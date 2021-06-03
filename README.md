@@ -1,2 +1,2 @@
-# core-building-block
+# Core Building Block
 Building block which handles core functions for the Rokwire platform - users, accounts, profiles, organizations, authentication and authorization.
