@@ -46,12 +46,6 @@ func (we Adapter) Start() {
 	router.PathPrefix("/doc/ui").Handler(we.serveDocUI())
 	router.HandleFunc("/doc", we.serveDoc)
 
-	servicesSubrouter := router.PathPrefix("/services").Subrouter()
-	servicesSubrouter.HandleFunc("/test", we.wrapFunc(we.apisHandler.GetTest)).Methods("GET")
-
-	adminSubrouter := router.PathPrefix("/admin").Subrouter()
-	adminSubrouter.HandleFunc("/test-model", we.wrapFunc(we.adminApisHandler.GetTestModel)).Methods("GET")
-
 	log.Fatal(http.ListenAndServe(":80", router))
 }
 

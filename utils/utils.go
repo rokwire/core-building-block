@@ -17,10 +17,8 @@ func LogRequest(req *http.Request) {
 	header := make(map[string][]string)
 	for key, value := range req.Header {
 		var logValue []string
-		//do not log api keys, cookies and Authorization
-		if key == "Rokwire-Api-Key" || key == "User-Id" || key == "Cookie" ||
-			key == "Authorization" || key == "Rokwire-Hs-Api-Key" || key == "Group" ||
-			key == "Rokwire-Acc-Id" || key == "Csrf" {
+		//do not log sensitive information
+		if key == "Authorization" || key == "Csrf" {
 			logValue = append(logValue, "---")
 		} else {
 			logValue = value

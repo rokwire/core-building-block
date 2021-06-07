@@ -19,8 +19,6 @@ type administrationImpl struct {
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
 	SetStorageListener(storageListener StorageListener)
-
-	ReadTODO() error
 }
 
 //StorageListener listenes for change data storage events
