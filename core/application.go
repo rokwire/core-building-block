@@ -11,6 +11,8 @@ type Application struct {
 
 	Services       Services       //expose to the drivers adapters
 	Administration Administration //expose to the drivrs adapters
+	Encryption     Encryption     //expose to the drivrs adapters
+	BBs            BBs            //expose to the drivrs adapters
 
 	storage Storage
 
@@ -47,6 +49,8 @@ func NewApplication(version string, build string, storage Storage) *Application 
 	//add the drivers ports/interfaces
 	application.Services = &servicesImpl{app: &application}
 	application.Administration = &administrationImpl{app: &application}
+	application.Encryption = &encryptionImpl{app: &application}
+	application.BBs = &bbsImpl{app: &application}
 
 	return &application
 }

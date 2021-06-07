@@ -28,7 +28,7 @@ type encryptionImpl struct {
 type BBs interface {
 }
 
-type bbImpl struct {
+type bbsImpl struct {
 	app *Application
 }
 
