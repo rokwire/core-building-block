@@ -16,6 +16,22 @@ type administrationImpl struct {
 	app *Application
 }
 
+//Encryption exposes APIs for the Encryption building block
+type Encryption interface {
+}
+
+type encryptionImpl struct {
+	app *Application
+}
+
+//BBs exposes users related APIs used by the platform building blocks
+type BBs interface {
+}
+
+type bbImpl struct {
+	app *Application
+}
+
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
 	SetStorageListener(storageListener StorageListener)
