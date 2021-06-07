@@ -19,8 +19,8 @@ type Adapter struct {
 	auth          *Auth
 	authorization *casbin.Enforcer
 
-	apisHandler      ApisHandler
-	adminApisHandler AdminApisHandler
+	servicesApisHandler ServicesApisHandler
+	adminApisHandler    AdminApisHandler
 
 	app *core.Application
 }
@@ -72,9 +72,9 @@ func NewWebAdapter(app *core.Application, host string) Adapter {
 	auth := NewAuth(app)
 	authorization := casbin.NewEnforcer("driver/web/authorization_model.conf", "driver/web/authorization_policy.csv")
 
-	apisHandler := NewApisHandler(app)
+	servicesApisHandler := NewServicesApisHandler(app)
 	adminApisHandler := NewAdminApisHandler(app)
-	return Adapter{host: host, auth: auth, authorization: authorization, apisHandler: apisHandler, adminApisHandler: adminApisHandler, app: app}
+	return Adapter{host: host, auth: auth, authorization: authorization, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler, app: app}
 }
 
 //AppListener implements core.ApplicationListener interface
