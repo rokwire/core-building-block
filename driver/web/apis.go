@@ -2,7 +2,6 @@ package web
 
 import (
 	"core-building-block/core"
-	"net/http"
 )
 
 //ApisHandler handles the rest APIs implementation

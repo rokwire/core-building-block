@@ -2,7 +2,6 @@ package web
 
 import (
 	"core-building-block/core"
-	"net/http"
 )
 
 //AdminApisHandler handles the admin rest APIs implementation
