@@ -22,7 +22,7 @@ The test coverage should be at least 80% of the new created code.
 
 ### Open Pull Request to develop branch
 Once ready then open pull request to merge this into the develop branch. The name of the pull request should be `[ID-{the issue number}] {the issue name}`.
-The merge requires at least one approval. If your PR resolves the issue entirely, link your PR with your issue for easy access and to close the issue automatically when the PR is merged. If it does not, include a reference to the related issue in the PR description eg. `Progress on [#{issue number}]`
+The merge requires at least one approval. If your PR resolves the issue entirely, link it to the issue in the description with a [keyword](https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword) (eg. `Resolves #{issue number}`).This will close the issue automatically when the PR is merged. If the PR does not resolve the issue, include a reference to the related issue in the PR description without a keyword (eg. `Progress on #{issue number}`).
 
 ### Merge the Pull Request
 Once the pull request is approved then merge it into develop using "Squash and Merge". "Squash and Merge" gets all your changes and put this into develop with one single commit. This means that in your issue branch you can do as many commits as you want not tending to be so clear in the commits comments. Once you merge then you can exlude not meaningful commits and leave only the ones which gives meaningful information.
