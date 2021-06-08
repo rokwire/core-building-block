@@ -9,7 +9,7 @@ type EncApisHandler struct {
 	app *core.Application
 }
 
-//NewAdminApisHandler creates new enc Handler instance
+//NewEncApisHandler creates new enc Handler instance
 func NewEncApisHandler(app *core.Application) EncApisHandler {
 	return EncApisHandler{app: app}
 }
