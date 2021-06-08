@@ -45,8 +45,33 @@ func (we Adapter) Start() {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// handle apis
-	router.PathPrefix("/doc/ui").Handler(we.serveDocUI())
-	router.HandleFunc("/doc", we.serveDoc)
+	subRouter := router.PathPrefix("/core").Subrouter()
+	subRouter.PathPrefix("/doc/ui").Handler(we.serveDocUI())
+	subRouter.HandleFunc("/doc", we.serveDoc)
+
+	///services ///
+	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
+
+	//auth
+	authSubrouter := servicesSubRouter.PathPrefix("/auth").Subrouter()
+	authSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.GetTest)).Methods("GET")
+	/*
+		//common
+		commonSubrouter := servicesSubrouter.PathPrefix("/common").Subrouter()
+		///
+
+		///admin ///
+		adminSubrouter := coreSubrouter.PathPrefix("/admin").Subrouter()
+		///
+
+		///enc ///
+		encSubrouter := coreSubrouter.PathPrefix("/enc").Subrouter()
+		///
+
+		///bbs ///
+		bbsSubrouter := coreSubrouter.PathPrefix("/bbs").Subrouter()
+		///
+	*/
 
 	log.Fatal(http.ListenAndServe(":80", router))
 }
