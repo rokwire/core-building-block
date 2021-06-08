@@ -54,12 +54,13 @@ func (we Adapter) Start() {
 
 	//auth
 	authSubrouter := servicesSubRouter.PathPrefix("/auth").Subrouter()
-	authSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.GetTest)).Methods("GET")
-	/*
-		//common
-		commonSubrouter := servicesSubrouter.PathPrefix("/common").Subrouter()
-		///
+	authSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.GetAuthTest)).Methods("GET")
 
+	//common
+	commonSubrouter := servicesSubRouter.PathPrefix("/common").Subrouter()
+	commonSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.GetCommonTest)).Methods("GET")
+	///
+	/*
 		///admin ///
 		adminSubrouter := coreSubrouter.PathPrefix("/admin").Subrouter()
 		///

@@ -2,15 +2,21 @@ package core
 
 //Services exposes APIs for the driver adapters
 type Services interface {
-	SerGetTest() string
+	SerGetAuthTest() string
+
+	SerGetCommonTest() string
 }
 
 type servicesImpl struct {
 	app *Application
 }
 
-func (s *servicesImpl) SerGetTest() string {
-	return s.app.serGetTest()
+func (s *servicesImpl) SerGetAuthTest() string {
+	return s.app.serGetAuthTest()
+}
+
+func (s *servicesImpl) SerGetCommonTest() string {
+	return s.app.serGetCommonTest()
 }
 
 //Administration exposes administration APIs for the driver adapters

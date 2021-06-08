@@ -10,9 +10,15 @@ type ServicesApisHandler struct {
 	app *core.Application
 }
 
-//GetTest TODO get test
-func (h ServicesApisHandler) GetTest(w http.ResponseWriter, r *http.Request) {
-	res := h.app.Services.SerGetTest()
+//GetAuthTest TODO get test
+func (h ServicesApisHandler) GetAuthTest(w http.ResponseWriter, r *http.Request) {
+	res := h.app.Services.SerGetAuthTest()
+	w.Write([]byte(res))
+}
+
+//GetCommonTest TODO get test
+func (h ServicesApisHandler) GetCommonTest(w http.ResponseWriter, r *http.Request) {
+	res := h.app.Services.SerGetCommonTest()
 	w.Write([]byte(res))
 }
 
