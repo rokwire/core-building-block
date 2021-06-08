@@ -21,6 +21,7 @@ type Adapter struct {
 
 	servicesApisHandler ServicesApisHandler
 	adminApisHandler    AdminApisHandler
+	encApisHandler      EncApisHandler
 
 	app *core.Application
 }
@@ -74,7 +75,9 @@ func NewWebAdapter(app *core.Application, host string) Adapter {
 
 	servicesApisHandler := NewServicesApisHandler(app)
 	adminApisHandler := NewAdminApisHandler(app)
-	return Adapter{host: host, auth: auth, authorization: authorization, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler, app: app}
+	encApisHandler := NewEncApisHandler(app)
+	return Adapter{host: host, auth: auth, authorization: authorization, servicesApisHandler: servicesApisHandler,
+		adminApisHandler: adminApisHandler, encApisHandler: encApisHandler, app: app}
 }
 
 //AppListener implements core.ApplicationListener interface
