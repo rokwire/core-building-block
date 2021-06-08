@@ -43,8 +43,10 @@ func (we Adapter) Start() {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// handle apis
-	router.PathPrefix("/doc/ui").Handler(we.serveDocUI())
-	router.HandleFunc("/doc", we.serveDoc)
+	subrouter := router.PathPrefix("/core").Subrouter()
+	subrouter.PathPrefix("/doc/ui").Handler(we.serveDocUI())
+	subrouter.HandleFunc("/doc", we.serveDoc)
+	subrouter.HandleFunc("/version", we.wrapFunc(we.servicesApisHandler.SerVersion)).Methods("GET")
 
 	log.Fatal(http.ListenAndServe(":80", router))
 }
