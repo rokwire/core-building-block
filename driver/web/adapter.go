@@ -65,15 +65,16 @@ func (we Adapter) Start() {
 	adminSubrouter := subRouter.PathPrefix("/admin").Subrouter()
 	adminSubrouter.HandleFunc("/test", we.wrapFunc(we.adminApisHandler.GetTest)).Methods("GET")
 	///
-	/*
-		///enc ///
-		encSubrouter := coreSubrouter.PathPrefix("/enc").Subrouter()
-		///
 
-		///bbs ///
-		bbsSubrouter := coreSubrouter.PathPrefix("/bbs").Subrouter()
-		///
-	*/
+	///enc ///
+	encSubrouter := subRouter.PathPrefix("/enc").Subrouter()
+	encSubrouter.HandleFunc("/test", we.wrapFunc(we.encApisHandler.GetTest)).Methods("GET")
+	///
+
+	///bbs ///
+	bbsSubrouter := subRouter.PathPrefix("/bbs").Subrouter()
+	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.GetTest)).Methods("GET")
+	///
 
 	log.Fatal(http.ListenAndServe(":80", router))
 }

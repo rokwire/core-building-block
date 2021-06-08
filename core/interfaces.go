@@ -34,18 +34,28 @@ func (s *administrationImpl) AdmGetTest() string {
 
 //Encryption exposes APIs for the Encryption building block
 type Encryption interface {
+	EncGetTest() string
 }
 
 type encryptionImpl struct {
 	app *Application
 }
 
+func (s *encryptionImpl) EncGetTest() string {
+	return s.app.encGetTest()
+}
+
 //BBs exposes users related APIs used by the platform building blocks
 type BBs interface {
+	BBsGetTest() string
 }
 
 type bbsImpl struct {
 	app *Application
+}
+
+func (s *bbsImpl) BBsGetTest() string {
+	return s.app.bbsGetTest()
 }
 
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
