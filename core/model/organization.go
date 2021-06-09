@@ -25,7 +25,7 @@ type OrganizationUser struct {
 }
 
 func (cu OrganizationUser) String() string {
-	return fmt.Sprintf("[ID:%s\tType:%s\tData:%s]", cu.ID, cu.Type, cu.Data)
+	return fmt.Sprintf("[ID:%s\n\tType:%s\n\tData:%s]", cu.ID, cu.Type, cu.Data)
 }
 
 //OrganizationMembership represents organization membership entity
@@ -36,7 +36,7 @@ type OrganizationMembership struct {
 	Organization      Organization
 	OrganizationUsers []OrganizationUser //some organizations have their own users - shibboleth, illini cash, icard etc
 
-	Account *OrganizationUserAccount //the user can have different account data(login) from the global one and from the other organization
+	Account *OrganizationUserAccount //the user can have different account data(login) from the global one and from the other organizations
 	Profile *OrganizationUserProfile //the user can have different profile data for the different organizations
 
 	Permissions []OrganizationPermission
@@ -45,7 +45,7 @@ type OrganizationMembership struct {
 }
 
 func (cm OrganizationMembership) String() string {
-	return fmt.Sprintf("[ID:%s\tUser:%s\tOrganization:%s\tOrganizationUsers:%s\tAccount:%s\tProfile:%s\tPermissions:%s\tRoles:%s\tGroups:%s\t]",
+	return fmt.Sprintf("[ID:%s\n\tUser:%s\n\tOrganization:%s\n\tOrganizationUsers:%s\n\tAccount:%s\n\tProfile:%s\n\tPermissions:%s\n\tRoles:%s\n\tGroups:%s\n\t]",
 		cm.ID, cm.User, cm.Organization, cm.OrganizationUsers, cm.Account, cm.Profile, cm.Permissions, cm.Roles, cm.Groups)
 }
 
@@ -86,12 +86,12 @@ func (cup OrganizationUserProfile) String() string {
 // - relatives are hosted in the same building etc.
 type OrganizationUserRelations struct {
 	ID      string
-	Type    string //family, couple, relatives, brothers/sisters, external roommate when there is no provided by the university for example
+	Type    string //family, couple, relatives, brothers/sisters, external roommate when there is no provided place by the university for example
 	Manager OrganizationMembership
 	Members []OrganizationMembership
 }
 
 func (cur OrganizationUserRelations) String() string {
-	return fmt.Sprintf("[ID:%s\tType:%s\tRelationManager:%s\tMembers:%s]",
+	return fmt.Sprintf("[ID:%s\n\tType:%s\n\tRelationManager:%s\n\tMembers:%s\n\t]",
 		cur.ID, cur.Type, cur.Manager, cur.Members)
 }

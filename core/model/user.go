@@ -17,7 +17,7 @@ type User struct {
 }
 
 func (u User) String() string {
-	return fmt.Sprintf("[ID:%s\tAccount:%s\tProfile:%s\tPermissions:%s\tRoles:%s\tGroups:%s\tOrganizationsMemberships:%s]",
+	return fmt.Sprintf("[ID:%s\n\tAccount:%s\n\tProfile:%s\n\tPermissions:%s\n\tRoles:%s\n\tGroups:%s\n\tOrganizationsMemberships:%s]",
 		u.ID, u.Account, u.Profile, u.Permissions, u.Roles, u.Groups, u.OrganizationsMemberships)
 }
 
@@ -90,7 +90,7 @@ type OrganizationGroup struct {
 }
 
 func (cg OrganizationGroup) String() string {
-	return fmt.Sprintf("[ID:%s\tName:%s\tOrganization:%s]", cg.ID, cg.Name, cg.Organization)
+	return fmt.Sprintf("[ID:%s\nName:%s\nOrganization:%s]", cg.ID, cg.Name, cg.Organization)
 }
 
 //OrganizationPermission represents organization permission entity
@@ -102,7 +102,7 @@ type OrganizationPermission struct {
 }
 
 func (c OrganizationPermission) String() string {
-	return fmt.Sprintf("[ID:%s\tName:%s\tOrganization:%s]", c.ID, c.Name, c.Organization)
+	return fmt.Sprintf("[ID:%s\nName:%s\nOrganization:%s]", c.ID, c.Name, c.Organization)
 }
 
 //OrganizationRole represents organization role entity. It is a collection of permissions
