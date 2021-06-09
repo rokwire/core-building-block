@@ -15,14 +15,14 @@ func (app *Application) admGetTestModel() string {
 
 	//communities configs
 	illinoisDomains := []string{"illinois.edu"}
-	illinoisCommunityConfig := model.CommunityConfig{Name: "Illinois community config", Setting: "setting_value", Domains: illinoisDomains, Custom: "Illinois community custom config"}
+	illinoisCommunityConfig := model.OrganizationConfig{Name: "Illinois community config", Setting: "setting_value", Domains: illinoisDomains, Custom: "Illinois community custom config"}
 
-	danceCommunityConfig := model.CommunityConfig{Name: "Dance community config", Setting: "setting_value", Domains: []string{}, Custom: "Dance community custom config"}
+	danceCommunityConfig := model.OrganizationConfig{Name: "Dance community config", Setting: "setting_value", Domains: []string{}, Custom: "Dance community custom config"}
 
 	//communities
-	illinoisCommunity := model.Community{ID: "1", Name: "Illinois", Type: "large", Config: illinoisCommunityConfig}
+	illinoisCommunity := model.Organization{ID: "1", Name: "Illinois", Type: "large", Config: illinoisCommunityConfig}
 
-	danceCommunity := model.Community{ID: "2", Name: "Dance", Type: "medium", Config: danceCommunityConfig}
+	danceCommunity := model.Organization{ID: "2", Name: "Dance", Type: "medium", Config: danceCommunityConfig}
 
 	//global permissions and roles
 
@@ -35,87 +35,87 @@ func (app *Application) admGetTestModel() string {
 
 	//Illinois permissions, roles and groups
 
-	illinoisRole1 := model.CommunityRole{ID: "1", Name: "community_super_admin", Permissions: nil, Community: illinoisCommunity} //community_super_admin has nil permissions as it has all
-	illinoisPermission1 := model.CommunityPermission{ID: "1", Name: "read_audit", Community: illinoisCommunity}
-	illinoisPermission2 := model.CommunityPermission{ID: "2", Name: "read_manual_test", Community: illinoisCommunity}
-	illinoisPermission3 := model.CommunityPermission{ID: "3", Name: "modify_manual_test", Community: illinoisCommunity}
-	illinoisRole2 := model.CommunityRole{ID: "2", Name: "manual_tests_manager",
-		Permissions: []model.CommunityPermission{illinoisPermission2, illinoisPermission3}, Community: illinoisCommunity}
-	illinoisGroup1 := model.CommunityGroup{ID: "1", Name: "students", Community: illinoisCommunity}
-	illinoisGroup2 := model.CommunityGroup{ID: "2", Name: "manual tests managers", Community: illinoisCommunity}
+	illinoisRole1 := model.OrganizationRole{ID: "1", Name: "community_super_admin", Permissions: nil, Organization: illinoisCommunity} //community_super_admin has nil permissions as it has all
+	illinoisPermission1 := model.OrganizationPermission{ID: "1", Name: "read_audit", Organization: illinoisCommunity}
+	illinoisPermission2 := model.OrganizationPermission{ID: "2", Name: "read_manual_test", Organization: illinoisCommunity}
+	illinoisPermission3 := model.OrganizationPermission{ID: "3", Name: "modify_manual_test", Organization: illinoisCommunity}
+	illinoisRole2 := model.OrganizationRole{ID: "2", Name: "manual_tests_manager",
+		Permissions: []model.OrganizationPermission{illinoisPermission2, illinoisPermission3}, Organization: illinoisCommunity}
+	illinoisGroup1 := model.OrganizationGroup{ID: "1", Name: "students", Organization: illinoisCommunity}
+	illinoisGroup2 := model.OrganizationGroup{ID: "2", Name: "manual tests managers", Organization: illinoisCommunity}
 
 	//Dance permissions, roles and groups
 
-	danceRole1 := model.CommunityRole{ID: "3", Name: "community_super_admin", Permissions: nil, Community: danceCommunity} //community_super_admin has nil permissions as it has all
-	dancePermission1 := model.CommunityPermission{ID: "4", Name: "view_video", Community: danceCommunity}
-	dancePermission2 := model.CommunityPermission{ID: "5", Name: "write_video", Community: danceCommunity}
-	dancePermission3 := model.CommunityPermission{ID: "6", Name: "view_schedule", Community: danceCommunity}
-	danceRole2 := model.CommunityRole{ID: "4", Name: "videos_manager",
-		Permissions: []model.CommunityPermission{dancePermission1, dancePermission2}, Community: danceCommunity}
-	danceGroup1 := model.CommunityGroup{ID: "3", Name: "videos managers", Community: danceCommunity}
+	danceRole1 := model.OrganizationRole{ID: "3", Name: "community_super_admin", Permissions: nil, Organization: danceCommunity} //community_super_admin has nil permissions as it has all
+	dancePermission1 := model.OrganizationPermission{ID: "4", Name: "view_video", Organization: danceCommunity}
+	dancePermission2 := model.OrganizationPermission{ID: "5", Name: "write_video", Organization: danceCommunity}
+	dancePermission3 := model.OrganizationPermission{ID: "6", Name: "view_schedule", Organization: danceCommunity}
+	danceRole2 := model.OrganizationRole{ID: "4", Name: "videos_manager",
+		Permissions: []model.OrganizationPermission{dancePermission1, dancePermission2}, Organization: danceCommunity}
+	danceGroup1 := model.OrganizationGroup{ID: "3", Name: "videos managers", Organization: danceCommunity}
 
 	//users
 
 	globalUser1Account := model.UserAccount{ID: "1", Email: "petyo.stoyanov@inabit.eu"}
 	globalUser1Profile := model.UserProfile{ID: "1", FirstName: "Petyo", LastName: "Stoyanov"}
 	globalUser1 := model.User{ID: "1", Account: globalUser1Account, Profile: globalUser1Profile,
-		Permissions: nil, Roles: []model.GlobalRole{glRole1}, Groups: nil, CommunitiesMemberships: nil}
+		Permissions: nil, Roles: []model.GlobalRole{glRole1}, Groups: nil, OrganizationsMemberships: nil}
 
 	globalUser2Account := model.UserAccount{ID: "2", Email: "pencho.penchev@inabit.eu"}
 	globalUser2Profile := model.UserProfile{ID: "2", FirstName: "Pencho", LastName: "penchev"}
 	globalUser2 := model.User{ID: "2", Account: globalUser2Account, Profile: globalUser2Profile,
-		Permissions: nil, Roles: []model.GlobalRole{glRole2}, Groups: nil, CommunitiesMemberships: nil}
+		Permissions: nil, Roles: []model.GlobalRole{glRole2}, Groups: nil, OrganizationsMemberships: nil}
 
 	illiniUser1Account := model.UserAccount{ID: "3", Email: "vivon@inabit.eu"}
 	illiniUser1Profile := model.UserProfile{ID: "3", FirstName: "Vivon", LastName: "Vivonov"}
 	illiniUser1 := model.User{ID: "3", Account: illiniUser1Account, Profile: illiniUser1Profile,
-		Permissions: nil, Roles: nil, Groups: nil, CommunitiesMemberships: nil}
-	illiniUser1Community := model.CommunityMembership{ID: "1", User: illiniUser1, Community: illinoisCommunity,
-		CommunityUsers: nil, Account: nil, Profile: nil, Permissions: nil, Roles: []model.CommunityRole{illinoisRole1}, Groups: nil}
-	illiniUser1.CommunitiesMemberships = []model.CommunityMembership{illiniUser1Community}
+		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
+	illiniUser1Community := model.OrganizationMembership{ID: "1", User: illiniUser1, Organization: illinoisCommunity,
+		OrganizationUsers: nil, Account: nil, Profile: nil, Permissions: nil, Roles: []model.OrganizationRole{illinoisRole1}, Groups: nil}
+	illiniUser1.OrganizationsMemberships = []model.OrganizationMembership{illiniUser1Community}
 
 	illiniUser2Account := model.UserAccount{ID: "4", Email: "vivon2@inabit.eu"}
 	illiniUser2Profile := model.UserProfile{ID: "4", FirstName: "Vivon2", LastName: "Vivonov2"}
 	illiniUser2 := model.User{ID: "4", Account: illiniUser2Account, Profile: illiniUser2Profile,
-		Permissions: nil, Roles: nil, Groups: nil, CommunitiesMemberships: nil}
-	illiniUser2Community := model.CommunityMembership{ID: "2", User: illiniUser2, Community: illinoisCommunity,
-		CommunityUsers: nil, Account: nil, Profile: nil,
-		Permissions: []model.CommunityPermission{illinoisPermission1},
-		Roles:       []model.CommunityRole{illinoisRole2},
-		Groups:      []model.CommunityGroup{illinoisGroup1}}
-	illiniUser2.CommunitiesMemberships = []model.CommunityMembership{illiniUser2Community}
+		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
+	illiniUser2Community := model.OrganizationMembership{ID: "2", User: illiniUser2, Organization: illinoisCommunity,
+		OrganizationUsers: nil, Account: nil, Profile: nil,
+		Permissions: []model.OrganizationPermission{illinoisPermission1},
+		Roles:       []model.OrganizationRole{illinoisRole2},
+		Groups:      []model.OrganizationGroup{illinoisGroup1}}
+	illiniUser2.OrganizationsMemberships = []model.OrganizationMembership{illiniUser2Community}
 
 	illiniUser3Account := model.UserAccount{ID: "5", Email: "vivon3@inabit.eu"}
 	illiniUser3Profile := model.UserProfile{ID: "5", FirstName: "Vivon3", LastName: "Vivonov3"}
 	illiniUser3 := model.User{ID: "5", Account: illiniUser3Account, Profile: illiniUser3Profile,
-		Permissions: nil, Roles: nil, Groups: nil, CommunitiesMemberships: nil}
-	illiniUser3Community := model.CommunityMembership{ID: "3", User: illiniUser3, Community: illinoisCommunity,
-		CommunityUsers: nil, Account: nil, Profile: nil,
-		Permissions: []model.CommunityPermission{illinoisPermission1},
-		Roles:       []model.CommunityRole{illinoisRole2},
-		Groups:      []model.CommunityGroup{illinoisGroup1}}
-	illiniUser3.CommunitiesMemberships = []model.CommunityMembership{illiniUser3Community}
+		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
+	illiniUser3Community := model.OrganizationMembership{ID: "3", User: illiniUser3, Organization: illinoisCommunity,
+		OrganizationUsers: nil, Account: nil, Profile: nil,
+		Permissions: []model.OrganizationPermission{illinoisPermission1},
+		Roles:       []model.OrganizationRole{illinoisRole2},
+		Groups:      []model.OrganizationGroup{illinoisGroup1}}
+	illiniUser3.OrganizationsMemberships = []model.OrganizationMembership{illiniUser3Community}
 
-	illiniUsersRel := model.CommunityUserRelations{ID: "1", Type: "family",
-		Manager: illiniUser2Community, Members: []model.CommunityMembership{illiniUser3Community}}
+	illiniUsersRel := model.OrganizationUserRelations{ID: "1", Type: "family",
+		Manager: illiniUser2Community, Members: []model.OrganizationMembership{illiniUser3Community}}
 
 	danceUser1Account := model.UserAccount{ID: "6", Email: "cocun@inabit.eu"}
 	danceUser1Profile := model.UserProfile{ID: "6", FirstName: "Cocun", LastName: "Cocunov"}
 	danceUser1 := model.User{ID: "6", Account: danceUser1Account, Profile: danceUser1Profile,
-		Permissions: nil, Roles: nil, Groups: nil, CommunitiesMemberships: nil}
-	danceUser1Community := model.CommunityMembership{ID: "4", User: danceUser1, Community: danceCommunity,
-		CommunityUsers: nil, Account: nil, Profile: nil, Permissions: nil, Roles: []model.CommunityRole{danceRole1}, Groups: nil}
-	danceUser1.CommunitiesMemberships = []model.CommunityMembership{danceUser1Community}
+		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
+	danceUser1Community := model.OrganizationMembership{ID: "4", User: danceUser1, Organization: danceCommunity,
+		OrganizationUsers: nil, Account: nil, Profile: nil, Permissions: nil, Roles: []model.OrganizationRole{danceRole1}, Groups: nil}
+	danceUser1.OrganizationsMemberships = []model.OrganizationMembership{danceUser1Community}
 
 	diAccount := model.UserAccount{ID: "7", Email: "di@inabit.eu"}
 	diProfile := model.UserProfile{ID: "7", FirstName: "Dinko", LastName: "Dinkov"}
 	diUser := model.User{ID: "7", Account: diAccount, Profile: diProfile,
-		Permissions: nil, Roles: nil, Groups: nil, CommunitiesMemberships: nil}
-	danceDICommunity := model.CommunityMembership{ID: "5", User: diUser, Community: danceCommunity,
-		CommunityUsers: nil, Account: nil, Profile: nil, Permissions: nil, Roles: []model.CommunityRole{danceRole2}, Groups: []model.CommunityGroup{danceGroup1}}
-	illinoisDICommunity := model.CommunityMembership{ID: "6", User: diUser, Community: illinoisCommunity,
-		CommunityUsers: nil, Account: nil, Profile: nil, Permissions: nil, Roles: []model.CommunityRole{illinoisRole2}, Groups: []model.CommunityGroup{illinoisGroup2}}
-	diUser.CommunitiesMemberships = []model.CommunityMembership{danceDICommunity, illinoisDICommunity}
+		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
+	danceDICommunity := model.OrganizationMembership{ID: "5", User: diUser, Organization: danceCommunity,
+		OrganizationUsers: nil, Account: nil, Profile: nil, Permissions: nil, Roles: []model.OrganizationRole{danceRole2}, Groups: []model.OrganizationGroup{danceGroup1}}
+	illinoisDICommunity := model.OrganizationMembership{ID: "6", User: diUser, Organization: illinoisCommunity,
+		OrganizationUsers: nil, Account: nil, Profile: nil, Permissions: nil, Roles: []model.OrganizationRole{illinoisRole2}, Groups: []model.OrganizationGroup{illinoisGroup2}}
+	diUser.OrganizationsMemberships = []model.OrganizationMembership{danceDICommunity, illinoisDICommunity}
 
 	res := fmt.Sprintf("GlobalConfig:\n\t%s\n\n"+
 		"IllinoisCommunityConfig:\n\t%s\n\n"+
