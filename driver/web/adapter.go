@@ -48,6 +48,7 @@ func (we Adapter) Start() {
 	subRouter := router.PathPrefix("/core").Subrouter()
 	subRouter.PathPrefix("/doc/ui").Handler(we.serveDocUI())
 	subRouter.HandleFunc("/doc", we.serveDoc)
+  subrouter.HandleFunc("/version", we.wrapFunc(we.servicesApisHandler.SerVersion)).Methods("GET")
 
 	///services ///
 	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
