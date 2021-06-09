@@ -13,7 +13,7 @@ func (app *Application) admGetTestModel() string {
 	//global config
 	globalConfig := model.GlobalConfig{Setting: "setting_value"}
 
-	//communities configs
+	//organizations configs
 	illinoisDomains := []string{"illinois.edu"}
 	illinoisOrganizationConfig := model.OrganizationConfig{Name: "Illinois organization config", Setting: "setting_value", Domains: illinoisDomains, Custom: "Illinois organization custom config"}
 

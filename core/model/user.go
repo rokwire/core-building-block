@@ -21,7 +21,7 @@ func (u User) String() string {
 		u.ID, u.Account, u.Profile, u.Permissions, u.Roles, u.Groups, u.OrganizationsMemberships)
 }
 
-//UserAccount represents user account entity
+//UserAccount represents user account entity. The user account is the user himself or herself.
 type UserAccount struct {
 	ID       string
 	Email    string
@@ -37,7 +37,7 @@ func (ua UserAccount) String() string {
 		ua.ID, ua.Email, ua.Phone, ua.Number, ua.Username)
 }
 
-//UserProfile represents user profile entity
+//UserProfile represents user profile entity. The user profile is an information about the user.
 type UserProfile struct {
 	ID        string
 	PhotoURL  string
