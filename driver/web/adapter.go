@@ -21,6 +21,8 @@ type Adapter struct {
 
 	servicesApisHandler ServicesApisHandler
 	adminApisHandler    AdminApisHandler
+	encApisHandler      EncApisHandler
+	bbsApisHandler      BBsApisHandler
 
 	app *core.Application
 }
@@ -43,10 +45,37 @@ func (we Adapter) Start() {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// handle apis
-	subrouter := router.PathPrefix("/core").Subrouter()
-	subrouter.PathPrefix("/doc/ui").Handler(we.serveDocUI())
-	subrouter.HandleFunc("/doc", we.serveDoc)
-	subrouter.HandleFunc("/version", we.wrapFunc(we.servicesApisHandler.SerVersion)).Methods("GET")
+	subRouter := router.PathPrefix("/core").Subrouter()
+	subRouter.PathPrefix("/doc/ui").Handler(we.serveDocUI())
+	subRouter.HandleFunc("/doc", we.serveDoc)
+  subrouter.HandleFunc("/version", we.wrapFunc(we.servicesApisHandler.SerVersion)).Methods("GET")
+
+	///services ///
+	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
+
+	//auth
+	authSubrouter := servicesSubRouter.PathPrefix("/auth").Subrouter()
+	authSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.GetAuthTest)).Methods("GET")
+
+	//common
+	commonSubrouter := servicesSubRouter.PathPrefix("/common").Subrouter()
+	commonSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.GetCommonTest)).Methods("GET")
+	///
+
+	///admin ///
+	adminSubrouter := subRouter.PathPrefix("/admin").Subrouter()
+	adminSubrouter.HandleFunc("/test", we.wrapFunc(we.adminApisHandler.GetTest)).Methods("GET")
+	///
+
+	///enc ///
+	encSubrouter := subRouter.PathPrefix("/enc").Subrouter()
+	encSubrouter.HandleFunc("/test", we.wrapFunc(we.encApisHandler.GetTest)).Methods("GET")
+	///
+
+	///bbs ///
+	bbsSubrouter := subRouter.PathPrefix("/bbs").Subrouter()
+	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.GetTest)).Methods("GET")
+	///
 
 	log.Fatal(http.ListenAndServe(":80", router))
 }
@@ -76,7 +105,10 @@ func NewWebAdapter(app *core.Application, host string) Adapter {
 
 	servicesApisHandler := NewServicesApisHandler(app)
 	adminApisHandler := NewAdminApisHandler(app)
-	return Adapter{host: host, auth: auth, authorization: authorization, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler, app: app}
+	encApisHandler := NewEncApisHandler(app)
+	bbsApisHandler := NewBBsApisHandler(app)
+	return Adapter{host: host, auth: auth, authorization: authorization, servicesApisHandler: servicesApisHandler,
+		adminApisHandler: adminApisHandler, encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, app: app}
 }
 
 //AppListener implements core.ApplicationListener interface
