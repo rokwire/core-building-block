@@ -13,12 +13,12 @@ type User struct {
 	Roles       []GlobalRole
 	Groups      []GlobalGroup
 
-	CommunitiesMemberships []CommunityMembership
+	OrganizationsMemberships []OrganizationMembership
 }
 
 func (u User) String() string {
-	return fmt.Sprintf("[ID:%s\tAccount:%s\tProfile:%s\tPermissions:%s\tRoles:%s\tGroups:%s\tCommunitiesMemberships:%s]",
-		u.ID, u.Account, u.Profile, u.Permissions, u.Roles, u.Groups, u.CommunitiesMemberships)
+	return fmt.Sprintf("[ID:%s\tAccount:%s\tProfile:%s\tPermissions:%s\tRoles:%s\tGroups:%s\tOrganizationsMemberships:%s]",
+		u.ID, u.Account, u.Profile, u.Permissions, u.Roles, u.Groups, u.OrganizationsMemberships)
 }
 
 //UserAccount represents user account entity
@@ -78,40 +78,40 @@ func (c GlobalRole) String() string {
 	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s]", c.ID, c.Name, c.Permissions)
 }
 
-//CommunityGroup represents community group entity. It is a collection of users
-type CommunityGroup struct {
+//OrganizationGroup represents organization group entity. It is a collection of users
+type OrganizationGroup struct {
 	ID   string
 	Name string
 
-	Community Community
+	Organization Organization
 }
 
-func (cg CommunityGroup) String() string {
-	return fmt.Sprintf("[ID:%s\tName:%s\tCommunity:%s]", cg.ID, cg.Name, cg.Community)
+func (cg OrganizationGroup) String() string {
+	return fmt.Sprintf("[ID:%s\tName:%s\tOrganization:%s]", cg.ID, cg.Name, cg.Organization)
 }
 
-//CommunityPermission represents community permission entity
-type CommunityPermission struct {
+//OrganizationPermission represents organization permission entity
+type OrganizationPermission struct {
 	ID   string
 	Name string
 
-	Community Community
+	Organization Organization
 }
 
-func (c CommunityPermission) String() string {
-	return fmt.Sprintf("[ID:%s\tName:%s\tCommunity:%s]", c.ID, c.Name, c.Community)
+func (c OrganizationPermission) String() string {
+	return fmt.Sprintf("[ID:%s\tName:%s\tOrganization:%s]", c.ID, c.Name, c.Organization)
 }
 
-//CommunityRole represents community role entity. It is a collection of permissions
-type CommunityRole struct {
+//OrganizationRole represents organization role entity. It is a collection of permissions
+type OrganizationRole struct {
 	ID   string
 	Name string
 
-	Permissions []CommunityPermission
+	Permissions []OrganizationPermission
 
-	Community Community
+	Organization Organization
 }
 
-func (c CommunityRole) String() string {
-	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s\tCommunity:%s]", c.ID, c.Name, c.Permissions, c.Community)
+func (c OrganizationRole) String() string {
+	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s\tOrganization:%s]", c.ID, c.Name, c.Permissions, c.Organization)
 }
