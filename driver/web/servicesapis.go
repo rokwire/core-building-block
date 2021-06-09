@@ -26,3 +26,6 @@ func (h ServicesApisHandler) GetCommonTest(w http.ResponseWriter, r *http.Reques
 func NewServicesApisHandler(app *core.Application) ServicesApisHandler {
 	return ServicesApisHandler{app: app}
 }
+func (h ServicesApisHandler) SerVersion(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(h.app.Services.SerGetVersion()))
+}
