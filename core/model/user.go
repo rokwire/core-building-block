@@ -23,11 +23,14 @@ func (u User) String() string {
 
 //UserAccount represents user account entity. The user account is the user himself or herself.
 type UserAccount struct {
-	ID       string
+	ID string
+
+	//we should define which unique identifier(or identifiers) we will use to identify the user.
 	Email    string
 	Phone    string //??
 	Number   string
 	Username string
+
 	//TODO other?
 	//has 2FA ???
 }
