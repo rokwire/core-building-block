@@ -37,7 +37,10 @@ type OrganizationMembership struct {
 	Organization      Organization
 	OrganizationUsers []OrganizationUser //some organizations have their own users - shibboleth, illini cash, icard etc
 
-	Profile *OrganizationUserProfile //the user can have different profile data for the different organizations
+	//the user can have different org profile data for the different organizations
+	//for Illinois university org - this will be populated by the illinois organization user
+	//for Champaign org - this will be empty or populated with data if it requires to be different than the user profile
+	OrgUserProfile *OrganizationUserProfile
 
 	Permissions []OrganizationPermission
 	Roles       []OrganizationRole
