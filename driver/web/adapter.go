@@ -10,6 +10,8 @@ import (
 	"github.com/casbin/casbin"
 	"github.com/gorilla/mux"
 
+	//"github.com/google/uuid"
+
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -48,7 +50,9 @@ func (we Adapter) Start() {
 	subRouter := router.PathPrefix("/core").Subrouter()
 	subRouter.PathPrefix("/doc/ui").Handler(we.serveDocUI())
 	subRouter.HandleFunc("/doc", we.serveDoc)
-  subrouter.HandleFunc("/version", we.wrapFunc(we.servicesApisHandler.SerVersion)).Methods("GET")
+	subRouter.HandleFunc("/version", we.wrapFunc(we.servicesApisHandler.SerVersion)).Methods("GET")
+
+	//log
 
 	///services ///
 	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
@@ -92,7 +96,22 @@ func (we Adapter) serveDocUI() http.Handler {
 
 func (we Adapter) wrapFunc(handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		utils.LogRequest(req)
+
+		//generate logging ID
+		//loggingID, _ := uuid.NewUUID()
+		loggingID := "1234"
+		logging := utils.Logging{ID: loggingID}
+
+		//log for first time
+		data := utils.GetRequestLogData(req)
+		logging.Printf(data)
+
+		//TODO get user id:
+		userID := "1001"
+		logging.UserID = userID
+
+		//log for second time
+		logging.Printf("we already have user id")
 
 		handler(w, req)
 	}

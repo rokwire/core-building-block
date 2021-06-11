@@ -1,14 +1,24 @@
 package utils
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 )
 
-//LogRequest logs the request as hide some header fields because of security reasons
-func LogRequest(req *http.Request) {
+type Logging struct {
+	ID     string
+	UserID string
+}
+
+func (l Logging) Printf(data string) {
+	log.Printf("ID:%s USER_ID:%s DATA:%s", l.ID, l.UserID, data)
+}
+
+//GetRequestLogData gets request log data
+func GetRequestLogData(req *http.Request) string {
 	if req == nil {
-		return
+		return ""
 	}
 
 	method := req.Method
@@ -25,5 +35,6 @@ func LogRequest(req *http.Request) {
 		}
 		header[key] = logValue
 	}
-	log.Printf("%s %s %s", method, path, header)
+	result := fmt.Sprintf("%s %s %s", method, path, header)
+	return result
 }
