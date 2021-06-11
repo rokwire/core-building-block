@@ -37,7 +37,6 @@ type OrganizationMembership struct {
 	Organization      Organization
 	OrganizationUsers []OrganizationUser //some organizations have their own users - shibboleth, illini cash, icard etc
 
-	Account *OrganizationUserAccount //the user can have different account data(login) from the global one and from the other organizations
 	Profile *OrganizationUserProfile //the user can have different profile data for the different organizations
 
 	Permissions []OrganizationPermission
@@ -46,24 +45,8 @@ type OrganizationMembership struct {
 }
 
 func (cm OrganizationMembership) String() string {
-	return fmt.Sprintf("[ID:%s\n\tUser:%s\n\tOrganization:%s\n\tOrganizationUsers:%s\n\tAccount:%s\n\tProfile:%s\n\tPermissions:%s\n\tRoles:%s\n\tGroups:%s\n\t]",
-		cm.ID, cm.User, cm.Organization, cm.OrganizationUsers, cm.Account, cm.Profile, cm.Permissions, cm.Roles, cm.Groups)
-}
-
-//OrganizationUserAccount represents organization user account entity
-type OrganizationUserAccount struct {
-	ID       string
-	Email    string
-	Phone    string //??
-	Number   string
-	Username string
-	//TODO other?
-	//has 2FA ???
-}
-
-func (cua OrganizationUserAccount) String() string {
-	return fmt.Sprintf("[ID:%s\tEmail:%s\tPhone:%s\tNumber:%s\tUsername:%s]",
-		cua.ID, cua.Email, cua.Phone, cua.Number, cua.Username)
+	return fmt.Sprintf("[ID:%s\n\tUser:%s\n\tOrganization:%s\n\tOrganizationUsers:%s\n\tProfile:%s\n\tPermissions:%s\n\tRoles:%s\n\tGroups:%s\n\t]",
+		cm.ID, cm.User, cm.Organization, cm.OrganizationUsers, cm.Profile, cm.Permissions, cm.Roles, cm.Groups)
 }
 
 //OrganizationUserProfile represents organization user profile entity

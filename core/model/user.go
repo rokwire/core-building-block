@@ -36,17 +36,23 @@ func (u User) String() string {
 }
 
 //UserAccount represents user account entity. The user account is the user himself or herself.
+//we should require the user to give unique phone or unique email(or both) when registering.
+//It is also a good practive internally the system to generate unique number and unique username which are not changable.
+//At some moment the user could be needed to change his phone or email so we need to rely on the number and the username which cannot be changed.
 type UserAccount struct {
 	ID string
 
-	//we should define which unique identifier(or identifiers) we will use to identify the user.
-	//maybe we always must have Number!?
-	Email    string
-	Phone    string //??
+	Email string
+	Phone string
+
 	Number   string
 	Username string
 
-	//TODO other?
+	//for Champaign org - basically this will be one or many of  - email, phone, number, username
+	//for Illinois university org - this will be empty because this organization requires it own login
+	LoginTypes []string
+
+	//TODO
 	//has 2FA ???
 }
 
