@@ -1,6 +1,9 @@
 package model
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+)
 
 //User represents user entity
 type User struct {
@@ -17,8 +20,19 @@ type User struct {
 }
 
 func (u User) String() string {
+
+	var memberships bytes.Buffer
+	memberships.WriteString("")
+
+	if len(u.OrganizationsMemberships) >= 0 {
+		for _, c := range u.OrganizationsMemberships {
+			memberships.WriteString(c.Organization.Name)
+			memberships.WriteString("\t")
+		}
+	}
+
 	return fmt.Sprintf("[ID:%s\n\tAccount:%s\n\tProfile:%s\n\tPermissions:%s\n\tRoles:%s\n\tGroups:%s\n\tOrganizationsMemberships:%s]",
-		u.ID, u.Account, u.Profile, u.Permissions, u.Roles, u.Groups, u.OrganizationsMemberships)
+		u.ID, u.Account, u.Profile, u.Permissions, u.Roles, u.Groups, memberships.String())
 }
 
 //UserAccount represents user account entity. The user account is the user himself or herself.
@@ -26,6 +40,7 @@ type UserAccount struct {
 	ID string
 
 	//we should define which unique identifier(or identifiers) we will use to identify the user.
+	//maybe we always must have Number!?
 	Email    string
 	Phone    string //??
 	Number   string
