@@ -6,9 +6,10 @@ import "fmt"
 
 //Organization represents organization entity
 type Organization struct {
-	ID   string
-	Name string
-	Type string //micro small medium large - based on the users count
+	ID               string
+	Name             string
+	Type             string //micro small medium large - based on the users count
+	RequiresOwnLogin bool   //Illinois orgnization requires own login(oidc) but Champaign organization does not requires
 
 	Config OrganizationConfig
 }
