@@ -22,10 +22,12 @@ func (h ServicesApisHandler) GetCommonTest(w http.ResponseWriter, r *http.Reques
 	w.Write([]byte(res))
 }
 
+//SerVersion gives the service version
+func (h ServicesApisHandler) SerVersion(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(h.app.Services.SerGetVersion()))
+}
+
 //NewServicesApisHandler creates new rest services Handler instance
 func NewServicesApisHandler(app *core.Application) ServicesApisHandler {
 	return ServicesApisHandler{app: app}
-}
-func (h ServicesApisHandler) SerVersion(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(h.app.Services.SerGetVersion()))
 }

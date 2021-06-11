@@ -49,7 +49,7 @@ type OrganizationMembership struct {
 
 func (cm OrganizationMembership) String() string {
 	return fmt.Sprintf("[ID:%s\n\tUser:%s\n\tOrganization:%s\n\tOrganizationUsers:%s\n\tProfile:%s\n\tPermissions:%s\n\tRoles:%s\n\tGroups:%s\n\t]",
-		cm.ID, cm.User, cm.Organization, cm.OrganizationUsers, cm.Profile, cm.Permissions, cm.Roles, cm.Groups)
+		cm.ID, cm.User, cm.Organization, cm.OrganizationUsers, cm.OrgUserProfile, cm.Permissions, cm.Roles, cm.Groups)
 }
 
 //OrganizationUserProfile represents organization user profile entity
