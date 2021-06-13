@@ -37,15 +37,14 @@ func (u User) String() string {
 
 //UserAccount represents user account entity. The user account is the user himself or herself.
 //we should require the user to give unique phone or unique email(or both) when registering.
-//It is also a good practive internally the system to generate unique number and unique username which are not changable.
-//At some moment the user could be needed to change his phone or email so we need to rely on the number and the username which cannot be changed.
+//It is also a good practive internally the system to generate unique number and(or) unique username which are not changable.
+//At some moment the user could be needed to change his phone or email so we need to rely on the number or on the username which cannot be changed.
 type UserAccount struct {
 	ID string
 
 	Email string
 	Phone string
 
-	Number   string
 	Username string
 
 	//for Champaign org - basically this will be one or many of  - email, phone, number, username
@@ -57,8 +56,8 @@ type UserAccount struct {
 }
 
 func (ua UserAccount) String() string {
-	return fmt.Sprintf("[ID:%s\tEmail:%s\tPhone:%s\tNumber:%s\tUsername:%s]",
-		ua.ID, ua.Email, ua.Phone, ua.Number, ua.Username)
+	return fmt.Sprintf("[ID:%s\tEmail:%s\tPhone:%s\tUsername:%s]",
+		ua.ID, ua.Email, ua.Phone, ua.Username)
 }
 
 //UserProfile represents user profile entity. The user profile is an information about the user.
