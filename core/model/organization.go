@@ -21,29 +21,17 @@ func (c Organization) String() string {
 	return fmt.Sprintf("[ID:%s\tName:%s\tType:%s\tConfig:%s]", c.ID, c.Name, c.Type, c.Config)
 }
 
-//OrganizationUser represents an organization user entity
-type OrganizationUser struct {
-	ID   string
-	Type string //shibboleth, illini cash, icard
-	Data interface{}
-}
-
-func (cu OrganizationUser) String() string {
-	return fmt.Sprintf("[ID:%s\n\tType:%s\n\tData:%s]", cu.ID, cu.Type, cu.Data)
-}
-
 //OrganizationMembership represents organization membership entity
 type OrganizationMembership struct {
 	ID string
 
-	User              User
-	Organization      Organization
-	OrganizationUsers []OrganizationUser //some organizations have their own users - shibboleth, illini cash, icard etc
+	User         User
+	Organization Organization
 
-	//the user can have different org profile data for the different organizations
-	//for Illinois university org - this will be populated by the illinois organization user
-	//for Champaign org - this will be empty or populated with data if it requires to be different than the user profile
-	OrgUserProfile *OrganizationUserProfile
+	//the user can have specific user data for the different organizations
+	//for Illinois university org - this will be populated by the illinois organization user data - shiboleth, illini cash, icard
+	//for Champaign org - this will be empty or populated with data if there is
+	OrgUserData map[string]interface{}
 
 	Permissions []OrganizationPermission
 	Roles       []OrganizationRole
@@ -51,21 +39,8 @@ type OrganizationMembership struct {
 }
 
 func (cm OrganizationMembership) String() string {
-	return fmt.Sprintf("[ID:%s\n\tUser:%s\n\tOrganization:%s\n\tOrganizationUsers:%s\n\tProfile:%s\n\tPermissions:%s\n\tRoles:%s\n\tGroups:%s\n\t]",
-		cm.ID, cm.User, cm.Organization, cm.OrganizationUsers, cm.OrgUserProfile, cm.Permissions, cm.Roles, cm.Groups)
-}
-
-//OrganizationUserProfile represents organization user profile entity
-type OrganizationUserProfile struct {
-	ID        string
-	PhotoURL  string
-	FirstName string
-	LastName  string
-}
-
-func (cup OrganizationUserProfile) String() string {
-	return fmt.Sprintf("[ID:%s\tPhotoURL:%s\tFirstName:%s\tLastName:%s]",
-		cup.ID, cup.PhotoURL, cup.FirstName, cup.LastName)
+	return fmt.Sprintf("[ID:%s\n\tUser:%s\n\tOrganization:%s\n\tUserData:%s\n\tPermissions:%s\n\tRoles:%s\n\tGroups:%s\n\t]",
+		cm.ID, cm.User, cm.Organization, cm.OrgUserData, cm.Permissions, cm.Roles, cm.Groups)
 }
 
 //OrganizationUserRelations represents external relations between the organization users

@@ -71,7 +71,7 @@ func (app *Application) admGetTestModel() string {
 	illiniUser1 := model.User{ID: "3", Account: illiniUser1Account, Profile: illiniUser1Profile,
 		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
 	illiniUser1Organization := model.OrganizationMembership{ID: "1", User: illiniUser1, Organization: illinoisOrganization,
-		OrganizationUsers: nil, OrgUserProfile: nil, Permissions: nil, Roles: []model.OrganizationRole{illinoisRole1}, Groups: nil}
+		OrgUserData: nil, Permissions: nil, Roles: []model.OrganizationRole{illinoisRole1}, Groups: nil}
 	illiniUser1.OrganizationsMemberships = []model.OrganizationMembership{illiniUser1Organization}
 
 	illiniUser2Account := model.UserAccount{ID: "4", Email: "vivon2@inabit.eu"}
@@ -79,7 +79,7 @@ func (app *Application) admGetTestModel() string {
 	illiniUser2 := model.User{ID: "4", Account: illiniUser2Account, Profile: illiniUser2Profile,
 		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
 	illiniUser2Organization := model.OrganizationMembership{ID: "2", User: illiniUser2, Organization: illinoisOrganization,
-		OrganizationUsers: nil, OrgUserProfile: nil,
+		OrgUserData: nil,
 		Permissions: []model.OrganizationPermission{illinoisPermission1},
 		Roles:       []model.OrganizationRole{illinoisRole2},
 		Groups:      []model.OrganizationGroup{illinoisGroup1}}
@@ -90,7 +90,7 @@ func (app *Application) admGetTestModel() string {
 	illiniUser3 := model.User{ID: "5", Account: illiniUser3Account, Profile: illiniUser3Profile,
 		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
 	illiniUser3Organization := model.OrganizationMembership{ID: "3", User: illiniUser3, Organization: illinoisOrganization,
-		OrganizationUsers: nil, OrgUserProfile: nil,
+		OrgUserData: nil,
 		Permissions: []model.OrganizationPermission{illinoisPermission1},
 		Roles:       []model.OrganizationRole{illinoisRole2},
 		Groups:      []model.OrganizationGroup{illinoisGroup1}}
@@ -104,7 +104,7 @@ func (app *Application) admGetTestModel() string {
 	danceUser1 := model.User{ID: "6", Account: danceUser1Account, Profile: danceUser1Profile,
 		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
 	danceUser1Organization := model.OrganizationMembership{ID: "4", User: danceUser1, Organization: danceOrganization,
-		OrganizationUsers: nil, OrgUserProfile: nil, Permissions: nil, Roles: []model.OrganizationRole{danceRole1}, Groups: nil}
+		OrgUserData: nil, Permissions: nil, Roles: []model.OrganizationRole{danceRole1}, Groups: nil}
 	danceUser1.OrganizationsMemberships = []model.OrganizationMembership{danceUser1Organization}
 
 	diAccount := model.UserAccount{ID: "7", Email: "di@inabit.eu"}
@@ -112,9 +112,9 @@ func (app *Application) admGetTestModel() string {
 	diUser := model.User{ID: "7", Account: diAccount, Profile: diProfile,
 		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
 	danceDIOrganization := model.OrganizationMembership{ID: "5", User: diUser, Organization: danceOrganization,
-		OrganizationUsers: nil, OrgUserProfile: nil, Permissions: nil, Roles: []model.OrganizationRole{danceRole2}, Groups: []model.OrganizationGroup{danceGroup1}}
+		OrgUserData: nil, Permissions: nil, Roles: []model.OrganizationRole{danceRole2}, Groups: []model.OrganizationGroup{danceGroup1}}
 	illinoisDIOrganization := model.OrganizationMembership{ID: "6", User: diUser, Organization: illinoisOrganization,
-		OrganizationUsers: nil, OrgUserProfile: nil, Permissions: nil, Roles: []model.OrganizationRole{illinoisRole2}, Groups: []model.OrganizationGroup{illinoisGroup2}}
+		OrgUserData: nil, Permissions: nil, Roles: []model.OrganizationRole{illinoisRole2}, Groups: []model.OrganizationGroup{illinoisGroup2}}
 	diUser.OrganizationsMemberships = []model.OrganizationMembership{danceDIOrganization, illinoisDIOrganization}
 
 	res := fmt.Sprintf("GlobalConfig:\n\t%s\n\n"+
