@@ -51,6 +51,8 @@ type UserAccount struct {
 	//for Illinois university org - this will be empty because this organization requires it own login
 	LoginTypes []string
 
+	AllowLogin bool
+
 	//TODO
 	//has 2FA ???
 }
