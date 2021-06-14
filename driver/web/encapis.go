@@ -2,6 +2,7 @@ package web
 
 import (
 	"core-building-block/core"
+	"core-building-block/utils"
 	"net/http"
 )
 
@@ -11,7 +12,7 @@ type EncApisHandler struct {
 }
 
 //GetTest TODO get test
-func (h EncApisHandler) GetTest(w http.ResponseWriter, r *http.Request) {
+func (h EncApisHandler) GetTest(logging utils.Logging, w http.ResponseWriter, r *http.Request) {
 	res := h.app.Encryption.EncGetTest()
 	w.Write([]byte(res))
 }

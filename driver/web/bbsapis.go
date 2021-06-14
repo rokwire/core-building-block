@@ -2,6 +2,7 @@ package web
 
 import (
 	"core-building-block/core"
+	"core-building-block/utils"
 	"net/http"
 )
 
@@ -11,7 +12,7 @@ type BBsApisHandler struct {
 }
 
 //GetTest TODO get test
-func (h BBsApisHandler) GetTest(w http.ResponseWriter, r *http.Request) {
+func (h BBsApisHandler) GetTest(logging utils.Logging, w http.ResponseWriter, r *http.Request) {
 	res := h.app.BBs.BBsGetTest()
 	w.Write([]byte(res))
 }

@@ -94,7 +94,9 @@ func (we Adapter) serveDocUI() http.Handler {
 	return httpSwagger.Handler(httpSwagger.URL(url))
 }
 
-func (we Adapter) wrapFunc(handler http.HandlerFunc) http.HandlerFunc {
+type loggingFunc = func(utils.Logging, http.ResponseWriter, *http.Request)
+
+func (we Adapter) wrapFunc(handler loggingFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		//generate logging ID
@@ -113,7 +115,7 @@ func (we Adapter) wrapFunc(handler http.HandlerFunc) http.HandlerFunc {
 		//log for second time
 		logging.Printf("we already have user id")
 
-		handler(w, req)
+		handler(logging, w, req)
 	}
 }
 

@@ -2,6 +2,7 @@ package web
 
 import (
 	"core-building-block/core"
+	"core-building-block/utils"
 	"net/http"
 )
 
@@ -11,7 +12,7 @@ type AdminApisHandler struct {
 }
 
 //GetTest TODO get test
-func (h AdminApisHandler) GetTest(w http.ResponseWriter, r *http.Request) {
+func (h AdminApisHandler) GetTest(logging utils.Logging, w http.ResponseWriter, r *http.Request) {
 	res := h.app.Administration.AdmGetTest()
 	w.Write([]byte(res))
 }
