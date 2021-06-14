@@ -13,13 +13,13 @@ type ServicesApisHandler struct {
 
 //GetAuthTest TODO get test
 func (h ServicesApisHandler) GetAuthTest(logging utils.Logging, w http.ResponseWriter, r *http.Request) {
-	res := h.app.Services.SerGetAuthTest()
+	res := h.app.Services.SerGetAuthTest(logging)
 	w.Write([]byte(res))
 }
 
 //GetCommonTest TODO get test
 func (h ServicesApisHandler) GetCommonTest(logging utils.Logging, w http.ResponseWriter, r *http.Request) {
-	res := h.app.Services.SerGetCommonTest()
+	res := h.app.Services.SerGetCommonTest(logging)
 	w.Write([]byte(res))
 }
 
@@ -28,5 +28,5 @@ func NewServicesApisHandler(app *core.Application) ServicesApisHandler {
 	return ServicesApisHandler{app: app}
 }
 func (h ServicesApisHandler) SerVersion(logging utils.Logging, w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(h.app.Services.SerGetVersion()))
+	w.Write([]byte(h.app.Services.SerGetVersion(logging)))
 }
