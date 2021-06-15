@@ -15,7 +15,7 @@ func (l Logging) Printf(data string) {
 	log.Printf("ID:%s USER_ID:%s DATA:%s", l.ID, l.UserID, data)
 }
 func (l Logging) Fatalf(data string) {
-	log.Fatalln("Error")
+	log.Fatalf(data)
 }
 
 func (l Logging) Println(data string) {
@@ -23,7 +23,7 @@ func (l Logging) Println(data string) {
 }
 
 func (l Logging) Fatalln(data string) {
-	log.Fatalln("Error")
+	log.Fatalln(data)
 }
 
 //GetRequestLogData gets request log data

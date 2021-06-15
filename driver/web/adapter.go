@@ -98,7 +98,7 @@ func (we Adapter) wrapFunc(handler loggingFunc) http.HandlerFunc {
 
 		//generate logging ID
 		//loggingID, _ := utils.NewUUID()
-		loggingID := " "
+		loggingID := "1234"
 		logging := utils.Logging{ID: loggingID}
 
 		//log for first time

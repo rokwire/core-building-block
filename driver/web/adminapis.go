@@ -18,7 +18,7 @@ func (h AdminApisHandler) GetTest(logging utils.Logging, w http.ResponseWriter, 
 }
 
 //GetTestModel gives a test model instance
-func (h AdminApisHandler) GetTestModel(w http.ResponseWriter, r *http.Request) {
+func (h AdminApisHandler) GetTestModel(ogging utils.Logging, w http.ResponseWriter, r *http.Request) {
 	res := h.app.Administration.AdmGetTestModel()
 	w.Write([]byte(res))
 }
