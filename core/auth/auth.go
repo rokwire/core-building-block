@@ -35,7 +35,11 @@ func NewAuth(storage Storage) *Auth {
 	oidcAuth := newOidcAuth()
 	samlAuth := newSamlAuth()
 	firebaseAuth := newFirebaseAuth()
-	return &Auth{storage: storage, emailAuth: emailAuth, phoneAuth: phoneAuth, oidcAuth: oidcAuth, samlAuthImpl: samlAuth, firebaseAuth: firebaseAuth}
+
+	return &Auth{storage: storage,
+		emailAuth: emailAuth, phoneAuth: phoneAuth,
+		oidcAuth: oidcAuth, samlAuthImpl: samlAuth,
+		firebaseAuth: firebaseAuth}
 }
 
 func (a Auth) check(creds string, authType string) (*Claims, error) {
@@ -55,15 +59,18 @@ func (a Auth) check(creds string, authType string) (*Claims, error) {
 	}
 }
 
-func (a Auth) createAccount(claims *Claims) {
+//CreateAccount creates a new user account
+func (a Auth) CreateAccount(claims *Claims) {
 	//TODO: Implement
 }
 
-func (a Auth) updateAccount(claims *Claims) {
+//UpdateAccount updates a user's account information
+func (a Auth) UpdateAccount(claims *Claims) {
 	//TODO: Implement
 }
 
-func (a Auth) deleteAccount(claims *Claims) {
+//DeleteAccount deletes a user account
+func (a Auth) DeleteAccount(claims *Claims) {
 	//TODO: Implement
 }
 
