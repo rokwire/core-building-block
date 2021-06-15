@@ -12,7 +12,14 @@ func (a *phoneAuthImpl) check(creds string) (*Claims, error) {
 	return nil, errors.New("Unimplemented")
 }
 
-//newPhoneAuth creates a new phone auth instance
-func newPhoneAuth() *phoneAuthImpl {
-	return &phoneAuthImpl{}
+//initPhoneAuth initializes and registers a new phone auth instance
+func initPhoneAuth(auth *Auth) (*phoneAuthImpl, error) {
+	phone := &phoneAuthImpl{auth: auth}
+
+	err := auth.registerAuthType("phone", phone)
+	if err != nil {
+		return nil, err
+	}
+
+	return phone, nil
 }

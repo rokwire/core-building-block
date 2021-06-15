@@ -12,7 +12,14 @@ func (a *samlAuthImpl) check(creds string) (*Claims, error) {
 	return nil, errors.New("Unimplemented")
 }
 
-//newSamlAuth creates a new SAML auth instance
-func newSamlAuth() *samlAuthImpl {
-	return &samlAuthImpl{}
+//initSamlAuth initializes and registers a new SAML auth instance
+func initSamlAuth(auth *Auth) (*samlAuthImpl, error) {
+	saml := &samlAuthImpl{auth: auth}
+
+	err := auth.registerAuthType("saml", saml)
+	if err != nil {
+		return nil, err
+	}
+
+	return saml, nil
 }

@@ -14,7 +14,14 @@ func (a *emailAuthImpl) check(creds string) (*Claims, error) {
 	return nil, errors.New("Unimplemented")
 }
 
-//newEmailAuth creates a new email auth instance
-func newEmailAuth() *emailAuthImpl {
-	return &emailAuthImpl{}
+//initEmailAuth initializes and registers a new email auth instance
+func initEmailAuth(auth *Auth) (*emailAuthImpl, error) {
+	email := &emailAuthImpl{auth: auth}
+
+	err := auth.registerAuthType("email", email)
+	if err != nil {
+		return nil, err
+	}
+
+	return email, nil
 }

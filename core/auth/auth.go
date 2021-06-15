@@ -1,6 +1,9 @@
 package auth
 
-import "fmt"
+import (
+	"core-building-block/core/model"
+	"fmt"
+)
 
 type Claims struct {
 	ID     string
@@ -12,65 +15,78 @@ type Claims struct {
 	Exp    float64
 }
 
-// Interface for authentication mechanisms
+//Interface for authentication mechanisms
 type authType interface {
-	// Check validity of provided credentials
+	//Check validity of provided credentials
 	check(creds string) (*Claims, error)
 }
 
 type Auth struct {
 	storage Storage
 
-	emailAuth    *emailAuthImpl
-	phoneAuth    *phoneAuthImpl
-	oidcAuth     *oidcAuthImpl
-	samlAuthImpl *samlAuthImpl
-	firebaseAuth *firebaseAuthImpl
+	authTypes map[string]authType
 }
 
 //NewAuth creates a new auth instance
 func NewAuth(storage Storage) *Auth {
-	emailAuth := newEmailAuth()
-	phoneAuth := newPhoneAuth()
-	oidcAuth := newOidcAuth()
-	samlAuth := newSamlAuth()
-	firebaseAuth := newFirebaseAuth()
+	auth := &Auth{storage: storage}
 
-	return &Auth{storage: storage,
-		emailAuth: emailAuth, phoneAuth: phoneAuth,
-		oidcAuth: oidcAuth, samlAuthImpl: samlAuth,
-		firebaseAuth: firebaseAuth}
+	//Initialize auth types
+	initEmailAuth(auth)
+	initPhoneAuth(auth)
+	initOidcAuth(auth)
+	initSamlAuth(auth)
+	initFirebaseAuth(auth)
+
+	return auth
 }
 
-func (a Auth) check(creds string, authType string) (*Claims, error) {
-	switch authType {
-	case "email":
-		return a.emailAuth.check(creds)
-	case "phone":
-		return a.phoneAuth.check(creds)
-	case "oidc":
-		return a.oidcAuth.check(creds)
-	case "saml":
-		return a.samlAuthImpl.check(creds)
-	case "firebase":
-		return a.firebaseAuth.check(creds)
-	default:
-		return nil, fmt.Errorf("invalid authentication type: %s", authType)
+func (a *Auth) registerAuthType(name string, auth authType) error {
+	if _, ok := a.authTypes[name]; ok {
+		return fmt.Errorf("the requested auth type name has already been registered: %s", name)
 	}
+
+	a.authTypes[name] = auth
+
+	return nil
 }
 
-//CreateAccount creates a new user account
-func (a Auth) CreateAccount(claims *Claims) {
+func (a Auth) getAuthType(name string) (authType, error) {
+	if auth, ok := a.authTypes[name]; ok {
+		return auth, nil
+	}
+
+	return nil, fmt.Errorf("invalid auth type: %s", name)
+}
+
+func (a Auth) login(authName string, creds string) (*model.User, error) {
+	auth, err := a.getAuthType(authName)
+	if err != nil {
+		return nil, err
+	}
+
+	claims, err := auth.check(creds)
+	if err != nil {
+		return nil, err
+	}
+
+	//TODO: Implement account management and return user using claims
+
+	return nil, nil
+}
+
+//createAccount creates a new user account
+func (a Auth) createAccount(claims *Claims) {
 	//TODO: Implement
 }
 
-//UpdateAccount updates a user's account information
-func (a Auth) UpdateAccount(claims *Claims) {
+//updateAccount updates a user's account information
+func (a Auth) updateAccount(claims *Claims) {
 	//TODO: Implement
 }
 
-//DeleteAccount deletes a user account
-func (a Auth) DeleteAccount(claims *Claims) {
+//deleteAccount deletes a user account
+func (a Auth) deleteAccount(claims *Claims) {
 	//TODO: Implement
 }
 

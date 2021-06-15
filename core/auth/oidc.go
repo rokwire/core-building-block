@@ -12,7 +12,14 @@ func (a *oidcAuthImpl) check(creds string) (*Claims, error) {
 	return nil, errors.New("Unimplemented")
 }
 
-//newOidcAuth creates a new OIDC auth instance
-func newOidcAuth() *oidcAuthImpl {
-	return &oidcAuthImpl{}
+//initOidcAuth initializes and registers a new OIDC auth instance
+func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
+	oidc := &oidcAuthImpl{auth: auth}
+
+	err := auth.registerAuthType("oidc", oidc)
+	if err != nil {
+		return nil, err
+	}
+
+	return oidc, nil
 }

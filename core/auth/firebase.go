@@ -12,7 +12,14 @@ func (a *firebaseAuthImpl) check(creds string) (*Claims, error) {
 	return nil, errors.New("Unimplemented")
 }
 
-//newFirebaseAuth creates a new firebase auth instance
-func newFirebaseAuth() *firebaseAuthImpl {
-	return &firebaseAuthImpl{}
+//initFirebaseAuth initializes and registers a new Firebase auth instance
+func initFirebaseAuth(auth *Auth) (*firebaseAuthImpl, error) {
+	firebase := &firebaseAuthImpl{auth: auth}
+
+	err := auth.registerAuthType("firebase", firebase)
+	if err != nil {
+		return nil, err
+	}
+
+	return firebase, nil
 }
