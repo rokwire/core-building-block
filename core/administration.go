@@ -156,3 +156,8 @@ func (app *Application) admGetTestModel() string {
 		globalUser1, globalUser2, illiniUser1, illiniUser2, illiniUser3, illiniUsersRel, danceUser1, diUser)
 	return res
 }
+
+func (app *Application) getConfigs() ([]model.Configs, error) {
+	configs, _ := app.storage.GetConfigs()
+	return configs, nil
+}

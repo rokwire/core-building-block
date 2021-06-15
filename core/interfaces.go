@@ -1,6 +1,9 @@
 package core
 
-import "core-building-block/utils"
+import (
+	"core-building-block/core/model"
+	"core-building-block/utils"
+)
 
 //Services exposes APIs for the driver adapters
 type Services interface {
@@ -29,6 +32,7 @@ func (s *servicesImpl) SerGetCommonTest(logging utils.Logging) string {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
+	GetConfigs() ([]model.Configs, error)
 }
 
 type administrationImpl struct {
@@ -41,6 +45,9 @@ func (s *administrationImpl) AdmGetTest() string {
 
 func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
+}
+func (s *administrationImpl) GetConfigs() ([]model.Configs, error) {
+	return s.app.getConfigs()
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -72,6 +79,7 @@ func (s *bbsImpl) BBsGetTest() string {
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
 	SetStorageListener(storageListener StorageListener)
+	GetConfigs() ([]model.Configs, error)
 }
 
 //StorageListener listenes for change data storage events

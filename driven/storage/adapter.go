@@ -2,9 +2,12 @@ package storage
 
 import (
 	"core-building-block/core"
+	"core-building-block/core/model"
 	"log"
 	"strconv"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 //Adapter implements the Storage interface
@@ -39,4 +42,14 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeoutMS}
 	return &Adapter{db: db}
+}
+func (sa *Adapter) GetConfigs() ([]model.Configs, error) {
+	filter := bson.D{}
+	var result []model.Configs
+	err := sa.db.configs.Find(filter, &result, nil)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+
 }
