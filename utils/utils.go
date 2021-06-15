@@ -14,9 +14,16 @@ type Logging struct {
 func (l Logging) Printf(data string) {
 	log.Printf("ID:%s USER_ID:%s DATA:%s", l.ID, l.UserID, data)
 }
+func (l Logging) Fatalf(data string) {
+	log.Fatalln("Error")
+}
 
 func (l Logging) Println(data string) {
 	log.Println("ID=", l.ID, "DATA=", l.UserID)
+}
+
+func (l Logging) Fatalln(data string) {
+	log.Fatalln("Error")
 }
 
 //GetRequestLogData gets request log data
