@@ -10,8 +10,6 @@ import (
 	"github.com/casbin/casbin"
 	"github.com/gorilla/mux"
 
-	//"github.com/google/uuid"
-
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -100,8 +98,8 @@ func (we Adapter) wrapFunc(handler loggingFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		//generate logging ID
-		//loggingID, _ := uuid.NewUUID()
-		loggingID := "1234"
+		//loggingID, _ := utils.NewUUID()
+		loggingID := " "
 		logging := utils.Logging{ID: loggingID}
 
 		//log for first time
@@ -109,11 +107,11 @@ func (we Adapter) wrapFunc(handler loggingFunc) http.HandlerFunc {
 		logging.Printf(data)
 
 		//TODO get user id:
-		userID := "1001"
+		userID := " "
 		logging.UserID = userID
 
 		//log for second time
-		logging.Printf("we already have user id")
+		logging.Printf("Already have user id")
 
 		handler(logging, w, req)
 	}
