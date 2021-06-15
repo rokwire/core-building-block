@@ -28,6 +28,7 @@ func (s *servicesImpl) SerGetCommonTest(logging utils.Logging) string {
 //Administration exposes administration APIs for the driver adapters
 type Administration interface {
 	AdmGetTest() string
+	AdmGetTestModel() string
 }
 
 type administrationImpl struct {
@@ -36,6 +37,10 @@ type administrationImpl struct {
 
 func (s *administrationImpl) AdmGetTest() string {
 	return s.app.admGetTest()
+}
+
+func (s *administrationImpl) AdmGetTestModel() string {
+	return s.app.admGetTestModel()
 }
 
 //Encryption exposes APIs for the Encryption building block

@@ -50,8 +50,6 @@ func (we Adapter) Start() {
 	subRouter.HandleFunc("/doc", we.serveDoc)
 	subRouter.HandleFunc("/version", we.wrapFunc(we.servicesApisHandler.SerVersion)).Methods("GET")
 
-	//log
-
 	///services ///
 	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
 
@@ -67,6 +65,7 @@ func (we Adapter) Start() {
 	///admin ///
 	adminSubrouter := subRouter.PathPrefix("/admin").Subrouter()
 	adminSubrouter.HandleFunc("/test", we.wrapFunc(we.adminApisHandler.GetTest)).Methods("GET")
+	adminSubrouter.HandleFunc("/test-model", we.wrapFunc(we.adminApisHandler.GetTestModel)).Methods("GET")
 	///
 
 	///enc ///
