@@ -15,6 +15,10 @@ func (l Logging) Printf(data string) {
 	log.Printf("ID:%s USER_ID:%s DATA:%s", l.ID, l.UserID, data)
 }
 
+func (l Logging) Println(data string) {
+	log.Println("ID=", l.ID, "DATA=", l.UserID)
+}
+
 //GetRequestLogData gets request log data
 func GetRequestLogData(req *http.Request) string {
 	if req == nil {
