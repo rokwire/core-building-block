@@ -15,7 +15,7 @@ type Application struct {
 	Encryption     Encryption     //expose to the drivers adapters
 	BBs            BBs            //expose to the drivers adapters
 
-	Auth auth.Auth //expose to the drivers auth
+	Auth *auth.Auth //expose to the drivers auth
 
 	storage Storage
 
@@ -44,7 +44,7 @@ func (app *Application) notifyListeners(message string, data interface{}) {
 }
 
 //NewApplication creates new Application
-func NewApplication(version string, build string, storage Storage, auth auth.Auth) *Application {
+func NewApplication(version string, build string, storage Storage, auth *auth.Auth) *Application {
 	listeners := []ApplicationListener{}
 
 	application := Application{version: version, build: build, storage: storage, listeners: listeners}

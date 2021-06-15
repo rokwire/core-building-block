@@ -59,7 +59,7 @@ func (a Auth) getAuthType(name string) (authType, error) {
 	return nil, fmt.Errorf("invalid auth type: %s", name)
 }
 
-func (a Auth) login(authName string, creds string) (*model.User, error) {
+func (a Auth) Login(authName string, creds string) (*model.User, error) {
 	auth, err := a.getAuthType(authName)
 	if err != nil {
 		return nil, err
