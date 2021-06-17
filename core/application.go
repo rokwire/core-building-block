@@ -1,6 +1,7 @@
 package core
 
 import (
+	"core-building-block/core/auth"
 	"log"
 )
 
@@ -10,9 +11,11 @@ type Application struct {
 	build   string
 
 	Services       Services       //expose to the drivers adapters
-	Administration Administration //expose to the drivrs adapters
-	Encryption     Encryption     //expose to the drivrs adapters
-	BBs            BBs            //expose to the drivrs adapters
+	Administration Administration //expose to the drivers adapters
+	Encryption     Encryption     //expose to the drivers adapters
+	BBs            BBs            //expose to the drivers adapters
+
+	Auth *auth.Auth //expose to the drivers auth
 
 	storage Storage
 
@@ -41,7 +44,7 @@ func (app *Application) notifyListeners(message string, data interface{}) {
 }
 
 //NewApplication creates new Application
-func NewApplication(version string, build string, storage Storage) *Application {
+func NewApplication(version string, build string, storage Storage, auth *auth.Auth) *Application {
 	listeners := []ApplicationListener{}
 
 	application := Application{version: version, build: build, storage: storage, listeners: listeners}
@@ -51,6 +54,8 @@ func NewApplication(version string, build string, storage Storage) *Application 
 	application.Administration = &administrationImpl{app: &application}
 	application.Encryption = &encryptionImpl{app: &application}
 	application.BBs = &bbsImpl{app: &application}
+
+	application.Auth = auth
 
 	return &application
 }
