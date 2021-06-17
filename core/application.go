@@ -1,6 +1,7 @@
 package core
 
 import (
+	"core-building-block/core/model"
 	"log"
 )
 
@@ -53,4 +54,15 @@ func NewApplication(version string, build string, storage Storage) *Application 
 	application.BBs = &bbsImpl{app: &application}
 
 	return &application
+}
+
+//CreateCofigs creates configs
+func (app *Application) CreateConfigs(name string, setting string) (*model.OrganizationConfig, error) {
+
+	configs, err := app.storage.CreateConfigs(name, setting)
+	if err != nil {
+		return nil, err
+	}
+
+	return configs, nil
 }

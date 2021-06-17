@@ -91,3 +91,16 @@ func newBBsAuth(app *core.Application) *BBsAuth {
 	auth := BBsAuth{app: app}
 	return &auth
 }
+
+func CreateConfigs(name string, setting string) error {
+	return auth.adminAuth.createConfigs(name, setting)
+}
+
+func (auth *AdminAuth) createConfigs(name string, setting string) error {
+	_, err := auth.app.CreateConfigs(name, setting)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
