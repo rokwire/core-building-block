@@ -67,6 +67,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/test", we.wrapFunc(we.adminApisHandler.GetTest)).Methods("GET")
 	adminSubrouter.HandleFunc("/test-model", we.wrapFunc(we.adminApisHandler.GetTestModel)).Methods("GET")
 	adminSubrouter.HandleFunc("/configs", we.wrapFunc(we.adminApisHandler.GetConfigs)).Methods("GET")
+	adminSubrouter.HandleFunc("/configs-create", we.wrapFunc(we.adminApisHandler.CreateConfigs)).Methods("POST")
 	///
 
 	///enc ///
