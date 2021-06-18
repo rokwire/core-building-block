@@ -51,7 +51,7 @@ func (s *administrationImpl) GetConfigs() ([]model.Configs, error) {
 	return s.app.getConfigs()
 }
 func (s *administrationImpl) CreateConfigs(setting string) (*model.GlobalConfig, error) {
-	return nil, nil
+	return s.app.createConfigs(setting)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -84,6 +84,7 @@ func (s *bbsImpl) BBsGetTest() string {
 type Storage interface {
 	SetStorageListener(storageListener StorageListener)
 	GetConfigs() ([]model.Configs, error)
+	CreateConfigs(setting string) (*model.GlobalConfig, error)
 }
 
 //StorageListener listenes for change data storage events

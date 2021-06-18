@@ -161,3 +161,10 @@ func (app *Application) getConfigs() ([]model.Configs, error) {
 	configs, _ := app.storage.GetConfigs()
 	return configs, nil
 }
+func (app *Application) createConfigs(setting string) (*model.GlobalConfig, error) {
+	create, err := app.storage.CreateConfigs(setting)
+	if err != nil {
+		return nil, err
+	}
+	return create, nil
+}
