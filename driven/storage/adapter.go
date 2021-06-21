@@ -43,10 +43,10 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeoutMS}
 	return &Adapter{db: db}
 }
-func (sa *Adapter) GetConfigs() ([]model.Configs, error) {
+func (sa *Adapter) GetGlobalConfigs() ([]model.GlobalConfig, error) {
 	filter := bson.D{}
-	var result []model.Configs
-	err := sa.db.configs.Find(filter, &result, nil)
+	var result []model.GlobalConfig
+	err := sa.db.globalConfigs.Find(filter, &result, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -157,7 +157,7 @@ func (app *Application) admGetTestModel() string {
 	return res
 }
 
-func (app *Application) getConfigs() ([]model.Configs, error) {
-	configs, _ := app.storage.GetConfigs()
+func (app *Application) getGlobalConfigs() ([]model.GlobalConfig, error) {
+	configs, _ := app.storage.GetGlobalConfigs()
 	return configs, nil
 }

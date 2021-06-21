@@ -29,8 +29,8 @@ func (h AdminApisHandler) GetTestModel(logging utils.Logging, w http.ResponseWri
 func NewAdminApisHandler(app *core.Application) AdminApisHandler {
 	return AdminApisHandler{app: app}
 }
-func (h AdminApisHandler) GetConfigs(logging utils.Logging, w http.ResponseWriter, r *http.Request) {
-	configs, err := h.app.Administration.GetConfigs()
+func (h AdminApisHandler) GetGlobalConfigs(logging utils.Logging, w http.ResponseWriter, r *http.Request) {
+	configs, err := h.app.Administration.GetGlobalConfigs()
 	if err != nil {
 		log.Printf("Error config - %s\n", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
