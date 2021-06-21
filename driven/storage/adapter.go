@@ -52,7 +52,7 @@ func (sa *Adapter) GetConfigs() ([]model.Configs, error) {
 	}
 	return result, nil
 }
-func (sa *Adapter) CreateConfigs(setting string) (*model.GlobalConfig, error) {
+func (sa *Adapter) CreateGlobalConfigs(setting string) (*model.GlobalConfig, error) {
 	filter := bson.D{}
 	var createConf *model.GlobalConfig
 	err := sa.db.configs.Find(filter, &createConf, nil)

@@ -47,8 +47,8 @@ func (h AdminApisHandler) GetConfigs(logging utils.Logging, w http.ResponseWrite
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
-func (h AdminApisHandler) CreateConfigs(logging utils.Logging, w http.ResponseWriter, r *http.Request) {
-	createConf, err := h.app.Administration.CreateConfigs(r.URL.Host)
+func (h AdminApisHandler) CreateGlobalConfigs(logging utils.Logging, w http.ResponseWriter, r *http.Request) {
+	createConf, err := h.app.Administration.CreateGlobalConfigs(r.URL.Host)
 	if err != nil {
 		log.Printf("Error config - %s\n", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
