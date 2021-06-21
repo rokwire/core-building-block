@@ -6,6 +6,8 @@ import (
 	"log"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -17,6 +19,8 @@ type database struct {
 
 	db       *mongo.Database
 	dbClient *mongo.Client
+
+	authInfo *collectionWrapper
 
 	listener core.StorageListener
 }
@@ -50,7 +54,24 @@ func (m *database) start() error {
 	m.dbClient = client
 
 	//TODO
+	authInfo := &collectionWrapper{database: m, coll: db.Collection("auth_info")}
+	err = m.applyAuthInfoChecks(authInfo)
+	if err != nil {
+		return err
+	}
 
+	m.authInfo = authInfo
+
+	return nil
+}
+
+func (m *database) applyAuthInfoChecks(authInfo *collectionWrapper) error {
+	// Add client_id index
+	err := authInfo.AddIndex(bson.D{primitive.E{Key: "clientID", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+	log.Println("authInfo check passed")
 	return nil
 }
 

@@ -15,6 +15,25 @@ type Claims struct {
 	Exp    float64
 }
 
+type AuthInfo struct {
+	ClientID           string            `json:"client_id" bson:"client_id"`
+	Domain             string            `json:"domain" bson:"domain"`
+	Issuer             string            `json:"issuer" bson:"issuer"`
+	OIDCKeyURL         string            `json:"oidc_key_url" bson:"oidc_key_url"`
+	OIDCHost           string            `json:"oidc_host" bson:"oidc_host"`
+	OIDCTokenURL       string            `json:"oidc_token_url" bson:"oidc_token_url"`
+	OIDCAuthURL        string            `json:"oidc_auth_url" bson:"oidc_auth_url"`
+	OIDCUserURL        string            `json:"oidc_user_url" bson:"oidc_user_url"`
+	OIDCScopes         string            `json:"oidc_scopes" bson:"oidc_scopes"`
+	OIDCUsePKCE        bool              `json:"oidc_use_pkce" bson:"oidc_use_pkce"`
+	OIDCClientID       string            `json:"oidc_client_id" bson:"oidc_client_id"`
+	OIDCClientSecret   string            `json:"oidc_client_secret" bson:"oidc_client_secret"`
+	Type               string            `json:"type" bson:"type"`
+	Claims             map[string]string `json:"claims" bson:"claims"`
+	RequiredPopulation string            `json:"required_population" bson:"required_population"`
+	Populations        map[string]string `json:"populations" bson:"populations"`
+}
+
 //Interface for authentication mechanisms
 type authType interface {
 	//Check validity of provided credentials
@@ -91,5 +110,5 @@ func (a Auth) deleteAccount(claims *Claims) {
 }
 
 type Storage interface {
-	ReadTODO() error
+	FindDomainAuthInfo(domain string) (*AuthInfo, error)
 }

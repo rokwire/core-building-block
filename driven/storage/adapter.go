@@ -2,9 +2,14 @@ package storage
 
 import (
 	"core-building-block/core"
+	"core-building-block/core/auth"
+	"errors"
 	"log"
 	"strconv"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 //Adapter implements the Storage interface
@@ -26,6 +31,22 @@ func (sa *Adapter) SetStorageListener(storageListener core.StorageListener) {
 //ReadTODO TODO TODO
 func (sa *Adapter) ReadTODO() error {
 	return nil
+}
+
+//FindDomainAuthInfo finds the auth document from DB by domain
+func (sa *Adapter) FindDomainAuthInfo(domain string) (*auth.AuthInfo, error) {
+	filter := bson.D{primitive.E{Key: "domain", Value: domain}}
+	var result []*auth.AuthInfo
+	err := sa.db.authInfo.Find(filter, &result, nil)
+	if err != nil {
+		return nil, err
+	}
+	if result == nil || len(result) == 0 {
+		//not found
+
+		return nil, errors.New("no auth info found for the given domain:" + domain)
+	}
+	return result[0], nil
 }
 
 //NewStorageAdapter creates a new storage adapter instance
