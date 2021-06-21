@@ -24,8 +24,3 @@ type OrganizationConfig struct {
 func (cc OrganizationConfig) String() string {
 	return fmt.Sprintf("[Name:%s\tSetting:%s\tDomains:%s\tCustom:%s]", cc.Name, cc.Setting, cc.Domains, cc.Custom)
 }
-
-type Configs struct {
-	Name             string `json:"name" bson:"name"`
-	NewsUpdatePeriod int    `json:"news_update_period" bson:"news_update_period"` //in minutes
-}
