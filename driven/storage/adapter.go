@@ -51,5 +51,14 @@ func (sa *Adapter) GetGlobalConfigs() ([]model.GlobalConfig, error) {
 		return nil, err
 	}
 	return result, nil
+}
 
+//SaveGlobalConfig saves the global configuration to the storage
+func (sa *Adapter) SaveGlobalConfig(*model.GlobalConfig) error {
+	filter := bson.D{}
+	err := sa.db.globalConfigs.ReplaceOne(filter, nil, nil)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -161,3 +161,10 @@ func (app *Application) getGlobalConfigs() ([]model.GlobalConfig, error) {
 	configs, _ := app.storage.GetGlobalConfigs()
 	return configs, nil
 }
+func (app *Application) updateGlobalConfig(config *model.GlobalConfig) error {
+	err := app.storage.SaveGlobalConfig(config)
+	if err != nil {
+		return err
+	}
+	return nil
+}
