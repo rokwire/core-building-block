@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Expose create global config admin API [#34] (https://github.com/rokwire/core-building-block/issues/34)
-- Expose get global config admin API [#35] (https://github.com/rokwire/core-building-block/issues/35)
+
 ### Added
 - Expose version API. [#13] (https://github.com/rokwire/core-building-block/issues/13)
 - Set up project skeleton. [#1](https://github.com/rokwire/core-building-block/issues/1)

@@ -29,26 +29,9 @@ func (h AdminApisHandler) GetTestModel(logging utils.Logging, w http.ResponseWri
 func NewAdminApisHandler(app *core.Application) AdminApisHandler {
 	return AdminApisHandler{app: app}
 }
-func (h AdminApisHandler) GetConfigs(logging utils.Logging, w http.ResponseWriter, r *http.Request) {
-	configs, err := h.app.Administration.GetConfigs()
-	if err != nil {
-		log.Printf("Error config - %s\n", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
 
-	data, err := json.Marshal(configs)
-	if err != nil {
-		log.Println(data)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
-}
-func (h AdminApisHandler) CreateGlobalConfigs(logging utils.Logging, w http.ResponseWriter, r *http.Request) {
-	createConf, err := h.app.Administration.CreateGlobalConfigs(r.URL.Host)
+func (h AdminApisHandler) CreateGlobalConfig(logging utils.Logging, w http.ResponseWriter, r *http.Request) {
+	createConf, err := h.app.Administration.CreateGlobalConfig(r.URL.Host)
 	if err != nil {
 		log.Printf("Error config - %s\n", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

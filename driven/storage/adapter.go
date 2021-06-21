@@ -6,8 +6,6 @@ import (
 	"log"
 	"strconv"
 	"time"
-
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 //Adapter implements the Storage interface
@@ -43,21 +41,14 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeoutMS}
 	return &Adapter{db: db}
 }
-func (sa *Adapter) GetConfigs() ([]model.Configs, error) {
-	filter := bson.D{}
-	var result []model.Configs
-	err := sa.db.configs.Find(filter, &result, nil)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-func (sa *Adapter) CreateGlobalConfigs(setting string) (*model.GlobalConfig, error) {
-	filter := bson.D{}
+
+//CreateGlobalConfig creates global config
+func (sa *Adapter) CreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
+
 	var createConf *model.GlobalConfig
-	err := sa.db.configs.Find(filter, &createConf, nil)
+	err := sa.db.configs.AddIndex(createConf, true)
 	if err != nil {
-		return nil, err
+		return nil, nil
 	}
 
 	return createConf, nil

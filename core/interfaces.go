@@ -32,8 +32,7 @@ func (s *servicesImpl) SerGetCommonTest(logging utils.Logging) string {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	GetConfigs() ([]model.Configs, error)
-	CreateGlobalConfigs(setting string) (*model.GlobalConfig, error)
+	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 }
 
 type administrationImpl struct {
@@ -47,11 +46,9 @@ func (s *administrationImpl) AdmGetTest() string {
 func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
-func (s *administrationImpl) GetConfigs() ([]model.Configs, error) {
-	return s.app.getConfigs()
-}
-func (s *administrationImpl) CreateGlobalConfigs(setting string) (*model.GlobalConfig, error) {
-	return s.app.createGlobalConfigs(setting)
+
+func (s *administrationImpl) CreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
+	return s.app.createGlobalConfig(setting)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -83,8 +80,7 @@ func (s *bbsImpl) BBsGetTest() string {
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
 	SetStorageListener(storageListener StorageListener)
-	GetConfigs() ([]model.Configs, error)
-	CreateGlobalConfigs(setting string) (*model.GlobalConfig, error)
+	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 }
 
 //StorageListener listenes for change data storage events

@@ -157,12 +157,8 @@ func (app *Application) admGetTestModel() string {
 	return res
 }
 
-func (app *Application) getConfigs() ([]model.Configs, error) {
-	configs, _ := app.storage.GetConfigs()
-	return configs, nil
-}
-func (app *Application) createGlobalConfigs(setting string) (*model.GlobalConfig, error) {
-	create, err := app.storage.CreateGlobalConfigs(setting)
+func (app *Application) createGlobalConfig(setting string) (*model.GlobalConfig, error) {
+	create, err := app.storage.CreateGlobalConfig(setting)
 	if err != nil {
 		return nil, err
 	}
