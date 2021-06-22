@@ -2,7 +2,9 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"errors"
 	"fmt"
+	"log"
 )
 
 type Claims struct {
@@ -37,7 +39,7 @@ type AuthInfo struct {
 //Interface for authentication mechanisms
 type authType interface {
 	//Check validity of provided credentials
-	check(creds string) (*Claims, error)
+	login(creds string, params string) (map[string]interface{}, error)
 }
 
 type Auth struct {
@@ -78,20 +80,29 @@ func (a Auth) getAuthType(name string) (authType, error) {
 	return nil, fmt.Errorf("invalid auth type: %s", name)
 }
 
-func (a Auth) Login(authName string, creds string) (*model.User, error) {
+func (a Auth) Login(authName string, creds string, params string) (*model.User, error) {
 	auth, err := a.getAuthType(authName)
 	if err != nil {
 		return nil, err
 	}
 
-	claims, err := auth.check(creds)
+	claims, err := auth.login(creds, params)
 	if err != nil {
 		return nil, err
 	}
+	log.Println(claims)
 
 	//TODO: Implement account management and return user using claims
 
 	return nil, nil
+}
+
+func (a Auth) generateAccessToken() (string, error) {
+	return "", errors.New("unimplemented")
+}
+
+func (a Auth) generateCSRFToken() (string, error) {
+	return "", errors.New("unimplemented")
 }
 
 //createAccount creates a new user account
