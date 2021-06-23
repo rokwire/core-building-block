@@ -3,6 +3,8 @@ package web
 import (
 	"core-building-block/core"
 	"net/http"
+
+	log "github.com/rokmetro/logging-library/loglib"
 )
 
 //AdminApisHandler handles the admin rest APIs implementation
@@ -11,13 +13,13 @@ type AdminApisHandler struct {
 }
 
 //GetTest TODO get test
-func (h AdminApisHandler) GetTest(w http.ResponseWriter, r *http.Request) {
+func (h AdminApisHandler) GetTest(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	res := h.app.Administration.AdmGetTest()
 	w.Write([]byte(res))
 }
 
 //GetTestModel gives a test model instance
-func (h AdminApisHandler) GetTestModel(w http.ResponseWriter, r *http.Request) {
+func (h AdminApisHandler) GetTestModel(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	res := h.app.Administration.AdmGetTestModel()
 	w.Write([]byte(res))
 }
