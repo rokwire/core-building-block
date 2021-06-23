@@ -30,6 +30,7 @@ func NewAdminApisHandler(app *core.Application) AdminApisHandler {
 	return AdminApisHandler{app: app}
 }
 
+//CreateGlobalConfig creates a global config
 func (h AdminApisHandler) CreateGlobalConfig(logging utils.Logging, w http.ResponseWriter, r *http.Request) {
 	createConf, err := h.app.Administration.CreateGlobalConfig(r.URL.Host)
 	if err != nil {
