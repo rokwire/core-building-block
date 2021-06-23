@@ -48,7 +48,7 @@ func NewApplication(version string, build string, storage Storage) *Application 
 
 	//add the drivers ports/interfaces
 	application.Services = &servicesImpl{app: &application}
-	application.Administration = &administrationImpl{app: &application}
+	//application.Administration = &administrationImpl{app: &application}
 	application.Encryption = &encryptionImpl{app: &application}
 	application.BBs = &bbsImpl{app: &application}
 

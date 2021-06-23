@@ -66,7 +66,6 @@ func (we Adapter) Start() {
 	adminSubrouter := subRouter.PathPrefix("/admin").Subrouter()
 	adminSubrouter.HandleFunc("/test", we.wrapFunc(we.adminApisHandler.GetTest)).Methods("GET")
 	adminSubrouter.HandleFunc("/test-model", we.wrapFunc(we.adminApisHandler.GetTestModel)).Methods("GET")
-	adminSubrouter.HandleFunc("/config", we.wrapFunc(we.adminApisHandler.GetGlobalConfigs)).Methods("GET")
 
 	///
 

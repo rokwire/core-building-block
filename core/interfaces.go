@@ -1,7 +1,6 @@
 package core
 
 import (
-	"core-building-block/core/model"
 	"core-building-block/utils"
 )
 
@@ -32,7 +31,6 @@ func (s *servicesImpl) SerGetCommonTest(logging utils.Logging) string {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	GetGlobalConfigs() ([]model.GlobalConfig, error)
 }
 
 type administrationImpl struct {
@@ -45,9 +43,6 @@ func (s *administrationImpl) AdmGetTest() string {
 
 func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
-}
-func (s *administrationImpl) GetGlobalConfigs() ([]model.GlobalConfig, error) {
-	return s.app.getGlobalConfigs()
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -79,7 +74,6 @@ func (s *bbsImpl) BBsGetTest() string {
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
 	SetStorageListener(storageListener StorageListener)
-	GetGlobalConfigs() ([]model.GlobalConfig, error)
 }
 
 //StorageListener listenes for change data storage events
