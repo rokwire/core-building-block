@@ -99,7 +99,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		utils.LogRequest(req)
 		var logObj = we.logger.NewLog("", "", []string{}, map[string]interface{}{})
 
-		handler(&logObj, w, req)
+		handler(logObj, w, req)
 		logObj.PrintContext()
 	}
 }
