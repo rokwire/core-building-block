@@ -41,27 +41,31 @@ type oidcToken struct {
 type oidcAuthImpl struct {
 	auth *Auth
 
-	authInfo     *syncmap.Map //cache authInfo / client id -> authInfo
+	authInfo     *syncmap.Map //cache authInfo / domain -> authInfo
 	authInfoLock *sync.RWMutex
 }
 
 type oidcCheckParams struct {
-	// ClientID string `json:"client_id"`
-	Web     bool   `json:"web"`
-	Domain  string `json:"domain"`
-	IDToken string `json:"id_token"`
+	Web    bool   `json:"web"`
+	Domain string `json:"domain"`
 }
 
 type oidcLoginParams struct {
-	// ClientID     string `json:"client_id"`
 	Web          bool   `json:"web"`
 	Domain       string `json:"domain"`
 	Code         string `json:"code"`
 	CodeVerifier string `json:"pkce_verifier"`
-	RedirectURI  string `json:"redirect_uri"` // should this be used for requests from mobile client?
+	RedirectURI  string `json:"redirect_uri"` // endpoint on core BB?
+}
+
+type oidcRefreshParams struct {
+	Web         string `json:"web"`
+	Domain      string `json:"domain"`
+	RedirectURI string `json:"redirect_uri"` // endpoint on core BB?
 }
 
 func (a *oidcAuthImpl) login(creds string, params string) (map[string]interface{}, error) {
+	// use credType argument to function instead?
 	paramsMap := make(map[string]interface{})
 	err := json.Unmarshal([]byte(params), &paramsMap)
 	if err != nil {
@@ -71,40 +75,46 @@ func (a *oidcAuthImpl) login(creds string, params string) (map[string]interface{
 	if !ok {
 		return nil, errors.New("cred_type parameter missing or invalid")
 	}
-	// check for web vs. mobile?
+
 	switch credType {
 	case "id_token":
-		return a.checkToken(creds, params)
+		var checkParams oidcCheckParams
+		err := json.Unmarshal([]byte(params), &checkParams)
+		if err != nil {
+			return nil, err
+		}
+		return a.checkToken(creds, checkParams)
 	case "code":
-		return a.newToken(creds, params)
+		var loginParams oidcLoginParams
+		err := json.Unmarshal([]byte(params), &loginParams)
+		if err != nil {
+			return nil, err
+		}
+		return a.newToken(creds, loginParams)
 	case "refresh_token":
-		return a.refreshToken(creds, params)
+		var refreshParams oidcRefreshParams
+		err := json.Unmarshal([]byte(params), &refreshParams)
+		if err != nil {
+			return nil, err
+		}
+		return a.refreshToken(creds, refreshParams)
 	default:
 		return nil, errors.New("unimplemented cred_type")
 	}
 }
 
-func (a *oidcAuthImpl) checkToken(idToken string, params string) (map[string]interface{}, error) {
-	var checkParams oidcCheckParams
-	err := json.Unmarshal([]byte(params), &checkParams)
-	if err != nil {
-		return nil, err
-	}
-
-	authInfo, err := a.auth.storage.FindDomainAuthInfo(checkParams.Domain)
-	if err != nil {
-		return nil, err
-	}
+func (a *oidcAuthImpl) checkToken(idToken string, params oidcCheckParams) (map[string]interface{}, error) {
+	authInfo := a.getAuthInfo(params.Domain)
 
 	oidcProvider := authInfo.OIDCHost
-	oidcAdminClientID := authInfo.OIDCClientID
+	oidcClientID := authInfo.OIDCClientID
 
 	// Validate the token
 	provider, err := oidc.NewProvider(context.Background(), oidcProvider)
 	if err != nil {
 		return nil, err
 	}
-	tokenVerifier := provider.Verifier(&oidc.Config{ClientID: oidcAdminClientID})
+	tokenVerifier := provider.Verifier(&oidc.Config{ClientID: oidcClientID})
 	verifiedToken, err := tokenVerifier.Verify(context.Background(), idToken)
 	if err != nil {
 		return nil, err
@@ -187,40 +197,67 @@ func (a *oidcAuthImpl) checkToken(idToken string, params string) (map[string]int
 	return rawClaims, nil
 }
 
-func (a *oidcAuthImpl) newToken(code string, params string) (map[string]interface{}, error) {
-	var loginParams oidcLoginParams
-	err := json.Unmarshal([]byte(params), &loginParams)
-	if err != nil {
-		return nil, err
-	}
+func (a *oidcAuthImpl) newToken(code string, params oidcLoginParams) (map[string]interface{}, error) {
+	authInfo := a.getAuthInfo(params.Domain)
 
-	authInfo, err := a.auth.storage.FindDomainAuthInfo(loginParams.Domain)
-	if err != nil {
-		return nil, err
+	bodyData := map[string]string{
+		"code":         code,
+		"grant_type":   "authorization_code",
+		"redirect_uri": params.RedirectURI,
+		"client_id":    authInfo.OIDCClientID,
+	}
+	if len(params.CodeVerifier) > 0 {
+		bodyData["code_verifier"] = params.CodeVerifier
 	}
 
 	// 1. Request Tokens
-	oidcToken, err := a.loadOidcTokenWithCode(code, &loginParams, authInfo)
+	oidcToken, err := a.loadOidcTokenWithParams(bodyData, authInfo)
+	if err != nil {
+		return nil, err
+	}
 	if oidcToken == nil {
 		return nil, errors.New("get auth token failed")
 	}
 
+	var claims Claims
+	checkParams := oidcCheckParams{Web: params.Web, Domain: params.Domain}
+	oidcClaims, err := a.checkToken(oidcToken.IDToken, checkParams)
+	claims.ID = oidcClaims["id"].(string)
+	claims.Name = oidcClaims["name"].(string)
+	claims.Email = oidcClaims["email"].(string)
+	claims.Phone = oidcClaims["phone"].(string)
+	claims.Groups = oidcClaims["groups"]
+	claims.Issuer = oidcClaims["iss"].(string)
+	claims.Exp = oidcClaims["exp"].(float64)
+
 	// 2. Request rokwire access token
-	accessToken, err := a.auth.generateAccessToken()
+	accessToken, err := a.auth.generateAccessToken(&claims)
 	if err != nil {
 		return nil, err
 	}
 
 	csrfToken := ""
-	if loginParams.Web {
-		csrfToken, err = a.auth.generateCSRFToken()
+	var cookie http.Cookie
+	if params.Web {
+		cookie = http.Cookie{
+			Name:   "rokmetro-access",
+			Value:  accessToken,
+			Domain: "services.rokmetro.com",
+			// Expires:  expirationTime,
+			SameSite: http.SameSiteNoneMode,
+			Secure:   true,
+			HttpOnly: true,
+		}
+		accessToken = ""
+
+		csrfToken, err = a.auth.generateCSRFToken(&claims)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	// 3. Request auth user
-	userInfo, err := a.loadOidcUser(oidcToken, authInfo.OIDCUserURL)
+	userInfo, err := a.loadOidcUserInfo(oidcToken, authInfo.OIDCUserURL)
 	if userInfo == nil {
 		return nil, errors.New("get auth user failed")
 	}
@@ -235,7 +272,7 @@ func (a *oidcAuthImpl) newToken(code string, params string) (map[string]interfac
 	// 5. Request user picture
 	var userPhoto []byte
 	if photoURL, ok := userMap["picture"].(string); ok {
-		userPhoto, err = a.getUserPhoto(oidcToken, photoURL)
+		userPhoto, err = a.loadOidcUserInfo(oidcToken, photoURL)
 		if err != nil {
 			log.Println("Error fetching user photo:", err.Error())
 		}
@@ -247,50 +284,84 @@ func (a *oidcAuthImpl) newToken(code string, params string) (map[string]interfac
 		"refresh_token":        oidcToken.RefreshToken,
 		"user_info":            userInfo,
 		"user_photo":           userPhoto,
+		"cookie":               cookie,
 	}
 
 	return loginResponse, nil
 }
 
-func (a *oidcAuthImpl) refreshToken(creds string, params string) (map[string]interface{}, error) {
-	return nil, errors.New("unimplemented")
+func (a *oidcAuthImpl) refreshToken(refreshToken string, params oidcRefreshParams) (map[string]interface{}, error) {
+	authInfo := a.getAuthInfo(params.Domain)
+
+	if len(authInfo.OIDCTokenURL) == 0 {
+		return nil, errors.New("auth info missing OIDC token URL")
+	}
+	if len(authInfo.OIDCClientID) == 0 {
+		return nil, errors.New("auth info missing OIDC client ID")
+	}
+	if !authInfo.OIDCUseRefresh {
+		return nil, errors.New("should not use refresh token")
+	}
+
+	bodyData := map[string]string{
+		"refresh_token": refreshToken,
+		"grant_type":    "refresh_token",
+		"redirect_uri":  params.RedirectURI,
+		"client_id":     authInfo.OIDCClientID,
+	}
+	oidcToken, err := a.loadOidcTokenWithParams(bodyData, authInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	userInfo, err := a.loadOidcUserInfo(oidcToken, authInfo.OIDCUserURL)
+	if userInfo == nil {
+		return nil, errors.New("get auth user failed")
+	}
+	var userMap map[string]interface{}
+	err = json.Unmarshal(userInfo, &userMap)
+	if err != nil {
+		return nil, err
+	}
+
+	var userPhoto []byte
+	if photoURL, ok := userMap["picture"].(string); ok {
+		userPhoto, err = a.loadOidcUserInfo(oidcToken, photoURL)
+		if err != nil {
+			log.Println("Error fetching user photo:", err.Error())
+		}
+	}
+
+	loginResponse := map[string]interface{}{
+		"refresh_token": oidcToken.RefreshToken,
+		"user_info":     userInfo,
+		"user_photo":    userPhoto,
+	}
+
+	return loginResponse, nil
 }
 
-func (a *oidcAuthImpl) loadOidcTokenWithCode(code string, params *oidcLoginParams, authInfo *AuthInfo) (*oidcToken, error) {
-	if authInfo == nil {
-		return nil, errors.New("authInfo must not be nil")
-	}
+func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, authInfo *AuthInfo) (*oidcToken, error) {
 	tokenUri := ""
-	bodyData := map[string]string{
-		"code":         code,
-		"grant_type":   "authorization_code",
-		"redirect_uri": params.RedirectURI,
-		"client_id":    authInfo.OIDCClientID,
-	}
-
 	if strings.Contains(authInfo.OIDCTokenURL, "{shibboleth_client_id}") {
 		tokenUri = strings.ReplaceAll(authInfo.OIDCTokenURL, "{shibboleth_client_id}", authInfo.OIDCClientID)
 		tokenUri = strings.ReplaceAll(tokenUri, "{shibboleth_client_secret}", authInfo.OIDCClientSecret)
 	} else if len(authInfo.OIDCClientSecret) > 0 {
 		tokenUri = authInfo.OIDCTokenURL
-		bodyData["client_secret"] = authInfo.OIDCClientSecret
+		params["client_secret"] = authInfo.OIDCClientSecret
 	} else {
 		tokenUri = authInfo.OIDCTokenURL
 	}
 
-	if len(params.CodeVerifier) > 0 {
-		bodyData["code_verifier"] = params.CodeVerifier
-	}
-
 	var uri url.URL
-	for k, v := range bodyData {
+	for k, v := range params {
 		uri.Query().Set(k, v)
 	}
 	headers := map[string]string{
 		"Content-Type":   "application/x-www-form-urlencoded",
 		"Content-Length": strconv.Itoa(len(uri.Query().Encode())),
 	}
-	jsonData, err := json.Marshal(bodyData)
+	jsonData, err := json.Marshal(params)
 	if err != nil {
 		return nil, err
 	}
@@ -326,19 +397,19 @@ func (a *oidcAuthImpl) loadOidcTokenWithCode(code string, params *oidcLoginParam
 	return &authToken, nil
 }
 
-func (a *oidcAuthImpl) loadOidcUser(token *oidcToken, userURL string) ([]byte, error) {
+func (a *oidcAuthImpl) loadOidcUserInfo(token *oidcToken, url string) ([]byte, error) {
 	if len(token.AccessToken) == 0 {
 		return nil, errors.New("missing access token")
 	}
 	if len(token.TokenType) == 0 {
 		return nil, errors.New("missing token type")
 	}
-	if len(userURL) == 0 {
-		return nil, errors.New("missing oidc user url")
+	if len(url) == 0 {
+		return nil, errors.New("missing oidc user info url")
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", userURL, nil)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -361,67 +432,55 @@ func (a *oidcAuthImpl) loadOidcUser(token *oidcToken, userURL string) ([]byte, e
 	return body, nil
 }
 
-func (a *oidcAuthImpl) getUserPhoto(token *oidcToken, photoURL string) ([]byte, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", photoURL, nil)
+func (a *oidcAuthImpl) loadAuthInfoDocs() error {
+	//1 load
+	authInfoDocs, err := a.auth.storage.LoadAuthInfoDocs()
 	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authorization", fmt.Sprintf("%s %s", token.TokenType, token.AccessToken))
-
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return body, nil
+	//2 set
+	a.setAuthInfo(authInfoDocs)
+
+	return nil
 }
 
-// func (a *oidcAuthImpl) loadAuthInfoDocs() error {
-// 	//1 load
-// 	authInfoDocs, err := a.auth.storage.LoadAuthInfoDocs()
-// 	if err != nil {
-// 		return err
-// 	}
+func (a *oidcAuthImpl) getAuthInfo(domain string) *AuthInfo {
+	a.authInfoLock.RLock()
+	defer a.authInfoLock.RUnlock()
 
-// 	//2 set
-// 	a.setAuthInfo(authInfoDocs)
+	var authInfo *AuthInfo //to return
 
-// 	return nil
-// }
+	item, _ := a.authInfo.Load(domain)
+	if item != nil {
+		authInfoFromCache, ok := item.(AuthInfo)
+		if !ok {
+			log.Println("getAuthInfo(): failed to cast cache item to AuthInfo")
+			return nil
+		}
+		authInfo = &authInfoFromCache
+	} else {
+		var err error
+		authInfo, err = a.auth.storage.FindDomainAuthInfo(domain)
+		if err != nil {
+			return nil
+		}
+	}
 
-// func (a *oidcAuthImpl) getAuthInfo(domain string) *AuthInfo {
-// 	a.authInfoLock.RLock()
-// 	defer a.authInfoLock.RUnlock()
+	return authInfo
+}
 
-// 	var authInfo AuthInfo //to return
+func (a *oidcAuthImpl) setAuthInfo(authInfo map[string]AuthInfo) {
+	a.authInfoLock.Lock()
+	defer a.authInfoLock.Unlock()
 
-// 	item, _ := a.authInfo.Load(domain)
-// 	if item != nil {
-// 		authInfo = item.(AuthInfo)
-// 	} else {
-// 		log.Println("getAPIKey() -> nil for domain", domain)
-// 	}
+	//first clear the old data
+	a.authInfo = &syncmap.Map{}
 
-// 	return &authInfo
-// }
-
-// func (a *oidcAuthImpl) setAuthInfo(authInfo map[string]AuthInfo) {
-// 	a.authInfoLock.Lock()
-// 	defer a.authInfoLock.Unlock()
-
-// 	//first clear the old data
-// 	a.authInfo = &syncmap.Map{}
-
-// 	for key, value := range authInfo {
-// 		a.authInfo.Store(key, value)
-// 	}
-// }
+	for key, value := range authInfo {
+		a.authInfo.Store(key, value)
+	}
+}
 
 //initOidcAuth initializes and registers a new OIDC auth instance
 func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
@@ -434,10 +493,10 @@ func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
 		return nil, err
 	}
 
-	// err = oidc.loadAuthInfoDocs()
-	// if err != nil {
-	// 	return nil, err
-	// }
+	err = oidc.loadAuthInfoDocs()
+	if err != nil {
+		return nil, err
+	}
 
 	return oidc, nil
 }

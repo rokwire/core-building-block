@@ -49,6 +49,27 @@ func (sa *Adapter) FindDomainAuthInfo(domain string) (*auth.AuthInfo, error) {
 	return result[0], nil
 }
 
+//FindDomainAuthInfo finds the auth document from DB by domain
+func (sa *Adapter) LoadAuthInfoDocs() (map[string]auth.AuthInfo, error) {
+	filter := bson.D{}
+	var result []auth.AuthInfo
+	err := sa.db.authInfo.Find(filter, &result, nil)
+	if err != nil {
+		return nil, err
+	}
+	if result == nil || len(result) == 0 {
+		return nil, errors.New("no auth info documents found")
+	}
+
+	authInfoMap := make(map[string]auth.AuthInfo)
+	for _, authInfo := range result {
+		if len(authInfo.Domain) > 0 {
+			authInfoMap[authInfo.Domain] = authInfo
+		}
+	}
+	return authInfoMap, nil
+}
+
 //NewStorageAdapter creates a new storage adapter instance
 func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string) *Adapter {
 	timeout, err := strconv.Atoi(mongoTimeout)

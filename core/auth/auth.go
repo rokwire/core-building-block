@@ -27,6 +27,7 @@ type AuthInfo struct {
 	OIDCAuthURL        string            `json:"oidc_auth_url" bson:"oidc_auth_url"`
 	OIDCUserURL        string            `json:"oidc_user_url" bson:"oidc_user_url"`
 	OIDCScopes         string            `json:"oidc_scopes" bson:"oidc_scopes"`
+	OIDCUseRefresh     bool              `json:"oidc_use_refresh" bson:"oidc_use_refresh"`
 	OIDCUsePKCE        bool              `json:"oidc_use_pkce" bson:"oidc_use_pkce"`
 	OIDCClientID       string            `json:"oidc_client_id" bson:"oidc_client_id"`
 	OIDCClientSecret   string            `json:"oidc_client_secret" bson:"oidc_client_secret"`
@@ -97,11 +98,11 @@ func (a Auth) Login(authName string, creds string, params string) (*model.User, 
 	return nil, nil
 }
 
-func (a Auth) generateAccessToken() (string, error) {
+func (a Auth) generateAccessToken(claims *Claims) (string, error) {
 	return "", errors.New("unimplemented")
 }
 
-func (a Auth) generateCSRFToken() (string, error) {
+func (a Auth) generateCSRFToken(claims *Claims) (string, error) {
 	return "", errors.New("unimplemented")
 }
 
@@ -122,4 +123,5 @@ func (a Auth) deleteAccount(claims *Claims) {
 
 type Storage interface {
 	FindDomainAuthInfo(domain string) (*AuthInfo, error)
+	LoadAuthInfoDocs() (map[string]AuthInfo, error)
 }
