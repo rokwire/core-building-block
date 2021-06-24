@@ -1,20 +1,16 @@
 package core
 
-import (
-	"core-building-block/utils"
-)
+func (app *Application) serGetVersion() string {
 
-func (app *Application) serGetVersion(logging utils.Logging) string {
-	logging.Printf("")
 	return app.version
 }
 
-func (app *Application) serGetAuthTest(logging utils.Logging) string {
-	logging.Printf("")
+func (app *Application) serGetAuthTest() string {
+
 	return "Services - Auth - test"
 }
 
-func (app *Application) serGetCommonTest(logging utils.Logging) string {
-	logging.Printf("")
+func (app *Application) serGetCommonTest() string {
+
 	return "Services - Common - test"
 }

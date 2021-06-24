@@ -2,29 +2,8 @@ package utils
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 )
-
-type Logging struct {
-	ID     string
-	UserID string
-}
-
-func (l Logging) Printf(data string) {
-	log.Printf("ID:%s USER_ID:%s DATA:%s", l.ID, l.UserID, data)
-}
-func (l Logging) Fatalf(data string) {
-	log.Fatalf(data)
-}
-
-func (l Logging) Println(data string) {
-	log.Println("ID=", l.ID, "DATA=", l.UserID)
-}
-
-func (l Logging) Fatalln(data string) {
-	log.Fatalln(data)
-}
 
 //GetRequestLogData gets request log data
 func GetRequestLogData(req *http.Request) string {

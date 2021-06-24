@@ -2,30 +2,29 @@ package core
 
 import (
 	"core-building-block/core/model"
-	"core-building-block/utils"
 )
 
 //Services exposes APIs for the driver adapters
 type Services interface {
-	SerGetVersion(logging utils.Logging) string
-	SerGetAuthTest(logging utils.Logging) string
-	SerGetCommonTest(logging utils.Logging) string
+	SerGetVersion() string
+	SerGetAuthTest() string
+	SerGetCommonTest() string
 }
 
 type servicesImpl struct {
 	app *Application
 }
 
-func (s *servicesImpl) SerGetVersion(logging utils.Logging) string {
-	return s.app.serGetVersion(logging)
+func (s *servicesImpl) SerGetVersion() string {
+	return s.app.serGetVersion()
 }
 
-func (s *servicesImpl) SerGetAuthTest(logging utils.Logging) string {
-	return s.app.serGetAuthTest(logging)
+func (s *servicesImpl) SerGetAuthTest() string {
+	return s.app.serGetAuthTest()
 }
 
-func (s *servicesImpl) SerGetCommonTest(logging utils.Logging) string {
-	return s.app.serGetCommonTest(logging)
+func (s *servicesImpl) SerGetCommonTest() string {
+	return s.app.serGetCommonTest()
 }
 
 //Administration exposes administration APIs for the driver adapters

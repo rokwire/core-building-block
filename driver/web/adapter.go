@@ -2,7 +2,6 @@ package web
 
 import (
 	"core-building-block/core"
-	"core-building-block/utils"
 	"fmt"
 	"log"
 	"net/http"
@@ -92,31 +91,6 @@ func (we Adapter) serveDocUI() http.Handler {
 	return httpSwagger.Handler(httpSwagger.URL(url))
 }
 
-type loggingFunc = func(utils.Logging, http.ResponseWriter, *http.Request)
-
-func (we Adapter) wrapFunc(handler loggingFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-
-		//generate logging ID
-		//loggingID, _ := utils.NewUUID()
-		loggingID := "1234"
-		logging := utils.Logging{ID: loggingID}
-
-		//log for first time
-		data := utils.GetRequestLogData(req)
-		logging.Printf(data)
-
-		//TODO get user id:
-		userID := " "
-		logging.UserID = userID
-
-		//log for second time
-		logging.Printf("Already have user id")
-
-		handler(logging, w, req)
-	}
-}
-
 //NewWebAdapter creates new WebAdapter instance
 func NewWebAdapter(app *core.Application, host string) Adapter {
 	auth := NewAuth(app)
@@ -133,4 +107,11 @@ func NewWebAdapter(app *core.Application, host string) Adapter {
 //AppListener implements core.ApplicationListener interface
 type AppListener struct {
 	adapter *Adapter
+}
+
+func (we Adapter) wrapFunc(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+
+		handler(w, req)
+	}
 }
