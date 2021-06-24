@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/casbin/casbin v1.9.1
 	github.com/gorilla/mux v1.8.0
-	github.com/rokmetro/logging-library v0.1.2
+	github.com/rokmetro/logging-library v0.1.3
 	github.com/swaggo/http-swagger v1.0.0
 	go.mongodb.org/mongo-driver v1.4.6
 	golang.org/x/crypto v0.0.0-20201217014255-9d1352758620 // indirect
