@@ -97,7 +97,7 @@ func (we Adapter) serveDocUI() http.Handler {
 func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		utils.LogRequest(req)
-		var logObj = we.logger.NewLog("", "", []string{}, map[string]interface{}{})
+		var logObj = we.logger.NewRequestLog(req)
 
 		handler(logObj, w, req)
 		logObj.PrintContext()
