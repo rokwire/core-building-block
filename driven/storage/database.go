@@ -62,6 +62,9 @@ func (m *database) start() error {
 
 	m.authInfo = authInfo
 
+	//watch for auth info changes
+	go m.authInfo.Watch(nil)
+
 	return nil
 }
 
@@ -83,5 +86,15 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 	ns := changeDoc["ns"]
 	if ns == nil {
 		return
+	}
+	nsMap := ns.(map[string]interface{})
+	coll := nsMap["coll"]
+
+	if "auth_info" == coll {
+		log.Println("auth_info collection changed")
+
+		if m.listener != nil {
+			m.listener.OnAuthInfoUpdated()
+		}
 	}
 }

@@ -116,3 +116,9 @@ func NewWebAdapter(app *core.Application, host string) Adapter {
 type AppListener struct {
 	adapter *Adapter
 }
+
+//OnAPIKeysUpdated notifies that the api keys are updated
+func (al *AppListener) OnAuthInfoUpdated() {
+	log.Println("AppListener -> OnAuthInfoUpdated")
+	al.adapter.app.Auth.LoadAuthInfoDocs()
+}

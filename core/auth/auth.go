@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sync"
+
+	"golang.org/x/sync/syncmap"
 )
 
 type Claims struct {
@@ -46,12 +49,16 @@ type authType interface {
 type Auth struct {
 	storage Storage
 
-	authTypes map[string]authType
+	authTypes    map[string]authType
+	authInfo     *syncmap.Map //cache authInfo / domain -> authInfo
+	authInfoLock *sync.RWMutex
 }
 
 //NewAuth creates a new auth instance
 func NewAuth(storage Storage) *Auth {
-	auth := &Auth{storage: storage}
+	authInfo := &syncmap.Map{}
+	authInfoLock := &sync.RWMutex{}
+	auth := &Auth{storage: storage, authInfo: authInfo, authInfoLock: authInfoLock}
 
 	//Initialize auth types
 	initEmailAuth(auth)
@@ -59,6 +66,11 @@ func NewAuth(storage Storage) *Auth {
 	initOidcAuth(auth)
 	initSamlAuth(auth)
 	initFirebaseAuth(auth)
+
+	err := auth.LoadAuthInfoDocs()
+	if err != nil {
+		log.Println("NewAuth() -> failed to cache auth info documents")
+	}
 
 	return auth
 }
@@ -119,6 +131,56 @@ func (a Auth) updateAccount(claims *Claims) {
 //deleteAccount deletes a user account
 func (a Auth) deleteAccount(claims *Claims) {
 	//TODO: Implement
+}
+
+func (a Auth) LoadAuthInfoDocs() error {
+	//1 load
+	authInfoDocs, err := a.storage.LoadAuthInfoDocs()
+	if err != nil {
+		return err
+	}
+
+	//2 set
+	a.setAuthInfo(authInfoDocs)
+
+	return nil
+}
+
+func (a Auth) getAuthInfo(domain string) *AuthInfo {
+	a.authInfoLock.RLock()
+	defer a.authInfoLock.RUnlock()
+
+	var authInfo *AuthInfo //to return
+
+	item, _ := a.authInfo.Load(domain)
+	if item != nil {
+		authInfoFromCache, ok := item.(AuthInfo)
+		if !ok {
+			log.Println("getAuthInfo(): failed to cast cache item to AuthInfo")
+			return nil
+		}
+		authInfo = &authInfoFromCache
+	} else {
+		var err error
+		authInfo, err = a.storage.FindDomainAuthInfo(domain)
+		if err != nil {
+			return nil
+		}
+	}
+
+	return authInfo
+}
+
+func (a Auth) setAuthInfo(authInfo map[string]AuthInfo) {
+	a.authInfoLock.Lock()
+	defer a.authInfoLock.Unlock()
+
+	//first clear the old data
+	a.authInfo = &syncmap.Map{}
+
+	for key, value := range authInfo {
+		a.authInfo.Store(key, value)
+	}
 }
 
 type Storage interface {

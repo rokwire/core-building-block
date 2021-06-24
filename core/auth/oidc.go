@@ -12,10 +12,8 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/coreos/go-oidc"
-	"golang.org/x/sync/syncmap"
 )
 
 //dynamic claimsMap
@@ -40,9 +38,6 @@ type oidcToken struct {
 // OIDC implementation of authType
 type oidcAuthImpl struct {
 	auth *Auth
-
-	authInfo     *syncmap.Map //cache authInfo / domain -> authInfo
-	authInfoLock *sync.RWMutex
 }
 
 type oidcCheckParams struct {
@@ -104,7 +99,7 @@ func (a *oidcAuthImpl) login(creds string, params string) (map[string]interface{
 }
 
 func (a *oidcAuthImpl) checkToken(idToken string, params oidcCheckParams) (map[string]interface{}, error) {
-	authInfo := a.getAuthInfo(params.Domain)
+	authInfo := a.auth.getAuthInfo(params.Domain)
 
 	oidcProvider := authInfo.OIDCHost
 	oidcClientID := authInfo.OIDCClientID
@@ -198,7 +193,7 @@ func (a *oidcAuthImpl) checkToken(idToken string, params oidcCheckParams) (map[s
 }
 
 func (a *oidcAuthImpl) newToken(code string, params oidcLoginParams) (map[string]interface{}, error) {
-	authInfo := a.getAuthInfo(params.Domain)
+	authInfo := a.auth.getAuthInfo(params.Domain)
 
 	bodyData := map[string]string{
 		"code":         code,
@@ -291,7 +286,7 @@ func (a *oidcAuthImpl) newToken(code string, params oidcLoginParams) (map[string
 }
 
 func (a *oidcAuthImpl) refreshToken(refreshToken string, params oidcRefreshParams) (map[string]interface{}, error) {
-	authInfo := a.getAuthInfo(params.Domain)
+	authInfo := a.auth.getAuthInfo(params.Domain)
 
 	if len(authInfo.OIDCTokenURL) == 0 {
 		return nil, errors.New("auth info missing OIDC token URL")
@@ -432,68 +427,11 @@ func (a *oidcAuthImpl) loadOidcUserInfo(token *oidcToken, url string) ([]byte, e
 	return body, nil
 }
 
-func (a *oidcAuthImpl) loadAuthInfoDocs() error {
-	//1 load
-	authInfoDocs, err := a.auth.storage.LoadAuthInfoDocs()
-	if err != nil {
-		return err
-	}
-
-	//2 set
-	a.setAuthInfo(authInfoDocs)
-
-	return nil
-}
-
-func (a *oidcAuthImpl) getAuthInfo(domain string) *AuthInfo {
-	a.authInfoLock.RLock()
-	defer a.authInfoLock.RUnlock()
-
-	var authInfo *AuthInfo //to return
-
-	item, _ := a.authInfo.Load(domain)
-	if item != nil {
-		authInfoFromCache, ok := item.(AuthInfo)
-		if !ok {
-			log.Println("getAuthInfo(): failed to cast cache item to AuthInfo")
-			return nil
-		}
-		authInfo = &authInfoFromCache
-	} else {
-		var err error
-		authInfo, err = a.auth.storage.FindDomainAuthInfo(domain)
-		if err != nil {
-			return nil
-		}
-	}
-
-	return authInfo
-}
-
-func (a *oidcAuthImpl) setAuthInfo(authInfo map[string]AuthInfo) {
-	a.authInfoLock.Lock()
-	defer a.authInfoLock.Unlock()
-
-	//first clear the old data
-	a.authInfo = &syncmap.Map{}
-
-	for key, value := range authInfo {
-		a.authInfo.Store(key, value)
-	}
-}
-
 //initOidcAuth initializes and registers a new OIDC auth instance
 func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
-	authInfo := &syncmap.Map{}
-	authInfoLock := &sync.RWMutex{}
-	oidc := &oidcAuthImpl{auth: auth, authInfo: authInfo, authInfoLock: authInfoLock}
+	oidc := &oidcAuthImpl{auth: auth}
 
 	err := auth.registerAuthType("oidc", oidc)
-	if err != nil {
-		return nil, err
-	}
-
-	err = oidc.loadAuthInfoDocs()
 	if err != nil {
 		return nil, err
 	}

@@ -38,8 +38,11 @@ func (app *Application) AddListener(listener ApplicationListener) {
 
 func (app *Application) notifyListeners(message string, data interface{}) {
 	go func() {
-		//TODO
-
+		for _, listener := range app.listeners {
+			if message == "onAuthInfoUpdated" {
+				listener.OnAuthInfoUpdated()
+			}
+		}
 	}()
 }
 
