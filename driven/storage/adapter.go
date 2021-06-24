@@ -2,14 +2,16 @@ package storage
 
 import (
 	"core-building-block/core"
-	"log"
 	"strconv"
 	"time"
+
+	log "github.com/rokmetro/logging-library/loglib"
 )
 
 //Adapter implements the Storage interface
 type Adapter struct {
-	db *database
+	db     *database
+	logger *log.StandardLogger
 }
 
 //Start starts the storage
@@ -29,14 +31,14 @@ func (sa *Adapter) ReadTODO() error {
 }
 
 //NewStorageAdapter creates a new storage adapter instance
-func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string) *Adapter {
+func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *log.StandardLogger) *Adapter {
 	timeout, err := strconv.Atoi(mongoTimeout)
 	if err != nil {
-		log.Println("Set default timeout - 500")
+		logger.Error("Set default timeout - 500")
 		timeout = 500
 	}
 	timeoutMS := time.Millisecond * time.Duration(timeout)
 
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeoutMS}
-	return &Adapter{db: db}
+	return &Adapter{db: db, logger: logger}
 }
