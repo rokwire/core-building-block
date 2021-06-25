@@ -164,3 +164,10 @@ func (app *Application) admCreateGlobalConfig(setting string) (*model.GlobalConf
 	}
 	return create, nil
 }
+func (app *Application) admGetGlobalConfig() ([]model.GlobalConfig, error) {
+	getConfig, err := app.storage.GetGlobalConfig()
+	if err != nil {
+		return nil, err
+	}
+	return getConfig, nil
+}
