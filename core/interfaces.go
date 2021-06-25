@@ -31,7 +31,7 @@ func (s *servicesImpl) SerGetCommonTest() string {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
+	AdmCreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 }
 
 type administrationImpl struct {
@@ -46,8 +46,8 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
-func (s *administrationImpl) CreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
-	return s.app.createGlobalConfig(setting)
+func (s *administrationImpl) AdmCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
+	return s.app.admCreateGlobalConfig(setting)
 }
 
 //Encryption exposes APIs for the Encryption building block
