@@ -44,12 +44,10 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 
 //CreateGlobalConfig creates global config
 func (sa *Adapter) CreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
-
-	var createConf *model.GlobalConfig
-	err, _ := sa.db.globalConfig.InsertOne(createConf)
+	globalConfig := model.GlobalConfig{Setting: setting}
+	_, err := sa.db.globalConfig.InsertOne(globalConfig)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
-
-	return createConf, nil
+	return &globalConfig, nil
 }
