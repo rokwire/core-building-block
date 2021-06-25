@@ -2,29 +2,31 @@ package core
 
 import (
 	"core-building-block/core/model"
+
+	log "github.com/rokmetro/logging-library/loglib"
 )
 
 //Services exposes APIs for the driver adapters
 type Services interface {
-	SerGetVersion() string
-	SerGetAuthTest() string
-	SerGetCommonTest() string
+	SerGetVersion(l *log.Log) string
+	SerGetAuthTest(l *log.Log) string
+	SerGetCommonTest(l *log.Log) string
 }
 
 type servicesImpl struct {
 	app *Application
 }
 
-func (s *servicesImpl) SerGetVersion() string {
-	return s.app.serGetVersion()
+func (s *servicesImpl) SerGetVersion(l *log.Log) string {
+	return s.app.serGetVersion(l)
 }
 
-func (s *servicesImpl) SerGetAuthTest() string {
-	return s.app.serGetAuthTest()
+func (s *servicesImpl) SerGetAuthTest(l *log.Log) string {
+	return s.app.serGetAuthTest(l)
 }
 
-func (s *servicesImpl) SerGetCommonTest() string {
-	return s.app.serGetCommonTest()
+func (s *servicesImpl) SerGetCommonTest(l *log.Log) string {
+	return s.app.serGetCommonTest(l)
 }
 
 //Administration exposes administration APIs for the driver adapters

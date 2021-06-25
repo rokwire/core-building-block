@@ -1,13 +1,17 @@
 package core
 
-func (app *Application) serGetVersion() string {
+import (
+	log "github.com/rokmetro/logging-library/loglib"
+)
+
+func (app *Application) serGetVersion(l *log.Log) string {
 	return app.version
 }
 
-func (app *Application) serGetAuthTest() string {
+func (app *Application) serGetAuthTest(l *log.Log) string {
 	return "Services - Auth - test"
 }
 
-func (app *Application) serGetCommonTest() string {
+func (app *Application) serGetCommonTest(l *log.Log) string {
 	return "Services - Common - test"
 }
