@@ -15,6 +15,7 @@ type samlCheckParams struct {
 }
 
 type samlLoginParams struct {
+	Initial bool   `json:"initial"`
 	Web     bool   `json:"web"`
 	xmlBlob string `json:"xml_blob"`
 }
@@ -40,10 +41,14 @@ func (a *samlAuthImpl) login(creds string, params string) (map[string]interface{
 
 func (a *samlAuthImpl) newToken(creds string, params samlLoginParams) (map[string]interface{}, error) {
 	//TODO: Implement
-	var samlResponse samlAssertion
-	err := xml.Unmarshal([]byte(params.xmlBlob), &samlResponse)
-	if err != nil {
-		return nil, err
+	if params.Initial {
+		// send SAML request to IDP
+	} else {
+		var samlResponse samlAssertion
+		err := xml.Unmarshal([]byte(params.xmlBlob), &samlResponse)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return nil, errors.New("Unimplemented")
