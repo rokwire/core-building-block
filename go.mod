@@ -18,6 +18,6 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	gopkg.in/ericchiang/go-oidc.v2 v2.2.1 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
+	gopkg.in/go-playground/validator.v9 v9.31.0
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 )

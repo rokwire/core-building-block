@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"gopkg.in/go-playground/validator.v9"
 )
 
 //AdminApisHandler handles the admin rest APIs implementation
@@ -26,8 +28,7 @@ func (h AdminApisHandler) GetTestModel(w http.ResponseWriter, r *http.Request) {
 }
 
 type createGlobalConfigRequest struct {
-	Setting string `json:"setting"`
-	Name    string `json:"name"`
+	Setting string `json:"setting" validate:"required"`
 }
 
 //CreateGlobalConfig creates a global config
@@ -44,6 +45,23 @@ func (h AdminApisHandler) CreateGlobalConfig(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		log.Printf("Error on unmarshal the create global config data - %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	//validate
+	validate := validator.New()
+	err = validate.Struct(requestData)
+	if err != nil {
+		log.Printf("Error on validating create global config data - %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	setting := requestData.Setting
+
+	_, err = h.app.Administration.AdmCreateGlobalConfig(setting)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
