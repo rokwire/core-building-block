@@ -1,14 +1,14 @@
 package utils
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 )
 
-//GetRequestLogData gets request log data
-func GetRequestLogData(req *http.Request) string {
+//LogRequest logs the request as hide some header fields because of security reasons
+func LogRequest(req *http.Request) {
 	if req == nil {
-		return ""
+		return
 	}
 
 	method := req.Method
@@ -25,6 +25,5 @@ func GetRequestLogData(req *http.Request) string {
 		}
 		header[key] = logValue
 	}
-	result := fmt.Sprintf("%s %s %s", method, path, header)
-	return result
+	log.Printf("%s %s %s", method, path, header)
 }
