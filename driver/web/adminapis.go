@@ -25,11 +25,6 @@ func (h AdminApisHandler) GetTestModel(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(res))
 }
 
-//NewAdminApisHandler creates new admin rest Handler instance
-func NewAdminApisHandler(app *core.Application) AdminApisHandler {
-	return AdminApisHandler{app: app}
-}
-
 type createGlobalConfigRequest struct {
 	Setting string `json:"setting"`
 	Name    string `json:"name"`
@@ -55,4 +50,9 @@ func (h AdminApisHandler) CreateGlobalConfig(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Successfully created"))
+}
+
+//NewAdminApisHandler creates new admin rest Handler instance
+func NewAdminApisHandler(app *core.Application) AdminApisHandler {
+	return AdminApisHandler{app: app}
 }
