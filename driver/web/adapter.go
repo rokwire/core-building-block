@@ -2,6 +2,7 @@ package web
 
 import (
 	"core-building-block/core"
+	"core-building-block/utils"
 	"fmt"
 	"log"
 	"net/http"
@@ -91,6 +92,14 @@ func (we Adapter) serveDocUI() http.Handler {
 	return httpSwagger.Handler(httpSwagger.URL(url))
 }
 
+func (we Adapter) wrapFunc(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		utils.LogRequest(req)
+
+		handler(w, req)
+	}
+}
+
 //NewWebAdapter creates new WebAdapter instance
 func NewWebAdapter(app *core.Application, host string) Adapter {
 	auth := NewAuth(app)
@@ -107,11 +116,4 @@ func NewWebAdapter(app *core.Application, host string) Adapter {
 //AppListener implements core.ApplicationListener interface
 type AppListener struct {
 	adapter *Adapter
-}
-
-func (we Adapter) wrapFunc(handler http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-
-		handler(w, req)
-	}
 }
