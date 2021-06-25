@@ -18,6 +18,8 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
+	globalConfig *collectionWrapper
+
 	listener core.StorageListener
 }
 
@@ -43,14 +45,27 @@ func (m *database) start() error {
 
 	//apply checks
 	db := client.Database(m.mongoDBName)
-	//TODO
+
+	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
+	err = m.applyGlobalConfigChecks(globalConfig)
+	if err != nil {
+		return err
+	}
 
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
+	m.globalConfig = globalConfig
 
 	//TODO
 
+	return nil
+}
+
+func (m *database) applyGlobalConfigChecks(configs *collectionWrapper) error {
+	log.Println("apply global config checks.....")
+
+	log.Println("global config checks passed")
 	return nil
 }
 

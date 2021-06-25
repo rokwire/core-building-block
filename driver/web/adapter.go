@@ -69,6 +69,7 @@ func (we Adapter) Start() {
 	adminSubrouter := subRouter.PathPrefix("/admin").Subrouter()
 	adminSubrouter.HandleFunc("/test", we.wrapFunc(we.adminApisHandler.GetTest)).Methods("GET")
 	adminSubrouter.HandleFunc("/test-model", we.wrapFunc(we.adminApisHandler.GetTestModel)).Methods("GET")
+	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.CreateGlobalConfig)).Methods("POST")
 	///
 
 	///enc ///
@@ -81,7 +82,9 @@ func (we Adapter) Start() {
 	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.GetTest)).Methods("GET")
 	///
 
-	we.logger.Fatal(http.ListenAndServe(":80", router))
+	//TODO
+	//we.logger.Fatal(http.ListenAndServe(":80", router))
+	http.ListenAndServe(":80", router)
 }
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {

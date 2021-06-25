@@ -2,7 +2,6 @@ package main
 
 import (
 	"core-building-block/core"
-	"core-building-block/core/auth"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
 
@@ -34,11 +33,12 @@ func main() {
 		logger.Fatal("Cannot start the mongoDB adapter - " + err.Error())
 	}
 
+	//TODO - crash
 	//auth
-	auth := auth.NewAuth(storageAdapter)
+	//auth := auth.NewAuth(storageAdapter)
 
 	//application
-	application := core.NewApplication(Version, Build, storageAdapter, auth)
+	application := core.NewApplication(Version, Build, storageAdapter, nil)
 	application.Start()
 
 	//web adapter

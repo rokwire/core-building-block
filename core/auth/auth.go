@@ -3,6 +3,7 @@ package auth
 import (
 	"core-building-block/core/model"
 	"fmt"
+	"log"
 )
 
 type Claims struct {
@@ -69,6 +70,7 @@ func (a Auth) Login(authName string, creds string) (*model.User, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Println(claims)
 
 	//TODO: Implement account management and return user using claims
 

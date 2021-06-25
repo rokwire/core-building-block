@@ -156,3 +156,11 @@ func (app *Application) admGetTestModel() string {
 		globalUser1, globalUser2, illiniUser1, illiniUser2, illiniUser3, illiniUsersRel, danceUser1, diUser)
 	return res
 }
+
+func (app *Application) admCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
+	create, err := app.storage.CreateGlobalConfig(setting)
+	if err != nil {
+		return nil, err
+	}
+	return create, nil
+}

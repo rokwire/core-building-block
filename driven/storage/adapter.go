@@ -2,6 +2,8 @@ package storage
 
 import (
 	"core-building-block/core"
+	"core-building-block/core/model"
+
 	"strconv"
 	"time"
 
@@ -28,6 +30,16 @@ func (sa *Adapter) SetStorageListener(storageListener core.StorageListener) {
 //ReadTODO TODO TODO
 func (sa *Adapter) ReadTODO() error {
 	return nil
+}
+
+//CreateGlobalConfig creates global config
+func (sa *Adapter) CreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
+	globalConfig := model.GlobalConfig{Setting: setting}
+	_, err := sa.db.globalConfig.InsertOne(globalConfig)
+	if err != nil {
+		return nil, err
+	}
+	return &globalConfig, nil
 }
 
 //NewStorageAdapter creates a new storage adapter instance
