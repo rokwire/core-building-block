@@ -37,6 +37,8 @@ func NewAuth(storage Storage) *Auth {
 	initOidcAuth(auth)
 	initSamlAuth(auth)
 	initFirebaseAuth(auth)
+	initApiKeyAuth(auth)
+	initSignatureAuth(auth)
 
 	return auth
 }
