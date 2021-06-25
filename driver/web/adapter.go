@@ -84,6 +84,7 @@ func (we Adapter) Start() {
 
 	//TODO
 	//we.logger.Fatal(http.ListenAndServe(":80", router))
+	http.ListenAndServe(":80", router)
 }
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
