@@ -6,6 +6,7 @@ import (
 	"log"
 )
 
+//Claims represents claims entity
 type Claims struct {
 	ID     string
 	Name   string
@@ -22,6 +23,7 @@ type authType interface {
 	check(creds string) (*Claims, error)
 }
 
+//Auth interface TODO
 type Auth struct {
 	storage Storage
 
@@ -60,6 +62,7 @@ func (a Auth) getAuthType(name string) (authType, error) {
 	return nil, fmt.Errorf("invalid auth type: %s", name)
 }
 
+//Login logins an user
 func (a Auth) Login(authName string, creds string) (*model.User, error) {
 	auth, err := a.getAuthType(authName)
 	if err != nil {
@@ -92,6 +95,7 @@ func (a Auth) deleteAccount(claims *Claims) {
 	//TODO: Implement
 }
 
+//Storage interface TODO
 type Storage interface {
 	ReadTODO() error
 }
