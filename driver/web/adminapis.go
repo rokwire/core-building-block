@@ -88,7 +88,9 @@ func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	data, err := json.Marshal(config)
+
+	responseData := responseGlobalConfig{Setting: config.Setting}
+	data, err := json.Marshal(responseData)
 	if err != nil {
 		//log.Println("Error on marshal the config")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
