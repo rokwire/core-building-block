@@ -112,6 +112,9 @@ type OrganizationGroup struct {
 	ID   string
 	Name string
 
+	Permissions []OrganizationPermission
+	Roles       []OrganizationRole
+
 	Organization Organization
 }
 
