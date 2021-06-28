@@ -44,14 +44,14 @@ func (sa *Adapter) CreateGlobalConfig(setting string) (*model.GlobalConfig, erro
 }
 
 //GetGlobalConfig give config
-func (sa *Adapter) GetGlobalConfig() ([]model.GlobalConfig, error) {
+func (sa *Adapter) GetGlobalConfig() (*model.GlobalConfig, error) {
 	filter := bson.D{}
 	var result []model.GlobalConfig
 	err := sa.db.globalConfig.Find(filter, &result, nil)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+	return &result[0], nil
 
 }
 
