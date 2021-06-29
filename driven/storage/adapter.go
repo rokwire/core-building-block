@@ -67,3 +67,13 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeoutMS}
 	return &Adapter{db: db, logger: logger}
 }
+
+//SaveGlobalConfig saves the global configuration to the storage
+func (sa *Adapter) SaveGlobalConfig(config *model.GlobalConfig) error {
+	filter := bson.D{}
+	err := sa.db.globalConfig.ReplaceOne(filter, config, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
