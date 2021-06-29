@@ -36,7 +36,6 @@ type Administration interface {
 	AdmCreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	AdmGetGlobalConfig() (*model.GlobalConfig, error)
 	AdmUpdateGlobalConfig(config *model.GlobalConfig) error
-
 }
 
 type administrationImpl struct {
@@ -57,12 +56,10 @@ func (s *administrationImpl) AdmCreateGlobalConfig(setting string) (*model.Globa
 func (s *administrationImpl) AdmGetGlobalConfig() (*model.GlobalConfig, error) {
 	return s.app.admGetGlobalConfig()
 }
-<<<<<<< HEAD
+
 func (s *administrationImpl) AdmUpdateGlobalConfig(config *model.GlobalConfig) error {
 	return s.app.admUpdateGlobalConfig(config)
 }
-=======
->>>>>>> develop
 
 //Encryption exposes APIs for the Encryption building block
 type Encryption interface {
@@ -95,10 +92,7 @@ type Storage interface {
 	SetStorageListener(storageListener StorageListener)
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	GetGlobalConfig() (*model.GlobalConfig, error)
-<<<<<<< HEAD
 	SaveGlobalConfig(config *model.GlobalConfig) error
-=======
->>>>>>> develop
 }
 
 //StorageListener listenes for change data storage events
