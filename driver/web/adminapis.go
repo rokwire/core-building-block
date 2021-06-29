@@ -75,3 +75,29 @@ func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 func NewAdminApisHandler(app *core.Application) AdminApisHandler {
 	return AdminApisHandler{app: app}
 }
+
+type responseGlobalConfig struct {
+	Setting string `json:"setting"`
+}
+
+//GetGlobalConfig gets config
+func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) {
+	config, err := h.app.Administration.AdmGetGlobalConfig()
+	if err != nil {
+		//log.Printf("Error on getting config - %s\n", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	responseData := responseGlobalConfig{Setting: config.Setting}
+	data, err := json.Marshal(responseData)
+	if err != nil {
+		//log.Println("Error on marshal the config")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}

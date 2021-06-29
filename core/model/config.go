@@ -8,7 +8,7 @@ type GlobalConfig struct {
 }
 
 func (gc GlobalConfig) String() string {
-	return fmt.Sprintf("[Setting:%s]", gc.Setting)
+	return fmt.Sprintf("[setting:%s]", gc.Setting)
 }
 
 //OrganizationConfig represents configuration for an organization

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	log "github.com/rokmetro/logging-library/loglib"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 //Adapter implements the Storage interface
@@ -40,6 +41,18 @@ func (sa *Adapter) CreateGlobalConfig(setting string) (*model.GlobalConfig, erro
 		return nil, err
 	}
 	return &globalConfig, nil
+}
+
+//GetGlobalConfig give config
+func (sa *Adapter) GetGlobalConfig() (*model.GlobalConfig, error) {
+	filter := bson.D{}
+	var result []model.GlobalConfig
+	err := sa.db.globalConfig.Find(filter, &result, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &result[0], nil
+
 }
 
 //NewStorageAdapter creates a new storage adapter instance
