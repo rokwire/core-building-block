@@ -85,7 +85,7 @@ type responseGlobalConfig struct {
 func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	config, err := h.app.Administration.AdmGetGlobalConfig()
 	if err != nil {
-		//log.Println("Error on getting config - %s\n", err)
+		//log.Printf("Error on getting config - %s\n", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
