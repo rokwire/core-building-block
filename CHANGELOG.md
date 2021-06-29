@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Added
+- Fixing the Log and the Changelog for issues #35 and #36 [#54] (https://github.com/rokwire/core-building-block/issues/54)
 - Expose get global config admin API [#36] (https://github.com/rokwire/core-building-block/issues/36)
 - Expose get global config admin API [#35] (https://github.com/rokwire/core-building-block/issues/35)
 - Set up auth framework. [#16] (https://github.com/rokwire/core-building-block/issues/16)
