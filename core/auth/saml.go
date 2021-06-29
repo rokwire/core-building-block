@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -26,7 +27,7 @@ type samlCheckParams struct {
 
 type samlLoginParams struct {
 	Web     bool   `json:"web"`
-	xmlBlob string `json:"xml_blob"`
+	xmlBlob []byte `json:"xml_blob"`
 }
 
 type samlRefreshParams struct {
@@ -59,14 +60,14 @@ type samlArtifactRequest struct {
 }
 
 type samlArtifactResponse struct {
-	XMLName      xml.Name `xml:"samlp:ArtifactResponse"`
+	XMLName      xml.Name `xml:"ArtifactResponse"`
 	XMLNSsamlp   string   `xml:"xmlns:samlp,attr"`
 	ID           string   `xml:",attr"`
 	InResponseTo string   `xml:",attr"`
 	Version      string   `xml:",attr"`
 	IssueInstant string   `xml:",attr"`
 	Signature    samlSignature
-	StatusCode   samlStatusCode `xml:"samlp:Status>samlp:StatusCode"`
+	StatusCode   samlStatusCode `xml:"Status>StatusCode"`
 	Response     samlResponse
 }
 
@@ -82,28 +83,28 @@ type samlNameIDPolicy struct {
 }
 
 type samlArtifact struct {
-	XMLName xml.Name `xml:"samlp:Artifact"`
+	XMLName xml.Name `xml:"Artifact"`
 	Value   string   `xml:",chardata"`
 }
 
 type samlSignature struct {
-	XMLName xml.Name `xml:"ds:Signature"`
+	XMLName xml.Name `xml:"Signature"`
 	XMLNSds string   `xml:"xmlns:ds,attr"`
 	// potentially many more members
 }
 
-type samlAssertion struct {
-	FirstName string `xml:"givenName"`
-	LastName  string `xml:"lastName"`
+type samlEncryptedAssertion struct {
+	XMLName xml.Name `xml:"EncryptedAssertion"`
 }
 
 type samlResponse struct {
-	XMLName   xml.Name      `xml:"samlp:Response"`
-	Assertion samlAssertion `xml:"saml:Assertion"`
+	XMLName            xml.Name `xml:"Response"`
+	EncryptedAssertion samlEncryptedAssertion
+	StatusCode         samlStatusCode `xml:"Status>StatusCode"`
 }
 
 type samlStatusCode struct {
-	XMLName xml.Name `xml:"samlp:StatusCode"`
+	XMLName xml.Name `xml:"StatusCode"`
 	Value   string   `xml:",attr"`
 }
 
@@ -114,7 +115,8 @@ func (a *samlAuthImpl) login(creds string, params string) (map[string]interface{
 
 // What defines web session vs mobile "session"?
 func (a *samlAuthImpl) sessionLogin(creds string, params samlLoginParams) (map[string]interface{}, error) {
-	//TODO: Implement
+	var xmlBlob []byte
+	var rawResponseBody []byte
 	if params.Web {
 		// SAMPLE DATA (WILL CHANGE)
 		requestID, err := uuid.NewUUID()
@@ -140,17 +142,21 @@ func (a *samlAuthImpl) sessionLogin(creds string, params samlLoginParams) (map[s
 
 		bodyData := map[string]string{
 			"SAMLRequest": base64.StdEncoding.EncodeToString(xmlData),
-			"RelayState":  "", // optional (encoded string to track some state)
+			// "RelayState":  "", // optional (encoded string to track some state)
 		}
-		var uri url.URL
+		uri := url.URL{}
 		for k, v := range bodyData {
-			uri.Query().Set(k, v)
+			if len(uri.RawQuery) < 1 {
+				uri.RawQuery += fmt.Sprintf("%s=%s", k, v)
+			} else {
+				uri.RawQuery += fmt.Sprintf("&%s=%s", k, v)
+			}
 		}
 		headers := map[string]string{
 			"Content-Type":   "application/x-www-form-urlencoded",
 			"Content-Length": strconv.Itoa(len(uri.Query().Encode())),
 		}
-		jsonData, err := json.Marshal(params)
+		jsonData, err := json.Marshal(bodyData)
 		if err != nil {
 			return nil, err
 		}
@@ -169,21 +175,30 @@ func (a *samlAuthImpl) sessionLogin(creds string, params samlLoginParams) (map[s
 		}
 
 		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
+		rawResponseBody, err = ioutil.ReadAll(resp.Body)
 		if resp.StatusCode != 200 {
 			return nil, errors.New("error with response code != 200")
 		}
 		if err != nil {
 			return nil, err
 		}
+	}
 
-		// send response artifact to IDP artifact resolution service or parse response
+	// decrypt assertion (if encrypted)
+	if len(params.xmlBlob) > 0 {
+		xmlBlob = params.xmlBlob
+	} else if len(rawResponseBody) > 0 {
+		xmlBlob = rawResponseBody
 	} else {
-		var samlResponse samlAssertion
-		err := xml.Unmarshal([]byte(params.xmlBlob), &samlResponse)
-		if err != nil {
-			return nil, err
-		}
+		return nil, errors.New("no SAML response to parse")
+	}
+	// check if received artifact, send request to IDP's artifact resolution service if so
+
+	// check if SAML assertion in response is encrypted, if so decrypt first, then parse
+	var response samlResponse
+	err := xml.Unmarshal([]byte(xmlBlob), &response)
+	if err != nil {
+		return nil, err
 	}
 
 	return nil, errors.New("Unimplemented")
