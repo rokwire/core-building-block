@@ -1,26 +1,8 @@
 package core
 
 import (
-	"core-building-block/core/model"
 	"testing"
-
-	"github.com/stretchr/testify/mock"
 )
-
-type StorageMock struct {
-	mock.Mock
-}
-
-func (r StorageMock) SetStorageListener(storageListener StorageListener) {
-}
-
-func (r StorageMock) CreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
-	return nil, nil
-}
-
-func (r StorageMock) GetGlobalConfig() (*model.GlobalConfig, error) {
-	return nil, nil
-}
 
 /*
 func (r StorageMock) GetAllUsers() ([]User, error) {
