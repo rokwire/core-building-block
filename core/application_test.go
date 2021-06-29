@@ -22,6 +22,10 @@ func (r StorageMock) GetGlobalConfig() (*model.GlobalConfig, error) {
 	return nil, nil
 }
 
+type StorageListenerMock struct {
+	mock.Mock
+}
+
 type ListenerMock struct {
 	mock.Mock
 }
@@ -34,6 +38,23 @@ func (r StorageMock) GetAllUsers() ([]User, error) {
 	}
 	return users, args.Error(1)
 } */
+
+func TestStart(t *testing.T) {
+	/*	storage := StorageMock{}
+		app := NewApplication("1.1.1", "build", storage, nil)
+
+		storageListener := app.storageListener
+		if len(listeners) != 0 {
+			t.Error("listeners is not empty")
+		}
+
+		app.S(StorageListenerMock{})
+
+		listeners = app.listeners
+		if len(listeners) != 1 {
+			t.Error("listeners must has 1 listener")
+		} */
+}
 
 func TestAddListener(t *testing.T) {
 	storage := StorageMock{}
