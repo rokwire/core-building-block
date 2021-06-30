@@ -83,6 +83,8 @@ type GlobalGroup struct {
 
 	Permissions []GlobalPermission
 	Roles       []GlobalRole
+
+	Users []User
 }
 
 //GlobalPermission represents global permission entity
@@ -116,6 +118,8 @@ type OrganizationGroup struct {
 	Roles       []OrganizationRole
 
 	Organization Organization
+
+	OrganizationsMemberships []OrganizationMembership
 }
 
 func (cg OrganizationGroup) String() string {
