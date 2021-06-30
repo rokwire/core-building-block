@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,35 +22,27 @@ type samlAuthImpl struct {
 	auth *Auth
 }
 
-type samlCheckParams struct {
-	Web bool `json:"web"`
-}
-
 type samlLoginParams struct {
-	Web     bool   `json:"web"`
-	xmlBlob []byte `json:"xml_blob"`
-}
-
-type samlRefreshParams struct {
 	Web bool `json:"web"`
+	// xmlBlob []byte `json:"xml_blob"`
 }
 
 type samlRequest struct {
-	XMLName                       xml.Name `xml:"samlp:AuthnRequest"`
-	XMLNSsamlp                    string   `xml:"xmlns:samlp,attr"`
-	XMLNSsaml                     string   `xml:"xmlns:saml,attr"`
-	ID                            string   `xml:",attr"`
-	Version                       string   `xml:",attr"`
-	IssueInstant                  string   `xml:",attr"`
-	AssertionConsumerServiceIndex string   `xml:",attr"`
-	Issuer                        samlIssuer
-	NameIDPolicy                  samlNameIDPolicy
+	XMLName                     xml.Name `xml:"samlp:AuthnRequest"`
+	XMLNSsamlp                  string   `xml:"xmlns:samlp,attr"`
+	ID                          string   `xml:",attr"`
+	Destination                 string   `xml:",attr"`
+	Version                     string   `xml:",attr"`
+	IssueInstant                string   `xml:",attr"`
+	ProtocolBinding             string   `xml:",attr"`
+	AssertionConsumerServiceURL string   `xml:",attr"`
+	Issuer                      samlIssuer
+	NameIDPolicy                samlNameIDPolicy
 }
 
 type samlArtifactRequest struct {
 	XMLName      xml.Name `xml:"samlp:ArtifactResolve"`
 	XMLNSsamlp   string   `xml:"xmlns:samlp,attr"`
-	XMLNSsaml    string   `xml:"xmlns:saml,attr"`
 	ID           string   `xml:",attr"`
 	Version      string   `xml:",attr"`
 	IssueInstant string   `xml:",attr"`
@@ -68,18 +61,19 @@ type samlArtifactResponse struct {
 	IssueInstant string   `xml:",attr"`
 	Signature    samlSignature
 	StatusCode   samlStatusCode `xml:"Status>StatusCode"`
-	Response     samlResponse
+	Artifact     samlArtifact
 }
 
 type samlIssuer struct {
-	XMLName xml.Name `xml:"saml:Issuer"`
-	URL     string   `xml:",chardata"`
+	XMLName   xml.Name `xml:"saml:Issuer"`
+	XMLNSsaml string   `xml:"xmlns:saml,attr"`
+	URL       string   `xml:",chardata"`
 }
 
 type samlNameIDPolicy struct {
 	XMLName     xml.Name `xml:"samlp:NameIDPolicy"`
 	AllowCreate string   `xml:",attr"`
-	Format      string   `xml:",attr"`
+	// Format      string   `xml:",attr"`
 }
 
 type samlArtifact struct {
@@ -88,9 +82,34 @@ type samlArtifact struct {
 }
 
 type samlSignature struct {
-	XMLName xml.Name `xml:"Signature"`
+	XMLName xml.Name `xml:"ds:Signature"`
 	XMLNSds string   `xml:"xmlns:ds,attr"`
 	// potentially many more members
+}
+
+type samlAssertion struct {
+	XMLName       xml.Name `xml:"Assertion"`
+	AuthStatement samlAuthStatement
+	Attributes    []samlAttribute `xml:"AttributeStatement>Attribute"`
+}
+
+type samlAuthStatement struct {
+	XMLName        xml.Name  `xml:"AuthnStatement"`
+	IssueTime      time.Time `xml:"AuthnInstant,attr"`
+	ExpirationTime time.Time `xml:"SessionNotOnOrAfter,attr"`
+	SessionIndex   string    `xml:",attr"`
+}
+
+type samlAttribute struct {
+	XMLName xml.Name             `xml:"Attribute"`
+	Name    string               `xml:",attr"`
+	Values  []samlAttributeValue `xml:"AttributeValue"`
+}
+
+type samlAttributeValue struct {
+	XMLName xml.Name `xml:"AttributeValue"`
+	Type    string   `xml:"type,attr"`
+	Value   string   `xml:",chardata"`
 }
 
 type samlEncryptedAssertion struct {
@@ -99,6 +118,7 @@ type samlEncryptedAssertion struct {
 
 type samlResponse struct {
 	XMLName            xml.Name `xml:"Response"`
+	Assertion          samlAssertion
 	EncryptedAssertion samlEncryptedAssertion
 	StatusCode         samlStatusCode `xml:"Status>StatusCode"`
 }
@@ -109,104 +129,235 @@ type samlStatusCode struct {
 }
 
 func (a *samlAuthImpl) login(creds string, params string) (map[string]interface{}, error) {
-	//TODO: Implement
-	return nil, errors.New("Unimplemented")
+	paramsMap := make(map[string]interface{})
+	err := json.Unmarshal([]byte(params), &paramsMap)
+	if err != nil {
+		return nil, err
+	}
+	credType, ok := paramsMap["cred_type"].(string)
+	if !ok {
+		return nil, errors.New("cred_type parameter missing or invalid")
+	}
+
+	switch credType {
+	case "saml_xml":
+		var loginParams samlLoginParams
+		err := json.Unmarshal([]byte(params), &loginParams)
+		if err != nil {
+			return nil, err
+		}
+		samlXML := []byte(creds)
+		return a.sessionLogin(samlXML, loginParams)
+	case "web_nil":
+		var loginParams samlLoginParams
+		err := json.Unmarshal([]byte(params), &loginParams)
+		if err != nil {
+			return nil, err
+		}
+		return a.sessionLogin(nil, loginParams)
+	default:
+		return nil, errors.New("unimplemented cred_type")
+	}
 }
 
-// What defines web session vs mobile "session"?
-func (a *samlAuthImpl) sessionLogin(creds string, params samlLoginParams) (map[string]interface{}, error) {
+func (a *samlAuthImpl) sessionLogin(samlXML []byte, params samlLoginParams) (map[string]interface{}, error) {
 	var xmlBlob []byte
 	var rawResponseBody []byte
+	var err error
 	if params.Web {
-		// SAMPLE DATA (WILL CHANGE)
-		requestID, err := uuid.NewUUID()
-		if err != nil {
-			return nil, err
-		}
-		issuer := samlIssuer{URL: "https://sp.example.com"}
-		nameIDPolicy := samlNameIDPolicy{AllowCreate: "true", Format: "urn:oasis:names:tc:SAML:2.0:nameid-format:transient"}
-		request := samlRequest{
-			XMLNSsamlp:                    "urn:oasis:names:tc:SAML:2.0:protocol",
-			XMLNSsaml:                     "urn:oasis:names:tc:SAML:2.0:assertion",
-			ID:                            requestID.String(),
-			Version:                       "2.0",
-			IssueInstant:                  time.Now().UTC().Format("2006-01-02T15:04:05Z"),
-			AssertionConsumerServiceIndex: "1",
-			Issuer:                        issuer,
-			NameIDPolicy:                  nameIDPolicy,
-		}
-		xmlData, err := xml.Marshal(request)
-		if err != nil {
-			return nil, err
-		}
-
-		bodyData := map[string]string{
-			"SAMLRequest": base64.StdEncoding.EncodeToString(xmlData),
-			// "RelayState":  "", // optional (encoded string to track some state)
-		}
-		uri := url.URL{}
-		for k, v := range bodyData {
-			if len(uri.RawQuery) < 1 {
-				uri.RawQuery += fmt.Sprintf("%s=%s", k, v)
-			} else {
-				uri.RawQuery += fmt.Sprintf("&%s=%s", k, v)
-			}
-		}
-		headers := map[string]string{
-			"Content-Type":   "application/x-www-form-urlencoded",
-			"Content-Length": strconv.Itoa(len(uri.Query().Encode())),
-		}
-		jsonData, err := json.Marshal(bodyData)
-		if err != nil {
-			return nil, err
-		}
-
-		client := &http.Client{}
-		req, err := http.NewRequest("POST", "http://idp.example.org/saml2/sso/post", bytes.NewReader(jsonData))
-		if err != nil {
-			return nil, err
-		}
-		for k, v := range headers {
-			req.Header.Set(k, v)
-		}
-		resp, err := client.Do(req)
-		if err != nil {
-			return nil, err
-		}
-
-		defer resp.Body.Close()
-		rawResponseBody, err = ioutil.ReadAll(resp.Body)
-		if resp.StatusCode != 200 {
-			return nil, errors.New("error with response code != 200")
-		}
+		rawResponseBody, err = a.sendSamlRequest()
 		if err != nil {
 			return nil, err
 		}
 	}
-
-	// decrypt assertion (if encrypted)
-	if len(params.xmlBlob) > 0 {
-		xmlBlob = params.xmlBlob
+	if len(samlXML) > 0 {
+		// received SAML response XML from mobile client
+		xmlBlob = samlXML
 	} else if len(rawResponseBody) > 0 {
+		// received SAML response XML from previous request (web)
 		xmlBlob = rawResponseBody
 	} else {
 		return nil, errors.New("no SAML response to parse")
 	}
-	// check if received artifact, send request to IDP's artifact resolution service if so
 
-	// check if SAML assertion in response is encrypted, if so decrypt first, then parse
+	// check if received artifact
+	var artifactResp samlArtifactResponse
+	err = xml.Unmarshal([]byte(xmlBlob), &artifactResp)
+	if err == nil {
+		rawResponseBody, err = a.sendSamlArtifactRequest(artifactResp.Artifact.Value)
+		if err != nil {
+			return nil, err
+		}
+		if len(rawResponseBody) > 0 {
+			xmlBlob = rawResponseBody
+		}
+	}
+
 	var response samlResponse
-	err := xml.Unmarshal([]byte(xmlBlob), &response)
+	err = xml.Unmarshal([]byte(xmlBlob), &response)
+	if err != nil {
+		return nil, err
+	}
+	if !strings.Contains(response.StatusCode.Value, "Success") {
+		return nil, errors.New(fmt.Sprintf("saml response error: %s", response.StatusCode.Value))
+	}
+
+	// check signatures if desired
+
+	if len(response.EncryptedAssertion.XMLName.Space) > 0 {
+		// decrypt and set response.Assertion
+	}
+
+	// claims to be returned may change
+	claimsMap := make(map[string]interface{}, 0)
+	for _, attribute := range response.Assertion.Attributes {
+		if len(attribute.Values) > 0 {
+			attrList := make([]string, 0)
+			for _, val := range attribute.Values {
+				attrList = append(attrList, val.Value)
+			}
+			claimsMap[attribute.Name] = attrList
+		} else {
+			claimsMap[attribute.Name] = attribute.Values[0].Value
+		}
+	}
+	claimsMap["exp"] = response.Assertion.AuthStatement.ExpirationTime
+	claimsMap["session_id"] = response.Assertion.AuthStatement.SessionIndex
+
+	return claimsMap, nil
+}
+
+func (a *samlAuthImpl) sendSamlRequest() ([]byte, error) {
+	// SAMPLE DATA
+	requestID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, err
+	}
+	request := samlRequest{
+		XMLNSsamlp:                  "urn:oasis:names:tc:SAML:2.0:protocol",
+		ID:                          requestID.String(),
+		Destination:                 "https://idp.example.com/idp/profile/SAML2/POST/SSO",
+		Version:                     "2.0",
+		IssueInstant:                time.Now().UTC().Format("2006-01-02T15:04:05Z"),
+		ProtocolBinding:             "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+		AssertionConsumerServiceURL: "https://dev.rokwire.com",
+		Issuer:                      samlIssuer{URL: "https://dev.rokwire.com", XMLNSsaml: "urn:oasis:names:tc:SAML:2.0:assertion"},
+		NameIDPolicy:                samlNameIDPolicy{AllowCreate: "1"},
+	}
+	xmlData, err := xml.Marshal(request)
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, errors.New("Unimplemented")
+	bodyData := map[string]string{
+		"SAMLRequest": base64.StdEncoding.EncodeToString(xmlData),
+		// "RelayState":  "", // optional (encoded string to track some state)
+	}
+	uri := url.URL{}
+	for k, v := range bodyData {
+		if len(uri.RawQuery) < 1 {
+			uri.RawQuery += fmt.Sprintf("%s=%s", k, v)
+		} else {
+			uri.RawQuery += fmt.Sprintf("&%s=%s", k, v)
+		}
+	}
+	headers := map[string]string{
+		"Content-Type":   "application/x-www-form-urlencoded",
+		"Content-Length": strconv.Itoa(len(uri.Query().Encode())),
+	}
+	jsonData, err := json.Marshal(bodyData)
+	if err != nil {
+		return nil, err
+	}
+
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", request.Destination, bytes.NewReader(jsonData))
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if resp.StatusCode != 200 {
+		return nil, errors.New("error with response code != 200")
+	}
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
 }
 
-// use if there is no way to refresh user's session
-func (a *samlAuthImpl) sessionLogout() {
+func (a *samlAuthImpl) sendSamlArtifactRequest(artifact string) ([]byte, error) {
+	// SAMPLE DATA
+	requestID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, err
+	}
+	request := samlArtifactRequest{
+		XMLNSsamlp:   "urn:oasis:names:tc:SAML:2.0:protocol",
+		ID:           requestID.String(),
+		Destination:  "https://idp.example.com/idp/profile/SAML2/SOAP/ArtifactResolution",
+		Version:      "2.0",
+		IssueInstant: time.Now().UTC().Format("2006-01-02T15:04:05Z"),
+		Issuer:       samlIssuer{URL: "https://dev.rokwire.com", XMLNSsaml: "urn:oasis:names:tc:SAML:2.0:assertion"},
+		Artifact:     samlArtifact{Value: artifact},
+	}
+	xmlData, err := xml.Marshal(request)
+	if err != nil {
+		return nil, err
+	}
 
+	// use SOAP binding
+	bodyData := map[string]string{
+		"SAMLRequest": base64.StdEncoding.EncodeToString(xmlData),
+		// "RelayState":  "", // optional (encoded string to track some state)
+	}
+	uri := url.URL{}
+	for k, v := range bodyData {
+		if len(uri.RawQuery) < 1 {
+			uri.RawQuery += fmt.Sprintf("%s=%s", k, v)
+		} else {
+			uri.RawQuery += fmt.Sprintf("&%s=%s", k, v)
+		}
+	}
+	headers := map[string]string{
+		"Content-Type":   "application/x-www-form-urlencoded",
+		"Content-Length": strconv.Itoa(len(uri.Query().Encode())),
+	}
+	jsonData, err := json.Marshal(bodyData)
+	if err != nil {
+		return nil, err
+	}
+
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", request.Destination, bytes.NewReader(jsonData))
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if resp.StatusCode != 200 {
+		return nil, errors.New("error with response code != 200")
+	}
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
 }
 
 //initSamlAuth initializes and registers a new SAML auth instance
