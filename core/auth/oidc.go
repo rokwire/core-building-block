@@ -348,9 +348,13 @@ func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, authInf
 		tokenUri = authInfo.OIDCTokenURL
 	}
 
-	var uri url.URL
+	uri := url.URL{}
 	for k, v := range params {
-		uri.Query().Set(k, v)
+		if len(uri.RawQuery) < 1 {
+			uri.RawQuery += fmt.Sprintf("%s=%s", k, v)
+		} else {
+			uri.RawQuery += fmt.Sprintf("&%s=%s", k, v)
+		}
 	}
 	headers := map[string]string{
 		"Content-Type":   "application/x-www-form-urlencoded",
