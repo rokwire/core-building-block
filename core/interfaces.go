@@ -92,7 +92,7 @@ type Storage interface {
 	SetStorageListener(storageListener StorageListener)
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	GetGlobalConfig() (*model.GlobalConfig, error)
-	SaveGlobalConfig(config *model.GlobalConfig) error
+	SaveGlobalConfig(ID *model.GlobalConfig) error
 }
 
 //StorageListener listenes for change data storage events
