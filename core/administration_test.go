@@ -33,9 +33,13 @@ func TestAdmCreateGlobalConfig(t *testing.T) {
 	app := NewApplication("1.1.1", "build", storage, nil)
 
 	gc, _ := app.admCreateGlobalConfig("setting")
-
+	if gc == nil {
+		t.Error("gc is nil")
+		return
+	}
 	if gc.Setting != "setting" {
 		t.Errorf("got %q, wanted %q", gc.Setting, "setting")
+		return
 	}
 	//got := app.admCreateGlobalConfig("setting")
 	/*
