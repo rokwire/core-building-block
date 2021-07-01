@@ -14,7 +14,8 @@ type User struct {
 
 	Permissions []GlobalPermission
 	Roles       []GlobalRole
-	Groups      []GlobalGroup
+
+	Groups []GlobalGroup
 
 	OrganizationsMemberships []OrganizationMembership
 }
@@ -79,6 +80,11 @@ func (up UserProfile) String() string {
 type GlobalGroup struct {
 	ID   string
 	Name string
+
+	Permissions []GlobalPermission
+	Roles       []GlobalRole
+
+	Users []User
 }
 
 //GlobalPermission represents global permission entity
@@ -108,7 +114,12 @@ type OrganizationGroup struct {
 	ID   string
 	Name string
 
+	Permissions []OrganizationPermission
+	Roles       []OrganizationRole
+
 	Organization Organization
+
+	OrganizationsMemberships []OrganizationMembership
 }
 
 func (cg OrganizationGroup) String() string {
