@@ -4,15 +4,6 @@ import (
 	"testing"
 )
 
-/*
-func (r StorageMock) GetAllUsers() ([]User, error) {
-	args := r.Called()
-	users := []User{
-		{"mock", "*****"},
-	}
-	return users, args.Error(1)
-} */
-
 func TestAdmGetTest(t *testing.T) {
 	storage := StorageMock{}
 	app := NewApplication("1.1.1", "build", storage, nil)

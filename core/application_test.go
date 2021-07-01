@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+//Storage Mock
+
 type StorageMock struct {
 	mock.Mock
 }
@@ -22,13 +24,21 @@ func (r StorageMock) GetGlobalConfig() (*model.GlobalConfig, error) {
 	return nil, nil
 }
 
+///
+
+//StorageListener Mock
 type StorageListenerMock struct {
 	mock.Mock
 }
 
+///
+
+//ListenerMock Mock
 type ListenerMock struct {
 	mock.Mock
 }
+
+///
 
 /*
 func (r StorageMock) GetAllUsers() ([]User, error) {
@@ -72,18 +82,3 @@ func TestAddListener(t *testing.T) {
 		t.Error("listeners must has 1 listener")
 	}
 }
-
-/*
-func TestAdmCreateGlobalConfig2(t *testing.T) {
-
-		repository := UserRepositoryMock{}
-		repository.On("GetAllUsers").Return([]User{}, nil)
-
-		service := UserService{repository}
-		users, _ := service.GetUser()
-		for i := range users {
-			assert.Equal(t, users[i].Password, "*****", "user password must be encrypted")
-		}
-		fmt.Println(users)
-
-} */
