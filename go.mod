@@ -20,5 +20,6 @@ require (
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
+	gotest.tools v2.2.0+incompatible
 
 )
