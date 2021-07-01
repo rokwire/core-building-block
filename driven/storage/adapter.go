@@ -70,7 +70,7 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 
 //SaveGlobalConfig saves the global configuration to the storage
 func (sa *Adapter) SaveGlobalConfig(config *model.GlobalConfig) error {
-	filter := bson.D{}
+	filter := bson.D{{Key: "setting", Value: config.Setting}}
 	err := sa.db.globalConfig.ReplaceOne(filter, config, nil)
 	if err != nil {
 		return err

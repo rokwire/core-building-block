@@ -2,7 +2,6 @@ package web
 
 import (
 	"core-building-block/core"
-	"core-building-block/core/model"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -103,6 +102,10 @@ func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *
 	w.Write(data)
 }
 
+type updateGlobalConfig struct {
+	Setting string `json:"setting" validate:"required"`
+}
+
 //UpdateGlobalConfig updates global config
 func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
@@ -111,21 +114,31 @@ func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 		return
 	}
 
-	var config model.GlobalConfig
-	err = json.Unmarshal(data, &config)
+	var updateConfig updateGlobalConfig
+	err = json.Unmarshal(data, &updateConfig)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = h.app.Administration.AdmUpdateGlobalConfig(&config)
+	//validate
+	validate := validator.New()
+	err = validate.Struct(updateConfig)
 	if err != nil {
-		//log.Printf("Error on updating global config - %s\n", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		//log.Printf("Error on validating create global config data - %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	setting := updateConfig.Setting
+
+	_, err = h.app.Administration.AdmCreateGlobalConfig(setting)
+	if err != nil {
+		//	log.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Successfully updated"))
+	w.Write([]byte("Successfully created"))
 }
