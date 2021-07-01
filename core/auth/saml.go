@@ -2,8 +2,15 @@ package auth
 
 import (
 	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha1"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -113,7 +120,19 @@ type samlAttributeValue struct {
 }
 
 type samlEncryptedAssertion struct {
-	XMLName xml.Name `xml:"EncryptedAssertion"`
+	XMLName       xml.Name `xml:"EncryptedAssertion"`
+	EncryptedData samlEncryptedData
+}
+
+type samlEncryptedData struct {
+	XMLName      xml.Name         `xml:"EncryptedData"`
+	EncryptedKey samlEncryptedKey `xml:"KeyInfo>EncryptedKey"`
+	CipherText   string           `xml:"CipherData>CipherValue"`
+}
+
+type samlEncryptedKey struct {
+	XMLName    xml.Name `xml:"EncryptedKey"`
+	CipherText string   `xml:"CipherData>CipherValue"`
 }
 
 type samlResponse struct {
@@ -205,7 +224,20 @@ func (a *samlAuthImpl) sessionLogin(samlXML []byte, params samlLoginParams) (map
 	// check signatures if desired
 
 	if len(response.EncryptedAssertion.XMLName.Space) > 0 {
-		// decrypt and set response.Assertion
+		privateKey := "" // load this from environment/secrets
+		key, err := decryptKey(response.EncryptedAssertion.EncryptedData.EncryptedKey.CipherText, privateKey)
+		if err != nil {
+			return nil, err
+		}
+		decryptedXML, err := decryptXML(response.EncryptedAssertion.EncryptedData.CipherText, key)
+		if err != nil {
+			return nil, err
+		}
+
+		err = xml.Unmarshal(decryptedXML, &response.Assertion)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// claims to be returned may change
@@ -358,6 +390,56 @@ func (a *samlAuthImpl) sendSamlArtifactRequest(artifact string) ([]byte, error) 
 		return nil, err
 	}
 	return body, nil
+}
+
+func decryptXML(encryptedXML string, key []byte) ([]byte, error) {
+	decodedEncryptedXML, err := base64.StdEncoding.DecodeString(encryptedXML)
+	if err != nil {
+		return nil, err
+	}
+	initVector := decodedEncryptedXML[:16]
+
+	//Decrypt decodedEncryptedXML with AES using given key(CBC mode, PKCS7 padding, IV)
+	cipherBlock, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	padBlobXML := pkcs7Padding(decodedEncryptedXML, cipherBlock.BlockSize())
+	plainText := make([]byte, len(padBlobXML))
+	mode := cipher.NewCBCDecrypter(cipherBlock, initVector)
+	mode.CryptBlocks(plainText, padBlobXML)
+	return padBlobXML, nil
+}
+
+func decryptKey(encryptedKey string, privateKey string) ([]byte, error) {
+	decodedEncryptedKey, err := base64.StdEncoding.DecodeString(encryptedKey)
+	if err != nil {
+		return nil, err
+	}
+
+	privPem, _ := pem.Decode([]byte(privateKey))
+	rsaPrivateKey, err := x509.ParsePKCS1PrivateKey(privPem.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	rng := rand.Reader
+	plaintext, err := rsa.DecryptOAEP(sha1.New(), rng, rsaPrivateKey, decodedEncryptedKey, []byte(""))
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(plaintext)
+	return plaintext, nil
+}
+
+// pkcs7Padding returns the data with correct padding for AES block
+func pkcs7Padding(ciphertext []byte, blockSize int) []byte {
+	n := blockSize - (len(ciphertext) % blockSize)
+	pb := make([]byte, len(ciphertext)+n)
+	copy(pb, ciphertext)
+	copy(pb[len(ciphertext):], bytes.Repeat([]byte{byte(n)}, n))
+	return pb
 }
 
 //initSamlAuth initializes and registers a new SAML auth instance
