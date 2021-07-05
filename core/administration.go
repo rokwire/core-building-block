@@ -173,8 +173,14 @@ func (app *Application) admGetGlobalConfig() (*model.GlobalConfig, error) {
 	return getConfig, nil
 }
 
-func (app *Application) admUpdateGlobalConfig(config *model.GlobalConfig) error {
-	err := app.storage.SaveGlobalConfig(config)
+func (app *Application) admUpdateGlobalConfig(setting string) error {
+	updateConfig, err := app.storage.GetGlobalConfig()
+	if err != nil {
+		return err
+	}
+
+	updateConfig.Setting = setting
+	err = app.storage.SaveGlobalConfig(updateConfig)
 	if err != nil {
 		return err
 	}

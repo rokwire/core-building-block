@@ -131,7 +131,7 @@ func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 	}
 	setting := updateConfig.Setting
 
-	_, err = h.app.Administration.AdmCreateGlobalConfig(setting)
+	err = h.app.Administration.AdmUpdateGlobalConfig(setting)
 	if err != nil {
 		//	log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
