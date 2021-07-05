@@ -1,6 +1,7 @@
 package core_test
 
 import (
+	"errors"
 	"testing"
 
 	core "core-building-block/core"
@@ -35,15 +36,17 @@ func TestAdmCreateGlobalConfig(t *testing.T) {
 	}
 	assert.Equal(t, gc.Setting, "setting", "setting is different")
 
-	/*	//second case - error
-		storage2 := genmocks.Storage{}
-		app = core.NewApplication("1.1.1", "build", &storage2, nil)
+	//second case - error
+	storage2 := genmocks.Storage{}
+	storage2.On("CreateGlobalConfig", "setting").Return(nil, errors.New("error occured"))
 
-		_, err := app.Administration.AdmCreateGlobalConfig("setting")
-		if err == nil {
-			t.Error("we are expecting error")
-			return
-		}
-		assert.Equal(t, err.Error(), "error occured", "error is different") */
+	app = core.NewApplication("1.1.1", "build", &storage2, nil)
+
+	_, err := app.Administration.AdmCreateGlobalConfig("setting")
+	if err == nil {
+		t.Error("we are expecting error")
+		return
+	}
+	assert.Equal(t, err.Error(), "error occured", "error is different")
 
 }
