@@ -1,5 +1,6 @@
 package core
 
+/*
 import (
 	"core-building-block/core/model"
 	"errors"
@@ -74,3 +75,4 @@ func TestAdmCreateGlobalConfig(t *testing.T) {
 	assert.Equal(t, err.Error(), "error occured", "error is different")
 
 }
+*/
