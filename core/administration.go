@@ -2,6 +2,7 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"errors"
 	"fmt"
 )
 
@@ -158,11 +159,19 @@ func (app *Application) admGetTestModel() string {
 }
 
 func (app *Application) admCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
-	create, err := app.storage.CreateGlobalConfig(setting)
+	gc, err := app.storage.GetGlobalConfig()
 	if err != nil {
 		return nil, err
 	}
-	return create, nil
+	if gc != nil {
+		return nil, errors.New("there is already a global config")
+	}
+
+	gc, err = app.storage.CreateGlobalConfig(setting)
+	if err != nil {
+		return nil, err
+	}
+	return gc, nil
 }
 
 func (app *Application) admGetGlobalConfig() (*model.GlobalConfig, error) {

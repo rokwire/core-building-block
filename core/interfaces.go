@@ -90,6 +90,7 @@ func (s *bbsImpl) BBsGetTest() string {
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
 	SetStorageListener(storageListener StorageListener)
+
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	GetGlobalConfig() (*model.GlobalConfig, error)
 	SaveGlobalConfig(setting *model.GlobalConfig) error

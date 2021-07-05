@@ -51,6 +51,10 @@ func (sa *Adapter) GetGlobalConfig() (*model.GlobalConfig, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(result) == 0 {
+		//no record
+		return nil, nil
+	}
 	return &result[0], nil
 
 }
