@@ -175,21 +175,24 @@ func (app *Application) admCreateGlobalConfig(setting string) (*model.GlobalConf
 }
 
 func (app *Application) admGetGlobalConfig() (*model.GlobalConfig, error) {
-	getConfig, err := app.storage.GetGlobalConfig()
+	gc, err := app.storage.GetGlobalConfig()
 	if err != nil {
 		return nil, err
 	}
-	return getConfig, nil
+	return gc, nil
 }
 
 func (app *Application) admUpdateGlobalConfig(setting string) error {
-	updateConfig, err := app.storage.GetGlobalConfig()
+	gc, err := app.storage.GetGlobalConfig()
 	if err != nil {
 		return err
 	}
+	if gc == nil {
+		return errors.New("there is no a global config")
+	}
 
-	updateConfig.Setting = setting
-	err = app.storage.SaveGlobalConfig(updateConfig)
+	gc.Setting = setting
+	err = app.storage.SaveGlobalConfig(gc)
 	if err != nil {
 		return err
 	}

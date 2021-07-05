@@ -1,14 +1,17 @@
 package storage
 
 import (
+	"context"
 	"core-building-block/core"
 	"core-building-block/core/model"
+	"fmt"
 
 	"strconv"
 	"time"
 
 	log "github.com/rokmetro/logging-library/loglib"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 //Adapter implements the Storage interface
@@ -59,6 +62,45 @@ func (sa *Adapter) GetGlobalConfig() (*model.GlobalConfig, error) {
 
 }
 
+//SaveGlobalConfig saves the global configuration to the storage
+func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
+	// transaction
+	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+		err := sessionContext.StartTransaction()
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		//clear the global config - we always keep only one global config
+		delFilter := bson.D{}
+		_, err = sa.db.globalConfig.DeleteManyWithContext(sessionContext, delFilter, nil)
+		if err != nil {
+			abortTransaction(sessionContext)
+			return err
+		}
+
+		//add the new one
+		_, err = sa.db.globalConfig.InsertOneWithContext(sessionContext, gc)
+		if err != nil {
+			abortTransaction(sessionContext)
+			return err
+		}
+
+		err = sessionContext.CommitTransaction(sessionContext)
+		if err != nil {
+			//TODO print
+			//log.Printf("error on commiting a transaction - %s", err)
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 //NewStorageAdapter creates a new storage adapter instance
 func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *log.StandardLogger) *Adapter {
 	timeout, err := strconv.Atoi(mongoTimeout)
@@ -72,12 +114,9 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	return &Adapter{db: db, logger: logger}
 }
 
-//SaveGlobalConfig saves the global configuration to the storage
-func (sa *Adapter) SaveGlobalConfig(setting *model.GlobalConfig) error {
-	filter := bson.D{{Key: "_id", Value: setting.Setting}}
-	err := sa.db.globalConfig.ReplaceOne(filter, setting, nil)
+func abortTransaction(sessionContext mongo.SessionContext) {
+	err := sessionContext.AbortTransaction(sessionContext)
 	if err != nil {
-		return err
+		//TODO - log
 	}
-	return nil
 }
