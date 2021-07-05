@@ -33,10 +33,6 @@ func TestAdmCreateGlobalConfig(t *testing.T) {
 		t.Error("gc is nil")
 		return
 	}
-	if gc.Setting != "setting" {
-		t.Errorf("got %q, wanted %q", gc.Setting, "setting")
-		return
-	}
 	assert.Equal(t, gc.Setting, "setting", "setting is different")
 
 	/*	//second case - error
