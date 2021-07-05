@@ -172,3 +172,11 @@ func (app *Application) admGetGlobalConfig() (*model.GlobalConfig, error) {
 	}
 	return getConfig, nil
 }
+
+func (app *Application) admCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string) (*model.Organization, error) {
+	createOrganization, err := app.storage.CreateOrganization(name, requestType, requiresOwnLogin, loginTypes)
+	if err != nil {
+		return nil, err
+	}
+	return createOrganization, nil
+}

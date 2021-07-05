@@ -19,6 +19,7 @@ type database struct {
 	dbClient *mongo.Client
 
 	globalConfig *collectionWrapper
+	organization *collectionWrapper
 
 	listener core.StorageListener
 }

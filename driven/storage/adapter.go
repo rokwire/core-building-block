@@ -67,3 +67,13 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeoutMS}
 	return &Adapter{db: db, logger: logger}
 }
+
+//CreateGlobalConfig creates global config
+func (sa *Adapter) CreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string) (*model.Organization, error) {
+	organization := model.Organization{Name: name, Type: requestType, RequiresOwnLogin: requiresOwnLogin, LoginTypes: loginTypes}
+	_, err := sa.db.organization.InsertOne(organization)
+	if err != nil {
+		return nil, err
+	}
+	return &organization, nil
+}

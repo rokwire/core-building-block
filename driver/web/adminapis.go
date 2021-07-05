@@ -101,3 +101,67 @@ func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
+
+type createOrganizationRequest struct {
+	Name             string   `json:"name" validate:"required"`
+	Type             string   `json:"type" validate:"required"`
+	RequiresOwnLogin *bool    `json:"requires_own_login" validate:"required"`
+	LoginTypes       []string `json:"login_types"`
+}
+type OrganizationResponse struct {
+	Name             string   `json:"name"`
+	Type             string   `json:"type"`
+	RequiresOwnLogin bool     `json:"requires_own_login"`
+	LoginTypes       []string `json:"login_types"`
+}
+
+//CreateOrganization creates organization
+func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		//log.Printf("Error on marshal create organization - %s\n", err.Error())
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	var requestData createOrganizationRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		//log.Printf("Error on unmarshal the create organization  - %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	//validate
+	validate := validator.New()
+	err = validate.Struct(requestData)
+	if err != nil {
+		//log.Printf("Error on validating create organization  data - %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	name := requestData.Name
+	requestType := requestData.Type
+	requiresOwnLogin := requestData.RequiresOwnLogin
+	loginTypes := requestData.LoginTypes
+
+	organization, err := h.app.Administration.AdmCreateOrganization(name, requestType, *requiresOwnLogin, loginTypes)
+	if err != nil {
+		//	log.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := OrganizationResponse{Name: organization.Name, Type: organization.Type, RequiresOwnLogin: organization.RequiresOwnLogin, LoginTypes: loginTypes}
+	data, err = json.Marshal(response)
+	if err != nil {
+		//log.Println("Error on marshal")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Successfully created"))
+}
