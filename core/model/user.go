@@ -18,6 +18,8 @@ type User struct {
 	Groups []GlobalGroup
 
 	OrganizationsMemberships []OrganizationMembership
+
+	Devices []Device
 }
 
 func (u User) String() string {
@@ -150,4 +152,18 @@ type OrganizationRole struct {
 
 func (c OrganizationRole) String() string {
 	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s\tOrganization:%s]", c.ID, c.Name, c.Permissions, c.Organization)
+}
+
+//Device represents user devices entity.
+type Device struct {
+	ID   string
+	Type string //mobile, web, desktop, other
+
+	//TODO - other fields when they are clear
+	OS         string //?
+	MacAddress string //?
+	///
+
+	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
+	Users []User
 }
