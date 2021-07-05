@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Expose admin API which creates an organization [#58](https://github.com/rokwire/core-building-block/issues/58)
 - Expand the model to handle the user devices. [#41] (https://github.com/rokwire/core-building-block/issues/41)
 - Expose get global config admin API [#35] (https://github.com/rokwire/core-building-block/pull/43)
 - Set up auth framework. [#16] (https://github.com/rokwire/core-building-block/issues/16)
