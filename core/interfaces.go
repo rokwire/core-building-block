@@ -36,6 +36,8 @@ type Administration interface {
 	AdmCreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	AdmGetGlobalConfig() (*model.GlobalConfig, error)
 	AdmCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string) (*model.Organization, error)
+	AdmUpdateGlobalConfig(setting string) error
+
 }
 
 type administrationImpl struct {
@@ -58,6 +60,10 @@ func (s *administrationImpl) AdmGetGlobalConfig() (*model.GlobalConfig, error) {
 }
 func (s *administrationImpl) AdmCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string) (*model.Organization, error) {
 	return s.app.admCreateOrganization(name, requestType, requiresOwnLogin, loginTypes)
+}
+
+func (s *administrationImpl) AdmUpdateGlobalConfig(setting string) error {
+	return s.app.admUpdateGlobalConfig(setting)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -89,9 +95,13 @@ func (s *bbsImpl) BBsGetTest() string {
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
 	SetStorageListener(storageListener StorageListener)
+
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	GetGlobalConfig() (*model.GlobalConfig, error)
+
 	CreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string) (*model.Organization, error)
+	SaveGlobalConfig(setting *model.GlobalConfig) error
+
 }
 
 //StorageListener listenes for change data storage events
