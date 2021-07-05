@@ -101,6 +101,16 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 	return nil
 }
 
+//CreateGlobalConfig creates global config
+func (sa *Adapter) CreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string) (*model.Organization, error) {
+	organization := model.Organization{Name: name, Type: requestType, RequiresOwnLogin: requiresOwnLogin, LoginTypes: loginTypes}
+	_, err := sa.db.organization.InsertOne(organization)
+	if err != nil {
+		return nil, err
+	}
+	return &organization, nil
+}
+
 //NewStorageAdapter creates a new storage adapter instance
 func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *log.StandardLogger) *Adapter {
 	timeout, err := strconv.Atoi(mongoTimeout)
@@ -113,15 +123,6 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeoutMS}
 	return &Adapter{db: db, logger: logger}
 }
-
-//CreateGlobalConfig creates global config
-func (sa *Adapter) CreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string) (*model.Organization, error) {
-	organization := model.Organization{Name: name, Type: requestType, RequiresOwnLogin: requiresOwnLogin, LoginTypes: loginTypes}
-	_, err := sa.db.organization.InsertOne(organization)
-	if err != nil {
-		return nil, err
-	}
-	return &organization, nil
 
 func abortTransaction(sessionContext mongo.SessionContext) {
 	err := sessionContext.AbortTransaction(sessionContext)
