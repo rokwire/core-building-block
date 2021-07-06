@@ -13,7 +13,7 @@ func (gc GlobalConfig) String() string {
 
 //OrganizationConfig represents configuration for an organization
 type OrganizationConfig struct {
-	Name    string
+	ID      string
 	Setting string
 	//???
 	Domains []string //some organizations have their own users so that we need to associate a user with an organization
@@ -22,5 +22,5 @@ type OrganizationConfig struct {
 }
 
 func (cc OrganizationConfig) String() string {
-	return fmt.Sprintf("[Name:%s\tSetting:%s\tDomains:%s\tCustom:%s]", cc.Name, cc.Setting, cc.Domains, cc.Custom)
+	return fmt.Sprintf("[ID:%s\tSetting:%s\tDomains:%s\tCustom:%s]", cc.ID, cc.Setting, cc.Domains, cc.Custom)
 }

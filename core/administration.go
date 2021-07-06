@@ -16,9 +16,9 @@ func (app *Application) admGetTestModel() string {
 
 	//organizations configs
 	illinoisDomains := []string{"illinois.edu"}
-	illinoisOrganizationConfig := model.OrganizationConfig{Name: "Illinois organization config", Setting: "setting_value", Domains: illinoisDomains, Custom: "Illinois organization custom config"}
+	illinoisOrganizationConfig := model.OrganizationConfig{ID: "1", Setting: "setting_value", Domains: illinoisDomains, Custom: "Illinois organization custom config"}
 
-	danceOrganizationConfig := model.OrganizationConfig{Name: "Dance organization config", Setting: "setting_value", Domains: []string{}, Custom: "Dance organization custom config"}
+	danceOrganizationConfig := model.OrganizationConfig{ID: "2", Setting: "setting_value", Domains: []string{}, Custom: "Dance organization custom config"}
 
 	//organizations
 	illinoisOrganization := model.Organization{ID: "1", Name: "Illinois", Type: "large", Config: illinoisOrganizationConfig}
