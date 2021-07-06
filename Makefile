@@ -111,10 +111,6 @@ help:
 version:
 	@echo $(VERSION)
 
-.PHONY: swagger
-swagger: ;
-	swag init -g driver/web/adapter.go
-
 .PHONY: log-variables
 log-variables: ; $(info $(M) Log info…) @ ## Log the variables values
 	@echo "DATE:"$(DATE)
