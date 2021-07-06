@@ -101,8 +101,8 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 	return nil
 }
 
-//CreateGlobalConfig creates global config
-func (sa *Adapter) CreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string) (*model.Organization, error) {
+//CreateOrganization creates an organization
+func (sa *Adapter) CreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
 	organization := model.Organization{Name: name, Type: requestType, RequiresOwnLogin: requiresOwnLogin, LoginTypes: loginTypes}
 	_, err := sa.db.organization.InsertOne(organization)
 	if err != nil {

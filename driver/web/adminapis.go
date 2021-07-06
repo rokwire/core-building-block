@@ -181,9 +181,14 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 	requestType := requestData.Type
 	requiresOwnLogin := requestData.RequiresOwnLogin
 	loginTypes := requestData.LoginTypes
-	//organizationDomains := requestData.OrganizationDomains
+	organizationDomains := requestData.OrganizationDomains
 
-	_, err = h.app.Administration.AdmCreateOrganization(name, requestType, *requiresOwnLogin, loginTypes)
+	_, err = h.app.Administration.AdmCreateOrganization(name, requestType, *requiresOwnLogin, loginTypes, organizationDomains)
+	if err != nil {
+		l.Errorf("Error on creating an organization - %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
