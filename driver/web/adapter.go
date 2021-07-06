@@ -30,13 +30,6 @@ type Adapter struct {
 
 type handlerFunc = func(*log.Log, http.ResponseWriter, *http.Request)
 
-// @title Rokwire Core Building Block API
-// @description Rokwire Core Building Block API Documentation.
-// @version 1.0.0
-// @host localhost:80
-// @BasePath /
-// @schemes https http
-
 //Start starts the module
 func (we Adapter) Start() {
 
@@ -94,11 +87,11 @@ func (we Adapter) Start() {
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("access-control-allow-origin", "*")
-	http.ServeFile(w, r, "./docs/swagger.yaml")
+	http.ServeFile(w, r, "./docs/def.yaml")
 }
 
 func (we Adapter) serveDocUI() http.Handler {
-	url := fmt.Sprintf("%s/doc", we.host)
+	url := fmt.Sprintf("%s/core/doc", we.host)
 	return httpSwagger.Handler(httpSwagger.URL(url))
 }
 
