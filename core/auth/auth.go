@@ -97,5 +97,6 @@ func (a Auth) deleteAccount(claims *Claims) {
 
 //Storage interface TODO
 type Storage interface {
+	GetFirebaseAdminCreds(clientID string) (*model.FirebaseAdminCreds, error)
 	ReadTODO() error
 }

@@ -9,6 +9,7 @@ import (
 
 	log "github.com/rokmetro/logging-library/loglib"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 //Adapter implements the Storage interface
@@ -41,6 +42,22 @@ func (sa *Adapter) CreateGlobalConfig(setting string) (*model.GlobalConfig, erro
 		return nil, err
 	}
 	return &globalConfig, nil
+}
+
+//GetFirebaseAdminCreds finds the Firebase cred document from DB by clientID
+func (sa *Adapter) GetFirebaseAdminCreds(clientID string) (*model.FirebaseAdminCreds, error) {
+	filter := bson.D{primitive.E{Key: "clientID", Value: clientID}}
+	var result []*model.FirebaseAdminCreds
+	err := sa.db.firebaseAdminCreds.Find(filter, &result, nil)
+	if err != nil {
+		return nil, err
+	}
+	if result == nil || len(result) == 0 {
+		//not found
+		// log.Info("no Firebase creds found for the given clientID")
+		return nil, nil
+	}
+	return result[0], nil
 }
 
 //GetGlobalConfig give config
