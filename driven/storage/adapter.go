@@ -139,8 +139,12 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 		return nil, err
 	}
 
-	//TODO
-	return nil, nil
+	//return the correct type
+	resOrgConfig := model.OrganizationConfig{ID: orgConfig.ID, Domains: orgConfig.Domains}
+
+	resOrg := model.Organization{ID: organization.ID, Name: organization.Name, Type: organization.Type,
+		RequiresOwnLogin: organization.RequiresOwnLogin, LoginTypes: organization.LoginTypes, Config: resOrgConfig}
+	return &resOrg, nil
 }
 
 //NewStorageAdapter creates a new storage adapter instance
