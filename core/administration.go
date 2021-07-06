@@ -200,9 +200,9 @@ func (app *Application) admUpdateGlobalConfig(setting string) error {
 }
 
 func (app *Application) admCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
-	createOrganization, err := app.storage.CreateOrganization(name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+	organization, err := app.storage.CreateOrganization(name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
 	if err != nil {
 		return nil, err
 	}
-	return createOrganization, nil
+	return organization, nil
 }

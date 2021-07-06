@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/casbin/casbin v1.9.1
 	github.com/go-playground/universal-translator v0.17.0 // indirect
+	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/rokmetro/logging-library v0.1.5
