@@ -32,7 +32,8 @@ type Auth struct {
 
 //NewAuth creates a new auth instance
 func NewAuth(storage Storage) *Auth {
-	auth := &Auth{storage: storage}
+	authTypes := map[string]authType{}
+	auth := &Auth{storage: storage, authTypes: authTypes}
 
 	//Initialize auth types
 	initEmailAuth(auth)
