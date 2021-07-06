@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	log "github.com/rokmetro/logging-library/loglib"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -145,6 +146,28 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 	resOrg := model.Organization{ID: organization.ID, Name: organization.Name, Type: organization.Type,
 		RequiresOwnLogin: organization.RequiresOwnLogin, LoginTypes: organization.LoginTypes, Config: resOrgConfig}
 	return &resOrg, nil
+}
+
+//UpdateOrganization updates an organization
+func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
+
+	updatOrganizationFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	updateOrganization := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "name", Value: name},
+			primitive.E{Key: "type", Value: requestType},
+			primitive.E{Key: "requires_own_login", Value: requiresOwnLogin},
+			primitive.E{Key: "login_types", Value: loginTypes},
+			primitive.E{Key: "config.organization_domains", Value: organizationDomains},
+		}},
+	}
+
+	_, err := sa.db.organizations.UpdateOne(updatOrganizationFilter, updateOrganization, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }
 
 //NewStorageAdapter creates a new storage adapter instance
