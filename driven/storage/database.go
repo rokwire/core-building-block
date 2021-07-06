@@ -6,6 +6,8 @@ import (
 	"log"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -17,6 +19,9 @@ type database struct {
 
 	db       *mongo.Database
 	dbClient *mongo.Client
+
+	globalConfig  *collectionWrapper
+	organizations *collectionWrapper
 
 	listener core.StorageListener
 }
@@ -43,14 +48,47 @@ func (m *database) start() error {
 
 	//apply checks
 	db := client.Database(m.mongoDBName)
-	//TODO
+
+	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
+	err = m.applyGlobalConfigChecks(globalConfig)
+	if err != nil {
+		return err
+	}
+
+	organizations := &collectionWrapper{database: m, coll: db.Collection("organizations")}
+	err = m.applyOrganizationsChecks(organizations)
+	if err != nil {
+		return err
+	}
 
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
+	m.globalConfig = globalConfig
+	m.organizations = organizations
 
 	//TODO
 
+	return nil
+}
+
+func (m *database) applyGlobalConfigChecks(configs *collectionWrapper) error {
+	log.Println("apply global config checks.....")
+
+	log.Println("global config checks passed")
+	return nil
+}
+
+func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) error {
+	log.Println("apply organizations checks.....")
+
+	//add name index - unique
+	err := organizations.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	log.Println("organizations checks passed")
 	return nil
 }
 

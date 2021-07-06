@@ -3,8 +3,10 @@ package auth
 import (
 	"core-building-block/core/model"
 	"fmt"
+	"log"
 )
 
+//Claims represents the claims entity
 type Claims struct {
 	ID     string
 	Name   string
@@ -21,6 +23,7 @@ type authType interface {
 	check(creds string) (*Claims, error)
 }
 
+//Auth represents the auth functionality unit
 type Auth struct {
 	storage Storage
 
@@ -37,8 +40,6 @@ func NewAuth(storage Storage) *Auth {
 	initOidcAuth(auth)
 	initSamlAuth(auth)
 	initFirebaseAuth(auth)
-	initApiKeyAuth(auth)
-	initSignatureAuth(auth)
 
 	return auth
 }
@@ -61,6 +62,7 @@ func (a Auth) getAuthType(name string) (authType, error) {
 	return nil, fmt.Errorf("invalid auth type: %s", name)
 }
 
+//Login logs a user in using the specified credentials and authentication method
 func (a Auth) Login(authName string, creds string) (*model.User, error) {
 	auth, err := a.getAuthType(authName)
 	if err != nil {
@@ -71,6 +73,7 @@ func (a Auth) Login(authName string, creds string) (*model.User, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Println(claims)
 
 	//TODO: Implement account management and return user using claims
 
@@ -92,6 +95,7 @@ func (a Auth) deleteAccount(claims *Claims) {
 	//TODO: Implement
 }
 
+//Storage interface for auth package
 type Storage interface {
 	ReadTODO() error
 }

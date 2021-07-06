@@ -14,9 +14,12 @@ type User struct {
 
 	Permissions []GlobalPermission
 	Roles       []GlobalRole
-	Groups      []GlobalGroup
+
+	Groups []GlobalGroup
 
 	OrganizationsMemberships []OrganizationMembership
+
+	Devices []Device
 }
 
 func (u User) String() string {
@@ -79,6 +82,11 @@ func (up UserProfile) String() string {
 type GlobalGroup struct {
 	ID   string
 	Name string
+
+	Permissions []GlobalPermission
+	Roles       []GlobalRole
+
+	Users []User
 }
 
 //GlobalPermission represents global permission entity
@@ -108,7 +116,12 @@ type OrganizationGroup struct {
 	ID   string
 	Name string
 
+	Permissions []OrganizationPermission
+	Roles       []OrganizationRole
+
 	Organization Organization
+
+	OrganizationsMemberships []OrganizationMembership
 }
 
 func (cg OrganizationGroup) String() string {
@@ -139,4 +152,18 @@ type OrganizationRole struct {
 
 func (c OrganizationRole) String() string {
 	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s\tOrganization:%s]", c.ID, c.Name, c.Permissions, c.Organization)
+}
+
+//Device represents user devices entity.
+type Device struct {
+	ID   string
+	Type string //mobile, web, desktop, other
+
+	//TODO - other fields when they are clear
+	OS         string //?
+	MacAddress string //?
+	///
+
+	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
+	Users []User
 }

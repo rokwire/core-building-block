@@ -8,11 +8,14 @@ Here are proposals which every develop should accept. They are not final and eve
 ## Work Flow
 Here is the process every develop should follow when working on an issue.
 
+### Create issue
+Create an issue for each new feature or bug. Issue names should describe the changes to be made starting with an action verb (eg. Set up project skeleton, Fix email login bug). Issues should contain a detailed description comment including any information about feature requirements or steps to reproduce bugs.
+
 ### Create issue branch
 All work should happen in an issue branch. The name of the branch should be `issues/ID-[issue number]`.
 
 #### Update the CHANGELOG.md file
-We should keep the changelog up to date as this is part of open source platform.
+We should keep the changelog up to date as this is part of open source platform. Each issue should be added to the top of the appropriate [verb](https://keepachangelog.com/en/1.0.0/#how) in the `[Unreleased]` section of the changelog in the corresponding issue branch in the format `{issue name} [#{issue-ID}]({issue url})` (eg. [Unreleased] Added - Set up project skeleton [#1](https://github.com/rokwire/core-building-block/issues/1))
 
 #### Add code
 Make as many commits as needed to complete the issue.

@@ -35,7 +35,8 @@ type OrganizationMembership struct {
 
 	Permissions []OrganizationPermission
 	Roles       []OrganizationRole
-	Groups      []OrganizationGroup
+
+	Groups []OrganizationGroup
 }
 
 func (cm OrganizationMembership) String() string {

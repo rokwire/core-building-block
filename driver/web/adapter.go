@@ -4,8 +4,9 @@ import (
 	"core-building-block/core"
 	"core-building-block/utils"
 	"fmt"
-	"log"
 	"net/http"
+
+	log "github.com/rokmetro/logging-library/loglib"
 
 	"github.com/casbin/casbin"
 	"github.com/gorilla/mux"
@@ -15,10 +16,10 @@ import (
 
 //Adapter entity
 type Adapter struct {
-	host          string
-	auth          *Auth
-	authorization *casbin.Enforcer
-
+	host                string
+	auth                *Auth
+	authorization       *casbin.Enforcer
+	logger              *log.StandardLogger
 	servicesApisHandler ServicesApisHandler
 	adminApisHandler    AdminApisHandler
 	encApisHandler      EncApisHandler
@@ -26,6 +27,8 @@ type Adapter struct {
 
 	app *core.Application
 }
+
+type handlerFunc = func(*log.Log, http.ResponseWriter, *http.Request)
 
 // @title Rokwire Core Building Block API
 // @description Rokwire Core Building Block API Documentation.
@@ -66,6 +69,12 @@ func (we Adapter) Start() {
 	adminSubrouter := subRouter.PathPrefix("/admin").Subrouter()
 	adminSubrouter.HandleFunc("/test", we.wrapFunc(we.adminApisHandler.GetTest)).Methods("GET")
 	adminSubrouter.HandleFunc("/test-model", we.wrapFunc(we.adminApisHandler.GetTestModel)).Methods("GET")
+
+	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.CreateGlobalConfig)).Methods("POST")
+	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.GetGlobalConfig)).Methods("GET")
+	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.UpdateGlobalConfig)).Methods("PUT")
+
+	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.CreateOrganization)).Methods("POST")
 	///
 
 	///enc ///
@@ -78,7 +87,9 @@ func (we Adapter) Start() {
 	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.GetTest)).Methods("GET")
 	///
 
-	log.Fatal(http.ListenAndServe(":80", router))
+	//TODO
+	//we.logger.Fatal(http.ListenAndServe(":80", router))
+	http.ListenAndServe(":80", router)
 }
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
@@ -91,16 +102,18 @@ func (we Adapter) serveDocUI() http.Handler {
 	return httpSwagger.Handler(httpSwagger.URL(url))
 }
 
-func (we Adapter) wrapFunc(handler http.HandlerFunc) http.HandlerFunc {
+func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		utils.LogRequest(req)
+		var logObj = we.logger.NewRequestLog(req)
 
-		handler(w, req)
+		handler(logObj, w, req)
+		logObj.PrintContext()
 	}
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(app *core.Application, host string) Adapter {
+func NewWebAdapter(app *core.Application, host string, logger *log.StandardLogger) Adapter {
 	auth := NewAuth(app)
 	authorization := casbin.NewEnforcer("driver/web/authorization_model.conf", "driver/web/authorization_policy.csv")
 
@@ -108,7 +121,7 @@ func NewWebAdapter(app *core.Application, host string) Adapter {
 	adminApisHandler := NewAdminApisHandler(app)
 	encApisHandler := NewEncApisHandler(app)
 	bbsApisHandler := NewBBsApisHandler(app)
-	return Adapter{host: host, auth: auth, authorization: authorization, servicesApisHandler: servicesApisHandler,
+	return Adapter{host: host, auth: auth, logger: logger, authorization: authorization, servicesApisHandler: servicesApisHandler,
 		adminApisHandler: adminApisHandler, encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, app: app}
 }
 
