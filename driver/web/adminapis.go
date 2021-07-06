@@ -8,6 +8,7 @@ import (
 
 	"gopkg.in/go-playground/validator.v9"
 
+	"github.com/gorilla/mux"
 	log "github.com/rokmetro/logging-library/loglib"
 )
 
@@ -205,6 +206,13 @@ type updateOrganizationRequest struct {
 
 //UpdateOrganization updates organization
 func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		http.Error(w, "ID is required", http.StatusBadRequest)
+		return
+	}
+
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		l.Errorf("Error on marshal update organization - %s\n", err.Error())
@@ -232,7 +240,7 @@ func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, 
 	loginTypes := requestData.LoginTypes
 	organizationDomains := requestData.OrganizationDomains
 
-	_, err = h.app.Administration.AdmUpdateOrganization(name, requestType, *requiresOwnLogin, loginTypes, organizationDomains)
+	_, err = h.app.Administration.AdmUpdateOrganization(ID, name, requestType, *requiresOwnLogin, loginTypes, organizationDomains)
 	if err != nil {
 		l.Errorf("Error on updating an organization - %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
