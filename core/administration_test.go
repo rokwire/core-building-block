@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	core "core-building-block/core"
+	genmocks "core-building-block/core/mocks"
 	core_model "core-building-block/core/model"
-	genmocks "core-building-block/mocks"
 
 	"gotest.tools/assert"
 )

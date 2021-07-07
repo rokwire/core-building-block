@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	core "core-building-block/core"
-	genmocks "core-building-block/mocks"
+	genmocks "core-building-block/core/mocks"
 )
 
 func TestAddListener(t *testing.T) {
