@@ -38,6 +38,29 @@ func (_m *Storage) CreateGlobalConfig(setting string) (*model.GlobalConfig, erro
 	return r0, r1
 }
 
+// CreateOrganization provides a mock function with given fields: name, requestType, requiresOwnLogin, loginTypes, organizationDomains
+func (_m *Storage) CreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
+	ret := _m.Called(name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+
+	var r0 *model.Organization
+	if rf, ok := ret.Get(0).(func(string, string, bool, []string, []string) *model.Organization); ok {
+		r0 = rf(name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Organization)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string, bool, []string, []string) error); ok {
+		r1 = rf(name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetGlobalConfig provides a mock function with given fields:
 func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	ret := _m.Called()
@@ -59,6 +82,20 @@ func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	}
 
 	return r0, r1
+}
+
+// SaveGlobalConfig provides a mock function with given fields: setting
+func (_m *Storage) SaveGlobalConfig(setting *model.GlobalConfig) error {
+	ret := _m.Called(setting)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*model.GlobalConfig) error); ok {
+		r0 = rf(setting)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // SetStorageListener provides a mock function with given fields: storageListener
