@@ -1,5 +1,5 @@
 package core
 
-func (app *Application) encGetTest() string {
+func (app *application) encGetTest() string {
 	return "Enc - test"
 }

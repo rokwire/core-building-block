@@ -1,5 +1,5 @@
 package core
 
-func (app *Application) bbsGetTest() string {
+func (app *application) bbsGetTest() string {
 	return "BBs - test"
 }

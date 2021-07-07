@@ -51,7 +51,7 @@ type StorageListener interface {
 }
 
 type storageListenerImpl struct {
-	app *Application
+	app *application
 }
 
 //ApplicationListener represents application listener
