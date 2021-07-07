@@ -25,7 +25,7 @@ type Adapter struct {
 	encApisHandler      EncApisHandler
 	bbsApisHandler      BBsApisHandler
 
-	coreAPIs *core.CoreAPIs
+	coreAPIs *core.APIs
 }
 
 type handlerFunc = func(*log.Log, http.ResponseWriter, *http.Request)
@@ -113,7 +113,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(coreAPIs *core.CoreAPIs, host string, logger *log.StandardLogger) Adapter {
+func NewWebAdapter(coreAPIs *core.APIs, host string, logger *log.StandardLogger) Adapter {
 	auth := NewAuth(coreAPIs)
 	authorization := casbin.NewEnforcer("driver/web/authorization_model.conf", "driver/web/authorization_policy.csv")
 

@@ -9,7 +9,7 @@ import (
 
 //ServicesApisHandler handles the rest APIs implementation
 type ServicesApisHandler struct {
-	coreAPIs *core.CoreAPIs
+	coreAPIs *core.APIs
 }
 
 //GetAuthTest TODO get test
@@ -30,6 +30,6 @@ func (h ServicesApisHandler) SerVersion(l *log.Log, w http.ResponseWriter, r *ht
 }
 
 //NewServicesApisHandler creates new rest services Handler instance
-func NewServicesApisHandler(coreAPIs *core.CoreAPIs) ServicesApisHandler {
+func NewServicesApisHandler(coreAPIs *core.APIs) ServicesApisHandler {
 	return ServicesApisHandler{coreAPIs: coreAPIs}
 }

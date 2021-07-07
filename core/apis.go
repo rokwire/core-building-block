@@ -7,8 +7,8 @@ import (
 	log "github.com/rokmetro/logging-library/loglib"
 )
 
-//CoreAPIs exposes to the drivers adapters access to the core functionality
-type CoreAPIs struct {
+//APIs exposes to the drivers adapters access to the core functionality
+type APIs struct {
 	Services       Services       //expose to the drivers adapters
 	Administration Administration //expose to the drivers adapters
 	Encryption     Encryption     //expose to the drivers adapters
@@ -20,17 +20,17 @@ type CoreAPIs struct {
 }
 
 //Start starts the core part of the application
-func (c *CoreAPIs) Start() {
+func (c *APIs) Start() {
 	c.app.start()
 }
 
 //AddListener adds application listener
-func (c *CoreAPIs) AddListener(listener ApplicationListener) {
+func (c *APIs) AddListener(listener ApplicationListener) {
 	c.app.addListener(listener)
 }
 
 //NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(version string, build string, storage Storage, auth *auth.Auth) *CoreAPIs {
+func NewCoreAPIs(version string, build string, storage Storage, auth *auth.Auth) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
 	application := application{version: version, build: build, storage: storage, listeners: listeners}
@@ -42,7 +42,7 @@ func NewCoreAPIs(version string, build string, storage Storage, auth *auth.Auth)
 	bbsImpl := &bbsImpl{app: &application}
 
 	//+ auth
-	coreAPIs := CoreAPIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
+	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
 		BBs: bbsImpl, Auth: auth, app: &application}
 
 	return &coreAPIs

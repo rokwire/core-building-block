@@ -13,7 +13,7 @@ import (
 
 //AdminApisHandler handles the admin rest APIs implementation
 type AdminApisHandler struct {
-	coreAPIs *core.CoreAPIs
+	coreAPIs *core.APIs
 }
 
 //GetTest TODO get test
@@ -72,7 +72,7 @@ func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance
-func NewAdminApisHandler(coreAPIs *core.CoreAPIs) AdminApisHandler {
+func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
 	return AdminApisHandler{coreAPIs: coreAPIs}
 }
 

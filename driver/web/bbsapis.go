@@ -9,7 +9,7 @@ import (
 
 //BBsApisHandler handles the APIs implementation used by the platform building blocks
 type BBsApisHandler struct {
-	coreAPIs *core.CoreAPIs
+	coreAPIs *core.APIs
 }
 
 //GetTest TODO get test
@@ -19,6 +19,6 @@ func (h BBsApisHandler) GetTest(l *log.Log, w http.ResponseWriter, r *http.Reque
 }
 
 //NewBBsApisHandler creates new bbs Handler instance
-func NewBBsApisHandler(coreAPIs *core.CoreAPIs) BBsApisHandler {
+func NewBBsApisHandler(coreAPIs *core.APIs) BBsApisHandler {
 	return BBsApisHandler{coreAPIs: coreAPIs}
 }

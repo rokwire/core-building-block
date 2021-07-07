@@ -26,7 +26,7 @@ func (auth *Auth) Start() error {
 }
 
 //NewAuth creates new auth handler
-func NewAuth(coreAPIs *core.CoreAPIs) *Auth {
+func NewAuth(coreAPIs *core.APIs) *Auth {
 	servicesAuth := newServicesAuth(coreAPIs)
 	adminAuth := newAdminAuth(coreAPIs)
 	encAuth := newEncAuth(coreAPIs)
@@ -38,56 +38,56 @@ func NewAuth(coreAPIs *core.CoreAPIs) *Auth {
 
 //ServicesAuth entity
 type ServicesAuth struct {
-	coreAPIs *core.CoreAPIs
+	coreAPIs *core.APIs
 }
 
 func (auth *ServicesAuth) start() {
 	log.Println("ServicesAuth -> start")
 }
 
-func newServicesAuth(coreAPIs *core.CoreAPIs) *ServicesAuth {
+func newServicesAuth(coreAPIs *core.APIs) *ServicesAuth {
 	auth := ServicesAuth{coreAPIs: coreAPIs}
 	return &auth
 }
 
 //AdminAuth entity
 type AdminAuth struct {
-	coreAPIs *core.CoreAPIs
+	coreAPIs *core.APIs
 }
 
 func (auth *AdminAuth) start() {
 	log.Println("AdminAuth -> start")
 }
 
-func newAdminAuth(coreAPIs *core.CoreAPIs) *AdminAuth {
+func newAdminAuth(coreAPIs *core.APIs) *AdminAuth {
 	auth := AdminAuth{coreAPIs: coreAPIs}
 	return &auth
 }
 
 //EncAuth entity
 type EncAuth struct {
-	coreAPIs *core.CoreAPIs
+	coreAPIs *core.APIs
 }
 
 func (auth *EncAuth) start() {
 	log.Println("EncAuth -> start")
 }
 
-func newEncAuth(coreAPIs *core.CoreAPIs) *EncAuth {
+func newEncAuth(coreAPIs *core.APIs) *EncAuth {
 	auth := EncAuth{coreAPIs: coreAPIs}
 	return &auth
 }
 
 //BBsAuth entity
 type BBsAuth struct {
-	coreAPIs *core.CoreAPIs
+	coreAPIs *core.APIs
 }
 
 func (auth *BBsAuth) start() {
 	log.Println("BBsAuth -> start")
 }
 
-func newBBsAuth(coreAPIs *core.CoreAPIs) *BBsAuth {
+func newBBsAuth(coreAPIs *core.APIs) *BBsAuth {
 	auth := BBsAuth{coreAPIs: coreAPIs}
 	return &auth
 }
