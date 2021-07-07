@@ -207,10 +207,11 @@ func (app *Application) admCreateOrganization(name string, requestType string, r
 	return organization, nil
 }
 
-func (app *Application) admUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
-	updateOrganization, err := app.storage.UpdateOrganization(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+func (app *Application) admUpdateOrganization(ID string, name *string, requestType *string, requiresOwnLogin *bool, loginTypes *[]string, organizationDomains *[]string) error {
+	err := app.storage.UpdateOrganization(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return updateOrganization, nil
+
+	return err
 }

@@ -149,7 +149,7 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 }
 
 //UpdateOrganization updates an organization
-func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
+func (sa *Adapter) UpdateOrganization(ID string, name *string, requestType *string, requiresOwnLogin *bool, loginTypes *[]string, organizationDomains *[]string) error {
 
 	updatOrganizationFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	updateOrganization := bson.D{
@@ -164,10 +164,19 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 
 	_, err := sa.db.organizations.UpdateOne(updatOrganizationFilter, updateOrganization, nil)
 	if err != nil {
-		return nil, err
+		upFilter := bson.D{primitive.E{Key: "id", Value: ID},
+			primitive.E{Key: "name", Value: name}}
+		var upResult []*model.Organization
+		err = sa.db.organizations.Find(upFilter, &upResult, nil)
+		if err != nil {
+			return err
+		}
+		if len(upResult) == 0 {
+			return nil
+		}
+		return err
 	}
-
-	return nil, nil
+	return nil
 }
 
 //NewStorageAdapter creates a new storage adapter instance

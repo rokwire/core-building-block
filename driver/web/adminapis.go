@@ -148,9 +148,9 @@ func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 }
 
 type createOrganizationRequest struct {
-	Name                string   `json:"name" validate:"required"`
-	Type                string   `json:"type" validate:"required,oneof=micro small medium large huge"`
-	RequiresOwnLogin    *bool    `json:"requires_own_login" validate:"required"`
+	Name                string   `json:"name"`
+	Type                string   `json:"type"`
+	RequiresOwnLogin    *bool    `json:"requires_own_login"`
 	LoginTypes          []string `json:"login_types"`
 	OrganizationDomains []string `json:"organization_domains"`
 }
@@ -197,11 +197,11 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 }
 
 type updateOrganizationRequest struct {
-	Name                string   `json:"name" validate:"required"`
-	Type                string   `json:"type" validate:"required,oneof=micro small medium large huge"`
-	RequiresOwnLogin    *bool    `json:"requires_own_login" validate:"required"`
-	LoginTypes          []string `json:"login_types"`
-	OrganizationDomains []string `json:"organization_domains"`
+	Name                *string   `json:"name"`
+	Type                *string   `json:"type"`
+	RequiresOwnLogin    *bool     `json:"requires_own_login"`
+	LoginTypes          *[]string `json:"login_types"`
+	OrganizationDomains *[]string `json:"organization_domains"`
 }
 
 //UpdateOrganization updates organization
@@ -240,7 +240,7 @@ func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, 
 	loginTypes := requestData.LoginTypes
 	organizationDomains := requestData.OrganizationDomains
 
-	_, err = h.app.Administration.AdmUpdateOrganization(ID, name, requestType, *requiresOwnLogin, loginTypes, organizationDomains)
+	err = h.app.Administration.AdmUpdateOrganization(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
 	if err != nil {
 		l.Errorf("Error on updating an organization - %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -249,5 +249,5 @@ func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, 
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Successfully created"))
+	w.Write([]byte("Successfully updated"))
 }
