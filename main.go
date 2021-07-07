@@ -38,12 +38,12 @@ func main() {
 	//auth := auth.NewAuth(storageAdapter)
 
 	//core
-	application := core.NewCoreAPIs(Version, Build, storageAdapter, nil)
-	application.Start()
+	coreAPIs := core.NewCoreAPIs(Version, Build, storageAdapter, nil)
+	coreAPIs.Start()
 
 	//web adapter
 	host := getEnvKey(logger, "ROKWIRE_CORE_HOST", true)
-	webAdapter := web.NewWebAdapter(application, host, logger)
+	webAdapter := web.NewWebAdapter(coreAPIs, host, logger)
 
 	webAdapter.Start()
 }
