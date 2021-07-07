@@ -13,18 +13,18 @@ import (
 
 //AdminApisHandler handles the admin rest APIs implementation
 type AdminApisHandler struct {
-	app *core.Application
+	coreAPIs *core.CoreAPIs
 }
 
 //GetTest TODO get test
 func (h AdminApisHandler) GetTest(l *log.Log, w http.ResponseWriter, r *http.Request) {
-	res := h.app.Administration.AdmGetTest()
+	res := h.coreAPIs.Administration.AdmGetTest()
 	w.Write([]byte(res))
 }
 
 //GetTestModel gives a test model instance
 func (h AdminApisHandler) GetTestModel(l *log.Log, w http.ResponseWriter, r *http.Request) {
-	res := h.app.Administration.AdmGetTestModel()
+	res := h.coreAPIs.Administration.AdmGetTestModel()
 	w.Write([]byte(res))
 }
 
@@ -59,7 +59,7 @@ func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 	}
 	setting := requestData.Setting
 
-	_, err = h.app.Administration.AdmCreateGlobalConfig(setting)
+	_, err = h.coreAPIs.Administration.AdmCreateGlobalConfig(setting)
 	if err != nil {
 		//	log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -72,8 +72,8 @@ func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance
-func NewAdminApisHandler(app *core.Application) AdminApisHandler {
-	return AdminApisHandler{app: app}
+func NewAdminApisHandler(coreAPIs *core.CoreAPIs) AdminApisHandler {
+	return AdminApisHandler{coreAPIs: coreAPIs}
 }
 
 type responseGlobalConfig struct {
@@ -82,7 +82,7 @@ type responseGlobalConfig struct {
 
 //GetGlobalConfig gets config
 func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) {
-	config, err := h.app.Administration.AdmGetGlobalConfig()
+	config, err := h.coreAPIs.Administration.AdmGetGlobalConfig()
 	if err != nil {
 		//log.Printf("Error on getting config - %s\n", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -134,7 +134,7 @@ func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 	}
 	setting := updateConfig.Setting
 
-	err = h.app.Administration.AdmUpdateGlobalConfig(setting)
+	err = h.coreAPIs.Administration.AdmUpdateGlobalConfig(setting)
 	if err != nil {
 		//	log.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -183,7 +183,7 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 	loginTypes := requestData.LoginTypes
 	organizationDomains := requestData.OrganizationDomains
 
-	_, err = h.app.Administration.AdmCreateOrganization(name, requestType, *requiresOwnLogin, loginTypes, organizationDomains)
+	_, err = h.coreAPIs.Administration.AdmCreateOrganization(name, requestType, *requiresOwnLogin, loginTypes, organizationDomains)
 	if err != nil {
 		l.Errorf("Error on creating an organization - %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)

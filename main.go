@@ -37,8 +37,8 @@ func main() {
 	//auth
 	//auth := auth.NewAuth(storageAdapter)
 
-	//application
-	application := core.NewApplication(Version, Build, storageAdapter, nil)
+	//core
+	application := core.NewCoreAPIs(Version, Build, storageAdapter, nil)
 	application.Start()
 
 	//web adapter

@@ -2,21 +2,18 @@ package core_test
 
 import (
 	"testing"
-
-	core "core-building-block/core"
-	genmocks "core-building-block/core/mocks"
 )
 
 func TestAddListener(t *testing.T) {
-	storage := genmocks.Storage{}
-	app := core.NewApplication("1.1.1", "build", &storage, nil)
+	//storage := genmocks.Storage{}
+	//app := core.NewApplication("1.1.1", "build", &storage, nil)
 	/*
 		listeners := app.listeners
 		if len(listeners) != 0 {
 			t.Error("listeners is not empty")
 		}
 	*/
-	app.AddListener(genmocks.ApplicationListener{})
+	//	app.AddListener(genmocks.ApplicationListener{})
 	/*
 		listeners = app.listeners
 		if len(listeners) != 1 {

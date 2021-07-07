@@ -26,11 +26,11 @@ func (auth *Auth) Start() error {
 }
 
 //NewAuth creates new auth handler
-func NewAuth(app *core.Application) *Auth {
-	servicesAuth := newServicesAuth(app)
-	adminAuth := newAdminAuth(app)
-	encAuth := newEncAuth(app)
-	bbsAuth := newBBsAuth(app)
+func NewAuth(coreAPIs *core.CoreAPIs) *Auth {
+	servicesAuth := newServicesAuth(coreAPIs)
+	adminAuth := newAdminAuth(coreAPIs)
+	encAuth := newEncAuth(coreAPIs)
+	bbsAuth := newBBsAuth(coreAPIs)
 
 	auth := Auth{servicesAuth: servicesAuth, adminAuth: adminAuth, encAuth: encAuth, bbsAuth: bbsAuth}
 	return &auth
@@ -38,56 +38,56 @@ func NewAuth(app *core.Application) *Auth {
 
 //ServicesAuth entity
 type ServicesAuth struct {
-	app *core.Application
+	coreAPIs *core.CoreAPIs
 }
 
 func (auth *ServicesAuth) start() {
 	log.Println("ServicesAuth -> start")
 }
 
-func newServicesAuth(app *core.Application) *ServicesAuth {
-	auth := ServicesAuth{app: app}
+func newServicesAuth(coreAPIs *core.CoreAPIs) *ServicesAuth {
+	auth := ServicesAuth{coreAPIs: coreAPIs}
 	return &auth
 }
 
 //AdminAuth entity
 type AdminAuth struct {
-	app *core.Application
+	coreAPIs *core.CoreAPIs
 }
 
 func (auth *AdminAuth) start() {
 	log.Println("AdminAuth -> start")
 }
 
-func newAdminAuth(app *core.Application) *AdminAuth {
-	auth := AdminAuth{app: app}
+func newAdminAuth(coreAPIs *core.CoreAPIs) *AdminAuth {
+	auth := AdminAuth{coreAPIs: coreAPIs}
 	return &auth
 }
 
 //EncAuth entity
 type EncAuth struct {
-	app *core.Application
+	coreAPIs *core.CoreAPIs
 }
 
 func (auth *EncAuth) start() {
 	log.Println("EncAuth -> start")
 }
 
-func newEncAuth(app *core.Application) *EncAuth {
-	auth := EncAuth{app: app}
+func newEncAuth(coreAPIs *core.CoreAPIs) *EncAuth {
+	auth := EncAuth{coreAPIs: coreAPIs}
 	return &auth
 }
 
 //BBsAuth entity
 type BBsAuth struct {
-	app *core.Application
+	coreAPIs *core.CoreAPIs
 }
 
 func (auth *BBsAuth) start() {
 	log.Println("BBsAuth -> start")
 }
 
-func newBBsAuth(app *core.Application) *BBsAuth {
-	auth := BBsAuth{app: app}
+func newBBsAuth(coreAPIs *core.CoreAPIs) *BBsAuth {
+	auth := BBsAuth{coreAPIs: coreAPIs}
 	return &auth
 }
