@@ -8,8 +8,49 @@ import (
 	genmocks "core-building-block/core/mocks"
 	core_model "core-building-block/core/model"
 
+	log "github.com/rokmetro/logging-library/loglib"
+
 	"gotest.tools/assert"
 )
+
+//Services
+
+func TestSerGetVersion(t *testing.T) {
+	storage := genmocks.Storage{}
+	coreAPIs := core.NewCoreAPIs("1.1.1", "build", &storage, nil)
+
+	l := log.NewLogger("test").NewLog("1", "1")
+	got := coreAPIs.Services.SerGetVersion(l)
+	want := "1.1.1"
+
+	assert.Equal(t, got, want, "result is different")
+}
+
+func TestSerGetAuthTest(t *testing.T) {
+	storage := genmocks.Storage{}
+	coreAPIs := core.NewCoreAPIs("1.1.1", "build", &storage, nil)
+
+	l := log.NewLogger("test").NewLog("1", "1")
+	got := coreAPIs.Services.SerGetAuthTest(l)
+	want := "Services - Auth - test"
+
+	assert.Equal(t, got, want, "result is different")
+}
+
+func TestSerGetCommonTest(t *testing.T) {
+	storage := genmocks.Storage{}
+	coreAPIs := core.NewCoreAPIs("1.1.1", "build", &storage, nil)
+
+	l := log.NewLogger("test").NewLog("1", "1")
+	got := coreAPIs.Services.SerGetCommonTest(l)
+	want := "Services - Common - test"
+
+	assert.Equal(t, got, want, "result is different")
+}
+
+///
+
+//Administration
 
 func TestAdmGetTest(t *testing.T) {
 	storage := genmocks.Storage{}
@@ -52,6 +93,10 @@ func TestAdmCreateGlobalConfig(t *testing.T) {
 	assert.Equal(t, err.Error(), "error occured", "error is different")
 }
 
+///
+
+//Encryption
+
 func TestEncGetTest(t *testing.T) {
 	storage := genmocks.Storage{}
 	coreAPIs := core.NewCoreAPIs("1.1.1", "build", &storage, nil)
@@ -61,3 +106,19 @@ func TestEncGetTest(t *testing.T) {
 
 	assert.Equal(t, got, want, "result is different")
 }
+
+///
+
+//BBs
+
+func TestBBsGetTest(t *testing.T) {
+	storage := genmocks.Storage{}
+	coreAPIs := core.NewCoreAPIs("1.1.1", "build", &storage, nil)
+
+	got := coreAPIs.BBs.BBsGetTest()
+	want := "BBs - test"
+
+	assert.Equal(t, got, want, "result is different")
+}
+
+///
