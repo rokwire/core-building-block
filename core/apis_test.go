@@ -51,3 +51,13 @@ func TestAdmCreateGlobalConfig(t *testing.T) {
 	}
 	assert.Equal(t, err.Error(), "error occured", "error is different")
 }
+
+func TestEncGetTest(t *testing.T) {
+	storage := genmocks.Storage{}
+	coreAPIs := core.NewCoreAPIs("1.1.1", "build", &storage, nil)
+
+	got := coreAPIs.Encryption.EncGetTest()
+	want := "Enc - test"
+
+	assert.Equal(t, got, want, "result is different")
+}
