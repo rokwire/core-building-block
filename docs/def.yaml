@@ -34,9 +34,9 @@ components:
           type: string
           description: the organization id
         name:
-        type: string
-        description: TODO
-        otype:
+          type: string
+          description: TODO
+        type:
           type: string
           enum:
             - V1
