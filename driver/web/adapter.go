@@ -16,10 +16,11 @@ import (
 
 //Adapter entity
 type Adapter struct {
-	host                string
-	auth                *Auth
-	authorization       *casbin.Enforcer
-	logger              *log.StandardLogger
+	host          string
+	auth          *Auth
+	authorization *casbin.Enforcer
+	logger        *log.StandardLogger
+
 	servicesApisHandler ServicesApisHandler
 	adminApisHandler    AdminApisHandler
 	encApisHandler      EncApisHandler

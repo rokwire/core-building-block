@@ -21,3 +21,48 @@ tags:
   description: APIs consumed by the Encryption building block.
 - name: BBs
   description: APIs consumed by the platform building blocks.
+components:
+  schemas:
+    Organization:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          type: string
+          description: the organization id
+        name:
+        type: string
+        description: TODO
+        otype:
+          type: string
+          enum:
+            - V1
+            - V2
+            - Other
+          description: TODO
+        requires-own-login:
+          type: boolean
+          description: TODO
+        login-types:
+          type: array
+          description: TODO
+          items:
+            type: string
+        config:
+          $ref: "#/components/schemas/OrganizationConfig"
+          description: TODO
+    OrganizationConfig:
+      type: object
+      properties:
+        id:
+          type: string
+          description: the organization config id
+        domains:
+          type: array
+          description: organization domains
+          items:
+            type: string
+        
