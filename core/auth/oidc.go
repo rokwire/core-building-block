@@ -41,12 +41,10 @@ type oidcAuthImpl struct {
 }
 
 type oidcCheckParams struct {
-	Web    bool   `json:"web"`
 	Domain string `json:"domain"`
 }
 
 type oidcLoginParams struct {
-	Web          bool   `json:"web"`
 	Domain       string `json:"domain"`
 	Code         string `json:"code"`
 	CodeVerifier string `json:"pkce_verifier"`
@@ -54,12 +52,11 @@ type oidcLoginParams struct {
 }
 
 type oidcRefreshParams struct {
-	Web         string `json:"web"`
 	Domain      string `json:"domain"`
 	RedirectURI string `json:"redirect_uri"` // endpoint on core BB?
 }
 
-func (a *oidcAuthImpl) login(creds string, params string) (map[string]interface{}, error) {
+func (a *oidcAuthImpl) check(creds string, params string) (*UserAuth, error) {
 	// use credType argument to function instead?
 	paramsMap := make(map[string]interface{})
 	err := json.Unmarshal([]byte(params), &paramsMap)
@@ -98,7 +95,7 @@ func (a *oidcAuthImpl) login(creds string, params string) (map[string]interface{
 	}
 }
 
-func (a *oidcAuthImpl) checkToken(idToken string, params oidcCheckParams) (map[string]interface{}, error) {
+func (a *oidcAuthImpl) checkToken(idToken string, params oidcCheckParams) (*UserAuth, error) {
 	authInfo := a.auth.getAuthInfo(params.Domain)
 
 	oidcProvider := authInfo.OIDCHost
@@ -122,77 +119,17 @@ func (a *oidcAuthImpl) checkToken(idToken string, params oidcCheckParams) (map[s
 		log.Printf("Raw Token Claims: %v", rawClaims)
 	}
 
-	// var claims Claims
-	// uidClaimTag = authInfo.Claims["uid"]
-	// nameClaimTag = authInfo.Claims["name"]
-	// firstNameClaimTag = authInfo.Claims["firstname"]
-	// lastNameClaimTag = authInfo.Claims["lastname"]
-	// emailClaimTag = authInfo.Claims["email"]
-	// phoneClaimTag = authInfo.Claims["phone"]
-	// groupsClaimTag = authInfo.Claims["groups"]
-	// populationsClaimTag = authInfo.Claims["populations"]
-	// log.Printf("AuthInfo Claims: %v", authInfo.Claims)
-
-	// if err := idToken.Claims(&claims); err != nil {
-	// 	log.Printf("error getting claims from token - %s\n", err)
-	// 	return nil, err
-	// }
-
-	// populationsString := ""
-	// inRequiredPopulation := (authInfo.RequiredPopulation == "")
-	// if populations, ok := claims.Populations.([]interface{}) ok {
-	// 	for _, populationInterface := range populations {
-	// 		if population, ok := populationInterface.(string) ok {
-	// 			if authInfo.RequiredPopulation == population {
-	// 				inRequiredPopulation = true
-	// 			}
-
-	// 			if authInfo.Populations != nil {
-	// 				if populationString, ok := authInfo.Populations[population] ok {
-	// 					if populationsString != "" {
-	// 						populationsString += ","
-	// 					}
-	// 					populationsString += populationString
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
-
-	// if !inRequiredPopulation {
-	// 	log.Printf("missing required population: %s - %v\n", authInfo.RequiredPopulation, claims.Populations)
-	// 	return nil
-	// }
-
-	// claims.Populations = populationsString
-
-	// var groups string
-	// groupsMap := make(map[string]string)
-
-	// for key, value := range authInfo.Groups {
-	// 	groupsMap[value] = key
-	// }
-	// groupsSplit := strings.Split(*claims.Groups, ",")
-
-	// for _, s := range groupsSplit {
-	// 	if groups != "" {
-	// 		groups += ", "
-	// 	}
-	// 	groups += groupsMap[s]
-	// }
-	// claims.Groups = &groups
-
-	// uidClaimTag = "uid"
-	// nameClaimTag = "name"
-	// emailClaimTag = "email"
-	// phoneClaimTag = "phone"
-	// groupsClaimTag = "groups"
-	// populationsClaimTag = "populations"
-
-	return rawClaims, nil
+	userAuth := UserAuth{}
+	userAuth.ID = rawClaims["id"].(string)
+	userAuth.Name = rawClaims["name"].(string)
+	userAuth.Email = rawClaims["email"].(string)
+	userAuth.Phone = rawClaims["phone"].(string)
+	userAuth.Issuer = rawClaims["iss"].(string)
+	userAuth.Exp = rawClaims["exp"].(float64)
+	return &userAuth, nil
 }
 
-func (a *oidcAuthImpl) newToken(code string, params oidcLoginParams) (map[string]interface{}, error) {
+func (a *oidcAuthImpl) newToken(code string, params oidcLoginParams) (*UserAuth, error) {
 	authInfo := a.auth.getAuthInfo(params.Domain)
 
 	bodyData := map[string]string{
@@ -214,44 +151,12 @@ func (a *oidcAuthImpl) newToken(code string, params oidcLoginParams) (map[string
 		return nil, errors.New("get auth token failed")
 	}
 
-	var claims Claims
-	checkParams := oidcCheckParams{Web: params.Web, Domain: params.Domain}
-	oidcClaims, err := a.checkToken(oidcToken.IDToken, checkParams)
-	claims.ID = oidcClaims["id"].(string)
-	claims.Name = oidcClaims["name"].(string)
-	claims.Email = oidcClaims["email"].(string)
-	claims.Phone = oidcClaims["phone"].(string)
-	claims.Groups = oidcClaims["groups"]
-	claims.Issuer = oidcClaims["iss"].(string)
-	claims.Exp = oidcClaims["exp"].(float64)
+	checkParams := oidcCheckParams{Domain: params.Domain}
+	userAuth, err := a.checkToken(oidcToken.IDToken, checkParams)
 
-	// 2. Request rokwire access token
-	accessToken, err := a.auth.generateAccessToken(&claims)
-	if err != nil {
-		return nil, err
-	}
+	userAuth.RefreshToken = oidcToken.RefreshToken
 
-	csrfToken := ""
-	var cookie http.Cookie
-	if params.Web {
-		cookie = http.Cookie{
-			Name:   "rokmetro-access",
-			Value:  accessToken,
-			Domain: "services.rokmetro.com",
-			// Expires:  expirationTime,
-			SameSite: http.SameSiteNoneMode,
-			Secure:   true,
-			HttpOnly: true,
-		}
-		accessToken = ""
-
-		csrfToken, err = a.auth.generateCSRFToken(&claims)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// 3. Request auth user
+	// 2. Request auth user
 	userInfo, err := a.loadOidcUserInfo(oidcToken, authInfo.OIDCUserURL)
 	if userInfo == nil {
 		return nil, errors.New("get auth user failed")
@@ -262,9 +167,7 @@ func (a *oidcAuthImpl) newToken(code string, params oidcLoginParams) (map[string
 		return nil, err
 	}
 
-	// 4. UserData from core?
-
-	// 5. Request user picture
+	// 3. Request user picture
 	var userPhoto []byte
 	if photoURL, ok := userMap["picture"].(string); ok {
 		userPhoto, err = a.loadOidcUserInfo(oidcToken, photoURL)
@@ -272,20 +175,12 @@ func (a *oidcAuthImpl) newToken(code string, params oidcLoginParams) (map[string
 			log.Println("Error fetching user photo:", err.Error())
 		}
 	}
+	userAuth.Picture = userPhoto
 
-	loginResponse := map[string]interface{}{
-		"rokwire_access_token": accessToken,
-		"csrf_token":           csrfToken,
-		"refresh_token":        oidcToken.RefreshToken,
-		"user_info":            userInfo,
-		"user_photo":           userPhoto,
-		"cookie":               cookie,
-	}
-
-	return loginResponse, nil
+	return userAuth, nil
 }
 
-func (a *oidcAuthImpl) refreshToken(refreshToken string, params oidcRefreshParams) (map[string]interface{}, error) {
+func (a *oidcAuthImpl) refreshToken(refreshToken string, params oidcRefreshParams) (*UserAuth, error) {
 	authInfo := a.auth.getAuthInfo(params.Domain)
 
 	if len(authInfo.OIDCTokenURL) == 0 {
@@ -308,6 +203,14 @@ func (a *oidcAuthImpl) refreshToken(refreshToken string, params oidcRefreshParam
 	if err != nil {
 		return nil, err
 	}
+	if oidcToken == nil {
+		return nil, errors.New("get auth token failed")
+	}
+
+	checkParams := oidcCheckParams{Domain: params.Domain}
+	userAuth, err := a.checkToken(oidcToken.IDToken, checkParams)
+
+	userAuth.RefreshToken = oidcToken.RefreshToken
 
 	userInfo, err := a.loadOidcUserInfo(oidcToken, authInfo.OIDCUserURL)
 	if userInfo == nil {
@@ -326,14 +229,9 @@ func (a *oidcAuthImpl) refreshToken(refreshToken string, params oidcRefreshParam
 			log.Println("Error fetching user photo:", err.Error())
 		}
 	}
+	userAuth.Picture = userPhoto
 
-	loginResponse := map[string]interface{}{
-		"refresh_token": oidcToken.RefreshToken,
-		"user_info":     userInfo,
-		"user_photo":    userPhoto,
-	}
-
-	return loginResponse, nil
+	return userAuth, nil
 }
 
 func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, authInfo *AuthInfo) (*oidcToken, error) {

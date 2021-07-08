@@ -2,7 +2,6 @@ package auth
 
 import (
 	"core-building-block/core/model"
-	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -10,14 +9,16 @@ import (
 	"golang.org/x/sync/syncmap"
 )
 
-type Claims struct {
-	ID     string
-	Name   string
-	Email  string
-	Phone  string
-	Groups interface{}
-	Issuer string
-	Exp    float64
+type UserAuth struct {
+	ID           string
+	Name         string
+	Email        string
+	Phone        string
+	Picture      []byte
+	Groups       interface{}
+	Issuer       string
+	Exp          float64
+	RefreshToken string
 }
 
 type AuthInfo struct {
@@ -43,7 +44,7 @@ type AuthInfo struct {
 //Interface for authentication mechanisms
 type authType interface {
 	//Check validity of provided credentials
-	login(creds string, params string) (map[string]interface{}, error)
+	check(creds string, params string) (*UserAuth, error)
 }
 
 type Auth struct {
@@ -99,7 +100,7 @@ func (a Auth) Login(authName string, creds string, params string) (*model.User, 
 		return nil, err
 	}
 
-	claims, err := auth.login(creds, params)
+	claims, err := auth.check(creds, params)
 	if err != nil {
 		return nil, err
 	}
@@ -110,26 +111,18 @@ func (a Auth) Login(authName string, creds string, params string) (*model.User, 
 	return nil, nil
 }
 
-func (a Auth) generateAccessToken(claims *Claims) (string, error) {
-	return "", errors.New("unimplemented")
-}
-
-func (a Auth) generateCSRFToken(claims *Claims) (string, error) {
-	return "", errors.New("unimplemented")
-}
-
 //createAccount creates a new user account
-func (a Auth) createAccount(claims *Claims) {
+func (a Auth) createAccount(claims *UserAuth) {
 	//TODO: Implement
 }
 
 //updateAccount updates a user's account information
-func (a Auth) updateAccount(claims *Claims) {
+func (a Auth) updateAccount(claims *UserAuth) {
 	//TODO: Implement
 }
 
 //deleteAccount deletes a user account
-func (a Auth) deleteAccount(claims *Claims) {
+func (a Auth) deleteAccount(claims *UserAuth) {
 	//TODO: Implement
 }
 
