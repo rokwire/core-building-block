@@ -61,6 +61,12 @@ func (m *database) start() error {
 		return err
 	}
 
+	users := &collectionWrapper{database: m, coll: db.Collection("email_credentials")}
+	err = m.applyCredsChecks(users)
+	if err != nil {
+		return err
+	}
+
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
@@ -89,6 +95,19 @@ func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) er
 	}
 
 	log.Println("organizations checks passed")
+	return nil
+}
+
+func (m *database) applyCredsChecks(organizations *collectionWrapper) error {
+	log.Println("apply creds checks.....")
+
+	//add username index - unique
+	err := organizations.AddIndex(bson.D{primitive.E{Key: "username", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	log.Println("users checks passed")
 	return nil
 }
 

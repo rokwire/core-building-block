@@ -98,4 +98,6 @@ func (a Auth) deleteAccount(claims *Claims) {
 //Storage interface TODO
 type Storage interface {
 	ReadTODO() error
+	SetEmailCredential(username string, password string) error
+	GetEmailCredential(username string) (*model.Credential, error)
 }
