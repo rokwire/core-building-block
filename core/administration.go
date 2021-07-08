@@ -206,3 +206,10 @@ func (app *Application) admCreateOrganization(name string, requestType string, r
 	}
 	return organization, nil
 }
+func (app *Application) admGetOrganization(ID string) (*model.Organization, error) {
+	getOrganization, err := app.storage.GetOrganization(ID)
+	if err != nil {
+		return nil, err
+	}
+	return getOrganization, nil
+}

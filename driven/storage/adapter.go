@@ -146,6 +146,20 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 		RequiresOwnLogin: organization.RequiresOwnLogin, LoginTypes: organization.LoginTypes, Config: resOrgConfig}
 	return &resOrg, nil
 }
+func (sa *Adapter) GetOrganization(ID string) (*model.Organization, error) {
+	filter := bson.D{}
+	var result []model.Organization
+	err := sa.db.organizations.Find(filter, &result, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(result) == 0 {
+		//no record
+		return nil, nil
+	}
+	return &result[0], nil
+
+}
 
 //NewStorageAdapter creates a new storage adapter instance
 func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *log.StandardLogger) *Adapter {
