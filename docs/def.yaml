@@ -32,34 +32,30 @@ components:
       properties:
         id:
           type: string
-          description: the organization id
         name:
           type: string
-          description: TODO
         type:
           type: string
           enum:
-            - V1
-            - V2
-            - Other
-          description: TODO
+            - micro
+            - small
+            - medium
+            - large
+            - huge
         requires-own-login:
           type: boolean
-          description: TODO
         login-types:
           type: array
-          description: TODO
           items:
             type: string
         config:
           $ref: "#/components/schemas/OrganizationConfig"
-          description: TODO
     OrganizationConfig:
       type: object
       properties:
         id:
           type: string
-          description: the organization config id
+          description: organization config id
         domains:
           type: array
           description: organization domains
