@@ -149,7 +149,7 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 }
 
 //UpdateOrganization updates an organization
-func (sa *Adapter) UpdateOrganization(ID string, name *string, requestType *string, requiresOwnLogin *bool, loginTypes *[]string, organizationDomains *[]string) error {
+func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
 
 	updatOrganizationFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	updateOrganization := bson.D{
@@ -166,6 +166,7 @@ func (sa *Adapter) UpdateOrganization(ID string, name *string, requestType *stri
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 

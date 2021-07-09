@@ -207,7 +207,7 @@ func (app *application) admCreateOrganization(name string, requestType string, r
 	return organization, nil
 }
 
-func (app *application) admUpdateOrganization(ID string, name *string, requestType *string, requiresOwnLogin *bool, loginTypes *[]string, organizationDomains *[]string) error {
+func (app *application) admUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
 	err := app.storage.UpdateOrganization(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
 	if err != nil {
 		return err

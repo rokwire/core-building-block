@@ -99,7 +99,7 @@ func (s *administrationImpl) AdmCreateOrganization(name string, requestType stri
 	return s.app.admCreateOrganization(name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
 }
 
-func (s *administrationImpl) AdmUpdateOrganization(ID string, name *string, requestType *string, requiresOwnLogin *bool, loginTypes *[]string, organizationDomains *[]string) error {
+func (s *administrationImpl) AdmUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
 	return s.app.admUpdateOrganization(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
 }
 
