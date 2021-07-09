@@ -50,8 +50,8 @@ type OrganizationConfig struct {
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// TODO
-	// (GET /core/admin/organizations/{id})
-	GetCoreAdminOrganizationsId(ctx echo.Context, id string) error
+	// (GET /admin/organizations/{id})
+	GetAdminOrganizationsId(ctx echo.Context, id string) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -59,8 +59,8 @@ type ServerInterfaceWrapper struct {
 	Handler ServerInterface
 }
 
-// GetCoreAdminOrganizationsId converts echo context to params.
-func (w *ServerInterfaceWrapper) GetCoreAdminOrganizationsId(ctx echo.Context) error {
+// GetAdminOrganizationsId converts echo context to params.
+func (w *ServerInterfaceWrapper) GetAdminOrganizationsId(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "id" -------------
 	var id string
@@ -71,7 +71,7 @@ func (w *ServerInterfaceWrapper) GetCoreAdminOrganizationsId(ctx echo.Context) e
 	}
 
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetCoreAdminOrganizationsId(ctx, id)
+	err = w.Handler.GetAdminOrganizationsId(ctx, id)
 	return err
 }
 
@@ -103,6 +103,6 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/core/admin/organizations/:id", wrapper.GetCoreAdminOrganizationsId)
+	router.GET(baseURL+"/admin/organizations/:id", wrapper.GetAdminOrganizationsId)
 
 }
