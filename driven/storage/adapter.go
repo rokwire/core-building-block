@@ -164,16 +164,6 @@ func (sa *Adapter) UpdateOrganization(ID string, name *string, requestType *stri
 
 	_, err := sa.db.organizations.UpdateOne(updatOrganizationFilter, updateOrganization, nil)
 	if err != nil {
-		upFilter := bson.D{primitive.E{Key: "id", Value: ID},
-			primitive.E{Key: "name", Value: name}}
-		var upResult []*model.Organization
-		err = sa.db.organizations.Find(upFilter, &upResult, nil)
-		if err != nil {
-			return err
-		}
-		if len(upResult) == 0 {
-			return nil
-		}
 		return err
 	}
 	return nil
