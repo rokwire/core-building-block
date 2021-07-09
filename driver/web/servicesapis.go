@@ -1,9 +1,14 @@
 package web
 
 import (
+	"context"
 	"core-building-block/core"
+	"fmt"
 	"net/http"
 
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/getkin/kin-openapi/openapi3filter"
+	"github.com/getkin/kin-openapi/routers/gorillamux"
 	log "github.com/rokmetro/logging-library/loglib"
 )
 
@@ -20,6 +25,51 @@ func (h ServicesApisHandler) GetAuthTest(l *log.Log, w http.ResponseWriter, r *h
 
 //GetCommonTest TODO get test
 func (h ServicesApisHandler) GetCommonTest(l *log.Log, w http.ResponseWriter, r *http.Request) {
+
+	ctx := context.Background()
+	loader := &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
+	doc, err := loader.LoadFromFile("docs/def.yaml")
+	if err != nil {
+		panic(err)
+	}
+	if err = doc.Validate(loader.Context); err != nil {
+		panic(err)
+	}
+	router5, err := gorillamux.NewRouter(doc)
+	if err != nil {
+		panic(err)
+	}
+	//httpReq, err := http.NewRequest(http.MethodGet, "core/admin/organizations/{id}", nil)
+	//if err != nil {
+	//	panic(err)
+	//}
+
+	route, pathParams, err := router5.FindRoute(r)
+	if err != nil {
+		panic(err)
+	}
+
+	requestValidationInput := &openapi3filter.RequestValidationInput{
+		Request:    r,
+		PathParams: pathParams,
+		Route:      route,
+	}
+	if err := openapi3filter.ValidateRequest(ctx, requestValidationInput); err != nil {
+		panic(err)
+	}
+
+	responseValidationInput := &openapi3filter.ResponseValidationInput{
+		RequestValidationInput: requestValidationInput,
+		Status:                 200,
+		Header:                 http.Header{"Content-Type": []string{"application/json"}},
+	}
+	responseValidationInput.SetBodyBytes([]byte(`{}`))
+
+	err = openapi3filter.ValidateResponse(ctx, responseValidationInput)
+	fmt.Println(err)
+
+	///
+
 	res := h.coreAPIs.Services.SerGetCommonTest(l)
 	w.Write([]byte(res))
 }

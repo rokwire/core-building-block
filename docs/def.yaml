@@ -10,6 +10,8 @@ servers:
   description: Test server
 - url: https://api-dev.rokwire.illinois.edu/core
   description: Development server
+- url: http://localhost/core
+  description: Local server
 tags:
 - name: Auth
   description: APIs handling the authentication.
@@ -22,6 +24,17 @@ tags:
 - name: BBs
   description: APIs consumed by the platform building blocks.
 paths:
+  /services/common/test:
+     get:
+      responses:
+          200:
+            description: successful operation
+          400:
+            description: TODO
+          401:
+            description: Unauthorized
+          500:
+            description: Internal error
   /admin/organizations/{id}:
       get:
         tags:

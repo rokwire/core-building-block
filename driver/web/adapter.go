@@ -1,15 +1,11 @@
 package web
 
 import (
-	"context"
 	"core-building-block/core"
 	"core-building-block/utils"
 	"fmt"
 	"net/http"
 
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/openapi3filter"
-	"github.com/getkin/kin-openapi/routers/gorillamux"
 	"github.com/gorilla/mux"
 
 	log "github.com/rokmetro/logging-library/loglib"
@@ -42,47 +38,6 @@ func (we Adapter) Start() {
 	//add listener to the application
 	we.coreAPIs.AddListener(&AppListener{&we})
 
-	ctx := context.Background()
-	loader := &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
-	doc, err := loader.LoadFromFile("docs/def.yaml")
-	if err != nil {
-		panic(err)
-	}
-	if err = doc.Validate(loader.Context); err != nil {
-		panic(err)
-	}
-	router5, err := gorillamux.NewRouter(doc)
-	if err != nil {
-		panic(err)
-	}
-	httpReq, err := http.NewRequest(http.MethodGet, "core/admin/organizations/{id}", nil)
-	if err != nil {
-		panic(err)
-	}
-
-	route, pathParams, err := router5.FindRoute(httpReq)
-	if err != nil {
-		panic(err)
-	}
-
-	requestValidationInput := &openapi3filter.RequestValidationInput{
-		Request:    httpReq,
-		PathParams: pathParams,
-		Route:      route,
-	}
-	if err := openapi3filter.ValidateRequest(ctx, requestValidationInput); err != nil {
-		panic(err)
-	}
-
-	responseValidationInput := &openapi3filter.ResponseValidationInput{
-		RequestValidationInput: requestValidationInput,
-		Status:                 200,
-		Header:                 http.Header{"Content-Type": []string{"application/json"}},
-	}
-	responseValidationInput.SetBodyBytes([]byte(`{}`))
-
-	err = openapi3filter.ValidateResponse(ctx, responseValidationInput)
-	fmt.Println(err)
 	// Output:
 	// response body doesn't match the schema: Field must be set to string or not be present
 	// Schema:
