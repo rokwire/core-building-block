@@ -10,35 +10,21 @@ import (
 )
 
 type UserAuth struct {
-	ID           string
+	UserID       string
+	Sub          string
 	Name         string
 	Email        string
 	Phone        string
 	Picture      []byte
-	Groups       interface{}
-	Issuer       string
 	Exp          float64
 	RefreshToken string
 }
 
-type AuthInfo struct {
-	OrgID              string            `json:"org_id" bson:"org_id"`
-	AppID              string            `json:"app_id" bson:"app_id"`
-	Issuer             string            `json:"issuer" bson:"issuer"`
-	OIDCKeyURL         string            `json:"oidc_key_url" bson:"oidc_key_url"`
-	OIDCHost           string            `json:"oidc_host" bson:"oidc_host"`
-	OIDCTokenURL       string            `json:"oidc_token_url" bson:"oidc_token_url"`
-	OIDCAuthURL        string            `json:"oidc_auth_url" bson:"oidc_auth_url"`
-	OIDCUserURL        string            `json:"oidc_user_url" bson:"oidc_user_url"`
-	OIDCScopes         string            `json:"oidc_scopes" bson:"oidc_scopes"`
-	OIDCUseRefresh     bool              `json:"oidc_use_refresh" bson:"oidc_use_refresh"`
-	OIDCUsePKCE        bool              `json:"oidc_use_pkce" bson:"oidc_use_pkce"`
-	OIDCClientID       string            `json:"oidc_client_id" bson:"oidc_client_id"`
-	OIDCClientSecret   string            `json:"oidc_client_secret" bson:"oidc_client_secret"`
-	Type               string            `json:"type" bson:"type"`
-	Claims             map[string]string `json:"claims" bson:"claims"`
-	RequiredPopulation string            `json:"required_population" bson:"required_population"`
-	Populations        map[string]string `json:"populations" bson:"populations"`
+type AuthConfig struct {
+	OrgID  string      `json:"org_id" bson:"org_id"`
+	AppID  string      `json:"app_id" bson:"app_id"`
+	Type   string      `json:"type" bson:"type"`
+	Config interface{} `json:"config" bson:"config"`
 }
 
 //Interface for authentication mechanisms
@@ -50,16 +36,16 @@ type authType interface {
 type Auth struct {
 	storage Storage
 
-	authTypes    map[string]authType
-	authInfo     *syncmap.Map //cache authInfo / domain -> authInfo
-	authInfoLock *sync.RWMutex
+	authTypes       map[string]authType
+	authConfigs     *syncmap.Map //cache authConfigs / orgID_appID -> authConfig
+	authConfigsLock *sync.RWMutex
 }
 
 //NewAuth creates a new auth instance
 func NewAuth(storage Storage) *Auth {
-	authInfo := &syncmap.Map{}
-	authInfoLock := &sync.RWMutex{}
-	auth := &Auth{storage: storage, authInfo: authInfo, authInfoLock: authInfoLock}
+	authConfigs := &syncmap.Map{}
+	authConfigsLock := &sync.RWMutex{}
+	auth := &Auth{storage: storage, authConfigs: authConfigs, authConfigsLock: authConfigsLock}
 
 	//Initialize auth types
 	initEmailAuth(auth)
@@ -68,7 +54,7 @@ func NewAuth(storage Storage) *Auth {
 	initSamlAuth(auth)
 	initFirebaseAuth(auth)
 
-	err := auth.LoadAuthInfoDocs()
+	err := auth.LoadAuthConfigs()
 	if err != nil {
 		log.Println("NewAuth() -> failed to cache auth info documents")
 	}
@@ -126,54 +112,54 @@ func (a Auth) deleteAccount(claims *UserAuth) {
 	//TODO: Implement
 }
 
-func (a Auth) LoadAuthInfoDocs() error {
-	authInfoDocs, err := a.storage.LoadAuthInfoDocs()
+func (a Auth) LoadAuthConfigs() error {
+	authConfigDocs, err := a.storage.LoadAuthConfigs()
 	if err != nil {
 		return err
 	}
 
-	a.setAuthInfo(authInfoDocs)
+	a.setAuthConfigs(authConfigDocs)
 
 	return nil
 }
 
-func (a Auth) getAuthInfo(orgID string, appID string) *AuthInfo {
-	a.authInfoLock.RLock()
-	defer a.authInfoLock.RUnlock()
+func (a Auth) getAuthConfig(orgID string, appID string, authType string) *AuthConfig {
+	a.authConfigsLock.RLock()
+	defer a.authConfigsLock.RUnlock()
 
-	var authInfo *AuthInfo //to return
+	var authConfig *AuthConfig //to return
 
-	item, _ := a.authInfo.Load(fmt.Sprintf("%s_%s", orgID, appID))
+	item, _ := a.authConfigs.Load(fmt.Sprintf("%s_%s_%s", orgID, appID, authType))
 	if item != nil {
-		authInfoFromCache, ok := item.(AuthInfo)
+		authConfigFromCache, ok := item.(AuthConfig)
 		if !ok {
-			log.Println("getAuthInfo(): failed to cast cache item to AuthInfo")
+			log.Println("getAuthConfig(): failed to cast cache item to AuthConfig")
 			return nil
 		}
-		authInfo = &authInfoFromCache
+		authConfig = &authConfigFromCache
 	} else {
 		var err error
-		authInfo, err = a.storage.FindDomainAuthInfo(orgID, appID)
+		authConfig, err = a.storage.FindAuthConfig(orgID, appID, authType)
 		if err != nil {
 			return nil
 		}
 	}
 
-	return authInfo
+	return authConfig
 }
 
-func (a Auth) setAuthInfo(authInfo map[string]AuthInfo) {
-	a.authInfoLock.Lock()
-	defer a.authInfoLock.Unlock()
+func (a Auth) setAuthConfigs(authConfigs map[string]AuthConfig) {
+	a.authConfigsLock.Lock()
+	defer a.authConfigsLock.Unlock()
 
-	a.authInfo = &syncmap.Map{}
+	a.authConfigs = &syncmap.Map{}
 
-	for key, value := range authInfo {
-		a.authInfo.Store(key, value)
+	for key, value := range authConfigs {
+		a.authConfigs.Store(key, value)
 	}
 }
 
 type Storage interface {
-	FindDomainAuthInfo(orgID string, appID string) (*AuthInfo, error)
-	LoadAuthInfoDocs() (map[string]AuthInfo, error)
+	FindAuthConfig(orgID string, appID string, authType string) (*AuthConfig, error)
+	LoadAuthConfigs() (map[string]AuthConfig, error)
 }

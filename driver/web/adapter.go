@@ -118,7 +118,7 @@ type AppListener struct {
 }
 
 //OnAPIKeysUpdated notifies that the api keys are updated
-func (al *AppListener) OnAuthInfoUpdated() {
-	log.Println("AppListener -> OnAuthInfoUpdated")
-	al.adapter.app.Auth.LoadAuthInfoDocs()
+func (al *AppListener) OnAuthConfigUpdated() {
+	log.Println("AppListener -> OnAuthConfigUpdated")
+	al.adapter.app.Auth.LoadAuthConfigs()
 }

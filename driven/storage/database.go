@@ -20,7 +20,7 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
-	authInfo *collectionWrapper
+	authConfigs *collectionWrapper
 
 	listener core.StorageListener
 }
@@ -54,27 +54,27 @@ func (m *database) start() error {
 	m.dbClient = client
 
 	//TODO
-	authInfo := &collectionWrapper{database: m, coll: db.Collection("auth_info")}
-	err = m.applyAuthInfoChecks(authInfo)
+	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
+	err = m.applyAuthConfigChecks(authConfigs)
 	if err != nil {
 		return err
 	}
 
-	m.authInfo = authInfo
+	m.authConfigs = authConfigs
 
 	//watch for auth info changes
-	go m.authInfo.Watch(nil)
+	go m.authConfigs.Watch(nil)
 
 	return nil
 }
 
-func (m *database) applyAuthInfoChecks(authInfo *collectionWrapper) error {
-	// Add client_id index
-	err := authInfo.AddIndex(bson.D{primitive.E{Key: "clientID", Value: 1}}, false)
+func (m *database) applyAuthConfigChecks(authInfo *collectionWrapper) error {
+	// Add org_id, app_id compound index
+	err := authInfo.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
-	log.Println("authInfo check passed")
+	log.Println("authConfig check passed")
 	return nil
 }
 
@@ -90,11 +90,11 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 	nsMap := ns.(map[string]interface{})
 	coll := nsMap["coll"]
 
-	if "auth_info" == coll {
-		log.Println("auth_info collection changed")
+	if "auth_configs" == coll {
+		log.Println("auth_configs collection changed")
 
 		if m.listener != nil {
-			m.listener.OnAuthInfoUpdated()
+			m.listener.OnAuthConfigUpdated()
 		}
 	}
 }
