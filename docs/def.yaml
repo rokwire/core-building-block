@@ -32,7 +32,7 @@ paths:
         parameters:
         - name: id
           in: path
-          description: ID of the event that needs to be updated
+          description: ID of the organization that needs to be updated
           required: true
           style: simple
           explode: false
