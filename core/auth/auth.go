@@ -22,8 +22,8 @@ type UserAuth struct {
 }
 
 type AuthInfo struct {
-	ClientID           string            `json:"client_id" bson:"client_id"`
-	Domain             string            `json:"domain" bson:"domain"`
+	OrgID              string            `json:"org_id" bson:"org_id"`
+	AppID              string            `json:"app_id" bson:"app_id"`
 	Issuer             string            `json:"issuer" bson:"issuer"`
 	OIDCKeyURL         string            `json:"oidc_key_url" bson:"oidc_key_url"`
 	OIDCHost           string            `json:"oidc_host" bson:"oidc_host"`
@@ -127,25 +127,23 @@ func (a Auth) deleteAccount(claims *UserAuth) {
 }
 
 func (a Auth) LoadAuthInfoDocs() error {
-	//1 load
 	authInfoDocs, err := a.storage.LoadAuthInfoDocs()
 	if err != nil {
 		return err
 	}
 
-	//2 set
 	a.setAuthInfo(authInfoDocs)
 
 	return nil
 }
 
-func (a Auth) getAuthInfo(domain string) *AuthInfo {
+func (a Auth) getAuthInfo(orgID string, appID string) *AuthInfo {
 	a.authInfoLock.RLock()
 	defer a.authInfoLock.RUnlock()
 
 	var authInfo *AuthInfo //to return
 
-	item, _ := a.authInfo.Load(domain)
+	item, _ := a.authInfo.Load(fmt.Sprintf("%s_%s", orgID, appID))
 	if item != nil {
 		authInfoFromCache, ok := item.(AuthInfo)
 		if !ok {
@@ -155,7 +153,7 @@ func (a Auth) getAuthInfo(domain string) *AuthInfo {
 		authInfo = &authInfoFromCache
 	} else {
 		var err error
-		authInfo, err = a.storage.FindDomainAuthInfo(domain)
+		authInfo, err = a.storage.FindDomainAuthInfo(orgID, appID)
 		if err != nil {
 			return nil
 		}
@@ -168,7 +166,6 @@ func (a Auth) setAuthInfo(authInfo map[string]AuthInfo) {
 	a.authInfoLock.Lock()
 	defer a.authInfoLock.Unlock()
 
-	//first clear the old data
 	a.authInfo = &syncmap.Map{}
 
 	for key, value := range authInfo {
@@ -177,6 +174,6 @@ func (a Auth) setAuthInfo(authInfo map[string]AuthInfo) {
 }
 
 type Storage interface {
-	FindDomainAuthInfo(domain string) (*AuthInfo, error)
+	FindDomainAuthInfo(orgID string, appID string) (*AuthInfo, error)
 	LoadAuthInfoDocs() (map[string]AuthInfo, error)
 }

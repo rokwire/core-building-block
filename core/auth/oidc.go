@@ -16,17 +16,6 @@ import (
 	"github.com/coreos/go-oidc"
 )
 
-//dynamic claimsMap
-
-var uidClaimTag string = ""
-var nameClaimTag string = ""
-var firstNameClaimTag string = ""
-var lastNameClaimTag string = ""
-var emailClaimTag string = ""
-var phoneClaimTag string = ""
-var groupsClaimTag string = ""
-var populationsClaimTag string = ""
-
 type oidcToken struct {
 	IDToken      string `json:"id_token"`
 	AccessToken  string `json:"access_token"`
@@ -41,23 +30,25 @@ type oidcAuthImpl struct {
 }
 
 type oidcCheckParams struct {
-	Domain string `json:"domain"`
+	OrgID string `json:"org_id"`
+	AppID string `json:"app_id"`
 }
 
 type oidcLoginParams struct {
-	Domain       string `json:"domain"`
+	OrgID        string `json:"org_id"`
+	AppID        string `json:"app_id"`
 	Code         string `json:"code"`
 	CodeVerifier string `json:"pkce_verifier"`
-	RedirectURI  string `json:"redirect_uri"` // endpoint on core BB?
+	RedirectURI  string `json:"redirect_uri"`
 }
 
 type oidcRefreshParams struct {
-	Domain      string `json:"domain"`
-	RedirectURI string `json:"redirect_uri"` // endpoint on core BB?
+	OrgID       string `json:"org_id"`
+	AppID       string `json:"app_id"`
+	RedirectURI string `json:"redirect_uri"`
 }
 
 func (a *oidcAuthImpl) check(creds string, params string) (*UserAuth, error) {
-	// use credType argument to function instead?
 	paramsMap := make(map[string]interface{})
 	err := json.Unmarshal([]byte(params), &paramsMap)
 	if err != nil {
@@ -75,28 +66,30 @@ func (a *oidcAuthImpl) check(creds string, params string) (*UserAuth, error) {
 		if err != nil {
 			return nil, err
 		}
-		return a.checkToken(creds, checkParams)
+		return a.checkToken(creds, &checkParams, nil)
 	case "code":
 		var loginParams oidcLoginParams
 		err := json.Unmarshal([]byte(params), &loginParams)
 		if err != nil {
 			return nil, err
 		}
-		return a.newToken(creds, loginParams)
+		return a.newToken(creds, &loginParams)
 	case "refresh_token":
 		var refreshParams oidcRefreshParams
 		err := json.Unmarshal([]byte(params), &refreshParams)
 		if err != nil {
 			return nil, err
 		}
-		return a.refreshToken(creds, refreshParams)
+		return a.refreshToken(creds, &refreshParams)
 	default:
 		return nil, errors.New("unimplemented cred_type")
 	}
 }
 
-func (a *oidcAuthImpl) checkToken(idToken string, params oidcCheckParams) (*UserAuth, error) {
-	authInfo := a.auth.getAuthInfo(params.Domain)
+func (a *oidcAuthImpl) checkToken(idToken string, params *oidcCheckParams, authInfo *AuthInfo) (*UserAuth, error) {
+	if authInfo == nil {
+		authInfo = a.auth.getAuthInfo(params.OrgID, params.AppID)
+	}
 
 	oidcProvider := authInfo.OIDCHost
 	oidcClientID := authInfo.OIDCClientID
@@ -129,8 +122,18 @@ func (a *oidcAuthImpl) checkToken(idToken string, params oidcCheckParams) (*User
 	return &userAuth, nil
 }
 
-func (a *oidcAuthImpl) newToken(code string, params oidcLoginParams) (*UserAuth, error) {
-	authInfo := a.auth.getAuthInfo(params.Domain)
+func (a *oidcAuthImpl) newToken(code string, params *oidcLoginParams) (*UserAuth, error) {
+	authInfo := a.auth.getAuthInfo(params.OrgID, params.AppID)
+
+	if len(authInfo.OIDCTokenURL) == 0 {
+		return nil, errors.New("auth info missing OIDC token URL")
+	}
+	if len(authInfo.OIDCUserURL) == 0 {
+		return nil, errors.New("auth info missing OIDC user URL")
+	}
+	if len(authInfo.OIDCClientID) == 0 {
+		return nil, errors.New("auth info missing OIDC client ID")
+	}
 
 	bodyData := map[string]string{
 		"code":         code,
@@ -142,49 +145,17 @@ func (a *oidcAuthImpl) newToken(code string, params oidcLoginParams) (*UserAuth,
 		bodyData["code_verifier"] = params.CodeVerifier
 	}
 
-	// 1. Request Tokens
-	oidcToken, err := a.loadOidcTokenWithParams(bodyData, authInfo)
-	if err != nil {
-		return nil, err
-	}
-	if oidcToken == nil {
-		return nil, errors.New("get auth token failed")
-	}
-
-	checkParams := oidcCheckParams{Domain: params.Domain}
-	userAuth, err := a.checkToken(oidcToken.IDToken, checkParams)
-
-	userAuth.RefreshToken = oidcToken.RefreshToken
-
-	// 2. Request auth user
-	userInfo, err := a.loadOidcUserInfo(oidcToken, authInfo.OIDCUserURL)
-	if userInfo == nil {
-		return nil, errors.New("get auth user failed")
-	}
-	var userMap map[string]interface{}
-	err = json.Unmarshal(userInfo, &userMap)
-	if err != nil {
-		return nil, err
-	}
-
-	// 3. Request user picture
-	var userPhoto []byte
-	if photoURL, ok := userMap["picture"].(string); ok {
-		userPhoto, err = a.loadOidcUserInfo(oidcToken, photoURL)
-		if err != nil {
-			log.Println("Error fetching user photo:", err.Error())
-		}
-	}
-	userAuth.Picture = userPhoto
-
-	return userAuth, nil
+	return a.loadOidcTokensAndInfo(bodyData, authInfo)
 }
 
-func (a *oidcAuthImpl) refreshToken(refreshToken string, params oidcRefreshParams) (*UserAuth, error) {
-	authInfo := a.auth.getAuthInfo(params.Domain)
+func (a *oidcAuthImpl) refreshToken(refreshToken string, params *oidcRefreshParams) (*UserAuth, error) {
+	authInfo := a.auth.getAuthInfo(params.OrgID, params.AppID)
 
 	if len(authInfo.OIDCTokenURL) == 0 {
 		return nil, errors.New("auth info missing OIDC token URL")
+	}
+	if len(authInfo.OIDCUserURL) == 0 {
+		return nil, errors.New("auth info missing OIDC user URL")
 	}
 	if len(authInfo.OIDCClientID) == 0 {
 		return nil, errors.New("auth info missing OIDC client ID")
@@ -199,6 +170,11 @@ func (a *oidcAuthImpl) refreshToken(refreshToken string, params oidcRefreshParam
 		"redirect_uri":  params.RedirectURI,
 		"client_id":     authInfo.OIDCClientID,
 	}
+
+	return a.loadOidcTokensAndInfo(bodyData, authInfo)
+}
+
+func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, authInfo *AuthInfo) (*UserAuth, error) {
 	oidcToken, err := a.loadOidcTokenWithParams(bodyData, authInfo)
 	if err != nil {
 		return nil, err
@@ -207,9 +183,7 @@ func (a *oidcAuthImpl) refreshToken(refreshToken string, params oidcRefreshParam
 		return nil, errors.New("get auth token failed")
 	}
 
-	checkParams := oidcCheckParams{Domain: params.Domain}
-	userAuth, err := a.checkToken(oidcToken.IDToken, checkParams)
-
+	userAuth, err := a.checkToken(oidcToken.IDToken, nil, authInfo)
 	userAuth.RefreshToken = oidcToken.RefreshToken
 
 	userInfo, err := a.loadOidcUserInfo(oidcToken, authInfo.OIDCUserURL)

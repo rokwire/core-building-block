@@ -4,6 +4,7 @@ import (
 	"core-building-block/core"
 	"core-building-block/core/auth"
 	"errors"
+	"fmt"
 	"log"
 	"strconv"
 	"time"
@@ -34,19 +35,17 @@ func (sa *Adapter) ReadTODO() error {
 }
 
 //FindDomainAuthInfo finds the auth document from DB by domain
-func (sa *Adapter) FindDomainAuthInfo(domain string) (*auth.AuthInfo, error) {
-	filter := bson.D{primitive.E{Key: "domain", Value: domain}}
-	var result []*auth.AuthInfo
-	err := sa.db.authInfo.Find(filter, &result, nil)
+func (sa *Adapter) FindDomainAuthInfo(orgID string, appID string) (*auth.AuthInfo, error) {
+	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID}}
+	var result *auth.AuthInfo
+	err := sa.db.authInfo.FindOne(filter, &result, nil)
 	if err != nil {
 		return nil, err
 	}
-	if result == nil || len(result) == 0 {
-		//not found
-
-		return nil, errors.New("no auth info found for the given domain:" + domain)
+	if result == nil {
+		return nil, fmt.Errorf("no auth info found for orgID %s, appID %s:", orgID, appID)
 	}
-	return result[0], nil
+	return result, nil
 }
 
 //FindDomainAuthInfo finds the auth document from DB by domain
@@ -63,8 +62,8 @@ func (sa *Adapter) LoadAuthInfoDocs() (map[string]auth.AuthInfo, error) {
 
 	authInfoMap := make(map[string]auth.AuthInfo)
 	for _, authInfo := range result {
-		if len(authInfo.Domain) > 0 {
-			authInfoMap[authInfo.Domain] = authInfo
+		if len(authInfo.OrgID) > 0 && len(authInfo.AppID) > 0 {
+			authInfoMap[fmt.Sprintf("%s_%s", authInfo.OrgID, authInfo.AppID)] = authInfo
 		}
 	}
 	return authInfoMap, nil
