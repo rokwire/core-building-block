@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rokmetro/auth-library/authservice"
 	log "github.com/rokmetro/logging-library/loglib"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -145,6 +146,24 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 	resOrg := model.Organization{ID: organization.ID, Name: organization.Name, Type: organization.Type,
 		RequiresOwnLogin: organization.RequiresOwnLogin, LoginTypes: organization.LoginTypes, Config: resOrgConfig}
 	return &resOrg, nil
+}
+
+//GetServiceRegs fetches the requested service registration records
+func (sa *Adapter) GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error) {
+	var filter bson.M
+	for _, serviceID := range serviceIDs {
+		if serviceID == "all" {
+			filter = bson.M{}
+			break
+		}
+	}
+	if filter == nil {
+		filter = bson.M{"service_id": bson.M{"$in": serviceIDs}}
+	}
+
+	var result []authservice.ServiceReg
+	err := sa.db.serviceRegs.Find(filter, &result, nil)
+	return result, err
 }
 
 //NewStorageAdapter creates a new storage adapter instance

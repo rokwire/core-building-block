@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/rokmetro/auth-library/authservice"
 	"github.com/rokmetro/auth-library/authutils"
 	"github.com/rokmetro/auth-library/tokenauth"
@@ -197,8 +197,9 @@ type LocalServiceRegLoaderImpl struct {
 	*authservice.ServiceRegSubscriptions
 }
 
+//LoadServices implements ServiceRegLoader interface
 func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, error) {
-	return l.storage.LoadServiceRegs(l.GetSubscribedServices())
+	return l.storage.GetServiceRegs(l.GetSubscribedServices())
 }
 
 //NewLocalServiceRegLoader creates and configures a new LocalServiceRegLoaderImpl instance
@@ -210,5 +211,5 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 //Storage interface for auth package
 type Storage interface {
 	ReadTODO() error
-	LoadServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error) //TODO: Implement in sotrage adapater
+	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
 }

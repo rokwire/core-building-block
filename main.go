@@ -5,9 +5,10 @@ import (
 	"core-building-block/core/auth"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
+	"strconv"
 
-	"os"
-
+	"github.com/golang-jwt/jwt"
+	"github.com/rokmetro/auth-library/envloader"
 	log "github.com/rokmetro/logging-library/loglib"
 )
 
@@ -22,12 +23,16 @@ func main() {
 	if len(Version) == 0 {
 		Version = "dev"
 	}
-	var logger = log.NewLogger("core-building-block")
+	logger := log.NewLogger("core")
+	envLoader := envloader.NewEnvLoader(Version, logger)
+
+	serviceID := envLoader.GetEnvVar("SERVICE_ID", true)
+	host := envLoader.GetEnvVar("ROKWIRE_CORE_HOST", true)
 
 	// mongoDB adapter
-	mongoDBAuth := getEnvKey(logger, "ROKWIRE_CORE_MONGO_AUTH", true)
-	mongoDBName := getEnvKey(logger, "ROKWIRE_CORE_MONGO_DATABASE", true)
-	mongoTimeout := getEnvKey(logger, "ROKWIRE_CORE_MONGO_TIMEOUT", false)
+	mongoDBAuth := envLoader.GetEnvVar("ROKWIRE_CORE_MONGO_AUTH", true)
+	mongoDBName := envLoader.GetEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true)
+	mongoTimeout := envLoader.GetEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false)
 	storageAdapter := storage.NewStorageAdapter(mongoDBAuth, mongoDBName, mongoTimeout, logger)
 	err := storageAdapter.Start()
 	if err != nil {
@@ -35,35 +40,35 @@ func main() {
 	}
 
 	//auth
-	auth := auth.NewAuth(storageAdapter)
+	authPrivKeyPem := envLoader.GetEnvVar("AUTH_PRIV_KEY", true)
+	authPrivKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(authPrivKeyPem))
+	if err != nil {
+		logger.Fatalf("Failed to parse auth priv key: %v", err)
+	}
+
+	minTokenExpStr := envLoader.GetEnvVar("MIN_TOKEN_EXP", false)
+	minTokenExp, err := strconv.ParseInt(minTokenExpStr, 10, 64)
+	if err != nil {
+		logger.Fatalf("Error parsing min token exp: %v", err)
+	}
+
+	maxTokenExpStr := envLoader.GetEnvVar("MAX_TOKEN_EXP", false)
+	maxTokenExp, err := strconv.ParseInt(maxTokenExpStr, 10, 64)
+	if err != nil {
+		logger.Fatalf("Error parsing max token exp: %v", err)
+	}
+
+	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp)
+	if err != nil {
+		logger.Fatalf("Error initializing auth: %v", err)
+	}
 
 	//application
 	application := core.NewApplication(Version, Build, storageAdapter, auth)
 	application.Start()
 
 	//web adapter
-	host := getEnvKey(logger, "ROKWIRE_CORE_HOST", true)
 	webAdapter := web.NewWebAdapter(application, host, logger)
 
 	webAdapter.Start()
-}
-
-func getEnvKey(logger *log.StandardLogger, key string, required bool) string {
-	//get from the environment
-	value, exist := os.LookupEnv(key)
-	if !exist {
-		if required {
-			logger.Fatal("No provided environment variable for " + key)
-		} else {
-			logger.Error("No provided environment variable for " + key)
-		}
-	}
-	printEnvVar(logger, key, value)
-	return value
-}
-
-func printEnvVar(logger *log.StandardLogger, name string, value string) {
-	if Version == "dev" {
-		logger.InfoWithFields("ENV_VAR", map[string]interface{}{"name": name, "value": value})
-	}
 }
