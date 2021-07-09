@@ -209,7 +209,6 @@ func (h AdminApisHandler) GetOrganization(l *log.Log, w http.ResponseWriter, r *
 	params := mux.Vars(r)
 	ID := params["id"]
 	if len(ID) <= 0 {
-		//log.Println("id is required")
 		http.Error(w, "id is required", http.StatusBadRequest)
 		return
 	}
