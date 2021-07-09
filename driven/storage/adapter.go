@@ -146,7 +146,8 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 		RequiresOwnLogin: organization.RequiresOwnLogin, LoginTypes: organization.LoginTypes, Config: resOrgConfig}
 	return &resOrg, nil
 }
-func (sa *Adapter) GetOrganization(ID string) (*model.Organization, error) {
+
+func (sa *Adapter) GetOrganization() (*model.Organization, error) {
 	filter := bson.D{}
 	var result []model.Organization
 	err := sa.db.organizations.Find(filter, &result, nil)

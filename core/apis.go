@@ -98,6 +98,7 @@ func (s *administrationImpl) AdmUpdateGlobalConfig(setting string) error {
 func (s *administrationImpl) AdmCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
 	return s.app.admCreateOrganization(name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
 }
+
 func (s *administrationImpl) AdmGetOrganization(ID string) (*model.Organization, error) {
 	return s.app.admGetOrganization(ID)
 }

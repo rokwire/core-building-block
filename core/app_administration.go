@@ -206,6 +206,7 @@ func (app *application) admCreateOrganization(name string, requestType string, r
 	}
 	return organization, nil
 }
+
 func (app *application) admGetOrganization(ID string) (*model.Organization, error) {
 	getOrganization, err := app.storage.GetOrganization(ID)
 	if err != nil {
