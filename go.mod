@@ -4,10 +4,13 @@ go 1.16
 
 require (
 	github.com/casbin/casbin v1.9.1
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
+	github.com/golang-jwt/jwt v3.2.1+incompatible // indirect
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/leodido/go-urn v1.2.1 // indirect
+	github.com/rokmetro/auth-library v0.1.2
 	github.com/rokmetro/logging-library v0.1.5
 	github.com/swaggo/http-swagger v1.0.0
 	go.mongodb.org/mongo-driver v1.4.6
