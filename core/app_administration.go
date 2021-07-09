@@ -212,5 +212,6 @@ func (app *application) admGetOrganization(ID string) (*model.Organization, erro
 	if err != nil {
 		return nil, err
 	}
+
 	return getOrganization, nil
 }

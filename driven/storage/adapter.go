@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	log "github.com/rokmetro/logging-library/loglib"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -147,18 +148,23 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 	return &resOrg, nil
 }
 
-func (sa *Adapter) GetOrganization() (*model.Organization, error) {
-	filter := bson.D{}
-	var result []model.Organization
-	err := sa.db.organizations.Find(filter, &result, nil)
+func (sa *Adapter) GetOrganization(ID string) (*model.Organization, error) {
+
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	var org organization
+	err := sa.db.organizations.FindOne(filter, &org, nil)
 	if err != nil {
 		return nil, err
 	}
-	if len(result) == 0 {
-		//no record
-		return nil, nil
-	}
-	return &result[0], nil
+
+	//return the correct type
+	var organizationDomains []string
+	getOrgConfig := organizationConfig{Domains: organizationDomains}
+	getResOrgConfig := model.OrganizationConfig{Domains: getOrgConfig.Domains}
+
+	getResOrg := model.Organization{ID: org.ID, Name: org.Name, Type: org.Type,
+		RequiresOwnLogin: org.RequiresOwnLogin, LoginTypes: org.LoginTypes, Config: getResOrgConfig}
+	return &getResOrg, nil
 
 }
 
