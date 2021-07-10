@@ -23,6 +23,7 @@ type Administration interface {
 	AdmUpdateGlobalConfig(setting string) error
 
 	AdmCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error)
+	AdmGetOrganizations(ID string) ([]model.Organization, error)
 }
 
 //Encryption exposes APIs for the Encryption building block

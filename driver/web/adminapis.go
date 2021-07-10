@@ -194,3 +194,21 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Successfully created"))
 }
+
+func (h AdminApisHandler) GetOrganizations(l *log.Log, w http.ResponseWriter, r *http.Request) {
+	organizations, err := h.coreAPIs.Administration.AdmGetOrganizations(ID)
+	if err != nil {
+		l.Errorf("Error - %s\n", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	data, err := json.Marshal(organizations)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
