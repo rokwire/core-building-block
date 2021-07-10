@@ -129,7 +129,7 @@ func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 	validate := validator.New()
 	err = validate.Struct(updateConfig)
 	if err != nil {
-		//log.Printf("Error on validating create global config data - %s\n", err.Error())
+		l.Errorf("Error on validating create global config data - %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -137,7 +137,7 @@ func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 
 	err = h.coreAPIs.Administration.AdmUpdateGlobalConfig(setting)
 	if err != nil {
-		//	log.Println(err.Error())
+		l.Errorf(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
