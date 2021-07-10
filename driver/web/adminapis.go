@@ -8,6 +8,7 @@ import (
 
 	"gopkg.in/go-playground/validator.v9"
 
+	"github.com/gorilla/mux"
 	log "github.com/rokmetro/logging-library/loglib"
 )
 
@@ -195,19 +196,39 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 	w.Write([]byte("Successfully created"))
 }
 
+type getOrganizationsResponse struct {
+	Name                string   `json:"name" validate:"required"`
+	Type                string   `json:"type" validate:"required,oneof=micro small medium large huge"`
+	RequiresOwnLogin    *bool    `json:"requires_own_login" validate:"required"`
+	LoginTypes          []string `json:"login_types"`
+	OrganizationDomains []string `json:"organization_domains"`
+}
+
+//GetOrganizations gets organizations
 func (h AdminApisHandler) GetOrganizations(l *log.Log, w http.ResponseWriter, r *http.Request) {
-	organizations, err := h.coreAPIs.Administration.AdmGetOrganizations(ID)
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		http.Error(w, "id is required", http.StatusBadRequest)
+		return
+	}
+	getOrg, err := h.coreAPIs.Administration.AdmGetOrganizations(ID)
 	if err != nil {
-		l.Errorf("Error - %s\n", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
-	data, err := json.Marshal(organizations)
+	var responseData *getOrganizationsResponse
+	if getOrg != nil {
+		l.Errorf("The are no organizations")
+	}
+	data, err := json.Marshal(responseData)
 	if err != nil {
+		//log.Println("Error on marshal the config")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)

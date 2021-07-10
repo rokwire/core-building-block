@@ -45,6 +45,7 @@ type Storage interface {
 	SaveGlobalConfig(setting *model.GlobalConfig) error
 
 	CreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error)
+	GetOrganizations(ID string) ([]model.Organization, error)
 }
 
 //StorageListener listenes for change data storage events

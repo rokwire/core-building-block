@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	log "github.com/rokmetro/logging-library/loglib"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -165,5 +166,21 @@ func abortTransaction(sessionContext mongo.SessionContext) {
 	if err != nil {
 		//TODO - log
 	}
+
+}
+
+func (sa *Adapter) GetOrganizations(ID string) ([]model.Organization, error) {
+
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	var result []model.Organization
+	err := sa.db.organizations.Find(filter, &result, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(result) == 0 {
+		//no record
+		return nil, nil
+	}
+	return result, nil
 
 }

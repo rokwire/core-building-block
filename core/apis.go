@@ -99,6 +99,10 @@ func (s *administrationImpl) AdmCreateOrganization(name string, requestType stri
 	return s.app.admCreateOrganization(name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
 }
 
+func (s *administrationImpl) AdmGetOrganizations(ID string) ([]model.Organization, error) {
+	return s.app.admGetOrganizations(ID)
+}
+
 ///
 
 //encryptionImpl
