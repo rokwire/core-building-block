@@ -152,6 +152,8 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 //UpdateOrganization updates an organization
 func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
 
+	now := time.Now()
+
 	updatOrganizationFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	updateOrganization := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
@@ -160,6 +162,8 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 			primitive.E{Key: "requires_own_login", Value: requiresOwnLogin},
 			primitive.E{Key: "login_types", Value: loginTypes},
 			primitive.E{Key: "config.domains", Value: organizationDomains},
+			primitive.E{Key: "config.date_updated", Value: now},
+			primitive.E{Key: "date_updated", Value: now},
 		}},
 	}
 
