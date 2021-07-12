@@ -66,8 +66,9 @@ func (cur OrganizationUserRelations) String() string {
 
 //Application represents users application entity - safer community, uuic, etc
 type Application struct {
-	ID   string
-	Name string //safer community mobile, safer community web, uuic mobile, uuic web, uuic admin etc
+	ID       string
+	Name     string   //safer community mobile, safer community web, uuic mobile, uuic web, uuic admin etc
+	Versions []string //1.1.0, 1.2.0 etc
 
 	Organizations []Organization
 }
