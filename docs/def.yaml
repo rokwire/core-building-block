@@ -66,6 +66,13 @@ paths:
             description: Internal error
 components:
   schemas:
+    GlobalConfig:
+      required:
+        - setting
+      type: object
+      properties:
+        setting:
+          type: string
     Organization:
       required:
         - id
