@@ -201,14 +201,11 @@ func abortTransaction(sessionContext mongo.SessionContext) {
 
 func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 
+	filter := bson.D{}
 	var result []model.Organization
-	err := sa.db.organizations.Find(&result, nil, nil)
+	err := sa.db.organizations.Find(filter, &result, nil)
 	if err != nil {
 		return nil, err
-	}
-	if len(result) == 0 {
-		//no record
-		return nil, nil
 	}
 	return result, nil
 

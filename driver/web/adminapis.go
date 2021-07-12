@@ -197,7 +197,18 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 }
 
 type getOrganizationsResponse struct {
+	Name                string             `json:"name" validate:"required"`
+	Type                string             `json:"type" validate:"required,oneof=micro small medium large huge"`
+	RequiresOwnLogin    *bool              `json:"requires_own_login" validate:"required"`
+	LoginTypes          []string           `json:"login_types"`
+	OrganizationDomains []string           `json:"organization_domains"`
+	Config              organizationConfig `bson:"config"`
 }
+type organizationConfig struct {
+	ID      string   `bson:"id"`
+	Domains []string `bson:"domains"`
+}
+
 type updateOrganizationRequest struct {
 	Name                string   `json:"name" validate:"required"`
 	Type                string   `json:"type" validate:"required,oneof=micro small medium large huge"`
@@ -208,20 +219,16 @@ type updateOrganizationRequest struct {
 
 //GetOrganizations gets organizations
 func (h AdminApisHandler) GetOrganizations(l *log.Log, w http.ResponseWriter, r *http.Request) {
-
 	getOrg, err := h.coreAPIs.Administration.AdmGetOrganizations()
 	if err != nil {
+		l.Errorf("Error geting the organizations - %s\n", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
-	var responseData *getOrganizationsResponse
-	if getOrg != nil {
-		l.Errorf("The are no organizations")
-	}
-	data, err := json.Marshal(responseData)
+	data, err := json.Marshal(getOrg)
 	if err != nil {
-		//log.Println("Error on marshal the config")
+		l.Errorf("Error on marshal the config")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
