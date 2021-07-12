@@ -26,13 +26,13 @@ func main() {
 	logger := log.NewLogger("core")
 	envLoader := envloader.NewEnvLoader(Version, logger)
 
-	serviceID := envLoader.GetEnvVar("SERVICE_ID", true)
-	host := envLoader.GetEnvVar("ROKWIRE_CORE_HOST", true)
+	serviceID := envLoader.GetAndLogEnvVar("SERVICE_ID", true, false)
+	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
 
 	// mongoDB adapter
-	mongoDBAuth := envLoader.GetEnvVar("ROKWIRE_CORE_MONGO_AUTH", true)
-	mongoDBName := envLoader.GetEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true)
-	mongoTimeout := envLoader.GetEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false)
+	mongoDBAuth := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_AUTH", true, false)
+	mongoDBName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true, false)
+	mongoTimeout := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false, false)
 	storageAdapter := storage.NewStorageAdapter(mongoDBAuth, mongoDBName, mongoTimeout, logger)
 	err := storageAdapter.Start()
 	if err != nil {
@@ -40,22 +40,28 @@ func main() {
 	}
 
 	//auth
-	authPrivKeyPem := envLoader.GetEnvVar("AUTH_PRIV_KEY", true)
+	authPrivKeyPem := envLoader.GetAndLogEnvVar("AUTH_PRIV_KEY", true, true)
 	authPrivKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(authPrivKeyPem))
 	if err != nil {
 		logger.Fatalf("Failed to parse auth priv key: %v", err)
 	}
 
-	minTokenExpStr := envLoader.GetEnvVar("MIN_TOKEN_EXP", false)
-	minTokenExp, err := strconv.ParseInt(minTokenExpStr, 10, 64)
-	if err != nil {
-		logger.Fatalf("Error parsing min token exp: %v", err)
+	minTokenExpStr := envLoader.GetAndLogEnvVar("MIN_TOKEN_EXP", false, false)
+	var minTokenExp *int64
+	minTokenExpVal, err := strconv.ParseInt(minTokenExpStr, 10, 64)
+	if err == nil {
+		minTokenExp = &minTokenExpVal
+	} else {
+		logger.Infof("Error parsing min token exp, applying defaults: %v", err)
 	}
 
-	maxTokenExpStr := envLoader.GetEnvVar("MAX_TOKEN_EXP", false)
-	maxTokenExp, err := strconv.ParseInt(maxTokenExpStr, 10, 64)
-	if err != nil {
-		logger.Fatalf("Error parsing max token exp: %v", err)
+	maxTokenExpStr := envLoader.GetAndLogEnvVar("MAX_TOKEN_EXP", false, false)
+	var maxTokenExp *int64
+	maxTokenExpVal, err := strconv.ParseInt(maxTokenExpStr, 10, 64)
+	if err == nil {
+		maxTokenExp = &maxTokenExpVal
+	} else {
+		logger.Infof("Error parsing max token exp, applying defaults: %v", err)
 	}
 
 	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp)
@@ -63,12 +69,12 @@ func main() {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
 
-	//application
-	application := core.NewApplication(Version, Build, storageAdapter, auth)
-	application.Start()
+	//core
+	coreAPIs := core.NewCoreAPIs(Version, Build, storageAdapter, auth)
+	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(application, host, logger)
+	webAdapter := web.NewWebAdapter(coreAPIs, host, logger)
 
 	webAdapter.Start()
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"core-building-block/core"
 	"core-building-block/core/model"
+	"errors"
 	"fmt"
 
 	"strconv"
@@ -13,6 +14,7 @@ import (
 	"github.com/rokmetro/auth-library/authservice"
 	log "github.com/rokmetro/logging-library/loglib"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -148,6 +150,35 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 	return &resOrg, nil
 }
 
+//UpdateOrganization updates an organization
+func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
+
+	now := time.Now()
+
+	updatOrganizationFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	updateOrganization := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "name", Value: name},
+			primitive.E{Key: "type", Value: requestType},
+			primitive.E{Key: "requires_own_login", Value: requiresOwnLogin},
+			primitive.E{Key: "login_types", Value: loginTypes},
+			primitive.E{Key: "config.domains", Value: organizationDomains},
+			primitive.E{Key: "config.date_updated", Value: now},
+			primitive.E{Key: "date_updated", Value: now},
+		}},
+	}
+
+	result, err := sa.db.organizations.UpdateOne(updatOrganizationFilter, updateOrganization, nil)
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return errors.New("there is no organziation for the provided id")
+	}
+
+	return nil
+}
+
 //GetServiceRegs fetches the requested service registration records
 func (sa *Adapter) GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error) {
 	var filter bson.M
@@ -164,6 +195,16 @@ func (sa *Adapter) GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg
 	var result []authservice.ServiceReg
 	err := sa.db.serviceRegs.Find(filter, &result, nil)
 	return result, err
+}
+
+//InsertServiceReg inserts the service registration to the storage
+func (sa *Adapter) InsertServiceReg(reg *authservice.ServiceReg) error {
+	_, err := sa.db.serviceRegs.InsertOne(reg)
+	if err != nil {
+		return fmt.Errorf("error inserting service reg for service id %s: %v", reg.ServiceID, err)
+	}
+
+	return nil
 }
 
 //NewStorageAdapter creates a new storage adapter instance

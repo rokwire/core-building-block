@@ -38,18 +38,36 @@ type Auth struct {
 
 	authPrivKey *rsa.PrivateKey
 
-	authService *authservice.AuthService
-	TokenAuth   *tokenauth.TokenAuth
+	AuthService *authservice.AuthService
 
-	issuer      string //Issuer for tokens (should match service host)
+	serviceID   string
+	host        string //Service host
 	minTokenExp int64  //Minimum access token expiration time in minutes
 	maxTokenExp int64  //Maximum access token expiration time in minutes
 }
 
 //NewAuth creates a new auth instance
-//Token Exp Suggestions: Min = 5, Max = 60
-func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp int64, maxTokenExp int64) (*Auth, error) {
-	//TODO: Create local ServiceRegLoader implementation
+//Token Exp Defaults: Min = 5, Max = 60
+func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64) (*Auth, error) {
+	if minTokenExp == nil {
+		var minTokenExpVal int64 = 5
+		minTokenExp = &minTokenExpVal
+	}
+
+	if maxTokenExp == nil {
+		var maxTokenExpVal int64 = 60
+		maxTokenExp = &maxTokenExpVal
+	}
+
+	authTypes := map[string]authType{}
+	auth := &Auth{storage: storage, authTypes: authTypes, authPrivKey: authPrivKey, AuthService: nil,
+		serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp}
+
+	err := auth.storeReg()
+	if err != nil {
+		return nil, fmt.Errorf("error storing auth reg: %v", err)
+	}
+
 	serviceLoader := NewLocalServiceRegLoader(storage)
 
 	authService, err := authservice.NewAuthService(serviceID, host, serviceLoader)
@@ -57,14 +75,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 		return nil, fmt.Errorf("error initializing auth service: %v", err)
 	}
 
-	tokenAuth, err := tokenauth.NewTokenAuth(true, authService)
-	if err != nil {
-		return nil, fmt.Errorf("error initializing token auth: %v", err)
-	}
-
-	authTypes := map[string]authType{}
-	auth := &Auth{storage: storage, authTypes: authTypes, authPrivKey: authPrivKey, authService: authService, TokenAuth: tokenAuth,
-		minTokenExp: minTokenExp, maxTokenExp: maxTokenExp}
+	auth.AuthService = authService
 
 	//Initialize auth types
 	initEmailAuth(auth)
@@ -119,7 +130,7 @@ func (a *Auth) Login(authName string, creds string) (string, *model.User, error)
 }
 
 func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scope string) (string, error) {
-	scopedClaims := a.getStandardClaims(claims.Subject, serviceID, claims.OrgID, nil)
+	scopedClaims := a.getStandardClaims(claims.Subject, serviceID, claims.OrgID, claims.AppID, nil)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
@@ -135,15 +146,15 @@ func (a *Auth) buildCsrfToken(claims tokenauth.Claims) (string, error) {
 	return a.generateToken(&claims)
 }
 
-func (a *Auth) getStandardClaims(sub string, aud string, orgID string, exp *int64) tokenauth.Claims {
+func (a *Auth) getStandardClaims(sub string, aud string, orgID string, appID string, exp *int64) tokenauth.Claims {
 	return tokenauth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			Audience:  aud,
 			Subject:   sub,
 			ExpiresAt: a.getExp(exp),
 			IssuedAt:  time.Now().Unix(),
-			Issuer:    a.issuer,
-		}, OrgID: orgID,
+			Issuer:    a.host,
+		}, OrgID: orgID, AppID: appID,
 	}
 }
 
@@ -191,6 +202,19 @@ func (a *Auth) deleteAccount(claims *tokenauth.Claims) {
 	//TODO: Implement
 }
 
+//saveReg stores the auth service registration record
+func (a *Auth) storeReg() error {
+	pem, err := authutils.GetPubKeyPem(&a.authPrivKey.PublicKey)
+	if err != nil {
+		return fmt.Errorf("error encoding pub key for storage: %v", err)
+	}
+
+	key := authservice.PubKey{KeyPem: pem, Alg: "RS256"}
+	reg := authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key}
+	a.storage.InsertServiceReg(&reg)
+	return nil
+}
+
 //LocalServiceRegLoaderImpl provides a local implementation for ServiceRegLoader
 type LocalServiceRegLoaderImpl struct {
 	storage Storage
@@ -212,4 +236,5 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 type Storage interface {
 	ReadTODO() error
 	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
+	InsertServiceReg(reg *authservice.ServiceReg) error
 }
