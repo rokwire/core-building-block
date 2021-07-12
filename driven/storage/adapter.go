@@ -4,6 +4,7 @@ import (
 	"context"
 	"core-building-block/core"
 	"core-building-block/core/model"
+	"errors"
 	"fmt"
 
 	"strconv"
@@ -158,13 +159,16 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 			primitive.E{Key: "type", Value: requestType},
 			primitive.E{Key: "requires_own_login", Value: requiresOwnLogin},
 			primitive.E{Key: "login_types", Value: loginTypes},
-			primitive.E{Key: "config.organization_domains", Value: organizationDomains},
+			primitive.E{Key: "config.domains", Value: organizationDomains},
 		}},
 	}
 
-	_, err := sa.db.organizations.UpdateOne(updatOrganizationFilter, updateOrganization, nil)
+	result, err := sa.db.organizations.UpdateOne(updatOrganizationFilter, updateOrganization, nil)
 	if err != nil {
 		return err
+	}
+	if result.MatchedCount == 0 {
+		return errors.New("there is no organziation for the provided id")
 	}
 
 	return nil
