@@ -76,7 +76,7 @@ func (we Adapter) Start() {
 
 	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.CreateOrganization)).Methods("POST")
 	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.GetOrganizations)).Methods("GET")
-
+	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.UpdateOrganization)).Methods("PUT")
 	///
 
 	///enc ///

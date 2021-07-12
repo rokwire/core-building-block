@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Expose admin API which gives the organizations list. [#61] (https://github.com/rokwire/core-building-block/issues/61)
+- Expose admin API which updates an organization. [#59] (https://github.com/rokwire/core-building-block/issues/59)
 - Set up unit tests environment. [#7] (https://github.com/rokwire/core-building-block/issues/7)
 - Expose admin API which creates an organization. [#58](https://github.com/rokwire/core-building-block/issues/58)
 - Expose update global config admin API. [#36] (https://github.com/rokwire/core-building-block/issues/36)
