@@ -159,9 +159,8 @@ func (sa *Adapter) GetOrganization(ID string) (*model.Organization, error) {
 	}
 
 	//return the correct type
-	var organizationDomains []string
-	getOrgConfig := organizationConfig{Domains: organizationDomains}
-	getResOrgConfig := model.OrganizationConfig{Domains: getOrgConfig.Domains}
+	getOrgConfig := org.Config
+	getResOrgConfig := model.OrganizationConfig{ID: getOrgConfig.ID, Domains: getOrgConfig.Domains}
 
 	getResOrg := model.Organization{ID: org.ID, Name: org.Name, Type: org.Type,
 		RequiresOwnLogin: org.RequiresOwnLogin, LoginTypes: org.LoginTypes, Config: getResOrgConfig}

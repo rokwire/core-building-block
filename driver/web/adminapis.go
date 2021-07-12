@@ -202,6 +202,13 @@ type getOrganizationResponse struct {
 	RequiresOwnLogin    *bool    `json:"requires_own_login" validate:"required"`
 	LoginTypes          []string `json:"login_types"`
 	OrganizationDomains []string `json:"organization_domains"`
+
+	Config organizationConfig `bson:"config"`
+}
+
+type organizationConfig struct {
+	ID      string   `bson:"id"`
+	Domains []string `bson:"domains"`
 }
 
 type updateOrganizationRequest struct {
@@ -222,6 +229,7 @@ func (h AdminApisHandler) GetOrganization(l *log.Log, w http.ResponseWriter, r *
 	}
 	getOrg, err := h.coreAPIs.Administration.AdmGetOrganization(ID)
 	if err != nil {
+		l.Errorf("Error on geting an organization - %s\n", err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
