@@ -204,14 +204,6 @@ type getOrganizationResponse struct {
 	OrganizationDomains []string `json:"organization_domains"`
 }
 
-type updateOrganizationRequest struct {
-	Name                string   `json:"name" validate:"required"`
-	Type                string   `json:"type" validate:"required,oneof=micro small medium large huge"`
-	RequiresOwnLogin    *bool    `json:"requires_own_login" validate:"required"`
-	LoginTypes          []string `json:"login_types"`
-	OrganizationDomains []string `json:"organization_domains"`
-}
-
 //GetOrganization gets organization
 func (h AdminApisHandler) GetOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
