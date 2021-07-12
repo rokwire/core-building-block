@@ -69,13 +69,13 @@ func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (
 		return nil, err
 	}
 	if result == nil {
-		return nil, fmt.Errorf("no auth info found for orgID %s, appID %s, authType %s:", orgID, appID, authType)
+		return nil, fmt.Errorf("no auth config found for orgID %s, appID %s, authType %s:", orgID, appID, authType)
 	}
 	return result, nil
 }
 
 //LoadAuthConfigs finds all auth config documents in the DB
-func (sa *Adapter) LoadAuthConfigs() (map[string]auth.AuthConfig, error) {
+func (sa *Adapter) LoadAuthConfigs() (*[]auth.AuthConfig, error) {
 	filter := bson.D{}
 	var result []auth.AuthConfig
 	err := sa.db.authConfigs.Find(filter, &result, nil)
@@ -83,16 +83,10 @@ func (sa *Adapter) LoadAuthConfigs() (map[string]auth.AuthConfig, error) {
 		return nil, err
 	}
 	if result == nil || len(result) == 0 {
-		return nil, errors.New("no auth info documents found")
+		return nil, errors.New("no auth config documents found")
 	}
 
-	authInfoMap := make(map[string]auth.AuthConfig)
-	for _, authInfo := range result {
-		if len(authInfo.OrgID) > 0 && len(authInfo.AppID) > 0 {
-			authInfoMap[fmt.Sprintf("%s_%s", authInfo.OrgID, authInfo.AppID)] = authInfo
-		}
-	}
-	return authInfoMap, nil
+	return &result, nil
 }
 
 //CreateGlobalConfig creates global config

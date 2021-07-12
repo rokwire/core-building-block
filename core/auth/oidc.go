@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/coreos/go-oidc"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 // OIDC implementation of authType
@@ -22,16 +23,16 @@ type oidcAuthImpl struct {
 }
 
 type oidcAuthConfig struct {
-	Issuer             string            `json:"issuer" bson:"issuer"`
-	Host               string            `json:"host" bson:"host"`
-	Scopes             string            `json:"scopes" bson:"scopes"`
-	UseRefresh         bool              `json:"use_refresh" bson:"use_refresh"`
-	UsePKCE            bool              `json:"use_pkce" bson:"use_pkce"`
-	ClientID           string            `json:"client_id" bson:"client_id"`
-	ClientSecret       string            `json:"client_secret" bson:"client_secret"`
-	Claims             map[string]string `json:"claims" bson:"claims"`
-	RequiredPopulation string            `json:"required_population" bson:"required_population"`
-	Populations        map[string]string `json:"populations" bson:"populations"`
+	Issuer             string            `json:"issuer"`
+	Host               string            `json:"host" validate:"required"`
+	Scopes             string            `json:"scopes" validate:"required"`
+	UseRefresh         bool              `json:"use_refresh" validate:"required"`
+	UsePKCE            bool              `json:"use_pkce" validate:"required"`
+	ClientID           string            `json:"client_id" validate:"required"`
+	ClientSecret       string            `json:"client_secret"`
+	Claims             map[string]string `json:"claims" validate:"required"`
+	RequiredPopulation string            `json:"required_population"`
+	Populations        map[string]string `json:"populations"`
 }
 
 type oidcMobileParams struct {
@@ -60,10 +61,10 @@ type oidcRefreshParams struct {
 }
 
 type oidcToken struct {
-	IDToken      string `json:"id_token"`
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	TokenType    string `json:"token_type"`
+	IDToken      string `json:"id_token" validate:"required"`
+	AccessToken  string `json:"access_token" validate:"required"`
+	RefreshToken string `json:"refresh_token" validate:"required"`
+	TokenType    string `json:"token_type" validate:"required"`
 	ExpiresIn    int    `json:"expires_in"`
 }
 
@@ -85,10 +86,20 @@ func (a *oidcAuthImpl) check(creds string, params string) (*UserAuth, error) {
 		if err != nil {
 			return nil, err
 		}
+		validate := validator.New()
+		err = validate.Struct(loginParams)
+		if err != nil {
+			return nil, err
+		}
 		return a.newToken(creds, &loginParams)
 	case "refresh_token":
 		var refreshParams oidcRefreshParams
 		err := json.Unmarshal([]byte(params), &refreshParams)
+		if err != nil {
+			return nil, err
+		}
+		validate := validator.New()
+		err = validate.Struct(refreshParams)
 		if err != nil {
 			return nil, err
 		}
@@ -104,18 +115,15 @@ func (a *oidcAuthImpl) mobileLoginURL(params string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	authConfig := a.auth.getAuthConfig(mobileParams.OrgID, mobileParams.AppID, "oidc")
-	oidcConfig, ok := authConfig.Config.(oidcAuthConfig)
-	if !ok {
-		return "", fmt.Errorf("auth config for orgID %s, appID %s cannot be used for oidc", mobileParams.OrgID, mobileParams.AppID)
+	validate := validator.New()
+	err = validate.Struct(mobileParams)
+	if err != nil {
+		return "", err
 	}
 
-	if len(oidcConfig.Host) == 0 {
-		return "", errors.New("oidc auth config missing host")
-	}
-	if len(oidcConfig.ClientID) == 0 {
-		return "", errors.New("oidc auth config missing client ID")
+	oidcConfig, err := a.getOidcAuthConfig(mobileParams.OrgID, mobileParams.AppID)
+	if err != nil {
+		return "", fmt.Errorf("auth config for orgID %s, appID %s cannot be used for oidc: %s", mobileParams.OrgID, mobileParams.AppID, err.Error())
 	}
 
 	scopes := oidcConfig.Scopes
@@ -158,13 +166,12 @@ func (a *oidcAuthImpl) mobileLoginURL(params string) (string, error) {
 }
 
 func (a *oidcAuthImpl) checkToken(idToken string, params *oidcCheckParams, oidcConfig *oidcAuthConfig) (string, error) {
+	var err error
 	if oidcConfig == nil {
-		authConfig := a.auth.getAuthConfig(params.OrgID, params.AppID, "oidc")
-		newOidcConfig, ok := authConfig.Config.(oidcAuthConfig)
-		if !ok {
-			return "", fmt.Errorf("auth config for orgID %s, appID %s cannot be used for oidc", params.OrgID, params.AppID)
+		oidcConfig, err = a.getOidcAuthConfig(params.OrgID, params.AppID)
+		if err != nil {
+			return "", fmt.Errorf("auth config for orgID %s, appID %s cannot be used for oidc: %s", params.OrgID, params.AppID, err.Error())
 		}
-		oidcConfig = &newOidcConfig
 	}
 
 	oidcProvider := oidcConfig.Host
@@ -196,17 +203,9 @@ func (a *oidcAuthImpl) checkToken(idToken string, params *oidcCheckParams, oidcC
 }
 
 func (a *oidcAuthImpl) newToken(code string, params *oidcLoginParams) (*UserAuth, error) {
-	authConfig := a.auth.getAuthConfig(params.OrgID, params.AppID, "oidc")
-	oidcConfig, ok := authConfig.Config.(oidcAuthConfig)
-	if !ok {
-		return nil, fmt.Errorf("auth config for orgID %s, appID %s cannot be used for oidc", params.OrgID, params.AppID)
-	}
-
-	if len(oidcConfig.Host) == 0 {
-		return nil, errors.New("oidc auth config missing host")
-	}
-	if len(oidcConfig.ClientID) == 0 {
-		return nil, errors.New("oidc auth config missing client ID")
+	oidcConfig, err := a.getOidcAuthConfig(params.OrgID, params.AppID)
+	if err != nil {
+		return nil, fmt.Errorf("auth config for orgID %s, appID %s cannot be used for oidc: %s", params.OrgID, params.AppID, err.Error())
 	}
 
 	bodyData := map[string]string{
@@ -219,21 +218,13 @@ func (a *oidcAuthImpl) newToken(code string, params *oidcLoginParams) (*UserAuth
 		bodyData["code_verifier"] = params.CodeVerifier
 	}
 
-	return a.loadOidcTokensAndInfo(bodyData, &oidcConfig)
+	return a.loadOidcTokensAndInfo(bodyData, oidcConfig)
 }
 
 func (a *oidcAuthImpl) refreshToken(refreshToken string, params *oidcRefreshParams) (*UserAuth, error) {
-	authConfig := a.auth.getAuthConfig(params.OrgID, params.AppID, "oidc")
-	oidcConfig, ok := authConfig.Config.(oidcAuthConfig)
-	if !ok {
-		return nil, fmt.Errorf("auth config for orgID %s, appID %s cannot be used for oidc", params.OrgID, params.AppID)
-	}
-
-	if len(oidcConfig.Host) == 0 {
-		return nil, errors.New("oidc auth config missing host")
-	}
-	if len(oidcConfig.ClientID) == 0 {
-		return nil, errors.New("oidc auth config missing client ID")
+	oidcConfig, err := a.getOidcAuthConfig(params.OrgID, params.AppID)
+	if err != nil {
+		return nil, fmt.Errorf("auth config for orgID %s, appID %s cannot be used for oidc: %s", params.OrgID, params.AppID, err.Error())
 	}
 	if !oidcConfig.UseRefresh {
 		return nil, errors.New("should not use refresh token")
@@ -246,7 +237,7 @@ func (a *oidcAuthImpl) refreshToken(refreshToken string, params *oidcRefreshPara
 		"client_id":     oidcConfig.ClientID,
 	}
 
-	return a.loadOidcTokensAndInfo(bodyData, &oidcConfig)
+	return a.loadOidcTokensAndInfo(bodyData, oidcConfig)
 }
 
 func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcConfig *oidcAuthConfig) (*UserAuth, error) {
@@ -282,11 +273,27 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	if userAuth.Sub != sub {
 		return nil, fmt.Errorf("mismatching user info sub %s and id token sub %s", userAuth.Sub, sub)
 	}
-	userAuth.UserID = readFromClaims("user_id", &oidcConfig.Claims, &userClaims).(string)
-	userAuth.Name = readFromClaims("name", &oidcConfig.Claims, &userClaims).(string)
-	userAuth.Email = readFromClaims("email", &oidcConfig.Claims, &userClaims).(string)
-	userAuth.Phone = readFromClaims("phone", &oidcConfig.Claims, &userClaims).(string)
-	userAuth.Exp = readFromClaims("exp", &oidcConfig.Claims, &userClaims).(float64)
+	var ok bool
+	userID := readFromClaims("user_id", &oidcConfig.Claims, &userClaims)
+	if userAuth.UserID, ok = userID.(string); !ok {
+		log.Printf("Failed to cast user_id %v to string\n", userID)
+	}
+	name := readFromClaims("name", &oidcConfig.Claims, &userClaims)
+	if userAuth.Name, ok = name.(string); !ok {
+		log.Printf("Failed to cast name %v to string\n", name)
+	}
+	email := readFromClaims("email", &oidcConfig.Claims, &userClaims)
+	if userAuth.Email, ok = email.(string); !ok {
+		log.Printf("Failed to cast email %v to string\n", email)
+	}
+	phone := readFromClaims("phone", &oidcConfig.Claims, &userClaims)
+	if userAuth.Phone, ok = phone.(string); !ok {
+		log.Printf("Failed to cast phone %v to string\n", phone)
+	}
+	exp := readFromClaims("exp", &oidcConfig.Claims, &userClaims)
+	if userAuth.Exp, ok = exp.(float64); !ok {
+		log.Printf("Failed to cast exp %v to string\n", exp)
+	}
 
 	var userPhoto []byte
 	if photoURL, ok := readFromClaims("picture", &oidcConfig.Claims, &userClaims).(string); ok {
@@ -357,6 +364,11 @@ func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcCon
 	if err != nil {
 		return nil, err
 	}
+	validate := validator.New()
+	err = validate.Struct(authToken)
+	if err != nil {
+		return nil, err
+	}
 
 	return &authToken, nil
 }
@@ -394,6 +406,30 @@ func (a *oidcAuthImpl) loadOidcUserInfo(token *oidcToken, url string) ([]byte, e
 	}
 
 	return body, nil
+}
+
+func (a *oidcAuthImpl) getOidcAuthConfig(orgID string, appID string) (*oidcAuthConfig, error) {
+	authConfig, err := a.auth.getAuthConfig(orgID, appID, "oidc")
+	if err != nil {
+		return nil, err
+	}
+
+	configBytes, err := json.Marshal(authConfig.Config)
+	if err != nil {
+		return nil, err
+	}
+	var oidcConfig oidcAuthConfig
+	err = json.Unmarshal(configBytes, &oidcConfig)
+	if err != nil {
+		return nil, err
+	}
+	validate := validator.New()
+	err = validate.Struct(oidcConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return &oidcConfig, nil
 }
 
 // --- Helper functions ---

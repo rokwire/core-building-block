@@ -2,11 +2,13 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"errors"
 	"fmt"
 	"log"
 	"sync"
 
 	"golang.org/x/sync/syncmap"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 type UserAuth struct {
@@ -21,10 +23,10 @@ type UserAuth struct {
 }
 
 type AuthConfig struct {
-	OrgID  string      `json:"org_id" bson:"org_id"`
-	AppID  string      `json:"app_id" bson:"app_id"`
-	Type   string      `json:"type" bson:"type"`
-	Config interface{} `json:"config" bson:"config"`
+	OrgID  string      `json:"org_id" bson:"org_id" validate:"required"`
+	AppID  string      `json:"app_id" bson:"app_id" validate:"required"`
+	Type   string      `json:"type" bson:"type" validate:"required"`
+	Config interface{} `json:"config" bson:"config" validate:"required"`
 }
 
 //Interface for authentication mechanisms
@@ -124,7 +126,7 @@ func (a Auth) LoadAuthConfigs() error {
 	return nil
 }
 
-func (a Auth) getAuthConfig(orgID string, appID string, authType string) *AuthConfig {
+func (a Auth) getAuthConfig(orgID string, appID string, authType string) (*AuthConfig, error) {
 	a.authConfigsLock.RLock()
 	defer a.authConfigsLock.RUnlock()
 
@@ -134,33 +136,30 @@ func (a Auth) getAuthConfig(orgID string, appID string, authType string) *AuthCo
 	if item != nil {
 		authConfigFromCache, ok := item.(AuthConfig)
 		if !ok {
-			log.Println("getAuthConfig(): failed to cast cache item to AuthConfig")
-			return nil
+			return nil, errors.New("failed to cast cache item to AuthConfig")
 		}
 		authConfig = &authConfigFromCache
-	} else {
-		var err error
-		authConfig, err = a.storage.FindAuthConfig(orgID, appID, authType)
-		if err != nil {
-			return nil
-		}
+		return authConfig, nil
 	}
-
-	return authConfig
+	return nil, errors.New("auth config does not exist")
 }
 
-func (a Auth) setAuthConfigs(authConfigs map[string]AuthConfig) {
+func (a Auth) setAuthConfigs(authConfigs *[]AuthConfig) {
+	a.authConfigs = &syncmap.Map{}
+	validate := validator.New()
+	var err error
+
 	a.authConfigsLock.Lock()
 	defer a.authConfigsLock.Unlock()
-
-	a.authConfigs = &syncmap.Map{}
-
-	for key, value := range authConfigs {
-		a.authConfigs.Store(key, value)
+	for _, authConfig := range *authConfigs {
+		err = validate.Struct(authConfig)
+		if err == nil {
+			a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, authConfig.AppID, authConfig.Type), authConfig)
+		}
 	}
 }
 
 type Storage interface {
 	FindAuthConfig(orgID string, appID string, authType string) (*AuthConfig, error)
-	LoadAuthConfigs() (map[string]AuthConfig, error)
+	LoadAuthConfigs() (*[]AuthConfig, error)
 }
