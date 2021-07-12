@@ -85,7 +85,7 @@ type responseGlobalConfig struct {
 func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	config, err := h.coreAPIs.Administration.AdmGetGlobalConfig()
 	if err != nil {
-		//log.Printf("Error on getting config - %s\n", err)
+		l.Errorf("Error on getting config - %s\n", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -96,7 +96,7 @@ func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *
 	}
 	data, err := json.Marshal(responseData)
 	if err != nil {
-		//log.Println("Error on marshal the config")
+		l.Errorf("Error on marshal the config")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
