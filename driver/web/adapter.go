@@ -160,16 +160,20 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 			panic(err)
 		}
 
+		options := openapi3filter.Options{IncludeResponseStatus: true}
 		responseValidationInput := &openapi3filter.ResponseValidationInput{
 			RequestValidationInput: requestValidationInput,
-			Status:                 105,
+			Status:                 200,
 			Header:                 http.Header{"Content-Type": []string{"application/json"}},
+			Options:                &options,
 		}
-		//responseValidationInput.SetBodyBytes([]byte(`{}`))
-		responseValidationInput.SetBodyBytes([]byte(`fwefwefwefewfew`))
+		responseValidationInput.SetBodyBytes([]byte(`{}`))
+		//responseValidationInput.SetBodyBytes([]byte(`fwefwefwefewfew`))
 
 		err = openapi3filter.ValidateResponse(ctx, responseValidationInput)
-		fmt.Println(err)
+		if err != nil {
+			panic(err)
+		}
 
 		///
 
