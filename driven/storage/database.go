@@ -20,7 +20,9 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
-	authConfigs *collectionWrapper
+	authConfigs   *collectionWrapper
+	globalConfig  *collectionWrapper
+	organizations *collectionWrapper
 
 	listener core.StorageListener
 }
@@ -47,11 +49,24 @@ func (m *database) start() error {
 
 	//apply checks
 	db := client.Database(m.mongoDBName)
-	//TODO
+
+	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
+	err = m.applyGlobalConfigChecks(globalConfig)
+	if err != nil {
+		return err
+	}
+
+	organizations := &collectionWrapper{database: m, coll: db.Collection("organizations")}
+	err = m.applyOrganizationsChecks(organizations)
+	if err != nil {
+		return err
+	}
 
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
+	m.globalConfig = globalConfig
+	m.organizations = organizations
 
 	//TODO
 	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
@@ -75,6 +90,26 @@ func (m *database) applyAuthConfigChecks(authInfo *collectionWrapper) error {
 		return err
 	}
 	log.Println("authConfig check passed")
+	return nil
+}
+
+func (m *database) applyGlobalConfigChecks(configs *collectionWrapper) error {
+	log.Println("apply global config checks.....")
+
+	log.Println("global config checks passed")
+	return nil
+}
+
+func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) error {
+	log.Println("apply organizations checks.....")
+
+	//add name index - unique
+	err := organizations.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	log.Println("organizations checks passed")
 	return nil
 }
 

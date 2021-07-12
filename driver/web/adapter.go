@@ -4,8 +4,9 @@ import (
 	"core-building-block/core"
 	"core-building-block/utils"
 	"fmt"
-	"log"
 	"net/http"
+
+	log "github.com/rokmetro/logging-library/loglib"
 
 	"github.com/casbin/casbin"
 	"github.com/gorilla/mux"
@@ -15,17 +16,19 @@ import (
 
 //Adapter entity
 type Adapter struct {
-	host          string
-	auth          *Auth
-	authorization *casbin.Enforcer
-
+	host                string
+	auth                *Auth
+	authorization       *casbin.Enforcer
+	logger              *log.StandardLogger
 	servicesApisHandler ServicesApisHandler
 	adminApisHandler    AdminApisHandler
 	encApisHandler      EncApisHandler
 	bbsApisHandler      BBsApisHandler
 
-	app *core.Application
+	coreAPIs *core.APIs
 }
+
+type handlerFunc = func(*log.Log, http.ResponseWriter, *http.Request)
 
 // @title Rokwire Core Building Block API
 // @description Rokwire Core Building Block API Documentation.
@@ -38,7 +41,7 @@ type Adapter struct {
 func (we Adapter) Start() {
 
 	//add listener to the application
-	we.app.AddListener(&AppListener{&we})
+	we.coreAPIs.AddListener(&AppListener{&we})
 
 	we.auth.Start()
 
@@ -66,6 +69,12 @@ func (we Adapter) Start() {
 	adminSubrouter := subRouter.PathPrefix("/admin").Subrouter()
 	adminSubrouter.HandleFunc("/test", we.wrapFunc(we.adminApisHandler.GetTest)).Methods("GET")
 	adminSubrouter.HandleFunc("/test-model", we.wrapFunc(we.adminApisHandler.GetTestModel)).Methods("GET")
+
+	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.CreateGlobalConfig)).Methods("POST")
+	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.GetGlobalConfig)).Methods("GET")
+	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.UpdateGlobalConfig)).Methods("PUT")
+
+	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.CreateOrganization)).Methods("POST")
 	///
 
 	///enc ///
@@ -78,7 +87,9 @@ func (we Adapter) Start() {
 	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.GetTest)).Methods("GET")
 	///
 
-	log.Fatal(http.ListenAndServe(":80", router))
+	//TODO
+	//we.logger.Fatal(http.ListenAndServe(":80", router))
+	http.ListenAndServe(":80", router)
 }
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
@@ -91,25 +102,27 @@ func (we Adapter) serveDocUI() http.Handler {
 	return httpSwagger.Handler(httpSwagger.URL(url))
 }
 
-func (we Adapter) wrapFunc(handler http.HandlerFunc) http.HandlerFunc {
+func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		utils.LogRequest(req)
+		var logObj = we.logger.NewRequestLog(req)
 
-		handler(w, req)
+		handler(logObj, w, req)
+		logObj.PrintContext()
 	}
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(app *core.Application, host string) Adapter {
-	auth := NewAuth(app)
+func NewWebAdapter(coreAPIs *core.APIs, host string, logger *log.StandardLogger) Adapter {
+	auth := NewAuth(coreAPIs)
 	authorization := casbin.NewEnforcer("driver/web/authorization_model.conf", "driver/web/authorization_policy.csv")
 
-	servicesApisHandler := NewServicesApisHandler(app)
-	adminApisHandler := NewAdminApisHandler(app)
-	encApisHandler := NewEncApisHandler(app)
-	bbsApisHandler := NewBBsApisHandler(app)
-	return Adapter{host: host, auth: auth, authorization: authorization, servicesApisHandler: servicesApisHandler,
-		adminApisHandler: adminApisHandler, encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, app: app}
+	servicesApisHandler := NewServicesApisHandler(coreAPIs)
+	adminApisHandler := NewAdminApisHandler(coreAPIs)
+	encApisHandler := NewEncApisHandler(coreAPIs)
+	bbsApisHandler := NewBBsApisHandler(coreAPIs)
+	return Adapter{host: host, auth: auth, logger: logger, authorization: authorization, servicesApisHandler: servicesApisHandler,
+		adminApisHandler: adminApisHandler, encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, coreAPIs: coreAPIs}
 }
 
 //AppListener implements core.ApplicationListener interface
@@ -117,8 +130,7 @@ type AppListener struct {
 	adapter *Adapter
 }
 
-//OnAPIKeysUpdated notifies that the api keys are updated
+//OnAuthConfigUpdated notifies that an auth config has been updated
 func (al *AppListener) OnAuthConfigUpdated() {
-	log.Println("AppListener -> OnAuthConfigUpdated")
-	al.adapter.app.Auth.LoadAuthConfigs()
+	al.adapter.coreAPIs.Auth.LoadAuthConfigs()
 }

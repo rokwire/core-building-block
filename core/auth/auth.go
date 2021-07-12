@@ -33,6 +33,7 @@ type authType interface {
 	check(creds string, params string) (*UserAuth, error)
 }
 
+//Auth interface TODO
 type Auth struct {
 	storage Storage
 

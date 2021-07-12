@@ -2,22 +2,23 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"errors"
 	"fmt"
 )
 
-func (app *Application) admGetTest() string {
+func (app *application) admGetTest() string {
 	return "Admin - test"
 }
 
-func (app *Application) admGetTestModel() string {
+func (app *application) admGetTestModel() string {
 	//global config
 	globalConfig := model.GlobalConfig{Setting: "setting_value"}
 
 	//organizations configs
 	illinoisDomains := []string{"illinois.edu"}
-	illinoisOrganizationConfig := model.OrganizationConfig{Name: "Illinois organization config", Setting: "setting_value", Domains: illinoisDomains, Custom: "Illinois organization custom config"}
+	illinoisOrganizationConfig := model.OrganizationConfig{ID: "1", Setting: "setting_value", Domains: illinoisDomains, Custom: "Illinois organization custom config"}
 
-	danceOrganizationConfig := model.OrganizationConfig{Name: "Dance organization config", Setting: "setting_value", Domains: []string{}, Custom: "Dance organization custom config"}
+	danceOrganizationConfig := model.OrganizationConfig{ID: "2", Setting: "setting_value", Domains: []string{}, Custom: "Dance organization custom config"}
 
 	//organizations
 	illinoisOrganization := model.Organization{ID: "1", Name: "Illinois", Type: "large", Config: illinoisOrganizationConfig}
@@ -155,4 +156,53 @@ func (app *Application) admGetTestModel() string {
 		danceRole1, dancePermission1, dancePermission2, dancePermission3, danceRole2, danceGroup1,
 		globalUser1, globalUser2, illiniUser1, illiniUser2, illiniUser3, illiniUsersRel, danceUser1, diUser)
 	return res
+}
+
+func (app *application) admCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
+	gc, err := app.storage.GetGlobalConfig()
+	if err != nil {
+		return nil, err
+	}
+	if gc != nil {
+		return nil, errors.New("there is already a global config")
+	}
+
+	gc, err = app.storage.CreateGlobalConfig(setting)
+	if err != nil {
+		return nil, err
+	}
+	return gc, nil
+}
+
+func (app *application) admGetGlobalConfig() (*model.GlobalConfig, error) {
+	gc, err := app.storage.GetGlobalConfig()
+	if err != nil {
+		return nil, err
+	}
+	return gc, nil
+}
+
+func (app *application) admUpdateGlobalConfig(setting string) error {
+	gc, err := app.storage.GetGlobalConfig()
+	if err != nil {
+		return err
+	}
+	if gc == nil {
+		return errors.New("there is no a global config")
+	}
+
+	gc.Setting = setting
+	err = app.storage.SaveGlobalConfig(gc)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (app *application) admCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
+	organization, err := app.storage.CreateOrganization(name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+	if err != nil {
+		return nil, err
+	}
+	return organization, nil
 }

@@ -260,9 +260,15 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 
 	userAuth := UserAuth{}
 	sub, err := a.checkToken(oidcToken.IDToken, nil, oidcConfig)
+	if err != nil {
+		return nil, err
+	}
 	userAuth.RefreshToken = oidcToken.RefreshToken
 
 	userInfo, err := a.loadOidcUserInfo(oidcToken, oidcConfig.Host+"/idp/profile/oidc/userinfo")
+	if err != nil {
+		return nil, fmt.Errorf("get auth user failed: %s", err)
+	}
 	if userInfo == nil {
 		return nil, errors.New("get auth user failed")
 	}
