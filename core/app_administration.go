@@ -215,3 +215,13 @@ func (app *application) admGetOrganization(ID string) (*model.Organization, erro
 
 	return getOrganization, nil
 }
+
+func (app *application) admUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
+	err := app.storage.UpdateOrganization(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+	if err != nil {
+		return err
+	}
+
+	return err
+
+}

@@ -204,6 +204,14 @@ type getOrganizationResponse struct {
 	OrganizationDomains []string `json:"organization_domains"`
 }
 
+type updateOrganizationRequest struct {
+	Name                string   `json:"name" validate:"required"`
+	Type                string   `json:"type" validate:"required,oneof=micro small medium large huge"`
+	RequiresOwnLogin    *bool    `json:"requires_own_login" validate:"required"`
+	LoginTypes          []string `json:"login_types"`
+	OrganizationDomains []string `json:"organization_domains"`
+}
+
 //GetOrganization gets organization
 func (h AdminApisHandler) GetOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
@@ -233,4 +241,52 @@ func (h AdminApisHandler) GetOrganization(l *log.Log, w http.ResponseWriter, r *
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
+}
+
+//UpdateOrganization updates organization
+func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		http.Error(w, "ID is required", http.StatusBadRequest)
+		return
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		l.Errorf("Error on marshal update organization - %s\n", err.Error())
+		return
+	}
+	var requestData updateOrganizationRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		l.Errorf("Error on unmarshal the update organization  - %s\n", err.Error())
+		return
+	}
+
+	//validate
+	validate := validator.New()
+	err = validate.Struct(requestData)
+	if err != nil {
+		l.Errorf("Error on validating update organization  data - %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	name := requestData.Name
+	requestType := requestData.Type
+	requiresOwnLogin := requestData.RequiresOwnLogin
+	loginTypes := requestData.LoginTypes
+	organizationDomains := requestData.OrganizationDomains
+
+	err = h.coreAPIs.Administration.AdmUpdateOrganization(ID, name, requestType, *requiresOwnLogin, loginTypes, organizationDomains)
+	if err != nil {
+		l.Errorf("Error on updating an organization - %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Successfully updated"))
 }
