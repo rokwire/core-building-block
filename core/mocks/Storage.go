@@ -102,3 +102,17 @@ func (_m *Storage) SaveGlobalConfig(setting *model.GlobalConfig) error {
 func (_m *Storage) SetStorageListener(storageListener core.StorageListener) {
 	_m.Called(storageListener)
 }
+
+// UpdateOrganization provides a mock function with given fields: ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains
+func (_m *Storage) UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
+	ret := _m.Called(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string, string, bool, []string, []string) error); ok {
+		r0 = rf(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
