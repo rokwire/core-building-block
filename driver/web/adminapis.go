@@ -37,7 +37,7 @@ type createGlobalConfigRequest struct {
 func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		//log.Printf("Error on marshal create global config - %s\n", err.Error())
+		l.Errorf("Error on marshal create global config - %s\n", err.Error())
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
@@ -45,7 +45,7 @@ func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 	var requestData createGlobalConfigRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		//log.Printf("Error on unmarshal the create global config data - %s\n", err.Error())
+		l.Errorf("Error on unmarshal the create global config data - %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -54,7 +54,7 @@ func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 	validate := validator.New()
 	err = validate.Struct(requestData)
 	if err != nil {
-		//log.Printf("Error on validating create global config data - %s\n", err.Error())
+		l.Errorf("Error on validating create global config data - %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -62,7 +62,7 @@ func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 
 	_, err = h.coreAPIs.Administration.AdmCreateGlobalConfig(setting)
 	if err != nil {
-		//	log.Println(err.Error())
+		l.Errorf(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
