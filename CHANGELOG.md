@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Fixing the Log and the Changelog for issues #35 and #36 [#54](https://github.com/rokwire/core-building-block/issues/54)
 - Expose admin API which updates an organization. [#59] (https://github.com/rokwire/core-building-block/issues/59)
 - Set up unit tests environment. [#7] (https://github.com/rokwire/core-building-block/issues/7)
 - Expose admin API which creates an organization. [#58](https://github.com/rokwire/core-building-block/issues/58)
