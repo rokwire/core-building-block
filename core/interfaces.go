@@ -23,7 +23,7 @@ type Administration interface {
 	AdmUpdateGlobalConfig(setting string) error
 
 	AdmCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error)
-	AdmGetOrganizations(ID string) ([]model.Organization, error)
+	AdmGetOrganizations() ([]model.Organization, error)
 	AdmUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
 }
 
@@ -46,7 +46,7 @@ type Storage interface {
 	SaveGlobalConfig(setting *model.GlobalConfig) error
 
 	CreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error)
-	GetOrganizations(ID string) ([]model.Organization, error)
+	GetOrganizations() ([]model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
 }
 

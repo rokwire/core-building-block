@@ -199,11 +199,10 @@ func abortTransaction(sessionContext mongo.SessionContext) {
 
 }
 
-func (sa *Adapter) GetOrganizations(ID string) ([]model.Organization, error) {
+func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 
-	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	var result []model.Organization
-	err := sa.db.organizations.Find(filter, &result, nil)
+	err := sa.db.organizations.Find(&result, nil, nil)
 	if err != nil {
 		return nil, err
 	}

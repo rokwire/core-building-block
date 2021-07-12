@@ -208,13 +208,8 @@ type updateOrganizationRequest struct {
 
 //GetOrganizations gets organizations
 func (h AdminApisHandler) GetOrganizations(l *log.Log, w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	ID := params["id"]
-	if len(ID) <= 0 {
-		http.Error(w, "id is required", http.StatusBadRequest)
-		return
-	}
-	getOrg, err := h.coreAPIs.Administration.AdmGetOrganizations(ID)
+
+	getOrg, err := h.coreAPIs.Administration.AdmGetOrganizations()
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return

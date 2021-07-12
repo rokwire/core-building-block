@@ -207,8 +207,8 @@ func (app *application) admCreateOrganization(name string, requestType string, r
 	return organization, nil
 }
 
-func (app *application) admGetOrganizations(ID string) ([]model.Organization, error) {
-	getOrganization, err := app.storage.GetOrganizations(ID)
+func (app *application) admGetOrganizations() ([]model.Organization, error) {
+	getOrganization, err := app.storage.GetOrganizations()
 	if err != nil {
 		return nil, err
 	}
