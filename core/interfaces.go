@@ -8,7 +8,6 @@ import (
 
 //Services exposes APIs for the driver adapters
 type Services interface {
-	SerGetVersion(l *log.Log) string
 	SerGetAuthTest(l *log.Log) string
 	SerGetCommonTest(l *log.Log) string
 }

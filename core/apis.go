@@ -60,10 +60,6 @@ type servicesImpl struct {
 	app *application
 }
 
-func (s *servicesImpl) SerGetVersion(l *log.Log) string {
-	return s.app.serGetVersion(l)
-}
-
 func (s *servicesImpl) SerGetAuthTest(l *log.Log) string {
 	return s.app.serGetAuthTest(l)
 }
