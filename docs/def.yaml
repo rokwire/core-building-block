@@ -56,12 +56,12 @@ paths:
           500:
             description: Internal error
   /admin/organizations/{id}:
-    get:
+    put:
       tags:
       - Admin
-      summary: TODO
+      summary: Update organization
       description: |
-        TODO
+        Updates organization
       parameters:
       - name: id
         in: path
@@ -71,6 +71,13 @@ paths:
         explode: false
         schema:
           type: string
+      requestBody:
+        description: update one organization
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+        required: true
       responses:
         200:
           description: successful operation
@@ -101,6 +108,7 @@ components:
       type: object
       properties:
         id:
+          readOnly: true
           type: string
         name:
           type: string
@@ -124,6 +132,7 @@ components:
       type: object
       properties:
         id:
+          readOnly: true
           type: string
           description: organization config id
         domains:
