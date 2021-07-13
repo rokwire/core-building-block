@@ -26,7 +26,7 @@ func main() {
 	logger := log.NewLogger("core")
 	envLoader := envloader.NewEnvLoader(Version, logger)
 
-	serviceID := envLoader.GetAndLogEnvVar("SERVICE_ID", true, false)
+	serviceID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SERVICE_ID", true, false)
 	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
 
 	// mongoDB adapter
@@ -40,13 +40,13 @@ func main() {
 	}
 
 	//auth
-	authPrivKeyPem := envLoader.GetAndLogEnvVar("AUTH_PRIV_KEY", true, true)
+	authPrivKeyPem := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", true, true)
 	authPrivKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(authPrivKeyPem))
 	if err != nil {
 		logger.Fatalf("Failed to parse auth priv key: %v", err)
 	}
 
-	minTokenExpStr := envLoader.GetAndLogEnvVar("MIN_TOKEN_EXP", false, false)
+	minTokenExpStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MIN_TOKEN_EXP", false, false)
 	var minTokenExp *int64
 	minTokenExpVal, err := strconv.ParseInt(minTokenExpStr, 10, 64)
 	if err == nil {
@@ -55,7 +55,7 @@ func main() {
 		logger.Infof("Error parsing min token exp, applying defaults: %v", err)
 	}
 
-	maxTokenExpStr := envLoader.GetAndLogEnvVar("MAX_TOKEN_EXP", false, false)
+	maxTokenExpStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MAX_TOKEN_EXP", false, false)
 	var maxTokenExp *int64
 	maxTokenExpVal, err := strconv.ParseInt(maxTokenExpStr, 10, 64)
 	if err == nil {

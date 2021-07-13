@@ -63,7 +63,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	auth := &Auth{storage: storage, authTypes: authTypes, authPrivKey: authPrivKey, AuthService: nil,
 		serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp}
 
-	err := auth.storeReg()
+	err := auth.storeAuthReg()
 	if err != nil {
 		return nil, fmt.Errorf("error storing auth reg: %v", err)
 	}
@@ -202,15 +202,15 @@ func (a *Auth) deleteAccount(claims *tokenauth.Claims) {
 	//TODO: Implement
 }
 
-//saveReg stores the auth service registration record
-func (a *Auth) storeReg() error {
+//storeAuthReg stores the auth service registration record
+func (a *Auth) storeAuthReg() error {
 	pem, err := authutils.GetPubKeyPem(&a.authPrivKey.PublicKey)
 	if err != nil {
-		return fmt.Errorf("error encoding pub key for storage: %v", err)
+		return fmt.Errorf("error encoding auth pub key for storage: %v", err)
 	}
 
 	key := authservice.PubKey{KeyPem: pem, Alg: "RS256"}
-	reg := authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key}
+	reg := authservice.ServiceReg{ServiceID: "auth", Host: a.host, PubKey: &key}
 	a.storage.InsertServiceReg(&reg)
 	return nil
 }

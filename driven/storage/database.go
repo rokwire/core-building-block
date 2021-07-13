@@ -63,7 +63,7 @@ func (m *database) start() error {
 	}
 
 	serviceRegs := &collectionWrapper{database: m, coll: db.Collection("service_regs")}
-	err = m.applyServiceRegsChecks(organizations)
+	err = m.applyServiceRegsChecks(serviceRegs)
 	if err != nil {
 		return err
 	}
