@@ -2,6 +2,7 @@ package web
 
 import (
 	"core-building-block/core"
+	Def "core-building-block/docs"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -219,7 +220,7 @@ func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, 
 		l.Errorf("Error on marshal update organization - %s\n", err.Error())
 		return
 	}
-	var requestData organization
+	var requestData Def.Organization
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		l.Errorf("Error on unmarshal the update organization  - %s\n", err.Error())
@@ -236,12 +237,12 @@ func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, 
 	}
 
 	name := requestData.Name
-	requestType := requestData.Type_
+	requestType := requestData.Type
 	requiresOwnLogin := requestData.RequiresOwnLogin
 	loginTypes := requestData.LoginTypes
 	organizationDomains := requestData.Config.Domains
 
-	err = h.coreAPIs.Administration.AdmUpdateOrganization(ID, name, string(requestType), requiresOwnLogin, loginTypes, organizationDomains)
+	err = h.coreAPIs.Administration.AdmUpdateOrganization(ID, name, string(requestType), *requiresOwnLogin, *loginTypes, *organizationDomains)
 	if err != nil {
 		l.Errorf("Error on updating an organization - %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
