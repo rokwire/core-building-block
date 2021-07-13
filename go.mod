@@ -7,7 +7,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
-	github.com/rokmetro/auth-library v0.1.7
+	github.com/rokmetro/auth-library v0.1.9
 	github.com/rokmetro/logging-library v0.1.6
 	github.com/stretchr/testify v1.6.1
 	github.com/swaggo/http-swagger v1.0.0
