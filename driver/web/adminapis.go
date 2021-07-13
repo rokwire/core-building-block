@@ -202,11 +202,11 @@ type getOrganizationsResponse struct {
 	RequiresOwnLogin    *bool              `json:"requires_own_login" validate:"required"`
 	LoginTypes          []string           `json:"login_types"`
 	OrganizationDomains []string           `json:"organization_domains"`
-	Config              organizationConfig `bson:"config"`
+	Config              organizationConfig `json:"config"`
 }
 type organizationConfig struct {
-	ID      string   `bson:"id"`
-	Domains []string `bson:"domains"`
+	ID      string   `json:"id"`
+	Domains []string `json:"domains"`
 }
 
 type updateOrganizationRequest struct {
@@ -225,8 +225,16 @@ func (h AdminApisHandler) GetOrganizations(l *log.Log, w http.ResponseWriter, r 
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+	var response []getOrganizationsResponse
+	if getOrg != nil {
+		for _, getResp := range getOrg {
+			r := getOrganizationsResponse{Name: getResp.Name, Type: getResp.Type, RequiresOwnLogin: &getResp.RequiresOwnLogin,
+				LoginTypes: getResp.LoginTypes}
+			response = append(response, r)
+		}
+	}
 
-	data, err := json.Marshal(getOrg)
+	data, err := json.Marshal(response)
 	if err != nil {
 		l.Errorf("Error on marshal the config")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

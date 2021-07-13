@@ -207,6 +207,14 @@ func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
 
+	var resultList []model.Organization
+	if result != nil {
+		for _, current := range result {
+			item := &model.Organization{ID: current.ID, Name: current.Name, Type: current.Type, RequiresOwnLogin: current.RequiresOwnLogin,
+				LoginTypes: current.LoginTypes, Config: current.Config}
+			resultList = append(resultList, *item)
+		}
+	}
+	return resultList, nil
 }
