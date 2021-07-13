@@ -55,6 +55,32 @@ paths:
             description: Unauthorized
           500:
             description: Internal error
+    post:
+      tags:
+      - Admin
+      summary: Create global config
+      description: |
+        Creates the system global config
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GlobalConfig'
+        required: true
+      responses:
+          200:
+            description: successful operation
+            content:
+              text/plain:
+                schema:
+                  type: string
+                  example: Successfully created
+          400:
+            description: Bad request
+          401:
+            description: Unauthorized
+          500:
+            description: Internal error
   /admin/organizations/{id}:
     put:
       tags:
