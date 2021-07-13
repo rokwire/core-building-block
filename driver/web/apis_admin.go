@@ -148,14 +148,6 @@ func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 	w.Write([]byte("Successfully created"))
 }
 
-type createOrganizationRequest struct {
-	Name                string   `json:"name" validate:"required"`
-	Type                string   `json:"type" validate:"required,oneof=micro small medium large huge"`
-	RequiresOwnLogin    *bool    `json:"requires_own_login" validate:"required"`
-	LoginTypes          []string `json:"login_types"`
-	OrganizationDomains []string `json:"organization_domains"`
-}
-
 //CreateOrganization creates organization
 func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
@@ -163,7 +155,7 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 		l.Errorf("Error on marshal create organization - %s\n", err.Error())
 		return
 	}
-	var requestData createOrganizationRequest
+	var requestData Def.Organization
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		l.Errorf("Error on unmarshal the create organization  - %s\n", err.Error())
@@ -183,9 +175,9 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 	requestType := requestData.Type
 	requiresOwnLogin := requestData.RequiresOwnLogin
 	loginTypes := requestData.LoginTypes
-	organizationDomains := requestData.OrganizationDomains
+	organizationDomains := requestData.Config.Domains
 
-	_, err = h.coreAPIs.Administration.AdmCreateOrganization(name, requestType, *requiresOwnLogin, loginTypes, organizationDomains)
+	_, err = h.coreAPIs.Administration.AdmCreateOrganization(name, string(requestType), *requiresOwnLogin, *loginTypes, *organizationDomains)
 	if err != nil {
 		l.Errorf("Error on creating an organization - %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -196,15 +188,6 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Successfully created"))
 }
-
-/*
-type updateOrganizationRequest struct {
-	Name                string   `json:"name" validate:"required"`
-	Type                string   `json:"type" validate:"required,oneof=micro small medium large huge"`
-	RequiresOwnLogin    *bool    `json:"requires_own_login" validate:"required"`
-	LoginTypes          []string `json:"login_types"`
-	OrganizationDomains []string `json:"organization_domains"`
-} */
 
 //UpdateOrganization updates organization
 func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) {
