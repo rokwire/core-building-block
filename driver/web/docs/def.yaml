@@ -82,9 +82,10 @@ paths:
         200:
           description: successful operation
           content:
-            application/json:
+            text/plain:
               schema:
-                $ref: '#/components/schemas/Organization'
+                type: string
+                example: Successfullly created
         400:
           description: Bad request
         401:

@@ -155,7 +155,7 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 		l.Errorf("Error on marshal create organization - %s\n", err.Error())
 		return
 	}
-	var requestData Def.Organization
+	var requestData Def.PostAdminOrganizationsJSONRequestBody
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		l.Errorf("Error on unmarshal the create organization  - %s\n", err.Error())
@@ -203,7 +203,7 @@ func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, 
 		l.Errorf("Error on marshal update organization - %s\n", err.Error())
 		return
 	}
-	var requestData Def.Organization
+	var requestData Def.PutAdminOrganizationsIdJSONRequestBody
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		l.Errorf("Error on unmarshal the update organization  - %s\n", err.Error())
