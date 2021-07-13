@@ -30,6 +30,11 @@ paths:
       responses:
         200:
           description: successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: v1.1.0
   /admin/global-config:
     get:
       tags:
