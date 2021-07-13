@@ -5,9 +5,10 @@ import (
 	"core-building-block/core/auth"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
+	"strconv"
 
-	"os"
-
+	"github.com/golang-jwt/jwt"
+	"github.com/rokmetro/auth-library/envloader"
 	log "github.com/rokmetro/logging-library/loglib"
 )
 
@@ -22,12 +23,16 @@ func main() {
 	if len(Version) == 0 {
 		Version = "dev"
 	}
-	var logger = log.NewLogger("core-building-block")
+	logger := log.NewLogger("core")
+	envLoader := envloader.NewEnvLoader(Version, logger)
+
+	serviceID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SERVICE_ID", true, false)
+	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
 
 	// mongoDB adapter
-	mongoDBAuth := getEnvKey(logger, "ROKWIRE_CORE_MONGO_AUTH", true)
-	mongoDBName := getEnvKey(logger, "ROKWIRE_CORE_MONGO_DATABASE", true)
-	mongoTimeout := getEnvKey(logger, "ROKWIRE_CORE_MONGO_TIMEOUT", false)
+	mongoDBAuth := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_AUTH", true, false)
+	mongoDBName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true, false)
+	mongoTimeout := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false, false)
 	storageAdapter := storage.NewStorageAdapter(mongoDBAuth, mongoDBName, mongoTimeout, logger)
 	err := storageAdapter.Start()
 	if err != nil {
@@ -35,35 +40,41 @@ func main() {
 	}
 
 	//auth
-	auth := auth.NewAuth(storageAdapter)
+	authPrivKeyPem := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", true, true)
+	authPrivKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(authPrivKeyPem))
+	if err != nil {
+		logger.Fatalf("Failed to parse auth priv key: %v", err)
+	}
+
+	minTokenExpStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MIN_TOKEN_EXP", false, false)
+	var minTokenExp *int64
+	minTokenExpVal, err := strconv.ParseInt(minTokenExpStr, 10, 64)
+	if err == nil {
+		minTokenExp = &minTokenExpVal
+	} else {
+		logger.Infof("Error parsing min token exp, applying defaults: %v", err)
+	}
+
+	maxTokenExpStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MAX_TOKEN_EXP", false, false)
+	var maxTokenExp *int64
+	maxTokenExpVal, err := strconv.ParseInt(maxTokenExpStr, 10, 64)
+	if err == nil {
+		maxTokenExp = &maxTokenExpVal
+	} else {
+		logger.Infof("Error parsing max token exp, applying defaults: %v", err)
+	}
+
+	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp)
+	if err != nil {
+		logger.Fatalf("Error initializing auth: %v", err)
+	}
 
 	//core
 	coreAPIs := core.NewCoreAPIs(Version, Build, storageAdapter, auth)
 	coreAPIs.Start()
 
 	//web adapter
-	host := getEnvKey(logger, "ROKWIRE_CORE_HOST", true)
 	webAdapter := web.NewWebAdapter(coreAPIs, host, logger)
 
 	webAdapter.Start()
-}
-
-func getEnvKey(logger *log.StandardLogger, key string, required bool) string {
-	//get from the environment
-	value, exist := os.LookupEnv(key)
-	if !exist {
-		if required {
-			logger.Fatal("No provided environment variable for " + key)
-		} else {
-			logger.Error("No provided environment variable for " + key)
-		}
-	}
-	printEnvVar(logger, key, value)
-	return value
-}
-
-func printEnvVar(logger *log.StandardLogger, name string, value string) {
-	if Version == "dev" {
-		logger.InfoWithFields("ENV_VAR", map[string]interface{}{"name": name, "value": value})
-	}
 }

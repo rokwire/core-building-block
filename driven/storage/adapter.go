@@ -11,10 +11,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rokmetro/auth-library/authservice"
 	log "github.com/rokmetro/logging-library/loglib"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type organization struct {
@@ -176,6 +178,65 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 	resOrg := model.Organization{ID: organization.ID, Name: organization.Name, Type: organization.Type,
 		RequiresOwnLogin: organization.RequiresOwnLogin, LoginTypes: organization.LoginTypes, Config: resOrgConfig}
 	return &resOrg, nil
+}
+
+//UpdateOrganization updates an organization
+func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
+
+	now := time.Now()
+
+	updatOrganizationFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	updateOrganization := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "name", Value: name},
+			primitive.E{Key: "type", Value: requestType},
+			primitive.E{Key: "requires_own_login", Value: requiresOwnLogin},
+			primitive.E{Key: "login_types", Value: loginTypes},
+			primitive.E{Key: "config.domains", Value: organizationDomains},
+			primitive.E{Key: "config.date_updated", Value: now},
+			primitive.E{Key: "date_updated", Value: now},
+		}},
+	}
+
+	result, err := sa.db.organizations.UpdateOne(updatOrganizationFilter, updateOrganization, nil)
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return errors.New("there is no organziation for the provided id")
+	}
+
+	return nil
+}
+
+//GetServiceRegs fetches the requested service registration records
+func (sa *Adapter) GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error) {
+	var filter bson.M
+	for _, serviceID := range serviceIDs {
+		if serviceID == "all" {
+			filter = bson.M{}
+			break
+		}
+	}
+	if filter == nil {
+		filter = bson.M{"service_id": bson.M{"$in": serviceIDs}}
+	}
+
+	var result []authservice.ServiceReg
+	err := sa.db.serviceRegs.Find(filter, &result, nil)
+	return result, err
+}
+
+//SaveServiceReg saves the service registration to the storage
+func (sa *Adapter) SaveServiceReg(reg *authservice.ServiceReg) error {
+	filter := bson.M{"service_id": reg.ServiceID}
+	opts := options.Replace().SetUpsert(true)
+	err := sa.db.serviceRegs.ReplaceOne(filter, reg, opts)
+	if err != nil {
+		return fmt.Errorf("error saving service reg for service id %s: %v", reg.ServiceID, err)
+	}
+
+	return nil
 }
 
 //NewStorageAdapter creates a new storage adapter instance
