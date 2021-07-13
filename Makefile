@@ -111,6 +111,10 @@ help:
 version:
 	@echo $(VERSION)
 
+.PHONY: oapi-gen-types
+oapi-gen-types: ;
+	oapi-codegen --generate types -o driver/web/docs/gen_types.go driver/web/docs/def.yaml
+
 .PHONY: log-variables
 log-variables: ; $(info $(M) Log info…) @ ## Log the variables values
 	@echo "DATE:"$(DATE)
