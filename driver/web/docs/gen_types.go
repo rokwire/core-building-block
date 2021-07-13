@@ -44,11 +44,17 @@ type OrganizationConfig struct {
 	Id *string `json:"id,omitempty"`
 }
 
+// PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
+type PostAdminGlobalConfigJSONBody GlobalConfig
+
 // PostAdminOrganizationsJSONBody defines parameters for PostAdminOrganizations.
 type PostAdminOrganizationsJSONBody Organization
 
 // PutAdminOrganizationsIdJSONBody defines parameters for PutAdminOrganizationsId.
 type PutAdminOrganizationsIdJSONBody Organization
+
+// PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
+type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody
 
 // PostAdminOrganizationsJSONRequestBody defines body for PostAdminOrganizations for application/json ContentType.
 type PostAdminOrganizationsJSONRequestBody PostAdminOrganizationsJSONBody

@@ -30,10 +30,6 @@ func (h AdminApisHandler) GetTestModel(l *log.Log, w http.ResponseWriter, r *htt
 	w.Write([]byte(res))
 }
 
-type createGlobalConfigRequest struct {
-	Setting string `json:"setting" validate:"required"`
-}
-
 //CreateGlobalConfig creates a global config
 func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
@@ -43,7 +39,7 @@ func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 		return
 	}
 
-	var requestData createGlobalConfigRequest
+	var requestData Def.PostAdminGlobalConfigJSONRequestBody
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		//log.Printf("Error on unmarshal the create global config data - %s\n", err.Error())
