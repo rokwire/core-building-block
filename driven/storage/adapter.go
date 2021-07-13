@@ -114,6 +114,7 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
 			abortTransaction(sessionContext)
+			fmt.Errorf("error on commiting a transaction - %s", err)
 			return err
 		}
 		return nil
