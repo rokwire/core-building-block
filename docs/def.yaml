@@ -26,16 +26,10 @@ tags:
 paths:
   /version:
     get:
-      tags:
-        Common
       summary: Get service version
       responses:
         200:
           description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GlobalConfig'
   /admin/global-config:
     get:
       tags:

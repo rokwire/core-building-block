@@ -24,11 +24,6 @@ func (h ServicesApisHandler) GetCommonTest(l *log.Log, w http.ResponseWriter, r 
 	w.Write([]byte(res))
 }
 
-//SerVersion gives the service version
-func (h ServicesApisHandler) SerVersion(l *log.Log, w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(h.coreAPIs.Services.SerGetVersion(l)))
-}
-
 //NewServicesApisHandler creates new rest services Handler instance
 func NewServicesApisHandler(coreAPIs *core.APIs) ServicesApisHandler {
 	return ServicesApisHandler{coreAPIs: coreAPIs}

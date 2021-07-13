@@ -29,6 +29,11 @@ func (c *APIs) AddListener(listener ApplicationListener) {
 	c.app.addListener(listener)
 }
 
+//GetVersion gives the service version
+func (c *APIs) GetVersion() string {
+	return c.app.version
+}
+
 //NewCoreAPIs creates new CoreAPIs
 func NewCoreAPIs(version string, build string, storage Storage, auth *auth.Auth) *APIs {
 	//add application instance

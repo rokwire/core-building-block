@@ -26,6 +26,7 @@ type Adapter struct {
 	authorization *casbin.Enforcer
 	logger        *log.StandardLogger
 
+	defaultApisHandler  DefaultApisHandler
 	servicesApisHandler ServicesApisHandler
 	adminApisHandler    AdminApisHandler
 	encApisHandler      EncApisHandler
@@ -74,7 +75,10 @@ func (we Adapter) Start() {
 	subRouter := router.PathPrefix("/core").Subrouter()
 	subRouter.PathPrefix("/doc/ui").Handler(we.serveDocUI())
 	subRouter.HandleFunc("/doc", we.serveDoc)
-	subRouter.HandleFunc("/version", we.wrapFunc(we.servicesApisHandler.SerVersion)).Methods("GET")
+
+	///default ///
+	subRouter.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.GetVersion)).Methods("GET")
+	///
 
 	///services ///
 	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
@@ -190,12 +194,13 @@ func NewWebAdapter(coreAPIs *core.APIs, host string, logger *log.StandardLogger)
 	auth := NewAuth(coreAPIs)
 	authorization := casbin.NewEnforcer("driver/web/authorization_model.conf", "driver/web/authorization_policy.csv")
 
+	defaultApisHandler := NewDefaultApisHandler(coreAPIs)
 	servicesApisHandler := NewServicesApisHandler(coreAPIs)
 	adminApisHandler := NewAdminApisHandler(coreAPIs)
 	encApisHandler := NewEncApisHandler(coreAPIs)
 	bbsApisHandler := NewBBsApisHandler(coreAPIs)
-	return Adapter{host: host, auth: auth, logger: logger, authorization: authorization, servicesApisHandler: servicesApisHandler,
-		adminApisHandler: adminApisHandler, encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, coreAPIs: coreAPIs}
+	return Adapter{host: host, auth: auth, logger: logger, authorization: authorization, defaultApisHandler: defaultApisHandler,
+		servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler, encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, coreAPIs: coreAPIs}
 }
 
 //AppListener implements core.ApplicationListener interface
