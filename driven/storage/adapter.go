@@ -3,10 +3,10 @@ package storage
 import (
 	"context"
 	"core-building-block/core"
+	"core-building-block/core/auth"
 	"core-building-block/core/model"
 	"errors"
 	"fmt"
-
 	"strconv"
 	"time"
 
@@ -60,6 +60,35 @@ func (sa *Adapter) SetStorageListener(storageListener core.StorageListener) {
 //ReadTODO TODO TODO
 func (sa *Adapter) ReadTODO() error {
 	return nil
+}
+
+//FindAuthConfig finds the auth document from DB by orgID and appID
+func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (*auth.AuthConfig, error) {
+	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "type", Value: authType}}
+	var result *auth.AuthConfig
+	err := sa.db.authConfigs.FindOne(filter, &result, nil)
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, fmt.Errorf("no auth config found for orgID %s, appID %s, authType %s:", orgID, appID, authType)
+	}
+	return result, nil
+}
+
+//LoadAuthConfigs finds all auth config documents in the DB
+func (sa *Adapter) LoadAuthConfigs() (*[]auth.AuthConfig, error) {
+	filter := bson.D{}
+	var result []auth.AuthConfig
+	err := sa.db.authConfigs.Find(filter, &result, nil)
+	if err != nil {
+		return nil, err
+	}
+	if result == nil || len(result) == 0 {
+		return nil, errors.New("no auth config documents found")
+	}
+
+	return &result, nil
 }
 
 //CreateGlobalConfig creates global config

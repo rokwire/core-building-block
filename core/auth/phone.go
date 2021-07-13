@@ -7,7 +7,7 @@ type phoneAuthImpl struct {
 	auth *Auth
 }
 
-func (a *phoneAuthImpl) check(creds string) (*Claims, error) {
+func (a *phoneAuthImpl) check(creds string, params string) (*UserAuth, error) {
 	//TODO: Implement
 	return nil, errors.New("Unimplemented")
 }

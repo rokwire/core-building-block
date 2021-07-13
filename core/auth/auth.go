@@ -3,31 +3,42 @@ package auth
 import (
 	"core-building-block/core/model"
 	"crypto/rsa"
+	"errors"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/rokmetro/auth-library/authservice"
 	"github.com/rokmetro/auth-library/authutils"
 	"github.com/rokmetro/auth-library/tokenauth"
+	"golang.org/x/sync/syncmap"
+	"gopkg.in/go-playground/validator.v9"
 )
 
-//Claims represents the claims entity
-type Claims struct {
-	ID     string
-	Name   string
-	Email  string
-	Phone  string
-	Groups interface{}
-	Issuer string
-	Exp    float64
+type UserAuth struct {
+	UserID       string
+	Sub          string
+	Name         string
+	Email        string
+	Phone        string
+	Picture      []byte
+	Exp          float64
+	RefreshToken string
+}
+
+type AuthConfig struct {
+	OrgID  string      `json:"org_id" bson:"org_id" validate:"required"`
+	AppID  string      `json:"app_id" bson:"app_id" validate:"required"`
+	Type   string      `json:"type" bson:"type" validate:"required"`
+	Config interface{} `json:"config" bson:"config" validate:"required"`
 }
 
 //Interface for authentication mechanisms
 type authType interface {
 	//Check validity of provided credentials
-	check(creds string) (*Claims, error)
+	check(creds string, params string) (*UserAuth, error)
 }
 
 //Auth represents the auth functionality unit
@@ -44,10 +55,12 @@ type Auth struct {
 	host        string //Service host
 	minTokenExp int64  //Minimum access token expiration time in minutes
 	maxTokenExp int64  //Maximum access token expiration time in minutes
+
+	authConfigs     *syncmap.Map //cache authConfigs / orgID_appID -> authConfig
+	authConfigsLock *sync.RWMutex
 }
 
 //NewAuth creates a new auth instance
-//Token Exp Defaults: Min = 5, Max = 60
 func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
@@ -60,8 +73,12 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	}
 
 	authTypes := map[string]authType{}
+
+	authConfigs := &syncmap.Map{}
+	authConfigsLock := &sync.RWMutex{}
 	auth := &Auth{storage: storage, authTypes: authTypes, authPrivKey: authPrivKey, AuthService: nil,
-		serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp}
+		serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp,
+		authConfigs: authConfigs, authConfigsLock: authConfigsLock}
 
 	err := auth.storeReg()
 	if err != nil {
@@ -83,6 +100,14 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initOidcAuth(auth)
 	initSamlAuth(auth)
 	initFirebaseAuth(auth)
+
+	initApiKeyAuth(auth)
+	initSignatureAuth(auth)
+
+	err = auth.LoadAuthConfigs()
+	if err != nil {
+		log.Println("NewAuth() -> failed to cache auth info documents")
+	}
 
 	return auth, nil
 }
@@ -112,13 +137,13 @@ func (a *Auth) getAuthType(name string) (authType, error) {
 //	Returns:
 //		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //		User (User): User object for authenticated user
-func (a *Auth) Login(authName string, creds string) (string, *model.User, error) {
+func (a *Auth) Login(authName string, creds string, params string) (string, *model.User, error) {
 	auth, err := a.getAuthType(authName)
 	if err != nil {
 		return "", nil, err
 	}
 
-	claims, err := auth.check(creds)
+	claims, err := auth.check(creds, params)
 	if err != nil {
 		return "", nil, err
 	}
@@ -228,6 +253,50 @@ func (a *Auth) storeReg() error {
 	return nil
 }
 
+func (a Auth) LoadAuthConfigs() error {
+	authConfigDocs, err := a.storage.LoadAuthConfigs()
+	if err != nil {
+		return err
+	}
+
+	a.setAuthConfigs(authConfigDocs)
+
+	return nil
+}
+
+func (a Auth) getAuthConfig(orgID string, appID string, authType string) (*AuthConfig, error) {
+	a.authConfigsLock.RLock()
+	defer a.authConfigsLock.RUnlock()
+
+	var authConfig *AuthConfig //to return
+
+	item, _ := a.authConfigs.Load(fmt.Sprintf("%s_%s_%s", orgID, appID, authType))
+	if item != nil {
+		authConfigFromCache, ok := item.(AuthConfig)
+		if !ok {
+			return nil, errors.New("failed to cast cache item to AuthConfig")
+		}
+		authConfig = &authConfigFromCache
+		return authConfig, nil
+	}
+	return nil, errors.New("auth config does not exist")
+}
+
+func (a Auth) setAuthConfigs(authConfigs *[]AuthConfig) {
+	a.authConfigs = &syncmap.Map{}
+	validate := validator.New()
+	var err error
+
+	a.authConfigsLock.Lock()
+	defer a.authConfigsLock.Unlock()
+	for _, authConfig := range *authConfigs {
+		err = validate.Struct(authConfig)
+		if err == nil {
+			a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, authConfig.AppID, authConfig.Type), authConfig)
+		}
+	}
+}
+
 //LocalServiceRegLoaderImpl provides a local implementation for ServiceRegLoader
 type LocalServiceRegLoaderImpl struct {
 	storage Storage
@@ -245,9 +314,10 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 	return &LocalServiceRegLoaderImpl{storage: storage, ServiceRegSubscriptions: subscriptions}
 }
 
-//Storage interface for auth package
 type Storage interface {
-	ReadTODO() error
 	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
 	SaveServiceReg(reg *authservice.ServiceReg) error
+
+	FindAuthConfig(orgID string, appID string, authType string) (*AuthConfig, error)
+	LoadAuthConfigs() (*[]AuthConfig, error)
 }

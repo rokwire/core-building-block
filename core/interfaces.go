@@ -50,12 +50,18 @@ type Storage interface {
 
 //StorageListener listenes for change data storage events
 type StorageListener interface {
+	OnAuthConfigUpdated()
 }
 
 type storageListenerImpl struct {
 	app *application
 }
 
+func (a *storageListenerImpl) OnAuthConfigUpdated() {
+	a.app.notifyListeners("onAuthConfigUpdated", nil)
+}
+
 //ApplicationListener represents application listener
 type ApplicationListener interface {
+	OnAuthConfigUpdated()
 }

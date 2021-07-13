@@ -9,7 +9,7 @@ type emailAuthImpl struct {
 	auth *Auth
 }
 
-func (a *emailAuthImpl) check(creds string) (*Claims, error) {
+func (a *emailAuthImpl) check(creds string, params string) (*UserAuth, error) {
 	//TODO: Implement
 	return nil, errors.New("Unimplemented")
 }

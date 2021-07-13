@@ -20,6 +20,7 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
+	authConfigs   *collectionWrapper
 	globalConfig  *collectionWrapper
 	organizations *collectionWrapper
 	serviceRegs   *collectionWrapper
@@ -76,7 +77,27 @@ func (m *database) start() error {
 	m.serviceRegs = serviceRegs
 
 	//TODO
+	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
+	err = m.applyAuthConfigChecks(authConfigs)
+	if err != nil {
+		return err
+	}
 
+	m.authConfigs = authConfigs
+
+	//watch for auth info changes
+	go m.authConfigs.Watch(nil)
+
+	return nil
+}
+
+func (m *database) applyAuthConfigChecks(authInfo *collectionWrapper) error {
+	// Add org_id, app_id compound index
+	err := authInfo.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+	log.Println("authConfig check passed")
 	return nil
 }
 
@@ -121,5 +142,15 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 	ns := changeDoc["ns"]
 	if ns == nil {
 		return
+	}
+	nsMap := ns.(map[string]interface{})
+	coll := nsMap["coll"]
+
+	if "auth_configs" == coll {
+		log.Println("auth_configs collection changed")
+
+		if m.listener != nil {
+			m.listener.OnAuthConfigUpdated()
+		}
 	}
 }

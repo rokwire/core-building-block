@@ -9,7 +9,7 @@ type apiKeyAuthImpl struct {
 	auth *Auth
 }
 
-func (a *apiKeyAuthImpl) check(creds string) (*Claims, error) {
+func (a *apiKeyAuthImpl) check(creds string, params string) (*UserAuth, error) {
 	//TODO: Implement
 	return nil, errors.New("Unimplemented")
 }

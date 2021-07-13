@@ -9,7 +9,7 @@ type signatureAuthImpl struct {
 	auth *Auth
 }
 
-func (a *signatureAuthImpl) check(creds string) (*Claims, error) {
+func (a *signatureAuthImpl) check(creds string, params string) (*UserAuth, error) {
 	//TODO: Implement
 	return nil, errors.New("Unimplemented")
 }

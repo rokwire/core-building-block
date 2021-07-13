@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Add OIDC support. [#17] (https://github.com/rokwire/core-building-block/issues/17)
 - Incorporate Application entity in the data model. [#50] (https://github.com/rokwire/core-building-block/issues/50)
 - Expose admin API which updates an organization. [#59] (https://github.com/rokwire/core-building-block/issues/59)
 - Set up unit tests environment. [#7] (https://github.com/rokwire/core-building-block/issues/7)
