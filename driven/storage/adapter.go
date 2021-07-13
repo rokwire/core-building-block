@@ -16,6 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type organization struct {
@@ -197,11 +198,13 @@ func (sa *Adapter) GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg
 	return result, err
 }
 
-//InsertServiceReg inserts the service registration to the storage
-func (sa *Adapter) InsertServiceReg(reg *authservice.ServiceReg) error {
-	_, err := sa.db.serviceRegs.InsertOne(reg)
+//SaveServiceReg saves the service registration to the storage
+func (sa *Adapter) SaveServiceReg(reg *authservice.ServiceReg) error {
+	filter := bson.M{"service_id": reg.ServiceID}
+	opts := options.Replace().SetUpsert(true)
+	err := sa.db.serviceRegs.ReplaceOne(filter, reg, opts)
 	if err != nil {
-		return fmt.Errorf("error inserting service reg for service id %s: %v", reg.ServiceID, err)
+		return fmt.Errorf("error saving service reg for service id %s: %v", reg.ServiceID, err)
 	}
 
 	return nil

@@ -213,11 +213,17 @@ func (a *Auth) storeReg() error {
 
 	// Setup "auth" registration for token validation
 	authReg := authservice.ServiceReg{ServiceID: "auth", Host: a.host, PubKey: &key}
-	a.storage.InsertServiceReg(&authReg)
+	err = a.storage.SaveServiceReg(&authReg)
+	if err != nil {
+		return fmt.Errorf("error saving auth service reg: %v", err)
+	}
 
 	// Setup core registration for signature validation
 	coreReg := authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key}
-	a.storage.InsertServiceReg(&coreReg)
+	err = a.storage.SaveServiceReg(&coreReg)
+	if err != nil {
+		return fmt.Errorf("error saving core service reg: %v", err)
+	}
 
 	return nil
 }
@@ -243,5 +249,5 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 type Storage interface {
 	ReadTODO() error
 	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
-	InsertServiceReg(reg *authservice.ServiceReg) error
+	SaveServiceReg(reg *authservice.ServiceReg) error
 }
