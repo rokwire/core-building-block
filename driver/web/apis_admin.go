@@ -74,10 +74,6 @@ func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
 	return AdminApisHandler{coreAPIs: coreAPIs}
 }
 
-type responseGlobalConfig struct {
-	Setting string `json:"setting"`
-}
-
 //GetGlobalConfig gets config
 func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	config, err := h.coreAPIs.Administration.AdmGetGlobalConfig()
@@ -87,9 +83,9 @@ func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *
 		return
 	}
 
-	var responseData *responseGlobalConfig
+	var responseData *Def.GlobalConfig
 	if config != nil {
-		responseData = &responseGlobalConfig{Setting: config.Setting}
+		responseData = &Def.GlobalConfig{Setting: config.Setting}
 	}
 	data, err := json.Marshal(responseData)
 	if err != nil {
@@ -103,10 +99,6 @@ func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *
 	w.Write(data)
 }
 
-type updateGlobalConfig struct {
-	Setting string `json:"setting" validate:"required"`
-}
-
 //UpdateGlobalConfig updates global config
 func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
@@ -115,7 +107,7 @@ func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 		return
 	}
 
-	var updateConfig updateGlobalConfig
+	var updateConfig Def.PutAdminGlobalConfigJSONRequestBody
 	err = json.Unmarshal(data, &updateConfig)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

@@ -47,6 +47,9 @@ type OrganizationConfig struct {
 // PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
 type PostAdminGlobalConfigJSONBody GlobalConfig
 
+// PutAdminGlobalConfigJSONBody defines parameters for PutAdminGlobalConfig.
+type PutAdminGlobalConfigJSONBody GlobalConfig
+
 // PostAdminOrganizationsJSONBody defines parameters for PostAdminOrganizations.
 type PostAdminOrganizationsJSONBody Organization
 
@@ -55,6 +58,9 @@ type PutAdminOrganizationsIdJSONBody Organization
 
 // PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
 type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody
+
+// PutAdminGlobalConfigJSONRequestBody defines body for PutAdminGlobalConfig for application/json ContentType.
+type PutAdminGlobalConfigJSONRequestBody PutAdminGlobalConfigJSONBody
 
 // PostAdminOrganizationsJSONRequestBody defines body for PostAdminOrganizations for application/json ContentType.
 type PostAdminOrganizationsJSONRequestBody PostAdminOrganizationsJSONBody
