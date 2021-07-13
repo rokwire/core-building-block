@@ -11,10 +11,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rokmetro/auth-library/authservice"
 	log "github.com/rokmetro/logging-library/loglib"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type organization struct {
@@ -173,6 +175,36 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 	}
 	if result.MatchedCount == 0 {
 		return errors.New("there is no organziation for the provided id")
+	}
+
+	return nil
+}
+
+//GetServiceRegs fetches the requested service registration records
+func (sa *Adapter) GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error) {
+	var filter bson.M
+	for _, serviceID := range serviceIDs {
+		if serviceID == "all" {
+			filter = bson.M{}
+			break
+		}
+	}
+	if filter == nil {
+		filter = bson.M{"service_id": bson.M{"$in": serviceIDs}}
+	}
+
+	var result []authservice.ServiceReg
+	err := sa.db.serviceRegs.Find(filter, &result, nil)
+	return result, err
+}
+
+//SaveServiceReg saves the service registration to the storage
+func (sa *Adapter) SaveServiceReg(reg *authservice.ServiceReg) error {
+	filter := bson.M{"service_id": reg.ServiceID}
+	opts := options.Replace().SetUpsert(true)
+	err := sa.db.serviceRegs.ReplaceOne(filter, reg, opts)
+	if err != nil {
+		return fmt.Errorf("error saving service reg for service id %s: %v", reg.ServiceID, err)
 	}
 
 	return nil
