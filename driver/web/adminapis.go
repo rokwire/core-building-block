@@ -203,12 +203,12 @@ type getOrganizationResponse struct {
 	LoginTypes          []string `json:"login_types"`
 	OrganizationDomains []string `json:"organization_domains"`
 
-	Config organizationConfig `bson:"config"`
+	Config organizationConfig `json:"config"`
 }
 
 type organizationConfig struct {
-	ID      string   `bson:"id"`
-	Domains []string `bson:"domains"`
+	ID      string   `json:"id"`
+	Domains []string `json:"domains"`
 }
 
 type updateOrganizationRequest struct {
@@ -241,7 +241,7 @@ func (h AdminApisHandler) GetOrganization(l *log.Log, w http.ResponseWriter, r *
 	}
 	data, err := json.Marshal(responseData)
 	if err != nil {
-		//log.Println("Error on marshal the config")
+		l.Errorf("Error on marshal the config")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
