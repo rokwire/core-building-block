@@ -63,9 +63,9 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	auth := &Auth{storage: storage, authTypes: authTypes, authPrivKey: authPrivKey, AuthService: nil,
 		serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp}
 
-	err := auth.storeAuthReg()
+	err := auth.storeReg()
 	if err != nil {
-		return nil, fmt.Errorf("error storing auth reg: %v", err)
+		return nil, fmt.Errorf("error storing reg: %v", err)
 	}
 
 	serviceLoader := NewLocalServiceRegLoader(storage)
@@ -202,16 +202,23 @@ func (a *Auth) deleteAccount(claims *tokenauth.Claims) {
 	//TODO: Implement
 }
 
-//storeAuthReg stores the auth service registration record
-func (a *Auth) storeAuthReg() error {
+//storeReg stores the service registration record
+func (a *Auth) storeReg() error {
 	pem, err := authutils.GetPubKeyPem(&a.authPrivKey.PublicKey)
 	if err != nil {
 		return fmt.Errorf("error encoding auth pub key for storage: %v", err)
 	}
 
 	key := authservice.PubKey{KeyPem: pem, Alg: "RS256"}
-	reg := authservice.ServiceReg{ServiceID: "auth", Host: a.host, PubKey: &key}
-	a.storage.InsertServiceReg(&reg)
+
+	// Setup "auth" registration for token validation
+	authReg := authservice.ServiceReg{ServiceID: "auth", Host: a.host, PubKey: &key}
+	a.storage.InsertServiceReg(&authReg)
+
+	// Setup core registration for signature validation
+	coreReg := authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key}
+	a.storage.InsertServiceReg(&coreReg)
+
 	return nil
 }
 
