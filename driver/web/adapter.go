@@ -46,30 +46,6 @@ func (we Adapter) Start() {
 	//add listener to the application
 	we.coreAPIs.AddListener(&AppListener{&we})
 
-	// Output:
-	// response body doesn't match the schema: Field must be set to string or not be present
-	// Schema:
-	//   {
-	//     "type": "string"
-	//   }
-	//
-	// Value:
-	//   "object"
-
-	/*
-		loader := openapi3.NewLoader()
-		doc, err := loader.LoadFromFile("docs/def.yaml")
-		if err != nil {
-			we.logger.Error(err.Error())
-		}
-
-		err = doc.Validate(loader.Context)
-		if err != nil {
-			we.logger.Error(err.Error())
-		}
-		router, _ := gorillamux.NewRouter(doc)
-		//route, pathParams, _ := router.FindRoute(httpRequest)
-	*/
 	we.auth.Start()
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -136,42 +112,57 @@ func (we Adapter) serveDocUI() http.Handler {
 
 func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		route, pathParams, err := we.openAPIRouter.FindRoute(req)
-		if err != nil {
-			panic(err)
-		}
 
-		requestValidationInput := &openapi3filter.RequestValidationInput{
-			Request:    req,
-			PathParams: pathParams,
-			Route:      route,
-		}
-		if err := openapi3filter.ValidateRequest(context.Background(), requestValidationInput); err != nil {
-			panic(err)
-		}
+		/*
+			options := openapi3filter.Options{IncludeResponseStatus: true}
+			responseValidationInput := &openapi3filter.ResponseValidationInput{
+				RequestValidationInput: requestValidationInput,
+				Status:                 200,
+				Header:                 http.Header{"Content-Type": []string{"application/json"}},
+				Options:                &options,
+			}
+			responseValidationInput.SetBodyBytes([]byte(`{}`))
+			//responseValidationInput.SetBodyBytes([]byte(`fwefwefwefewfew`))
 
-		options := openapi3filter.Options{IncludeResponseStatus: true}
-		responseValidationInput := &openapi3filter.ResponseValidationInput{
-			RequestValidationInput: requestValidationInput,
-			Status:                 200,
-			Header:                 http.Header{"Content-Type": []string{"application/json"}},
-			Options:                &options,
-		}
-		responseValidationInput.SetBodyBytes([]byte(`{}`))
-		//responseValidationInput.SetBodyBytes([]byte(`fwefwefwefewfew`))
-
-		err = openapi3filter.ValidateResponse(context.Background(), responseValidationInput)
-		if err != nil {
-			panic(err)
-		}
-		///
+			err = openapi3filter.ValidateResponse(context.Background(), responseValidationInput)
+			if err != nil {
+				panic(err)
+			}
+			/// */
 
 		utils.LogRequest(req)
 		var logObj = we.logger.NewRequestLog(req)
 
+		//validate request
+		err := we.validateRequest(req)
+		if err != nil {
+			we.logger.Errorf("error validating request - %s", err)
+
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(http.StatusText(http.StatusBadRequest)))
+			return
+		}
+
 		handler(logObj, w, req)
 		logObj.PrintContext()
 	}
+}
+
+func (we Adapter) validateRequest(req *http.Request) error {
+	route, pathParams, err := we.openAPIRouter.FindRoute(req)
+	if err != nil {
+		return err
+	}
+
+	requestValidationInput := &openapi3filter.RequestValidationInput{
+		Request:    req,
+		PathParams: pathParams,
+		Route:      route,
+	}
+	if err := openapi3filter.ValidateRequest(context.Background(), requestValidationInput); err != nil {
+		return err
+	}
+	return nil
 }
 
 //NewWebAdapter creates new WebAdapter instance
