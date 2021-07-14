@@ -38,7 +38,7 @@ type BBs interface {
 
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
-	SetStorageListener(storageListener StorageListener)
+	SetCoreStorageListener(storageListener StorageListener)
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	GetGlobalConfig() (*model.GlobalConfig, error)
@@ -50,18 +50,12 @@ type Storage interface {
 
 //StorageListener listenes for change data storage events
 type StorageListener interface {
-	OnAuthConfigUpdated()
 }
 
 type storageListenerImpl struct {
 	app *application
 }
 
-func (a *storageListenerImpl) OnAuthConfigUpdated() {
-	a.app.notifyListeners("onAuthConfigUpdated", nil)
-}
-
 //ApplicationListener represents application listener
 type ApplicationListener interface {
-	OnAuthConfigUpdated()
 }

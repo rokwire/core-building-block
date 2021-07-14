@@ -52,9 +52,14 @@ func (sa *Adapter) Start() error {
 	return err
 }
 
-//SetStorageListener sets listener for the storage
-func (sa *Adapter) SetStorageListener(storageListener core.StorageListener) {
-	sa.db.listener = storageListener
+//SetCoreStorageListener sets core listener for the storage
+func (sa *Adapter) SetCoreStorageListener(storageListener core.StorageListener) {
+	sa.db.coreListener = storageListener
+}
+
+//SetAuthStorageListener sets auth listener for the storage
+func (sa *Adapter) SetAuthStorageListener(storageListener auth.StorageListener) {
+	sa.db.authListener = storageListener
 }
 
 //ReadTODO TODO TODO
