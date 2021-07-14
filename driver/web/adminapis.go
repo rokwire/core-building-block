@@ -230,7 +230,7 @@ func (h AdminApisHandler) GetOrganization(l *log.Log, w http.ResponseWriter, r *
 	getOrg, err := h.coreAPIs.Administration.AdmGetOrganization(ID)
 	if err != nil {
 		l.Errorf("Error on geting an organization - %s\n", err.Error())
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
@@ -242,7 +242,7 @@ func (h AdminApisHandler) GetOrganization(l *log.Log, w http.ResponseWriter, r *
 	data, err := json.Marshal(responseData)
 	if err != nil {
 		l.Errorf("Error on marshal the config")
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
