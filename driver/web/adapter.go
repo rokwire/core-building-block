@@ -118,9 +118,10 @@ func (we Adapter) Start() {
 	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.GetTest)).Methods("GET")
 	///
 
-	//TODO
-	//we.logger.Fatal(http.ListenAndServe(":80", router))
-	http.ListenAndServe(":80", router)
+	err := http.ListenAndServe(":80", router)
+	if err != nil {
+		we.logger.Fatal(err.Error())
+	}
 }
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
