@@ -52,14 +52,9 @@ func (sa *Adapter) Start() error {
 	return err
 }
 
-//SetCoreStorageListener sets core listener for the storage
-func (sa *Adapter) SetCoreStorageListener(storageListener core.StorageListener) {
-	sa.db.coreListener = storageListener
-}
-
-//SetAuthStorageListener sets auth listener for the storage
-func (sa *Adapter) SetAuthStorageListener(storageListener auth.StorageListener) {
-	sa.db.authListener = storageListener
+//RegisterStorageListener registers a data change listener with the storage adapter
+func (sa *Adapter) RegisterStorageListener(storageListener core.StorageListener) {
+	sa.db.listeners = append(sa.db.listeners, storageListener)
 }
 
 //ReadTODO TODO TODO
@@ -76,7 +71,7 @@ func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (
 		return nil, err
 	}
 	if result == nil {
-		return nil, fmt.Errorf("no auth config found for orgID %s, appID %s, authType %s:", orgID, appID, authType)
+		return nil, fmt.Errorf("no auth config found for orgID %s, appID %s, authType %s", orgID, appID, authType)
 	}
 	return result, nil
 }
@@ -89,7 +84,7 @@ func (sa *Adapter) LoadAuthConfigs() (*[]auth.AuthConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	if result == nil || len(result) == 0 {
+	if len(result) == 0 {
 		return nil, errors.New("no auth config documents found")
 	}
 

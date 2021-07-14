@@ -58,8 +58,6 @@ type Auth struct {
 
 	authConfigs     *syncmap.Map //cache authConfigs / orgID_appID -> authConfig
 	authConfigsLock *sync.RWMutex
-
-	listeners []AuthListener
 }
 
 //NewAuth creates a new auth instance
@@ -95,11 +93,6 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	}
 
 	auth.AuthService = authService
-
-	//set storage listener
-	storageListener := storageListenerImpl{auth: auth}
-	auth.storage.SetAuthStorageListener(&storageListener)
-	auth.addListener(AuthListener{auth})
 
 	//Initialize auth types
 	initEmailAuth(auth)
@@ -304,21 +297,6 @@ func (a *Auth) setAuthConfigs(authConfigs *[]AuthConfig) {
 	}
 }
 
-//addListener adds auth listener
-func (a *Auth) addListener(listener AuthListener) {
-	a.listeners = append(a.listeners, listener)
-}
-
-func (a *Auth) notifyListeners(message string, data interface{}) {
-	go func() {
-		for _, listener := range a.listeners {
-			if message == "onAuthConfigUpdated" {
-				listener.OnAuthConfigUpdated()
-			}
-		}
-	}()
-}
-
 //LocalServiceRegLoaderImpl provides a local implementation for ServiceRegLoader
 type LocalServiceRegLoaderImpl struct {
 	storage Storage
@@ -337,8 +315,6 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 }
 
 type Storage interface {
-	SetAuthStorageListener(storageListener StorageListener)
-
 	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
 	SaveServiceReg(reg *authservice.ServiceReg) error
 
@@ -346,24 +322,18 @@ type Storage interface {
 	LoadAuthConfigs() (*[]AuthConfig, error)
 }
 
-//StorageListener listens for change data storage events
-type StorageListener interface {
-	OnAuthConfigUpdated()
-}
-
-type storageListenerImpl struct {
-	auth *Auth
-}
-
-func (a *storageListenerImpl) OnAuthConfigUpdated() {
-	a.auth.notifyListeners("onAuthConfigUpdated", nil)
-}
-
 type AuthListener struct {
-	auth *Auth
+	Auth *Auth
+}
+
+//OnAuthConfigUpdated notifies that an auth config has been updated
+func (al *AuthListener) OnDataChanged(collection string) {
+	if collection == "auth_configs" {
+		al.OnAuthConfigUpdated()
+	}
 }
 
 //OnAuthConfigUpdated notifies that an auth config has been updated
 func (al *AuthListener) OnAuthConfigUpdated() {
-	al.auth.LoadAuthConfigs()
+	al.Auth.LoadAuthConfigs()
 }

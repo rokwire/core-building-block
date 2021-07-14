@@ -22,6 +22,9 @@ type APIs struct {
 //Start starts the core part of the application
 func (c *APIs) Start() {
 	c.app.start()
+
+	storageListener := auth.AuthListener{Auth: c.Auth}
+	c.app.storage.RegisterStorageListener(&storageListener)
 }
 
 //AddListener adds application listener

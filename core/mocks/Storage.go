@@ -84,6 +84,11 @@ func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	return r0, r1
 }
 
+// RegisterStorageListener provides a mock function with given fields: storageListener
+func (_m *Storage) RegisterStorageListener(storageListener core.StorageListener) {
+	_m.Called(storageListener)
+}
+
 // SaveGlobalConfig provides a mock function with given fields: setting
 func (_m *Storage) SaveGlobalConfig(setting *model.GlobalConfig) error {
 	ret := _m.Called(setting)
@@ -96,11 +101,6 @@ func (_m *Storage) SaveGlobalConfig(setting *model.GlobalConfig) error {
 	}
 
 	return r0
-}
-
-// SetCoreStorageListener provides a mock function with given fields: storageListener
-func (_m *Storage) SetCoreStorageListener(storageListener core.StorageListener) {
-	_m.Called(storageListener)
 }
 
 // UpdateOrganization provides a mock function with given fields: ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains
