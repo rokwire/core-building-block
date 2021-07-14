@@ -1,10 +1,15 @@
 package web
 
 import (
+	"context"
 	"core-building-block/core"
 	"core-building-block/utils"
 	"fmt"
 	"net/http"
+
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/getkin/kin-openapi/openapi3filter"
+	"github.com/getkin/kin-openapi/routers/gorillamux"
 
 	"github.com/gorilla/mux"
 
@@ -128,53 +133,52 @@ func (we Adapter) serveDocUI() http.Handler {
 
 func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		/*	ctx := context.Background()
-			loader := &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
-			doc, err := loader.LoadFromFile("docs/def.yaml")
-			if err != nil {
-				panic(err)
-			}
-			if err = doc.Validate(loader.Context); err != nil {
-				panic(err)
-			}
-			router5, err := gorillamux.NewRouter(doc)
-			if err != nil {
-				panic(err)
-			}
-			//httpReq, err := http.NewRequest(http.MethodGet, "core/admin/organizations/{id}", nil)
-			//if err != nil {
-			//	panic(err)
-			//}
+		ctx := context.Background()
+		loader := &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
+		doc, err := loader.LoadFromFile("driver/web/docs/def.yaml")
+		if err != nil {
+			panic(err)
+		}
+		if err = doc.Validate(loader.Context); err != nil {
+			panic(err)
+		}
+		router5, err := gorillamux.NewRouter(doc)
+		if err != nil {
+			panic(err)
+		}
+		//httpReq, err := http.NewRequest(http.MethodGet, "core/admin/organizations/{id}", nil)
+		//if err != nil {
+		//	panic(err)
+		//}
 
-			route, pathParams, err := router5.FindRoute(req)
-			if err != nil {
-				panic(err)
-			}
+		route, pathParams, err := router5.FindRoute(req)
+		if err != nil {
+			panic(err)
+		}
 
-			requestValidationInput := &openapi3filter.RequestValidationInput{
-				Request:    req,
-				PathParams: pathParams,
-				Route:      route,
-			}
-			if err := openapi3filter.ValidateRequest(ctx, requestValidationInput); err != nil {
-				panic(err)
-			}
+		requestValidationInput := &openapi3filter.RequestValidationInput{
+			Request:    req,
+			PathParams: pathParams,
+			Route:      route,
+		}
+		if err := openapi3filter.ValidateRequest(ctx, requestValidationInput); err != nil {
+			panic(err)
+		}
 
-			options := openapi3filter.Options{IncludeResponseStatus: true}
-			responseValidationInput := &openapi3filter.ResponseValidationInput{
-				RequestValidationInput: requestValidationInput,
-				Status:                 200,
-				Header:                 http.Header{"Content-Type": []string{"application/json"}},
-				Options:                &options,
-			}
-			responseValidationInput.SetBodyBytes([]byte(`{}`))
-			//responseValidationInput.SetBodyBytes([]byte(`fwefwefwefewfew`))
+		options := openapi3filter.Options{IncludeResponseStatus: true}
+		responseValidationInput := &openapi3filter.ResponseValidationInput{
+			RequestValidationInput: requestValidationInput,
+			Status:                 200,
+			Header:                 http.Header{"Content-Type": []string{"application/json"}},
+			Options:                &options,
+		}
+		responseValidationInput.SetBodyBytes([]byte(`{}`))
+		//responseValidationInput.SetBodyBytes([]byte(`fwefwefwefewfew`))
 
-			err = openapi3filter.ValidateResponse(ctx, responseValidationInput)
-			if err != nil {
-				panic(err)
-			}*/
-
+		err = openapi3filter.ValidateResponse(ctx, responseValidationInput)
+		if err != nil {
+			panic(err)
+		}
 		///
 
 		utils.LogRequest(req)
