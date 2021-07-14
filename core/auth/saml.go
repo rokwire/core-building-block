@@ -7,7 +7,7 @@ type samlAuthImpl struct {
 	auth *Auth
 }
 
-func (a *samlAuthImpl) check(creds string) (*Claims, error) {
+func (a *samlAuthImpl) check(creds string, params string) (*UserAuth, error) {
 	//TODO: Implement
 	return nil, errors.New("Unimplemented")
 }

@@ -27,7 +27,10 @@ func (app *application) addListener(listener ApplicationListener) {
 
 func (app *application) notifyListeners(message string, data interface{}) {
 	go func() {
-		//TODO
-
+		for _, listener := range app.listeners {
+			if message == "onAuthConfigUpdated" {
+				listener.OnAuthConfigUpdated()
+			}
+		}
 	}()
 }
