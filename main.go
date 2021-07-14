@@ -75,6 +75,5 @@ func main() {
 
 	//web adapter
 	webAdapter := web.NewWebAdapter(coreAPIs, host, logger)
-
 	webAdapter.Start()
 }

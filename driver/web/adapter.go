@@ -9,6 +9,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
+	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
 
 	"github.com/gorilla/mux"
@@ -22,6 +23,7 @@ import (
 
 //Adapter entity
 type Adapter struct {
+	openAPIRouter routers.Router
 	host          string
 	auth          *Auth
 	authorization *casbin.Enforcer
@@ -133,25 +135,7 @@ func (we Adapter) serveDocUI() http.Handler {
 
 func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		ctx := context.Background()
-		loader := &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
-		doc, err := loader.LoadFromFile("driver/web/docs/def.yaml")
-		if err != nil {
-			panic(err)
-		}
-		if err = doc.Validate(loader.Context); err != nil {
-			panic(err)
-		}
-		router5, err := gorillamux.NewRouter(doc)
-		if err != nil {
-			panic(err)
-		}
-		//httpReq, err := http.NewRequest(http.MethodGet, "core/admin/organizations/{id}", nil)
-		//if err != nil {
-		//	panic(err)
-		//}
-
-		route, pathParams, err := router5.FindRoute(req)
+		route, pathParams, err := we.openAPIRouter.FindRoute(req)
 		if err != nil {
 			panic(err)
 		}
@@ -161,7 +145,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 			PathParams: pathParams,
 			Route:      route,
 		}
-		if err := openapi3filter.ValidateRequest(ctx, requestValidationInput); err != nil {
+		if err := openapi3filter.ValidateRequest(context.Background(), requestValidationInput); err != nil {
 			panic(err)
 		}
 
@@ -175,7 +159,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		responseValidationInput.SetBodyBytes([]byte(`{}`))
 		//responseValidationInput.SetBodyBytes([]byte(`fwefwefwefewfew`))
 
-		err = openapi3filter.ValidateResponse(ctx, responseValidationInput)
+		err = openapi3filter.ValidateResponse(context.Background(), responseValidationInput)
 		if err != nil {
 			panic(err)
 		}
@@ -191,6 +175,22 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 
 //NewWebAdapter creates new WebAdapter instance
 func NewWebAdapter(coreAPIs *core.APIs, host string, logger *log.StandardLogger) Adapter {
+	//openAPI doc
+	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
+	doc, err := loader.LoadFromFile("driver/web/docs/def.yaml")
+	if err != nil {
+		logger.Fatal(err.Error())
+	}
+	err = doc.Validate(loader.Context)
+	if err != nil {
+		logger.Fatal(err.Error())
+	}
+	openAPIRouter, err := gorillamux.NewRouter(doc)
+	if err != nil {
+		logger.Fatal(err.Error())
+	}
+	//
+
 	auth := NewAuth(coreAPIs)
 	authorization := casbin.NewEnforcer("driver/web/authorization_model.conf", "driver/web/authorization_policy.csv")
 
@@ -199,7 +199,7 @@ func NewWebAdapter(coreAPIs *core.APIs, host string, logger *log.StandardLogger)
 	adminApisHandler := NewAdminApisHandler(coreAPIs)
 	encApisHandler := NewEncApisHandler(coreAPIs)
 	bbsApisHandler := NewBBsApisHandler(coreAPIs)
-	return Adapter{host: host, auth: auth, logger: logger, authorization: authorization, defaultApisHandler: defaultApisHandler,
+	return Adapter{openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, authorization: authorization, defaultApisHandler: defaultApisHandler,
 		servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler, encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, coreAPIs: coreAPIs}
 }
 
