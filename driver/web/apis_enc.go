@@ -13,9 +13,10 @@ type EncApisHandler struct {
 }
 
 //GetTest TODO get test
-func (h EncApisHandler) GetTest(l *log.Log, w http.ResponseWriter, r *http.Request) {
+func (h EncApisHandler) GetTest(l *log.Log, w http.ResponseWriter, r *http.Request) (*errorResponse, *successResponse) {
 	res := h.coreAPIs.Encryption.EncGetTest()
-	w.Write([]byte(res))
+
+	return nil, &successResponse{responseCode: http.StatusOK, body: []byte(res)}
 }
 
 //NewEncApisHandler creates new enc Handler instance

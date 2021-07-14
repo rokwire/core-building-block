@@ -21,6 +21,17 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+type errorResponse struct {
+	error string
+	code  int
+}
+
+type successResponse struct {
+	responseCode int
+	body         []byte
+	contentType  *string
+}
+
 //Adapter entity
 type Adapter struct {
 	openAPIRouter routers.Router
@@ -38,7 +49,7 @@ type Adapter struct {
 	coreAPIs *core.APIs
 }
 
-type handlerFunc = func(*log.Log, http.ResponseWriter, *http.Request)
+type handlerFunc = func(*log.Log, http.ResponseWriter, *http.Request) (*errorResponse, *successResponse)
 
 //Start starts the module
 func (we Adapter) Start() {
@@ -143,7 +154,24 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 			return
 		}
 
-		handler(logObj, w, req)
+		errorResp, successResp := handler(logObj, w, req)
+		//return the error response if there is
+		if errorResp != nil {
+			we.logger.Errorf("error response - %s", errorResp.error)
+			http.Error(w, errorResp.error, errorResp.code)
+			return
+		}
+
+		//return success error
+		if successResp.contentType != nil {
+			w.Header().Set("Content-Type", *successResp.contentType)
+		}
+		w.WriteHeader(successResp.responseCode)
+		if successResp.body != nil {
+			w.Write(successResp.body)
+		}
+
+		//TODO
 		logObj.PrintContext()
 	}
 }

@@ -13,12 +13,11 @@ type DefaultApisHandler struct {
 }
 
 //GetVersion gives the service version
-func (h DefaultApisHandler) GetVersion(l *log.Log, w http.ResponseWriter, r *http.Request) {
+func (h DefaultApisHandler) GetVersion(l *log.Log, w http.ResponseWriter, r *http.Request) (*errorResponse, *successResponse) {
 	version := h.coreAPIs.GetVersion()
 
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(version))
+	contentType := "text/plain"
+	return nil, &successResponse{responseCode: http.StatusOK, contentType: &contentType, body: []byte(version)}
 }
 
 //NewDefaultApisHandler creates new rest services Handler instance

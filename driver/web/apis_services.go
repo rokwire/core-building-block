@@ -13,15 +13,17 @@ type ServicesApisHandler struct {
 }
 
 //GetAuthTest TODO get test
-func (h ServicesApisHandler) GetAuthTest(l *log.Log, w http.ResponseWriter, r *http.Request) {
+func (h ServicesApisHandler) GetAuthTest(l *log.Log, w http.ResponseWriter, r *http.Request) (*errorResponse, *successResponse) {
 	res := h.coreAPIs.Services.SerGetAuthTest(l)
-	w.Write([]byte(res))
+
+	return nil, &successResponse{responseCode: http.StatusOK, body: []byte(res)}
 }
 
 //GetCommonTest TODO get test
-func (h ServicesApisHandler) GetCommonTest(l *log.Log, w http.ResponseWriter, r *http.Request) {
+func (h ServicesApisHandler) GetCommonTest(l *log.Log, w http.ResponseWriter, r *http.Request) (*errorResponse, *successResponse) {
 	res := h.coreAPIs.Services.SerGetCommonTest(l)
-	w.Write([]byte(res))
+
+	return nil, &successResponse{responseCode: http.StatusOK, body: []byte(res)}
 }
 
 //NewServicesApisHandler creates new rest services Handler instance
