@@ -69,11 +69,6 @@ func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 	w.Write([]byte("Successfully created"))
 }
 
-//NewAdminApisHandler creates new admin rest Handler instance
-func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
-	return AdminApisHandler{coreAPIs: coreAPIs}
-}
-
 //GetGlobalConfig gets config
 func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	config, err := h.coreAPIs.Administration.AdmGetGlobalConfig()
@@ -223,4 +218,9 @@ func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Successfully updated"))
+}
+
+//NewAdminApisHandler creates new admin rest Handler instance
+func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
+	return AdminApisHandler{coreAPIs: coreAPIs}
 }
