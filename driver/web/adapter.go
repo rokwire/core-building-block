@@ -123,46 +123,41 @@ func (we Adapter) serveDocUI() http.Handler {
 
 func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-
-		/*
-			options := openapi3filter.Options{IncludeResponseStatus: true}
-			responseValidationInput := &openapi3filter.ResponseValidationInput{
-				RequestValidationInput: requestValidationInput,
-				Status:                 200,
-				Header:                 http.Header{"Content-Type": []string{"application/json"}},
-				Options:                &options,
-			}
-			responseValidationInput.SetBodyBytes([]byte(`{}`))
-			//responseValidationInput.SetBodyBytes([]byte(`fwefwefwefewfew`))
-
-			err = openapi3filter.ValidateResponse(context.Background(), responseValidationInput)
-			if err != nil {
-				panic(err)
-			}
-			/// */
-
 		utils.LogRequest(req)
 		var logObj = we.logger.NewRequestLog(req)
 
-		//validate request
+		//1. validate request
 		err := we.validateRequest(req)
 		if err != nil {
-			we.logger.Errorf("error validating request - %s", err)
+			logObj.Errorf("error validating request - %s", err)
 
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(http.StatusText(http.StatusBadRequest)))
 			return
 		}
 
+		//2. process it
 		errorResp, successResp := handler(logObj, w, req)
-		//return the error response if there is
+
+		//3. validate the response
+		err = we.validateResponse()
+		if err != nil {
+			logObj.Errorf("error validating response - %s", err)
+
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(http.StatusText(http.StatusBadRequest)))
+			return
+		}
+
+		//4. return response
+		///4.1 return the error response if there is
 		if errorResp != nil {
-			we.logger.Errorf("error response - %s", errorResp.error)
+			logObj.Errorf("error response - %s", errorResp.error)
 			http.Error(w, errorResp.error, errorResp.code)
 			return
 		}
 
-		//return success error
+		///4.2 return success error
 		if successResp.contentType != nil {
 			w.Header().Set("Content-Type", *successResp.contentType)
 		}
@@ -171,7 +166,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 			w.Write(successResp.body)
 		}
 
-		//TODO
+		//5. print
 		logObj.PrintContext()
 	}
 }
@@ -191,6 +186,26 @@ func (we Adapter) validateRequest(req *http.Request) error {
 		return err
 	}
 	return nil
+}
+
+func (we Adapter) validateResponse() error {
+	return nil
+	/*
+		options := openapi3filter.Options{IncludeResponseStatus: true}
+		responseValidationInput := &openapi3filter.ResponseValidationInput{
+			RequestValidationInput: requestValidationInput,
+			Status:                 200,
+			Header:                 http.Header{"Content-Type": []string{"application/json"}},
+			Options:                &options,
+		}
+		responseValidationInput.SetBodyBytes([]byte(`{}`))
+		//responseValidationInput.SetBodyBytes([]byte(`fwefwefwefewfew`))
+
+		err = openapi3filter.ValidateResponse(context.Background(), responseValidationInput)
+		if err != nil {
+			panic(err)
+		}
+		/// */
 }
 
 //NewWebAdapter creates new WebAdapter instance
