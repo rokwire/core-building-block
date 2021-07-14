@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expose admin API which creates an organization. [#58](https://github.com/rokwire/core-building-block/issues/58)
 - Expose update global config admin API. [#36] (https://github.com/rokwire/core-building-block/issues/36)
 - Expand the model to handle the user devices. [#41] (https://github.com/rokwire/core-building-block/issues/41)
-- Expose get global config admin API [#35] (https://github.com/rokwire/core-building-block/pull/43)
+- Expose get global config admin API [#35] (https://github.com/rokwire/core-building-block/issues/35)
 - Set up auth framework. [#16] (https://github.com/rokwire/core-building-block/issues/16)
 - Expose version API. [#13] (https://github.com/rokwire/core-building-block/issues/13)
 - Set up project skeleton. [#1] (https://github.com/rokwire/core-building-block/issues/1)
