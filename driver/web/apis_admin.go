@@ -18,22 +18,22 @@ type AdminApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-//GetTest TODO get test
-func (h AdminApisHandler) GetTest(l *log.Log, w http.ResponseWriter, r *http.Request) response {
+//getTest TODO get test
+func (h AdminApisHandler) getTest(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	res := h.coreAPIs.Administration.AdmGetTest()
 
 	return createSuccessResponse(res, nil, http.StatusOK)
 }
 
-//GetTestModel gives a test model instance
-func (h AdminApisHandler) GetTestModel(l *log.Log, w http.ResponseWriter, r *http.Request) response {
+//getTestModel gives a test model instance
+func (h AdminApisHandler) getTestModel(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	res := h.coreAPIs.Administration.AdmGetTestModel()
 
 	return createSuccessResponse(res, nil, http.StatusOK)
 }
 
-//CreateGlobalConfig creates a global config
-func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) response {
+//createGlobalConfig creates a global config
+func (h AdminApisHandler) createGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		//log.Printf("Error on marshal create global config - %s\n", err.Error())
@@ -67,8 +67,8 @@ func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 	return createSuccessResponse("Successfully created", headers, http.StatusOK)
 }
 
-//GetGlobalConfig gets config
-func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) response {
+//getGlobalConfig gets config
+func (h AdminApisHandler) getGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	config, err := h.coreAPIs.Administration.AdmGetGlobalConfig()
 	if err != nil {
 		//log.Printf("Error on getting config - %s\n", err)
@@ -90,8 +90,8 @@ func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *
 	return createSuccessResponse(string(data), headers, http.StatusOK)
 }
 
-//UpdateGlobalConfig updates global config
-func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) response {
+//updateGlobalConfig updates global config
+func (h AdminApisHandler) updateGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -125,8 +125,8 @@ func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 	return createSuccessResponse("Successfully created", headers, http.StatusOK)
 }
 
-//CreateOrganization creates organization
-func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) response {
+//createOrganization creates organization
+func (h AdminApisHandler) createOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		l.Errorf("Error on marshal create organization - %s\n", err.Error())
@@ -164,8 +164,8 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 	return createSuccessResponse("Successfully created", headers, http.StatusOK)
 }
 
-//UpdateOrganization updates organization
-func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) response {
+//updateOrganization updates organization
+func (h AdminApisHandler) updateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	params := mux.Vars(r)
 	ID := params["id"]
 	if len(ID) <= 0 {

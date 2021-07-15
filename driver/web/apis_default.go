@@ -12,8 +12,8 @@ type DefaultApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-//GetVersion gives the service version
-func (h DefaultApisHandler) GetVersion(l *log.Log, w http.ResponseWriter, r *http.Request) response {
+//getVersion gives the service version
+func (h DefaultApisHandler) getVersion(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	version := h.coreAPIs.GetVersion()
 
 	headers := map[string]string{}
