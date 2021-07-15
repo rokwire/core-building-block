@@ -21,15 +21,33 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-type errorResponse struct {
-	error string
-	code  int
+type response struct {
+	responseCode int
+	header       map[string][]string
+	body         []byte
 }
 
-type successResponse struct {
-	responseCode int
-	body         []byte
-	contentType  *string
+func createErrorResponse(body string, responseCode int) response {
+	headers := map[string][]string{}
+	headers["Content-Type"] = []string{"text/plain; charset=utf-8"}
+	headers["X-Content-Type-Options"] = []string{"nosniff"}
+
+	return response{responseCode: responseCode, header: headers, body: []byte(body)}
+}
+
+func createSuccessResponse(body string, headers map[string]string, responseCode int) response {
+	//prepare headers
+	if headers == nil {
+		headers = map[string]string{}
+	}
+
+	preparedHeaders := make(map[string][]string, len(headers))
+	if len(headers) > 0 {
+		for key, value := range headers {
+			preparedHeaders[key] = []string{value}
+		}
+	}
+	return response{responseCode: responseCode, header: preparedHeaders, body: []byte(body)}
 }
 
 //Adapter entity
@@ -49,7 +67,7 @@ type Adapter struct {
 	coreAPIs *core.APIs
 }
 
-type handlerFunc = func(*log.Log, http.ResponseWriter, *http.Request) (*errorResponse, *successResponse)
+type handlerFunc = func(*log.Log, http.ResponseWriter, *http.Request) response
 
 //Start starts the module
 func (we Adapter) Start() {
@@ -137,10 +155,10 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		}
 
 		//2. process it
-		errorResp, successResp := handler(logObj, w, req)
+		response := handler(logObj, w, req)
 
 		//3. validate the response
-		err = we.validateResponse(requestValidationInput, errorResp, successResp)
+		err = we.validateResponse(requestValidationInput, response)
 		if err != nil {
 			logObj.Errorf("error validating response - %s", err)
 
@@ -150,20 +168,21 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		}
 
 		//4. return response
-		///4.1 return the error response if there is
-		if errorResp != nil {
-			logObj.Errorf("error response - %s", errorResp.error)
-			http.Error(w, errorResp.error, errorResp.code)
-			return
+		//4.1 headers
+		if len(response.header) > 0 {
+			for key, values := range response.header {
+				if len(values) > 0 {
+					for _, value := range values {
+						w.Header().Add(key, value)
+					}
+				}
+			}
 		}
-
-		///4.2 return success error
-		if successResp.contentType != nil {
-			w.Header().Set("Content-Type", *successResp.contentType)
-		}
-		w.WriteHeader(successResp.responseCode)
-		if successResp.body != nil {
-			w.Write(successResp.body)
+		//4.2 response code
+		w.WriteHeader(response.responseCode)
+		//4.3 body
+		if len(response.body) > 0 {
+			w.Write(response.body)
 		}
 
 		//5. print
@@ -188,30 +207,15 @@ func (we Adapter) validateRequest(req *http.Request) (*openapi3filter.RequestVal
 	return requestValidationInput, nil
 }
 
-func (we Adapter) validateResponse(requestValidationInput *openapi3filter.RequestValidationInput,
-	errorResp *errorResponse, successResp *successResponse) error {
-
-	var responseCode *int
-	var body []byte
-	header := http.Header{}
+func (we Adapter) validateResponse(requestValidationInput *openapi3filter.RequestValidationInput, response response) error {
+	responseCode := response.responseCode
+	body := response.body
+	header := response.header
 	options := openapi3filter.Options{IncludeResponseStatus: true}
-	if errorResp != nil {
-		//error response
-		responseCode = &errorResp.code
-		body = []byte(errorResp.error)
-	} else {
-		//success response
-		responseCode = &successResp.responseCode
-		body = successResp.body
-
-		if successResp.contentType != nil {
-			header["Content-Type"] = []string{*successResp.contentType}
-		}
-	}
 
 	responseValidationInput := &openapi3filter.ResponseValidationInput{
 		RequestValidationInput: requestValidationInput,
-		Status:                 *responseCode,
+		Status:                 responseCode,
 		Header:                 header,
 		Options:                &options}
 	responseValidationInput.SetBodyBytes(body)

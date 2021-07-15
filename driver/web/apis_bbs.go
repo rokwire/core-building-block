@@ -13,10 +13,10 @@ type BBsApisHandler struct {
 }
 
 //GetTest TODO get test
-func (h BBsApisHandler) GetTest(l *log.Log, w http.ResponseWriter, r *http.Request) (*errorResponse, *successResponse) {
+func (h BBsApisHandler) GetTest(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	res := h.coreAPIs.BBs.BBsGetTest()
 
-	return nil, &successResponse{responseCode: http.StatusOK, body: []byte(res)}
+	return createSuccessResponse(res, nil, http.StatusOK)
 }
 
 //NewBBsApisHandler creates new bbs Handler instance

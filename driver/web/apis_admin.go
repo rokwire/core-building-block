@@ -19,32 +19,32 @@ type AdminApisHandler struct {
 }
 
 //GetTest TODO get test
-func (h AdminApisHandler) GetTest(l *log.Log, w http.ResponseWriter, r *http.Request) (*errorResponse, *successResponse) {
+func (h AdminApisHandler) GetTest(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	res := h.coreAPIs.Administration.AdmGetTest()
 
-	return nil, &successResponse{responseCode: http.StatusOK, body: []byte(res)}
+	return createSuccessResponse(res, nil, http.StatusOK)
 }
 
 //GetTestModel gives a test model instance
-func (h AdminApisHandler) GetTestModel(l *log.Log, w http.ResponseWriter, r *http.Request) (*errorResponse, *successResponse) {
+func (h AdminApisHandler) GetTestModel(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	res := h.coreAPIs.Administration.AdmGetTestModel()
 
-	return nil, &successResponse{responseCode: http.StatusOK, body: []byte(res)}
+	return createSuccessResponse(res, nil, http.StatusOK)
 }
 
 //CreateGlobalConfig creates a global config
-func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) (*errorResponse, *successResponse) {
+func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		//log.Printf("Error on marshal create global config - %s\n", err.Error())
-		return &errorResponse{http.StatusText(http.StatusBadRequest), http.StatusBadRequest}, nil
+		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
 
 	var requestData Def.PostAdminGlobalConfigJSONRequestBody
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		//log.Printf("Error on unmarshal the create global config data - %s\n", err.Error())
-		return &errorResponse{err.Error(), http.StatusBadRequest}, nil
+		return createErrorResponse(err.Error(), http.StatusBadRequest)
 	}
 
 	//validate
@@ -52,26 +52,27 @@ func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 	err = validate.Struct(requestData)
 	if err != nil {
 		//log.Printf("Error on validating create global config data - %s\n", err.Error())
-		return &errorResponse{err.Error(), http.StatusBadRequest}, nil
+		return createErrorResponse(err.Error(), http.StatusBadRequest)
 	}
 	setting := requestData.Setting
 
 	_, err = h.coreAPIs.Administration.AdmCreateGlobalConfig(setting)
 	if err != nil {
 		//	log.Println(err.Error())
-		return &errorResponse{err.Error(), http.StatusInternalServerError}, nil
+		return createErrorResponse(err.Error(), http.StatusInternalServerError)
 	}
 
-	contentType := "text/plain"
-	return nil, &successResponse{responseCode: http.StatusOK, contentType: &contentType, body: []byte("Successfully created")}
+	headers := map[string]string{}
+	headers["Content-Type"] = "text/plain"
+	return createSuccessResponse("Successfully created", headers, http.StatusOK)
 }
 
 //GetGlobalConfig gets config
-func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) (*errorResponse, *successResponse) {
+func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	config, err := h.coreAPIs.Administration.AdmGetGlobalConfig()
 	if err != nil {
 		//log.Printf("Error on getting config - %s\n", err)
-		return &errorResponse{http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError}, nil
+		return createErrorResponse(http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 
 	var responseData *Def.GlobalConfig
@@ -81,24 +82,27 @@ func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *
 	data, err := json.Marshal(responseData)
 	if err != nil {
 		//log.Println("Error on marshal the config")
-		return &errorResponse{http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError}, nil
+		return createErrorResponse(http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 
-	contentType := "application/json; charset=utf-8"
-	return nil, &successResponse{responseCode: http.StatusOK, contentType: &contentType, body: data}
+	headers := map[string]string{}
+	headers["Content-Type"] = "application/json; charset=utf-8"
+	return createSuccessResponse(string(data), headers, http.StatusOK)
 }
 
 //UpdateGlobalConfig updates global config
-func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) (*errorResponse, *successResponse) {
+func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return &errorResponse{http.StatusText(http.StatusBadRequest), http.StatusBadRequest}, nil
+		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+
 	}
 
 	var updateConfig Def.PutAdminGlobalConfigJSONRequestBody
 	err = json.Unmarshal(data, &updateConfig)
 	if err != nil {
-		return &errorResponse{err.Error(), http.StatusBadRequest}, nil
+		return createErrorResponse(err.Error(), http.StatusBadRequest)
+
 	}
 
 	//validate
@@ -106,32 +110,33 @@ func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 	err = validate.Struct(updateConfig)
 	if err != nil {
 		//log.Printf("Error on validating create global config data - %s\n", err.Error())
-		return &errorResponse{err.Error(), http.StatusBadRequest}, nil
+		return createErrorResponse(err.Error(), http.StatusBadRequest)
 	}
 	setting := updateConfig.Setting
 
 	err = h.coreAPIs.Administration.AdmUpdateGlobalConfig(setting)
 	if err != nil {
 		//	log.Println(err.Error())
-		return &errorResponse{err.Error(), http.StatusInternalServerError}, nil
+		return createErrorResponse(err.Error(), http.StatusInternalServerError)
 	}
 
-	contentType := "text/plain"
-	return nil, &successResponse{responseCode: http.StatusOK, contentType: &contentType, body: []byte("Successfully updated")}
+	headers := map[string]string{}
+	headers["Content-Type"] = "text/plain"
+	return createSuccessResponse("Successfully created", headers, http.StatusOK)
 }
 
 //CreateOrganization creates organization
-func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) (*errorResponse, *successResponse) {
+func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		l.Errorf("Error on marshal create organization - %s\n", err.Error())
-		return &errorResponse{http.StatusText(http.StatusBadRequest), http.StatusBadRequest}, nil
+		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
 	var requestData Def.PostAdminOrganizationsJSONRequestBody
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		l.Errorf("Error on unmarshal the create organization  - %s\n", err.Error())
-		return &errorResponse{http.StatusText(http.StatusBadRequest), http.StatusBadRequest}, nil
+		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
 
 	//validate
@@ -139,7 +144,7 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 	err = validate.Struct(requestData)
 	if err != nil {
 		l.Errorf("Error on validating create organization  data - %s\n", err.Error())
-		return &errorResponse{http.StatusText(http.StatusBadRequest), http.StatusBadRequest}, nil
+		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
 
 	name := requestData.Name
@@ -151,31 +156,32 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 	_, err = h.coreAPIs.Administration.AdmCreateOrganization(name, string(requestType), *requiresOwnLogin, *loginTypes, *organizationDomains)
 	if err != nil {
 		l.Errorf("Error on creating an organization - %s\n", err.Error())
-		return &errorResponse{err.Error(), http.StatusInternalServerError}, nil
+		return createErrorResponse(err.Error(), http.StatusInternalServerError)
 	}
 
-	contentType := "text/plain"
-	return nil, &successResponse{responseCode: http.StatusOK, contentType: &contentType, body: []byte("Successfully created")}
+	headers := map[string]string{}
+	headers["Content-Type"] = "text/plain"
+	return createSuccessResponse("Successfully created", headers, http.StatusOK)
 }
 
 //UpdateOrganization updates organization
-func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) (*errorResponse, *successResponse) {
+func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	params := mux.Vars(r)
 	ID := params["id"]
 	if len(ID) <= 0 {
-		return &errorResponse{"ID is required", http.StatusBadRequest}, nil
+		return createErrorResponse("ID is required", http.StatusBadRequest)
 	}
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		l.Errorf("Error on marshal update organization - %s\n", err.Error())
-		return &errorResponse{"ID is required", http.StatusBadRequest}, nil
+		return createErrorResponse("ID is required", http.StatusBadRequest)
 	}
 	var requestData Def.PutAdminOrganizationsIdJSONRequestBody
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		l.Errorf("Error on unmarshal the update organization  - %s\n", err.Error())
-		return &errorResponse{http.StatusText(http.StatusBadRequest), http.StatusBadRequest}, nil
+		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
 
 	//validate
@@ -183,7 +189,7 @@ func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, 
 	err = validate.Struct(requestData)
 	if err != nil {
 		l.Errorf("Error on validating update organization  data - %s\n", err.Error())
-		return &errorResponse{http.StatusText(http.StatusBadRequest), http.StatusBadRequest}, nil
+		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
 
 	name := requestData.Name
@@ -195,11 +201,12 @@ func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, 
 	err = h.coreAPIs.Administration.AdmUpdateOrganization(ID, name, string(requestType), *requiresOwnLogin, *loginTypes, *organizationDomains)
 	if err != nil {
 		l.Errorf("Error on updating an organization - %s\n", err.Error())
-		return &errorResponse{err.Error(), http.StatusInternalServerError}, nil
+		return createErrorResponse(err.Error(), http.StatusInternalServerError)
 	}
 
-	contentType := "text/plain"
-	return nil, &successResponse{responseCode: http.StatusOK, contentType: &contentType, body: []byte("Successfully updated")}
+	headers := map[string]string{}
+	headers["Content-Type"] = "text/plain"
+	return createSuccessResponse("Successfully created", headers, http.StatusOK)
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance
