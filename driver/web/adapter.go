@@ -146,27 +146,34 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		utils.LogRequest(req)
 		var logObj = we.logger.NewRequestLog(req)
 
-		//1. validate request
-		requestValidationInput, err := we.validateRequest(req)
-		if err != nil {
-			logObj.Errorf("error validating request - %s", err)
+		var err error
 
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(http.StatusText(http.StatusBadRequest)))
-			return
+		//1. validate request
+		var requestValidationInput *openapi3filter.RequestValidationInput
+		if we.env != "production" {
+			requestValidationInput, err = we.validateRequest(req)
+			if err != nil {
+				logObj.Errorf("error validating request - %s", err)
+
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(http.StatusText(http.StatusBadRequest)))
+				return
+			}
 		}
 
 		//2. process it
 		response := handler(logObj, w, req)
 
 		//3. validate the response
-		err = we.validateResponse(requestValidationInput, response)
-		if err != nil {
-			logObj.Errorf("error validating response - %s", err)
+		if we.env != "production" {
+			err = we.validateResponse(requestValidationInput, response)
+			if err != nil {
+				logObj.Errorf("error validating response - %s", err)
 
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(http.StatusText(http.StatusBadRequest)))
-			return
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(http.StatusText(http.StatusBadRequest)))
+				return
+			}
 		}
 
 		//4. return response
