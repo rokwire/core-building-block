@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"core-building-block/core/model"
 	"log"
 	"time"
 
@@ -25,7 +24,7 @@ type database struct {
 	organizations *collectionWrapper
 	serviceRegs   *collectionWrapper
 
-	listeners []model.StorageListener
+	listeners []StorageListener
 }
 
 func (m *database) start() error {

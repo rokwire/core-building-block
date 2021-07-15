@@ -2,6 +2,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 	"crypto/rsa"
 	"errors"
 	"fmt"
@@ -17,28 +18,10 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
-type UserAuth struct {
-	UserID       string
-	Sub          string
-	Name         string
-	Email        string
-	Phone        string
-	Picture      []byte
-	Exp          float64
-	RefreshToken string
-}
-
-type AuthConfig struct {
-	OrgID  string      `json:"org_id" bson:"org_id" validate:"required"`
-	AppID  string      `json:"app_id" bson:"app_id" validate:"required"`
-	Type   string      `json:"type" bson:"type" validate:"required"`
-	Config interface{} `json:"config" bson:"config" validate:"required"`
-}
-
 //Interface for authentication mechanisms
 type authType interface {
 	//Check validity of provided credentials
-	check(creds string, params string) (*UserAuth, error)
+	check(creds string, params string) (*model.UserAuth, error)
 }
 
 //Auth represents the auth functionality unit
@@ -264,15 +247,15 @@ func (a *Auth) LoadAuthConfigs() error {
 	return nil
 }
 
-func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*AuthConfig, error) {
+func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error) {
 	a.authConfigsLock.RLock()
 	defer a.authConfigsLock.RUnlock()
 
-	var authConfig *AuthConfig //to return
+	var authConfig *model.AuthConfig //to return
 
 	item, _ := a.authConfigs.Load(fmt.Sprintf("%s_%s_%s", orgID, appID, authType))
 	if item != nil {
-		authConfigFromCache, ok := item.(AuthConfig)
+		authConfigFromCache, ok := item.(model.AuthConfig)
 		if !ok {
 			return nil, errors.New("failed to cast cache item to AuthConfig")
 		}
@@ -282,7 +265,7 @@ func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*Auth
 	return nil, errors.New("auth config does not exist")
 }
 
-func (a *Auth) setAuthConfigs(authConfigs *[]AuthConfig) {
+func (a *Auth) setAuthConfigs(authConfigs *[]model.AuthConfig) {
 	a.authConfigs = &syncmap.Map{}
 	validate := validator.New()
 	var err error
@@ -318,13 +301,13 @@ type Storage interface {
 	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
 	SaveServiceReg(reg *authservice.ServiceReg) error
 
-	FindAuthConfig(orgID string, appID string, authType string) (*AuthConfig, error)
-	LoadAuthConfigs() (*[]AuthConfig, error)
+	FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error)
+	LoadAuthConfigs() (*[]model.AuthConfig, error)
 }
 
 type AuthStorageListener struct {
 	Auth *Auth
-	model.DefaultStorageListenerImpl
+	storage.DefaultStorageListenerImpl
 }
 
 //OnAuthConfigUpdated notifies that an auth config has been updated

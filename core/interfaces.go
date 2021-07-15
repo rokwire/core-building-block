@@ -2,6 +2,7 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 
 	log "github.com/rokmetro/logging-library/loglib"
 )
@@ -38,7 +39,7 @@ type BBs interface {
 
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
-	RegisterStorageListener(storageListener model.StorageListener)
+	RegisterStorageListener(storageListener storage.StorageListener)
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	GetGlobalConfig() (*model.GlobalConfig, error)
@@ -52,7 +53,7 @@ type Storage interface {
 
 type CoreStorageListener struct {
 	app *application
-	model.DefaultStorageListenerImpl
+	storage.DefaultStorageListenerImpl
 }
 
 //ApplicationListener represents application listener
