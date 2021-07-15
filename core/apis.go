@@ -35,10 +35,10 @@ func (c *APIs) GetVersion() string {
 }
 
 //NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(version string, build string, storage Storage, auth *auth.Auth) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, auth *auth.Auth) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
-	application := application{version: version, build: build, storage: storage, listeners: listeners}
+	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners}
 
 	//add coreAPIs instance
 	servicesImpl := &servicesImpl{app: &application}

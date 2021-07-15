@@ -26,6 +26,7 @@ func main() {
 	logger := log.NewLogger("core")
 	envLoader := envloader.NewEnvLoader(Version, logger)
 
+	env := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_ENVIRONMENT", true, false) //local, dev, staging, prod
 	serviceID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SERVICE_ID", true, false)
 	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
 
@@ -70,10 +71,10 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(Version, Build, storageAdapter, auth)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth)
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(coreAPIs, host, logger)
+	webAdapter := web.NewWebAdapter(env, coreAPIs, host, logger)
 	webAdapter.Start()
 }

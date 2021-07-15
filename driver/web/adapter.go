@@ -52,6 +52,8 @@ func createSuccessResponse(body string, headers map[string]string, responseCode 
 
 //Adapter entity
 type Adapter struct {
+	env string
+
 	openAPIRouter routers.Router
 	host          string
 	auth          *Auth
@@ -228,7 +230,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(coreAPIs *core.APIs, host string, logger *log.StandardLogger) Adapter {
+func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.StandardLogger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	doc, err := loader.LoadFromFile("driver/web/docs/def.yaml")
@@ -253,7 +255,7 @@ func NewWebAdapter(coreAPIs *core.APIs, host string, logger *log.StandardLogger)
 	adminApisHandler := NewAdminApisHandler(coreAPIs)
 	encApisHandler := NewEncApisHandler(coreAPIs)
 	bbsApisHandler := NewBBsApisHandler(coreAPIs)
-	return Adapter{openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, authorization: authorization, defaultApisHandler: defaultApisHandler,
+	return Adapter{env: env, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, authorization: authorization, defaultApisHandler: defaultApisHandler,
 		servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler, encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, coreAPIs: coreAPIs}
 }
 

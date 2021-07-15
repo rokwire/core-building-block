@@ -2,6 +2,7 @@ package core
 
 //application represents the core application code based on hexagonal architecture
 type application struct {
+	env     string
 	version string
 	build   string
 
