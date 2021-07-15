@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"core-building-block/core"
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
 	"errors"
@@ -53,7 +52,7 @@ func (sa *Adapter) Start() error {
 }
 
 //RegisterStorageListener registers a data change listener with the storage adapter
-func (sa *Adapter) RegisterStorageListener(storageListener core.StorageListener) {
+func (sa *Adapter) RegisterStorageListener(storageListener model.StorageListener) {
 	sa.db.listeners = append(sa.db.listeners, storageListener)
 }
 

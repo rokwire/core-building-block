@@ -322,18 +322,12 @@ type Storage interface {
 	LoadAuthConfigs() (*[]AuthConfig, error)
 }
 
-type AuthListener struct {
+type AuthStorageListener struct {
 	Auth *Auth
+	model.DefaultStorageListenerImpl
 }
 
 //OnAuthConfigUpdated notifies that an auth config has been updated
-func (al *AuthListener) OnDataChanged(collection string) {
-	if collection == "auth_configs" {
-		al.OnAuthConfigUpdated()
-	}
-}
-
-//OnAuthConfigUpdated notifies that an auth config has been updated
-func (al *AuthListener) OnAuthConfigUpdated() {
+func (al *AuthStorageListener) OnAuthConfigUpdated() {
 	al.Auth.LoadAuthConfigs()
 }

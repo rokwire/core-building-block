@@ -38,7 +38,7 @@ type BBs interface {
 
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
-	RegisterStorageListener(storageListener StorageListener)
+	RegisterStorageListener(storageListener model.StorageListener)
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	GetGlobalConfig() (*model.GlobalConfig, error)
@@ -49,20 +49,10 @@ type Storage interface {
 }
 
 //StorageListener listenes for change data storage events
-type StorageListener interface {
-	OnDataChanged(collection string)
-}
 
-type storageListenerImpl struct {
+type CoreStorageListener struct {
 	app *application
-
-	dataHandlers map[string]func()
-}
-
-func (a *storageListenerImpl) OnDataChanged(collection string) {
-	if len(a.dataHandlers) > 0 && a.dataHandlers[collection] != nil {
-		a.dataHandlers[collection]()
-	}
+	model.DefaultStorageListenerImpl
 }
 
 //ApplicationListener represents application listener

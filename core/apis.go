@@ -23,7 +23,7 @@ type APIs struct {
 func (c *APIs) Start() {
 	c.app.start()
 
-	storageListener := auth.AuthListener{Auth: c.Auth}
+	storageListener := auth.AuthStorageListener{Auth: c.Auth}
 	c.app.storage.RegisterStorageListener(&storageListener)
 }
 

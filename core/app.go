@@ -13,7 +13,7 @@ type application struct {
 //start starts the core part of the application
 func (app *application) start() {
 	//set storage listener
-	storageListener := storageListenerImpl{app: app}
+	storageListener := CoreStorageListener{app: app}
 	app.storage.RegisterStorageListener(&storageListener)
 }
 
