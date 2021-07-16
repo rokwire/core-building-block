@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -213,18 +214,46 @@ func (a *Auth) getExp(exp *int64) int64 {
 }
 
 //createAccount creates a new user account
-func (a *Auth) createAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
+func (a *Auth) createAccount(claims *tokenauth.Claims, userAuth *UserAuth) (*model.User, error) {
+	names := strings.Split(userAuth.Name, " ")
+	newUser := model.User{}
+
+	newAccount := model.UserAccount{Email: userAuth.Email, Phone: userAuth.Phone, Username: userAuth.UserID}
+	newUser.Account = newAccount
+	newProfile := model.UserProfile{FirstName: names[0], LastName: names[len(names)-1]}
+	newUser.Profile = newProfile
+
+	newOrgMembership := model.OrganizationMembership{}
+	organization, err := a.storage.FindOrganization(claims.OrgID)
+	if err != nil {
+		return nil, err
+	}
+	newOrgMembership.Organization = *organization
+
+	newPermissions := []model.OrganizationPermission{}
+	for _, p := range strings.Split(claims.Permissions, ",") {
+		newPermissions = append(newPermissions, model.OrganizationPermission{Name: p})
+	}
+	newOrgMembership.Permissions = newPermissions
+
+	device := model.Device{}
+	newUser.Devices = []model.Device{device}
+
+	newUser.OrganizationsMemberships = []model.OrganizationMembership{newOrgMembership}
+	newUser.OrganizationsMemberships[0].User = newUser
+
+	return a.storage.InsertUser(&newUser)
 }
 
 //updateAccount updates a user's account information
-func (a *Auth) updateAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
+func (a *Auth) updateAccount(claims *tokenauth.Claims, userAuth *UserAuth) (*model.User, error) {
+	updatedUser := model.User{}
+	return a.storage.UpdateUser(&updatedUser)
 }
 
 //deleteAccount deletes a user account
-func (a *Auth) deleteAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
+func (a *Auth) deleteAccount(claims *tokenauth.Claims, userAuth *UserAuth) error {
+	return a.storage.DeleteUser(claims.Id)
 }
 
 //storeReg stores the service registration record
@@ -315,6 +344,12 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 }
 
 type Storage interface {
+	InsertUser(user *model.User) (*model.User, error)
+	UpdateUser(user *model.User) (*model.User, error)
+	DeleteUser(id string) error
+
+	FindOrganization(id string) (*model.Organization, error)
+
 	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
 	SaveServiceReg(reg *authservice.ServiceReg) error
 

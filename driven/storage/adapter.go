@@ -62,6 +62,21 @@ func (sa *Adapter) ReadTODO() error {
 	return nil
 }
 
+//InsertUser inserts a user
+func (sa *Adapter) InsertUser(user *model.User) (*model.User, error) {
+	return nil, errors.New("unimplemented")
+}
+
+//UpdateUser updates an existing user
+func (sa *Adapter) UpdateUser(user *model.User) (*model.User, error) {
+	return nil, errors.New("unimplemented")
+}
+
+//DeleteUser deletes a user
+func (sa *Adapter) DeleteUser(id string) error {
+	return errors.New("unimplemented")
+}
+
 //FindAuthConfig finds the auth document from DB by orgID and appID
 func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (*auth.AuthConfig, error) {
 	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "type", Value: authType}}
@@ -154,6 +169,11 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 		return err
 	}
 	return nil
+}
+
+//FindOrganization finds an organization
+func (sa *Adapter) FindOrganization(id string) (*model.Organization, error) {
+	return nil, errors.New("unimplemented")
 }
 
 //CreateOrganization creates an organization
