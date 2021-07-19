@@ -19,6 +19,22 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type user struct {
+	ID string `bson:"_id"`
+
+	Account model.UserAccount `bson:"account"`
+	Profile model.UserProfile `bson:"profile"`
+
+	Permissions []string `bson:"permissions"`
+	Roles       []string `bson:"roles"`
+
+	Groups []string `bson:"groups"`
+
+	OrganizationsMemberships []string `bson:"memberships"`
+
+	Devices []string `bson:"devices"`
+}
+
 type organization struct {
 	ID               string   `bson:"_id"`
 	Name             string   `bson:"name"`
@@ -62,6 +78,100 @@ func (sa *Adapter) ReadTODO() error {
 	return nil
 }
 
+func (sa *Adapter) FindUser(userID string) (*model.User, error) {
+	var fullUser *model.User
+	// transaction
+	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+		err := sessionContext.StartTransaction()
+		if err != nil {
+			return err
+		}
+
+		// check if there is a user
+		userFilter := bson.D{primitive.E{Key: "_id", Value: userID}}
+		var usersResult []*user
+		err = sa.db.users.FindWithContext(sessionContext, userFilter, &usersResult, nil)
+		if err != nil {
+			abortTransaction(sessionContext)
+			return err
+		}
+		if len(usersResult) > 0 {
+			//there is a user
+			existingUser := usersResult[0]
+			fullUser.ID = existingUser.ID
+			fullUser.Account = existingUser.Account
+			fullUser.Profile = existingUser.Profile
+
+			// rolesResult, err := sa.FindGlobalRoles(&existingUser.Roles, &sessionContext)
+			// if err != nil {
+			// 	abortTransaction(sessionContext)
+			// 	return err
+			// }
+			// fullUser.Roles = *rolesResult
+
+			groupsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": existingUser.Groups}}}
+			var groupsResult []model.GlobalGroup
+			err = sa.db.groups.FindWithContext(sessionContext, groupsFilter, &groupsResult, nil)
+			if err != nil {
+				abortTransaction(sessionContext)
+				return err
+			}
+			fullUser.Groups = groupsResult
+
+			membershipsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": existingUser.OrganizationsMemberships}}}
+			var membershipsResult []model.OrganizationMembership
+			err = sa.db.memberships.FindWithContext(sessionContext, membershipsFilter, &membershipsResult, nil)
+			if err != nil {
+				abortTransaction(sessionContext)
+				return err
+			}
+			fullUser.OrganizationsMemberships = membershipsResult
+
+			devicesFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": existingUser.Devices}}}
+			var devicesResult []model.Device
+			err = sa.db.devices.FindWithContext(sessionContext, devicesFilter, &devicesResult, nil)
+			if err != nil {
+				abortTransaction(sessionContext)
+				return err
+			}
+			fullUser.Devices = devicesResult
+
+			// pipeline := []bson.M{
+			// 	{"$lookup": bson.M{
+			// 		"from":         "roles",
+			// 		"localField":   "roles",
+			// 		"foreignField": "_id",
+			// 		"as":           "roles",
+			// 	}},
+			// 	{"$match": bson.M{"user_id1": user.ID, "active": true}},
+			// 	{"$unwind": "$sub"},
+			// 	{"$project": bson.M{
+			// 		"clientID": "$sub.clientID", "_id": "$sub._id", "uid": "$sub.uid", "external_id": "$sub.external_id",
+			// 		"profile": "$sub.profile", "sub": "$sub.sub", "active": "$sub.active", "date_created": "$sub.date_created",
+			// 		"date_updated": "$sub.date_updated", "created_by": "$sub.created_by",
+			// 	}}}
+
+			// var userSubsResult []*model.User
+			// err := sa.db.usersrelations.Aggregate(pipeline, &userSubsResult, nil)
+			// if err != nil {
+			// 	abortTransaction(sessionContext)
+			// 	return err
+			// }
+		}
+
+		//commit the transaction
+		err = sessionContext.CommitTransaction(sessionContext)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return fullUser, nil
+}
+
 //InsertUser inserts a user
 func (sa *Adapter) InsertUser(user *model.User) (*model.User, error) {
 	return nil, errors.New("unimplemented")
@@ -76,6 +186,69 @@ func (sa *Adapter) UpdateUser(user *model.User) (*model.User, error) {
 func (sa *Adapter) DeleteUser(id string) error {
 	return errors.New("unimplemented")
 }
+
+//FindGlobalRoles finds a set of global user roles
+// func (sa *Adapter) FindGlobalRoles(ids *[]string, orgID string, context *mongo.SessionContext) (*[]model.GlobalRole, error) {
+// 	rolesFilter := bson.D{primitive.E{Key: "org_id", Value: "global"}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
+// 	var rolesResult []role
+// 	var err error
+// 	if context == nil {
+// 		err = sa.db.roles.Find(rolesFilter, &rolesResult, nil)
+// 	} else {
+// 		err = sa.db.roles.FindWithContext(*context, rolesFilter, &rolesResult, nil)
+// 	}
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	roles := make([]model.GlobalRole, 0)
+// 	for _, role := range rolesResult {
+// 		permList := make([]model.GlobalPermission, 0)
+// 		for _, permission := range role.Permissions {
+// 			permList = append(permList, model.GlobalPermission{ID: "", Name: permission})
+// 		}
+// 		roles = append(roles, model.GlobalRole{ID: role.ID, Name: role.Name, Permissions: permList})
+// 	}
+// 	return &roles, nil
+// }
+
+//FindOrganizationRoles finds a set of global user roles
+// func (sa *Adapter) FindOrganizationRoles(ids *[]string, orgID string, context *mongo.SessionContext) (*[]model.OrganizationRole, error) {
+// 	pipeline := []bson.M{
+// 		{"$match": bson.M{"org_id": orgID, "_id": bson.M{"$in": *ids}}},
+// 		{"$lookup": bson.M{
+// 			"from":         "organizations",
+// 			"localField":   "org_id",
+// 			"foreignField": "_id",
+// 			"as":           "organization",
+// 		}},
+// 		{"$unwind": "$organization"},
+// 		{"$project": bson.M{
+// 			"clientID": "$sub.clientID", "_id": "$sub._id", "uid": "$sub.uid", "external_id": "$sub.external_id",
+// 			"profile": "$sub.profile", "sub": "$sub.sub", "active": "$sub.active", "date_created": "$sub.date_created",
+// 			"date_updated": "$sub.date_updated", "created_by": "$sub.created_by",
+// 		}}}
+// 	rolesFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
+// 	var rolesResult []model.OrganizationRole
+// 	var err error
+// 	if context == nil {
+// 		err = sa.db.roles.Find(rolesFilter, &rolesResult, nil)
+// 	} else {
+// 		err = sa.db.roles.FindWithContext(*context, rolesFilter, &rolesResult, nil)
+// 	}
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	org, err := sa.FindOrganization(orgID)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	for _, role := range rolesResult {
+// 		role.Organization = *org
+// 	}
+// 	return &rolesResult, nil
+// }
 
 //FindAuthConfig finds the auth document from DB by orgID and appID
 func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (*auth.AuthConfig, error) {

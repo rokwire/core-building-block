@@ -7,19 +7,19 @@ import (
 
 //User represents user entity
 type User struct {
-	ID string
+	ID string `bson:"_id"`
 
-	Account UserAccount
-	Profile UserProfile
+	Account UserAccount `bson:"account"`
+	Profile UserProfile `bson:"profile"`
 
-	Permissions []GlobalPermission
-	Roles       []GlobalRole
+	Permissions []GlobalPermission `bson:"permissions"`
+	Roles       []GlobalRole       `bson:"roles"`
 
-	Groups []GlobalGroup
+	Groups []GlobalGroup `bson:"groups"`
 
-	OrganizationsMemberships []OrganizationMembership
+	OrganizationsMemberships []OrganizationMembership `bson:"memberships"`
 
-	Devices []Device
+	Devices []Device `bson:"devices"`
 }
 
 func (u User) String() string {
@@ -45,16 +45,16 @@ func (u User) String() string {
 type UserAccount struct {
 	ID string
 
-	Email string
-	Phone string
+	Email string `bson:"email"`
+	Phone string `bson:"phone"`
 
-	Username string
+	Username string `bson:"username"`
 
 	//for Champaign org - basically this will be one or many of  - email, phone, number, username
 	//for Illinois university org - this will be empty because this organization requires it own login
-	LoginTypes []string
+	LoginTypes []string `bson:"login_types"`
 
-	AllowLogin bool
+	AllowLogin bool `bson:"allow_login"`
 
 	//TODO
 	//has 2FA ???
@@ -68,9 +68,9 @@ func (ua UserAccount) String() string {
 //UserProfile represents user profile entity. The user profile is an information about the user.
 type UserProfile struct {
 	ID        string
-	PhotoURL  string
-	FirstName string
-	LastName  string
+	PhotoURL  string `bson:"photo"`
+	FirstName string `bson:"firstname"`
+	LastName  string `bson:"lastname"`
 }
 
 func (up UserProfile) String() string {
@@ -142,12 +142,12 @@ func (c OrganizationPermission) String() string {
 
 //OrganizationRole represents organization role entity. It is a collection of permissions
 type OrganizationRole struct {
-	ID   string
-	Name string
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
 
 	Permissions []OrganizationPermission
 
-	Organization Organization
+	Organization Organization `bson:"organization"`
 }
 
 func (c OrganizationRole) String() string {
