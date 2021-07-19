@@ -23,7 +23,7 @@ func main() {
 	if len(Version) == 0 {
 		Version = "dev"
 	}
-	logger := log.NewLogger("core")
+	logger := log.NewLogger("core", nil)
 	envLoader := envloader.NewEnvLoader(Version, logger)
 
 	serviceID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SERVICE_ID", true, false)
@@ -36,7 +36,7 @@ func main() {
 	storageAdapter := storage.NewStorageAdapter(mongoDBAuth, mongoDBName, mongoTimeout, logger)
 	err := storageAdapter.Start()
 	if err != nil {
-		logger.Fatal("Cannot start the mongoDB adapter - " + err.Error())
+		logger.Fatalf("Cannot start the mongoDB adapter: %v", err)
 	}
 
 	//auth
@@ -64,7 +64,7 @@ func main() {
 		logger.Infof("Error parsing max token exp, applying defaults: %v", err)
 	}
 
-	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp)
+	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}

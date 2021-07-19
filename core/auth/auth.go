@@ -3,9 +3,7 @@ package auth
 import (
 	"core-building-block/core/model"
 	"crypto/rsa"
-	"errors"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -15,6 +13,16 @@ import (
 	"github.com/rokmetro/auth-library/tokenauth"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/go-playground/validator.v9"
+
+	log "github.com/rokmetro/logging-library/loglib"
+)
+
+const (
+	typeAuthType   log.LogData = "auth type"
+	TypeUserAuth   log.LogData = "user auth"
+	TypeAuthConfig log.LogData = "user auth"
+	TypeAuth       log.LogData = "auth"
+	TypeServiceReg log.LogData = "service reg"
 )
 
 type UserAuth struct {
@@ -29,16 +37,18 @@ type UserAuth struct {
 }
 
 type AuthConfig struct {
-	OrgID  string      `json:"org_id" bson:"org_id" validate:"required"`
-	AppID  string      `json:"app_id" bson:"app_id" validate:"required"`
-	Type   string      `json:"type" bson:"type" validate:"required"`
-	Config interface{} `json:"config" bson:"config" validate:"required"`
+	OrgID string `json:"org_id" bson:"org_id" validate:"required"`
+	AppID string `json:"app_id" bson:"app_id" validate:"required"`
+	Type  string `json:"type" bson:"type" validate:"required"`
+
+	//Config is a JSON encoded auth type specific structure
+	Config []byte `json:"config" bson:"config" validate:"required"`
 }
 
 //Interface for authentication mechanisms
 type authType interface {
 	//Check validity of provided credentials
-	check(creds string, params string) (*UserAuth, error)
+	check(creds string, params string, l *log.Log) (*UserAuth, error)
 }
 
 //Auth represents the auth functionality unit
@@ -61,7 +71,7 @@ type Auth struct {
 }
 
 //NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64) (*Auth, error) {
+func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, logger *log.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -82,14 +92,14 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	err := auth.storeReg()
 	if err != nil {
-		return nil, fmt.Errorf("error storing reg: %v", err)
+		return nil, log.WrapActionError(log.SaveAction, "reg", nil, err)
 	}
 
 	serviceLoader := NewLocalServiceRegLoader(storage)
 
 	authService, err := authservice.NewAuthService(serviceID, host, serviceLoader)
 	if err != nil {
-		return nil, fmt.Errorf("error initializing auth service: %v", err)
+		return nil, log.WrapActionError(log.InitializeAction, "auth service", nil, err)
 	}
 
 	auth.AuthService = authService
@@ -106,7 +116,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	err = auth.LoadAuthConfigs()
 	if err != nil {
-		log.Println("NewAuth() -> failed to cache auth info documents")
+		logger.Warn("NewAuth() failed to cache auth info documents")
 	}
 
 	return auth, nil
@@ -114,7 +124,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 func (a *Auth) registerAuthType(name string, auth authType) error {
 	if _, ok := a.authTypes[name]; ok {
-		return fmt.Errorf("the requested auth type name has already been registered: %s", name)
+		return log.NewErrorf("the requested auth type name has already been registered: %s", name)
 	}
 
 	a.authTypes[name] = auth
@@ -127,27 +137,28 @@ func (a *Auth) getAuthType(name string) (authType, error) {
 		return auth, nil
 	}
 
-	return nil, fmt.Errorf("invalid auth type: %s", name)
+	return nil, log.DataError(log.InvalidStatus, typeAuthType, log.StringArgs(name))
 }
 
 //Login logs a user in using the specified credentials and authentication method
 //	Input:
-//		authName (string): Name of the authentication method for provided creds (eg. "email")
-//		creds (string): Credentials/JSON encoded credential structure defined for the specific auth type
+//		authType (string): Name of the authentication method for provided creds (eg. "email")
+//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
+//		params (string): JSON encoded params defined by specified auth type
+//		l (*loglib.Log): Log object pointer for request
 //	Returns:
 //		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //		User (User): User object for authenticated user
-func (a *Auth) Login(authName string, creds string, params string) (string, *model.User, error) {
-	auth, err := a.getAuthType(authName)
+func (a *Auth) Login(authType string, creds string, params string, l *log.Log) (string, *model.User, error) {
+	auth, err := a.getAuthType(authType)
 	if err != nil {
-		return "", nil, err
+		return "", nil, log.WrapActionError(log.LoadCacheAction, typeAuthType, nil, err)
 	}
 
-	claims, err := auth.check(creds, params)
+	_, err = auth.check(creds, params, l)
 	if err != nil {
-		return "", nil, err
+		return "", nil, log.WrapActionError(log.ValidateAction, "creds", nil, err)
 	}
-	log.Println(claims)
 
 	//TODO: Implement account management and return token and user using claims
 
@@ -187,7 +198,7 @@ func (a *Auth) generateToken(claims *tokenauth.Claims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	kid, err := authutils.GetKeyFingerprint(&a.authPrivKey.PublicKey)
 	if err != nil {
-		return "", fmt.Errorf("error computing auth key fingerprint: %v", err)
+		return "", log.WrapActionError(log.ComputeAction, "fingerprint", log.StringArgs("auth key"), err)
 	}
 	token.Header["kid"] = kid
 	return token.SignedString(a.authPrivKey)
@@ -231,7 +242,7 @@ func (a *Auth) deleteAccount(claims *tokenauth.Claims) {
 func (a *Auth) storeReg() error {
 	pem, err := authutils.GetPubKeyPem(&a.authPrivKey.PublicKey)
 	if err != nil {
-		return fmt.Errorf("error encoding auth pub key for storage: %v", err)
+		return log.WrapActionError(log.EncodeAction, "auth pub key", nil, err)
 	}
 
 	key := authservice.PubKey{KeyPem: pem, Alg: "RS256"}
@@ -240,14 +251,14 @@ func (a *Auth) storeReg() error {
 	authReg := authservice.ServiceReg{ServiceID: "auth", Host: a.host, PubKey: &key}
 	err = a.storage.SaveServiceReg(&authReg)
 	if err != nil {
-		return fmt.Errorf("error saving auth service reg: %v", err)
+		return log.WrapActionError(log.SaveAction, TypeServiceReg, log.StringArgs("auth"), err)
 	}
 
 	// Setup core registration for signature validation
 	coreReg := authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key}
 	err = a.storage.SaveServiceReg(&coreReg)
 	if err != nil {
-		return fmt.Errorf("error saving core service reg: %v", err)
+		return log.WrapActionError(log.SaveAction, TypeServiceReg, log.StringArgs("core"), err)
 	}
 
 	return nil
@@ -256,7 +267,7 @@ func (a *Auth) storeReg() error {
 func (a Auth) LoadAuthConfigs() error {
 	authConfigDocs, err := a.storage.LoadAuthConfigs()
 	if err != nil {
-		return err
+		return log.WrapActionError(log.FindAction, TypeAuthConfig, nil, err)
 	}
 
 	a.setAuthConfigs(authConfigDocs)
@@ -270,16 +281,18 @@ func (a Auth) getAuthConfig(orgID string, appID string, authType string) (*AuthC
 
 	var authConfig *AuthConfig //to return
 
+	errArgs := &log.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": authType}
+
 	item, _ := a.authConfigs.Load(fmt.Sprintf("%s_%s_%s", orgID, appID, authType))
 	if item != nil {
 		authConfigFromCache, ok := item.(AuthConfig)
 		if !ok {
-			return nil, errors.New("failed to cast cache item to AuthConfig")
+			return nil, log.ActionError(log.CastAction, TypeAuthConfig, errArgs)
 		}
 		authConfig = &authConfigFromCache
 		return authConfig, nil
 	}
-	return nil, errors.New("auth config does not exist")
+	return nil, log.DataError(log.MissingStatus, TypeAuthConfig, errArgs)
 }
 
 func (a Auth) setAuthConfigs(authConfigs *[]AuthConfig) {

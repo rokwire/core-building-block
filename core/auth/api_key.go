@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"errors"
+	log "github.com/rokmetro/logging-library/loglib"
 )
 
 //API Key implementation of authType
@@ -9,9 +9,9 @@ type apiKeyAuthImpl struct {
 	auth *Auth
 }
 
-func (a *apiKeyAuthImpl) check(creds string, params string) (*UserAuth, error) {
+func (a *apiKeyAuthImpl) check(creds string, params string, l *log.Log) (*UserAuth, error) {
 	//TODO: Implement
-	return nil, errors.New("Unimplemented")
+	return nil, log.NewError(log.Unimplemented)
 }
 
 //initApiKeyAuth initializes and registers a new API key auth instance
@@ -20,7 +20,7 @@ func initApiKeyAuth(auth *Auth) (*apiKeyAuthImpl, error) {
 
 	err := auth.registerAuthType("api_key", api_key)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.RegisterAction, typeAuthType, nil, err)
 	}
 
 	return api_key, nil

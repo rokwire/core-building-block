@@ -2,7 +2,6 @@ package web
 
 import (
 	"core-building-block/core"
-	"core-building-block/utils"
 	"fmt"
 	"net/http"
 
@@ -19,7 +18,7 @@ type Adapter struct {
 	host                string
 	auth                *Auth
 	authorization       *casbin.Enforcer
-	logger              *log.StandardLogger
+	logger              *log.Logger
 	servicesApisHandler ServicesApisHandler
 	adminApisHandler    AdminApisHandler
 	encApisHandler      EncApisHandler
@@ -88,9 +87,7 @@ func (we Adapter) Start() {
 	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.GetTest)).Methods("GET")
 	///
 
-	//TODO
-	//we.logger.Fatal(http.ListenAndServe(":80", router))
-	http.ListenAndServe(":80", router)
+	we.logger.Fatalf("http listener error: %v", http.ListenAndServe(":80", router))
 }
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
@@ -105,16 +102,16 @@ func (we Adapter) serveDocUI() http.Handler {
 
 func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		utils.LogRequest(req)
-		var logObj = we.logger.NewRequestLog(req)
+		logObj := we.logger.NewRequestLog(req)
 
+		logObj.RequestReceived()
 		handler(logObj, w, req)
-		logObj.PrintContext()
+		logObj.RequestComplete()
 	}
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(coreAPIs *core.APIs, host string, logger *log.StandardLogger) Adapter {
+func NewWebAdapter(coreAPIs *core.APIs, host string, logger *log.Logger) Adapter {
 	auth := NewAuth(coreAPIs)
 	authorization := casbin.NewEnforcer("driver/web/authorization_model.conf", "driver/web/authorization_policy.csv")
 

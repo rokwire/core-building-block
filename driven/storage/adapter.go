@@ -5,8 +5,6 @@ import (
 	"core-building-block/core"
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
-	"errors"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -42,13 +40,16 @@ type organizationConfig struct {
 
 //Adapter implements the Storage interface
 type Adapter struct {
-	db     *database
-	logger *log.StandardLogger
+	db *database
 }
 
 //Start starts the storage
 func (sa *Adapter) Start() error {
 	err := sa.db.start()
+	if err != nil {
+		return log.WrapActionError(log.InitializeAction, "storage adapter", nil, err)
+	}
+
 	return err
 }
 
@@ -64,14 +65,16 @@ func (sa *Adapter) ReadTODO() error {
 
 //FindAuthConfig finds the auth document from DB by orgID and appID
 func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (*auth.AuthConfig, error) {
+	errFields := &log.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": authType}
+
 	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "type", Value: authType}}
 	var result *auth.AuthConfig
 	err := sa.db.authConfigs.FindOne(filter, &result, nil)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.FindAction, auth.TypeAuthConfig, errFields, err)
 	}
 	if result == nil {
-		return nil, fmt.Errorf("no auth config found for orgID %s, appID %s, authType %s:", orgID, appID, authType)
+		return nil, log.WrapDataError(log.MissingStatus, auth.TypeAuthConfig, errFields, err)
 	}
 	return result, nil
 }
@@ -82,10 +85,10 @@ func (sa *Adapter) LoadAuthConfigs() (*[]auth.AuthConfig, error) {
 	var result []auth.AuthConfig
 	err := sa.db.authConfigs.Find(filter, &result, nil)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.FindAction, auth.TypeAuthConfig, nil, err)
 	}
-	if result == nil || len(result) == 0 {
-		return nil, errors.New("no auth config documents found")
+	if len(result) == 0 {
+		return nil, log.WrapDataError(log.MissingStatus, auth.TypeAuthConfig, nil, err)
 	}
 
 	return &result, nil
@@ -96,7 +99,7 @@ func (sa *Adapter) CreateGlobalConfig(setting string) (*model.GlobalConfig, erro
 	globalConfig := model.GlobalConfig{Setting: setting}
 	_, err := sa.db.globalConfig.InsertOne(globalConfig)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.InsertAction, model.TypeGlobalConfig, nil, err)
 	}
 	return &globalConfig, nil
 }
@@ -107,7 +110,7 @@ func (sa *Adapter) GetGlobalConfig() (*model.GlobalConfig, error) {
 	var result []model.GlobalConfig
 	err := sa.db.globalConfig.Find(filter, &result, nil)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.FindAction, model.TypeGlobalConfig, nil, err)
 	}
 	if len(result) == 0 {
 		//no record
@@ -123,8 +126,7 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
 		err := sessionContext.StartTransaction()
 		if err != nil {
-			fmt.Println(err)
-			return err
+			return log.WrapActionError(log.StartAction, log.TypeTransaction, nil, err)
 		}
 
 		//clear the global config - we always keep only one global config
@@ -132,21 +134,19 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 		_, err = sa.db.globalConfig.DeleteManyWithContext(sessionContext, delFilter, nil)
 		if err != nil {
 			abortTransaction(sessionContext)
-			return err
+			return log.WrapActionError(log.DeleteAction, model.TypeGlobalConfig, nil, err)
 		}
 
 		//add the new one
 		_, err = sa.db.globalConfig.InsertOneWithContext(sessionContext, gc)
 		if err != nil {
 			abortTransaction(sessionContext)
-			return err
+			return log.WrapActionError(log.InsertAction, model.TypeGlobalConfig, nil, err)
 		}
 
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
-			//TODO print
-			//log.Printf("error on commiting a transaction - %s", err)
-			return err
+			return log.WrapActionError(log.CommitAction, log.TypeTransaction, nil, err)
 		}
 		return nil
 	})
@@ -169,7 +169,7 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 
 	_, err := sa.db.organizations.InsertOne(organization)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.InsertAction, model.TypeOrganization, nil, err)
 	}
 
 	//return the correct type
@@ -200,10 +200,10 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 
 	result, err := sa.db.organizations.UpdateOne(updatOrganizationFilter, updateOrganization, nil)
 	if err != nil {
-		return err
+		return log.WrapActionError(log.UpdateAction, model.TypeOrganization, &log.FieldArgs{"id": ID}, err)
 	}
 	if result.MatchedCount == 0 {
-		return errors.New("there is no organziation for the provided id")
+		return log.WrapDataError(log.MissingStatus, model.TypeOrganization, &log.FieldArgs{"id": ID}, err)
 	}
 
 	return nil
@@ -224,7 +224,11 @@ func (sa *Adapter) GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg
 
 	var result []authservice.ServiceReg
 	err := sa.db.serviceRegs.Find(filter, &result, nil)
-	return result, err
+	if err != nil {
+		return nil, log.WrapActionError(log.FindAction, auth.TypeServiceReg, &log.FieldArgs{"service_id": serviceIDs}, err)
+	}
+
+	return result, nil
 }
 
 //SaveServiceReg saves the service registration to the storage
@@ -233,23 +237,23 @@ func (sa *Adapter) SaveServiceReg(reg *authservice.ServiceReg) error {
 	opts := options.Replace().SetUpsert(true)
 	err := sa.db.serviceRegs.ReplaceOne(filter, reg, opts)
 	if err != nil {
-		return fmt.Errorf("error saving service reg for service id %s: %v", reg.ServiceID, err)
+		return log.WrapActionError(log.SaveAction, auth.TypeServiceReg, &log.FieldArgs{"service_id": reg.ServiceID}, err)
 	}
 
 	return nil
 }
 
 //NewStorageAdapter creates a new storage adapter instance
-func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *log.StandardLogger) *Adapter {
-	timeout, err := strconv.Atoi(mongoTimeout)
+func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *log.Logger) *Adapter {
+	timeoutInt, err := strconv.Atoi(mongoTimeout)
 	if err != nil {
 		logger.Error("Set default timeout - 500")
-		timeout = 500
+		timeoutInt = 500
 	}
-	timeoutMS := time.Millisecond * time.Duration(timeout)
+	timeout := time.Millisecond * time.Duration(timeoutInt)
 
-	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeoutMS}
-	return &Adapter{db: db, logger: logger}
+	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout}
+	return &Adapter{db: db}
 }
 
 func abortTransaction(sessionContext mongo.SessionContext) {
