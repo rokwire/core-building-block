@@ -4,13 +4,17 @@ import (
 	"core-building-block/core/model"
 	"encoding/json"
 	"errors"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
+	"gopkg.in/gomail.v2"
 )
 
 // Email implementation of authType
 type emailAuthImpl struct {
-	auth *Auth
+	auth        *Auth
+	emailDialer *gomail.Dialer
+	emailFrom   string
 }
 
 func (a *emailAuthImpl) check(creds string, params string) (*Claims, error) {
@@ -72,6 +76,26 @@ func (a *emailAuthImpl) handleSignin(c *model.Credential, user *model.Credential
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(c.Password)); err != nil {
 		return errors.New("invalid password")
 	}
+	return nil
+}
+
+func (a *emailAuthImpl) sendEmail(toEmail string, subject string, attachmentFilename string) error {
+	if toEmail == "" {
+		return errors.New("Missing email")
+	}
+
+	emails := strings.Split(toEmail, ",")
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", a.emailFrom)
+	m.SetHeader("To", emails...)
+	m.SetHeader("Subject", subject)
+	m.Attach(attachmentFilename)
+
+	if err := a.emailDialer.DialAndSend(m); err != nil {
+		return err
+	}
+
 	return nil
 }
 
