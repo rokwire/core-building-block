@@ -26,6 +26,12 @@ func main() {
 	logger := log.NewLogger("core", nil)
 	envLoader := envloader.NewEnvLoader(Version, logger)
 
+	level := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_LOG_LEVEL", false, false)
+	logLevel := log.LogLevelFromString(level)
+	if logLevel != nil {
+		logger.SetLevel(*logLevel)
+	}
+
 	serviceID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SERVICE_ID", true, false)
 	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
 
