@@ -90,7 +90,7 @@ func TestAdmCreateGlobalConfig(t *testing.T) {
 		t.Error("we are expecting error")
 		return
 	}
-	assert.Equal(t, err.Error(), "error occured", "error is different")
+	assert.Equal(t, err.Error(), "core-building-block/core.(*application).admCreateGlobalConfig() error inserting global config: error occured", "error is different: "+err.Error())
 }
 
 ///
