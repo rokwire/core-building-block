@@ -38,14 +38,14 @@ type createGlobalConfigRequest struct {
 func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		l.RequestErrorAction(w, log.ReadAction, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+		l.RequestErrorAction(w, log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 		return
 	}
 
 	var requestData createGlobalConfigRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		l.RequestErrorAction(w, log.UnmarshalAction, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
+		l.RequestErrorAction(w, log.ActionUnmarshal, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
 		return
 	}
 
@@ -53,14 +53,14 @@ func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 	validate := validator.New()
 	err = validate.Struct(requestData)
 	if err != nil {
-		l.RequestErrorAction(w, log.ValidateAction, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
+		l.RequestErrorAction(w, log.ActionValidate, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
 		return
 	}
 	setting := requestData.Setting
 
 	_, err = h.coreAPIs.Administration.AdmCreateGlobalConfig(setting)
 	if err != nil {
-		l.RequestErrorAction(w, log.CreateAction, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
+		l.RequestErrorAction(w, log.ActionCreate, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
 		return
 	}
 
@@ -82,7 +82,7 @@ type responseGlobalConfig struct {
 func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	config, err := h.coreAPIs.Administration.AdmGetGlobalConfig()
 	if err != nil {
-		l.RequestErrorAction(w, log.GetAction, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
+		l.RequestErrorAction(w, log.ActionGet, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
 		return
 	}
 
@@ -92,7 +92,7 @@ func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *
 	}
 	data, err := json.Marshal(responseData)
 	if err != nil {
-		l.RequestErrorAction(w, log.MarshalAction, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, false)
+		l.RequestErrorAction(w, log.ActionMarshal, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, false)
 		return
 	}
 
@@ -109,14 +109,14 @@ type updateGlobalConfig struct {
 func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		l.RequestErrorAction(w, log.ReadAction, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+		l.RequestErrorAction(w, log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 		return
 	}
 
 	var updateConfig updateGlobalConfig
 	err = json.Unmarshal(data, &updateConfig)
 	if err != nil {
-		l.RequestErrorAction(w, log.UnmarshalAction, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
+		l.RequestErrorAction(w, log.ActionUnmarshal, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
 		return
 	}
 
@@ -124,14 +124,14 @@ func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 	validate := validator.New()
 	err = validate.Struct(updateConfig)
 	if err != nil {
-		l.RequestErrorAction(w, log.ValidateAction, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
+		l.RequestErrorAction(w, log.ActionValidate, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
 		return
 	}
 	setting := updateConfig.Setting
 
 	err = h.coreAPIs.Administration.AdmUpdateGlobalConfig(setting)
 	if err != nil {
-		l.RequestErrorAction(w, log.UpdateAction, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
+		l.RequestErrorAction(w, log.ActionUpdate, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
 		return
 	}
 
@@ -152,14 +152,14 @@ type createOrganizationRequest struct {
 func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		l.RequestErrorAction(w, log.ReadAction, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+		l.RequestErrorAction(w, log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 		return
 	}
 
 	var requestData createOrganizationRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		l.RequestErrorAction(w, log.UnmarshalAction, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
+		l.RequestErrorAction(w, log.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
 		return
 	}
 
@@ -167,7 +167,7 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 	validate := validator.New()
 	err = validate.Struct(requestData)
 	if err != nil {
-		l.RequestErrorAction(w, log.ValidateAction, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
+		l.RequestErrorAction(w, log.ActionValidate, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
 		return
 	}
 
@@ -179,7 +179,7 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 
 	_, err = h.coreAPIs.Administration.AdmCreateOrganization(name, requestType, *requiresOwnLogin, loginTypes, organizationDomains)
 	if err != nil {
-		l.RequestErrorAction(w, log.CreateAction, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
+		l.RequestErrorAction(w, log.ActionCreate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 		return
 	}
 
@@ -201,20 +201,20 @@ func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, 
 	params := mux.Vars(r)
 	ID := params["id"]
 	if len(ID) <= 0 {
-		l.RequestErrorData(w, log.MissingStatus, log.TypeQueryParam, log.StringArgs("id"), nil, http.StatusBadRequest, false)
+		l.RequestErrorData(w, log.StatusMissing, log.TypeQueryParam, log.StringArgs("id"), nil, http.StatusBadRequest, false)
 		return
 	}
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		l.RequestErrorData(w, log.InvalidStatus, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+		l.RequestErrorData(w, log.StatusInvalid, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 		return
 	}
 
 	var requestData updateOrganizationRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		l.RequestErrorAction(w, log.UnmarshalAction, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
+		l.RequestErrorAction(w, log.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
 		return
 	}
 
@@ -222,7 +222,7 @@ func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, 
 	validate := validator.New()
 	err = validate.Struct(requestData)
 	if err != nil {
-		l.RequestErrorAction(w, log.ValidateAction, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
+		l.RequestErrorAction(w, log.ActionValidate, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
 		return
 	}
 
@@ -234,7 +234,7 @@ func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, 
 
 	err = h.coreAPIs.Administration.AdmUpdateOrganization(ID, name, requestType, *requiresOwnLogin, loginTypes, organizationDomains)
 	if err != nil {
-		l.RequestErrorAction(w, log.UpdateAction, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
+		l.RequestErrorAction(w, log.ActionUpdate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 		return
 	}
 

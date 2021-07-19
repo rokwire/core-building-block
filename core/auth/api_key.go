@@ -22,7 +22,7 @@ func initApiKeyAuth(auth *Auth) (*apiKeyAuthImpl, error) {
 
 	err := auth.registerAuthType("api_key", api_key)
 	if err != nil {
-		return nil, log.WrapActionError(log.RegisterAction, typeAuthType, nil, err)
+		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return api_key, nil

@@ -45,7 +45,7 @@ type Adapter struct {
 func (sa *Adapter) Start() error {
 	err := sa.db.start()
 	if err != nil {
-		return log.WrapActionError(log.InitializeAction, "storage adapter", nil, err)
+		return log.WrapActionError(log.ActionInitialize, "storage adapter", nil, err)
 	}
 
 	return err
@@ -68,10 +68,10 @@ func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (
 	var result *model.AuthConfig
 	err := sa.db.authConfigs.FindOne(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapActionError(log.FindAction, model.TypeAuthConfig, errFields, err)
+		return nil, log.WrapActionError(log.ActionFind, model.TypeAuthConfig, errFields, err)
 	}
 	if result == nil {
-		return nil, log.WrapDataError(log.MissingStatus, model.TypeAuthConfig, errFields, err)
+		return nil, log.WrapDataError(log.StatusMissing, model.TypeAuthConfig, errFields, err)
 	}
 	return result, nil
 }
@@ -82,10 +82,10 @@ func (sa *Adapter) LoadAuthConfigs() (*[]model.AuthConfig, error) {
 	var result []model.AuthConfig
 	err := sa.db.authConfigs.Find(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapActionError(log.FindAction, model.TypeAuthConfig, nil, err)
+		return nil, log.WrapActionError(log.ActionFind, model.TypeAuthConfig, nil, err)
 	}
 	if len(result) == 0 {
-		return nil, log.WrapDataError(log.MissingStatus, model.TypeAuthConfig, nil, err)
+		return nil, log.WrapDataError(log.StatusMissing, model.TypeAuthConfig, nil, err)
 	}
 
 	return &result, nil
@@ -96,7 +96,7 @@ func (sa *Adapter) CreateGlobalConfig(setting string) (*model.GlobalConfig, erro
 	globalConfig := model.GlobalConfig{Setting: setting}
 	_, err := sa.db.globalConfig.InsertOne(globalConfig)
 	if err != nil {
-		return nil, log.WrapActionError(log.InsertAction, model.TypeGlobalConfig, nil, err)
+		return nil, log.WrapActionError(log.ActionInsert, model.TypeGlobalConfig, nil, err)
 	}
 	return &globalConfig, nil
 }
@@ -107,7 +107,7 @@ func (sa *Adapter) GetGlobalConfig() (*model.GlobalConfig, error) {
 	var result []model.GlobalConfig
 	err := sa.db.globalConfig.Find(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapActionError(log.FindAction, model.TypeGlobalConfig, nil, err)
+		return nil, log.WrapActionError(log.ActionFind, model.TypeGlobalConfig, nil, err)
 	}
 	if len(result) == 0 {
 		//no record
@@ -123,7 +123,7 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
 		err := sessionContext.StartTransaction()
 		if err != nil {
-			return log.WrapActionError(log.StartAction, log.TypeTransaction, nil, err)
+			return log.WrapActionError(log.ActionStart, log.TypeTransaction, nil, err)
 		}
 
 		//clear the global config - we always keep only one global config
@@ -131,20 +131,20 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 		_, err = sa.db.globalConfig.DeleteManyWithContext(sessionContext, delFilter, nil)
 		if err != nil {
 			abortTransaction(sessionContext)
-			return log.WrapActionError(log.DeleteAction, model.TypeGlobalConfig, nil, err)
+			return log.WrapActionError(log.ActionDelete, model.TypeGlobalConfig, nil, err)
 		}
 
 		//add the new one
 		_, err = sa.db.globalConfig.InsertOneWithContext(sessionContext, gc)
 		if err != nil {
 			abortTransaction(sessionContext)
-			return log.WrapActionError(log.InsertAction, model.TypeGlobalConfig, nil, err)
+			return log.WrapActionError(log.ActionInsert, model.TypeGlobalConfig, nil, err)
 		}
 
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
 			abortTransaction(sessionContext)
-			return log.WrapActionError(log.CommitAction, log.TypeTransaction, nil, err)
+			return log.WrapActionError(log.ActionCommit, log.TypeTransaction, nil, err)
 		}
 		return nil
 	})
@@ -167,7 +167,7 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 
 	_, err := sa.db.organizations.InsertOne(organization)
 	if err != nil {
-		return nil, log.WrapActionError(log.InsertAction, model.TypeOrganization, nil, err)
+		return nil, log.WrapActionError(log.ActionInsert, model.TypeOrganization, nil, err)
 	}
 
 	//return the correct type
@@ -198,10 +198,10 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 
 	result, err := sa.db.organizations.UpdateOne(updatOrganizationFilter, updateOrganization, nil)
 	if err != nil {
-		return log.WrapActionError(log.UpdateAction, model.TypeOrganization, &log.FieldArgs{"id": ID}, err)
+		return log.WrapActionError(log.ActionUpdate, model.TypeOrganization, &log.FieldArgs{"id": ID}, err)
 	}
 	if result.MatchedCount == 0 {
-		return log.WrapDataError(log.MissingStatus, model.TypeOrganization, &log.FieldArgs{"id": ID}, err)
+		return log.WrapDataError(log.StatusMissing, model.TypeOrganization, &log.FieldArgs{"id": ID}, err)
 	}
 
 	return nil
@@ -223,7 +223,7 @@ func (sa *Adapter) GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg
 	var result []authservice.ServiceReg
 	err := sa.db.serviceRegs.Find(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapActionError(log.FindAction, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceIDs}, err)
+		return nil, log.WrapActionError(log.ActionFind, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceIDs}, err)
 	}
 
 	return result, nil
@@ -235,7 +235,7 @@ func (sa *Adapter) SaveServiceReg(reg *authservice.ServiceReg) error {
 	opts := options.Replace().SetUpsert(true)
 	err := sa.db.serviceRegs.ReplaceOne(filter, reg, opts)
 	if err != nil {
-		return log.WrapActionError(log.SaveAction, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.ServiceID}, err)
+		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.ServiceID}, err)
 	}
 
 	return nil

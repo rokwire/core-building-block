@@ -70,14 +70,14 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	err := auth.storeReg()
 	if err != nil {
-		return nil, log.WrapActionError(log.SaveAction, "reg", nil, err)
+		return nil, log.WrapActionError(log.ActionSave, "reg", nil, err)
 	}
 
 	serviceLoader := NewLocalServiceRegLoader(storage)
 
 	authService, err := authservice.NewAuthService(serviceID, host, serviceLoader)
 	if err != nil {
-		return nil, log.WrapActionError(log.InitializeAction, "auth service", nil, err)
+		return nil, log.WrapActionError(log.ActionInitialize, "auth service", nil, err)
 	}
 
 	auth.AuthService = authService
@@ -115,7 +115,7 @@ func (a *Auth) getAuthType(name string) (authType, error) {
 		return auth, nil
 	}
 
-	return nil, log.DataError(log.InvalidStatus, typeAuthType, log.StringArgs(name))
+	return nil, log.DataError(log.StatusInvalid, typeAuthType, log.StringArgs(name))
 }
 
 //Login logs a user in using the specified credentials and authentication method
@@ -130,12 +130,12 @@ func (a *Auth) getAuthType(name string) (authType, error) {
 func (a *Auth) Login(authType string, creds string, params string, l *log.Log) (string, *model.User, error) {
 	auth, err := a.getAuthType(authType)
 	if err != nil {
-		return "", nil, log.WrapActionError(log.LoadCacheAction, typeAuthType, nil, err)
+		return "", nil, log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
 	}
 
 	_, err = auth.check(creds, params, l)
 	if err != nil {
-		return "", nil, log.WrapActionError(log.ValidateAction, "creds", nil, err)
+		return "", nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
 	}
 
 	//TODO: Implement account management and return token and user using claims
@@ -176,7 +176,7 @@ func (a *Auth) generateToken(claims *tokenauth.Claims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	kid, err := authutils.GetKeyFingerprint(&a.authPrivKey.PublicKey)
 	if err != nil {
-		return "", log.WrapActionError(log.ComputeAction, "fingerprint", log.StringArgs("auth key"), err)
+		return "", log.WrapActionError(log.ActionCompute, "fingerprint", log.StringArgs("auth key"), err)
 	}
 	token.Header["kid"] = kid
 	return token.SignedString(a.authPrivKey)
@@ -220,7 +220,7 @@ func (a *Auth) deleteAccount(claims *tokenauth.Claims) {
 func (a *Auth) storeReg() error {
 	pem, err := authutils.GetPubKeyPem(&a.authPrivKey.PublicKey)
 	if err != nil {
-		return log.WrapActionError(log.EncodeAction, "auth pub key", nil, err)
+		return log.WrapActionError(log.ActionEncode, "auth pub key", nil, err)
 	}
 
 	key := authservice.PubKey{KeyPem: pem, Alg: "RS256"}
@@ -229,14 +229,14 @@ func (a *Auth) storeReg() error {
 	authReg := authservice.ServiceReg{ServiceID: "auth", Host: a.host, PubKey: &key}
 	err = a.storage.SaveServiceReg(&authReg)
 	if err != nil {
-		return log.WrapActionError(log.SaveAction, model.TypeServiceReg, log.StringArgs("auth"), err)
+		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs("auth"), err)
 	}
 
 	// Setup core registration for signature validation
 	coreReg := authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key}
 	err = a.storage.SaveServiceReg(&coreReg)
 	if err != nil {
-		return log.WrapActionError(log.SaveAction, model.TypeServiceReg, log.StringArgs("core"), err)
+		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs("core"), err)
 	}
 
 	return nil
@@ -245,7 +245,7 @@ func (a *Auth) storeReg() error {
 func (a *Auth) LoadAuthConfigs() error {
 	authConfigDocs, err := a.storage.LoadAuthConfigs()
 	if err != nil {
-		return log.WrapActionError(log.FindAction, model.TypeAuthConfig, nil, err)
+		return log.WrapActionError(log.ActionFind, model.TypeAuthConfig, nil, err)
 	}
 
 	a.setAuthConfigs(authConfigDocs)
@@ -265,12 +265,12 @@ func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*mode
 	if item != nil {
 		authConfigFromCache, ok := item.(model.AuthConfig)
 		if !ok {
-			return nil, log.ActionError(log.CastAction, model.TypeAuthConfig, errArgs)
+			return nil, log.ActionError(log.ActionCast, model.TypeAuthConfig, errArgs)
 		}
 		authConfig = &authConfigFromCache
 		return authConfig, nil
 	}
-	return nil, log.DataError(log.MissingStatus, model.TypeAuthConfig, errArgs)
+	return nil, log.DataError(log.StatusMissing, model.TypeAuthConfig, errArgs)
 }
 
 func (a *Auth) setAuthConfigs(authConfigs *[]model.AuthConfig) {

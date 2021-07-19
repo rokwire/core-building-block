@@ -22,7 +22,7 @@ func initSignatureAuth(auth *Auth) (*signatureAuthImpl, error) {
 
 	err := auth.registerAuthType("signature", signature)
 	if err != nil {
-		return nil, log.WrapActionError(log.RegisterAction, typeAuthType, nil, err)
+		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return signature, nil
