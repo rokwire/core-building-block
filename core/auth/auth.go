@@ -2,6 +2,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 	"crypto/rsa"
 	"fmt"
 	"sync"
@@ -18,37 +19,14 @@ import (
 )
 
 const (
-	typeAuthType   log.LogData = "auth type"
-	TypeUserAuth   log.LogData = "user auth"
-	TypeAuthConfig log.LogData = "user auth"
-	TypeAuth       log.LogData = "auth"
-	TypeServiceReg log.LogData = "service reg"
+	typeAuthType log.LogData = "auth type"
+	TypeAuth     log.LogData = "auth"
 )
-
-type UserAuth struct {
-	UserID       string
-	Sub          string
-	Name         string
-	Email        string
-	Phone        string
-	Picture      []byte
-	Exp          float64
-	RefreshToken string
-}
-
-type AuthConfig struct {
-	OrgID string `json:"org_id" bson:"org_id" validate:"required"`
-	AppID string `json:"app_id" bson:"app_id" validate:"required"`
-	Type  string `json:"type" bson:"type" validate:"required"`
-
-	//Config is a JSON encoded auth type specific structure
-	Config []byte `json:"config" bson:"config" validate:"required"`
-}
 
 //Interface for authentication mechanisms
 type authType interface {
 	//Check validity of provided credentials
-	check(creds string, params string, l *log.Log) (*UserAuth, error)
+	check(creds string, params string, l *log.Log) (*model.UserAuth, error)
 }
 
 //Auth represents the auth functionality unit
@@ -251,23 +229,23 @@ func (a *Auth) storeReg() error {
 	authReg := authservice.ServiceReg{ServiceID: "auth", Host: a.host, PubKey: &key}
 	err = a.storage.SaveServiceReg(&authReg)
 	if err != nil {
-		return log.WrapActionError(log.SaveAction, TypeServiceReg, log.StringArgs("auth"), err)
+		return log.WrapActionError(log.SaveAction, model.TypeServiceReg, log.StringArgs("auth"), err)
 	}
 
 	// Setup core registration for signature validation
 	coreReg := authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key}
 	err = a.storage.SaveServiceReg(&coreReg)
 	if err != nil {
-		return log.WrapActionError(log.SaveAction, TypeServiceReg, log.StringArgs("core"), err)
+		return log.WrapActionError(log.SaveAction, model.TypeServiceReg, log.StringArgs("core"), err)
 	}
 
 	return nil
 }
 
-func (a Auth) LoadAuthConfigs() error {
+func (a *Auth) LoadAuthConfigs() error {
 	authConfigDocs, err := a.storage.LoadAuthConfigs()
 	if err != nil {
-		return log.WrapActionError(log.FindAction, TypeAuthConfig, nil, err)
+		return log.WrapActionError(log.FindAction, model.TypeAuthConfig, nil, err)
 	}
 
 	a.setAuthConfigs(authConfigDocs)
@@ -275,27 +253,27 @@ func (a Auth) LoadAuthConfigs() error {
 	return nil
 }
 
-func (a Auth) getAuthConfig(orgID string, appID string, authType string) (*AuthConfig, error) {
+func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error) {
 	a.authConfigsLock.RLock()
 	defer a.authConfigsLock.RUnlock()
 
-	var authConfig *AuthConfig //to return
+	var authConfig *model.AuthConfig //to return
 
 	errArgs := &log.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": authType}
 
 	item, _ := a.authConfigs.Load(fmt.Sprintf("%s_%s_%s", orgID, appID, authType))
 	if item != nil {
-		authConfigFromCache, ok := item.(AuthConfig)
+		authConfigFromCache, ok := item.(model.AuthConfig)
 		if !ok {
-			return nil, log.ActionError(log.CastAction, TypeAuthConfig, errArgs)
+			return nil, log.ActionError(log.CastAction, model.TypeAuthConfig, errArgs)
 		}
 		authConfig = &authConfigFromCache
 		return authConfig, nil
 	}
-	return nil, log.DataError(log.MissingStatus, TypeAuthConfig, errArgs)
+	return nil, log.DataError(log.MissingStatus, model.TypeAuthConfig, errArgs)
 }
 
-func (a Auth) setAuthConfigs(authConfigs *[]AuthConfig) {
+func (a *Auth) setAuthConfigs(authConfigs *[]model.AuthConfig) {
 	a.authConfigs = &syncmap.Map{}
 	validate := validator.New()
 	var err error
@@ -331,6 +309,16 @@ type Storage interface {
 	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
 	SaveServiceReg(reg *authservice.ServiceReg) error
 
-	FindAuthConfig(orgID string, appID string, authType string) (*AuthConfig, error)
-	LoadAuthConfigs() (*[]AuthConfig, error)
+	FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error)
+	LoadAuthConfigs() (*[]model.AuthConfig, error)
+}
+
+type AuthStorageListener struct {
+	Auth *Auth
+	storage.DefaultStorageListenerImpl
+}
+
+//OnAuthConfigUpdated notifies that an auth config has been updated
+func (al *AuthStorageListener) OnAuthConfigUpdated() {
+	al.Auth.LoadAuthConfigs()
 }

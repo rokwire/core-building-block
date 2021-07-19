@@ -1,13 +1,17 @@
 package auth
 
-import log "github.com/rokmetro/logging-library/loglib"
+import (
+	"core-building-block/core/model"
+
+	log "github.com/rokmetro/logging-library/loglib"
+)
 
 // SAML implementation of authType
 type samlAuthImpl struct {
 	auth *Auth
 }
 
-func (a *samlAuthImpl) check(creds string, params string, l *log.Log) (*UserAuth, error) {
+func (a *samlAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
 	//TODO: Implement
 	return nil, log.NewError(log.Unimplemented)
 }

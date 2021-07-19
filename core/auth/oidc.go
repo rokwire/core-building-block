@@ -3,6 +3,7 @@ package auth
 import (
 	"bytes"
 	"context"
+	"core-building-block/core/model"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -77,7 +78,7 @@ type oidcToken struct {
 	ExpiresIn    int    `json:"expires_in"`
 }
 
-func (a *oidcAuthImpl) check(creds string, params string, l *log.Log) (*UserAuth, error) {
+func (a *oidcAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
 	paramsMap := make(map[string]interface{})
 	err := json.Unmarshal([]byte(params), &paramsMap)
 	if err != nil {
@@ -210,7 +211,7 @@ func (a *oidcAuthImpl) checkToken(idToken string, params *oidcCheckParams, oidcC
 	return sub, nil
 }
 
-func (a *oidcAuthImpl) newToken(code string, params *oidcLoginParams, l *log.Log) (*UserAuth, error) {
+func (a *oidcAuthImpl) newToken(code string, params *oidcLoginParams, l *log.Log) (*model.UserAuth, error) {
 	oidcConfig, err := a.getOidcAuthConfig(params.OrgID, params.AppID)
 	if err != nil {
 		return nil, log.WrapActionError(log.GetAction, typeOidcAuthConfig, nil, err)
@@ -229,7 +230,7 @@ func (a *oidcAuthImpl) newToken(code string, params *oidcLoginParams, l *log.Log
 	return a.loadOidcTokensAndInfo(bodyData, oidcConfig, l)
 }
 
-func (a *oidcAuthImpl) refreshToken(refreshToken string, params *oidcRefreshParams, l *log.Log) (*UserAuth, error) {
+func (a *oidcAuthImpl) refreshToken(refreshToken string, params *oidcRefreshParams, l *log.Log) (*model.UserAuth, error) {
 	oidcConfig, err := a.getOidcAuthConfig(params.OrgID, params.AppID)
 	if err != nil {
 		return nil, log.WrapActionError(log.GetAction, typeOidcAuthConfig, nil, err)
@@ -248,13 +249,13 @@ func (a *oidcAuthImpl) refreshToken(refreshToken string, params *oidcRefreshPara
 	return a.loadOidcTokensAndInfo(bodyData, oidcConfig, l)
 }
 
-func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcConfig *oidcAuthConfig, l *log.Log) (*UserAuth, error) {
+func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcConfig *oidcAuthConfig, l *log.Log) (*model.UserAuth, error) {
 	oidcToken, err := a.loadOidcTokenWithParams(bodyData, oidcConfig)
 	if err != nil {
 		return nil, log.WrapActionError(log.GetAction, typeOidcToken, nil, err)
 	}
 
-	userAuth := UserAuth{}
+	userAuth := model.UserAuth{}
 	sub, err := a.checkToken(oidcToken.IDToken, nil, oidcConfig, l)
 	if err != nil {
 		return nil, log.WrapActionError(log.ValidateAction, typeOidcToken, nil, err)
@@ -419,19 +420,19 @@ func (a *oidcAuthImpl) getOidcAuthConfig(orgID string, appID string) (*oidcAuthC
 
 	authConfig, err := a.auth.getAuthConfig(orgID, appID, "oidc")
 	if err != nil {
-		return nil, log.WrapActionError(log.FindAction, TypeAuthConfig, errFields, err)
+		return nil, log.WrapActionError(log.FindAction, model.TypeAuthConfig, errFields, err)
 	}
 
 	var oidcConfig oidcAuthConfig
 	err = json.Unmarshal(authConfig.Config, &oidcConfig)
 	if err != nil {
-		return nil, log.WrapActionError(log.UnmarshalAction, TypeAuthConfig, errFields, err)
+		return nil, log.WrapActionError(log.UnmarshalAction, model.TypeAuthConfig, errFields, err)
 	}
 
 	validate := validator.New()
 	err = validate.Struct(oidcConfig)
 	if err != nil {
-		return nil, log.WrapActionError(log.ValidateAction, TypeAuthConfig, errFields, err)
+		return nil, log.WrapActionError(log.ValidateAction, model.TypeAuthConfig, errFields, err)
 	}
 
 	return &oidcConfig, nil

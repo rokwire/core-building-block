@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"core-building-block/core/model"
+
 	log "github.com/rokmetro/logging-library/loglib"
 )
 
@@ -9,7 +11,7 @@ type firebaseAuthImpl struct {
 	auth *Auth
 }
 
-func (a *firebaseAuthImpl) check(creds string, params string, l *log.Log) (*UserAuth, error) {
+func (a *firebaseAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
 	//TODO: Implement
 	return nil, log.NewError(log.Unimplemented)
 }
