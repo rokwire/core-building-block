@@ -17,7 +17,7 @@ type emailAuthImpl struct {
 	emailFrom   string
 }
 
-func (a *emailAuthImpl) check(creds string, params string) (*Claims, error) {
+func (a *emailAuthImpl) check(creds string, params string) (*model.UserAuth, error) {
 	//TODO: Implement
 	var c *model.Credential
 	err := json.Unmarshal([]byte(creds), &c)

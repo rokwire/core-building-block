@@ -1,13 +1,16 @@
 package auth
 
-import "errors"
+import (
+	"core-building-block/core/model"
+	"errors"
+)
 
 // Firebase implementation of authType
 type firebaseAuthImpl struct {
 	auth *Auth
 }
 
-func (a *firebaseAuthImpl) check(creds string) (*Claims, error) {
+func (a *firebaseAuthImpl) check(creds string, params string) (*model.UserAuth, error) {
 	//TODO: Implement
 	return nil, errors.New("Unimplemented")
 }

@@ -9,16 +9,16 @@ import (
 
 //EncApisHandler handles the APIs implementation used by the Encryption BB
 type EncApisHandler struct {
-	app *core.Application
+	coreAPIs *core.APIs
 }
 
 //GetTest TODO get test
 func (h EncApisHandler) GetTest(l *log.Log, w http.ResponseWriter, r *http.Request) {
-	res := h.app.Encryption.EncGetTest()
+	res := h.coreAPIs.Encryption.EncGetTest()
 	w.Write([]byte(res))
 }
 
 //NewEncApisHandler creates new enc Handler instance
-func NewEncApisHandler(app *core.Application) EncApisHandler {
-	return EncApisHandler{app: app}
+func NewEncApisHandler(coreAPIs *core.APIs) EncApisHandler {
+	return EncApisHandler{coreAPIs: coreAPIs}
 }

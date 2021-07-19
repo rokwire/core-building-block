@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"core-building-block/core"
 	"log"
 	"time"
 
@@ -20,10 +19,12 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
+	authConfigs   *collectionWrapper
 	globalConfig  *collectionWrapper
 	organizations *collectionWrapper
+	serviceRegs   *collectionWrapper
 
-	listener core.StorageListener
+	listeners []StorageListener
 }
 
 func (m *database) start() error {
@@ -66,15 +67,41 @@ func (m *database) start() error {
 	if err != nil {
 		return err
 	}
+	serviceRegs := &collectionWrapper{database: m, coll: db.Collection("service_regs")}
+	err = m.applyServiceRegsChecks(serviceRegs)
+	if err != nil {
+		return err
+	}
 
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
 	m.globalConfig = globalConfig
 	m.organizations = organizations
+	m.serviceRegs = serviceRegs
 
 	//TODO
+	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
+	err = m.applyAuthConfigChecks(authConfigs)
+	if err != nil {
+		return err
+	}
 
+	m.authConfigs = authConfigs
+
+	//watch for auth info changes
+	go m.authConfigs.Watch(nil)
+
+	return nil
+}
+
+func (m *database) applyAuthConfigChecks(authInfo *collectionWrapper) error {
+	// Add org_id, app_id compound index
+	err := authInfo.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+	log.Println("authConfig check passed")
 	return nil
 }
 
@@ -106,8 +133,18 @@ func (m *database) applyCredsChecks(organizations *collectionWrapper) error {
 	if err != nil {
 		return err
 	}
-
 	log.Println("users checks passed")
+	return nil
+}
+func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error {
+	log.Println("apply service regs checks.....")
+
+	//add service_id index - unique
+	err := serviceRegs.AddIndex(bson.D{primitive.E{Key: "service_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+	log.Println("service regs checks passed")
 	return nil
 }
 
@@ -119,5 +156,15 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 	ns := changeDoc["ns"]
 	if ns == nil {
 		return
+	}
+	nsMap := ns.(map[string]interface{})
+	coll := nsMap["coll"]
+
+	if coll == "auth_configs" {
+		log.Println("auth_configs collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnAuthConfigUpdated()
+		}
 	}
 }

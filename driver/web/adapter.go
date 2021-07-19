@@ -25,7 +25,7 @@ type Adapter struct {
 	encApisHandler      EncApisHandler
 	bbsApisHandler      BBsApisHandler
 
-	app *core.Application
+	coreAPIs *core.APIs
 }
 
 type handlerFunc = func(*log.Log, http.ResponseWriter, *http.Request)
@@ -41,7 +41,7 @@ type handlerFunc = func(*log.Log, http.ResponseWriter, *http.Request)
 func (we Adapter) Start() {
 
 	//add listener to the application
-	we.app.AddListener(&AppListener{&we})
+	we.coreAPIs.AddListener(&AppListener{&we})
 
 	we.auth.Start()
 
@@ -75,6 +75,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.UpdateGlobalConfig)).Methods("PUT")
 
 	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.CreateOrganization)).Methods("POST")
+	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.UpdateOrganization)).Methods("PUT")
 	///
 
 	///enc ///
@@ -113,16 +114,16 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(app *core.Application, host string, logger *log.StandardLogger) Adapter {
-	auth := NewAuth(app)
+func NewWebAdapter(coreAPIs *core.APIs, host string, logger *log.StandardLogger) Adapter {
+	auth := NewAuth(coreAPIs)
 	authorization := casbin.NewEnforcer("driver/web/authorization_model.conf", "driver/web/authorization_policy.csv")
 
-	servicesApisHandler := NewServicesApisHandler(app)
-	adminApisHandler := NewAdminApisHandler(app)
-	encApisHandler := NewEncApisHandler(app)
-	bbsApisHandler := NewBBsApisHandler(app)
+	servicesApisHandler := NewServicesApisHandler(coreAPIs)
+	adminApisHandler := NewAdminApisHandler(coreAPIs)
+	encApisHandler := NewEncApisHandler(coreAPIs)
+	bbsApisHandler := NewBBsApisHandler(coreAPIs)
 	return Adapter{host: host, auth: auth, logger: logger, authorization: authorization, servicesApisHandler: servicesApisHandler,
-		adminApisHandler: adminApisHandler, encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, app: app}
+		adminApisHandler: adminApisHandler, encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, coreAPIs: coreAPIs}
 }
 
 //AppListener implements core.ApplicationListener interface

@@ -83,10 +83,13 @@ func (collWrapper *collectionWrapper) ReplaceOneWithContext(ctx context.Context,
 	if res == nil {
 		return errors.New("replace one - res is nil")
 	}
-	matchedCount := res.MatchedCount
-	if matchedCount == 0 {
-		return errors.New("replace one - no record replaced")
+	if replaceOptions.Upsert == nil || !*replaceOptions.Upsert {
+		matchedCount := res.MatchedCount
+		if matchedCount == 0 {
+			return errors.New("replace one - no record replaced")
+		}
 	}
+
 	return nil
 }
 

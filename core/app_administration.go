@@ -6,11 +6,11 @@ import (
 	"fmt"
 )
 
-func (app *Application) admGetTest() string {
+func (app *application) admGetTest() string {
 	return "Admin - test"
 }
 
-func (app *Application) admGetTestModel() string {
+func (app *application) admGetTestModel() string {
 	//global config
 	globalConfig := model.GlobalConfig{Setting: "setting_value"}
 
@@ -158,7 +158,7 @@ func (app *Application) admGetTestModel() string {
 	return res
 }
 
-func (app *Application) admCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
+func (app *application) admCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
 	gc, err := app.storage.GetGlobalConfig()
 	if err != nil {
 		return nil, err
@@ -174,7 +174,7 @@ func (app *Application) admCreateGlobalConfig(setting string) (*model.GlobalConf
 	return gc, nil
 }
 
-func (app *Application) admGetGlobalConfig() (*model.GlobalConfig, error) {
+func (app *application) admGetGlobalConfig() (*model.GlobalConfig, error) {
 	gc, err := app.storage.GetGlobalConfig()
 	if err != nil {
 		return nil, err
@@ -182,7 +182,7 @@ func (app *Application) admGetGlobalConfig() (*model.GlobalConfig, error) {
 	return gc, nil
 }
 
-func (app *Application) admUpdateGlobalConfig(setting string) error {
+func (app *application) admUpdateGlobalConfig(setting string) error {
 	gc, err := app.storage.GetGlobalConfig()
 	if err != nil {
 		return err
@@ -199,10 +199,19 @@ func (app *Application) admUpdateGlobalConfig(setting string) error {
 	return nil
 }
 
-func (app *Application) admCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
+func (app *application) admCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
 	organization, err := app.storage.CreateOrganization(name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
 	if err != nil {
 		return nil, err
 	}
 	return organization, nil
+}
+
+func (app *application) admUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
+	err := app.storage.UpdateOrganization(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
