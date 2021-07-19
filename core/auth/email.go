@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"core-building-block/core/model"
 	"errors"
 )
 
@@ -9,7 +10,7 @@ type emailAuthImpl struct {
 	auth *Auth
 }
 
-func (a *emailAuthImpl) check(creds string, params string) (*UserAuth, error) {
+func (a *emailAuthImpl) check(creds string, params string) (*model.UserAuth, error) {
 	//TODO: Implement
 	return nil, errors.New("Unimplemented")
 }

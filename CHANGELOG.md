@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-
+- Extend the storage adapter listener. [#76] (https://github.com/rokwire/core-building-block/issues/76)]
 - Fixing the Log and the Changelog for issues #35 and #36 [#54](https://github.com/rokwire/core-building-block/issues/54)
 - Add OIDC support. [#17] (https://github.com/rokwire/core-building-block/issues/17)
 - Incorporate Application entity in the data model. [#50] (https://github.com/rokwire/core-building-block/issues/50)
