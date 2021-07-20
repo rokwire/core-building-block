@@ -64,9 +64,7 @@ func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Successfully created"))
+	l.RequestSuccess(w)
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance
@@ -96,9 +94,7 @@ func (h AdminApisHandler) GetGlobalConfig(l *log.Log, w http.ResponseWriter, r *
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	l.RequestSuccessJSON(w, data)
 }
 
 type updateGlobalConfig struct {
@@ -135,9 +131,7 @@ func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Successfully created"))
+	l.RequestSuccess(w)
 }
 
 type createOrganizationRequest struct {
@@ -183,9 +177,7 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Successfully created"))
+	l.RequestSuccess(w)
 }
 
 type updateOrganizationRequest struct {
@@ -238,7 +230,5 @@ func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, 
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Successfully updated"))
+	l.RequestSuccess(w)
 }
