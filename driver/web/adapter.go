@@ -75,6 +75,11 @@ func (we Adapter) Start() {
 
 	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.CreateOrganization)).Methods("POST")
 	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.UpdateOrganization)).Methods("PUT")
+
+	adminSubrouter.HandleFunc("/service-reg", we.wrapFunc(we.adminApisHandler.GetServiceRegistrations)).Methods("GET")
+	adminSubrouter.HandleFunc("/service-reg", we.wrapFunc(we.adminApisHandler.CreateGlobalConfig)).Methods("POST")
+	adminSubrouter.HandleFunc("/service-reg", we.wrapFunc(we.adminApisHandler.UpdateGlobalConfig)).Methods("PUT")
+	adminSubrouter.HandleFunc("/service-reg", we.wrapFunc(we.adminApisHandler.UpdateGlobalConfig)).Methods("DELETE")
 	///
 
 	///enc ///

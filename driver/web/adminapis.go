@@ -6,10 +6,12 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/gorilla/mux"
+	"github.com/rokmetro/auth-library/authservice"
 	log "github.com/rokmetro/logging-library/loglib"
 )
 
@@ -49,7 +51,6 @@ func (h AdminApisHandler) CreateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 		return
 	}
 
-	//validate
 	validate := validator.New()
 	err = validate.Struct(requestData)
 	if err != nil {
@@ -120,7 +121,6 @@ func (h AdminApisHandler) UpdateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 		return
 	}
 
-	//validate
 	validate := validator.New()
 	err = validate.Struct(updateConfig)
 	if err != nil {
@@ -163,7 +163,6 @@ func (h AdminApisHandler) CreateOrganization(l *log.Log, w http.ResponseWriter, 
 		return
 	}
 
-	//validate
 	validate := validator.New()
 	err = validate.Struct(requestData)
 	if err != nil {
@@ -218,7 +217,6 @@ func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, 
 		return
 	}
 
-	//validate
 	validate := validator.New()
 	err = validate.Struct(requestData)
 	if err != nil {
@@ -235,6 +233,118 @@ func (h AdminApisHandler) UpdateOrganization(l *log.Log, w http.ResponseWriter, 
 	err = h.coreAPIs.Administration.AdmUpdateOrganization(ID, name, requestType, *requiresOwnLogin, loginTypes, organizationDomains)
 	if err != nil {
 		l.RequestErrorAction(w, log.ActionUpdate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Successfully updated"))
+}
+
+//GetServiceRegistrations gets the requested service registrations
+func (h AdminApisHandler) GetServiceRegistrations(l *log.Log, w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	serviceIDsParam := params["service_ids"]
+	if len(serviceIDsParam) <= 0 {
+		l.RequestErrorData(w, log.StatusMissing, log.TypeQueryParam, log.StringArgs("service_ids"), nil, http.StatusBadRequest, false)
+		return
+	}
+	serviceIDs := strings.Split(serviceIDsParam, ",")
+
+	serviceRegs, err := h.coreAPIs.Auth.GetServiceRegistrations(serviceIDs)
+	if err != nil {
+		l.RequestErrorAction(w, log.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
+		return
+	}
+
+	data, err := json.Marshal(serviceRegs)
+	if err != nil {
+		l.RequestErrorAction(w, log.ActionMarshal, model.TypeServiceReg, nil, err, http.StatusInternalServerError, false)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
+
+//RegisterService creates a new service registration
+func (h AdminApisHandler) RegisterService(l *log.Log, w http.ResponseWriter, r *http.Request) {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		l.RequestErrorAction(w, log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+		return
+	}
+
+	var requestData *authservice.ServiceReg
+	err = json.Unmarshal(data, requestData)
+	if err != nil {
+		l.RequestErrorAction(w, log.ActionUnmarshal, model.TypeServiceReg, nil, err, http.StatusBadRequest, true)
+		return
+	}
+
+	validate := validator.New()
+	err = validate.Struct(requestData)
+	if err != nil {
+		l.RequestErrorAction(w, log.ActionValidate, model.TypeServiceReg, nil, err, http.StatusBadRequest, true)
+		return
+	}
+
+	err = h.coreAPIs.Auth.RegisterService(requestData)
+	if err != nil {
+		l.RequestErrorAction(w, log.ActionCreate, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Successfully registered"))
+}
+
+//UpdateServiceRegistration updates am existing service registration
+func (h AdminApisHandler) UpdateServiceRegistration(l *log.Log, w http.ResponseWriter, r *http.Request) {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		l.RequestErrorData(w, log.StatusInvalid, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+		return
+	}
+
+	var requestData *authservice.ServiceReg
+	err = json.Unmarshal(data, requestData)
+	if err != nil {
+		l.RequestErrorAction(w, log.ActionUnmarshal, model.TypeServiceReg, nil, err, http.StatusBadRequest, true)
+		return
+	}
+
+	validate := validator.New()
+	err = validate.Struct(requestData)
+	if err != nil {
+		l.RequestErrorAction(w, log.ActionValidate, model.TypeServiceReg, nil, err, http.StatusBadRequest, true)
+		return
+	}
+
+	err = h.coreAPIs.Auth.UpdateServiceRegistration(requestData)
+	if err != nil {
+		l.RequestErrorAction(w, log.ActionUpdate, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Successfully updated"))
+}
+
+//DeregisterService deregisters the requested service
+func (h AdminApisHandler) DeregisterService(l *log.Log, w http.ResponseWriter, r *http.Request) {
+	service_id := r.URL.Query().Get("service_id")
+	if service_id != "" {
+		l.RequestErrorData(w, log.StatusMissing, log.TypeQueryParam, log.StringArgs("service_id"), nil, http.StatusBadRequest, false)
+		return
+	}
+
+	err := h.coreAPIs.Auth.DeregisterService(service_id)
+	if err != nil {
+		l.RequestErrorAction(w, log.ActionDelete, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
 		return
 	}
 

@@ -94,28 +94,10 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	err = auth.LoadAuthConfigs()
 	if err != nil {
-		logger.Warn("NewAuth() failed to cache auth info documents")
+		logger.Warn("NewAuth() failed to cache auth configs")
 	}
 
 	return auth, nil
-}
-
-func (a *Auth) registerAuthType(name string, auth authType) error {
-	if _, ok := a.authTypes[name]; ok {
-		return log.NewErrorf("the requested auth type name has already been registered: %s", name)
-	}
-
-	a.authTypes[name] = auth
-
-	return nil
-}
-
-func (a *Auth) getAuthType(name string) (authType, error) {
-	if auth, ok := a.authTypes[name]; ok {
-		return auth, nil
-	}
-
-	return nil, log.DataError(log.StatusInvalid, typeAuthType, log.StringArgs(name))
 }
 
 //Login logs a user in using the specified credentials and authentication method
@@ -146,6 +128,59 @@ func (a *Auth) Login(authType string, creds string, params string, l *log.Log) (
 func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scope string) (string, error) {
 	scopedClaims := a.getStandardClaims(claims.Subject, serviceID, claims.OrgID, claims.AppID, nil)
 	return a.buildAccessToken(scopedClaims, "", scope)
+}
+
+//GetServiceRegistrations retrieves all service registrations
+func (a *Auth) GetServiceRegistrations(serviceIDs []string) ([]authservice.ServiceReg, error) {
+	return a.storage.FindServiceRegs(serviceIDs)
+}
+
+//RegisterService creates a new service registration
+func (a *Auth) RegisterService(reg *authservice.ServiceReg) error {
+	return a.storage.InsertServiceReg(reg)
+}
+
+//UpdateServiceRegistration updates an existing service registration
+func (a *Auth) UpdateServiceRegistration(reg *authservice.ServiceReg) error {
+	return a.storage.UpdateServiceReg(reg)
+}
+
+//DeregisterService deletes an existing service registration
+func (a *Auth) DeregisterService(serviceID string) error {
+	return a.storage.DeleteServiceReg(serviceID)
+}
+
+//createAccount creates a new user account
+func (a *Auth) createAccount(claims *tokenauth.Claims) {
+	//TODO: Implement
+}
+
+//updateAccount updates a user's account information
+func (a *Auth) updateAccount(claims *tokenauth.Claims) {
+	//TODO: Implement
+}
+
+//deleteAccount deletes a user account
+func (a *Auth) deleteAccount(claims *tokenauth.Claims) {
+	//TODO: Implement
+}
+
+func (a *Auth) registerAuthType(name string, auth authType) error {
+	if _, ok := a.authTypes[name]; ok {
+		return log.NewErrorf("the requested auth type name has already been registered: %s", name)
+	}
+
+	a.authTypes[name] = auth
+
+	return nil
+}
+
+func (a *Auth) getAuthType(name string) (authType, error) {
+	if auth, ok := a.authTypes[name]; ok {
+		return auth, nil
+	}
+
+	return nil, log.DataError(log.StatusInvalid, typeAuthType, log.StringArgs(name))
 }
 
 func (a *Auth) buildAccessToken(claims tokenauth.Claims, permissions string, scope string) (string, error) {
@@ -199,21 +234,6 @@ func (a *Auth) getExp(exp *int64) int64 {
 
 		return *exp
 	}
-}
-
-//createAccount creates a new user account
-func (a *Auth) createAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
-}
-
-//updateAccount updates a user's account information
-func (a *Auth) updateAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
-}
-
-//deleteAccount deletes a user account
-func (a *Auth) deleteAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
 }
 
 //storeReg stores the service registration record
@@ -276,12 +296,11 @@ func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*mode
 func (a *Auth) setAuthConfigs(authConfigs *[]model.AuthConfig) {
 	a.authConfigs = &syncmap.Map{}
 	validate := validator.New()
-	var err error
 
 	a.authConfigsLock.Lock()
 	defer a.authConfigsLock.Unlock()
 	for _, authConfig := range *authConfigs {
-		err = validate.Struct(authConfig)
+		err := validate.Struct(authConfig)
 		if err == nil {
 			a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, authConfig.AppID, authConfig.Type), authConfig)
 		}
@@ -296,7 +315,7 @@ type LocalServiceRegLoaderImpl struct {
 
 //LoadServices implements ServiceRegLoader interface
 func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, error) {
-	return l.storage.GetServiceRegs(l.GetSubscribedServices())
+	return l.storage.FindServiceRegs(l.GetSubscribedServices())
 }
 
 //NewLocalServiceRegLoader creates and configures a new LocalServiceRegLoaderImpl instance
@@ -306,9 +325,15 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 }
 
 type Storage interface {
-	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
+	//ServiceRegs
+	FindServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
+	FindServiceReg(serviceID string) (*authservice.ServiceReg, error)
+	InsertServiceReg(reg *authservice.ServiceReg) error
+	UpdateServiceReg(reg *authservice.ServiceReg) error
 	SaveServiceReg(reg *authservice.ServiceReg) error
+	DeleteServiceReg(serviceID string) error
 
+	//AuthConfigs
 	FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error)
 	LoadAuthConfigs() (*[]model.AuthConfig, error)
 }
@@ -321,4 +346,9 @@ type AuthStorageListener struct {
 //OnAuthConfigUpdated notifies that an auth config has been updated
 func (al *AuthStorageListener) OnAuthConfigUpdated() {
 	al.Auth.LoadAuthConfigs()
+}
+
+//OnServiceRegsUpdated notifies that a service registration has been updated
+func (al *AuthStorageListener) OnServiceRegsUpdated() {
+	al.Auth.AuthService.LoadServices()
 }
