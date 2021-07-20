@@ -12,9 +12,7 @@ import (
 
 // Email implementation of authType
 type emailAuthImpl struct {
-	auth        *Auth
-	emailDialer *gomail.Dialer
-	emailFrom   string
+	auth *Auth
 }
 
 func (a *emailAuthImpl) check(creds string, params string) (*model.UserAuth, error) {
@@ -87,12 +85,12 @@ func (a *emailAuthImpl) sendEmail(toEmail string, subject string, attachmentFile
 	emails := strings.Split(toEmail, ",")
 
 	m := gomail.NewMessage()
-	m.SetHeader("From", a.emailFrom)
+	m.SetHeader("From", a.auth.emailFrom)
 	m.SetHeader("To", emails...)
 	m.SetHeader("Subject", subject)
 	m.Attach(attachmentFilename)
 
-	if err := a.emailDialer.DialAndSend(m); err != nil {
+	if err := a.auth.emailDialer.DialAndSend(m); err != nil {
 		return err
 	}
 
@@ -100,7 +98,7 @@ func (a *emailAuthImpl) sendEmail(toEmail string, subject string, attachmentFile
 }
 
 //initEmailAuth initializes and registers a new email auth instance
-func initEmailAuth(auth *Auth) (*emailAuthImpl, error) {
+func initEmailAuth(auth *Auth, smtpHost string, smtpPort string) (*emailAuthImpl, error) {
 	email := &emailAuthImpl{auth: auth}
 
 	err := auth.registerAuthType("email", email)

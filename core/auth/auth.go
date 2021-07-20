@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/rokmetro/auth-library/tokenauth"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/go-playground/validator.v9"
+	"gopkg.in/gomail.v2"
 )
 
 //Interface for authentication mechanisms
@@ -39,12 +41,15 @@ type Auth struct {
 	minTokenExp int64  //Minimum access token expiration time in minutes
 	maxTokenExp int64  //Maximum access token expiration time in minutes
 
+	emailFrom   string
+	emailDialer *gomail.Dialer
+
 	authConfigs     *syncmap.Map //cache authConfigs / orgID_appID -> authConfig
 	authConfigsLock *sync.RWMutex
 }
 
 //NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64) (*Auth, error) {
+func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, smtpHost string, smtpPort string, smtpUser string, smtpPassword string, smtpFrom string) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -54,6 +59,12 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 		var maxTokenExpVal int64 = 60
 		maxTokenExp = &maxTokenExpVal
 	}
+	smtpPortNum, err := strconv.Atoi(smtpPort)
+	if err != nil {
+		// handle error
+		log.Fatal("Invalid SMTP port")
+	}
+	emailDialer := gomail.NewPlainDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
 
 	authTypes := map[string]authType{}
 
@@ -61,9 +72,9 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	authConfigsLock := &sync.RWMutex{}
 	auth := &Auth{storage: storage, authTypes: authTypes, authPrivKey: authPrivKey, AuthService: nil,
 		serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp,
-		authConfigs: authConfigs, authConfigsLock: authConfigsLock}
+		authConfigs: authConfigs, authConfigsLock: authConfigsLock, emailDialer: emailDialer, emailFrom: smtpFrom}
 
-	err := auth.storeReg()
+	err = auth.storeReg()
 	if err != nil {
 		return nil, fmt.Errorf("error storing reg: %v", err)
 	}
