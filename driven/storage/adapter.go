@@ -32,7 +32,7 @@ type user struct {
 
 	OrganizationsMemberships []string `bson:"memberships"`
 
-	Devices []string `bson:"devices"`
+	Devices []model.Device `bson:"devices"`
 }
 
 type organization struct {
@@ -78,7 +78,7 @@ func (sa *Adapter) ReadTODO() error {
 	return nil
 }
 
-func (sa *Adapter) FindUser(userID string) (*model.User, error) {
+func (sa *Adapter) FindUser(id string) (*model.User, error) {
 	var fullUser *model.User
 	// transaction
 	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
@@ -88,7 +88,7 @@ func (sa *Adapter) FindUser(userID string) (*model.User, error) {
 		}
 
 		// check if there is a user
-		userFilter := bson.D{primitive.E{Key: "_id", Value: userID}}
+		userFilter := bson.D{primitive.E{Key: "_id", Value: id}}
 		var usersResult []*user
 		err = sa.db.users.FindWithContext(sessionContext, userFilter, &usersResult, nil)
 		if err != nil {
@@ -102,21 +102,19 @@ func (sa *Adapter) FindUser(userID string) (*model.User, error) {
 			fullUser.Account = existingUser.Account
 			fullUser.Profile = existingUser.Profile
 
-			// rolesResult, err := sa.FindGlobalRoles(&existingUser.Roles, &sessionContext)
-			// if err != nil {
-			// 	abortTransaction(sessionContext)
-			// 	return err
-			// }
-			// fullUser.Roles = *rolesResult
-
-			groupsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": existingUser.Groups}}}
-			var groupsResult []model.GlobalGroup
-			err = sa.db.groups.FindWithContext(sessionContext, groupsFilter, &groupsResult, nil)
+			rolesResult, err := sa.FindGlobalRoles(&existingUser.Roles, &sessionContext)
 			if err != nil {
 				abortTransaction(sessionContext)
 				return err
 			}
-			fullUser.Groups = groupsResult
+			fullUser.Roles = *rolesResult
+
+			groupsResult, err := sa.FindGlobalGroups(&existingUser.Groups, &sessionContext)
+			if err != nil {
+				abortTransaction(sessionContext)
+				return err
+			}
+			fullUser.Groups = *groupsResult
 
 			membershipsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": existingUser.OrganizationsMemberships}}}
 			var membershipsResult []model.OrganizationMembership
@@ -126,15 +124,6 @@ func (sa *Adapter) FindUser(userID string) (*model.User, error) {
 				return err
 			}
 			fullUser.OrganizationsMemberships = membershipsResult
-
-			devicesFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": existingUser.Devices}}}
-			var devicesResult []model.Device
-			err = sa.db.devices.FindWithContext(sessionContext, devicesFilter, &devicesResult, nil)
-			if err != nil {
-				abortTransaction(sessionContext)
-				return err
-			}
-			fullUser.Devices = devicesResult
 
 			// pipeline := []bson.M{
 			// 	{"$lookup": bson.M{
@@ -188,32 +177,121 @@ func (sa *Adapter) DeleteUser(id string) error {
 }
 
 //FindGlobalRoles finds a set of global user roles
-// func (sa *Adapter) FindGlobalRoles(ids *[]string, orgID string, context *mongo.SessionContext) (*[]model.GlobalRole, error) {
-// 	rolesFilter := bson.D{primitive.E{Key: "org_id", Value: "global"}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
-// 	var rolesResult []role
-// 	var err error
-// 	if context == nil {
-// 		err = sa.db.roles.Find(rolesFilter, &rolesResult, nil)
-// 	} else {
-// 		err = sa.db.roles.FindWithContext(*context, rolesFilter, &rolesResult, nil)
-// 	}
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (sa *Adapter) FindGlobalRoles(ids *[]string, context *mongo.SessionContext) (*[]model.GlobalRole, error) {
+	rolesFilter := bson.D{primitive.E{Key: "org_id", Value: "global"}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
+	var rolesResult []model.GlobalRole
+	var err error
+	if context == nil {
+		err = sa.db.roles.Find(rolesFilter, &rolesResult, nil)
+	} else {
+		err = sa.db.roles.FindWithContext(*context, rolesFilter, &rolesResult, nil)
+	}
+	if err != nil {
+		return nil, err
+	}
 
-// 	roles := make([]model.GlobalRole, 0)
-// 	for _, role := range rolesResult {
-// 		permList := make([]model.GlobalPermission, 0)
-// 		for _, permission := range role.Permissions {
-// 			permList = append(permList, model.GlobalPermission{ID: "", Name: permission})
-// 		}
-// 		roles = append(roles, model.GlobalRole{ID: role.ID, Name: role.Name, Permissions: permList})
-// 	}
-// 	return &roles, nil
-// }
+	return &rolesResult, nil
+}
 
-//FindOrganizationRoles finds a set of global user roles
-// func (sa *Adapter) FindOrganizationRoles(ids *[]string, orgID string, context *mongo.SessionContext) (*[]model.OrganizationRole, error) {
+//FindOrganizationRoles finds a set of organization user roles
+func (sa *Adapter) FindOrganizationRoles(ids *[]string, orgID string, context *mongo.SessionContext) (*[]model.OrganizationRole, error) {
+	pipeline := []bson.M{
+		{"$match": bson.M{"org_id": orgID, "_id": bson.M{"$in": *ids}}},
+		{"$lookup": bson.M{
+			"from":         "organizations",
+			"localField":   "org_id",
+			"foreignField": "_id",
+			"as":           "organization",
+		}},
+		{"$unwind": "$organization"},
+		{"$project": bson.M{"org_id": 0}},
+	}
+	var rolesResult []model.OrganizationRole
+	var err error
+
+	if context == nil {
+		err = sa.db.roles.Aggregate(pipeline, &rolesResult, nil)
+	} else {
+		err = sa.db.roles.AggregateWithContext(*context, pipeline, &rolesResult, nil)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &rolesResult, nil
+}
+
+//FindGlobalGroups finds a set of global user groups
+func (sa *Adapter) FindGlobalGroups(ids *[]string, context *mongo.SessionContext) (*[]model.GlobalGroup, error) {
+	pipeline := []bson.M{
+		{"$match": bson.M{"org_id": "global", "_id": bson.M{"$in": *ids}}},
+		{"$lookup": bson.M{
+			"from":         "roles",
+			"localField":   "roles",
+			"foreignField": "_id",
+			"as":           "roles",
+		}},
+		{"$lookup": bson.M{
+			"from":         "users",
+			"localField":   "users",
+			"foreignField": "_id",
+			"as":           "users",
+		}},
+	}
+	var groupsResult []model.GlobalGroup
+	var err error
+	if context == nil {
+		err = sa.db.groups.Aggregate(pipeline, &groupsResult, nil)
+	} else {
+		err = sa.db.groups.AggregateWithContext(*context, pipeline, &groupsResult, nil)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &groupsResult, nil
+}
+
+//FindOrganizationGroups finds a set of organization user groups
+func (sa *Adapter) FindOrganizationGroups(ids *[]string, orgID string, context *mongo.SessionContext) (*[]model.OrganizationGroup, error) {
+	pipeline := []bson.M{
+		{"$match": bson.M{"org_id": orgID, "_id": bson.M{"$in": *ids}}},
+		{"$lookup": bson.M{
+			"from":         "roles",
+			"localField":   "roles",
+			"foreignField": "_id",
+			"as":           "roles",
+		}},
+		{"$lookup": bson.M{
+			"from":         "memberships",
+			"localField":   "memberships",
+			"foreignField": "_id",
+			"as":           "memberships",
+		}},
+		{"$lookup": bson.M{
+			"from":         "organizations",
+			"localField":   "org_id",
+			"foreignField": "_id",
+			"as":           "organization",
+		}},
+		{"$unwind": "$organization"},
+		{"$project": bson.M{"org_id": 0}},
+	}
+	var groupsResult []model.OrganizationGroup
+	var err error
+	if context == nil {
+		err = sa.db.groups.Aggregate(pipeline, &groupsResult, nil)
+	} else {
+		err = sa.db.groups.AggregateWithContext(*context, pipeline, &groupsResult, nil)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &groupsResult, nil
+}
+
+// func (sa *Adapter) FindOrganizationMemberships(ids *[]string, context *mongo.SessionContext) (*[]model.OrganizationMembership, error) {
 // 	pipeline := []bson.M{
 // 		{"$match": bson.M{"org_id": orgID, "_id": bson.M{"$in": *ids}}},
 // 		{"$lookup": bson.M{
@@ -223,30 +301,20 @@ func (sa *Adapter) DeleteUser(id string) error {
 // 			"as":           "organization",
 // 		}},
 // 		{"$unwind": "$organization"},
-// 		{"$project": bson.M{
-// 			"clientID": "$sub.clientID", "_id": "$sub._id", "uid": "$sub.uid", "external_id": "$sub.external_id",
-// 			"profile": "$sub.profile", "sub": "$sub.sub", "active": "$sub.active", "date_created": "$sub.date_created",
-// 			"date_updated": "$sub.date_updated", "created_by": "$sub.created_by",
-// 		}}}
-// 	rolesFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
+// 		{"$project": bson.M{"org_id": 0}},
+// 	}
 // 	var rolesResult []model.OrganizationRole
 // 	var err error
+
 // 	if context == nil {
-// 		err = sa.db.roles.Find(rolesFilter, &rolesResult, nil)
+// 		err = sa.db.roles.Aggregate(pipeline, &rolesResult, nil)
 // 	} else {
-// 		err = sa.db.roles.FindWithContext(*context, rolesFilter, &rolesResult, nil)
+// 		err = sa.db.roles.AggregateWithContext(*context, pipeline, &rolesResult, nil)
 // 	}
 // 	if err != nil {
 // 		return nil, err
 // 	}
 
-// 	org, err := sa.FindOrganization(orgID)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	for _, role := range rolesResult {
-// 		role.Organization = *org
-// 	}
 // 	return &rolesResult, nil
 // }
 

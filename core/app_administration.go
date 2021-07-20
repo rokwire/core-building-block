@@ -28,31 +28,31 @@ func (app *application) admGetTestModel() string {
 	//global permissions and roles
 
 	glRole1 := model.GlobalRole{ID: "1", Name: "super_admin", Permissions: nil} //super_admin has nil permissions as it has all
-	glPermission1 := model.GlobalPermission{ID: "1", Name: "invite_organization_admin"}
-	glPermission2 := model.GlobalPermission{ID: "2", Name: "read_log"}
-	glPermission3 := model.GlobalPermission{ID: "3", Name: "modify_config"}
+	glPermission1 := "invite_organization_admin"
+	glPermission2 := "read_log"
+	glPermission3 := "modify_config"
 	glRole2 := model.GlobalRole{ID: "2", Name: "lite_admin",
-		Permissions: []model.GlobalPermission{glPermission1, glPermission2, glPermission3}}
+		Permissions: []string{glPermission1, glPermission2, glPermission3}}
 
 	//Illinois permissions, roles and groups
 
 	illinoisRole1 := model.OrganizationRole{ID: "1", Name: "organization_super_admin", Permissions: nil, Organization: illinoisOrganization} //organization_super_admin has nil permissions as it has all
-	illinoisPermission1 := model.OrganizationPermission{ID: "1", Name: "read_audit", Organization: illinoisOrganization}
-	illinoisPermission2 := model.OrganizationPermission{ID: "2", Name: "read_manual_test", Organization: illinoisOrganization}
-	illinoisPermission3 := model.OrganizationPermission{ID: "3", Name: "modify_manual_test", Organization: illinoisOrganization}
+	illinoisPermission1 := "read_audit"
+	illinoisPermission2 := "read_manual_test"
+	illinoisPermission3 := "modify_manual_test"
 	illinoisRole2 := model.OrganizationRole{ID: "2", Name: "manual_tests_manager",
-		Permissions: []model.OrganizationPermission{illinoisPermission2, illinoisPermission3}, Organization: illinoisOrganization}
+		Permissions: []string{illinoisPermission2, illinoisPermission3}, Organization: illinoisOrganization}
 	illinoisGroup1 := model.OrganizationGroup{ID: "1", Name: "students", Organization: illinoisOrganization}
 	illinoisGroup2 := model.OrganizationGroup{ID: "2", Name: "manual tests managers", Organization: illinoisOrganization}
 
 	//Dance permissions, roles and groups
 
 	danceRole1 := model.OrganizationRole{ID: "3", Name: "organization_super_admin", Permissions: nil, Organization: danceOrganization} //organization_super_admin has nil permissions as it has all
-	dancePermission1 := model.OrganizationPermission{ID: "4", Name: "view_video", Organization: danceOrganization}
-	dancePermission2 := model.OrganizationPermission{ID: "5", Name: "write_video", Organization: danceOrganization}
-	dancePermission3 := model.OrganizationPermission{ID: "6", Name: "view_schedule", Organization: danceOrganization}
+	dancePermission1 := "view_video"
+	dancePermission2 := "write_video"
+	dancePermission3 := "view_schedule"
 	danceRole2 := model.OrganizationRole{ID: "4", Name: "videos_manager",
-		Permissions: []model.OrganizationPermission{dancePermission1, dancePermission2}, Organization: danceOrganization}
+		Permissions: []string{dancePermission1, dancePermission2}, Organization: danceOrganization}
 	danceGroup1 := model.OrganizationGroup{ID: "3", Name: "videos managers", Organization: danceOrganization}
 
 	//users
@@ -81,7 +81,7 @@ func (app *application) admGetTestModel() string {
 		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
 	illiniUser2Organization := model.OrganizationMembership{ID: "2", User: illiniUser2, Organization: illinoisOrganization,
 		OrgUserData: nil,
-		Permissions: []model.OrganizationPermission{illinoisPermission1},
+		Permissions: []string{illinoisPermission1},
 		Roles:       []model.OrganizationRole{illinoisRole2},
 		Groups:      []model.OrganizationGroup{illinoisGroup1}}
 	illiniUser2.OrganizationsMemberships = []model.OrganizationMembership{illiniUser2Organization}
@@ -92,7 +92,7 @@ func (app *application) admGetTestModel() string {
 		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
 	illiniUser3Organization := model.OrganizationMembership{ID: "3", User: illiniUser3, Organization: illinoisOrganization,
 		OrgUserData: nil,
-		Permissions: []model.OrganizationPermission{illinoisPermission1},
+		Permissions: []string{illinoisPermission1},
 		Roles:       []model.OrganizationRole{illinoisRole2},
 		Groups:      []model.OrganizationGroup{illinoisGroup1}}
 	illiniUser3.OrganizationsMemberships = []model.OrganizationMembership{illiniUser3Organization}

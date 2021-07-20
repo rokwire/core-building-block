@@ -213,6 +213,11 @@ func (a *Auth) getExp(exp *int64) int64 {
 	}
 }
 
+//findAccount retrieves a user's account information
+func (a *Auth) findAccount(claims *tokenauth.Claims, userAuth *UserAuth) (*model.User, error) {
+	return a.storage.FindUser(userAuth.UserID)
+}
+
 //createAccount creates a new user account
 func (a *Auth) createAccount(claims *tokenauth.Claims, userAuth *UserAuth) (*model.User, error) {
 	names := strings.Split(userAuth.Name, " ")
@@ -230,11 +235,7 @@ func (a *Auth) createAccount(claims *tokenauth.Claims, userAuth *UserAuth) (*mod
 	}
 	newOrgMembership.Organization = *organization
 
-	newPermissions := []model.OrganizationPermission{}
-	for _, p := range strings.Split(claims.Permissions, ",") {
-		newPermissions = append(newPermissions, model.OrganizationPermission{Name: p})
-	}
-	newOrgMembership.Permissions = newPermissions
+	newOrgMembership.Permissions = strings.Split(claims.Permissions, ",")
 
 	device := model.Device{}
 	newUser.Devices = []model.Device{device}
@@ -344,6 +345,7 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 }
 
 type Storage interface {
+	FindUser(id string) (*model.User, error)
 	InsertUser(user *model.User) (*model.User, error)
 	UpdateUser(user *model.User) (*model.User, error)
 	DeleteUser(id string) error

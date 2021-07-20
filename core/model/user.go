@@ -12,8 +12,8 @@ type User struct {
 	Account UserAccount `bson:"account"`
 	Profile UserProfile `bson:"profile"`
 
-	Permissions []GlobalPermission `bson:"permissions"`
-	Roles       []GlobalRole       `bson:"roles"`
+	Permissions []string     `bson:"permissions"`
+	Roles       []GlobalRole `bson:"roles"`
 
 	Groups []GlobalGroup `bson:"groups"`
 
@@ -80,31 +80,21 @@ func (up UserProfile) String() string {
 
 //GlobalGroup represents global group entity. It is a collection of users
 type GlobalGroup struct {
-	ID   string
-	Name string
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
 
-	Permissions []GlobalPermission
+	Permissions []string `bson:"permissions"`
 	Roles       []GlobalRole
 
 	Users []User
 }
 
-//GlobalPermission represents global permission entity
-type GlobalPermission struct {
-	ID   string
-	Name string
-}
-
-func (c GlobalPermission) String() string {
-	return fmt.Sprintf("[ID:%s\tName:%s]", c.ID, c.Name)
-}
-
 //GlobalRole represents global role entity. It is a collection of permissions
 type GlobalRole struct {
-	ID   string
-	Name string
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
 
-	Permissions []GlobalPermission
+	Permissions []string `bson:"permissions"`
 }
 
 func (c GlobalRole) String() string {
@@ -116,7 +106,7 @@ type OrganizationGroup struct {
 	ID   string
 	Name string
 
-	Permissions []OrganizationPermission
+	Permissions []string
 	Roles       []OrganizationRole
 
 	Organization Organization
@@ -128,24 +118,12 @@ func (cg OrganizationGroup) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nOrganization:%s]", cg.ID, cg.Name, cg.Organization)
 }
 
-//OrganizationPermission represents organization permission entity
-type OrganizationPermission struct {
-	ID   string
-	Name string
-
-	Organization Organization
-}
-
-func (c OrganizationPermission) String() string {
-	return fmt.Sprintf("[ID:%s\nName:%s\nOrganization:%s]", c.ID, c.Name, c.Organization)
-}
-
 //OrganizationRole represents organization role entity. It is a collection of permissions
 type OrganizationRole struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 
-	Permissions []OrganizationPermission
+	Permissions []string
 
 	Organization Organization `bson:"organization"`
 }
