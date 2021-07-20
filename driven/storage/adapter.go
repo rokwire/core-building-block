@@ -41,7 +41,7 @@ type organizationConfig struct {
 //Adapter implements the Storage interface
 type Adapter struct {
 	db     *database
-	logger *log.StandardLogger
+	logger *log.Logger
 }
 
 //Start starts the storage
@@ -238,7 +238,7 @@ func (sa *Adapter) SaveServiceReg(reg *authservice.ServiceReg) error {
 }
 
 //NewStorageAdapter creates a new storage adapter instance
-func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *log.StandardLogger) *Adapter {
+func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *log.Logger) *Adapter {
 	timeout, err := strconv.Atoi(mongoTimeout)
 	if err != nil {
 		logger.Error("Set default timeout - 500")

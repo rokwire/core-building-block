@@ -44,13 +44,13 @@ func (a *emailAuthImpl) check(creds string, params string) (*model.UserAuth, err
 		if err = a.handleSignup(c, user); err != nil {
 			return nil, err
 		}
-		return &Claims{Email: c.Email}, nil
+		return &model.UserAuth{Email: c.Email}, nil
 	}
 
 	if err = a.handleSignin(c, user); err != nil {
 		return nil, err
 	}
-	claims := &Claims{ID: c.Email, Email: c.Email}
+	claims := &model.UserAuth{Email: c.Email}
 	return claims, nil
 }
 
