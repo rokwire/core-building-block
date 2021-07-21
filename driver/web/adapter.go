@@ -58,6 +58,7 @@ func (we Adapter) Start() {
 
 	///default ///
 	subRouter.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion)).Methods("GET")
+	subRouter.HandleFunc("/services", we.wrapFunc(we.defaultApisHandler.getServiceRegistrations)).Methods("GET")
 	///
 
 	///services ///

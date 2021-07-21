@@ -184,10 +184,9 @@ func (h AdminApisHandler) updateOrganization(l *log.Log, w http.ResponseWriter, 
 }
 
 func (h AdminApisHandler) getServiceRegistrations(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
-	params := mux.Vars(r)
-	serviceIDsParam := params["service_ids"]
-	if len(serviceIDsParam) <= 0 {
-		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("service_ids"), nil, http.StatusBadRequest, false)
+	serviceIDsParam := r.URL.Query().Get("ids")
+	if serviceIDsParam == "" {
+		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("ids"), nil, http.StatusBadRequest, false)
 	}
 	serviceIDs := strings.Split(serviceIDsParam, ",")
 
@@ -257,12 +256,12 @@ func (h AdminApisHandler) updateServiceRegistration(l *log.Log, w http.ResponseW
 }
 
 func (h AdminApisHandler) deregisterService(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
-	service_id := r.URL.Query().Get("service_id")
-	if service_id != "" {
-		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("service_id"), nil, http.StatusBadRequest, false)
+	serviceID := r.URL.Query().Get("id")
+	if serviceID == "" {
+		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	err := h.coreAPIs.Auth.DeregisterService(service_id)
+	err := h.coreAPIs.Auth.DeregisterService(serviceID)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionDelete, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
 	}

@@ -228,6 +228,10 @@ func (sa *Adapter) FindServiceRegs(serviceIDs []string) ([]authservice.ServiceRe
 		return nil, log.WrapActionError(log.ActionFind, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceIDs}, err)
 	}
 
+	if result == nil {
+		result = []authservice.ServiceReg{}
+	}
+
 	return result, nil
 }
 
