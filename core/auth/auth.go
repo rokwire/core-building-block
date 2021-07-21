@@ -122,6 +122,9 @@ func (a *Auth) getAuthType(name string) (authType, error) {
 //		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //		User (User): User object for authenticated user
 func (a *Auth) Login(authName string, creds string, params string) (string, *model.User, error) {
+	var user *model.User
+	var err error
+
 	auth, err := a.getAuthType(authName)
 	if err != nil {
 		return "", nil, err
@@ -131,11 +134,32 @@ func (a *Auth) Login(authName string, creds string, params string) (string, *mod
 	if err != nil {
 		return "", nil, err
 	}
-	log.Println(claims)
+
+	if len(claims.AccountID) > 0 {
+		user, err = a.findAccount(claims)
+		if err != nil {
+			return "", nil, err
+		}
+	} else {
+		if strings.Contains(err.Error(), "no credentials found") {
+			user, err = a.createAccount(claims)
+			if err != nil {
+				return "", nil, err
+			}
+		} else if strings.Contains(err.Error(), "credentials do not match") {
+			// Or reject login entirely?
+			user, err = a.updateAccount(claims)
+			if err != nil {
+				return "", nil, err
+			}
+		}
+	}
+
+	// generate token
 
 	//TODO: Implement account management and return token and user using claims
 
-	return "", nil, nil
+	return "", user, nil
 }
 
 //GetScopedAccessToken TODO
@@ -197,12 +221,12 @@ func (a *Auth) getExp(exp *int64) int64 {
 }
 
 //findAccount retrieves a user's account information
-func (a *Auth) findAccount(claims *tokenauth.Claims, userAuth *model.UserAuth) (*model.User, error) {
+func (a *Auth) findAccount(userAuth *model.UserAuth) (*model.User, error) {
 	return a.storage.FindUser(userAuth.UserID)
 }
 
 //createAccount creates a new user account
-func (a *Auth) createAccount(claims *tokenauth.Claims, userAuth *model.UserAuth) (*model.User, error) {
+func (a *Auth) createAccount(userAuth *model.UserAuth) (*model.User, error) {
 	names := strings.Split(userAuth.Name, " ")
 	newUser := model.User{}
 
@@ -212,13 +236,13 @@ func (a *Auth) createAccount(claims *tokenauth.Claims, userAuth *model.UserAuth)
 	newUser.Profile = newProfile
 
 	newOrgMembership := model.OrganizationMembership{}
-	organization, err := a.storage.FindOrganization(claims.OrgID)
+	organization, err := a.storage.FindOrganization(userAuth.OrgData["orgID"].(string))
 	if err != nil {
 		return nil, err
 	}
 	newOrgMembership.Organization = *organization
 
-	newOrgMembership.Permissions = strings.Split(claims.Permissions, ",")
+	newOrgMembership.Permissions = strings.Split(userAuth.OrgData["permissions"].(string), ",")
 
 	device := model.Device{}
 	newUser.Devices = []model.Device{device}
@@ -230,14 +254,14 @@ func (a *Auth) createAccount(claims *tokenauth.Claims, userAuth *model.UserAuth)
 }
 
 //updateAccount updates a user's account information
-func (a *Auth) updateAccount(claims *tokenauth.Claims, userAuth *model.UserAuth) (*model.User, error) {
+func (a *Auth) updateAccount(userAuth *model.UserAuth) (*model.User, error) {
 	updatedUser := model.User{}
 	return a.storage.UpdateUser(&updatedUser)
 }
 
 //deleteAccount deletes a user account
-func (a *Auth) deleteAccount(claims *tokenauth.Claims, userAuth *model.UserAuth) error {
-	return a.storage.DeleteUser(claims.Id)
+func (a *Auth) deleteAccount(userAuth *model.UserAuth) error {
+	return a.storage.DeleteUser(userAuth.UserID)
 }
 
 //storeReg stores the service registration record
@@ -330,10 +354,13 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 
 //Storage interface to communicate with the storage
 type Storage interface {
-	FindUser(id string) (*model.User, error)
+	FindUser(accountID string) (*model.User, error)
 	InsertUser(user *model.User) (*model.User, error)
 	UpdateUser(user *model.User) (*model.User, error)
 	DeleteUser(id string) error
+
+	FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCred, error)
+	InsertCredentials(creds *model.AuthCred) (*model.AuthCred, error)
 
 	FindOrganization(id string) (*model.Organization, error)
 

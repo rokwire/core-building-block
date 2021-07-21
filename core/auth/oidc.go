@@ -36,6 +36,10 @@ type oidcAuthConfig struct {
 	Populations        map[string]string `json:"populations"`
 }
 
+type oidcCreds struct {
+	Sub string `json:"sub" validate:"required"`
+}
+
 type oidcMobileParams struct {
 	OrgID         string `json:"org_id" validate:"required"`
 	AppID         string `json:"app_id" validate:"required"`
@@ -92,7 +96,22 @@ func (a *oidcAuthImpl) check(creds string, params string) (*model.UserAuth, erro
 		if err != nil {
 			return nil, err
 		}
-		return a.newToken(creds, &loginParams)
+
+		userAuth, err := a.newToken(creds, &loginParams)
+		if err != nil {
+			return nil, err
+		}
+		userAuth.OrgData["orgID"] = loginParams.OrgID
+		credentials, err := a.auth.storage.FindCredentials(loginParams.OrgID, loginParams.AppID, "oidc", userAuth.UserID)
+		if err != nil {
+			return userAuth, err
+		}
+		ok, err := a.validateUser(userAuth, credentials.Creds)
+		if err != nil || !ok {
+			return userAuth, err
+		}
+		userAuth.AccountID = credentials.AccountID
+		return userAuth, nil
 	case "refresh_token":
 		var refreshParams oidcRefreshParams
 		err := json.Unmarshal([]byte(params), &refreshParams)
@@ -104,10 +123,47 @@ func (a *oidcAuthImpl) check(creds string, params string) (*model.UserAuth, erro
 		if err != nil {
 			return nil, err
 		}
-		return a.refreshToken(creds, &refreshParams)
+
+		userAuth, err := a.refreshToken(creds, &refreshParams)
+		if err != nil {
+			return nil, err
+		}
+		userAuth.OrgData["orgID"] = refreshParams.OrgID
+		credentials, err := a.auth.storage.FindCredentials(refreshParams.OrgID, refreshParams.AppID, "oidc", userAuth.UserID)
+		if err != nil {
+			return userAuth, fmt.Errorf("no credentials found: %s", err.Error())
+		}
+		ok, err := a.validateUser(userAuth, credentials.Creds)
+		if err != nil || !ok {
+			return userAuth, fmt.Errorf("credentials do not match: %s", err.Error())
+		}
+		userAuth.AccountID = credentials.AccountID
+		return userAuth, nil
 	default:
 		return nil, fmt.Errorf("unimplemented cred_type %s", credType)
 	}
+}
+
+func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials interface{}) (bool, error) {
+	credBytes, err := json.Marshal(credentials)
+	if err != nil {
+		return false, err
+	}
+	var creds oidcCreds
+	err = json.Unmarshal(credBytes, &creds)
+	if err != nil {
+		return false, err
+	}
+	validate := validator.New()
+	err = validate.Struct(creds)
+	if err != nil {
+		return false, err
+	}
+
+	if userAuth.Sub != creds.Sub {
+		return false, errors.New("userAuth failed validation against database creds")
+	}
+	return true, nil
 }
 
 func (a *oidcAuthImpl) mobileLoginURL(params string) (string, error) {
@@ -269,6 +325,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	if err != nil {
 		return nil, err
 	}
+	userAuth.OrgData = userClaims
 
 	userAuth.Sub = userClaims["sub"].(string)
 	if userAuth.Sub != sub {

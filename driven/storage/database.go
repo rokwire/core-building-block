@@ -26,7 +26,9 @@ type database struct {
 	applications *collectionWrapper
 	devices      *collectionWrapper
 
-	authConfigs   *collectionWrapper
+	authConfigs *collectionWrapper
+	credentials *collectionWrapper
+
 	globalConfig  *collectionWrapper
 	organizations *collectionWrapper
 	serviceRegs   *collectionWrapper
@@ -133,6 +135,14 @@ func (m *database) start() error {
 
 	m.authConfigs = authConfigs
 
+	credentials := &collectionWrapper{database: m, coll: db.Collection("credentials")}
+	err = m.applyCredentialChecks(credentials)
+	if err != nil {
+		return err
+	}
+
+	m.credentials = credentials
+
 	//watch for auth info changes
 	go m.authConfigs.Watch(nil)
 
@@ -178,6 +188,21 @@ func (m *database) applyDevicesChecks(devices *collectionWrapper) error {
 	log.Println("apply devices checks.....")
 
 	log.Println("devices check passed")
+	return nil
+}
+
+func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
+	// Add org_id, app_id compound index
+	err := credentials.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	err = credentials.AddIndex(bson.D{primitive.E{Key: "type", Value: 1}, primitive.E{Key: "user_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+	log.Println("authConfig check passed")
 	return nil
 }
 

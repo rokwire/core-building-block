@@ -103,10 +103,10 @@ func (c GlobalRole) String() string {
 
 //OrganizationGroup represents organization group entity. It is a collection of users
 type OrganizationGroup struct {
-	ID   string
-	Name string
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
 
-	Permissions []string
+	Permissions []string `bson:"permissions"`
 	Roles       []OrganizationRole
 
 	Organization Organization
@@ -123,9 +123,9 @@ type OrganizationRole struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 
-	Permissions []string
+	Permissions []string `bson:"permissions"`
 
-	Organization Organization `bson:"organization"`
+	Organization Organization
 }
 
 func (c OrganizationRole) String() string {
