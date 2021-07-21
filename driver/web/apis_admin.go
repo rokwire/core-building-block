@@ -40,7 +40,7 @@ func (h AdminApisHandler) createGlobalConfig(l *log.Log, w http.ResponseWriter, 
 		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
 
-	var requestData Def.PostAdminGlobalConfigJSONRequestBody
+	var requestData Def.GlobalConfig
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		l.Errorf("Error on unmarshal the create global config data - %s\n", err.Error())
@@ -98,7 +98,7 @@ func (h AdminApisHandler) updateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 
 	}
 
-	var updateConfig Def.PutAdminGlobalConfigJSONRequestBody
+	var updateConfig Def.GlobalConfig
 	err = json.Unmarshal(data, &updateConfig)
 	if err != nil {
 		return createErrorResponse(err.Error(), http.StatusBadRequest)
@@ -132,7 +132,7 @@ func (h AdminApisHandler) createOrganization(l *log.Log, w http.ResponseWriter, 
 		l.Errorf("Error on marshal create organization - %s\n", err.Error())
 		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
-	var requestData Def.PostAdminOrganizationsJSONRequestBody
+	var requestData Def.Organization
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		l.Errorf("Error on unmarshal the create organization  - %s\n", err.Error())
@@ -177,7 +177,7 @@ func (h AdminApisHandler) updateOrganization(l *log.Log, w http.ResponseWriter, 
 		l.Errorf("Error on marshal update organization - %s\n", err.Error())
 		return createErrorResponse("ID is required", http.StatusBadRequest)
 	}
-	var requestData Def.PutAdminOrganizationsIdJSONRequestBody
+	var requestData Def.Organization
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		l.Errorf("Error on unmarshal the update organization  - %s\n", err.Error())
