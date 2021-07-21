@@ -48,6 +48,16 @@ type Auth struct {
 	authConfigsLock *sync.RWMutex
 }
 
+//TODO: Once the profile has been transferred and the new user ID scheme has been adopted across all services
+//		this should be replaced by tokenauth.Claims directly
+//tokenClaims is a temporary claims model to provide backwards compatibility
+type tokenClaims struct {
+	tokenauth.Claims
+	UID   string `json:"uid,omitempty"`
+	Email string `json:"email,omitempty"`
+	Phone string `json:"phone,omitempty"`
+}
+
 //NewAuth creates a new auth instance
 func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, logger *log.Logger) (*Auth, error) {
 	if minTokenExp == nil {
@@ -127,52 +137,61 @@ func (a *Auth) getAuthType(name string) (authType, error) {
 //	Returns:
 //		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //		User (User): User object for authenticated user
-func (a *Auth) Login(authType string, creds string, params string, l *log.Log) (string, *model.User, error) {
+//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+func (a *Auth) Login(authType string, creds string, orgID string, appID string, params string, l *log.Log) (string, *model.User, string, error) {
 	auth, err := a.getAuthType(authType)
 	if err != nil {
-		return "", nil, log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
+		return "", nil, "", log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	_, err = auth.check(creds, params, l)
+	userAuth, err := auth.check(creds, params, l)
 	if err != nil {
-		return "", nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
+		return "", nil, "", log.WrapActionError(log.ActionValidate, "creds", nil, err)
 	}
 
-	//TODO: Implement account management and return token and user using claims
+	claims := a.getStandardClaims("", userAuth.UserID, userAuth.Email, userAuth.Phone, "rokwire", orgID, appID, userAuth.Exp)
+	token, err := a.buildAccessToken(claims, "", "all")
+	if err != nil {
+		return "", nil, "", log.WrapActionError("build", log.TypeToken, nil, err)
+	}
 
-	return "", nil, nil
+	//TODO: Implement account management
+
+	return token, nil, userAuth.RefreshToken, nil
 }
 
-func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scope string) (string, error) {
-	scopedClaims := a.getStandardClaims(claims.Subject, serviceID, claims.OrgID, claims.AppID, nil)
+func (a *Auth) GetScopedAccessToken(claims tokenClaims, serviceID string, scope string) (string, error) {
+	scopedClaims := a.getStandardClaims(claims.Subject, claims.UID, "", "", serviceID, claims.OrgID, claims.AppID, nil)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
-func (a *Auth) buildAccessToken(claims tokenauth.Claims, permissions string, scope string) (string, error) {
+func (a *Auth) buildAccessToken(claims tokenClaims, permissions string, scope string) (string, error) {
 	claims.Purpose = "access"
 	claims.Permissions = permissions
 	claims.Scope = scope
 	return a.generateToken(&claims)
 }
 
-func (a *Auth) buildCsrfToken(claims tokenauth.Claims) (string, error) {
+func (a *Auth) buildCsrfToken(claims tokenClaims) (string, error) {
 	claims.Purpose = "csrf"
 	return a.generateToken(&claims)
 }
 
-func (a *Auth) getStandardClaims(sub string, aud string, orgID string, appID string, exp *int64) tokenauth.Claims {
-	return tokenauth.Claims{
-		StandardClaims: jwt.StandardClaims{
-			Audience:  aud,
-			Subject:   sub,
-			ExpiresAt: a.getExp(exp),
-			IssuedAt:  time.Now().Unix(),
-			Issuer:    a.host,
-		}, OrgID: orgID, AppID: appID,
+func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string, exp *int64) tokenClaims {
+	return tokenClaims{
+		Claims: tokenauth.Claims{
+			StandardClaims: jwt.StandardClaims{
+				Audience:  aud,
+				Subject:   sub,
+				ExpiresAt: a.getExp(exp),
+				IssuedAt:  time.Now().Unix(),
+				Issuer:    a.host,
+			}, OrgID: orgID, AppID: appID,
+		}, UID: uid, Email: email, Phone: phone,
 	}
 }
 
-func (a *Auth) generateToken(claims *tokenauth.Claims) (string, error) {
+func (a *Auth) generateToken(claims *tokenClaims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	kid, err := authutils.GetKeyFingerprint(&a.authPrivKey.PublicKey)
 	if err != nil {

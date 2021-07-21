@@ -15,7 +15,7 @@ type UserAuth struct {
 	Email        string
 	Phone        string
 	Picture      []byte
-	Exp          float64
+	Exp          *int64
 	RefreshToken string
 }
 

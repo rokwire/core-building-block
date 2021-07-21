@@ -295,8 +295,11 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 		l.LogAction(log.Warn, log.StatusError, log.ActionCast, log.TypeString, &log.FieldArgs{"phone": phone})
 	}
 	exp := readFromClaims("exp", &oidcConfig.Claims, &userClaims)
-	if userAuth.Exp, ok = exp.(float64); !ok {
+	if expFloat, ok := exp.(float64); !ok {
 		l.LogAction(log.Warn, log.StatusError, log.ActionCast, "float64", &log.FieldArgs{"exp": exp})
+	} else {
+		expInt := int64(expFloat)
+		userAuth.Exp = &expInt
 	}
 
 	var userPhoto []byte
