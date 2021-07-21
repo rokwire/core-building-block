@@ -197,12 +197,12 @@ func (a *Auth) getExp(exp *int64) int64 {
 }
 
 //findAccount retrieves a user's account information
-func (a *Auth) findAccount(claims *tokenauth.Claims, userAuth *UserAuth) (*model.User, error) {
+func (a *Auth) findAccount(claims *tokenauth.Claims, userAuth *model.UserAuth) (*model.User, error) {
 	return a.storage.FindUser(userAuth.UserID)
 }
 
 //createAccount creates a new user account
-func (a *Auth) createAccount(claims *tokenauth.Claims, userAuth *UserAuth) (*model.User, error) {
+func (a *Auth) createAccount(claims *tokenauth.Claims, userAuth *model.UserAuth) (*model.User, error) {
 	names := strings.Split(userAuth.Name, " ")
 	newUser := model.User{}
 
@@ -230,13 +230,13 @@ func (a *Auth) createAccount(claims *tokenauth.Claims, userAuth *UserAuth) (*mod
 }
 
 //updateAccount updates a user's account information
-func (a *Auth) updateAccount(claims *tokenauth.Claims, userAuth *UserAuth) (*model.User, error) {
+func (a *Auth) updateAccount(claims *tokenauth.Claims, userAuth *model.UserAuth) (*model.User, error) {
 	updatedUser := model.User{}
 	return a.storage.UpdateUser(&updatedUser)
 }
 
 //deleteAccount deletes a user account
-func (a *Auth) deleteAccount(claims *tokenauth.Claims, userAuth *UserAuth) error {
+func (a *Auth) deleteAccount(claims *tokenauth.Claims, userAuth *model.UserAuth) error {
 	return a.storage.DeleteUser(claims.Id)
 }
 
