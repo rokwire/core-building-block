@@ -310,7 +310,7 @@ type Storage interface {
 //StorageListener represents storage listener implementation for the auth package
 type StorageListener struct {
 	Auth *Auth
-	storage.DefaultStorageListenerImpl
+	storage.DefaultListenerImpl
 }
 
 //OnAuthConfigUpdated notifies that an auth config has been updated

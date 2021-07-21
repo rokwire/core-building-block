@@ -85,7 +85,7 @@ func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 }
 
 // RegisterStorageListener provides a mock function with given fields: storageListener
-func (_m *Storage) RegisterStorageListener(storageListener storage.StorageListener) {
+func (_m *Storage) RegisterStorageListener(storageListener storage.Listener) {
 	_m.Called(storageListener)
 }
 

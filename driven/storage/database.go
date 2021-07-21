@@ -24,7 +24,7 @@ type database struct {
 	organizations *collectionWrapper
 	serviceRegs   *collectionWrapper
 
-	listeners []StorageListener
+	listeners []Listener
 }
 
 func (m *database) start() error {
