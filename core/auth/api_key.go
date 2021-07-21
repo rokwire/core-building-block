@@ -15,14 +15,14 @@ func (a *apiKeyAuthImpl) check(creds string, params string) (*model.UserAuth, er
 	return nil, errors.New("Unimplemented")
 }
 
-//initApiKeyAuth initializes and registers a new API key auth instance
-func initApiKeyAuth(auth *Auth) (*apiKeyAuthImpl, error) {
-	api_key := &apiKeyAuthImpl{auth: auth}
+//initAPIKeyAuth initializes and registers a new API key auth instance
+func initAPIKeyAuth(auth *Auth) (*apiKeyAuthImpl, error) {
+	apiKey := &apiKeyAuthImpl{auth: auth}
 
-	err := auth.registerAuthType("api_key", api_key)
+	err := auth.registerAuthType("api_key", apiKey)
 	if err != nil {
 		return nil, err
 	}
 
-	return api_key, nil
+	return apiKey, nil
 }

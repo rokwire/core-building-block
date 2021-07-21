@@ -12,21 +12,18 @@ type ServicesApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-//GetAuthTest TODO get test
-func (h ServicesApisHandler) GetAuthTest(l *log.Log, w http.ResponseWriter, r *http.Request) {
+//getAuthTest TODO get test
+func (h ServicesApisHandler) getAuthTest(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	res := h.coreAPIs.Services.SerGetAuthTest(l)
-	w.Write([]byte(res))
+
+	return createSuccessResponse(res, nil, http.StatusOK)
 }
 
-//GetCommonTest TODO get test
-func (h ServicesApisHandler) GetCommonTest(l *log.Log, w http.ResponseWriter, r *http.Request) {
+//getCommonTest TODO get test
+func (h ServicesApisHandler) getCommonTest(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	res := h.coreAPIs.Services.SerGetCommonTest(l)
-	w.Write([]byte(res))
-}
 
-//SerVersion gives the service version
-func (h ServicesApisHandler) SerVersion(l *log.Log, w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(h.coreAPIs.Services.SerGetVersion(l)))
+	return createSuccessResponse(res, nil, http.StatusOK)
 }
 
 //NewServicesApisHandler creates new rest services Handler instance
