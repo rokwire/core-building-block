@@ -309,16 +309,16 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 }
 
 func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcConfig *oidcAuthConfig) (*oidcToken, error) {
-	tokenUri := ""
+	tokenURI := ""
 	oidcTokenURL := oidcConfig.Host + "/idp/profile/oidc/token"
 	if strings.Contains(oidcTokenURL, "{shibboleth_client_id}") {
-		tokenUri = strings.ReplaceAll(oidcTokenURL, "{shibboleth_client_id}", oidcConfig.ClientID)
-		tokenUri = strings.ReplaceAll(tokenUri, "{shibboleth_client_secret}", oidcConfig.ClientSecret)
+		tokenURI = strings.ReplaceAll(oidcTokenURL, "{shibboleth_client_id}", oidcConfig.ClientID)
+		tokenURI = strings.ReplaceAll(tokenURI, "{shibboleth_client_secret}", oidcConfig.ClientSecret)
 	} else if len(oidcConfig.ClientSecret) > 0 {
-		tokenUri = oidcTokenURL
+		tokenURI = oidcTokenURL
 		params["client_secret"] = oidcConfig.ClientSecret
 	} else {
-		tokenUri = oidcTokenURL
+		tokenURI = oidcTokenURL
 	}
 
 	uri := url.URL{}
@@ -339,7 +339,7 @@ func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcCon
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", tokenUri, bytes.NewReader(jsonData))
+	req, err := http.NewRequest("POST", tokenURI, bytes.NewReader(jsonData))
 	if err != nil {
 		return nil, err
 	}
