@@ -2,8 +2,6 @@ package storage
 
 import (
 	"context"
-	"core-building-block/core"
-	"core-building-block/core/auth"
 	"core-building-block/core/model"
 	"errors"
 	"fmt"
@@ -52,9 +50,9 @@ func (sa *Adapter) Start() error {
 	return err
 }
 
-//SetStorageListener sets listener for the storage
-func (sa *Adapter) SetStorageListener(storageListener core.StorageListener) {
-	sa.db.listener = storageListener
+//RegisterStorageListener registers a data change listener with the storage adapter
+func (sa *Adapter) RegisterStorageListener(storageListener StorageListener) {
+	sa.db.listeners = append(sa.db.listeners, storageListener)
 }
 
 //ReadTODO TODO TODO
@@ -63,28 +61,28 @@ func (sa *Adapter) ReadTODO() error {
 }
 
 //FindAuthConfig finds the auth document from DB by orgID and appID
-func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (*auth.AuthConfig, error) {
+func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error) {
 	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "type", Value: authType}}
-	var result *auth.AuthConfig
+	var result *model.AuthConfig
 	err := sa.db.authConfigs.FindOne(filter, &result, nil)
 	if err != nil {
 		return nil, err
 	}
 	if result == nil {
-		return nil, fmt.Errorf("no auth config found for orgID %s, appID %s, authType %s:", orgID, appID, authType)
+		return nil, fmt.Errorf("no auth config found for orgID %s, appID %s, authType %s", orgID, appID, authType)
 	}
 	return result, nil
 }
 
 //LoadAuthConfigs finds all auth config documents in the DB
-func (sa *Adapter) LoadAuthConfigs() (*[]auth.AuthConfig, error) {
+func (sa *Adapter) LoadAuthConfigs() (*[]model.AuthConfig, error) {
 	filter := bson.D{}
-	var result []auth.AuthConfig
+	var result []model.AuthConfig
 	err := sa.db.authConfigs.Find(filter, &result, nil)
 	if err != nil {
 		return nil, err
 	}
-	if result == nil || len(result) == 0 {
+	if len(result) == 0 {
 		return nil, errors.New("no auth config documents found")
 	}
 
@@ -144,8 +142,8 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
-			//TODO print
-			//log.Printf("error on commiting a transaction - %s", err)
+			abortTransaction(sessionContext)
+			fmt.Errorf("error on commiting a transaction - %s", err)
 			return err
 		}
 		return nil
@@ -258,4 +256,14 @@ func abortTransaction(sessionContext mongo.SessionContext) {
 		//TODO - log
 	}
 
+}
+
+type StorageListener interface {
+	OnAuthConfigUpdated()
+}
+
+type DefaultStorageListenerImpl struct {
+}
+
+func (d *DefaultStorageListenerImpl) OnAuthConfigUpdated() {
 }

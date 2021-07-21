@@ -270,8 +270,3 @@ func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.Sta
 type AppListener struct {
 	adapter *Adapter
 }
-
-//OnAuthConfigUpdated notifies that an auth config has been updated
-func (al *AppListener) OnAuthConfigUpdated() {
-	al.adapter.coreAPIs.Auth.LoadAuthConfigs()
-}

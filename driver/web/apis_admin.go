@@ -36,14 +36,14 @@ func (h AdminApisHandler) getTestModel(l *log.Log, w http.ResponseWriter, r *htt
 func (h AdminApisHandler) createGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		//log.Printf("Error on marshal create global config - %s\n", err.Error())
+		l.Errorf("Error on marshal create global config - %s\n", err.Error())
 		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
 
 	var requestData Def.PostAdminGlobalConfigJSONRequestBody
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		//log.Printf("Error on unmarshal the create global config data - %s\n", err.Error())
+		l.Errorf("Error on unmarshal the create global config data - %s\n", err.Error())
 		return createErrorResponse(err.Error(), http.StatusBadRequest)
 	}
 
@@ -71,7 +71,7 @@ func (h AdminApisHandler) createGlobalConfig(l *log.Log, w http.ResponseWriter, 
 func (h AdminApisHandler) getGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	config, err := h.coreAPIs.Administration.AdmGetGlobalConfig()
 	if err != nil {
-		//log.Printf("Error on getting config - %s\n", err)
+		l.Errorf("Error on getting config - %s\n", err)
 		return createErrorResponse(http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 
@@ -81,7 +81,7 @@ func (h AdminApisHandler) getGlobalConfig(l *log.Log, w http.ResponseWriter, r *
 	}
 	data, err := json.Marshal(responseData)
 	if err != nil {
-		//log.Println("Error on marshal the config")
+		l.Errorf("Error on marshal the config - %s\n", err)
 		return createErrorResponse(http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 
@@ -109,14 +109,14 @@ func (h AdminApisHandler) updateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 	validate := validator.New()
 	err = validate.Struct(updateConfig)
 	if err != nil {
-		//log.Printf("Error on validating create global config data - %s\n", err.Error())
+		l.Errorf("Error on validating create global config data - %s\n", err.Error())
 		return createErrorResponse(err.Error(), http.StatusBadRequest)
 	}
 	setting := updateConfig.Setting
 
 	err = h.coreAPIs.Administration.AdmUpdateGlobalConfig(setting)
 	if err != nil {
-		//	log.Println(err.Error())
+		l.Errorf(err.Error())
 		return createErrorResponse(err.Error(), http.StatusInternalServerError)
 	}
 
