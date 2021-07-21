@@ -2,6 +2,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 	"crypto/rsa"
 	"errors"
 	"fmt"
@@ -18,28 +19,10 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
-type UserAuth struct {
-	UserID       string
-	Sub          string
-	Name         string
-	Email        string
-	Phone        string
-	Picture      []byte
-	Exp          float64
-	RefreshToken string
-}
-
-type AuthConfig struct {
-	OrgID  string      `json:"org_id" bson:"org_id" validate:"required"`
-	AppID  string      `json:"app_id" bson:"app_id" validate:"required"`
-	Type   string      `json:"type" bson:"type" validate:"required"`
-	Config interface{} `json:"config" bson:"config" validate:"required"`
-}
-
 //Interface for authentication mechanisms
 type authType interface {
 	//Check validity of provided credentials
-	check(creds string, params string) (*UserAuth, error)
+	check(creds string, params string) (*model.UserAuth, error)
 }
 
 //Auth represents the auth functionality unit
@@ -102,7 +85,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initSamlAuth(auth)
 	initFirebaseAuth(auth)
 
-	initApiKeyAuth(auth)
+	initAPIKeyAuth(auth)
 	initSignatureAuth(auth)
 
 	err = auth.LoadAuthConfigs()
@@ -155,6 +138,7 @@ func (a *Auth) Login(authName string, creds string, params string) (string, *mod
 	return "", nil, nil
 }
 
+//GetScopedAccessToken TODO
 func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scope string) (string, error) {
 	scopedClaims := a.getStandardClaims(claims.Subject, serviceID, claims.OrgID, claims.AppID, nil)
 	return a.buildAccessToken(scopedClaims, "", scope)
@@ -198,19 +182,18 @@ func (a *Auth) getExp(exp *int64) int64 {
 	if exp == nil {
 		defaultTime := time.Now().Add(30 * time.Minute) //TODO: Set up org configs for default token exp
 		return defaultTime.Unix()
-	} else {
-		expTime := time.Unix(*exp, 0)
-		minTime := time.Now().Add(time.Duration(a.minTokenExp) * time.Minute)
-		maxTime := time.Now().Add(time.Duration(a.maxTokenExp) * time.Minute)
-
-		if expTime.Before(minTime) {
-			return minTime.Unix()
-		} else if expTime.After(maxTime) {
-			return maxTime.Unix()
-		}
-
-		return *exp
 	}
+	expTime := time.Unix(*exp, 0)
+	minTime := time.Now().Add(time.Duration(a.minTokenExp) * time.Minute)
+	maxTime := time.Now().Add(time.Duration(a.maxTokenExp) * time.Minute)
+
+	if expTime.Before(minTime) {
+		return minTime.Unix()
+	} else if expTime.After(maxTime) {
+		return maxTime.Unix()
+	}
+
+	return *exp
 }
 
 //findAccount retrieves a user's account information
@@ -283,7 +266,8 @@ func (a *Auth) storeReg() error {
 	return nil
 }
 
-func (a Auth) LoadAuthConfigs() error {
+//LoadAuthConfigs loads the auth configs
+func (a *Auth) LoadAuthConfigs() error {
 	authConfigDocs, err := a.storage.LoadAuthConfigs()
 	if err != nil {
 		return err
@@ -294,15 +278,15 @@ func (a Auth) LoadAuthConfigs() error {
 	return nil
 }
 
-func (a Auth) getAuthConfig(orgID string, appID string, authType string) (*AuthConfig, error) {
+func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error) {
 	a.authConfigsLock.RLock()
 	defer a.authConfigsLock.RUnlock()
 
-	var authConfig *AuthConfig //to return
+	var authConfig *model.AuthConfig //to return
 
 	item, _ := a.authConfigs.Load(fmt.Sprintf("%s_%s_%s", orgID, appID, authType))
 	if item != nil {
-		authConfigFromCache, ok := item.(AuthConfig)
+		authConfigFromCache, ok := item.(model.AuthConfig)
 		if !ok {
 			return nil, errors.New("failed to cast cache item to AuthConfig")
 		}
@@ -312,7 +296,7 @@ func (a Auth) getAuthConfig(orgID string, appID string, authType string) (*AuthC
 	return nil, errors.New("auth config does not exist")
 }
 
-func (a Auth) setAuthConfigs(authConfigs *[]AuthConfig) {
+func (a *Auth) setAuthConfigs(authConfigs *[]model.AuthConfig) {
 	a.authConfigs = &syncmap.Map{}
 	validate := validator.New()
 	var err error
@@ -344,6 +328,7 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 	return &LocalServiceRegLoaderImpl{storage: storage, ServiceRegSubscriptions: subscriptions}
 }
 
+//Storage interface to communicate with the storage
 type Storage interface {
 	FindUser(id string) (*model.User, error)
 	InsertUser(user *model.User) (*model.User, error)
@@ -355,6 +340,17 @@ type Storage interface {
 	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
 	SaveServiceReg(reg *authservice.ServiceReg) error
 
-	FindAuthConfig(orgID string, appID string, authType string) (*AuthConfig, error)
-	LoadAuthConfigs() (*[]AuthConfig, error)
+	FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error)
+	LoadAuthConfigs() (*[]model.AuthConfig, error)
+}
+
+//StorageListener represents storage listener implementation for the auth package
+type StorageListener struct {
+	Auth *Auth
+	storage.DefaultListenerImpl
+}
+
+//OnAuthConfigUpdated notifies that an auth config has been updated
+func (al *StorageListener) OnAuthConfigUpdated() {
+	al.Auth.LoadAuthConfigs()
 }

@@ -1,13 +1,16 @@
 package auth
 
-import "errors"
+import (
+	"core-building-block/core/model"
+	"errors"
+)
 
 // SAML implementation of authType
 type samlAuthImpl struct {
 	auth *Auth
 }
 
-func (a *samlAuthImpl) check(creds string, params string) (*UserAuth, error) {
+func (a *samlAuthImpl) check(creds string, params string) (*model.UserAuth, error) {
 	//TODO: Implement
 	return nil, errors.New("Unimplemented")
 }

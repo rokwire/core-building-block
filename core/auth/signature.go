@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"core-building-block/core/model"
 	"errors"
 )
 
@@ -9,7 +10,7 @@ type signatureAuthImpl struct {
 	auth *Auth
 }
 
-func (a *signatureAuthImpl) check(creds string, params string) (*UserAuth, error) {
+func (a *signatureAuthImpl) check(creds string, params string) (*model.UserAuth, error) {
 	//TODO: Implement
 	return nil, errors.New("Unimplemented")
 }

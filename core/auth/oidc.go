@@ -3,6 +3,7 @@ package auth
 import (
 	"bytes"
 	"context"
+	"core-building-block/core/model"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -68,7 +69,7 @@ type oidcToken struct {
 	ExpiresIn    int    `json:"expires_in"`
 }
 
-func (a *oidcAuthImpl) check(creds string, params string) (*UserAuth, error) {
+func (a *oidcAuthImpl) check(creds string, params string) (*model.UserAuth, error) {
 	paramsMap := make(map[string]interface{})
 	err := json.Unmarshal([]byte(params), &paramsMap)
 	if err != nil {
@@ -202,7 +203,7 @@ func (a *oidcAuthImpl) checkToken(idToken string, params *oidcCheckParams, oidcC
 	return sub, nil
 }
 
-func (a *oidcAuthImpl) newToken(code string, params *oidcLoginParams) (*UserAuth, error) {
+func (a *oidcAuthImpl) newToken(code string, params *oidcLoginParams) (*model.UserAuth, error) {
 	oidcConfig, err := a.getOidcAuthConfig(params.OrgID, params.AppID)
 	if err != nil {
 		return nil, fmt.Errorf("auth config for orgID %s, appID %s cannot be used for oidc: %s", params.OrgID, params.AppID, err.Error())
@@ -221,7 +222,7 @@ func (a *oidcAuthImpl) newToken(code string, params *oidcLoginParams) (*UserAuth
 	return a.loadOidcTokensAndInfo(bodyData, oidcConfig)
 }
 
-func (a *oidcAuthImpl) refreshToken(refreshToken string, params *oidcRefreshParams) (*UserAuth, error) {
+func (a *oidcAuthImpl) refreshToken(refreshToken string, params *oidcRefreshParams) (*model.UserAuth, error) {
 	oidcConfig, err := a.getOidcAuthConfig(params.OrgID, params.AppID)
 	if err != nil {
 		return nil, fmt.Errorf("auth config for orgID %s, appID %s cannot be used for oidc: %s", params.OrgID, params.AppID, err.Error())
@@ -240,7 +241,7 @@ func (a *oidcAuthImpl) refreshToken(refreshToken string, params *oidcRefreshPara
 	return a.loadOidcTokensAndInfo(bodyData, oidcConfig)
 }
 
-func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcConfig *oidcAuthConfig) (*UserAuth, error) {
+func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcConfig *oidcAuthConfig) (*model.UserAuth, error) {
 	oidcToken, err := a.loadOidcTokenWithParams(bodyData, oidcConfig)
 	if err != nil {
 		return nil, err
@@ -249,7 +250,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 		return nil, errors.New("get auth token failed")
 	}
 
-	userAuth := UserAuth{}
+	userAuth := model.UserAuth{}
 	sub, err := a.checkToken(oidcToken.IDToken, nil, oidcConfig)
 	if err != nil {
 		return nil, err
@@ -308,16 +309,16 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 }
 
 func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcConfig *oidcAuthConfig) (*oidcToken, error) {
-	tokenUri := ""
+	tokenURI := ""
 	oidcTokenURL := oidcConfig.Host + "/idp/profile/oidc/token"
 	if strings.Contains(oidcTokenURL, "{shibboleth_client_id}") {
-		tokenUri = strings.ReplaceAll(oidcTokenURL, "{shibboleth_client_id}", oidcConfig.ClientID)
-		tokenUri = strings.ReplaceAll(tokenUri, "{shibboleth_client_secret}", oidcConfig.ClientSecret)
+		tokenURI = strings.ReplaceAll(oidcTokenURL, "{shibboleth_client_id}", oidcConfig.ClientID)
+		tokenURI = strings.ReplaceAll(tokenURI, "{shibboleth_client_secret}", oidcConfig.ClientSecret)
 	} else if len(oidcConfig.ClientSecret) > 0 {
-		tokenUri = oidcTokenURL
+		tokenURI = oidcTokenURL
 		params["client_secret"] = oidcConfig.ClientSecret
 	} else {
-		tokenUri = oidcTokenURL
+		tokenURI = oidcTokenURL
 	}
 
 	uri := url.URL{}
@@ -338,7 +339,7 @@ func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcCon
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", tokenUri, bytes.NewReader(jsonData))
+	req, err := http.NewRequest("POST", tokenURI, bytes.NewReader(jsonData))
 	if err != nil {
 		return nil, err
 	}
