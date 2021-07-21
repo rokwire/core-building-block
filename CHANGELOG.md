@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Storage interface standardization. [#74](https://github.com/rokwire/core-building-block/issues/74)
 - Set up API documentation. [#8](https://github.com/rokwire/core-building-block/issues/8)
 - Extend the storage adapter listener. [#76] (https://github.com/rokwire/core-building-block/issues/76)]
 - Fixing the Log and the Changelog for issues #35 and #36 [#54](https://github.com/rokwire/core-building-block/issues/54)
