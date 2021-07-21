@@ -20,35 +20,6 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-type response struct {
-	responseCode int
-	header       map[string][]string
-	body         []byte
-}
-
-func createErrorResponse(body string, responseCode int) response {
-	headers := map[string][]string{}
-	headers["Content-Type"] = []string{"text/plain; charset=utf-8"}
-	headers["X-Content-Type-Options"] = []string{"nosniff"}
-
-	return response{responseCode: responseCode, header: headers, body: []byte(body)}
-}
-
-func createSuccessResponse(body string, headers map[string]string, responseCode int) response {
-	//prepare headers
-	if headers == nil {
-		headers = map[string]string{}
-	}
-
-	preparedHeaders := make(map[string][]string, len(headers))
-	if len(headers) > 0 {
-		for key, value := range headers {
-			preparedHeaders[key] = []string{value}
-		}
-	}
-	return response{responseCode: responseCode, header: preparedHeaders, body: []byte(body)}
-}
-
 //Adapter entity
 type Adapter struct {
 	env string
@@ -68,7 +39,7 @@ type Adapter struct {
 	coreAPIs *core.APIs
 }
 
-type handlerFunc = func(*log.Log, http.ResponseWriter, *http.Request) response
+type handlerFunc = func(*log.Log, http.ResponseWriter, *http.Request) log.HttpResponse
 
 //Start starts the module
 func (we Adapter) Start() {
@@ -178,8 +149,8 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 
 		//4. return response
 		//4.1 headers
-		if len(response.header) > 0 {
-			for key, values := range response.header {
+		if len(response.Headers) > 0 {
+			for key, values := range response.Headers {
 				if len(values) > 0 {
 					for _, value := range values {
 						w.Header().Add(key, value)
@@ -188,10 +159,10 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 			}
 		}
 		//4.2 response code
-		w.WriteHeader(response.responseCode)
+		w.WriteHeader(response.ResponseCode)
 		//4.3 body
-		if len(response.body) > 0 {
-			w.Write(response.body)
+		if len(response.Body) > 0 {
+			w.Write(response.Body)
 		}
 
 		//5. print
@@ -216,10 +187,10 @@ func (we Adapter) validateRequest(req *http.Request) (*openapi3filter.RequestVal
 	return requestValidationInput, nil
 }
 
-func (we Adapter) validateResponse(requestValidationInput *openapi3filter.RequestValidationInput, response response) error {
-	responseCode := response.responseCode
-	body := response.body
-	header := response.header
+func (we Adapter) validateResponse(requestValidationInput *openapi3filter.RequestValidationInput, response log.HttpResponse) error {
+	responseCode := response.ResponseCode
+	body := response.Body
+	header := response.Headers
 	options := openapi3filter.Options{IncludeResponseStatus: true}
 
 	responseValidationInput := &openapi3filter.ResponseValidationInput{

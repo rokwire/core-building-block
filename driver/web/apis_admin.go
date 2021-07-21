@@ -2,6 +2,7 @@ package web
 
 import (
 	"core-building-block/core"
+	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs"
 	"encoding/json"
 	"io/ioutil"
@@ -19,60 +20,52 @@ type AdminApisHandler struct {
 }
 
 //getTest TODO get test
-func (h AdminApisHandler) getTest(l *log.Log, w http.ResponseWriter, r *http.Request) response {
+func (h AdminApisHandler) getTest(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
 	res := h.coreAPIs.Administration.AdmGetTest()
 
-	return createSuccessResponse(res, nil, http.StatusOK)
+	return l.HttpResponseSuccessMessage(res)
 }
 
 //getTestModel gives a test model instance
-func (h AdminApisHandler) getTestModel(l *log.Log, w http.ResponseWriter, r *http.Request) response {
+func (h AdminApisHandler) getTestModel(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
 	res := h.coreAPIs.Administration.AdmGetTestModel()
 
-	return createSuccessResponse(res, nil, http.StatusOK)
+	return l.HttpResponseSuccessMessage(res)
 }
 
 //createGlobalConfig creates a global config
-func (h AdminApisHandler) createGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) response {
+func (h AdminApisHandler) createGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		l.Errorf("Error on marshal create global config - %s\n", err.Error())
-		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
 	var requestData Def.GlobalConfig
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		l.Errorf("Error on unmarshal the create global config data - %s\n", err.Error())
-		return createErrorResponse(err.Error(), http.StatusBadRequest)
+		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
 	}
 
 	//validate
 	validate := validator.New()
 	err = validate.Struct(requestData)
 	if err != nil {
-		//log.Printf("Error on validating create global config data - %s\n", err.Error())
-		return createErrorResponse(err.Error(), http.StatusBadRequest)
+		return l.HttpResponseErrorAction(log.ActionValidate, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
 	}
-	setting := requestData.Setting
 
-	_, err = h.coreAPIs.Administration.AdmCreateGlobalConfig(setting)
+	_, err = h.coreAPIs.Administration.AdmCreateGlobalConfig(requestData.Setting)
 	if err != nil {
-		//	log.Println(err.Error())
-		return createErrorResponse(err.Error(), http.StatusInternalServerError)
+		return l.HttpResponseErrorAction(log.ActionCreate, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
 	}
 
-	headers := map[string]string{}
-	headers["Content-Type"] = "text/plain"
-	return createSuccessResponse("Successfully created", headers, http.StatusOK)
+	return l.HttpResponseSuccess()
 }
 
 //getGlobalConfig gets config
-func (h AdminApisHandler) getGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) response {
+func (h AdminApisHandler) getGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
 	config, err := h.coreAPIs.Administration.AdmGetGlobalConfig()
 	if err != nil {
-		l.Errorf("Error on getting config - %s\n", err)
-		return createErrorResponse(http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return l.HttpResponseErrorAction(log.ActionGet, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
 	}
 
 	var responseData *Def.GlobalConfig
@@ -81,70 +74,58 @@ func (h AdminApisHandler) getGlobalConfig(l *log.Log, w http.ResponseWriter, r *
 	}
 	data, err := json.Marshal(responseData)
 	if err != nil {
-		l.Errorf("Error on marshal the config - %s\n", err)
-		return createErrorResponse(http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, false)
 	}
 
-	headers := map[string]string{}
-	headers["Content-Type"] = "application/json; charset=utf-8"
-	return createSuccessResponse(string(data), headers, http.StatusOK)
+	return l.HttpResponseSuccessJSON(data)
 }
 
 //updateGlobalConfig updates global config
-func (h AdminApisHandler) updateGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) response {
+func (h AdminApisHandler) updateGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-
+		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
 	var updateConfig Def.GlobalConfig
 	err = json.Unmarshal(data, &updateConfig)
 	if err != nil {
-		return createErrorResponse(err.Error(), http.StatusBadRequest)
-
+		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
 	}
 
 	//validate
 	validate := validator.New()
 	err = validate.Struct(updateConfig)
 	if err != nil {
-		l.Errorf("Error on validating create global config data - %s\n", err.Error())
-		return createErrorResponse(err.Error(), http.StatusBadRequest)
+		return l.HttpResponseErrorAction(log.ActionValidate, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
 	}
 	setting := updateConfig.Setting
 
 	err = h.coreAPIs.Administration.AdmUpdateGlobalConfig(setting)
 	if err != nil {
-		l.Errorf(err.Error())
-		return createErrorResponse(err.Error(), http.StatusInternalServerError)
+		return l.HttpResponseErrorAction(log.ActionUpdate, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
 	}
 
-	headers := map[string]string{}
-	headers["Content-Type"] = "text/plain"
-	return createSuccessResponse("Successfully created", headers, http.StatusOK)
+	return l.HttpResponseSuccess()
 }
 
 //createOrganization creates organization
-func (h AdminApisHandler) createOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) response {
+func (h AdminApisHandler) createOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		l.Errorf("Error on marshal create organization - %s\n", err.Error())
-		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 	var requestData Def.Organization
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		l.Errorf("Error on unmarshal the create organization  - %s\n", err.Error())
-		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
 	}
 
 	//validate
 	validate := validator.New()
 	err = validate.Struct(requestData)
 	if err != nil {
-		l.Errorf("Error on validating create organization  data - %s\n", err.Error())
-		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return l.HttpResponseErrorAction(log.ActionValidate, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
 	}
 
 	name := requestData.Name
@@ -155,41 +136,35 @@ func (h AdminApisHandler) createOrganization(l *log.Log, w http.ResponseWriter, 
 
 	_, err = h.coreAPIs.Administration.AdmCreateOrganization(name, string(requestType), *requiresOwnLogin, *loginTypes, *organizationDomains)
 	if err != nil {
-		l.Errorf("Error on creating an organization - %s\n", err.Error())
-		return createErrorResponse(err.Error(), http.StatusInternalServerError)
+		return l.HttpResponseErrorAction(log.ActionCreate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 	}
 
-	headers := map[string]string{}
-	headers["Content-Type"] = "text/plain"
-	return createSuccessResponse("Successfully created", headers, http.StatusOK)
+	return l.HttpResponseSuccess()
 }
 
 //updateOrganization updates organization
-func (h AdminApisHandler) updateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) response {
+func (h AdminApisHandler) updateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
 	params := mux.Vars(r)
 	ID := params["id"]
 	if len(ID) <= 0 {
-		return createErrorResponse("ID is required", http.StatusBadRequest)
+		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		l.Errorf("Error on marshal update organization - %s\n", err.Error())
-		return createErrorResponse("ID is required", http.StatusBadRequest)
+		return l.HttpResponseErrorData(log.StatusInvalid, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 	var requestData Def.Organization
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		l.Errorf("Error on unmarshal the update organization  - %s\n", err.Error())
-		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
 	}
 
 	//validate
 	validate := validator.New()
 	err = validate.Struct(requestData)
 	if err != nil {
-		l.Errorf("Error on validating update organization  data - %s\n", err.Error())
-		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return l.HttpResponseErrorAction(log.ActionValidate, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
 	}
 
 	name := requestData.Name
@@ -200,13 +175,10 @@ func (h AdminApisHandler) updateOrganization(l *log.Log, w http.ResponseWriter, 
 
 	err = h.coreAPIs.Administration.AdmUpdateOrganization(ID, name, string(requestType), *requiresOwnLogin, *loginTypes, *organizationDomains)
 	if err != nil {
-		l.Errorf("Error on updating an organization - %s\n", err.Error())
-		return createErrorResponse(err.Error(), http.StatusInternalServerError)
+		return l.HttpResponseErrorAction(log.ActionUpdate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 	}
 
-	headers := map[string]string{}
-	headers["Content-Type"] = "text/plain"
-	return createSuccessResponse("Successfully created", headers, http.StatusOK)
+	return l.HttpResponseSuccess()
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance
