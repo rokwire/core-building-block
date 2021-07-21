@@ -49,8 +49,7 @@ type Storage interface {
 }
 
 //StorageListener listenes for change data storage events
-
-type CoreStorageListener struct {
+type StorageListener struct {
 	app *application
 	storage.DefaultStorageListenerImpl
 }
