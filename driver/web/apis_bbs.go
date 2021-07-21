@@ -13,7 +13,7 @@ type BBsApisHandler struct {
 }
 
 //getTest TODO get test
-func (h BBsApisHandler) getTest(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
+func (h BBsApisHandler) getTest(l *log.Log, r *http.Request) log.HttpResponse {
 	res := h.coreAPIs.BBs.BBsGetTest()
 
 	return l.HttpResponseSuccessMessage(res)

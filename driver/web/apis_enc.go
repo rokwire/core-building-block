@@ -13,7 +13,7 @@ type EncApisHandler struct {
 }
 
 //getTest TODO get test
-func (h EncApisHandler) getTest(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
+func (h EncApisHandler) getTest(l *log.Log, r *http.Request) log.HttpResponse {
 	res := h.coreAPIs.Encryption.EncGetTest()
 
 	return l.HttpResponseSuccessMessage(res)

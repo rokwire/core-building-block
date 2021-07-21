@@ -39,7 +39,7 @@ type Adapter struct {
 	coreAPIs *core.APIs
 }
 
-type handlerFunc = func(*log.Log, http.ResponseWriter, *http.Request) log.HttpResponse
+type handlerFunc = func(*log.Log, *http.Request) log.HttpResponse
 
 //Start starts the module
 func (we Adapter) Start() {
@@ -133,7 +133,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		}
 
 		//2. process it
-		response := handler(logObj, w, req)
+		response := handler(logObj, req)
 
 		//3. validate the response
 		if we.env != "production" {
