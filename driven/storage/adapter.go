@@ -52,7 +52,7 @@ func (sa *Adapter) Start() error {
 }
 
 //RegisterStorageListener registers a data change listener with the storage adapter
-func (sa *Adapter) RegisterStorageListener(storageListener StorageListener) {
+func (sa *Adapter) RegisterStorageListener(storageListener Listener) {
 	sa.db.listeners = append(sa.db.listeners, storageListener)
 }
 
@@ -314,12 +314,13 @@ func abortTransaction(sessionContext mongo.SessionContext) {
 	}
 }
 
-type StorageListener interface {
+//Listener represents storage listener
+type Listener interface {
 	OnAuthConfigUpdated()
 	OnServiceRegsUpdated()
 }
 
-type DefaultStorageListenerImpl struct{}
+type DefaultListenerImpl struct{}
 
-func (d *DefaultStorageListenerImpl) OnAuthConfigUpdated()  {}
-func (d *DefaultStorageListenerImpl) OnServiceRegsUpdated() {}
+func (d *DefaultListenerImpl) OnAuthConfigUpdated()  {}
+func (d *DefaultListenerImpl) OnServiceRegsUpdated() {}

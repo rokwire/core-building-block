@@ -89,7 +89,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initSamlAuth(auth)
 	initFirebaseAuth(auth)
 
-	initApiKeyAuth(auth)
+	initAPIKeyAuth(auth)
 	initSignatureAuth(auth)
 
 	err = auth.LoadAuthConfigs()
@@ -125,6 +125,7 @@ func (a *Auth) Login(authType string, creds string, params string, l *log.Log) (
 	return "", nil, nil
 }
 
+//GetScopedAccessToken TODO
 func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scope string) (string, error) {
 	scopedClaims := a.getStandardClaims(claims.Subject, serviceID, claims.OrgID, claims.AppID, nil)
 	return a.buildAccessToken(scopedClaims, "", scope)
@@ -221,19 +222,18 @@ func (a *Auth) getExp(exp *int64) int64 {
 	if exp == nil {
 		defaultTime := time.Now().Add(30 * time.Minute) //TODO: Set up org configs for default token exp
 		return defaultTime.Unix()
-	} else {
-		expTime := time.Unix(*exp, 0)
-		minTime := time.Now().Add(time.Duration(a.minTokenExp) * time.Minute)
-		maxTime := time.Now().Add(time.Duration(a.maxTokenExp) * time.Minute)
-
-		if expTime.Before(minTime) {
-			return minTime.Unix()
-		} else if expTime.After(maxTime) {
-			return maxTime.Unix()
-		}
-
-		return *exp
 	}
+	expTime := time.Unix(*exp, 0)
+	minTime := time.Now().Add(time.Duration(a.minTokenExp) * time.Minute)
+	maxTime := time.Now().Add(time.Duration(a.maxTokenExp) * time.Minute)
+
+	if expTime.Before(minTime) {
+		return minTime.Unix()
+	} else if expTime.After(maxTime) {
+		return maxTime.Unix()
+	}
+
+	return *exp
 }
 
 //storeReg stores the service registration record
@@ -262,6 +262,7 @@ func (a *Auth) storeReg() error {
 	return nil
 }
 
+//LoadAuthConfigs loads the auth configs
 func (a *Auth) LoadAuthConfigs() error {
 	authConfigDocs, err := a.storage.LoadAuthConfigs()
 	if err != nil {
@@ -324,6 +325,7 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 	return &LocalServiceRegLoaderImpl{storage: storage, ServiceRegSubscriptions: subscriptions}
 }
 
+//Storage interface to communicate with the storage
 type Storage interface {
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
@@ -338,17 +340,18 @@ type Storage interface {
 	LoadAuthConfigs() (*[]model.AuthConfig, error)
 }
 
-type AuthStorageListener struct {
+//StorageListener represents storage listener implementation for the auth package
+type StorageListener struct {
 	Auth *Auth
-	storage.DefaultStorageListenerImpl
+	storage.DefaultListenerImpl
 }
 
 //OnAuthConfigUpdated notifies that an auth config has been updated
-func (al *AuthStorageListener) OnAuthConfigUpdated() {
+func (al *StorageListener) OnAuthConfigUpdated() {
 	al.Auth.LoadAuthConfigs()
 }
 
 //OnServiceRegsUpdated notifies that a service registration has been updated
-func (al *AuthStorageListener) OnServiceRegsUpdated() {
+func (al *StorageListener) OnServiceRegsUpdated() {
 	al.Auth.AuthService.LoadServices()
 }
