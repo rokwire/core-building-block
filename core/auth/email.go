@@ -2,12 +2,16 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/utils"
 	"encoding/json"
 	"errors"
-	"strings"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
-	"gopkg.in/gomail.v2"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 // Email implementation of authType
@@ -15,9 +19,17 @@ type emailAuthImpl struct {
 	auth *Auth
 }
 
+//credentials represents the credential struct for email auth
+type credential struct {
+	Email              string    `json:"email" bson:"email" validate:"required"`
+	Password           string    `json:"password" bson:"password"`
+	IsVerified         bool      `json:"is_verified" bson:"is_verified"`
+	VerificationCode   string    `json:"verification_code" bson:"verification_code" validate:"required"`
+	VerificationExpiry time.Time `json:"verification_expiry" bson:"verification_expiry"`
+}
+
 func (a *emailAuthImpl) check(creds string, params string) (*model.UserAuth, error) {
-	//TODO: Implement
-	var c *model.Credential
+	var c *credential
 	err := json.Unmarshal([]byte(creds), &c)
 	if err != nil {
 		return nil, err
@@ -52,7 +64,7 @@ func (a *emailAuthImpl) check(creds string, params string) (*model.UserAuth, err
 	return claims, nil
 }
 
-func (a *emailAuthImpl) handleSignup(c *model.Credential, user *model.Credential) error {
+func (a *emailAuthImpl) handleSignup(c *credential, user *credential) error {
 	if user != nil {
 		return errors.New("email already in use")
 	}
@@ -60,14 +72,21 @@ func (a *emailAuthImpl) handleSignup(c *model.Credential, user *model.Credential
 	if err != nil {
 		return errors.New("failed to generate hash from password")
 	}
-	err = a.auth.storage.SetEmailCredential(c.Email, string(hashedPassword))
+
+	c.VerificationCode = utils.RandSeq(8)
+	c.Password = string(hashedPassword)
+	c.VerificationExpiry = time.Now().Add(time.Hour * 24)
+	if err = a.sendVerificationCode(c.Email, c.VerificationCode); err != nil {
+		return errors.New("failed to send verification email for user")
+	}
+	err = a.auth.storage.CreateEmailCredential(c)
 	if err != nil {
 		return errors.New("failed to store credentials to DB")
 	}
 	return nil
 }
 
-func (a *emailAuthImpl) handleSignin(c *model.Credential, user *model.Credential) error {
+func (a *emailAuthImpl) handleSignin(c *credential, user *credential) error {
 	if user == nil {
 		return errors.New("no user credentials found")
 	}
@@ -77,28 +96,86 @@ func (a *emailAuthImpl) handleSignin(c *model.Credential, user *model.Credential
 	return nil
 }
 
-func (a *emailAuthImpl) sendEmail(toEmail string, subject string, attachmentFilename string) error {
-	if toEmail == "" {
-		return errors.New("Missing email")
+func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode string) error {
+	return a.auth.SendEmail(email, "Verify your email", "Your verification code is "+verificationCode, "")
+}
+
+func (a *emailAuthImpl) sendPasswordReset(email string, password string) error {
+	return a.auth.SendEmail(email, "Password Reset", "Your temporary password is "+password, "")
+}
+
+//Handler for verify endpoint
+func (a *emailAuthImpl) VerifyCodeHandler(w http.ResponseWriter, r *http.Request) {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("Error on marshalling credential - %s\n", err.Error())
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
 	}
 
-	emails := strings.Split(toEmail, ",")
+	var c credential
+	err = json.Unmarshal(data, &c)
+	if err != nil {
+		log.Printf("Error on unmarshal the credential request data - %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	m := gomail.NewMessage()
-	m.SetHeader("From", a.auth.emailFrom)
-	m.SetHeader("To", emails...)
-	m.SetHeader("Subject", subject)
-	m.Attach(attachmentFilename)
+	//validate
+	validate := validator.New()
+	err = validate.Struct(c)
+	if err != nil {
+		log.Printf("Error on validating credential data - %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	if err := a.auth.emailDialer.DialAndSend(m); err != nil {
+	if err = a.verifyCode(&c); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Successfully verified code"))
+}
+
+func (a *emailAuthImpl) verifyCode(c *credential) error {
+	credsFromDB, err := a.auth.storage.GetEmailCredential(c.Email)
+	if err != nil {
+		return errors.New("failed to fetch credential from DB")
+	}
+	valid, err := a.compareVerifyCode(credsFromDB, c)
+	if err != nil {
 		return err
 	}
-
+	if !valid {
+		return errors.New("invalid code")
+	}
+	//Update verification data
+	c.IsVerified = true
+	c.VerificationCode = ""
+	c.VerificationExpiry = time.Time{}
+	if err = a.auth.storage.UpdateEmailCredential(c); err != nil {
+		return err
+	}
 	return nil
 }
 
+func (a *emailAuthImpl) compareVerifyCode(actualCred *credential, requestCred *credential) (bool, error) {
+	if actualCred.VerificationExpiry.Before(time.Now()) {
+		return false, errors.New("verify code has expired")
+	}
+
+	if actualCred.VerificationCode != requestCred.VerificationCode {
+		//log info
+		return false, nil
+	}
+	return true, nil
+
+}
+
 //initEmailAuth initializes and registers a new email auth instance
-func initEmailAuth(auth *Auth, smtpHost string, smtpPort string) (*emailAuthImpl, error) {
+func initEmailAuth(auth *Auth) (*emailAuthImpl, error) {
 	email := &emailAuthImpl{auth: auth}
 
 	err := auth.registerAuthType("email", email)

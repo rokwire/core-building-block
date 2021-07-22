@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -64,7 +65,8 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 		// handle error
 		log.Fatal("Invalid SMTP port")
 	}
-	emailDialer := gomail.NewPlainDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
+	//maybe set up from config collection for diff types of auth
+	emailDialer := gomail.NewDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
 
 	authTypes := map[string]authType{}
 
@@ -146,6 +148,30 @@ func (a *Auth) Login(authName string, creds string, params string) (string, *mod
 	//TODO: Implement account management and return token and user using claims
 
 	return "", nil, nil
+}
+
+//SendEmail is used to send verification and password reset emails using Smtp connection
+func (a *Auth) SendEmail(toEmail string, subject string, body string, attachmentFilename string) error {
+	if a.emailDialer == nil {
+		return errors.New("Email dialer has not been set up")
+	}
+	if toEmail == "" {
+		return errors.New("Missing email")
+	}
+
+	emails := strings.Split(toEmail, ",")
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", a.emailFrom)
+	m.SetHeader("To", emails...)
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/plain", body)
+	m.Attach(attachmentFilename)
+
+	if err := a.emailDialer.DialAndSend(m); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scope string) (string, error) {
@@ -310,8 +336,9 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 
 type Storage interface {
 	ReadTODO() error
-	SetEmailCredential(username string, password string) error
-	GetEmailCredential(username string) (*model.Credential, error)
+	CreateEmailCredential(*credential) error
+	UpdateEmailCredential(*credential) error
+	GetEmailCredential(username string) (*credential, error)
 	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
 	SaveServiceReg(reg *authservice.ServiceReg) error
 
