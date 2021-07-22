@@ -103,7 +103,7 @@ func (we Adapter) Start() {
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("access-control-allow-origin", "*")
-	http.ServeFile(w, r, "./driver/web/docs/def.yaml")
+	http.ServeFile(w, r, "./driver/web/docs/gen/def.yaml")
 }
 
 func (we Adapter) serveDocUI() http.Handler {
@@ -211,7 +211,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
-	doc, err := loader.LoadFromFile("driver/web/docs/def.yaml")
+	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
 	if err != nil {
 		logger.Fatal(err.Error())
 	}

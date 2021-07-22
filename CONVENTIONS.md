@@ -20,6 +20,13 @@ We should keep the changelog up to date as this is part of open source platform.
 #### Add code
 Make as many commits as needed to complete the issue.
 
+When a developer needs to implement an API he/she should need to do this:
+- Add the API in the yaml files stored in driver/web/docs folder.
+- Run this command(make oapi-gen-docs) to generate the def.yaml file stored in driver/web/docs/gen folder. You will need to install on your mashine this tool - https://github.com/APIDevTools/swagger-cli. Once the command is run then all yaml files will be merged into the def.yaml file. Please do not change the def.yaml file manually.
+- Run this command(make oapi-gen-types) to generate the Go types from the def.yaml file. You will need to install on your mashine this tool - https://github.com/deepmap/oapi-codegen. Once the command is run then the driver/web/docs gen_types.go file will be updated with the new generated types.
+- Implement the API using the generated Go structs in driver/web/docs gen_types.go
+- Test you API via the documentation - open http://localhost/core/doc/ui/ , choose Local server from the Servers combobox and run your API. This is an alternative of Postman.
+
 #### Write unit tests to your code
 The test coverage should be at least 80% of the new created code.
 
