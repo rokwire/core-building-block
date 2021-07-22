@@ -12,6 +12,8 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/go-playground/validator.v9"
+
+	log "github.com/rokmetro/logging-library/loglib"
 )
 
 // Email implementation of authType
@@ -180,7 +182,7 @@ func initEmailAuth(auth *Auth) (*emailAuthImpl, error) {
 
 	err := auth.registerAuthType("email", email)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return email, nil

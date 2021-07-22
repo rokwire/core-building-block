@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/casbin/casbin v1.9.1
 	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/getkin/kin-openapi v0.66.0
 	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0

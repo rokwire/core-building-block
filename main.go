@@ -26,6 +26,13 @@ func main() {
 	logger := log.NewLogger("core", nil)
 	envLoader := envloader.NewEnvLoader(Version, logger)
 
+	level := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_LOG_LEVEL", false, false)
+	logLevel := log.LogLevelFromString(level)
+	if logLevel != nil {
+		logger.SetLevel(*logLevel)
+	}
+
+	env := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_ENVIRONMENT", true, false) //local, dev, staging, prod
 	serviceID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SERVICE_ID", true, false)
 	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
 
@@ -36,7 +43,7 @@ func main() {
 	storageAdapter := storage.NewStorageAdapter(mongoDBAuth, mongoDBName, mongoTimeout, logger)
 	err := storageAdapter.Start()
 	if err != nil {
-		logger.Fatal("Cannot start the mongoDB adapter - " + err.Error())
+		logger.Fatalf("Cannot start the mongoDB adapter: %v", err)
 	}
 
 	//auth
@@ -76,11 +83,10 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(Version, Build, storageAdapter, auth)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth)
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(coreAPIs, host, logger)
-
+	webAdapter := web.NewWebAdapter(env, coreAPIs, host, logger)
 	webAdapter.Start()
 }

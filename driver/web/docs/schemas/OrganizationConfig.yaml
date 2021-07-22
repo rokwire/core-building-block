@@ -1,0 +1,11 @@
+type: object
+properties:
+  id:
+    readOnly: true
+    type: string
+    description: organization config id
+  domains:
+    type: array
+    description: organization domains
+    items:
+      type: string

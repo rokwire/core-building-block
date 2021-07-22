@@ -23,7 +23,7 @@ type APIs struct {
 func (c *APIs) Start() {
 	c.app.start()
 
-	storageListener := auth.AuthStorageListener{Auth: c.Auth}
+	storageListener := auth.StorageListener{Auth: c.Auth}
 	c.app.storage.RegisterStorageListener(&storageListener)
 }
 
@@ -32,11 +32,16 @@ func (c *APIs) AddListener(listener ApplicationListener) {
 	c.app.addListener(listener)
 }
 
+//GetVersion gives the service version
+func (c *APIs) GetVersion() string {
+	return c.app.version
+}
+
 //NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(version string, build string, storage Storage, auth *auth.Auth) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, auth *auth.Auth) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
-	application := application{version: version, build: build, storage: storage, listeners: listeners}
+	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners}
 
 	//add coreAPIs instance
 	servicesImpl := &servicesImpl{app: &application}
@@ -56,10 +61,6 @@ func NewCoreAPIs(version string, build string, storage Storage, auth *auth.Auth)
 //servicesImpl
 type servicesImpl struct {
 	app *application
-}
-
-func (s *servicesImpl) SerGetVersion(l *log.Log) string {
-	return s.app.serGetVersion(l)
 }
 
 func (s *servicesImpl) SerGetAuthTest(l *log.Log) string {
