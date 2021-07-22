@@ -427,7 +427,6 @@ components:
       type: object
       properties:
         service_id:
-          readOnly: true
           type: string
         host:
           type: string
@@ -440,8 +439,6 @@ components:
       type: object
       properties:
         key_pem:
-          readOnly: true
           type: string
         alg:
-          readOnly: true
           type: string

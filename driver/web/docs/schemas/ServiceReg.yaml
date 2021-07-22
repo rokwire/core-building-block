@@ -4,7 +4,6 @@ required:
 type: object
 properties:
   service_id:
-    readOnly: true
     type: string
   host:
     type: string

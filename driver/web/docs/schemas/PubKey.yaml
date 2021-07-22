@@ -4,8 +4,6 @@ required:
 type: object
 properties:
   key_pem:
-    readOnly: true
     type: string
   alg:
-    readOnly: true
     type: string
