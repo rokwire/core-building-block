@@ -16,6 +16,13 @@ const (
 	OrganizationTypeSmall OrganizationType = "small"
 )
 
+// Application defines model for Application.
+type Application struct {
+	Id       string    `json:"id"`
+	Name     string    `json:"name"`
+	Versions *[]string `json:"versions,omitempty"`
+}
+
 // GlobalConfig defines model for GlobalConfig.
 type GlobalConfig struct {
 	Setting string `json:"setting"`
@@ -44,6 +51,9 @@ type OrganizationConfig struct {
 	Id *string `json:"id,omitempty"`
 }
 
+// PostAdminApplicationJSONBody defines parameters for PostAdminApplication.
+type PostAdminApplicationJSONBody Application
+
 // PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
 type PostAdminGlobalConfigJSONBody GlobalConfig
 
@@ -55,6 +65,9 @@ type PostAdminOrganizationsJSONBody Organization
 
 // PutAdminOrganizationsIdJSONBody defines parameters for PutAdminOrganizationsId.
 type PutAdminOrganizationsIdJSONBody Organization
+
+// PostAdminApplicationJSONRequestBody defines body for PostAdminApplication for application/json ContentType.
+type PostAdminApplicationJSONRequestBody PostAdminApplicationJSONBody
 
 // PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
 type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody
