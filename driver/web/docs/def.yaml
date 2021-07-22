@@ -24,6 +24,10 @@ tags:
 - name: BBs
   description: APIs consumed by the platform building blocks.
 paths:
+  /services/auth/test:
+    $ref: "./resources/auth/test.yaml"
+  /services/common/test:
+    $ref: "./resources/common/test.yaml"
   /version:
     $ref: "./resources/default/version.yaml"
   /admin/global-config:

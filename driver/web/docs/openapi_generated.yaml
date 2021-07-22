@@ -24,6 +24,32 @@ tags:
   - name: BBs
     description: APIs consumed by the platform building blocks.
 paths:
+  /services/auth/test:
+    get:
+      tags:
+        - Auth
+      summary: Test API..
+      responses:
+        '200':
+          description: successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Echooo
+  /services/common/test:
+    get:
+      tags:
+        - Common
+      summary: Test API..
+      responses:
+        '200':
+          description: successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Echooo
   /version:
     get:
       summary: Get service version

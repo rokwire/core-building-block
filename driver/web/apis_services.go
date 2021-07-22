@@ -16,14 +16,18 @@ type ServicesApisHandler struct {
 func (h ServicesApisHandler) getAuthTest(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	res := h.coreAPIs.Services.SerGetAuthTest(l)
 
-	return createSuccessResponse(res, nil, http.StatusOK)
+	headers := map[string]string{}
+	headers["Content-Type"] = "text/plain"
+	return createSuccessResponse(res, headers, http.StatusOK)
 }
 
 //getCommonTest TODO get test
 func (h ServicesApisHandler) getCommonTest(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	res := h.coreAPIs.Services.SerGetCommonTest(l)
 
-	return createSuccessResponse(res, nil, http.StatusOK)
+	headers := map[string]string{}
+	headers["Content-Type"] = "text/plain"
+	return createSuccessResponse(res, headers, http.StatusOK)
 }
 
 //NewServicesApisHandler creates new rest services Handler instance
