@@ -16,7 +16,9 @@ type EncApisHandler struct {
 func (h EncApisHandler) getTest(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	res := h.coreAPIs.Encryption.EncGetTest()
 
-	return createSuccessResponse(res, nil, http.StatusOK)
+	headers := map[string]string{}
+	headers["Content-Type"] = "text/plain"
+	return createSuccessResponse(res, headers, http.StatusOK)
 }
 
 //NewEncApisHandler creates new enc Handler instance

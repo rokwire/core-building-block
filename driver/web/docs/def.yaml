@@ -34,6 +34,8 @@ paths:
     $ref: "./resources/admin/organizations.yaml"
   /enc/test:
     $ref: "./resources/enc/test.yaml"
+  /bbs/test:
+    $ref: "./resources/bbs/test.yaml"
 components:
   schemas:
     $ref: "./schemas/index.yaml"

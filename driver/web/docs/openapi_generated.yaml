@@ -185,6 +185,19 @@ paths:
               schema:
                 type: string
                 example: Echooo
+  /bbs/test:
+    get:
+      tags:
+        - BBs
+      summary: Test API..
+      responses:
+        '200':
+          description: successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Echooo
 components:
   schemas:
     GlobalConfig:

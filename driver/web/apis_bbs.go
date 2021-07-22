@@ -16,7 +16,9 @@ type BBsApisHandler struct {
 func (h BBsApisHandler) getTest(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	res := h.coreAPIs.BBs.BBsGetTest()
 
-	return createSuccessResponse(res, nil, http.StatusOK)
+	headers := map[string]string{}
+	headers["Content-Type"] = "text/plain"
+	return createSuccessResponse(res, headers, http.StatusOK)
 }
 
 //NewBBsApisHandler creates new bbs Handler instance
