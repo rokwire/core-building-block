@@ -9,4 +9,4 @@ properties:
   host:
     type: string
   pub_key:
-    $ref: "#/components/schemas/PubKey"
+    $ref: "./PubKey.yaml"

@@ -167,7 +167,7 @@ paths:
       description: |
         Creates organization
       requestBody:
-        description: Creates one organization
+        description: creates one organization
         content:
           application/json:
             schema:
@@ -181,6 +181,124 @@ paths:
               schema:
                 type: string
                 example: Successfullly created
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/service-reg:
+    get:
+      tags:
+        - Admin
+      summary: Get service registrations
+      description: |
+        Returns service registration records
+      parameters:
+        - name: ids
+          in: query
+          description: A comma-separated list of service IDs to return registrations for
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceReg'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      tags:
+        - Admin
+      summary: Register service
+      description: |
+        Creates a new service registration
+
+        The "service_id" of the registration must not match an existing registration  
+      requestBody:
+        description: service registration record to be added
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceReg'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      tags:
+        - Admin
+      summary: Update service registration
+      description: |
+        Update an existing service registration
+
+        The "service_id" of the registration must match an existing registration
+      requestBody:
+        description: Service registration record update to be applied
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceReg'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      tags:
+        - Admin
+      summary: Deregister service
+      description: |
+        Deletes an existing service registration record
+      parameters:
+        - name: id
+          in: query
+          description: The service ID of the registration to delete
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -224,6 +342,35 @@ paths:
               schema:
                 type: string
                 example: v1.1.0
+  /services:
+    get:
+      summary: Get service registrations
+      description: |
+        Returns service registration records
+      parameters:
+        - name: ids
+          in: query
+          description: A comma-separated list of service IDs to return registrations for
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceReg'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
 components:
   schemas:
     GlobalConfig:
@@ -253,9 +400,9 @@ components:
             - medium
             - large
             - huge
-        requires_own_login:
+        requires-own-login:
           type: boolean
-        login_types:
+        login-types:
           type: array
           items:
             type: string
@@ -273,3 +420,28 @@ components:
           description: organization domains
           items:
             type: string
+    ServiceReg:
+      required:
+        - service_id
+        - host
+      type: object
+      properties:
+        service_id:
+          readOnly: true
+          type: string
+        host:
+          type: string
+        pub_key:
+          $ref: '#/components/schemas/PubKey'
+    PubKey:
+      required:
+        - key_pem
+        - alg
+      type: object
+      properties:
+        key_pem:
+          readOnly: true
+          type: string
+        alg:
+          readOnly: true
+          type: string
