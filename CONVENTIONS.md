@@ -20,6 +20,13 @@ We should keep the changelog up to date as this is part of the open source platf
 #### Add code
 Make as many commits as needed to complete the issue.
 
+When implementing an API:
+- Define the OpenAPI 3.0 documentation for the API in the appropriate yaml files stored in `driver/web/docs` folder.
+- Run `make oapi-gen-docs` to generate the `def.yaml` file stored in `driver/web/docs/gen` folder. To run this command, you will need to install [swagger-cli](https://github.com/APIDevTools/swagger-cli). This command will merge all OpenAPI files into the `def.yaml` file. Please do not change the `def.yaml` file manually.
+- Run `make oapi-gen-types` to generate the Go types from the `def.yaml` file. To run this command, you will need to install [oapi-codegen](https://github.com/deepmap/oapi-codegen). This command will update the `driver/web/docs/gen/gen_types.go` file with the new generated types.
+- Implement the API handler function using the generated Go structs in `driver/web/docs/gen/gen_types.go`
+- Test you API via the documentation - Open http://localhost/core/doc/ui/ , choose "Local server" from the "Servers" combobox and run your API. This is an alternative to Postman. Make sure to set the correct value in the `ROKWIRE_CORE_HOST` environment variable (eg. http://localhost/core) before running the service to access the docs.
+
 #### Write unit tests for your code
 The test coverage should be at least 80% of the new created code.
 
