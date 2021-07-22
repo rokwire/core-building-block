@@ -69,28 +69,28 @@ type PostAdminOrganizationsJSONBody Organization
 // PutAdminOrganizationsIdJSONBody defines parameters for PutAdminOrganizationsId.
 type PutAdminOrganizationsIdJSONBody Organization
 
-// DeleteAdminServiceRegParams defines parameters for DeleteAdminServiceReg.
-type DeleteAdminServiceRegParams struct {
+// DeleteAdminServiceRegsParams defines parameters for DeleteAdminServiceRegs.
+type DeleteAdminServiceRegsParams struct {
 
 	// The service ID of the registration to delete
 	Id string `json:"id"`
 }
 
-// GetAdminServiceRegParams defines parameters for GetAdminServiceReg.
-type GetAdminServiceRegParams struct {
+// GetAdminServiceRegsParams defines parameters for GetAdminServiceRegs.
+type GetAdminServiceRegsParams struct {
 
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
 
-// PostAdminServiceRegJSONBody defines parameters for PostAdminServiceReg.
-type PostAdminServiceRegJSONBody ServiceReg
+// PostAdminServiceRegsJSONBody defines parameters for PostAdminServiceRegs.
+type PostAdminServiceRegsJSONBody ServiceReg
 
-// PutAdminServiceRegJSONBody defines parameters for PutAdminServiceReg.
-type PutAdminServiceRegJSONBody ServiceReg
+// PutAdminServiceRegsJSONBody defines parameters for PutAdminServiceRegs.
+type PutAdminServiceRegsJSONBody ServiceReg
 
-// GetServicesParams defines parameters for GetServices.
-type GetServicesParams struct {
+// GetServicesAuthServiceRegsParams defines parameters for GetServicesAuthServiceRegs.
+type GetServicesAuthServiceRegsParams struct {
 
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
@@ -108,8 +108,8 @@ type PostAdminOrganizationsJSONRequestBody PostAdminOrganizationsJSONBody
 // PutAdminOrganizationsIdJSONRequestBody defines body for PutAdminOrganizationsId for application/json ContentType.
 type PutAdminOrganizationsIdJSONRequestBody PutAdminOrganizationsIdJSONBody
 
-// PostAdminServiceRegJSONRequestBody defines body for PostAdminServiceReg for application/json ContentType.
-type PostAdminServiceRegJSONRequestBody PostAdminServiceRegJSONBody
+// PostAdminServiceRegsJSONRequestBody defines body for PostAdminServiceRegs for application/json ContentType.
+type PostAdminServiceRegsJSONRequestBody PostAdminServiceRegsJSONBody
 
-// PutAdminServiceRegJSONRequestBody defines body for PutAdminServiceReg for application/json ContentType.
-type PutAdminServiceRegJSONRequestBody PutAdminServiceRegJSONBody
+// PutAdminServiceRegsJSONRequestBody defines body for PutAdminServiceRegs for application/json ContentType.
+type PutAdminServiceRegsJSONRequestBody PutAdminServiceRegsJSONBody

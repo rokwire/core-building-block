@@ -12,7 +12,6 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/gorilla/mux"
-	"github.com/rokmetro/auth-library/authservice"
 	log "github.com/rokmetro/logging-library/loglib"
 )
 
@@ -195,7 +194,9 @@ func (h AdminApisHandler) getServiceRegistrations(l *log.Log, r *http.Request) l
 		return l.HttpResponseErrorAction(log.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
 	}
 
-	data, err := json.Marshal(serviceRegs)
+	serviceRegResp := serviceRegListToDef(serviceRegs)
+
+	data, err := json.Marshal(serviceRegResp)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeServiceReg, nil, err, http.StatusInternalServerError, false)
 	}
@@ -209,19 +210,15 @@ func (h AdminApisHandler) registerService(l *log.Log, r *http.Request) log.HttpR
 		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData *authservice.ServiceReg
+	var requestData *Def.ServiceReg
 	err = json.Unmarshal(data, requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeServiceReg, nil, err, http.StatusBadRequest, true)
 	}
 
-	validate := validator.New()
-	err = validate.Struct(requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionValidate, model.TypeServiceReg, nil, err, http.StatusBadRequest, true)
-	}
+	serviceReg := serviceRegFromDef(requestData)
 
-	err = h.coreAPIs.Auth.RegisterService(requestData)
+	err = h.coreAPIs.Auth.RegisterService(&serviceReg)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionCreate, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
 	}
@@ -235,19 +232,15 @@ func (h AdminApisHandler) updateServiceRegistration(l *log.Log, r *http.Request)
 		return l.HttpResponseErrorData(log.StatusInvalid, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData *authservice.ServiceReg
+	var requestData *Def.ServiceReg
 	err = json.Unmarshal(data, requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeServiceReg, nil, err, http.StatusBadRequest, true)
 	}
 
-	validate := validator.New()
-	err = validate.Struct(requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionValidate, model.TypeServiceReg, nil, err, http.StatusBadRequest, true)
-	}
+	serviceReg := serviceRegFromDef(requestData)
 
-	err = h.coreAPIs.Auth.UpdateServiceRegistration(requestData)
+	err = h.coreAPIs.Auth.UpdateServiceRegistration(&serviceReg)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionUpdate, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
 	}

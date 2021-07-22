@@ -37,6 +37,35 @@ paths:
               schema:
                 type: string
                 example: Echooo
+  /services/auth/service-regs:
+    get:
+      summary: Get service registrations
+      description: |
+        Returns service registration records
+      parameters:
+        - name: ids
+          in: query
+          description: A comma-separated list of service IDs to return registrations for
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceReg'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/common/test:
     get:
       tags:
@@ -187,7 +216,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/service-reg:
+  /admin/service-regs:
     get:
       tags:
         - Admin
@@ -342,35 +371,6 @@ paths:
               schema:
                 type: string
                 example: v1.1.0
-  /services:
-    get:
-      summary: Get service registrations
-      description: |
-        Returns service registration records
-      parameters:
-        - name: ids
-          in: query
-          description: A comma-separated list of service IDs to return registrations for
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ServiceReg'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
 components:
   schemas:
     GlobalConfig:

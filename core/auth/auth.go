@@ -19,6 +19,9 @@ import (
 )
 
 const (
+	authServiceID string = "auth"
+	authKeyAlg    string = "RS256"
+
 	typeAuthType log.LogData = "auth type"
 	TypeAuth     log.LogData = "auth"
 )
@@ -143,11 +146,17 @@ func (a *Auth) RegisterService(reg *authservice.ServiceReg) error {
 
 //UpdateServiceRegistration updates an existing service registration
 func (a *Auth) UpdateServiceRegistration(reg *authservice.ServiceReg) error {
+	if reg.ServiceID == authServiceID || reg.ServiceID == a.serviceID {
+		return log.NewErrorf("modifying service registration not allowed for service id %v", reg.ServiceID)
+	}
 	return a.storage.UpdateServiceReg(reg)
 }
 
 //DeregisterService deletes an existing service registration
 func (a *Auth) DeregisterService(serviceID string) error {
+	if serviceID == authServiceID || serviceID == a.serviceID {
+		return log.NewErrorf("deregistering service not allowed for service id %v", serviceID)
+	}
 	return a.storage.DeleteServiceReg(serviceID)
 }
 
@@ -243,20 +252,20 @@ func (a *Auth) storeReg() error {
 		return log.WrapActionError(log.ActionEncode, "auth pub key", nil, err)
 	}
 
-	key := authservice.PubKey{KeyPem: pem, Alg: "RS256"}
+	key := authservice.PubKey{KeyPem: pem, Alg: authKeyAlg}
 
 	// Setup "auth" registration for token validation
-	authReg := authservice.ServiceReg{ServiceID: "auth", Host: a.host, PubKey: &key}
+	authReg := authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: &key}
 	err = a.storage.SaveServiceReg(&authReg)
 	if err != nil {
-		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs("auth"), err)
+		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs(authServiceID), err)
 	}
 
 	// Setup core registration for signature validation
 	coreReg := authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key}
 	err = a.storage.SaveServiceReg(&coreReg)
 	if err != nil {
-		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs("core"), err)
+		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs(a.serviceID), err)
 	}
 
 	return nil

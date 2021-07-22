@@ -27,7 +27,8 @@ paths:
   #auth
   /services/auth/test:
     $ref: "./resources/auth/test.yaml"
-
+  /services/auth/service-regs:
+    $ref: "./resources/auth/service-regs.yaml"
   #common
   /services/common/test:
     $ref: "./resources/common/test.yaml"
@@ -39,8 +40,8 @@ paths:
     $ref: "./resources/admin/organizationsId.yaml"
   /admin/organizations:
     $ref: "./resources/admin/organizations.yaml"
-  /admin/service-reg:
-    $ref: "./resources/admin/service-reg.yaml"
+  /admin/service-regs:
+    $ref: "./resources/admin/service-regs.yaml"
 
   #enc
   /enc/test:
@@ -53,8 +54,6 @@ paths:
   #default
   /version:
     $ref: "./resources/default/version.yaml"
-  /services:
-    $ref: "./resources/default/services.yaml"
 components:
   schemas:
     $ref: "./schemas/index.yaml"
