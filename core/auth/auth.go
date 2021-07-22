@@ -19,6 +19,9 @@ import (
 )
 
 const (
+	authServiceID string = "auth"
+	authKeyAlg    string = "RS256"
+
 	typeAuthType log.LogData = "auth type"
 	TypeAuth     log.LogData = "auth"
 )
@@ -99,33 +102,15 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initSamlAuth(auth)
 	initFirebaseAuth(auth)
 
-	initApiKeyAuth(auth)
+	initAPIKeyAuth(auth)
 	initSignatureAuth(auth)
 
 	err = auth.LoadAuthConfigs()
 	if err != nil {
-		logger.Warn("NewAuth() failed to cache auth info documents")
+		logger.Warn("NewAuth() failed to cache auth configs")
 	}
 
 	return auth, nil
-}
-
-func (a *Auth) registerAuthType(name string, auth authType) error {
-	if _, ok := a.authTypes[name]; ok {
-		return log.NewErrorf("the requested auth type name has already been registered: %s", name)
-	}
-
-	a.authTypes[name] = auth
-
-	return nil
-}
-
-func (a *Auth) getAuthType(name string) (authType, error) {
-	if auth, ok := a.authTypes[name]; ok {
-		return auth, nil
-	}
-
-	return nil, log.DataError(log.StatusInvalid, typeAuthType, log.StringArgs(name))
 }
 
 //Login logs a user in using the specified credentials and authentication method
@@ -160,9 +145,69 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 	return token, nil, userAuth.RefreshToken, nil
 }
 
+//GetScopedAccessToken TODO
 func (a *Auth) GetScopedAccessToken(claims tokenClaims, serviceID string, scope string) (string, error) {
 	scopedClaims := a.getStandardClaims(claims.Subject, claims.UID, "", "", serviceID, claims.OrgID, claims.AppID, nil)
 	return a.buildAccessToken(scopedClaims, "", scope)
+}
+
+//GetServiceRegistrations retrieves all service registrations
+func (a *Auth) GetServiceRegistrations(serviceIDs []string) ([]authservice.ServiceReg, error) {
+	return a.storage.FindServiceRegs(serviceIDs)
+}
+
+//RegisterService creates a new service registration
+func (a *Auth) RegisterService(reg *authservice.ServiceReg) error {
+	return a.storage.InsertServiceReg(reg)
+}
+
+//UpdateServiceRegistration updates an existing service registration
+func (a *Auth) UpdateServiceRegistration(reg *authservice.ServiceReg) error {
+	if reg.ServiceID == authServiceID || reg.ServiceID == a.serviceID {
+		return log.NewErrorf("modifying service registration not allowed for service id %v", reg.ServiceID)
+	}
+	return a.storage.UpdateServiceReg(reg)
+}
+
+//DeregisterService deletes an existing service registration
+func (a *Auth) DeregisterService(serviceID string) error {
+	if serviceID == authServiceID || serviceID == a.serviceID {
+		return log.NewErrorf("deregistering service not allowed for service id %v", serviceID)
+	}
+	return a.storage.DeleteServiceReg(serviceID)
+}
+
+//createAccount creates a new user account
+func (a *Auth) createAccount(claims *tokenauth.Claims) {
+	//TODO: Implement
+}
+
+//updateAccount updates a user's account information
+func (a *Auth) updateAccount(claims *tokenauth.Claims) {
+	//TODO: Implement
+}
+
+//deleteAccount deletes a user account
+func (a *Auth) deleteAccount(claims *tokenauth.Claims) {
+	//TODO: Implement
+}
+
+func (a *Auth) registerAuthType(name string, auth authType) error {
+	if _, ok := a.authTypes[name]; ok {
+		return log.NewErrorf("the requested auth type name has already been registered: %s", name)
+	}
+
+	a.authTypes[name] = auth
+
+	return nil
+}
+
+func (a *Auth) getAuthType(name string) (authType, error) {
+	if auth, ok := a.authTypes[name]; ok {
+		return auth, nil
+	}
+
+	return nil, log.DataError(log.StatusInvalid, typeAuthType, log.StringArgs(name))
 }
 
 func (a *Auth) buildAccessToken(claims tokenClaims, permissions string, scope string) (string, error) {
@@ -205,34 +250,18 @@ func (a *Auth) getExp(exp *int64) int64 {
 	if exp == nil {
 		defaultTime := time.Now().Add(30 * time.Minute) //TODO: Set up org configs for default token exp
 		return defaultTime.Unix()
-	} else {
-		expTime := time.Unix(*exp, 0)
-		minTime := time.Now().Add(time.Duration(a.minTokenExp) * time.Minute)
-		maxTime := time.Now().Add(time.Duration(a.maxTokenExp) * time.Minute)
-
-		if expTime.Before(minTime) {
-			return minTime.Unix()
-		} else if expTime.After(maxTime) {
-			return maxTime.Unix()
-		}
-
-		return *exp
 	}
-}
+	expTime := time.Unix(*exp, 0)
+	minTime := time.Now().Add(time.Duration(a.minTokenExp) * time.Minute)
+	maxTime := time.Now().Add(time.Duration(a.maxTokenExp) * time.Minute)
 
-//createAccount creates a new user account
-func (a *Auth) createAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
-}
+	if expTime.Before(minTime) {
+		return minTime.Unix()
+	} else if expTime.After(maxTime) {
+		return maxTime.Unix()
+	}
 
-//updateAccount updates a user's account information
-func (a *Auth) updateAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
-}
-
-//deleteAccount deletes a user account
-func (a *Auth) deleteAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
+	return *exp
 }
 
 //storeReg stores the service registration record
@@ -242,25 +271,26 @@ func (a *Auth) storeReg() error {
 		return log.WrapActionError(log.ActionEncode, "auth pub key", nil, err)
 	}
 
-	key := authservice.PubKey{KeyPem: pem, Alg: "RS256"}
+	key := authservice.PubKey{KeyPem: pem, Alg: authKeyAlg}
 
 	// Setup "auth" registration for token validation
-	authReg := authservice.ServiceReg{ServiceID: "auth", Host: a.host, PubKey: &key}
+	authReg := authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: &key}
 	err = a.storage.SaveServiceReg(&authReg)
 	if err != nil {
-		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs("auth"), err)
+		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs(authServiceID), err)
 	}
 
 	// Setup core registration for signature validation
 	coreReg := authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key}
 	err = a.storage.SaveServiceReg(&coreReg)
 	if err != nil {
-		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs("core"), err)
+		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs(a.serviceID), err)
 	}
 
 	return nil
 }
 
+//LoadAuthConfigs loads the auth configs
 func (a *Auth) LoadAuthConfigs() error {
 	authConfigDocs, err := a.storage.LoadAuthConfigs()
 	if err != nil {
@@ -295,12 +325,11 @@ func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*mode
 func (a *Auth) setAuthConfigs(authConfigs *[]model.AuthConfig) {
 	a.authConfigs = &syncmap.Map{}
 	validate := validator.New()
-	var err error
 
 	a.authConfigsLock.Lock()
 	defer a.authConfigsLock.Unlock()
 	for _, authConfig := range *authConfigs {
-		err = validate.Struct(authConfig)
+		err := validate.Struct(authConfig)
 		if err == nil {
 			a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, authConfig.AppID, authConfig.Type), authConfig)
 		}
@@ -315,7 +344,7 @@ type LocalServiceRegLoaderImpl struct {
 
 //LoadServices implements ServiceRegLoader interface
 func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, error) {
-	return l.storage.GetServiceRegs(l.GetSubscribedServices())
+	return l.storage.FindServiceRegs(l.GetSubscribedServices())
 }
 
 //NewLocalServiceRegLoader creates and configures a new LocalServiceRegLoaderImpl instance
@@ -324,20 +353,33 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 	return &LocalServiceRegLoaderImpl{storage: storage, ServiceRegSubscriptions: subscriptions}
 }
 
+//Storage interface to communicate with the storage
 type Storage interface {
-	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
+	//ServiceRegs
+	FindServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
+	FindServiceReg(serviceID string) (*authservice.ServiceReg, error)
+	InsertServiceReg(reg *authservice.ServiceReg) error
+	UpdateServiceReg(reg *authservice.ServiceReg) error
 	SaveServiceReg(reg *authservice.ServiceReg) error
+	DeleteServiceReg(serviceID string) error
 
+	//AuthConfigs
 	FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error)
 	LoadAuthConfigs() (*[]model.AuthConfig, error)
 }
 
-type AuthStorageListener struct {
+//StorageListener represents storage listener implementation for the auth package
+type StorageListener struct {
 	Auth *Auth
-	storage.DefaultStorageListenerImpl
+	storage.DefaultListenerImpl
 }
 
 //OnAuthConfigUpdated notifies that an auth config has been updated
-func (al *AuthStorageListener) OnAuthConfigUpdated() {
+func (al *StorageListener) OnAuthConfigUpdated() {
 	al.Auth.LoadAuthConfigs()
+}
+
+//OnServiceRegsUpdated notifies that a service registration has been updated
+func (al *StorageListener) OnServiceRegsUpdated() {
+	al.Auth.AuthService.LoadServices()
 }

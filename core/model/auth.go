@@ -8,6 +8,7 @@ const (
 	TypeServiceReg log.LogData = "service reg"
 )
 
+//UserAuth represents user auth entity
 type UserAuth struct {
 	UserID       string
 	Sub          string
@@ -19,6 +20,7 @@ type UserAuth struct {
 	RefreshToken string
 }
 
+//AuthConfig represents auth config entity
 type AuthConfig struct {
 	OrgID  string `json:"org_id" bson:"org_id" validate:"required"`
 	AppID  string `json:"app_id" bson:"app_id" validate:"required"`

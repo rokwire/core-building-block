@@ -1,0 +1,71 @@
+get:
+  tags:
+  - Admin
+  summary: Get global config
+  description: |
+    Gives the system global config
+  responses:
+      200:
+        description: Successful operation
+        content:
+          application/json:
+            schema:
+              $ref: "../../schemas/GlobalConfig.yaml"
+      400:
+        description: Bad request
+      401:
+        description: Unauthorized
+      500:
+        description: Internal error
+post:
+  tags:
+  - Admin
+  summary: Create global config
+  description: |
+    Creates the system global config
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: "../../schemas/GlobalConfig.yaml"
+    required: true
+  responses:
+      200:
+        description: successful operation
+        content:
+          text/plain:
+            schema:
+              type: string
+              example: Successfully created
+      400:
+        description: Bad request
+      401:
+        description: Unauthorized
+      500:
+        description: Internal error
+put:
+  tags:
+  - Admin
+  summary: Update global config
+  description: |
+    Updates the system global config
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: "../../schemas/GlobalConfig.yaml"
+    required: true
+  responses:
+    200:
+      description: successful operation
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: Successfully updated
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
