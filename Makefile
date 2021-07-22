@@ -113,7 +113,7 @@ version:
 
 .PHONY: oapi-gen-types
 oapi-gen-types: ;
-	oapi-codegen --generate types -o driver/web/docs/gen_types.go driver/web/docs/gen/def.yaml
+	oapi-codegen --generate types -o driver/web/docs/gen/gen_types.go driver/web/docs/gen/def.yaml
 
 .PHONY: oapi-gen-docs
 oapi-gen-docs: ;

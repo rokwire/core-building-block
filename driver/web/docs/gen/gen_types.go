@@ -69,6 +69,13 @@ type PostAdminOrganizationsJSONBody Organization
 // PutAdminOrganizationsIdJSONBody defines parameters for PutAdminOrganizationsId.
 type PutAdminOrganizationsIdJSONBody Organization
 
+// DeleteAdminServiceRegParams defines parameters for DeleteAdminServiceReg.
+type DeleteAdminServiceRegParams struct {
+
+	// The service ID of the registration to delete
+	Id string `json:"id"`
+}
+
 // GetAdminServiceRegParams defines parameters for GetAdminServiceReg.
 type GetAdminServiceRegParams struct {
 
@@ -78,6 +85,16 @@ type GetAdminServiceRegParams struct {
 
 // PostAdminServiceRegJSONBody defines parameters for PostAdminServiceReg.
 type PostAdminServiceRegJSONBody ServiceReg
+
+// PutAdminServiceRegJSONBody defines parameters for PutAdminServiceReg.
+type PutAdminServiceRegJSONBody ServiceReg
+
+// GetServicesParams defines parameters for GetServices.
+type GetServicesParams struct {
+
+	// A comma-separated list of service IDs to return registrations for
+	Ids string `json:"ids"`
+}
 
 // PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
 type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody
@@ -93,3 +110,6 @@ type PutAdminOrganizationsIdJSONRequestBody PutAdminOrganizationsIdJSONBody
 
 // PostAdminServiceRegJSONRequestBody defines body for PostAdminServiceReg for application/json ContentType.
 type PostAdminServiceRegJSONRequestBody PostAdminServiceRegJSONBody
+
+// PutAdminServiceRegJSONRequestBody defines body for PutAdminServiceReg for application/json ContentType.
+type PutAdminServiceRegJSONRequestBody PutAdminServiceRegJSONBody
