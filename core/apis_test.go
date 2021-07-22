@@ -29,7 +29,7 @@ func TestSerGetAuthTest(t *testing.T) {
 	storage := genmocks.Storage{}
 	coreAPIs := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
-	l := log.NewLogger("test").NewLog("1", "1")
+	l := log.NewLogger("test", nil).NewLog("1", log.RequestContext{})
 	got := coreAPIs.Services.SerGetAuthTest(l)
 	want := "Services - Auth - test"
 
@@ -40,7 +40,7 @@ func TestSerGetCommonTest(t *testing.T) {
 	storage := genmocks.Storage{}
 	coreAPIs := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
-	l := log.NewLogger("test").NewLog("1", "1")
+	l := log.NewLogger("test", nil).NewLog("1", log.RequestContext{})
 	got := coreAPIs.Services.SerGetCommonTest(l)
 	want := "Services - Common - test"
 
@@ -89,7 +89,7 @@ func TestAdmCreateGlobalConfig(t *testing.T) {
 		t.Error("we are expecting error")
 		return
 	}
-	assert.Equal(t, err.Error(), "error occured", "error is different")
+	assert.Equal(t, err.Error(), "core-building-block/core.(*application).admCreateGlobalConfig() error inserting global config: error occured", "error is different: "+err.Error())
 }
 
 ///
