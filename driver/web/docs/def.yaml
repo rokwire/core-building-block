@@ -36,4 +36,4 @@ paths:
     $ref: "./resources/enc/test.yaml"
 components:
   schemas:
-    $ref: "./schemas/_index.yaml"
+    $ref: "./schemas/index.yaml"
