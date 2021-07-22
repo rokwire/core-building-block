@@ -125,45 +125,6 @@ func (h AdminApisHandler) updateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 	return createSuccessResponse("Successfully created", headers, http.StatusOK)
 }
 
-//createOrganization creates organization
-func (h AdminApisHandler) createOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) response {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		l.Errorf("Error on marshal create organization - %s\n", err.Error())
-		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-	}
-	var requestData Def.Organization
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		l.Errorf("Error on unmarshal the create organization  - %s\n", err.Error())
-		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-	}
-
-	//validate
-	validate := validator.New()
-	err = validate.Struct(requestData)
-	if err != nil {
-		l.Errorf("Error on validating create organization  data - %s\n", err.Error())
-		return createErrorResponse(http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-	}
-
-	name := requestData.Name
-	requestType := requestData.Type
-	requiresOwnLogin := requestData.RequiresOwnLogin
-	loginTypes := requestData.LoginTypes
-	organizationDomains := requestData.Config.Domains
-
-	_, err = h.coreAPIs.Administration.AdmCreateOrganization(name, string(requestType), *requiresOwnLogin, *loginTypes, *organizationDomains)
-	if err != nil {
-		l.Errorf("Error on creating an organization - %s\n", err.Error())
-		return createErrorResponse(err.Error(), http.StatusInternalServerError)
-	}
-
-	headers := map[string]string{}
-	headers["Content-Type"] = "text/plain"
-	return createSuccessResponse("Successfully created", headers, http.StatusOK)
-}
-
 //updateOrganization updates organization
 func (h AdminApisHandler) updateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) response {
 	params := mux.Vars(r)
