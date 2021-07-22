@@ -29,70 +29,9 @@ paths:
   /admin/global-config:
     $ref: "./resources/admin/global-config.yaml"
   /admin/organizations/{id}:
-    put:
-      tags:
-      - Admin
-      summary: Update organization
-      description: |
-        Updates organization
-      parameters:
-      - name: id
-        in: path
-        description: ID of the organization that needs to be updated
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      requestBody:
-        description: update one organization
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Organization'
-        required: true
-      responses:
-        200:
-          description: successful operation
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Successfullly created
-        400:
-          description: Bad request
-        401:
-          description: Unauthorized
-        500:
-          description: Internal error
+    $ref: "./resources/admin/organizationsId.yaml"
   /admin/organizations:
-    post:
-      tags:
-      - Admin
-      summary: Create organization
-      description: |
-        Creates organization
-      requestBody:
-        description: creates one organization
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Organization'
-        required: true
-      responses:
-        200:
-          description: successful operation
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Successfullly created
-        400:
-          description: Bad request
-        401:
-          description: Unauthorized
-        500:
-          description: Internal error
+    $ref: "./resources/admin/organizations.yaml"
   /enc/test:
     $ref: "./resources/enc/test.yaml"
 components:
