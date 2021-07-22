@@ -172,6 +172,8 @@ paths:
           description: Unauthorized
         500:
           description: Internal error
+  /enc/test:
+    $ref: "./resources/enc/test.yaml"
 components:
   schemas:
     $ref: "./schemas/_index.yaml"

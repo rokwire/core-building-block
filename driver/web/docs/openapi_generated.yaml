@@ -172,6 +172,19 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /enc/test:
+    get:
+      tags:
+        - Enc
+      summary: Test API..
+      responses:
+        '200':
+          description: successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Echooo
 components:
   schemas:
     GlobalConfig:
