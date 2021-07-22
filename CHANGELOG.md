@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Expose service registration handlers [#75](https://github.com/rokwire/core-building-block/issues/75)
+- Split OpenAPI yaml file. [#84](https://github.com/rokwire/core-building-block/issues/84)
 - Set up API documentation. [#8](https://github.com/rokwire/core-building-block/issues/8)
 - Extend the storage adapter listener. [#76] (https://github.com/rokwire/core-building-block/issues/76)]
 - Fixing the Log and the Changelog for issues #35 and #36 [#54](https://github.com/rokwire/core-building-block/issues/54)

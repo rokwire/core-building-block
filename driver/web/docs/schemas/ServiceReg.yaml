@@ -1,0 +1,12 @@
+required:
+  - service_id
+  - host
+type: object
+properties:
+  service_id:
+    readOnly: true
+    type: string
+  host:
+    type: string
+  pub_key:
+    $ref: "#/components/schemas/PubKey"

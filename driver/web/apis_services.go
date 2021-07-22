@@ -13,14 +13,14 @@ type ServicesApisHandler struct {
 }
 
 //getAuthTest TODO get test
-func (h ServicesApisHandler) getAuthTest(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
+func (h ServicesApisHandler) getAuthTest(l *log.Log, r *http.Request) log.HttpResponse {
 	res := h.coreAPIs.Services.SerGetAuthTest(l)
 
 	return l.HttpResponseSuccessMessage(res)
 }
 
 //getCommonTest TODO get test
-func (h ServicesApisHandler) getCommonTest(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
+func (h ServicesApisHandler) getCommonTest(l *log.Log, r *http.Request) log.HttpResponse {
 	res := h.coreAPIs.Services.SerGetCommonTest(l)
 
 	return l.HttpResponseSuccessMessage(res)

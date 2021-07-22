@@ -3,7 +3,7 @@ package web
 import (
 	"core-building-block/core"
 	"core-building-block/core/model"
-	Def "core-building-block/driver/web/docs"
+	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -22,21 +22,21 @@ type AdminApisHandler struct {
 }
 
 //getTest TODO get test
-func (h AdminApisHandler) getTest(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
+func (h AdminApisHandler) getTest(l *log.Log, r *http.Request) log.HttpResponse {
 	res := h.coreAPIs.Administration.AdmGetTest()
 
 	return l.HttpResponseSuccessMessage(res)
 }
 
 //getTestModel gives a test model instance
-func (h AdminApisHandler) getTestModel(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
+func (h AdminApisHandler) getTestModel(l *log.Log, r *http.Request) log.HttpResponse {
 	res := h.coreAPIs.Administration.AdmGetTestModel()
 
 	return l.HttpResponseSuccessMessage(res)
 }
 
 //createGlobalConfig creates a global config
-func (h AdminApisHandler) createGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
+func (h AdminApisHandler) createGlobalConfig(l *log.Log, r *http.Request) log.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -64,7 +64,7 @@ func (h AdminApisHandler) createGlobalConfig(l *log.Log, w http.ResponseWriter, 
 }
 
 //getGlobalConfig gets config
-func (h AdminApisHandler) getGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
+func (h AdminApisHandler) getGlobalConfig(l *log.Log, r *http.Request) log.HttpResponse {
 	config, err := h.coreAPIs.Administration.AdmGetGlobalConfig()
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionGet, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
@@ -83,7 +83,7 @@ func (h AdminApisHandler) getGlobalConfig(l *log.Log, w http.ResponseWriter, r *
 }
 
 //updateGlobalConfig updates global config
-func (h AdminApisHandler) updateGlobalConfig(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
+func (h AdminApisHandler) updateGlobalConfig(l *log.Log, r *http.Request) log.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -112,7 +112,7 @@ func (h AdminApisHandler) updateGlobalConfig(l *log.Log, w http.ResponseWriter, 
 }
 
 //createOrganization creates organization
-func (h AdminApisHandler) createOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
+func (h AdminApisHandler) createOrganization(l *log.Log, r *http.Request) log.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -145,7 +145,7 @@ func (h AdminApisHandler) createOrganization(l *log.Log, w http.ResponseWriter, 
 }
 
 //updateOrganization updates organization
-func (h AdminApisHandler) updateOrganization(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
+func (h AdminApisHandler) updateOrganization(l *log.Log, r *http.Request) log.HttpResponse {
 	params := mux.Vars(r)
 	ID := params["id"]
 	if len(ID) <= 0 {
@@ -183,7 +183,7 @@ func (h AdminApisHandler) updateOrganization(l *log.Log, w http.ResponseWriter, 
 	return l.HttpResponseSuccess()
 }
 
-func (h AdminApisHandler) getServiceRegistrations(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
+func (h AdminApisHandler) getServiceRegistrations(l *log.Log, r *http.Request) log.HttpResponse {
 	serviceIDsParam := r.URL.Query().Get("ids")
 	if serviceIDsParam == "" {
 		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("ids"), nil, http.StatusBadRequest, false)
@@ -203,7 +203,7 @@ func (h AdminApisHandler) getServiceRegistrations(l *log.Log, w http.ResponseWri
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h AdminApisHandler) registerService(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
+func (h AdminApisHandler) registerService(l *log.Log, r *http.Request) log.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -229,7 +229,7 @@ func (h AdminApisHandler) registerService(l *log.Log, w http.ResponseWriter, r *
 	return l.HttpResponseSuccess()
 }
 
-func (h AdminApisHandler) updateServiceRegistration(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
+func (h AdminApisHandler) updateServiceRegistration(l *log.Log, r *http.Request) log.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorData(log.StatusInvalid, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -255,7 +255,7 @@ func (h AdminApisHandler) updateServiceRegistration(l *log.Log, w http.ResponseW
 	return l.HttpResponseSuccess()
 }
 
-func (h AdminApisHandler) deregisterService(l *log.Log, w http.ResponseWriter, r *http.Request) log.HttpResponse {
+func (h AdminApisHandler) deregisterService(l *log.Log, r *http.Request) log.HttpResponse {
 	serviceID := r.URL.Query().Get("id")
 	if serviceID == "" {
 		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("id"), nil, http.StatusBadRequest, false)

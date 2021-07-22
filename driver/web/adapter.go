@@ -39,7 +39,7 @@ type Adapter struct {
 	coreAPIs *core.APIs
 }
 
-type handlerFunc = func(*log.Log, http.ResponseWriter, *http.Request) log.HttpResponse
+type handlerFunc = func(*log.Log, *http.Request) log.HttpResponse
 
 //Start starts the module
 func (we Adapter) Start() {
@@ -109,7 +109,7 @@ func (we Adapter) Start() {
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("access-control-allow-origin", "*")
-	http.ServeFile(w, r, "./driver/web/docs/def.yaml")
+	http.ServeFile(w, r, "./driver/web/docs/gen/def.yaml")
 }
 
 func (we Adapter) serveDocUI() http.Handler {
@@ -139,7 +139,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		}
 
 		//2. process it
-		response := handler(logObj, w, req)
+		response := handler(logObj, req)
 
 		//3. validate the response
 		if we.env != "production" {
@@ -217,7 +217,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
-	doc, err := loader.LoadFromFile("driver/web/docs/def.yaml")
+	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
