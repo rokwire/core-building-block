@@ -3,6 +3,12 @@ package model
 import (
 	"bytes"
 	"fmt"
+
+	log "github.com/rokmetro/logging-library/loglib"
+)
+
+const (
+	TypeUser log.LogData = "user"
 )
 
 //User represents user entity

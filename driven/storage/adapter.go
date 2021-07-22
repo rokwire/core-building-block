@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,6 +17,20 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+type rawUser struct {
+	ID string `bson:"_id"`
+
+	Account model.UserAccount `bson:"account"`
+	Profile model.UserProfile `bson:"profile"`
+
+	Permissions              []string `bson:"permissions"`
+	Roles                    []string `bson:"roles"`
+	Groups                   []string `bson:"groups"`
+	OrganizationsMemberships []string `bson:"memberships"`
+
+	Devices []model.Device `bson:"devices"`
+}
 
 type user struct {
 	ID string `bson:"_id"`
@@ -222,8 +237,60 @@ func (sa *Adapter) findUser(key string, id string) (*model.User, error) {
 }
 
 //InsertUser inserts a user
-func (sa *Adapter) InsertUser(user *model.User) (*model.User, error) {
-	return nil, errors.New("unimplemented")
+func (sa *Adapter) InsertUser(userAuth *model.UserAuth) (*model.User, error) {
+	if userAuth == nil {
+		return nil, log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeUserAuth))
+	}
+
+	newID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("user_id"))
+	}
+	names := strings.Split(userAuth.Name, " ")
+	newUser := rawUser{ID: newID.String()}
+
+	newAccount := model.UserAccount{Email: userAuth.Email, Phone: userAuth.Phone}
+	newUser.Account = newAccount
+	newProfile := model.UserProfile{FirstName: names[0], LastName: names[len(names)-1]}
+	newUser.Profile = newProfile
+	newUser.Permissions = []string{}
+	newUser.Roles = []string{}
+	newUser.Groups = []string{}
+
+	membershipID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("membership_id"))
+	}
+	orgID, ok := userAuth.OrgData["orgID"].(string)
+	if !ok {
+		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("org_id"))
+	}
+	newOrgMembership := membership{ID: membershipID.String(), User: newID.String(), OrgID: orgID, OrgUserData: userAuth.OrgData,
+		Permissions: []string{}, Roles: []string{}, Groups: []string{}}
+
+	// TODO:
+	// add new membership ID to any applicable org groups, possibly set groups based on organization populations
+
+	newUser.OrganizationsMemberships = []string{newOrgMembership.ID}
+
+	err = sa.InsertMembership(&newOrgMembership)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionInsert, model.TypeOrganizationMembership, nil, err)
+	}
+
+	// pass some device info in to use here
+	newDevice := model.Device{}
+	err = sa.SaveDevice(&newDevice)
+	if err == nil {
+		newUser.Devices = []model.Device{newDevice}
+	}
+
+	_, err = sa.db.users.InsertOne(newUser)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionInsert, model.TypeUser, nil, err)
+	}
+
+	return sa.FindUserByID(newID.String())
 }
 
 //UpdateUser updates an existing user
@@ -233,7 +300,13 @@ func (sa *Adapter) UpdateUser(user *model.User) (*model.User, error) {
 
 //DeleteUser deletes a user
 func (sa *Adapter) DeleteUser(id string) error {
-	return errors.New("unimplemented")
+	filter := bson.M{"_id": id}
+	_, err := sa.db.users.DeleteOne(filter, nil)
+	if err != nil {
+		return log.WrapActionError(log.ActionDelete, model.TypeUser, nil, err)
+	}
+
+	return nil
 }
 
 //FindCredentials find a set of credentials
@@ -364,6 +437,18 @@ func (sa *Adapter) FindOrganizationGroups(ids *[]string, orgID string, context *
 	}
 
 	return &groupsResult, nil
+}
+
+//InsertMembership inserts an organization membership
+func (sa *Adapter) InsertMembership(orgMembership *membership) error {
+	if orgMembership == nil {
+		return log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeOrganizationMembership))
+	}
+	_, err := sa.db.memberships.InsertOne(orgMembership)
+	if err != nil {
+		return log.WrapActionError(log.ActionInsert, model.TypeOrganizationMembership, nil, err)
+	}
+	return nil
 }
 
 //FindAuthConfig finds the auth document from DB by orgID and appID
@@ -555,6 +640,21 @@ func (sa *Adapter) SaveServiceReg(reg *authservice.ServiceReg) error {
 	err := sa.db.serviceRegs.ReplaceOne(filter, reg, opts)
 	if err != nil {
 		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.ServiceID}, err)
+	}
+
+	return nil
+}
+
+func (sa *Adapter) SaveDevice(device *model.Device) error {
+	if device == nil {
+		return log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs("device"))
+	}
+
+	filter := bson.M{"_id": device.ID}
+	opts := options.Replace().SetUpsert(true)
+	err := sa.db.devices.ReplaceOne(filter, device, opts)
+	if err != nil {
+		return log.WrapActionError(log.ActionSave, "device", &log.FieldArgs{"device_id": device.ID}, nil)
 	}
 
 	return nil

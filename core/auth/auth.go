@@ -234,30 +234,7 @@ func (a *Auth) findAccount(userAuth *model.UserAuth) (*model.User, error) {
 
 //createAccount creates a new user account
 func (a *Auth) createAccount(userAuth *model.UserAuth) (*model.User, error) {
-	names := strings.Split(userAuth.Name, " ")
-	newUser := model.User{}
-
-	newAccount := model.UserAccount{Email: userAuth.Email, Phone: userAuth.Phone}
-	newUser.Account = newAccount
-	newProfile := model.UserProfile{FirstName: names[0], LastName: names[len(names)-1]}
-	newUser.Profile = newProfile
-
-	newOrgMembership := model.OrganizationMembership{}
-	organization, err := a.storage.FindOrganization(userAuth.OrgData["orgID"].(string))
-	if err != nil {
-		return nil, err
-	}
-	newOrgMembership.Organization = *organization
-
-	newOrgMembership.Permissions = strings.Split(userAuth.OrgData["permissions"].(string), ",")
-
-	device := model.Device{}
-	newUser.Devices = []model.Device{device}
-
-	newUser.OrganizationsMemberships = []model.OrganizationMembership{newOrgMembership}
-	newUser.OrganizationsMemberships[0].User = newUser
-
-	return a.storage.InsertUser(&newUser)
+	return a.storage.InsertUser(userAuth)
 }
 
 //updateAccount updates a user's account information
@@ -364,7 +341,7 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 //Storage interface to communicate with the storage
 type Storage interface {
 	FindUserByAccountID(accountID string) (*model.User, error)
-	InsertUser(user *model.User) (*model.User, error)
+	InsertUser(userAuth *model.UserAuth) (*model.User, error)
 	UpdateUser(user *model.User) (*model.User, error)
 	DeleteUser(id string) error
 
