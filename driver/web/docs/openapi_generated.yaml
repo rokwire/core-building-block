@@ -50,17 +50,6 @@ paths:
               schema:
                 type: string
                 example: Echooo
-  /version:
-    get:
-      summary: Get service version
-      responses:
-        '200':
-          description: successful operation
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: v1.1.0
   /admin/global-config:
     get:
       tags:
@@ -224,6 +213,17 @@ paths:
               schema:
                 type: string
                 example: Echooo
+  /version:
+    get:
+      summary: Get service version
+      responses:
+        '200':
+          description: successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: v1.1.0
 components:
   schemas:
     GlobalConfig:

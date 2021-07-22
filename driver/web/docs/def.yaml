@@ -24,22 +24,33 @@ tags:
 - name: BBs
   description: APIs consumed by the platform building blocks.
 paths:
+  #auth
   /services/auth/test:
     $ref: "./resources/auth/test.yaml"
+
+  #common
   /services/common/test:
     $ref: "./resources/common/test.yaml"
-  /version:
-    $ref: "./resources/default/version.yaml"
+
+  #admin
   /admin/global-config:
     $ref: "./resources/admin/global-config.yaml"
   /admin/organizations/{id}:
     $ref: "./resources/admin/organizationsId.yaml"
   /admin/organizations:
     $ref: "./resources/admin/organizations.yaml"
+
+  #enc
   /enc/test:
     $ref: "./resources/enc/test.yaml"
+
+  #bbs
   /bbs/test:
     $ref: "./resources/bbs/test.yaml"
+
+  #default
+  /version:
+    $ref: "./resources/default/version.yaml"
 components:
   schemas:
     $ref: "./schemas/index.yaml"
