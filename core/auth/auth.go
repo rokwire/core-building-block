@@ -229,7 +229,7 @@ func (a *Auth) getExp(exp *int64) int64 {
 
 //findAccount retrieves a user's account information
 func (a *Auth) findAccount(userAuth *model.UserAuth) (*model.User, error) {
-	return a.storage.FindUser(userAuth.UserID)
+	return a.storage.FindUserByAccountID(userAuth.AccountID)
 }
 
 //createAccount creates a new user account
@@ -237,7 +237,7 @@ func (a *Auth) createAccount(userAuth *model.UserAuth) (*model.User, error) {
 	names := strings.Split(userAuth.Name, " ")
 	newUser := model.User{}
 
-	newAccount := model.UserAccount{Email: userAuth.Email, Phone: userAuth.Phone, Username: userAuth.UserID}
+	newAccount := model.UserAccount{Email: userAuth.Email, Phone: userAuth.Phone}
 	newUser.Account = newAccount
 	newProfile := model.UserProfile{FirstName: names[0], LastName: names[len(names)-1]}
 	newUser.Profile = newProfile
@@ -268,7 +268,7 @@ func (a *Auth) updateAccount(userAuth *model.UserAuth) (*model.User, error) {
 
 //deleteAccount deletes a user account
 func (a *Auth) deleteAccount(userAuth *model.UserAuth) error {
-	return a.storage.DeleteUser(userAuth.UserID)
+	return a.storage.DeleteUser(userAuth.AccountID)
 }
 
 //storeReg stores the service registration record
@@ -363,7 +363,7 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 
 //Storage interface to communicate with the storage
 type Storage interface {
-	FindUser(accountID string) (*model.User, error)
+	FindUserByAccountID(accountID string) (*model.User, error)
 	InsertUser(user *model.User) (*model.User, error)
 	UpdateUser(user *model.User) (*model.User, error)
 	DeleteUser(id string) error

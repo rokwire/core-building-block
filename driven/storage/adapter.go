@@ -109,7 +109,15 @@ func (sa *Adapter) ReadTODO() error {
 	return nil
 }
 
-func (sa *Adapter) FindUser(accountID string) (*model.User, error) {
+func (sa *Adapter) FindUserByID(id string) (*model.User, error) {
+	return sa.findUser("_id", id)
+}
+
+func (sa *Adapter) FindUserByAccountID(accountID string) (*model.User, error) {
+	return sa.findUser("account.id", accountID)
+}
+
+func (sa *Adapter) findUser(key string, id string) (*model.User, error) {
 	fullUser := model.User{}
 	// transaction
 	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
@@ -119,7 +127,7 @@ func (sa *Adapter) FindUser(accountID string) (*model.User, error) {
 		}
 
 		pipeline := []bson.M{
-			{"$match": bson.M{"account.id": accountID}},
+			{"$match": bson.M{key: id}},
 			{"$lookup": bson.M{
 				"from":         "roles",
 				"localField":   "roles",
@@ -453,7 +461,16 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 
 //FindOrganization finds an organization
 func (sa *Adapter) FindOrganization(id string) (*model.Organization, error) {
-	return nil, errors.New("unimplemented")
+	errFields := &log.FieldArgs{"id": id}
+	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+	var org model.Organization
+
+	err := sa.db.organizations.FindOne(filter, &org, nil)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionFind, model.TypeOrganization, errFields, err)
+	}
+
+	return &org, nil
 }
 
 //CreateOrganization creates an organization

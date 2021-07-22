@@ -19,6 +19,7 @@ import (
 )
 
 const (
+	authTypeOidc          string      = "oidc"
 	typeOidcAuthConfig    log.LogData = "oidc auth config"
 	typeOidcMobileParams  log.LogData = "oidc mobile params"
 	typeOidcCheckParams   log.LogData = "oidc check params"
@@ -111,13 +112,13 @@ func (a *oidcAuthImpl) check(creds string, params string, l *log.Log) (*model.Us
 			return nil, err
 		}
 		userAuth.OrgData["orgID"] = loginParams.OrgID
-		credentials, err := a.auth.storage.FindCredentials(loginParams.OrgID, loginParams.AppID, "oidc", userAuth.UserID)
+		credentials, err := a.auth.storage.FindCredentials(loginParams.OrgID, loginParams.AppID, authTypeOidc, userAuth.UserID)
 		if err != nil {
-			return userAuth, err
+			return userAuth, fmt.Errorf("no credentials found: %s", err.Error())
 		}
 		ok, err := a.validateUser(userAuth, credentials.Creds)
 		if err != nil || !ok {
-			return userAuth, err
+			return userAuth, fmt.Errorf("credentials do not match: %s", err.Error())
 		}
 		userAuth.AccountID = credentials.AccountID
 		return userAuth, nil
@@ -138,7 +139,7 @@ func (a *oidcAuthImpl) check(creds string, params string, l *log.Log) (*model.Us
 			return nil, err
 		}
 		userAuth.OrgData["orgID"] = refreshParams.OrgID
-		credentials, err := a.auth.storage.FindCredentials(refreshParams.OrgID, refreshParams.AppID, "oidc", userAuth.UserID)
+		credentials, err := a.auth.storage.FindCredentials(refreshParams.OrgID, refreshParams.AppID, authTypeOidc, userAuth.UserID)
 		if err != nil {
 			return userAuth, fmt.Errorf("no credentials found: %s", err.Error())
 		}
@@ -170,7 +171,7 @@ func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials interf
 	}
 
 	if userAuth.Sub != creds.Sub {
-		return false, log.DataError(log.StatusInvalid, "user auth", log.StringArgs(userAuth.UserID))
+		return false, log.DataError(log.StatusInvalid, model.TypeUserAuth, log.StringArgs(userAuth.UserID))
 	}
 	return true, nil
 }
@@ -473,9 +474,9 @@ func (a *oidcAuthImpl) loadOidcUserInfo(token *oidcToken, url string) ([]byte, e
 }
 
 func (a *oidcAuthImpl) getOidcAuthConfig(orgID string, appID string) (*oidcAuthConfig, error) {
-	errFields := &log.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": "oidc"}
+	errFields := &log.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": authTypeOidc}
 
-	authConfig, err := a.auth.getAuthConfig(orgID, appID, "oidc")
+	authConfig, err := a.auth.getAuthConfig(orgID, appID, authTypeOidc)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionFind, model.TypeAuthConfig, errFields, err)
 	}
@@ -515,7 +516,7 @@ func readFromClaims(key string, claimsMap *map[string]string, rawClaims *map[str
 func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
 	oidc := &oidcAuthImpl{auth: auth}
 
-	err := auth.registerAuthType("oidc", oidc)
+	err := auth.registerAuthType(authTypeOidc, oidc)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
 	}
