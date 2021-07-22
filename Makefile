@@ -113,11 +113,11 @@ version:
 
 .PHONY: oapi-gen-types
 oapi-gen-types: ;
-	oapi-codegen --generate types -o driver/web/docs/gen_types.go driver/web/docs/def.yaml
+	oapi-codegen --generate types -o driver/web/docs/gen_types.go driver/web/docs/gen/def.yaml
 
 .PHONY: oapi-gen-docs
 oapi-gen-docs: ;
-	swagger-cli bundle driver/web/docs/def.yaml --outfile driver/web/docs/openapi_generated.yaml --type yaml
+	swagger-cli bundle driver/web/docs/index.yaml --outfile driver/web/docs/gen/def.yaml --type yaml
 
 .PHONY: log-variables
 log-variables: ; $(info $(M) Log info…) @ ## Log the variables values

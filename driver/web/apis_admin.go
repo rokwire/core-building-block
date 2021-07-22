@@ -2,7 +2,7 @@ package web
 
 import (
 	"core-building-block/core"
-	Def "core-building-block/driver/web/docs"
+	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
