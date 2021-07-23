@@ -10,6 +10,9 @@ import (
 
 	"firebase.google.com/go/auth"
 	firebase "firebase.google.com/go/v4"
+	"core-building-block/core/model"
+
+	log "github.com/rokmetro/logging-library/loglib"
 )
 
 // Firebase implementation of authType
@@ -154,7 +157,7 @@ func initFirebaseAuth(auth *Auth) (*firebaseAuthImpl, error) {
 
 	err := auth.registerAuthType("firebase", firebaseAuth)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return firebaseAuth, nil

@@ -3,21 +3,23 @@ package core
 import (
 	"core-building-block/core/model"
 	"fmt"
+
+	log "github.com/rokmetro/logging-library/loglib"
 )
 
-func (app *Application) admGetTest() string {
+func (app *application) admGetTest() string {
 	return "Admin - test"
 }
 
-func (app *Application) admGetTestModel() string {
+func (app *application) admGetTestModel() string {
 	//global config
 	globalConfig := model.GlobalConfig{Setting: "setting_value"}
 
 	//organizations configs
 	illinoisDomains := []string{"illinois.edu"}
-	illinoisOrganizationConfig := model.OrganizationConfig{Name: "Illinois organization config", Setting: "setting_value", Domains: illinoisDomains, Custom: "Illinois organization custom config"}
+	illinoisOrganizationConfig := model.OrganizationConfig{ID: "1", Setting: "setting_value", Domains: illinoisDomains, Custom: "Illinois organization custom config"}
 
-	danceOrganizationConfig := model.OrganizationConfig{Name: "Dance organization config", Setting: "setting_value", Domains: []string{}, Custom: "Dance organization custom config"}
+	danceOrganizationConfig := model.OrganizationConfig{ID: "2", Setting: "setting_value", Domains: []string{}, Custom: "Dance organization custom config"}
 
 	//organizations
 	illinoisOrganization := model.Organization{ID: "1", Name: "Illinois", Type: "large", Config: illinoisOrganizationConfig}
@@ -157,18 +159,60 @@ func (app *Application) admGetTestModel() string {
 	return res
 }
 
-func (app *Application) admCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
-	create, err := app.storage.CreateGlobalConfig(setting)
+func (app *application) admCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
+	gc, err := app.storage.GetGlobalConfig()
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.ActionFind, model.TypeGlobalConfig, nil, err)
 	}
-	return create, nil
+	if gc != nil {
+		return nil, log.NewError("global config already exists")
+	}
+
+	gc, err = app.storage.CreateGlobalConfig(setting)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionInsert, model.TypeGlobalConfig, nil, err)
+	}
+	return gc, nil
 }
 
-func (app *Application) admGetGlobalConfig() (*model.GlobalConfig, error) {
-	getConfig, err := app.storage.GetGlobalConfig()
+func (app *application) admGetGlobalConfig() (*model.GlobalConfig, error) {
+	gc, err := app.storage.GetGlobalConfig()
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.ActionFind, model.TypeGlobalConfig, nil, err)
 	}
-	return getConfig, nil
+	return gc, nil
+}
+
+func (app *application) admUpdateGlobalConfig(setting string) error {
+	gc, err := app.storage.GetGlobalConfig()
+	if err != nil {
+		return log.WrapActionError(log.ActionFind, model.TypeGlobalConfig, nil, err)
+	}
+	if gc == nil {
+		return log.WrapDataError(log.StatusMissing, model.TypeGlobalConfig, nil, err)
+	}
+
+	gc.Setting = setting
+	err = app.storage.SaveGlobalConfig(gc)
+	if err != nil {
+		return log.WrapActionError(log.ActionSave, model.TypeGlobalConfig, nil, err)
+	}
+	return nil
+}
+
+func (app *application) admCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
+	organization, err := app.storage.CreateOrganization(name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionFind, model.TypeOrganization, nil, err)
+	}
+	return organization, nil
+}
+
+func (app *application) admUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
+	err := app.storage.UpdateOrganization(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+	if err != nil {
+		return log.WrapActionError(log.ActionUpdate, model.TypeOrganization, nil, err)
+	}
+
+	return err
 }
