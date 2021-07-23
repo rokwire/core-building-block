@@ -27,21 +27,23 @@ type phoneAuthImpl struct {
 	auth *Auth
 }
 
+type phoneCreds struct {
+	Phone  string `json:"phone"`
+	Status string `json:"status"`
+	// TODO: Password
+}
+
 type phoneAuthConfig struct {
-	AccountSID string `json:"account_sid" validate:"required"`
-	AuthToken  string `json:"auth_token" validate:"required"`
-	ClientID   string `json:"client_id" validate:"required"`
+	VerifyServiceID string `json:"verify_service_id" validate:"required"`
+	// AccountSID string `json:"account_sid" validate:"required"`
+	// AuthToken  string `json:"auth_token" validate:"required"`
 }
 
-type startVerificationParams struct {
-	Channel string `json:"channel" validate:"required"`
-	To      string `json:"to" validate:"required"`
-}
-
-type checkVerificationParams struct {
-	Code            string `json:"code" validate:"required"`
-	To              string `json:"to"` // either this parameter or the verification_sid must be specified.
-	VerificationSid string `json:"verificationSid"`
+type verificationParams struct {
+	Code string `json:"code"`
+	To   string `json:"to" validate:"required"`
+	// OrgID string `json:"org_id" validate:"required"`
+	// AppID string `json:"app_id" validate:"required"`
 }
 
 type verifyPhoneResponse struct {
@@ -51,7 +53,6 @@ type verifyPhoneResponse struct {
 	To          string    `json:"to" validate:"required"`
 	Channel     string    `json:"channel" validate:"required"`
 	Status      string    `json:"status"`
-	Valid       bool      `json:"valid"`
 	Lookup      string    `json:"lookup"`
 	Amount      string    `json:"amount"`
 	Payee       string    `json:"payee"`
@@ -60,14 +61,13 @@ type verifyPhoneResponse struct {
 	URL         string    `json:"url"`
 }
 
-type checkVerificationResponse struct {
+type checkStatusResponse struct {
 	Sid         string    `json:"sid"`
 	ServiceSid  string    `json:"service_sid"`
 	AccountSid  string    `json:"account_sid"`
 	To          string    `json:"to" validate:"required"`
 	Channel     string    `json:"channel"`
 	Status      string    `json:"status"`
-	Valid       bool      `json:"valid"`
 	Amount      string    `json:"amount"`
 	Payee       string    `json:"payee"`
 	DateCreated time.Time `json:"date_created"`
@@ -75,102 +75,35 @@ type checkVerificationResponse struct {
 }
 
 func (a *phoneAuthImpl) check(creds string, params string) (*UserAuth, error) {
-	paramsMap := make(map[string]interface{})
-	err := json.Unmarshal([]byte(params), &paramsMap)
+	var verificationCreds verificationParams
+	err := json.Unmarshal([]byte(creds), &verificationCreds)
 	if err != nil {
 		return nil, err
 	}
-	// clientID, ok := paramsMap["clientID"].(string)
-	// if !ok {
-	// 	return nil, errors.New("ClientID parameter missing or invalid")
-	// }
-
-	// sid, ok := paramsMap["sid"].(string)
-	// if !ok {
-	// 	return nil, errors.New("sid parameter missing or invalid")
-	// }
-	// token, ok := paramsMap["token"].(string)
-	// if !ok {
-	// 	return nil, errors.New("token parameter missing or invalid")
-	// }
-
-	credType, ok := paramsMap["cred_type"].(string)
-	if !ok {
-		return nil, errors.New("cred_type parameter missing or invalid")
+	validate := validator.New()
+	err = validate.Struct(verificationCreds)
+	if err != nil {
+		return nil, err
 	}
 
-	// twilioClient := twilio.NewClient(sid, token, nil)
-	verifyServiceID := "VA9e0bd45bfa7d9b9e7dca86cf94c7d4f8"
+	// TODO: fetch phone cred from db if needed, might add password to phone creds later
+	// phoneCred := auth.storage.getCredential("phone", phoneNumber)
 
-	switch credType {
-	case "create":
-		var startVerificationParams startVerificationParams
-		err = json.Unmarshal([]byte(params), &startVerificationParams)
-		if err != nil {
-			return nil, err
-		}
-		validate := validator.New()
-		err = validate.Struct(startVerificationParams)
-		if err != nil {
-			return nil, err
-		}
+	// TODO: orgID string, appID string will be in input params
+	orgID, appID := "", ""
+	phoneAuthConfig, err := a.getPhoneAuthConfig(orgID, appID)
+	if err != nil {
+		return nil, fmt.Errorf("auth config for orgID %s, appID %s cannot be used for phone verify: %s", appID, orgID, err.Error())
+	}
+	verifyServiceID := phoneAuthConfig.VerifyServiceID
+	data := url.Values{}
+	phone := verificationCreds.To
+	data.Add("to", phone)
 
-		data := url.Values{}
-		data.Add("to", startVerificationParams.To)
-		data.Add("channel", startVerificationParams.Channel)
-
-		verifyResponse, err := a.startVerification(verifyServiceID, data)
-		if err != nil {
-			log.Printf("error in start phone verification - %s", err)
-			return nil, err
-		}
-		if verifyResponse.To != startVerificationParams.To {
-			log.Printf("expected To to be %s, got %s", startVerificationParams.To, verifyResponse.To)
-			return nil, fmt.Errorf("phone verify expected To to be %s, got %s", startVerificationParams.To, verifyResponse.To)
-		}
-		if verifyResponse.Valid {
-			log.Printf("expected Valid to be %t, got %t", false, true)
-			return nil, fmt.Errorf("phone verify expected Valid to be %t, got %t", false, true)
-		}
-		if verifyResponse.Channel != startVerificationParams.Channel {
-			log.Printf("expected Channel to be %s, got %s", startVerificationParams.Channel, verifyResponse.Channel)
-			return nil, fmt.Errorf("phone verify expected Channel to be %s, got %s", startVerificationParams.Channel, verifyResponse.Channel)
-		}
-		// if verifyResponse.Lookup.Carrier.Type != "mobile" {
-		// 	t.Errorf("expected Lookup.Carrier to be %s, got %s", "mobile", verifyResponse.Lookup.Carrier.Type)
-		// }
-		if verifyResponse.Sid == "" {
-			log.Println("expected Sid to be non-empty")
-			return nil, errors.New("phone verify expected Sid to be non-empty")
-
-		}
-		userAuth := UserAuth{}
-		userAuth.UserID = verifyResponse.Sid
-		userAuth.Phone = verifyResponse.To
-
-		return &userAuth, nil
-
-	case "check":
-		var checkVerificationParams checkVerificationParams
-		err = json.Unmarshal([]byte(params), &checkVerificationParams)
-		if err != nil {
-			return nil, err
-		}
-		validate := validator.New()
-		err = validate.Struct(checkVerificationParams)
-		if err != nil {
-			return nil, err
-		}
-
-		data := url.Values{}
-		data.Add("code", checkVerificationParams.Code)
-		if checkVerificationParams.To != "" {
-			data.Add("to", checkVerificationParams.To)
-		} else if checkVerificationParams.VerificationSid != "" {
-			data.Add("verification_sid", checkVerificationParams.VerificationSid)
-		} else {
-			return nil, errors.New("Either phone number or verification_sid must be specified")
-		}
+	if verificationCreds.Code != "" {
+		// handle check verification
+		code := verificationCreds.Code
+		data.Add("code", code)
 
 		checkResponse, err := a.checkVerification(verifyServiceID, data)
 		if err != nil {
@@ -178,31 +111,49 @@ func (a *phoneAuthImpl) check(creds string, params string) (*UserAuth, error) {
 			return nil, err
 		}
 
-		if checkResponse.To != checkVerificationParams.To {
-			log.Printf("expected To to be %s, got %s", checkVerificationParams.To, checkResponse.To)
-			return nil, fmt.Errorf("phone verify expected To to be %s, got %s", checkVerificationParams.To, checkResponse.To)
-		}
-		if !checkResponse.Valid {
-			log.Printf("expected Valid to be %t, got %t", true, false)
-			return nil, fmt.Errorf("phone verify expected Valid to be %t, got %t", true, false)
+		if checkResponse.To != phone {
+			log.Printf("expected To to be %s, got %s", phone, checkResponse.To)
+			return nil, fmt.Errorf("phone verify expected To to be %s, got %s", phone, checkResponse.To)
 		}
 		if checkResponse.Status != "approved" {
 			log.Printf("expected Status to be %s, got %s", "approved", checkResponse.Status)
 			return nil, fmt.Errorf("phone verify expected Status to be %s, got %s", "approved", checkResponse.Status)
 		}
-		// if checkResponse.Channel != checkVerificationParams.Channel {
-		// 	log.Printf("expected Channel to be %s, got %s", checkVerificationParams.Channel, checkResponse.Channel)
-		// 	return nil, fmt.Errorf("phone verify expected Channel to be %s, got %s", checkVerificationParams.Channel, checkResponse.Channel)
-		// }
 
 		userAuth := UserAuth{}
 		userAuth.UserID = checkResponse.Sid
 		userAuth.Phone = checkResponse.To
 
 		return &userAuth, nil
+
+	} else {
+		// handle start verification
+		data.Add("channel", "sms")
+
+		verifyResponse, err := a.startVerification(verifyServiceID, data)
+		if err != nil {
+			log.Printf("error starting phone verification - %s", err)
+			return nil, err
+		}
+		if verifyResponse.To != phone {
+			log.Printf("expected To to be %s, got %s", phone, verifyResponse.To)
+			return nil, fmt.Errorf("phone verify expected To to be %s, got %s", phone, verifyResponse.To)
+		}
+		if verifyResponse.Status != "pending" {
+			log.Printf("expected Status to be %s, got %s", "pending", verifyResponse.Status)
+			return nil, fmt.Errorf("phone verify expected Status to be %s, got %s", "pending", verifyResponse.Status)
+		}
+		if verifyResponse.Channel != "sms" {
+			log.Printf("expected Channel to be %s, got %s", "sms", verifyResponse.Channel)
+			return nil, fmt.Errorf("phone verify expected Channel to be %s, got %s", "sms", verifyResponse.Channel)
+		}
+		if verifyResponse.Sid == "" {
+			log.Println("expected Sid to be non-empty")
+			return nil, errors.New("phone verify expected Sid to be non-empty")
+		}
 	}
 
-	return nil, errors.New("Unimplemented")
+	return nil, nil
 }
 
 func (a *phoneAuthImpl) startVerification(verifyServiceID string, data url.Values) (*verifyPhoneResponse, error) {
@@ -226,7 +177,7 @@ func (a *phoneAuthImpl) startVerification(verifyServiceID string, data url.Value
 		return nil, err
 	}
 
-	return &verifyResult, err
+	return &verifyResult, nil
 }
 
 func (a *phoneAuthImpl) fetchVerification(verifyServiceID string, sid string) (*verifyPhoneResponse, error) {
@@ -249,7 +200,7 @@ func (a *phoneAuthImpl) fetchVerification(verifyServiceID string, sid string) (*
 		return nil, err
 	}
 
-	return &verifyResult, err
+	return &verifyResult, nil
 }
 
 func (a *phoneAuthImpl) updateVerification(verifyServiceID string, sid string) (*verifyPhoneResponse, error) {
@@ -273,10 +224,10 @@ func (a *phoneAuthImpl) updateVerification(verifyServiceID string, sid string) (
 		return nil, err
 	}
 
-	return &verifyResult, err
+	return &verifyResult, nil
 }
 
-func (a *phoneAuthImpl) checkVerification(verifyServiceID string, data url.Values) (*checkVerificationResponse, error) {
+func (a *phoneAuthImpl) checkVerification(verifyServiceID string, data url.Values) (*checkStatusResponse, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -290,14 +241,14 @@ func (a *phoneAuthImpl) checkVerification(verifyServiceID string, data url.Value
 		log.Printf("error reading the body data for checking verification - %s", err)
 	}
 
-	var checkResult checkVerificationResponse
+	var checkResult checkStatusResponse
 	err = json.Unmarshal(body, &checkResult)
 	if err != nil {
 		log.Printf("error converting data for checking the verification - %s", err)
 		return nil, err
 	}
 
-	return &checkResult, err
+	return &checkResult, nil
 }
 
 func (a *phoneAuthImpl) getPhoneAuthConfig(orgID string, appID string) (*phoneAuthConfig, error) {
