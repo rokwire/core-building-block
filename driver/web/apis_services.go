@@ -3,13 +3,13 @@ package web
 import (
 	"core-building-block/core"
 	"core-building-block/core/model"
+	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
 	log "github.com/rokmetro/logging-library/loglib"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 //ServicesApisHandler handles the rest APIs implementation
@@ -69,20 +69,23 @@ func (h ServicesApisHandler) authLogin(l *log.Log, r *http.Request) log.HttpResp
 
 	typeLoginRequest := log.LogData("auth login request")
 
-	var requestData authLoginRequest
+	var requestData Def.AuthLoginRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, typeLoginRequest, nil, err, http.StatusBadRequest, true)
 	}
 
-	//validate
-	validate := validator.New()
-	err = validate.Struct(requestData)
+	requestCreds, err := mapInterfaceToJSON(requestData.Creds)
 	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionValidate, typeLoginRequest, nil, err, http.StatusBadRequest, true)
+		return l.HttpResponseErrorAction(log.ActionMarshal, "creds", nil, err, http.StatusBadRequest, true)
 	}
 
-	accessToken, refreshToken, user, params, err := h.coreAPIs.Auth.Login(requestData.AuthType, requestData.Creds, requestData.OrgID, requestData.AppID, requestData.Params, l)
+	requestParams, err := mapInterfaceToJSON(requestData.Params)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
+	}
+
+	accessToken, refreshToken, user, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.OrgId, requestData.AppId, requestParams, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}

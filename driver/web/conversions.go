@@ -1,53 +1,35 @@
 package web
 
 import (
-	Def "core-building-block/driver/web/docs/gen"
+	"encoding/json"
 
-	"github.com/rokmetro/auth-library/authservice"
+	log "github.com/rokmetro/logging-library/loglib"
 )
 
-func pubKeyFromDef(item *Def.PubKey) *authservice.PubKey {
-	if item == nil {
-		return nil
+func defString(pointer *string) string {
+	if pointer == nil {
+		return ""
 	}
-	return &authservice.PubKey{KeyPem: item.KeyPem, Alg: item.Alg}
+	return *pointer
 }
 
-func pubKeyToDef(item *authservice.PubKey) *Def.PubKey {
-	if item == nil {
-		return nil
+func defMap(pointer *map[string]interface{}) map[string]interface{} {
+	if pointer == nil {
+		return map[string]interface{}{}
 	}
-	return &Def.PubKey{KeyPem: item.KeyPem, Alg: item.Alg}
+	return *pointer
 }
 
-func serviceRegFromDef(item *Def.ServiceReg) *authservice.ServiceReg {
-	if item == nil {
-		return nil
+func mapInterfaceToJSON(item interface{}) (string, error) {
+	itemMap, ok := item.(map[string]interface{})
+	if !ok {
+		return "", log.NewErrorf("invalid item type: must be map[string]interface{}")
 	}
-	pubKey := pubKeyFromDef(item.PubKey)
-	return &authservice.ServiceReg{ServiceID: item.ServiceId, Host: item.Host, PubKey: pubKey}
-}
 
-func serviceRegToDef(item *authservice.ServiceReg) *Def.ServiceReg {
-	if item == nil {
-		return nil
+	json, err := json.Marshal(itemMap)
+	if err != nil {
+		return "", log.WrapActionError(log.ActionMarshal, "map", nil, err)
 	}
-	pubKey := pubKeyToDef(item.PubKey)
-	return &Def.ServiceReg{ServiceId: item.ServiceID, Host: item.Host, PubKey: pubKey}
-}
 
-func serviceRegListToDef(items []authservice.ServiceReg) []Def.ServiceReg {
-	if items == nil {
-		return nil
-	}
-	out := make([]Def.ServiceReg, len(items))
-	for i, item := range items {
-		reg := serviceRegToDef(&item)
-		if reg != nil {
-			out[i] = *reg
-		} else {
-			out[i] = Def.ServiceReg{}
-		}
-	}
-	return out
+	return string(json), nil
 }

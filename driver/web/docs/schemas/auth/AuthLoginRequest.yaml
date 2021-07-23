@@ -17,13 +17,23 @@ properties:
     type: string
   creds:
     type: object
-    oneOf:
+    anyOf:
       - $ref: './AuthLoginCredsEmail.yaml'
       - $ref: './AuthLoginCredsPhone.yaml'
       - $ref: './AuthLoginCredsOidc.yaml'
   params:
     type: object
-    oneOf:
+    anyOf:
       - $ref: './AuthLoginParamsEmail.yaml'
       - $ref: './AuthLoginParamsPhone.yaml'
       - $ref: './AuthLoginParamsOidc.yaml'
+example: |
+  {
+    "auth_type": "email",
+    "org_id": "string",
+    "app_id": "string",
+    "creds": {
+      "email": "test@test.com", 
+      "password": "test12345"
+    },
+  }

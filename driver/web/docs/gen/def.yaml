@@ -570,16 +570,24 @@ components:
           type: string
         creds:
           type: object
-          oneOf:
+          anyOf:
             - $ref: '#/components/schemas/AuthLoginCredsEmail'
             - $ref: '#/components/schemas/AuthLoginCredsPhone'
             - $ref: '#/components/schemas/AuthLoginCredsOidc'
         params:
           type: object
-          oneOf:
+          anyOf:
             - $ref: '#/components/schemas/AuthLoginParamsEmail'
             - $ref: '#/components/schemas/AuthLoginParamsPhone'
             - $ref: '#/components/schemas/AuthLoginParamsOidc'
+      example: |
+        {
+          "auth_type": "email",
+          "org_id": "string",
+          "app_id": "string",
+          "creds": {"email": "test@test.com", "password": "test12345"},
+          "params": {}
+        }
     AuthLoginResponse:
       type: object
       properties:
@@ -628,11 +636,7 @@ components:
           default: false
     AuthLoginParamsPhone:
       type: object
-      description: Auth login params for auth_type="phone"
-      properties:
-        new_user:
-          type: boolean
-          default: false
+      description: Auth login params for auth_type="phone" (None)
     AuthLoginParamsOidc:
       type: object
       description: Auth login params for auth_type="oidc"

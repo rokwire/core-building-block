@@ -64,10 +64,8 @@ type AuthLoginParamsOidc struct {
 	RedirectUri   *string `json:"redirect_uri,omitempty"`
 }
 
-// Auth login params for auth_type="phone"
-type AuthLoginParamsPhone struct {
-	NewUser *bool `json:"new_user,omitempty"`
-}
+// Auth login params for auth_type="phone" (None)
+type AuthLoginParamsPhone map[string]interface{}
 
 // AuthLoginRequest defines model for AuthLoginRequest.
 type AuthLoginRequest struct {
