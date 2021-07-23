@@ -5,13 +5,9 @@ import (
 	"core-building-block/utils"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
-	"log"
-	"net/http"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
-	"gopkg.in/go-playground/validator.v9"
 
 	log "github.com/rokmetro/logging-library/loglib"
 )
@@ -20,6 +16,11 @@ import (
 type emailAuthImpl struct {
 	auth *Auth
 }
+
+const (
+	typeTime  log.LogData = "time.Time"
+	typeCreds log.LogData = "creds"
+)
 
 //credentials represents the credential struct for email auth
 type credential struct {
@@ -30,7 +31,7 @@ type credential struct {
 	VerificationExpiry time.Time `json:"verification_expiry" bson:"verification_expiry"`
 }
 
-func (a *emailAuthImpl) check(creds string, params string) (*model.UserAuth, error) {
+func (a *emailAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
 	var c *credential
 	err := json.Unmarshal([]byte(creds), &c)
 	if err != nil {
@@ -106,70 +107,35 @@ func (a *emailAuthImpl) sendPasswordReset(email string, password string) error {
 	return a.auth.SendEmail(email, "Password Reset", "Your temporary password is "+password, "")
 }
 
-//Handler for verify endpoint
-func (a *emailAuthImpl) VerifyCodeHandler(w http.ResponseWriter, r *http.Request) {
-	data, err := ioutil.ReadAll(r.Body)
+func (a *emailAuthImpl) verify(id string, verification string, l *log.Log) error {
+	creds, err := a.auth.storage.GetEmailCredential(id)
 	if err != nil {
-		log.Printf("Error on marshalling credential - %s\n", err.Error())
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
+		return log.WrapActionError(log.ActionFind, typeCreds, nil, err)
 	}
-
-	var c credential
-	err = json.Unmarshal(data, &c)
-	if err != nil {
-		log.Printf("Error on unmarshal the credential request data - %s\n", err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	//validate
-	validate := validator.New()
-	err = validate.Struct(c)
-	if err != nil {
-		log.Printf("Error on validating credential data - %s\n", err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if err = a.verifyCode(&c); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Successfully verified code"))
-}
-
-func (a *emailAuthImpl) verifyCode(c *credential) error {
-	credsFromDB, err := a.auth.storage.GetEmailCredential(c.Email)
-	if err != nil {
-		return errors.New("failed to fetch credential from DB")
-	}
-	valid, err := a.compareVerifyCode(credsFromDB, c)
+	valid, err := a.compareVerifyCode(creds.VerificationCode, verification, creds.VerificationExpiry, l)
 	if err != nil {
 		return err
 	}
 	if !valid {
-		return errors.New("invalid code")
+		return log.WrapActionError(log.ActionValidate, typeCreds, &log.FieldArgs{"verification_code": verification}, log.NewError("invalid verification code"))
 	}
 	//Update verification data
-	c.IsVerified = true
-	c.VerificationCode = ""
-	c.VerificationExpiry = time.Time{}
-	if err = a.auth.storage.UpdateEmailCredential(c); err != nil {
+	creds.IsVerified = true
+	creds.VerificationCode = ""
+	creds.VerificationExpiry = time.Time{}
+	if err = a.auth.storage.UpdateEmailCredential(creds); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (a *emailAuthImpl) compareVerifyCode(actualCred *credential, requestCred *credential) (bool, error) {
-	if actualCred.VerificationExpiry.Before(time.Now()) {
-		return false, errors.New("verify code has expired")
+//Update these guys
+func (a *emailAuthImpl) compareVerifyCode(credCode string, requestCode string, expiryTime time.Time, l *log.Log) (bool, error) {
+	if expiryTime.Before(time.Now()) {
+		return false, log.WrapActionError(log.ActionValidate, typeTime, nil, log.NewError("verification code has expired"))
 	}
 
-	if actualCred.VerificationCode != requestCred.VerificationCode {
-		//log info
+	if credCode != requestCode {
 		return false, nil
 	}
 	return true, nil

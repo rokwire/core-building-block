@@ -77,7 +77,7 @@ func main() {
 		logger.Infof("Error parsing max token exp, applying defaults: %v", err)
 	}
 
-	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, smtpHost, smtpPort, smtpUser, smtpPassword, smtpFrom)
+	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, smtpHost, smtpPort, smtpUser, smtpPassword, smtpFrom, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}

@@ -4,8 +4,8 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"crypto/rsa"
+	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -57,7 +57,7 @@ type Auth struct {
 }
 
 //NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, smtpHost string, smtpPort string, smtpUser string, smtpPassword string, smtpFrom string) (*Auth, error) {
+func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, smtpHost string, smtpPort string, smtpUser string, smtpPassword string, smtpFrom string, logger *log.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -70,7 +70,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	smtpPortNum, err := strconv.Atoi(smtpPort)
 	if err != nil {
 		// handle error
-		log.Fatal("Invalid SMTP port")
+		logger.Fatal("Invalid SMTP port")
 	}
 	//maybe set up from config collection for diff types of auth
 	emailDialer := gomail.NewDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
@@ -158,20 +158,18 @@ func (a *Auth) Login(authType string, creds string, params string, l *log.Log) (
 	return "", nil, nil
 }
 
-func (a *Auth) Verify(authType string, creds string, params string, l *log.Log) (string, *model.User, error) {
+func (a *Auth) Verify(authType string, id string, verification string, l *log.Log) error {
 	auth, err := a.getAuthType(authType)
 	if err != nil {
-		return "", nil, log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
+		return log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	_, err = auth.check(creds, params, l)
+	err = auth.verify(id, verification, l)
 	if err != nil {
-		return "", nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
+		log.WrapActionError(log.ActionValidate, "creds", nil, err)
 	}
 
-	//TODO: Implement account management and return token and user using claims
-
-	return "", nil, nil
+	return nil
 }
 
 //SendEmail is used to send verification and password reset emails using Smtp connection

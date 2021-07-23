@@ -16,6 +16,10 @@ func (a *phoneAuthImpl) check(creds string, params string, l *log.Log) (*model.U
 	return nil, log.NewError(log.Unimplemented)
 }
 
+func (a *phoneAuthImpl) verify(id string, verification string, l *log.Log) error {
+	return nil
+}
+
 //initPhoneAuth initializes and registers a new phone auth instance
 func initPhoneAuth(auth *Auth) (*phoneAuthImpl, error) {
 	phone := &phoneAuthImpl{auth: auth}

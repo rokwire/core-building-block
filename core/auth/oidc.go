@@ -119,6 +119,10 @@ func (a *oidcAuthImpl) check(creds string, params string, l *log.Log) (*model.Us
 	}
 }
 
+func (a *oidcAuthImpl) verify(id string, verification string, l *log.Log) error {
+	return nil
+}
+
 func (a *oidcAuthImpl) mobileLoginURL(params string, l *log.Log) (string, error) {
 	var mobileParams oidcMobileParams
 	err := json.Unmarshal([]byte(params), &mobileParams)
