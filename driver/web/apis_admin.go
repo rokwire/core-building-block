@@ -218,7 +218,7 @@ func (h AdminApisHandler) registerService(l *log.Log, r *http.Request) log.HttpR
 
 	serviceReg := serviceRegFromDef(&requestData)
 
-	err = h.coreAPIs.Auth.RegisterService(&serviceReg)
+	err = h.coreAPIs.Auth.RegisterService(serviceReg)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionCreate, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
 	}
@@ -240,7 +240,7 @@ func (h AdminApisHandler) updateServiceRegistration(l *log.Log, r *http.Request)
 
 	serviceReg := serviceRegFromDef(&requestData)
 
-	err = h.coreAPIs.Auth.UpdateServiceRegistration(&serviceReg)
+	err = h.coreAPIs.Auth.UpdateServiceRegistration(serviceReg)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionUpdate, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
 	}

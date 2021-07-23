@@ -6,28 +6,48 @@ import (
 	"github.com/rokmetro/auth-library/authservice"
 )
 
-func pubKeyFromDef(key *Def.PubKey) authservice.PubKey {
-	return authservice.PubKey{KeyPem: key.KeyPem, Alg: key.Alg}
+func pubKeyFromDef(item *Def.PubKey) *authservice.PubKey {
+	if item == nil {
+		return nil
+	}
+	return &authservice.PubKey{KeyPem: item.KeyPem, Alg: item.Alg}
 }
 
-func pubKeyToDef(key *authservice.PubKey) Def.PubKey {
-	return Def.PubKey{KeyPem: key.KeyPem, Alg: key.Alg}
+func pubKeyToDef(item *authservice.PubKey) *Def.PubKey {
+	if item == nil {
+		return nil
+	}
+	return &Def.PubKey{KeyPem: item.KeyPem, Alg: item.Alg}
 }
 
-func serviceRegFromDef(reg *Def.ServiceReg) authservice.ServiceReg {
-	pubKey := pubKeyFromDef(reg.PubKey)
-	return authservice.ServiceReg{ServiceID: reg.ServiceId, Host: reg.Host, PubKey: &pubKey}
+func serviceRegFromDef(item *Def.ServiceReg) *authservice.ServiceReg {
+	if item == nil {
+		return nil
+	}
+	pubKey := pubKeyFromDef(item.PubKey)
+	return &authservice.ServiceReg{ServiceID: item.ServiceId, Host: item.Host, PubKey: pubKey}
 }
 
-func serviceRegToDef(reg *authservice.ServiceReg) Def.ServiceReg {
-	pubKey := pubKeyToDef(reg.PubKey)
-	return Def.ServiceReg{ServiceId: reg.ServiceID, Host: reg.Host, PubKey: &pubKey}
+func serviceRegToDef(item *authservice.ServiceReg) *Def.ServiceReg {
+	if item == nil {
+		return nil
+	}
+	pubKey := pubKeyToDef(item.PubKey)
+	return &Def.ServiceReg{ServiceId: item.ServiceID, Host: item.Host, PubKey: pubKey}
 }
 
-func serviceRegListToDef(regs []authservice.ServiceReg) []Def.ServiceReg {
-	out := make([]Def.ServiceReg, len(regs))
-	for i, item := range regs {
-		out[i] = serviceRegToDef(&item)
+func serviceRegListToDef(items []authservice.ServiceReg) []Def.ServiceReg {
+	if items == nil {
+		return nil
+	}
+	out := make([]Def.ServiceReg, len(items))
+	for i, item := range items {
+		reg := serviceRegToDef(&item)
+		if reg != nil {
+			out[i] = *reg
+		} else {
+			out[i] = Def.ServiceReg{}
+		}
 	}
 	return out
 }
