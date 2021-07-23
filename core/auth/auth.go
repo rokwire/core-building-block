@@ -4,7 +4,6 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"crypto/rsa"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -25,6 +24,7 @@ import (
 const (
 	typeAuthType log.LogData = "auth type"
 	TypeAuth     log.LogData = "auth"
+	typeMail     log.LogData = "mail"
 )
 
 //Interface for authentication mechanisms
@@ -175,10 +175,10 @@ func (a *Auth) Verify(authType string, id string, verification string, l *log.Lo
 //SendEmail is used to send verification and password reset emails using Smtp connection
 func (a *Auth) SendEmail(toEmail string, subject string, body string, attachmentFilename string) error {
 	if a.emailDialer == nil {
-		return errors.New("Email dialer has not been set up")
+		return log.NewError("email Dialer is nil")
 	}
 	if toEmail == "" {
-		return errors.New("Missing email")
+		return log.NewError("Missing email addresses")
 	}
 
 	emails := strings.Split(toEmail, ",")
@@ -191,7 +191,7 @@ func (a *Auth) SendEmail(toEmail string, subject string, body string, attachment
 	m.Attach(attachmentFilename)
 
 	if err := a.emailDialer.DialAndSend(m); err != nil {
-		return err
+		return log.WrapActionError(log.ActionSend, typeMail, nil, err)
 	}
 	return nil
 }

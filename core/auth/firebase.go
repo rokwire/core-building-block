@@ -17,7 +17,7 @@ func (a *firebaseAuthImpl) check(creds string, params string, l *log.Log) (*mode
 }
 
 func (a *firebaseAuthImpl) verify(id string, verification string, l *log.Log) error {
-	return nil
+	return log.NewError(log.Unimplemented)
 }
 
 //initFirebaseAuth initializes and registers a new Firebase auth instance
