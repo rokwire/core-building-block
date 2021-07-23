@@ -210,13 +210,13 @@ func (h AdminApisHandler) registerService(l *log.Log, r *http.Request) log.HttpR
 		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData *Def.ServiceReg
-	err = json.Unmarshal(data, requestData)
+	var requestData Def.ServiceReg
+	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeServiceReg, nil, err, http.StatusBadRequest, true)
 	}
 
-	serviceReg := serviceRegFromDef(requestData)
+	serviceReg := serviceRegFromDef(&requestData)
 
 	err = h.coreAPIs.Auth.RegisterService(&serviceReg)
 	if err != nil {
@@ -232,13 +232,13 @@ func (h AdminApisHandler) updateServiceRegistration(l *log.Log, r *http.Request)
 		return l.HttpResponseErrorData(log.StatusInvalid, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData *Def.ServiceReg
-	err = json.Unmarshal(data, requestData)
+	var requestData Def.ServiceReg
+	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeServiceReg, nil, err, http.StatusBadRequest, true)
 	}
 
-	serviceReg := serviceRegFromDef(requestData)
+	serviceReg := serviceRegFromDef(&requestData)
 
 	err = h.coreAPIs.Auth.UpdateServiceRegistration(&serviceReg)
 	if err != nil {
