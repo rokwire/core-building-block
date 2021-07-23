@@ -1,0 +1,56 @@
+openapi: 3.0.3
+info:
+  title: Rokwire Core Building Block API
+  description: Core Building Block API Documentation
+  version: 1.0.0
+servers:
+- url: https://api.rokwire.illinois.edu/core
+  description: Production server
+- url: https://api-test.rokwire.illinois.edu/core
+  description: Test server
+- url: https://api-dev.rokwire.illinois.edu/core
+  description: Development server
+- url: http://localhost/core
+  description: Local server
+tags:
+- name: Auth
+  description: APIs handling the authentication.
+- name: Common
+  description: End users applications APIs.
+- name: Admin
+  description: Administration applications APIs.
+- name: Enc
+  description: APIs consumed by the Encryption building block.
+- name: BBs
+  description: APIs consumed by the platform building blocks.
+paths:
+  #auth
+  /services/auth/test:
+    $ref: "./resources/auth/test.yaml"
+
+  #common
+  /services/common/test:
+    $ref: "./resources/common/test.yaml"
+
+  #admin
+  /admin/global-config:
+    $ref: "./resources/admin/global-config.yaml"
+  /admin/organizations/{id}:
+    $ref: "./resources/admin/organizationsId.yaml"
+  /admin/organizations:
+    $ref: "./resources/admin/organizations.yaml"
+
+  #enc
+  /enc/test:
+    $ref: "./resources/enc/test.yaml"
+
+  #bbs
+  /bbs/test:
+    $ref: "./resources/bbs/test.yaml"
+
+  #default
+  /version:
+    $ref: "./resources/default/version.yaml"
+components:
+  schemas:
+    $ref: "./schemas/index.yaml"
