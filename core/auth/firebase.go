@@ -3,14 +3,13 @@ package auth
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"io/ioutil"
-	"log"
 	"os"
 
-	"firebase.google.com/go/auth"
-	firebase "firebase.google.com/go/v4"
 	"core-building-block/core/model"
+
+	firebase "firebase.google.com/go/v4"
+	"firebase.google.com/go/v4/auth"
 
 	log "github.com/rokmetro/logging-library/loglib"
 )
@@ -20,47 +19,45 @@ type firebaseAuthImpl struct {
 	auth *Auth
 }
 
-func (a *firebaseAuthImpl) check(creds string, params string) (*Claims, error) {
+const (
+	typeCred log.LogData = "creds"
+)
+
+func (a *firebaseAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
 	paramsMap := make(map[string]interface{})
 	err := json.Unmarshal([]byte(params), &paramsMap)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.ActionUnmarshal, log.TypeString, &log.FieldArgs{"params": params}, err)
 	}
 	clientID, ok := paramsMap["clientID"].(string)
 	if !ok {
-		return nil, errors.New("ClientID parameter missing or invalid")
+		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
 	}
 	err = a.setFirebaseAdminCreds(clientID)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.ActionSave, log.TypeString, nil, err)
 	}
 
 	firebaseApp, err := firebase.NewApp(context.Background(), nil)
 	if err != nil {
-		log.Printf("error initializing Firebase app: %v\n", err)
-		return nil, err
+		return nil, log.WrapActionError(log.ActionInitialize, typeCred, nil, err)
 	}
 
 	// Access auth service from the firebase app
 	firebaseAuth, err := firebaseApp.Auth(context.Background())
 	if err != nil {
-		log.Printf("error getting Firebase Auth client: %v\n", err)
-		return nil, err
+		return nil, log.WrapActionError(log.ActionInitialize, typeCred, nil, err)
 	}
 
 	//Validate the Firebase token
 	token, err := firebaseAuth.VerifyIDToken(context.Background(), creds)
 	if err != nil {
-		log.Printf("error verifying Firebase ID token: %v\n", err)
-		return nil, errors.New("Invalid token")
+		return nil, log.WrapActionError(log.ActionValidate, log.TypeToken, &log.FieldArgs{"token": token}, err)
 	}
-	log.Printf("Verified Firebase ID token: %v\n", token)
 	user, err := firebaseAuth.GetUser(context.Background(), token.Claims["user_id"].(string))
 	if err != nil {
-		log.Printf("error verifying Firebase ID token: %v\n", err)
-		return nil, errors.New("Failed to get Firebase user")
+		return nil, log.WrapActionError(log.ActionGet, typeCred, nil, err)
 	}
-	log.Printf("Claims: %v", token.Claims)
 	token.Claims["uid"] = token.Claims["user_id"]
 
 	if user.UserInfo.PhoneNumber != "" {
@@ -72,28 +69,15 @@ func (a *firebaseAuthImpl) check(creds string, params string) (*Claims, error) {
 	if user.UserInfo.DisplayName != "" {
 		token.Claims["name"] = user.UserInfo.DisplayName
 	}
-	claims := &Claims{ID: token.Claims["uid"].(string), Name: token.Claims["name"].(string), Phone: token.Claims["phone"].(string), Email: token.Claims["email"].(string), Issuer: token.Claims["issuer"].(string), Groups: nil, Exp: 0}
+	claims := &model.UserAuth{UserID: token.Claims["uid"].(string), Name: token.Claims["name"].(string), Phone: token.Claims["phone"].(string), Email: token.Claims["email"].(string), Exp: 0}
 	return claims, nil
 }
 
 //Create a firebase admin with given email and password
 func (a *firebaseAuthImpl) createAdmin(email string, password string) (string, error) {
-	err := a.setFirebaseAdminCreds("admin")
+	firebaseAuth, err := a.getFirebaseAuthClient("admin")
 	if err != nil {
-		return "", err
-	}
-
-	firebaseApp, err := firebase.NewApp(context.Background(), nil)
-	if err != nil {
-		log.Printf("error initializing Firebase app: %v\n", err)
-		return "", err
-	}
-
-	// Access auth service from the firebase app
-	firebaseAuth, err := firebaseApp.Auth(context.Background())
-	if err != nil {
-		log.Printf("error getting Firebase Auth client: %v\n", err)
-		return "", err
+		return "", log.WrapActionError(log.ActionGet, typeCred, nil, err)
 	}
 
 	params := (&auth.UserToCreate{}).
@@ -104,35 +88,21 @@ func (a *firebaseAuthImpl) createAdmin(email string, password string) (string, e
 
 	userRecord, err := firebaseAuth.CreateUser(context.Background(), params)
 	if err != nil {
-		log.Printf("error creating firebase user: %v\n", err)
-		return "", err
+		return "", log.WrapActionError(log.ActionCreate, typeCred, nil, err)
 	}
 	return userRecord.UID, nil
 }
 
 //Get a firebase admin by a given email
 func (a *firebaseAuthImpl) getAdmin(email string) (string, error) {
-	err := a.setFirebaseAdminCreds("admin")
+	firebaseAuth, err := a.getFirebaseAuthClient("admin")
 	if err != nil {
-		return "", err
-	}
-	firebaseApp, err := firebase.NewApp(context.Background(), nil)
-	if err != nil {
-		log.Printf("error initializing Firebase app: %v\n", err)
-		return "", err
-	}
-
-	// Access auth service from the firebase app
-	firebaseAuth, err := firebaseApp.Auth(context.Background())
-	if err != nil {
-		log.Printf("error getting Firebase Auth client: %v\n", err)
-		return "", err
+		return "", log.WrapActionError(log.ActionGet, typeCred, nil, err)
 	}
 
 	userRecord, err := firebaseAuth.GetUserByEmail(context.Background(), email)
 	if err != nil {
-		log.Printf("error fetching firebase user: %v\n", err)
-		return "", err
+		return "", log.WrapActionError(log.ActionGet, typeCred, nil, err)
 	}
 	return userRecord.UID, nil
 }
@@ -145,10 +115,29 @@ func (a *firebaseAuthImpl) setFirebaseAdminCreds(clientID string) error {
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "./service-account-file.json")
 	err = ioutil.WriteFile("./service-account-file.json", []byte(creds.FirebaseCreds), 0644)
 	if err != nil {
-		log.Printf("Unable to write Google credentials to file: " + err.Error())
-		return err
+		return log.WrapActionError(log.ActionUpdate, typeCred, nil, err)
+
 	}
 	return nil
+}
+
+func (a *firebaseAuthImpl) getFirebaseAuthClient(clientID string) (*auth.Client, error) {
+	err := a.setFirebaseAdminCreds(clientID)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionSave, log.TypeString, nil, err)
+	}
+
+	firebaseApp, err := firebase.NewApp(context.Background(), nil)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionInitialize, typeCred, nil, err)
+	}
+
+	// Access auth service from the firebase app
+	firebaseAuth, err := firebaseApp.Auth(context.Background())
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionInitialize, typeCred, nil, err)
+	}
+	return firebaseAuth, nil
 }
 
 //initFirebaseAuth initializes and registers a new Firebase auth instance

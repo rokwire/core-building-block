@@ -21,10 +21,10 @@ type database struct {
 	dbClient *mongo.Client
 
 	firebaseAdminCreds *collectionWrapper
-	authConfigs   *collectionWrapper
-	globalConfig  *collectionWrapper
-	organizations *collectionWrapper
-	serviceRegs   *collectionWrapper
+	authConfigs        *collectionWrapper
+	globalConfig       *collectionWrapper
+	organizations      *collectionWrapper
+	serviceRegs        *collectionWrapper
 
 	listeners []Listener
 }
@@ -119,6 +119,9 @@ func (m *database) applyFirebaseCredsChecks(firebaseCreds *collectionWrapper) er
 		return err
 	}
 	log.Println("FirebaseCreds check passed")
+	return nil
+}
+
 func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) error {
 	log.Println("apply organizations checks.....")
 
