@@ -4,10 +4,12 @@ import (
 	"core-building-block/core"
 	"core-building-block/core/model"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
 	log "github.com/rokmetro/logging-library/loglib"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 //ServicesApisHandler handles the rest APIs implementation
@@ -42,6 +44,55 @@ func (h ServicesApisHandler) getAuthServiceRegistrations(l *log.Log, r *http.Req
 	}
 
 	return l.HttpResponseSuccessJSON(data)
+}
+
+type authLoginRequest struct {
+	AuthType string `json:"auth_type" validate:"required"`
+	Creds    string `json:"creds" validate:"required"`
+	OrgID    string `json:"org_id" validate:"required"`
+	AppID    string `json:"app_id" validate:"required"`
+	Params   string `json:"params"`
+}
+
+type authLoginResponse struct {
+	AccessToken  string      `json:"access_token"`
+	User         *model.User `json:"user"`
+	RefreshToken string      `json:"refresh_token"`
+}
+
+func (h ServicesApisHandler) authLogin(l *log.Log, r *http.Request) log.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	typeLoginRequest := log.LogData("auth login request")
+
+	var requestData authLoginRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionUnmarshal, typeLoginRequest, nil, err, http.StatusBadRequest, true)
+	}
+
+	//validate
+	validate := validator.New()
+	err = validate.Struct(requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionValidate, typeLoginRequest, nil, err, http.StatusBadRequest, true)
+	}
+
+	accessToken, user, refreshToken, err := h.coreAPIs.Auth.Login(requestData.AuthType, requestData.Creds, requestData.OrgID, requestData.AppID, requestData.Params, l)
+	if err != nil {
+		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
+	}
+
+	responseData := &authLoginResponse{AccessToken: accessToken, User: user, RefreshToken: refreshToken}
+	respData, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, typeLoginRequest, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
 }
 
 //getCommonTest TODO get test

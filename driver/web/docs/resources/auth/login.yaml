@@ -1,0 +1,41 @@
+post:
+  summary: Login
+  description: |
+    Login using credentials to retrieve access token, refresh token, and user data
+  requestBody:
+    description: |
+      User credential details and parameters
+    content:
+      application/json:
+        schema:
+          oneOf:
+            - $ref: '../../schemas/AuthLoginEmail'
+            - $ref: '../../schemas/AuthLoginPhone'
+            - $ref: '../../schemas/AuthLoginOidc'
+          discriminator:
+            propertyName: auth_type
+            mapping:
+              email: '../../schemas/AuthLoginEmail'
+              phone: '../../schemas/AuthLoginPhone'
+              oidc: ''../../schemas/AuthLoginOidc'
+    required: true
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              access_token:
+                type: string
+              user:
+                $ref: "../../User.yaml"
+              refresh_token:
+                type: string
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
