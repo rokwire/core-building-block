@@ -1,0 +1,20 @@
+required:
+  - auth_type
+  - creds
+type: object
+properties:
+  auth_type:
+    type: string
+  creds:
+    type: object
+    properties:
+      email:
+        type: string
+      password:
+        type: string      
+  params:
+    type: object
+    properties:
+      new_user:
+        type: boolean
+        default: false

@@ -10,7 +10,7 @@ get:
         content:
           application/json:
             schema:
-              $ref: "../../schemas/GlobalConfig.yaml"
+              $ref: "../../schemas/global/GlobalConfig.yaml"
       400:
         description: Bad request
       401:
@@ -27,7 +27,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/GlobalConfig.yaml"
+          $ref: "../../schemas/global/GlobalConfig.yaml"
     required: true
   responses:
       200:
@@ -53,7 +53,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/GlobalConfig.yaml"
+          $ref: "../../schemas/global/GlobalConfig.yaml"
     required: true
   responses:
     200:

@@ -21,7 +21,7 @@ get:
           schema:
             type: array
             items: 
-              $ref: '../../schemas/ServiceReg.yaml'
+              $ref: '../../schemas/auth/ServiceReg.yaml'
     400:
       description: Bad request
     401:

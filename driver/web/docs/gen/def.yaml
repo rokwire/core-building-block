@@ -37,6 +37,53 @@ paths:
               schema:
                 type: string
                 example: Echooo
+  /services/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login
+      description: |
+        Login using credentials to retrieve access token, refresh token, and user data
+      requestBody:
+        description: |
+          User credential details and parameters
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/AuthLoginEmail'
+                - $ref: '#/components/schemas/AuthLoginPhone'
+                - $ref: '#/components/schemas/AuthLoginOidc'
+              discriminator:
+                propertyName: auth_type
+                mapping:
+                  email: ../../schemas/auth/AuthLoginEmail.yaml
+                  phone: ../../schemas/auth/AuthLoginPhone.yaml
+                  oidc: ../../schemas/auth/AuthLoginOidc.yaml
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  refresh_token:
+                    type: string
+                  params:
+                    type: object
+                    description: Login params to be submitted with subsequent requests (if necessary)
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/auth/service-regs:
     get:
       tags:
@@ -382,6 +429,42 @@ components:
       properties:
         setting:
           type: string
+    GlobalRole:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+    GlobalGroup:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/GlobalRole'
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
     Organization:
       required:
         - id
@@ -422,6 +505,48 @@ components:
           description: organization domains
           items:
             type: string
+    OrganizationRole:
+      required:
+        - id
+        - name
+        - org_id
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        org_id:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+    OrganizationGroup:
+      required:
+        - id
+        - name
+        - org_id
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        org_id:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationRole'
+        org_memberships:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationMembership'
     ServiceReg:
       required:
         - service_id
@@ -444,3 +569,183 @@ components:
           type: string
         alg:
           type: string
+    AuthLoginOidc:
+      required:
+        - auth_type
+        - creds
+        - params
+      type: object
+      properties:
+        auth_type:
+          type: string
+        creds:
+          type: string
+          description: |
+            User credentials
+             - Initial login: authorization code
+             - Refresh: refresh token
+        params:
+          required:
+            - org_id
+            - app_id
+          type: object
+          properties:
+            org_id:
+              type: string
+            app_id:
+              type: string
+            pkce_challenge:
+              type: string
+            redirect_uri:
+              type: string
+    AuthLoginEmail:
+      required:
+        - auth_type
+        - creds
+      type: object
+      properties:
+        auth_type:
+          type: string
+        creds:
+          type: object
+          properties:
+            email:
+              type: string
+            password:
+              type: string
+        params:
+          type: object
+          properties:
+            new_user:
+              type: boolean
+              default: false
+    AuthLoginPhone:
+      required:
+        - auth_type
+        - creds
+      type: object
+      properties:
+        auth_type:
+          type: string
+        creds:
+          type: object
+          required:
+            - phone
+          properties:
+            phone:
+              type: string
+            code:
+              type: string
+        params:
+          type: object
+          properties:
+            new_user:
+              type: boolean
+              default: false
+    User:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        account:
+          $ref: '#/components/schemas/UserAccount'
+        profile:
+          $ref: '#/components/schemas/UserProfile'
+        permissions:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/GlobalRole'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/GlobalGroup'
+        org_memberships:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationMembership'
+        devices:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
+    UserAccount:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        username:
+          type: string
+    UserProfile:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        photo_url:
+          type: string
+    OrganizationMembership:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        org_id:
+          type: string
+        org_user_data:
+          type: object
+          description: 'map[string]object for arbitrary organization user data'
+        permissions:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationRole'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationGroup'
+    Device:
+      required:
+        - id
+        - type
+        - user_ids
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+            - mobile
+            - web
+            - desktop
+            - other
+        os:
+          type: string
+        mac_address:
+          type: string
+        user_ids:
+          type: array
+          items:
+            type: string

@@ -25,8 +25,10 @@ tags:
   description: APIs consumed by the platform building blocks.
 paths:
   #auth
-  /services/auth/test:
+  /services/auth/test:  
     $ref: "./resources/auth/test.yaml"
+  /services/auth/login:
+    $ref: "./resources/auth/login.yaml"
   /services/auth/service-regs:
     $ref: "./resources/auth/service-regs.yaml"
   #common
