@@ -122,10 +122,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		//1. validate request
 		requestValidationInput, err := we.validateRequest(req)
 		if err != nil {
-			logObj.Errorf("error validating request - %s", err)
-
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(http.StatusText(http.StatusBadRequest)))
+			logObj.RequestErrorAction(w, log.ActionValidate, log.TypeRequest, nil, err, http.StatusBadRequest, true)
 			return
 		}
 
@@ -135,10 +132,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		//3. validate the response
 		err = we.validateResponse(requestValidationInput, response)
 		if err != nil {
-			logObj.Errorf("error validating response - %s", err)
-
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(http.StatusText(http.StatusBadRequest)))
+			logObj.RequestErrorAction(w, log.ActionValidate, log.TypeResponse, nil, err, http.StatusBadRequest, true)
 			return
 		}
 
