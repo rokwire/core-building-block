@@ -101,7 +101,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initSamlAuth(auth)
 	initFirebaseAuth(auth)
 
-	initApiKeyAuth(auth)
+	initAPIKeyAuth(auth)
 	initSignatureAuth(auth)
 
 	err = auth.LoadAuthConfigs()
