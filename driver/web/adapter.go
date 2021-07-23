@@ -120,31 +120,26 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		var err error
 
 		//1. validate request
-		var requestValidationInput *openapi3filter.RequestValidationInput
-		if we.env != "production" {
-			requestValidationInput, err = we.validateRequest(req)
-			if err != nil {
-				logObj.Errorf("error validating request - %s", err)
+		requestValidationInput, err := we.validateRequest(req)
+		if err != nil {
+			logObj.Errorf("error validating request - %s", err)
 
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(http.StatusText(http.StatusBadRequest)))
-				return
-			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(http.StatusText(http.StatusBadRequest)))
+			return
 		}
 
 		//2. process it
 		response := handler(logObj, req)
 
 		//3. validate the response
-		if we.env != "production" {
-			err = we.validateResponse(requestValidationInput, response)
-			if err != nil {
-				logObj.Errorf("error validating response - %s", err)
+		err = we.validateResponse(requestValidationInput, response)
+		if err != nil {
+			logObj.Errorf("error validating response - %s", err)
 
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(http.StatusText(http.StatusBadRequest)))
-				return
-			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(http.StatusText(http.StatusBadRequest)))
+			return
 		}
 
 		//4. return response
