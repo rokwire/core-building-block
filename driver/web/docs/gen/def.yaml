@@ -31,7 +31,7 @@ paths:
       summary: Test API..
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
@@ -50,16 +50,7 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-                - $ref: '#/components/schemas/AuthLoginEmail'
-                - $ref: '#/components/schemas/AuthLoginPhone'
-                - $ref: '#/components/schemas/AuthLoginOidc'
-              discriminator:
-                propertyName: auth_type
-                mapping:
-                  email: ../../schemas/auth/AuthLoginEmail.yaml
-                  phone: ../../schemas/auth/AuthLoginPhone.yaml
-                  oidc: ../../schemas/auth/AuthLoginOidc.yaml
+              $ref: '#/components/schemas/AuthLoginRequest'
         required: true
       responses:
         '200':
@@ -67,17 +58,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  access_token:
-                    type: string
-                  refresh_token:
-                    type: string
-                  params:
-                    type: object
-                    description: Login params to be submitted with subsequent requests (if necessary)
-                  user:
-                    $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/AuthLoginResponse'
         '400':
           description: Bad request
         '401':
@@ -122,7 +103,7 @@ paths:
       summary: Test API..
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
@@ -137,7 +118,7 @@ paths:
         Gives the system global config
       responses:
         '200':
-          description: Successful operation
+          description: Success
           content:
             application/json:
               schema:
@@ -162,12 +143,12 @@ paths:
         required: true
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
                 type: string
-                example: Successfully created
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -188,12 +169,12 @@ paths:
         required: true
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
                 type: string
-                example: Successfully updated
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -225,12 +206,12 @@ paths:
         required: true
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
                 type: string
-                example: Successfullly created
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -253,12 +234,12 @@ paths:
         required: true
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
                 type: string
-                example: Successfullly created
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -390,7 +371,7 @@ paths:
       summary: Test API..
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
@@ -403,7 +384,7 @@ paths:
       summary: Test API..
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
@@ -414,7 +395,7 @@ paths:
       summary: Get service version
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
@@ -569,79 +550,97 @@ components:
           type: string
         alg:
           type: string
-    AuthLoginOidc:
+    AuthLoginRequest:
       required:
         - auth_type
-        - creds
-        - params
-      type: object
-      properties:
-        auth_type:
-          type: string
-        creds:
-          type: string
-          description: |
-            User credentials
-             - Initial login: authorization code
-             - Refresh: refresh token
-        params:
-          required:
-            - org_id
-            - app_id
-          type: object
-          properties:
-            org_id:
-              type: string
-            app_id:
-              type: string
-            pkce_challenge:
-              type: string
-            redirect_uri:
-              type: string
-    AuthLoginEmail:
-      required:
-        - auth_type
+        - org_id
+        - app_id
         - creds
       type: object
       properties:
         auth_type:
           type: string
-        creds:
-          type: object
-          properties:
-            email:
-              type: string
-            password:
-              type: string
-        params:
-          type: object
-          properties:
-            new_user:
-              type: boolean
-              default: false
-    AuthLoginPhone:
-      required:
-        - auth_type
-        - creds
-      type: object
-      properties:
-        auth_type:
-          type: string
-        creds:
-          type: object
-          required:
+          enum:
+            - email
             - phone
-          properties:
-            phone:
-              type: string
-            code:
-              type: string
+            - oidc
+        org_id:
+          type: string
+        app_id:
+          type: string
+        creds:
+          type: object
+          oneOf:
+            - $ref: '#/components/schemas/AuthLoginCredsEmail'
+            - $ref: '#/components/schemas/AuthLoginCredsPhone'
+            - $ref: '#/components/schemas/AuthLoginCredsOidc'
         params:
           type: object
-          properties:
-            new_user:
-              type: boolean
-              default: false
+          oneOf:
+            - $ref: '#/components/schemas/AuthLoginParamsEmail'
+            - $ref: '#/components/schemas/AuthLoginParamsPhone'
+            - $ref: '#/components/schemas/AuthLoginParamsOidc'
+    AuthLoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        params:
+          type: object
+          description: Login params to be submitted with subsequent requests (if necessary)
+        user:
+          $ref: '#/components/schemas/User'
+    AuthLoginCredsEmail:
+      required:
+        - email
+        - password
+      type: object
+      description: Auth login creds for auth_type="email"
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    AuthLoginCredsPhone:
+      type: object
+      description: Auth login creds for auth_type="phone"
+      required:
+        - phone
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+    AuthLoginCredsOidc:
+      type: string
+      description: |
+        Auth login creds for auth_type="oidc"
+          - Initial login: authorization code
+          - Refresh: refresh token
+    AuthLoginParamsEmail:
+      type: object
+      description: Auth login params for auth_type="email"
+      properties:
+        new_user:
+          type: boolean
+          default: false
+    AuthLoginParamsPhone:
+      type: object
+      description: Auth login params for auth_type="phone"
+      properties:
+        new_user:
+          type: boolean
+          default: false
+    AuthLoginParamsOidc:
+      type: object
+      description: Auth login params for auth_type="oidc"
+      properties:
+        pkce_challenge:
+          type: string
+        redirect_uri:
+          type: string
     User:
       required:
         - id

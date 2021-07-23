@@ -1,0 +1,5 @@
+type: string
+description: |
+  Auth login creds for auth_type="oidc"
+    - Initial login: authorization code
+    - Refresh: refresh token

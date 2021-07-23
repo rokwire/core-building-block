@@ -21,12 +21,22 @@ ServiceReg:
   $ref: "./auth/ServiceReg.yaml"
 PubKey:
   $ref: "./auth/PubKey.yaml"
-AuthLoginOidc:
-  $ref: "./auth/AuthLoginOidc.yaml"
-AuthLoginEmail:
-  $ref: "./auth/AuthLoginEmail.yaml"
-AuthLoginPhone:
-  $ref: "./auth/AuthLoginPhone.yaml"
+AuthLoginRequest:
+  $ref: "./auth/AuthLoginRequest.yaml"
+AuthLoginResponse:
+  $ref: "./auth/AuthLoginResponse.yaml"
+AuthLoginCredsEmail:
+  $ref: "./auth/AuthLoginCredsEmail.yaml"
+AuthLoginCredsPhone:
+  $ref: "./auth/AuthLoginCredsPhone.yaml"
+AuthLoginCredsOidc:
+  $ref: "./auth/AuthLoginCredsOidc.yaml"
+AuthLoginParamsEmail:
+  $ref: "./auth/AuthLoginParamsEmail.yaml"
+AuthLoginParamsPhone:
+  $ref: "./auth/AuthLoginParamsPhone.yaml"
+AuthLoginParamsOidc:
+  $ref: "./auth/AuthLoginParamsOidc.yaml"
 
 # user
 User:

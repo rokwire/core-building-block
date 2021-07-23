@@ -10,16 +10,7 @@ post:
     content:
       application/json:
         schema:
-          oneOf:
-            - $ref: '../../schemas/auth/AuthLoginEmail.yaml'
-            - $ref: '../../schemas/auth/AuthLoginPhone.yaml'
-            - $ref: '../../schemas/auth/AuthLoginOidc.yaml'
-          discriminator:
-            propertyName: auth_type
-            mapping:
-              email: '../../schemas/auth/AuthLoginEmail.yaml'
-              phone: '../../schemas/auth/AuthLoginPhone.yaml'
-              oidc: '../../schemas/auth/AuthLoginOidc.yaml'
+          $ref: "../../schemas/auth/AuthLoginRequest.yaml"
     required: true
   responses:
     200:
@@ -27,17 +18,7 @@ post:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              access_token:
-                type: string
-              refresh_token:
-                type: string
-              params:
-                type: object
-                description: Login params to be submitted with subsequent requests (if necessary)
-              user:
-                $ref: "../../schemas/user/User.yaml"
+            $ref: "../../schemas/auth/AuthLoginResponse.yaml"
     400:
       description: Bad request
     401:

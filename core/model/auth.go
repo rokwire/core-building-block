@@ -18,6 +18,7 @@ type UserAuth struct {
 	Picture      []byte
 	Exp          *int64
 	RefreshToken string
+	Params       map[string]interface{}
 }
 
 //AuthConfig represents auth config entity

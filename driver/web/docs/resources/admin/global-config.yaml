@@ -6,7 +6,7 @@ get:
     Gives the system global config
   responses:
       200:
-        description: Successful operation
+        description: Success
         content:
           application/json:
             schema:
@@ -31,12 +31,12 @@ post:
     required: true
   responses:
       200:
-        description: successful operation
+        description: Success
         content:
           text/plain:
             schema:
               type: string
-              example: Successfully created
+              example: Success
       400:
         description: Bad request
       401:
@@ -57,12 +57,12 @@ put:
     required: true
   responses:
     200:
-      description: successful operation
+      description: Success
       content:
         text/plain:
           schema:
             type: string
-            example: Successfully updated
+            example: Success
     400:
       description: Bad request
     401:

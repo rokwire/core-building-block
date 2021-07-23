@@ -123,26 +123,27 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 //		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //		User (User): User object for authenticated user
 //		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
-func (a *Auth) Login(authType string, creds string, orgID string, appID string, params string, l *log.Log) (string, *model.User, string, error) {
+//		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
+func (a *Auth) Login(authType string, creds string, orgID string, appID string, params string, l *log.Log) (string, string, *model.User, map[string]interface{}, error) {
 	auth, err := a.getAuthType(authType)
 	if err != nil {
-		return "", nil, "", log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
+		return "", "", nil, nil, log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
 	}
 
 	userAuth, err := auth.check(creds, params, l)
 	if err != nil {
-		return "", nil, "", log.WrapActionError(log.ActionValidate, "creds", nil, err)
+		return "", "", nil, nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
 	}
 
 	claims := a.getStandardClaims("", userAuth.UserID, userAuth.Email, userAuth.Phone, "rokwire", orgID, appID, userAuth.Exp)
 	token, err := a.buildAccessToken(claims, "", "all")
 	if err != nil {
-		return "", nil, "", log.WrapActionError("build", log.TypeToken, nil, err)
+		return "", "", nil, nil, log.WrapActionError("build", log.TypeToken, nil, err)
 	}
 
 	//TODO: Implement account management
 
-	return token, nil, userAuth.RefreshToken, nil
+	return token, userAuth.RefreshToken, nil, userAuth.Params, nil
 }
 
 //GetScopedAccessToken TODO

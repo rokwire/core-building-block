@@ -55,9 +55,10 @@ type authLoginRequest struct {
 }
 
 type authLoginResponse struct {
-	AccessToken  string      `json:"access_token"`
-	User         *model.User `json:"user"`
-	RefreshToken string      `json:"refresh_token"`
+	AccessToken  string                 `json:"access_token"`
+	User         *model.User            `json:"user"`
+	Params       map[string]interface{} `json:"params"`
+	RefreshToken string                 `json:"refresh_token"`
 }
 
 func (h ServicesApisHandler) authLogin(l *log.Log, r *http.Request) log.HttpResponse {
@@ -81,12 +82,12 @@ func (h ServicesApisHandler) authLogin(l *log.Log, r *http.Request) log.HttpResp
 		return l.HttpResponseErrorAction(log.ActionValidate, typeLoginRequest, nil, err, http.StatusBadRequest, true)
 	}
 
-	accessToken, user, refreshToken, err := h.coreAPIs.Auth.Login(requestData.AuthType, requestData.Creds, requestData.OrgID, requestData.AppID, requestData.Params, l)
+	accessToken, refreshToken, user, params, err := h.coreAPIs.Auth.Login(requestData.AuthType, requestData.Creds, requestData.OrgID, requestData.AppID, requestData.Params, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
 
-	responseData := &authLoginResponse{AccessToken: accessToken, User: user, RefreshToken: refreshToken}
+	responseData := &authLoginResponse{AccessToken: accessToken, User: user, Params: params, RefreshToken: refreshToken}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionMarshal, typeLoginRequest, nil, err, http.StatusInternalServerError, false)

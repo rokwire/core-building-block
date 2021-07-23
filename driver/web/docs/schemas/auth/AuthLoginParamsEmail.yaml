@@ -1,0 +1,6 @@
+type: object
+description: Auth login params for auth_type="email"
+properties:
+  new_user:
+    type: boolean
+    default: false
