@@ -1,10 +1,12 @@
 package auth
 
 import (
+	"bytes"
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"crypto/rsa"
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -138,27 +140,31 @@ func (a *Auth) Login(authType string, creds string, params string, l *log.Log) (
 	}
 
 	claims, err := auth.check(creds, params, l)
-	if err != nil {
-		return "", nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
-	}
 
 	if len(claims.AccountID) > 0 {
 		user, err = a.findAccount(claims)
 		if err != nil {
-			return "", nil, err
+			return "", nil, log.WrapActionError(log.ActionFind, model.TypeUser, nil, err)
+		}
+		user, update, newMembership := a.needsUserUpdate(claims, user)
+		if update {
+			var newMembershipOrgData *map[string]interface{}
+			if newMembership {
+				newMembershipOrgData = &claims.OrgData
+			}
+			_, err = a.updateAccount(user, newMembershipOrgData)
+			if err != nil {
+				return "", nil, log.WrapActionError(log.ActionUpdate, model.TypeUser, nil, err)
+			}
 		}
 	} else {
 		if strings.Contains(err.Error(), "no credentials found") {
 			user, err = a.createAccount(claims)
 			if err != nil {
-				return "", nil, err
+				return "", nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
 			}
-		} else if strings.Contains(err.Error(), "credentials do not match") {
-			// Or reject login entirely?
-			user, err = a.updateAccount(claims)
-			if err != nil {
-				return "", nil, err
-			}
+		} else {
+			return "", nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
 		}
 	}
 
@@ -238,14 +244,57 @@ func (a *Auth) createAccount(userAuth *model.UserAuth) (*model.User, error) {
 }
 
 //updateAccount updates a user's account information
-func (a *Auth) updateAccount(userAuth *model.UserAuth) (*model.User, error) {
-	updatedUser := model.User{}
-	return a.storage.UpdateUser(&updatedUser)
+func (a *Auth) updateAccount(user *model.User, newOrgData *map[string]interface{}) (*model.User, error) {
+	return a.storage.UpdateUser(user, newOrgData)
 }
 
 //deleteAccount deletes a user account
 func (a *Auth) deleteAccount(userAuth *model.UserAuth) error {
 	return a.storage.DeleteUser(userAuth.AccountID)
+}
+
+//needsUserUpdate determines if user should be updated by userAuth (assumes userAuth is most up-to-date)
+func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*model.User, bool, bool) {
+	update := false
+
+	// account
+	if userAuth.Email != user.Account.Email {
+		user.Account.Email = userAuth.Email
+		update = true
+	}
+	if userAuth.Phone != user.Account.Phone {
+		user.Account.Phone = userAuth.Phone
+		update = true
+	}
+
+	// profile
+	names := strings.Split(userAuth.Name, " ")
+	if !bytes.Equal(userAuth.Picture, []byte(user.Profile.Photo)) {
+		user.Profile.Photo = string(userAuth.Picture)
+		update = true
+	}
+	if user.Profile.FirstName != names[0] {
+		user.Profile.FirstName = names[0]
+		update = true
+	}
+	if user.Profile.LastName != names[len(names)-1] {
+		user.Profile.LastName = names[len(names)-1]
+		update = true
+	}
+
+	// org data
+	foundOrg := false
+	for _, m := range user.OrganizationsMemberships {
+		if m.Organization.ID == userAuth.OrgData["orgID"] {
+			foundOrg = true
+			if !reflect.DeepEqual(userAuth.OrgData, m.OrgUserData) {
+				m.OrgUserData = userAuth.OrgData
+				update = true
+			}
+		}
+	}
+
+	return user, update, !foundOrg
 }
 
 //storeReg stores the service registration record
@@ -342,7 +391,7 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 type Storage interface {
 	FindUserByAccountID(accountID string) (*model.User, error)
 	InsertUser(userAuth *model.UserAuth) (*model.User, error)
-	UpdateUser(user *model.User) (*model.User, error)
+	UpdateUser(user *model.User, newOrgData *map[string]interface{}) (*model.User, error)
 	DeleteUser(id string) error
 
 	FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCred, error)

@@ -13,19 +13,19 @@ const (
 
 //User represents user entity
 type User struct {
-	ID string `bson:"_id"`
+	ID string
 
-	Account UserAccount `bson:"account"`
-	Profile UserProfile `bson:"profile"`
+	Account UserAccount
+	Profile UserProfile
 
-	Permissions []string     `bson:"permissions"`
-	Roles       []GlobalRole `bson:"roles"`
+	Permissions []string
+	Roles       []GlobalRole
 
-	Groups []GlobalGroup `bson:"groups"`
+	Groups []GlobalGroup
 
-	OrganizationsMemberships []OrganizationMembership `bson:"memberships"`
+	OrganizationsMemberships []OrganizationMembership
 
-	Devices []Device `bson:"devices"`
+	Devices []Device
 }
 
 func (u User) String() string {
@@ -49,7 +49,7 @@ func (u User) String() string {
 //It is also a good practive internally the system to generate unique number and(or) unique username which are not changable.
 //At some moment the user could be needed to change his phone or email so we need to rely on the number or on the username which cannot be changed.
 type UserAccount struct {
-	ID string
+	ID string `bson:"id"`
 
 	Email string `bson:"email"`
 	Phone string `bson:"phone"`
@@ -73,15 +73,15 @@ func (ua UserAccount) String() string {
 
 //UserProfile represents user profile entity. The user profile is an information about the user.
 type UserProfile struct {
-	ID        string
-	PhotoURL  string `bson:"photo"`
+	ID        string `bson:"id"`
+	Photo     string `bson:"photo"`
 	FirstName string `bson:"firstname"`
 	LastName  string `bson:"lastname"`
 }
 
 func (up UserProfile) String() string {
 	return fmt.Sprintf("[ID:%s\tPhotoURL:%s\tFirstName:%s\tLastName:%s]",
-		up.ID, up.PhotoURL, up.FirstName, up.LastName)
+		up.ID, up.Photo, up.FirstName, up.LastName)
 }
 
 //GlobalGroup represents global group entity. It is a collection of users
@@ -140,12 +140,12 @@ func (c OrganizationRole) String() string {
 
 //Device represents user devices entity.
 type Device struct {
-	ID   string
-	Type string //mobile, web, desktop, other
+	ID   string `bson:"_id"`
+	Type string `bson:"type"` //mobile, web, desktop, other
 
 	//TODO - other fields when they are clear
-	OS         string //?
-	MacAddress string //?
+	OS         string `bson:"os"`          //?
+	MacAddress string `bson:"mac_address"` //?
 	///
 
 	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc

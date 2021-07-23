@@ -22,12 +22,12 @@ func (gc GlobalConfig) String() string {
 
 //OrganizationConfig represents configuration for an organization
 type OrganizationConfig struct {
-	ID      string
-	Setting string
+	ID      string `bson:"id"`
+	Setting string `bson:"setting"`
 	//???
-	Domains []string //some organizations have their own users so that we need to associate a user with an organization
+	Domains []string `bson:"domains"` //some organizations have their own users so that we need to associate a user with an organization
 
-	Custom interface{}
+	Custom interface{} `bson:"custom"`
 }
 
 func (cc OrganizationConfig) String() string {
