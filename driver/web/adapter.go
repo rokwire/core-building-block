@@ -132,7 +132,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		//3. validate the response
 		err = we.validateResponse(requestValidationInput, response)
 		if err != nil {
-			logObj.RequestErrorAction(w, log.ActionValidate, log.TypeResponse, nil, err, http.StatusBadRequest, true)
+			logObj.RequestErrorAction(w, log.ActionValidate, log.TypeResponse, nil, err, http.StatusInternalServerError, true)
 			return
 		}
 
