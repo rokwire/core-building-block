@@ -5,8 +5,9 @@ import (
 	"core-building-block/core/auth"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
-	"core-building-block/vendor/github.com/golang-jwt/jwt"
 	"strconv"
+
+	"github.com/golang-jwt/jwt"
 
 	"github.com/rokmetro/auth-library/envloader"
 	log "github.com/rokmetro/logging-library/loglib"
