@@ -1,4 +1,6 @@
 get:
+  tags:
+    - Auth
   summary: Get service registrations
   description: |
     Returns service registration records
