@@ -38,6 +38,15 @@ type organizationConfig struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
+type application struct {
+	ID       string    `bson:"_id"`
+	Name     string    `bson:"name"`
+	Versions *[]string `bson:"versions"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
 //Adapter implements the Storage interface
 type Adapter struct {
 	db     *database
@@ -205,6 +214,25 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 	}
 
 	return nil
+}
+
+//CreateApplication creates an application
+func (sa *Adapter) CreateApplication(name string, versions *[]string) (*model.Application, error) {
+
+	now := time.Now()
+
+	appID, _ := uuid.NewUUID()
+	app := application{ID: appID.String(), Name: name, Versions: versions, DateCreated: now}
+
+	_, err := sa.db.applications.InsertOne(app)
+	if err != nil {
+		return nil, err
+	}
+
+	//return the correct type
+
+	resApp := model.Application{Name: app.Name, Versions: *app.Versions}
+	return &resApp, nil
 }
 
 //GetServiceRegs fetches the requested service registration records

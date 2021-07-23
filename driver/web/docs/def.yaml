@@ -252,7 +252,7 @@ components:
     Application:
       required:
         - id
-        - name
+        - name 
       type: object
       properties:
         id:
@@ -264,6 +264,7 @@ components:
           type: array
           items:
             type: string
+       
 
 
 

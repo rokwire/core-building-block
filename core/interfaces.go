@@ -24,6 +24,8 @@ type Administration interface {
 
 	AdmCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error)
 	AdmUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
+
+	AdmCreateApplication(name string, versions *[]string) (*model.Application, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -46,6 +48,8 @@ type Storage interface {
 
 	CreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
+
+	CreateApplication(name string, versions *[]string) (*model.Application, error)
 }
 
 //StorageListener listenes for change data storage events

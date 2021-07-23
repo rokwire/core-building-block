@@ -215,3 +215,11 @@ func (app *application) admUpdateOrganization(ID string, name string, requestTyp
 
 	return err
 }
+
+func (app *application) admCreateApplication(name string, versions *[]string) (*model.Application, error) {
+	application, err := app.storage.CreateApplication(name, versions)
+	if err != nil {
+		return nil, err
+	}
+	return application, nil
+}
