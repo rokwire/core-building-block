@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"strings"
 
-	"gopkg.in/go-playground/validator.v9"
-
 	"github.com/gorilla/mux"
 	log "github.com/rokmetro/logging-library/loglib"
 )
@@ -45,13 +43,6 @@ func (h AdminApisHandler) createGlobalConfig(l *log.Log, r *http.Request) log.Ht
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
-	}
-
-	//validate
-	validate := validator.New()
-	err = validate.Struct(requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionValidate, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
 	}
 
 	_, err = h.coreAPIs.Administration.AdmCreateGlobalConfig(requestData.Setting)
@@ -94,12 +85,6 @@ func (h AdminApisHandler) updateGlobalConfig(l *log.Log, r *http.Request) log.Ht
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
 	}
 
-	//validate
-	validate := validator.New()
-	err = validate.Struct(updateConfig)
-	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionValidate, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
-	}
 	setting := updateConfig.Setting
 
 	err = h.coreAPIs.Administration.AdmUpdateGlobalConfig(setting)
@@ -120,13 +105,6 @@ func (h AdminApisHandler) createOrganization(l *log.Log, r *http.Request) log.Ht
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
-	}
-
-	//validate
-	validate := validator.New()
-	err = validate.Struct(requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionValidate, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
 	}
 
 	name := requestData.Name
@@ -161,13 +139,6 @@ func (h AdminApisHandler) updateOrganization(l *log.Log, r *http.Request) log.Ht
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
 	}
 
-	//validate
-	validate := validator.New()
-	err = validate.Struct(requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionValidate, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
-	}
-
 	name := requestData.Name
 	requestType := requestData.Type
 	requiresOwnLogin := requestData.RequiresOwnLogin
@@ -180,6 +151,48 @@ func (h AdminApisHandler) updateOrganization(l *log.Log, r *http.Request) log.Ht
 	}
 
 	return l.HttpResponseSuccess()
+}
+
+//getOrganization gets organization
+func (h AdminApisHandler) getOrganization(l *log.Log, r *http.Request) log.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+	org, err := h.coreAPIs.Administration.AdmGetOrganization(ID)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+	if org == nil {
+		return l.HttpResponseErrorData(log.StatusFound, log.TypeResponse, log.StringArgs("no organization"), nil, http.StatusNotFound, false)
+	}
+
+	responseData := organizationToDef(org)
+	data, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeOrganization, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
+//getOrganizations gets organizations
+func (h AdminApisHandler) getOrganizations(l *log.Log, r *http.Request) log.HttpResponse {
+	organizations, err := h.coreAPIs.Administration.AdmGetOrganizations()
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+	var response []Def.Organization
+	for _, organization := range organizations {
+		r := organizationToDef(&organization)
+		response = append(response, *r)
+	}
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeOrganization, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
 }
 
 func (h AdminApisHandler) getServiceRegistrations(l *log.Log, r *http.Request) log.HttpResponse {

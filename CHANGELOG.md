@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Expose auth APIs [#81](https://github.com/rokwire/core-building-block/issues/81)
+- Expose admin API which gives the organizations list [#61](https://github.com/rokwire/core-building-block/issues/61)
+- Expose admin API which gets an organization [#60](https://github.com/rokwire/core-building-block/issues/60)
 - Expose service registration handlers [#75](https://github.com/rokwire/core-building-block/issues/75)
 - Split OpenAPI yaml file [#84](https://github.com/rokwire/core-building-block/issues/84)
 - Standardize logging using logging library [#78](https://github.com/rokwire/core-building-block/issues/78)
@@ -30,4 +32,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set up logging [#6](https://github.com/rokwire/core-building-block/issues/6)
 
 ### Fixed
+- Fix APIs requests validation [#89](https://github.com/rokwire/core-building-block/issues/89)
 - Fixing the Log and the Changelog for issues #35 and #36 [#54](https://github.com/rokwire/core-building-block/issues/54)

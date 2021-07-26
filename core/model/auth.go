@@ -3,8 +3,11 @@ package model
 import log "github.com/rokmetro/logging-library/loglib"
 
 const (
-	TypeUserAuth   log.LogData = "user auth"
+	//TypeUserAuth ...
+	TypeUserAuth log.LogData = "user auth"
+	//TypeAuthConfig ...
 	TypeAuthConfig log.LogData = "user auth"
+	//TypeServiceReg ...
 	TypeServiceReg log.LogData = "service reg"
 )
 

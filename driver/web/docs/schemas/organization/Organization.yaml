@@ -21,6 +21,7 @@ properties:
     type: boolean
   login_types:
     type: array
+    nullable: true
     items:
       type: string
   config:

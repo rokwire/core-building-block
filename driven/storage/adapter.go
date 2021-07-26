@@ -178,6 +178,30 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 	return &resOrg, nil
 }
 
+//GetOrganization gets organization
+func (sa *Adapter) GetOrganization(ID string) (*model.Organization, error) {
+
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	var result []organization
+	err := sa.db.organizations.Find(filter, &result, nil)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionFind, model.TypeOrganization, nil, err)
+	}
+	if len(result) == 0 {
+		//no record
+		return nil, nil
+	}
+	org := result[0]
+
+	//return the correct type
+	getOrgConfig := org.Config
+	getResOrgConfig := model.OrganizationConfig{ID: getOrgConfig.ID, Domains: getOrgConfig.Domains}
+
+	getResOrg := model.Organization{ID: org.ID, Name: org.Name, Type: org.Type,
+		RequiresOwnLogin: org.RequiresOwnLogin, LoginTypes: org.LoginTypes, Config: getResOrgConfig}
+	return &getResOrg, nil
+}
+
 //UpdateOrganization updates an organization
 func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
 
@@ -205,6 +229,27 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 	}
 
 	return nil
+}
+
+//GetOrganizations gets the organizations
+func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
+
+	filter := bson.D{}
+	var result []model.Organization
+	err := sa.db.organizations.Find(filter, &result, nil)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionFind, model.TypeOrganization, nil, err)
+	}
+
+	var resultList []model.Organization
+	if result != nil {
+		for _, current := range result {
+			item := &model.Organization{ID: current.ID, Name: current.Name, Type: current.Type, RequiresOwnLogin: current.RequiresOwnLogin,
+				LoginTypes: current.LoginTypes, Config: current.Config}
+			resultList = append(resultList, *item)
+		}
+	}
+	return resultList, nil
 }
 
 // ============================== ServiceRegs ==============================
@@ -280,7 +325,7 @@ func (sa *Adapter) SaveServiceReg(reg *authservice.ServiceReg) error {
 	return nil
 }
 
-//SaveServiceReg deletes the service registration from storage
+//DeleteServiceReg deletes the service registration from storage
 func (sa *Adapter) DeleteServiceReg(serviceID string) error {
 	filter := bson.M{"service_id": serviceID}
 	result, err := sa.db.serviceRegs.DeleteOne(filter, nil)
@@ -324,7 +369,11 @@ type Listener interface {
 	OnServiceRegsUpdated()
 }
 
+//DefaultListenerImpl default listener implementation
 type DefaultListenerImpl struct{}
 
-func (d *DefaultListenerImpl) OnAuthConfigUpdated()  {}
+//OnAuthConfigUpdated notifies auth configs have been updated
+func (d *DefaultListenerImpl) OnAuthConfigUpdated() {}
+
+//OnServiceRegsUpdated notifies services regs have been updated
 func (d *DefaultListenerImpl) OnServiceRegsUpdated() {}
