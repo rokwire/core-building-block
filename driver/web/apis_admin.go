@@ -178,35 +178,21 @@ func (h AdminApisHandler) getOrganization(l *log.Log, r *http.Request) log.HttpR
 
 //getOrganizations gets organizations
 func (h AdminApisHandler) getOrganizations(l *log.Log, r *http.Request) log.HttpResponse {
-	//TODO
-	return l.HttpResponseSuccess()
+	organizations, err := h.coreAPIs.Administration.AdmGetOrganizations()
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+	var response []Def.Organization
+	for _, organization := range organizations {
+		r := organizationToDef(&organization)
+		response = append(response, *r)
+	}
 
-	/*
-		getOrg, err := h.coreAPIs.Administration.AdmGetOrganizations()
-		if err != nil {
-			l.Errorf("Error geting the organizations - %s\n", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-		var response []getOrganizationsResponse
-		if getOrg != nil {
-			for _, getResp := range getOrg {
-				r := getOrganizationsResponse{Name: getResp.Name, Type: getResp.Type, RequiresOwnLogin: &getResp.RequiresOwnLogin,
-					LoginTypes: getResp.LoginTypes}
-				response = append(response, r)
-			}
-		}
-
-		data, err := json.Marshal(response)
-		if err != nil {
-			l.Errorf("Error on marshal the config")
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		w.Write(data) */
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeOrganization, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
 }
 
 func (h AdminApisHandler) getServiceRegistrations(l *log.Log, r *http.Request) log.HttpResponse {
