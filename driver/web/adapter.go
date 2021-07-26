@@ -130,10 +130,12 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		response := handler(logObj, req)
 
 		//3. validate the response
-		err = we.validateResponse(requestValidationInput, response)
-		if err != nil {
-			logObj.RequestErrorAction(w, log.ActionValidate, log.TypeResponse, nil, err, http.StatusInternalServerError, true)
-			return
+		if we.env != "production" {
+			err = we.validateResponse(requestValidationInput, response)
+			if err != nil {
+				logObj.RequestErrorAction(w, log.ActionValidate, log.TypeResponse, nil, err, http.StatusInternalServerError, true)
+				return
+			}
 		}
 
 		//4. return response
