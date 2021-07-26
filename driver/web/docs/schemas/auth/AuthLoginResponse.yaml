@@ -4,8 +4,5 @@ properties:
     type: string
   refresh_token:
     type: string
-  params:
-    type: object
-    description: Login params to be submitted with subsequent requests (if necessary)
   user:
     $ref: "../../schemas/user/User.yaml"

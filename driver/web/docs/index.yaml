@@ -31,6 +31,9 @@ paths:
     $ref: "./resources/auth/login.yaml"
   /services/auth/refresh:
     $ref: "./resources/auth/refresh.yaml"
+  /services/auth/login-url:
+    $ref: "./resources/auth/login-url.yaml"
+
   #common
   /services/common/test:
     $ref: "./resources/common/test.yaml"

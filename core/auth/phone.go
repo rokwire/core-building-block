@@ -12,7 +12,8 @@ const (
 
 // Phone implementation of authType
 type phoneAuthImpl struct {
-	auth *Auth
+	auth     *Auth
+	authType string
 }
 
 func (a *phoneAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
@@ -25,11 +26,15 @@ func (a *phoneAuthImpl) refresh(refreshToken string, l *log.Log) (*model.UserAut
 	return nil, nil
 }
 
+func (a *phoneAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
+	return "", nil, log.NewErrorf("get login url operation invalid for auth_type=%s", a.authType)
+}
+
 //initPhoneAuth initializes and registers a new phone auth instance
 func initPhoneAuth(auth *Auth) (*phoneAuthImpl, error) {
-	phone := &phoneAuthImpl{auth: auth}
+	phone := &phoneAuthImpl{auth: auth, authType: authTypePhone}
 
-	err := auth.registerAuthType(authTypePhone, phone)
+	err := auth.registerAuthType(phone.authType, phone)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
 	}

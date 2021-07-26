@@ -12,7 +12,8 @@ const (
 
 // SAML implementation of authType
 type samlAuthImpl struct {
-	auth *Auth
+	auth     *Auth
+	authType string
 }
 
 func (a *samlAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
@@ -26,11 +27,15 @@ func (a *samlAuthImpl) refresh(refreshToken string, l *log.Log) (*model.UserAuth
 	return nil, log.NewError(log.Unimplemented)
 }
 
+func (a *samlAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
+	return "", nil, log.NewErrorf("get login url operation invalid for auth_type=%s", a.authType)
+}
+
 //initSamlAuth initializes and registers a new SAML auth instance
 func initSamlAuth(auth *Auth) (*samlAuthImpl, error) {
-	saml := &samlAuthImpl{auth: auth}
+	saml := &samlAuthImpl{auth: auth, authType: authTypeSaml}
 
-	err := auth.registerAuthType(authTypeSaml, saml)
+	err := auth.registerAuthType(saml.authType, saml)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
 	}

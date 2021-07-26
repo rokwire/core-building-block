@@ -31,7 +31,8 @@ const (
 
 // OIDC implementation of authType
 type oidcAuthImpl struct {
-	auth *Auth
+	auth     *Auth
+	authType string
 }
 
 type oidcAuthConfig struct {
@@ -127,21 +128,14 @@ func (a *oidcAuthImpl) refresh(refreshToken string, l *log.Log) (*model.UserAuth
 	return nil, log.NewError(log.Unimplemented)
 }
 
-func (a *oidcAuthImpl) mobileLoginURL(params string, l *log.Log) (string, error) {
-	var mobileParams oidcMobileParams
-	err := json.Unmarshal([]byte(params), &mobileParams)
+func (a *oidcAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
+	oidcConfig, err := a.getOidcAuthConfig(orgID, appID)
 	if err != nil {
-		return "", log.WrapActionError(log.ActionUnmarshal, typeOidcMobileParams, nil, err)
-	}
-	validate := validator.New()
-	err = validate.Struct(mobileParams)
-	if err != nil {
-		return "", log.WrapActionError(log.ActionValidate, typeOidcMobileParams, nil, err)
+		return "", nil, log.WrapActionError(log.ActionGet, typeOidcAuthConfig, nil, err)
 	}
 
-	oidcConfig, err := a.getOidcAuthConfig(mobileParams.OrgID, mobileParams.AppID)
-	if err != nil {
-		return "", log.WrapActionError(log.ActionGet, typeOidcAuthConfig, nil, err)
+	responseParams := map[string]interface{}{
+		"redirect_uri": redirectUri,
 	}
 
 	scopes := oidcConfig.Scopes
@@ -152,7 +146,7 @@ func (a *oidcAuthImpl) mobileLoginURL(params string, l *log.Log) (string, error)
 	bodyData := map[string]string{
 		"scope":         scopes,
 		"response_type": "code",
-		"redirect_uri":  mobileParams.RedirectURI,
+		"redirect_uri":  redirectUri,
 		"client_id":     oidcConfig.ClientID,
 	}
 
@@ -164,13 +158,16 @@ func (a *oidcAuthImpl) mobileLoginURL(params string, l *log.Log) (string, error)
 	}
 
 	if oidcConfig.UsePKCE {
+		codeChallenge, codeVerifier := generatePkceChallenge()
 		bodyData["code_challenge_method"] = "S256"
-		bodyData["code_challenge"] = mobileParams.CodeChallenge
+		bodyData["code_challenge"] = codeChallenge
+
+		responseParams["pkce_verifier"] = codeVerifier
 	}
 
 	url, err := url.Parse(oidcConfig.Host + "/idp/profile/oidc/authorize")
 	if err != nil {
-		return "", log.WrapActionError(log.ActionParse, "auth url", &log.FieldArgs{"org_id": mobileParams.OrgID, "app_id": mobileParams.AppID}, err)
+		return "", nil, log.WrapActionError(log.ActionParse, "auth url", &log.FieldArgs{"org_id": orgID, "app_id": appID}, err)
 	}
 	for k, v := range bodyData {
 		if len(url.RawQuery) < 1 {
@@ -180,7 +177,7 @@ func (a *oidcAuthImpl) mobileLoginURL(params string, l *log.Log) (string, error)
 		}
 	}
 
-	return url.String(), nil
+	return url.String(), responseParams, nil
 }
 
 func (a *oidcAuthImpl) checkToken(idToken string, params *oidcCheckParams, oidcConfig *oidcAuthConfig, l *log.Log) (string, error) {
@@ -427,9 +424,9 @@ func (a *oidcAuthImpl) loadOidcUserInfo(token *oidcToken, url string) ([]byte, e
 }
 
 func (a *oidcAuthImpl) getOidcAuthConfig(orgID string, appID string) (*oidcAuthConfig, error) {
-	errFields := &log.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": authTypeOidc}
+	errFields := &log.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": a.authType}
 
-	authConfig, err := a.auth.getAuthConfig(orgID, appID, authTypeOidc)
+	authConfig, err := a.auth.getAuthConfig(orgID, appID, a.authType)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionFind, model.TypeAuthConfig, errFields, err)
 	}
@@ -465,11 +462,19 @@ func readFromClaims(key string, claimsMap *map[string]string, rawClaims *map[str
 	return nil
 }
 
+//generatePkceChallenge generates and returns a PKCE code challenge and verifier
+func generatePkceChallenge() (string, string) {
+	//TODO: Translate Dart implementation
+	//	_pkceVerifier = convert.base64Url.encode(RsaKeyHelper.getSecureRandom().nextBytes(50)).replaceAll('=', '');
+	// 	return convert.base64Url.encode(sha256.convert(convert.utf8.encode(_pkceVerifier)).bytes).replaceAll('=', '');
+	return "", ""
+}
+
 //initOidcAuth initializes and registers a new OIDC auth instance
 func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
-	oidc := &oidcAuthImpl{auth: auth}
+	oidc := &oidcAuthImpl{auth: auth, authType: authTypeOidc}
 
-	err := auth.registerAuthType(authTypeOidc, oidc)
+	err := auth.registerAuthType(oidc.authType, oidc)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
 	}

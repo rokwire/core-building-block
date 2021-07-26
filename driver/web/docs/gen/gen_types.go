@@ -12,6 +12,11 @@ const (
 	AuthLoginRequestAuthTypePhone AuthLoginRequestAuthType = "phone"
 )
 
+// Defines values for AuthLoginUrlRequestAuthType.
+const (
+	AuthLoginUrlRequestAuthTypeOidc AuthLoginUrlRequestAuthType = "oidc"
+)
+
 // Defines values for DeviceType.
 const (
 	DeviceTypeDesktop DeviceType = "desktop"
@@ -43,7 +48,7 @@ type AuthLoginCredsEmail struct {
 }
 
 // Auth login creds for auth_type="oidc"
-//   - Initial login: authorization code
+//   - Initial login: full redirect URI received from OIDC provider
 //   - Refresh: refresh token
 type AuthLoginCredsOidc string
 
@@ -60,8 +65,8 @@ type AuthLoginParamsEmail struct {
 
 // Auth login params for auth_type="oidc"
 type AuthLoginParamsOidc struct {
-	PkceChallenge *string `json:"pkce_challenge,omitempty"`
-	RedirectUri   *string `json:"redirect_uri,omitempty"`
+	PkceVerifier *string `json:"pkce_verifier,omitempty"`
+	RedirectUri  *string `json:"redirect_uri,omitempty"`
 }
 
 // Auth login params for auth_type="phone" (None)
@@ -81,12 +86,28 @@ type AuthLoginRequestAuthType string
 
 // AuthLoginResponse defines model for AuthLoginResponse.
 type AuthLoginResponse struct {
-	AccessToken *string `json:"access_token,omitempty"`
+	AccessToken  *string `json:"access_token,omitempty"`
+	RefreshToken *string `json:"refresh_token,omitempty"`
+	User         *User   `json:"user,omitempty"`
+}
 
-	// Login params to be submitted with subsequent requests (if necessary)
-	Params       *map[string]interface{} `json:"params,omitempty"`
-	RefreshToken *string                 `json:"refresh_token,omitempty"`
-	User         *User                   `json:"user,omitempty"`
+// AuthLoginUrlRequest defines model for AuthLoginUrlRequest.
+type AuthLoginUrlRequest struct {
+	AppId       string                      `json:"app_id"`
+	AuthType    AuthLoginUrlRequestAuthType `json:"auth_type"`
+	OrgId       string                      `json:"org_id"`
+	RedirectUri string                      `json:"redirect_uri"`
+}
+
+// AuthLoginUrlRequestAuthType defines model for AuthLoginUrlRequest.AuthType.
+type AuthLoginUrlRequestAuthType string
+
+// AuthLoginUrlResponse defines model for AuthLoginUrlResponse.
+type AuthLoginUrlResponse struct {
+	LoginUrl string `json:"login_url"`
+
+	// Params to be submitted with 'login' request (if necessary)
+	Params *map[string]interface{} `json:"params,omitempty"`
 }
 
 // AuthRefreshResponse defines model for AuthRefreshResponse.
@@ -265,6 +286,9 @@ type GetBbsServiceRegsParams struct {
 // PostServicesAuthLoginJSONBody defines parameters for PostServicesAuthLogin.
 type PostServicesAuthLoginJSONBody AuthLoginRequest
 
+// PostServicesAuthLoginUrlJSONBody defines parameters for PostServicesAuthLoginUrl.
+type PostServicesAuthLoginUrlJSONBody AuthLoginUrlRequest
+
 // PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
 type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody
 
@@ -285,3 +309,6 @@ type PutAdminServiceRegsJSONRequestBody PutAdminServiceRegsJSONBody
 
 // PostServicesAuthLoginJSONRequestBody defines body for PostServicesAuthLogin for application/json ContentType.
 type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
+
+// PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
+type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody

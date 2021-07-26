@@ -12,7 +12,8 @@ const (
 
 //API Key implementation of authType
 type apiKeyAuthImpl struct {
-	auth *Auth
+	auth     *Auth
+	authType string
 }
 
 func (a *apiKeyAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
@@ -24,11 +25,15 @@ func (a *apiKeyAuthImpl) refresh(refreshToken string, l *log.Log) (*model.UserAu
 	return nil, log.NewErrorf("refresh operation invalid for auth_type=%s", authTypeApiKey)
 }
 
+func (a *apiKeyAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
+	return "", nil, log.NewErrorf("get login url operation invalid for auth_type=%s", a.authType)
+}
+
 //initAPIKeyAuth initializes and registers a new API key auth instance
 func initAPIKeyAuth(auth *Auth) (*apiKeyAuthImpl, error) {
-	apiKey := &apiKeyAuthImpl{auth: auth}
+	apiKey := &apiKeyAuthImpl{auth: auth, authType: authTypeApiKey}
 
-	err := auth.registerAuthType(authTypeApiKey, apiKey)
+	err := auth.registerAuthType(apiKey.authType, apiKey)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
 	}

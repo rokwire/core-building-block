@@ -93,6 +93,32 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/auth/login-url:
+    post:
+      tags:
+        - Auth
+      summary: Get SSO login url
+      description: |
+        Retrieve a pre-formatted SSO login URL
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLoginUrlRequest'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthLoginUrlResponse'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/common/test:
     get:
       tags:
@@ -676,9 +702,6 @@ components:
           type: string
         refresh_token:
           type: string
-        params:
-          type: object
-          description: Login params to be submitted with subsequent requests (if necessary)
         user:
           $ref: '#/components/schemas/User'
     AuthLoginCredsEmail:
@@ -706,7 +729,7 @@ components:
       type: string
       description: |
         Auth login creds for auth_type="oidc"
-          - Initial login: authorization code
+          - Initial login: full redirect URI received from OIDC provider
           - Refresh: refresh token
     AuthLoginParamsEmail:
       type: object
@@ -722,9 +745,9 @@ components:
       type: object
       description: Auth login params for auth_type="oidc"
       properties:
-        pkce_challenge:
-          type: string
         redirect_uri:
+          type: string
+        pkce_verifier:
           type: string
     AuthRefreshResponse:
       type: object
@@ -733,6 +756,34 @@ components:
           type: string
         refresh_token:
           type: string
+    AuthLoginUrlRequest:
+      required:
+        - auth_type
+        - org_id
+        - app_id
+        - redirect_uri
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - oidc
+        org_id:
+          type: string
+        app_id:
+          type: string
+        redirect_uri:
+          type: string
+    AuthLoginUrlResponse:
+      required:
+        - login_url
+      type: object
+      properties:
+        login_url:
+          type: string
+        params:
+          type: object
+          description: Params to be submitted with 'login' request (if necessary)
     User:
       required:
         - id

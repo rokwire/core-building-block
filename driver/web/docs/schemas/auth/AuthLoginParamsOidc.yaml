@@ -1,7 +1,7 @@
 type: object
 description: Auth login params for auth_type="oidc"
 properties:
-  pkce_challenge:
-    type: string
   redirect_uri:
+    type: string
+  pkce_verifier:
     type: string
