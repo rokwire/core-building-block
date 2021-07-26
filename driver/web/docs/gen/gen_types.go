@@ -71,7 +71,7 @@ type AuthLoginParamsPhone map[string]interface{}
 type AuthLoginRequest struct {
 	AppId    string                   `json:"app_id"`
 	AuthType AuthLoginRequestAuthType `json:"auth_type"`
-	Creds    interface{}              `json:"creds"`
+	Creds    *interface{}             `json:"creds,omitempty"`
 	OrgId    string                   `json:"org_id"`
 	Params   *interface{}             `json:"params,omitempty"`
 }
@@ -87,6 +87,12 @@ type AuthLoginResponse struct {
 	Params       *map[string]interface{} `json:"params,omitempty"`
 	RefreshToken *string                 `json:"refresh_token,omitempty"`
 	User         *User                   `json:"user,omitempty"`
+}
+
+// AuthRefreshResponse defines model for AuthRefreshResponse.
+type AuthRefreshResponse struct {
+	AccessToken  *string `json:"access_token,omitempty"`
+	RefreshToken *string `json:"refresh_token,omitempty"`
 }
 
 // Device defines model for Device.

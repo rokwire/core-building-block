@@ -19,6 +19,8 @@ import (
 )
 
 const (
+	authTypeOidc string = "oidc"
+
 	typeOidcAuthConfig    log.LogData = "oidc auth config"
 	typeOidcMobileParams  log.LogData = "oidc mobile params"
 	typeOidcCheckParams   log.LogData = "oidc check params"
@@ -117,6 +119,12 @@ func (a *oidcAuthImpl) check(creds string, params string, l *log.Log) (*model.Us
 	default:
 		return nil, log.DataError(log.StatusInvalid, "cred type", log.StringArgs(credType))
 	}
+}
+
+//refresh must be implemented for OIDC auth
+func (a *oidcAuthImpl) refresh(refreshToken string, l *log.Log) (*model.UserAuth, error) {
+	//TODO: Implement
+	return nil, log.NewError(log.Unimplemented)
 }
 
 func (a *oidcAuthImpl) mobileLoginURL(params string, l *log.Log) (string, error) {
@@ -419,9 +427,9 @@ func (a *oidcAuthImpl) loadOidcUserInfo(token *oidcToken, url string) ([]byte, e
 }
 
 func (a *oidcAuthImpl) getOidcAuthConfig(orgID string, appID string) (*oidcAuthConfig, error) {
-	errFields := &log.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": "oidc"}
+	errFields := &log.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": authTypeOidc}
 
-	authConfig, err := a.auth.getAuthConfig(orgID, appID, "oidc")
+	authConfig, err := a.auth.getAuthConfig(orgID, appID, authTypeOidc)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionFind, model.TypeAuthConfig, errFields, err)
 	}
@@ -461,7 +469,7 @@ func readFromClaims(key string, claimsMap *map[string]string, rawClaims *map[str
 func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
 	oidc := &oidcAuthImpl{auth: auth}
 
-	err := auth.registerAuthType("oidc", oidc)
+	err := auth.registerAuthType(authTypeOidc, oidc)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
 	}

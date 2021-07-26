@@ -30,6 +30,7 @@ const (
 type authType interface {
 	//Check validity of provided credentials
 	check(creds string, params string, l *log.Log) (*model.UserAuth, error)
+	refresh(refreshToken string, l *log.Log) (*model.UserAuth, error)
 }
 
 //Auth represents the auth functionality unit
@@ -144,6 +145,17 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 	//TODO: Implement account management
 
 	return token, userAuth.RefreshToken, nil, userAuth.Params, nil
+}
+
+//Refresh refreshes an access token using a refresh token
+//	Input:
+//		refreshToken (string): Refresh token
+//		l (*loglib.Log): Log object pointer for request
+//	Returns:
+//		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+func (a *Auth) Refresh(refreshToken string, l *log.Log) (string, string, error) {
+	return "", "", log.NewError(log.Unimplemented)
 }
 
 //GetScopedAccessToken TODO

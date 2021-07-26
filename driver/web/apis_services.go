@@ -60,6 +60,28 @@ func (h ServicesApisHandler) authLogin(l *log.Log, r *http.Request) log.HttpResp
 	return l.HttpResponseSuccessJSON(respData)
 }
 
+func (h ServicesApisHandler) authRefresh(l *log.Log, r *http.Request) log.HttpResponse {
+	requestData, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	typeRefreshRequest := log.LogData("auth refresh request")
+
+	accessToken, refreshToken, err := h.coreAPIs.Auth.Refresh(string(requestData), l)
+	if err != nil {
+		return l.HttpResponseError("Error refreshing token", err, http.StatusInternalServerError, true)
+	}
+
+	responseData := &Def.AuthRefreshResponse{AccessToken: &accessToken, RefreshToken: &refreshToken}
+	respData, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, typeRefreshRequest, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
+}
+
 //getCommonTest TODO get test
 func (h ServicesApisHandler) getCommonTest(l *log.Log, r *http.Request) log.HttpResponse {
 	res := h.coreAPIs.Services.SerGetCommonTest(l)

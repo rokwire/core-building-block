@@ -65,6 +65,34 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Refresh
+      description: |
+        Refresh access token using a refresh token
+      requestBody:
+        description: |
+          Refresh token
+        content:
+          text/plain:
+            schema:
+              type: string
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthRefreshResponse'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/common/test:
     get:
       tags:
@@ -607,7 +635,6 @@ components:
         - auth_type
         - org_id
         - app_id
-        - creds
       type: object
       properties:
         auth_type:
@@ -698,6 +725,13 @@ components:
         pkce_challenge:
           type: string
         redirect_uri:
+          type: string
+    AuthRefreshResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
           type: string
     User:
       required:
