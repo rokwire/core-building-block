@@ -103,9 +103,10 @@ func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode stri
 	return a.auth.SendEmail(email, "Verify your email", "Your verification code is "+verificationCode, "")
 }
 
-func (a *emailAuthImpl) sendPasswordReset(email string, password string) error {
-	return a.auth.SendEmail(email, "Password Reset", "Your temporary password is "+password, "")
-}
+//TODO: To be used in password reset flow
+// func (a *emailAuthImpl) sendPasswordReset(email string, password string) error {
+// 	return a.auth.SendEmail(email, "Password Reset", "Your temporary password is "+password, "")
+// }
 
 func (a *emailAuthImpl) verify(id string, verification string, l *log.Log) error {
 	creds, err := a.auth.storage.GetEmailCredential(id)
