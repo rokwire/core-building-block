@@ -108,16 +108,15 @@ func TestEncGetTest(t *testing.T) {
 
 func TestCreateApplication(t *testing.T) {
 	storage := genmocks.Storage{}
-	storage.On("CreateApplication", "name", "versions").Return(&core_model.Application{Name: "name"}, nil)
-
+	versions := []string{"v1.1.0", "v1.2.0"}
+	storage.On("CreateApplication", "name", &versions).Return(&core_model.Application{Name: "name", Versions: []string{"v1.1.0", "v1.2.0"}}, nil)
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
-	application, _ := app.Administration.AdmCreateApplication("name", nil)
+	application, _ := app.Administration.AdmCreateApplication("name", &versions)
 	if application == nil {
 		t.Error("application is nil")
 		return
 	}
-
 }
 
 ///
