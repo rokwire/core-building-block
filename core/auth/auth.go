@@ -22,8 +22,11 @@ import (
 )
 
 const (
+	authServiceID string = "auth"
+	authKeyAlg    string = "RS256"
+
 	typeAuthType log.LogData = "auth type"
-	TypeAuth     log.LogData = "auth"
+	typeAuth     log.LogData = "auth"
 )
 
 //Interface for authentication mechanisms
@@ -100,28 +103,10 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	err = auth.LoadAuthConfigs()
 	if err != nil {
-		logger.Warn("NewAuth() failed to cache auth info documents")
+		logger.Warn("NewAuth() failed to cache auth configs")
 	}
 
 	return auth, nil
-}
-
-func (a *Auth) registerAuthType(name string, auth authType) error {
-	if _, ok := a.authTypes[name]; ok {
-		return log.NewErrorf("the requested auth type name has already been registered: %s", name)
-	}
-
-	a.authTypes[name] = auth
-
-	return nil
-}
-
-func (a *Auth) getAuthType(name string) (authType, error) {
-	if auth, ok := a.authTypes[name]; ok {
-		return auth, nil
-	}
-
-	return nil, log.DataError(log.StatusInvalid, typeAuthType, log.StringArgs(name))
 }
 
 //Login logs a user in using the specified credentials and authentication method
@@ -191,56 +176,30 @@ func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
-func (a *Auth) buildAccessToken(claims tokenauth.Claims, permissions string, scope string) (string, error) {
-	claims.Purpose = "access"
-	claims.Permissions = permissions
-	claims.Scope = scope
-	return a.generateToken(&claims)
+//GetServiceRegistrations retrieves all service registrations
+func (a *Auth) GetServiceRegistrations(serviceIDs []string) ([]authservice.ServiceReg, error) {
+	return a.storage.FindServiceRegs(serviceIDs)
 }
 
-func (a *Auth) buildCsrfToken(claims tokenauth.Claims) (string, error) {
-	claims.Purpose = "csrf"
-	return a.generateToken(&claims)
+//RegisterService creates a new service registration
+func (a *Auth) RegisterService(reg *authservice.ServiceReg) error {
+	return a.storage.InsertServiceReg(reg)
 }
 
-func (a *Auth) getStandardClaims(sub string, aud string, orgID string, appID string, exp *int64) tokenauth.Claims {
-	return tokenauth.Claims{
-		StandardClaims: jwt.StandardClaims{
-			Audience:  aud,
-			Subject:   sub,
-			ExpiresAt: a.getExp(exp),
-			IssuedAt:  time.Now().Unix(),
-			Issuer:    a.host,
-		}, OrgID: orgID, AppID: appID,
+//UpdateServiceRegistration updates an existing service registration
+func (a *Auth) UpdateServiceRegistration(reg *authservice.ServiceReg) error {
+	if reg.ServiceID == authServiceID || reg.ServiceID == a.serviceID {
+		return log.NewErrorf("modifying service registration not allowed for service id %v", reg.ServiceID)
 	}
+	return a.storage.UpdateServiceReg(reg)
 }
 
-func (a *Auth) generateToken(claims *tokenauth.Claims) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	kid, err := authutils.GetKeyFingerprint(&a.authPrivKey.PublicKey)
-	if err != nil {
-		return "", log.WrapActionError(log.ActionCompute, "fingerprint", log.StringArgs("auth key"), err)
+//DeregisterService deletes an existing service registration
+func (a *Auth) DeregisterService(serviceID string) error {
+	if serviceID == authServiceID || serviceID == a.serviceID {
+		return log.NewErrorf("deregistering service not allowed for service id %v", serviceID)
 	}
-	token.Header["kid"] = kid
-	return token.SignedString(a.authPrivKey)
-}
-
-func (a *Auth) getExp(exp *int64) int64 {
-	if exp == nil {
-		defaultTime := time.Now().Add(30 * time.Minute) //TODO: Set up org configs for default token exp
-		return defaultTime.Unix()
-	}
-	expTime := time.Unix(*exp, 0)
-	minTime := time.Now().Add(time.Duration(a.minTokenExp) * time.Minute)
-	maxTime := time.Now().Add(time.Duration(a.maxTokenExp) * time.Minute)
-
-	if expTime.Before(minTime) {
-		return minTime.Unix()
-	} else if expTime.After(maxTime) {
-		return maxTime.Unix()
-	}
-
-	return *exp
+	return a.storage.DeleteServiceReg(serviceID)
 }
 
 //findAccount retrieves a user's account information
@@ -307,6 +266,76 @@ func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*mod
 	return user, update, !foundOrg
 }
 
+func (a *Auth) registerAuthType(name string, auth authType) error {
+	if _, ok := a.authTypes[name]; ok {
+		return log.NewErrorf("the requested auth type name has already been registered: %s", name)
+	}
+
+	a.authTypes[name] = auth
+
+	return nil
+}
+
+func (a *Auth) getAuthType(name string) (authType, error) {
+	if auth, ok := a.authTypes[name]; ok {
+		return auth, nil
+	}
+
+	return nil, log.DataError(log.StatusInvalid, typeAuthType, log.StringArgs(name))
+}
+
+func (a *Auth) buildAccessToken(claims tokenauth.Claims, permissions string, scope string) (string, error) {
+	claims.Purpose = "access"
+	claims.Permissions = permissions
+	claims.Scope = scope
+	return a.generateToken(&claims)
+}
+
+func (a *Auth) buildCsrfToken(claims tokenauth.Claims) (string, error) {
+	claims.Purpose = "csrf"
+	return a.generateToken(&claims)
+}
+
+func (a *Auth) getStandardClaims(sub string, aud string, orgID string, appID string, exp *int64) tokenauth.Claims {
+	return tokenauth.Claims{
+		StandardClaims: jwt.StandardClaims{
+			Audience:  aud,
+			Subject:   sub,
+			ExpiresAt: a.getExp(exp),
+			IssuedAt:  time.Now().Unix(),
+			Issuer:    a.host,
+		}, OrgID: orgID, AppID: appID,
+	}
+}
+
+func (a *Auth) generateToken(claims *tokenauth.Claims) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	kid, err := authutils.GetKeyFingerprint(&a.authPrivKey.PublicKey)
+	if err != nil {
+		return "", log.WrapActionError(log.ActionCompute, "fingerprint", log.StringArgs("auth key"), err)
+	}
+	token.Header["kid"] = kid
+	return token.SignedString(a.authPrivKey)
+}
+
+func (a *Auth) getExp(exp *int64) int64 {
+	if exp == nil {
+		defaultTime := time.Now().Add(30 * time.Minute) //TODO: Set up org configs for default token exp
+		return defaultTime.Unix()
+	}
+	expTime := time.Unix(*exp, 0)
+	minTime := time.Now().Add(time.Duration(a.minTokenExp) * time.Minute)
+	maxTime := time.Now().Add(time.Duration(a.maxTokenExp) * time.Minute)
+
+	if expTime.Before(minTime) {
+		return minTime.Unix()
+	} else if expTime.After(maxTime) {
+		return maxTime.Unix()
+	}
+
+	return *exp
+}
+
 //storeReg stores the service registration record
 func (a *Auth) storeReg() error {
 	pem, err := authutils.GetPubKeyPem(&a.authPrivKey.PublicKey)
@@ -314,20 +343,20 @@ func (a *Auth) storeReg() error {
 		return log.WrapActionError(log.ActionEncode, "auth pub key", nil, err)
 	}
 
-	key := authservice.PubKey{KeyPem: pem, Alg: "RS256"}
+	key := authservice.PubKey{KeyPem: pem, Alg: authKeyAlg}
 
 	// Setup "auth" registration for token validation
-	authReg := authservice.ServiceReg{ServiceID: "auth", Host: a.host, PubKey: &key}
+	authReg := authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: &key}
 	err = a.storage.SaveServiceReg(&authReg)
 	if err != nil {
-		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs("auth"), err)
+		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs(authServiceID), err)
 	}
 
 	// Setup core registration for signature validation
 	coreReg := authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key}
 	err = a.storage.SaveServiceReg(&coreReg)
 	if err != nil {
-		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs("core"), err)
+		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs(a.serviceID), err)
 	}
 
 	return nil
@@ -368,12 +397,11 @@ func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*mode
 func (a *Auth) setAuthConfigs(authConfigs *[]model.AuthConfig) {
 	a.authConfigs = &syncmap.Map{}
 	validate := validator.New()
-	var err error
 
 	a.authConfigsLock.Lock()
 	defer a.authConfigsLock.Unlock()
 	for _, authConfig := range *authConfigs {
-		err = validate.Struct(authConfig)
+		err := validate.Struct(authConfig)
 		if err == nil {
 			a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, authConfig.AppID, authConfig.Type), authConfig)
 		}
@@ -388,7 +416,7 @@ type LocalServiceRegLoaderImpl struct {
 
 //LoadServices implements ServiceRegLoader interface
 func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, error) {
-	return l.storage.GetServiceRegs(l.GetSubscribedServices())
+	return l.storage.FindServiceRegs(l.GetSubscribedServices())
 }
 
 //NewLocalServiceRegLoader creates and configures a new LocalServiceRegLoaderImpl instance
@@ -409,9 +437,15 @@ type Storage interface {
 
 	FindOrganization(id string) (*model.Organization, error)
 
-	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
+	//ServiceRegs
+	FindServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
+	FindServiceReg(serviceID string) (*authservice.ServiceReg, error)
+	InsertServiceReg(reg *authservice.ServiceReg) error
+	UpdateServiceReg(reg *authservice.ServiceReg) error
 	SaveServiceReg(reg *authservice.ServiceReg) error
+	DeleteServiceReg(serviceID string) error
 
+	//AuthConfigs
 	FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error)
 	LoadAuthConfigs() (*[]model.AuthConfig, error)
 }
@@ -425,4 +459,9 @@ type StorageListener struct {
 //OnAuthConfigUpdated notifies that an auth config has been updated
 func (al *StorageListener) OnAuthConfigUpdated() {
 	al.Auth.LoadAuthConfigs()
+}
+
+//OnServiceRegsUpdated notifies that a service registration has been updated
+func (al *StorageListener) OnServiceRegsUpdated() {
+	al.Auth.AuthService.LoadServices()
 }

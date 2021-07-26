@@ -675,6 +675,30 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 	return &resOrg, nil
 }
 
+//GetOrganization gets organization
+func (sa *Adapter) GetOrganization(ID string) (*model.Organization, error) {
+
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	var result []organization
+	err := sa.db.organizations.Find(filter, &result, nil)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionFind, model.TypeOrganization, nil, err)
+	}
+	if len(result) == 0 {
+		//no record
+		return nil, nil
+	}
+	org := result[0]
+
+	//return the correct type
+	getOrgConfig := org.Config
+	getResOrgConfig := model.OrganizationConfig{ID: getOrgConfig.ID, Domains: getOrgConfig.Domains}
+
+	getResOrg := model.Organization{ID: org.ID, Name: org.Name, Type: org.Type,
+		RequiresOwnLogin: org.RequiresOwnLogin, LoginTypes: org.LoginTypes, Config: getResOrgConfig}
+	return &getResOrg, nil
+}
+
 //UpdateOrganization updates an organization
 func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
 
@@ -704,8 +728,29 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 	return nil
 }
 
-//GetServiceRegs fetches the requested service registration records
-func (sa *Adapter) GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error) {
+//GetOrganizations gets the organizations
+func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
+
+	filter := bson.D{}
+	var result []model.Organization
+	err := sa.db.organizations.Find(filter, &result, nil)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionFind, model.TypeOrganization, nil, err)
+	}
+
+	var resultList []model.Organization
+	for _, current := range result {
+		item := &model.Organization{ID: current.ID, Name: current.Name, Type: current.Type, RequiresOwnLogin: current.RequiresOwnLogin,
+			LoginTypes: current.LoginTypes, Config: current.Config}
+		resultList = append(resultList, *item)
+	}
+	return resultList, nil
+}
+
+// ============================== ServiceRegs ==============================
+
+//FindServiceRegs fetches the requested service registration records
+func (sa *Adapter) FindServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error) {
 	var filter bson.M
 	for _, serviceID := range serviceIDs {
 		if serviceID == "all" {
@@ -723,7 +768,44 @@ func (sa *Adapter) GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg
 		return nil, log.WrapActionError(log.ActionFind, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceIDs}, err)
 	}
 
+	if result == nil {
+		result = []authservice.ServiceReg{}
+	}
+
 	return result, nil
+}
+
+//FindServiceReg finds the service registration in storage
+func (sa *Adapter) FindServiceReg(serviceID string) (*authservice.ServiceReg, error) {
+	filter := bson.M{"service_id": serviceID}
+	var reg *authservice.ServiceReg
+	err := sa.db.serviceRegs.FindOne(filter, &reg, nil)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionFind, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceID}, err)
+	}
+
+	return reg, nil
+}
+
+//InsertServiceReg inserts the service registration to storage
+func (sa *Adapter) InsertServiceReg(reg *authservice.ServiceReg) error {
+	_, err := sa.db.serviceRegs.InsertOne(reg)
+	if err != nil {
+		return log.WrapActionError(log.ActionInsert, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.ServiceID}, err)
+	}
+
+	return nil
+}
+
+//UpdateServiceReg updates the service registration in storage
+func (sa *Adapter) UpdateServiceReg(reg *authservice.ServiceReg) error {
+	filter := bson.M{"service_id": reg.ServiceID}
+	err := sa.db.serviceRegs.ReplaceOne(filter, reg, nil)
+	if err != nil {
+		return log.WrapActionError(log.ActionInsert, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.ServiceID}, err)
+	}
+
+	return nil
 }
 
 //SaveServiceReg saves the service registration to the storage
@@ -733,6 +815,24 @@ func (sa *Adapter) SaveServiceReg(reg *authservice.ServiceReg) error {
 	err := sa.db.serviceRegs.ReplaceOne(filter, reg, opts)
 	if err != nil {
 		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.ServiceID}, err)
+	}
+
+	return nil
+}
+
+//DeleteServiceReg deletes the service registration from storage
+func (sa *Adapter) DeleteServiceReg(serviceID string) error {
+	filter := bson.M{"service_id": serviceID}
+	result, err := sa.db.serviceRegs.DeleteOne(filter, nil)
+	if err != nil {
+		return log.WrapActionError(log.ActionDelete, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceID}, err)
+	}
+	if result == nil {
+		return log.WrapDataError(log.StatusInvalid, "result", &log.FieldArgs{"service_id": serviceID}, err)
+	}
+	deletedCount := result.DeletedCount
+	if deletedCount == 0 {
+		return log.WrapDataError(log.StatusMissing, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceID}, err)
 	}
 
 	return nil
@@ -763,7 +863,7 @@ func (sa *Adapter) SaveDevice(device *model.Device, context mongo.SessionContext
 func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *log.Logger) *Adapter {
 	timeoutInt, err := strconv.Atoi(mongoTimeout)
 	if err != nil {
-		logger.Error("Set default timeout - 500")
+		logger.Warn("Setting default Mongo timeout - 500")
 		timeoutInt = 500
 	}
 	timeout := time.Millisecond * time.Duration(timeoutInt)
@@ -777,18 +877,19 @@ func abortTransaction(sessionContext mongo.SessionContext) {
 	if err != nil {
 		//TODO - log
 	}
-
 }
 
 //Listener represents storage listener
 type Listener interface {
 	OnAuthConfigUpdated()
+	OnServiceRegsUpdated()
 }
 
-//DefaultListenerImpl represents default storage listener implementation
-type DefaultListenerImpl struct {
-}
+//DefaultListenerImpl default listener implementation
+type DefaultListenerImpl struct{}
 
-//OnAuthConfigUpdated notifies that the auth config has been updated
-func (d *DefaultListenerImpl) OnAuthConfigUpdated() {
-}
+//OnAuthConfigUpdated notifies auth configs have been updated
+func (d *DefaultListenerImpl) OnAuthConfigUpdated() {}
+
+//OnServiceRegsUpdated notifies services regs have been updated
+func (d *DefaultListenerImpl) OnServiceRegsUpdated() {}

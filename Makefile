@@ -30,7 +30,7 @@ M = $(shell printf "\033[34;1m▶\033[0m")
 SHELL=bash
 
 .PHONY: all
-all: log-variables checkfmt lint test-short | $(BASE) ; $(info $(M) building executable(s)… $(VERSION) $(DATE)) @ ## Build program binary
+all: log-variables oapi-gen-docs checkfmt lint test-short | $(BASE) ; $(info $(M) building executable(s)… $(VERSION) $(DATE)) @ ## Build program binary
 	$Q cd $(CURDIR) && $(GO) generate ./...
 	@ret=0 && for d in $(BUILDS); do \
 		if expr \"$$d\" : \"${MODULE}\" 1>/dev/null; then SRCPATH=$(CURDIR) ; else SRCPATH=$(CURDIR)/$${d/${MODULE}\//} ; fi ;  \
@@ -113,7 +113,11 @@ version:
 
 .PHONY: oapi-gen-types
 oapi-gen-types: ;
-	oapi-codegen --generate types -o driver/web/docs/gen_types.go driver/web/docs/def.yaml
+	oapi-codegen --generate types -o driver/web/docs/gen/gen_types.go driver/web/docs/gen/def.yaml
+
+.PHONY: oapi-gen-docs
+oapi-gen-docs: ;
+	swagger-cli bundle driver/web/docs/index.yaml --outfile driver/web/docs/gen/def.yaml --type yaml
 
 .PHONY: log-variables
 log-variables: ; $(info $(M) Log info…) @ ## Log the variables values

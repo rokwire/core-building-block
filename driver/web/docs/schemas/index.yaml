@@ -1,0 +1,10 @@
+GlobalConfig:
+  $ref: "./GlobalConfig.yaml"
+Organization:
+  $ref: "./Organization.yaml"
+OrganizationConfig:
+  $ref: "./OrganizationConfig.yaml"
+ServiceReg:
+  $ref: "./ServiceReg.yaml"
+PubKey:
+  $ref: "./PubKey.yaml"

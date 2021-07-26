@@ -66,6 +66,7 @@ func (we Adapter) Start() {
 	//auth
 	authSubrouter := servicesSubRouter.PathPrefix("/auth").Subrouter()
 	authSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getAuthTest)).Methods("GET")
+	authSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.servicesApisHandler.getAuthServiceRegistrations)).Methods("GET")
 
 	//common
 	commonSubrouter := servicesSubRouter.PathPrefix("/common").Subrouter()
@@ -83,6 +84,13 @@ func (we Adapter) Start() {
 
 	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.createOrganization)).Methods("POST")
 	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.updateOrganization)).Methods("PUT")
+	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.getOrganization)).Methods("GET")
+	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.getOrganizations)).Methods("GET")
+
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.getServiceRegistrations)).Methods("GET")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.registerService)).Methods("POST")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.updateServiceRegistration)).Methods("PUT")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.deregisterService)).Methods("DELETE")
 	///
 
 	///enc ///
@@ -103,7 +111,7 @@ func (we Adapter) Start() {
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("access-control-allow-origin", "*")
-	http.ServeFile(w, r, "./driver/web/docs/def.yaml")
+	http.ServeFile(w, r, "./driver/web/docs/gen/def.yaml")
 }
 
 func (we Adapter) serveDocUI() http.Handler {
@@ -120,16 +128,10 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		var err error
 
 		//1. validate request
-		var requestValidationInput *openapi3filter.RequestValidationInput
-		if we.env != "production" {
-			requestValidationInput, err = we.validateRequest(req)
-			if err != nil {
-				logObj.Errorf("error validating request - %s", err)
-
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(http.StatusText(http.StatusBadRequest)))
-				return
-			}
+		requestValidationInput, err := we.validateRequest(req)
+		if err != nil {
+			logObj.RequestErrorAction(w, log.ActionValidate, log.TypeRequest, nil, err, http.StatusBadRequest, true)
+			return
 		}
 
 		//2. process it
@@ -139,10 +141,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		if we.env != "production" {
 			err = we.validateResponse(requestValidationInput, response)
 			if err != nil {
-				logObj.Errorf("error validating response - %s", err)
-
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(http.StatusText(http.StatusBadRequest)))
+				logObj.RequestErrorAction(w, log.ActionValidate, log.TypeResponse, nil, err, http.StatusInternalServerError, true)
 				return
 			}
 		}
@@ -211,7 +210,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
-	doc, err := loader.LoadFromFile("driver/web/docs/def.yaml")
+	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
 	if err != nil {
 		logger.Fatal(err.Error())
 	}

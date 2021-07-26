@@ -7,7 +7,9 @@ import (
 )
 
 const (
-	TypeGlobalConfig       log.LogData = "global config"
+	//TypeGlobalConfig ...
+	TypeGlobalConfig log.LogData = "global config"
+	//TypeOrganizationConfig ...
 	TypeOrganizationConfig log.LogData = "org config"
 )
 

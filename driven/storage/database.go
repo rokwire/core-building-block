@@ -261,11 +261,18 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 	nsMap := ns.(map[string]interface{})
 	coll := nsMap["coll"]
 
-	if coll == "auth_configs" {
+	switch coll {
+	case "auth_configs":
 		log.Println("auth_configs collection changed")
 
 		for _, listener := range m.listeners {
 			go listener.OnAuthConfigUpdated()
+		}
+	case "service_regs":
+		log.Println("service_regs collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnServiceRegsUpdated()
 		}
 	}
 }
