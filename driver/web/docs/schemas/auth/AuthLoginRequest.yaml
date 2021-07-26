@@ -35,5 +35,5 @@ example: |
     "creds": {
       "email": "test@test.com", 
       "password": "test12345"
-    },
+    }
   }

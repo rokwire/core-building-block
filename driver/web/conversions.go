@@ -20,16 +20,10 @@ func defMap(pointer *map[string]interface{}) map[string]interface{} {
 	return *pointer
 }
 
-func mapInterfaceToJSON(item interface{}) (string, error) {
-	itemMap, ok := item.(map[string]interface{})
-	if !ok {
-		return "", log.NewErrorf("invalid item type: must be map[string]interface{}")
-	}
-
-	json, err := json.Marshal(itemMap)
+func interfaceToJSON(item interface{}) (string, error) {
+	json, err := json.Marshal(item)
 	if err != nil {
-		return "", log.WrapActionError(log.ActionMarshal, "map", nil, err)
+		return "", log.WrapActionError(log.ActionMarshal, "interface", nil, err)
 	}
-
 	return string(json), nil
 }

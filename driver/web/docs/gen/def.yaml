@@ -640,7 +640,7 @@ components:
           "creds": {
             "email": "test@test.com", 
             "password": "test12345"
-          },
+          }
         }
     AuthLoginResponse:
       type: object

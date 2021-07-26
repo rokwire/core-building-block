@@ -36,12 +36,12 @@ func (h ServicesApisHandler) authLogin(l *log.Log, r *http.Request) log.HttpResp
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, typeLoginRequest, nil, err, http.StatusBadRequest, true)
 	}
 
-	requestCreds, err := mapInterfaceToJSON(requestData.Creds)
+	requestCreds, err := interfaceToJSON(requestData.Creds)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionMarshal, "creds", nil, err, http.StatusBadRequest, true)
 	}
 
-	requestParams, err := mapInterfaceToJSON(requestData.Params)
+	requestParams, err := interfaceToJSON(requestData.Params)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
