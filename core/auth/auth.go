@@ -132,7 +132,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 //	Returns:
 //		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //		User (User): User object for authenticated user
-func (a *Auth) Login(authType string, creds string, params string, l *log.Log) (string, *model.User, error) {
+func (a *Auth) Login(authType string, creds string, params string, orgID string, appID string, l *log.Log) (string, *model.User, error) {
 	var user *model.User
 	var err error
 
@@ -160,8 +160,15 @@ func (a *Auth) Login(authType string, creds string, params string, l *log.Log) (
 			}
 		}
 	} else {
-		if claims.NewCreds.Creds != nil {
-			user, err = a.createAccount(claims)
+		if claims.NewCreds != nil {
+			authCred := model.AuthCred{
+				OrgID:  orgID,
+				AppID:  appID,
+				Type:   authType,
+				UserID: claims.UserID,
+				Creds:  claims.NewCreds,
+			}
+			user, err = a.createAccount(claims, &authCred)
 			if err != nil {
 				return "", nil, err
 			}
@@ -250,8 +257,8 @@ func (a *Auth) findAccount(userAuth *model.UserAuth) (*model.User, error) {
 }
 
 //createAccount creates a new user account
-func (a *Auth) createAccount(userAuth *model.UserAuth) (*model.User, error) {
-	return a.storage.InsertUser(userAuth)
+func (a *Auth) createAccount(userAuth *model.UserAuth, authCred *model.AuthCred) (*model.User, error) {
+	return a.storage.InsertUser(userAuth, authCred)
 }
 
 //updateAccount updates a user's account information
@@ -474,7 +481,7 @@ type Storage interface {
 	GetEmailCredential(username string) (*credential, error)
 	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
 	FindUserByAccountID(accountID string) (*model.User, error)
-	InsertUser(userAuth *model.UserAuth) (*model.User, error)
+	InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred) (*model.User, error)
 	UpdateUser(user *model.User, newOrgData *map[string]interface{}) (*model.User, error)
 	DeleteUser(id string) error
 

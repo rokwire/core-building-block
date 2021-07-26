@@ -22,7 +22,7 @@ type UserAuth struct {
 	Exp          float64
 	RefreshToken string
 	OrgData      map[string]interface{}
-	NewCreds     AuthCred
+	NewCreds     interface{}
 }
 
 //AuthConfig represents auth config entity
