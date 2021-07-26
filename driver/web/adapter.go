@@ -66,6 +66,7 @@ func (we Adapter) Start() {
 	//auth
 	authSubrouter := servicesSubRouter.PathPrefix("/auth").Subrouter()
 	authSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getAuthTest)).Methods("GET")
+	authSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.servicesApisHandler.getAuthServiceRegistrations)).Methods("GET")
 
 	//common
 	commonSubrouter := servicesSubRouter.PathPrefix("/common").Subrouter()
@@ -83,6 +84,11 @@ func (we Adapter) Start() {
 
 	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.createOrganization)).Methods("POST")
 	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.updateOrganization)).Methods("PUT")
+
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.getServiceRegistrations)).Methods("GET")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.registerService)).Methods("POST")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.updateServiceRegistration)).Methods("PUT")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.deregisterService)).Methods("DELETE")
 	///
 
 	///enc ///

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 	log "github.com/rokmetro/logging-library/loglib"
@@ -147,6 +148,86 @@ func (h AdminApisHandler) updateOrganization(l *log.Log, r *http.Request) log.Ht
 	err = h.coreAPIs.Administration.AdmUpdateOrganization(ID, name, string(requestType), *requiresOwnLogin, *loginTypes, *organizationDomains)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionUpdate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h AdminApisHandler) getServiceRegistrations(l *log.Log, r *http.Request) log.HttpResponse {
+	serviceIDsParam := r.URL.Query().Get("ids")
+	if serviceIDsParam == "" {
+		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("ids"), nil, http.StatusBadRequest, false)
+	}
+	serviceIDs := strings.Split(serviceIDsParam, ",")
+
+	serviceRegs, err := h.coreAPIs.Auth.GetServiceRegistrations(serviceIDs)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
+	}
+
+	serviceRegResp := serviceRegListToDef(serviceRegs)
+
+	data, err := json.Marshal(serviceRegResp)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeServiceReg, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h AdminApisHandler) registerService(l *log.Log, r *http.Request) log.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ServiceReg
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeServiceReg, nil, err, http.StatusBadRequest, true)
+	}
+
+	serviceReg := serviceRegFromDef(&requestData)
+
+	err = h.coreAPIs.Auth.RegisterService(serviceReg)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionCreate, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h AdminApisHandler) updateServiceRegistration(l *log.Log, r *http.Request) log.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorData(log.StatusInvalid, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ServiceReg
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeServiceReg, nil, err, http.StatusBadRequest, true)
+	}
+
+	serviceReg := serviceRegFromDef(&requestData)
+
+	err = h.coreAPIs.Auth.UpdateServiceRegistration(serviceReg)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionUpdate, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h AdminApisHandler) deregisterService(l *log.Log, r *http.Request) log.HttpResponse {
+	serviceID := r.URL.Query().Get("id")
+	if serviceID == "" {
+		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	err := h.coreAPIs.Auth.DeregisterService(serviceID)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionDelete, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()
