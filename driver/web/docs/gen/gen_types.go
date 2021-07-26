@@ -249,15 +249,15 @@ type PostAdminServiceRegsJSONBody ServiceReg
 // PutAdminServiceRegsJSONBody defines parameters for PutAdminServiceRegs.
 type PutAdminServiceRegsJSONBody ServiceReg
 
-// PostServicesAuthLoginJSONBody defines parameters for PostServicesAuthLogin.
-type PostServicesAuthLoginJSONBody AuthLoginRequest
-
-// GetServicesAuthServiceRegsParams defines parameters for GetServicesAuthServiceRegs.
-type GetServicesAuthServiceRegsParams struct {
+// GetBbsServiceRegsParams defines parameters for GetBbsServiceRegs.
+type GetBbsServiceRegsParams struct {
 
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
+
+// PostServicesAuthLoginJSONBody defines parameters for PostServicesAuthLogin.
+type PostServicesAuthLoginJSONBody AuthLoginRequest
 
 // PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
 type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody

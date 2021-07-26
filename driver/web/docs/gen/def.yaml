@@ -65,37 +65,6 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/auth/service-regs:
-    get:
-      tags:
-        - Auth
-      summary: Get service registrations
-      description: |
-        Returns service registration records
-      parameters:
-        - name: ids
-          in: query
-          description: A comma-separated list of service IDs to return registrations for
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ServiceReg'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
   /services/common/test:
     get:
       tags:
@@ -441,6 +410,37 @@ paths:
               schema:
                 type: string
                 example: Echooo
+  /bbs/service-regs:
+    get:
+      tags:
+        - BBs
+      summary: Get service registrations
+      description: |
+        Returns service registration records
+      parameters:
+        - name: ids
+          in: query
+          description: A comma-separated list of service IDs to return registrations for
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceReg'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /version:
     get:
       summary: Get service version

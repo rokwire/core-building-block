@@ -28,8 +28,9 @@ func userToDef(item *model.User) *Def.User {
 	groups := globalGroupListToDef(item.Groups)
 	roles := globalRoleListToDef(item.Roles)
 	memberships := organizationMembershipListToDef(item.OrganizationsMemberships)
+	devices := deviceListToDef(item.Devices)
 	//TODO: handle permissions
-	return &Def.User{Id: item.ID, Account: account, Profile: profile, Groups: &groups, Roles: &roles, OrgMemberships: &memberships}
+	return &Def.User{Id: item.ID, Account: account, Profile: profile, Groups: &groups, Roles: &roles, OrgMemberships: &memberships, Devices: &devices}
 }
 
 //UserAccount
@@ -94,6 +95,37 @@ func organizationMembershipListToDef(items []model.OrganizationMembership) []Def
 			out[i] = *defItem
 		} else {
 			out[i] = Def.OrganizationMembership{}
+		}
+	}
+	return out
+}
+
+//Device
+func deviceFromDef(item *Def.Device) *model.Device {
+	if item == nil {
+		return nil
+	}
+	return &model.Device{ID: item.Id, Type: string(item.Type), OS: defString(item.Os), MacAddress: defString(item.MacAddress)}
+}
+
+func deviceToDef(item *model.Device) *Def.Device {
+	if item == nil {
+		return nil
+	}
+	return &Def.Device{Id: item.ID, Type: Def.DeviceType(item.Type), Os: &item.OS, MacAddress: &item.MacAddress}
+}
+
+func deviceListToDef(items []model.Device) []Def.Device {
+	if items == nil {
+		return nil
+	}
+	out := make([]Def.Device, len(items))
+	for i, item := range items {
+		defItem := deviceToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.Device{}
 		}
 	}
 	return out

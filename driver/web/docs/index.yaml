@@ -29,8 +29,6 @@ paths:
     $ref: "./resources/auth/test.yaml"
   /services/auth/login:
     $ref: "./resources/auth/login.yaml"
-  /services/auth/service-regs:
-    $ref: "./resources/auth/service-regs.yaml"
   #common
   /services/common/test:
     $ref: "./resources/common/test.yaml"
@@ -52,6 +50,8 @@ paths:
   #bbs
   /bbs/test:
     $ref: "./resources/bbs/test.yaml"
+  /bbs/service-regs:
+    $ref: "./resources/bbs/service-regs.yaml"
 
   #default
   /version:
