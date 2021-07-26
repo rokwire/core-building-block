@@ -7,7 +7,6 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"reflect"
-	"strings"
 	"sync"
 	"time"
 
@@ -35,7 +34,7 @@ type authType interface {
 	check(creds string, params string, l *log.Log) (*model.UserAuth, error)
 
 	//Set new credentials
-	set(user *model.User, params string) error
+	set(userAuth *model.UserAuth, orgID string, appID string) (*model.AuthCred, error)
 }
 
 //Auth represents the auth functionality unit
@@ -146,19 +145,10 @@ func (a *Auth) Login(authType string, creds string, params string, l *log.Log) (
 			}
 		}
 	} else {
-		if strings.Contains(err.Error(), "no credentials found") {
+		if claims.NewCreds.Creds != nil {
 			user, err = a.createAccount(claims)
 			if err != nil {
 				return "", nil, err
-			}
-
-			setErr := auth.set(user, params)
-			if setErr != nil {
-				err = a.deleteAccount(user.ID)
-				if err != nil {
-					return "", nil, err
-				}
-				return "", nil, setErr
 			}
 		} else {
 			return "", nil, log.WrapActionError(log.ActionValidate, model.TypeAuthCred, nil, err)
@@ -237,17 +227,16 @@ func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*mod
 	}
 
 	// profile
-	names := strings.Split(userAuth.Name, " ")
 	if !bytes.Equal(userAuth.Picture, []byte(user.Profile.Photo)) {
 		user.Profile.Photo = string(userAuth.Picture)
 		update = true
 	}
-	if user.Profile.FirstName != names[0] {
-		user.Profile.FirstName = names[0]
+	if user.Profile.FirstName != userAuth.FirstName {
+		user.Profile.FirstName = userAuth.FirstName
 		update = true
 	}
-	if user.Profile.LastName != names[len(names)-1] {
-		user.Profile.LastName = names[len(names)-1]
+	if user.Profile.LastName != userAuth.LastName {
+		user.Profile.LastName = userAuth.LastName
 		update = true
 	}
 
@@ -433,7 +422,6 @@ type Storage interface {
 	DeleteUser(id string) error
 
 	FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCred, error)
-	InsertCredentials(creds *model.AuthCred) error
 
 	FindOrganization(id string) (*model.Organization, error)
 

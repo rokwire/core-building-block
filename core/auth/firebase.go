@@ -16,8 +16,8 @@ func (a *firebaseAuthImpl) check(creds string, params string, l *log.Log) (*mode
 	return nil, log.NewError(log.Unimplemented)
 }
 
-func (a *firebaseAuthImpl) set(user *model.User, params string) error {
-	return log.NewError(log.Unimplemented)
+func (a *firebaseAuthImpl) set(userAuth *model.UserAuth, orgID string, appID string) (*model.AuthCred, error) {
+	return nil, log.NewError(log.Unimplemented)
 }
 
 //initFirebaseAuth initializes and registers a new Firebase auth instance

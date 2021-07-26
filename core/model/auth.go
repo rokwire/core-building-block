@@ -14,13 +14,15 @@ type UserAuth struct {
 	UserID       string
 	AccountID    string
 	Sub          string
-	Name         string
+	FirstName    string
+	LastName     string
 	Email        string
 	Phone        string
 	Picture      []byte
 	Exp          float64
 	RefreshToken string
 	OrgData      map[string]interface{}
+	NewCreds     AuthCred
 }
 
 //AuthConfig represents auth config entity

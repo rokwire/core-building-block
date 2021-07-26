@@ -5,7 +5,6 @@ import (
 	"core-building-block/core/model"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -247,12 +246,11 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth) (*model.User, error) {
 	if err != nil {
 		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("user_id"))
 	}
-	names := strings.Split(userAuth.Name, " ")
 	newUser := rawUser{ID: newID.String()}
 
 	newAccount := model.UserAccount{Email: userAuth.Email, Phone: userAuth.Phone}
 	newUser.Account = newAccount
-	newProfile := model.UserProfile{FirstName: names[0], LastName: names[len(names)-1], Photo: string(userAuth.Picture)}
+	newProfile := model.UserProfile{FirstName: userAuth.FirstName, LastName: userAuth.LastName, Photo: string(userAuth.Picture)}
 	newUser.Profile = newProfile
 	newUser.Permissions = []string{}
 	newUser.Roles = []string{}
@@ -299,6 +297,11 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth) (*model.User, error) {
 		if err != nil {
 			abortTransaction(sessionContext)
 			return log.WrapActionError(log.ActionInsert, model.TypeUser, nil, err)
+		}
+
+		err = sa.InsertCredentials(&userAuth.NewCreds, sessionContext)
+		if err != nil {
+			return log.WrapDataError(log.StatusInvalid, model.TypeAuthCred, &log.FieldArgs{"user_id": userAuth.UserID, "account_id": userAuth.AccountID}, err)
 		}
 
 		//commit the transaction
@@ -428,12 +431,17 @@ func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, 
 }
 
 //Insert credentials inserts a set of credentials
-func (sa *Adapter) InsertCredentials(creds *model.AuthCred) error {
+func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.SessionContext) error {
 	if creds == nil {
 		return log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeAuthCred))
 	}
 
-	_, err := sa.db.credentials.InsertOne(creds)
+	var err error
+	if context == nil {
+		_, err = sa.db.credentials.InsertOne(creds)
+	} else {
+		_, err = sa.db.credentials.InsertOneWithContext(context, creds)
+	}
 	if err != nil {
 		return log.WrapActionError(log.ActionInsert, model.TypeAuthCred, nil, err)
 	}

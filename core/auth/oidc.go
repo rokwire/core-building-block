@@ -116,6 +116,10 @@ func (a *oidcAuthImpl) check(creds string, params string, l *log.Log) (*model.Us
 		userAuth.OrgData["orgID"] = loginParams.OrgID
 		credentials, err := a.auth.storage.FindCredentials(loginParams.OrgID, loginParams.AppID, authTypeOidc, userAuth.UserID)
 		if err != nil {
+			errFields := log.FieldArgs{"org_id": loginParams.OrgID, "app_id": loginParams.AppID, "type": authTypeOidc, "user_id": userAuth.UserID}
+			l.LogAction(log.Warn, log.StatusError, log.ActionFind, model.TypeAuthCred, &errFields)
+			newCreds, err := a.set(userAuth, loginParams.OrgID, loginParams.AppID)
+			userAuth.NewCreds = *newCreds
 			return userAuth, fmt.Errorf("no credentials found: %s", err.Error())
 		}
 		ok, err := a.validateUser(userAuth, credentials.Creds)
@@ -143,6 +147,10 @@ func (a *oidcAuthImpl) check(creds string, params string, l *log.Log) (*model.Us
 		userAuth.OrgData["orgID"] = refreshParams.OrgID
 		credentials, err := a.auth.storage.FindCredentials(refreshParams.OrgID, refreshParams.AppID, authTypeOidc, userAuth.UserID)
 		if err != nil {
+			errFields := log.FieldArgs{"org_id": refreshParams.OrgID, "app_id": refreshParams.AppID, "type": authTypeOidc, "user_id": userAuth.UserID}
+			l.LogAction(log.Warn, log.StatusError, log.ActionFind, model.TypeAuthCred, &errFields)
+			newCreds, err := a.set(userAuth, refreshParams.OrgID, refreshParams.AppID)
+			userAuth.NewCreds = *newCreds
 			return userAuth, fmt.Errorf("no credentials found: %s", err.Error())
 		}
 		ok, err := a.validateUser(userAuth, credentials.Creds)
@@ -154,35 +162,6 @@ func (a *oidcAuthImpl) check(creds string, params string, l *log.Log) (*model.Us
 	default:
 		return nil, log.DataError(log.StatusInvalid, "cred type", log.StringArgs(credType))
 	}
-}
-
-func (a *oidcAuthImpl) set(user *model.User, params string) error {
-	var baseParams oidcBaseParams
-	err := json.Unmarshal([]byte(params), &baseParams)
-	if err != nil {
-		return log.WrapActionError(log.ActionUnmarshal, typeOidcBaseParams, nil, err)
-	}
-
-	newCreds, err := a.createCredentials(user, baseParams.OrgID)
-	if err != nil {
-		return log.WrapDataError(log.StatusInvalid, model.TypeAuthCred, &log.FieldArgs{"user_id": user.ID, "account_id": user.Account.ID}, err)
-	}
-
-	authCred := model.AuthCred{
-		OrgID:     baseParams.OrgID,
-		AppID:     baseParams.AppID,
-		Type:      authTypeOidc,
-		UserID:    user.ID,
-		AccountID: user.Account.ID,
-		Creds:     newCreds,
-	}
-
-	err = a.auth.storage.InsertCredentials(&authCred)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials interface{}) (bool, error) {
@@ -207,18 +186,24 @@ func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials interf
 	return true, nil
 }
 
-func (a *oidcAuthImpl) createCredentials(user *model.User, orgID string) (map[string]interface{}, error) {
-	for _, m := range user.OrganizationsMemberships {
-		membershipOrgID, ok := m.OrgUserData["orgID"].(string)
-		if ok && membershipOrgID == orgID {
-			creds := map[string]interface{}{
-				"sub": m.OrgUserData["sub"],
-			}
-			return creds, nil
-		}
+func (a *oidcAuthImpl) set(userAuth *model.UserAuth, orgID string, appID string) (*model.AuthCred, error) {
+	if userAuth == nil {
+		return nil, log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeUserAuth))
 	}
 
-	return nil, log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs("orgID"))
+	creds := map[string]interface{}{
+		"sub": userAuth.Sub,
+	}
+
+	authCred := model.AuthCred{
+		OrgID:  orgID,
+		AppID:  appID,
+		Type:   authTypeOidc,
+		UserID: userAuth.UserID,
+		Creds:  creds,
+	}
+
+	return &authCred, nil
 }
 
 func (a *oidcAuthImpl) mobileLoginURL(params string, l *log.Log) (string, error) {
@@ -385,9 +370,13 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	if userAuth.UserID, ok = userID.(string); !ok {
 		l.LogAction(log.Warn, log.StatusError, log.ActionCast, log.TypeString, &log.FieldArgs{"user_id": userID})
 	}
-	name := readFromClaims("name", &oidcConfig.Claims, &userClaims)
-	if userAuth.Name, ok = name.(string); !ok {
-		l.LogAction(log.Warn, log.StatusError, log.ActionCast, log.TypeString, &log.FieldArgs{"name": name})
+	firstName := readFromClaims("given_name", &oidcConfig.Claims, &userClaims)
+	if userAuth.FirstName, ok = firstName.(string); !ok {
+		l.LogAction(log.Warn, log.StatusError, log.ActionCast, log.TypeString, &log.FieldArgs{"given_name": firstName})
+	}
+	lastName := readFromClaims("family_name", &oidcConfig.Claims, &userClaims)
+	if userAuth.LastName, ok = lastName.(string); !ok {
+		l.LogAction(log.Warn, log.StatusError, log.ActionCast, log.TypeString, &log.FieldArgs{"family_name": lastName})
 	}
 	email := readFromClaims("email", &oidcConfig.Claims, &userClaims)
 	if userAuth.Email, ok = email.(string); !ok {
