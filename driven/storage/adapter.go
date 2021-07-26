@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"core-building-block/core/model"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -422,15 +421,24 @@ func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, 
 	var creds model.AuthCred
 	err := sa.db.credentials.FindOne(filter, &creds, nil)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.ActionFind, model.TypeAuthCred, nil, err)
 	}
 
 	return &creds, nil
 }
 
 //Insert credentials inserts a set of credentials
-func (sa *Adapter) InsertCredentials(creds *model.AuthCred) (*model.AuthCred, error) {
-	return nil, errors.New("unimplemented")
+func (sa *Adapter) InsertCredentials(creds *model.AuthCred) error {
+	if creds == nil {
+		return log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeAuthCred))
+	}
+
+	_, err := sa.db.credentials.InsertOne(creds)
+	if err != nil {
+		return log.WrapActionError(log.ActionInsert, model.TypeAuthCred, nil, err)
+	}
+
+	return nil
 }
 
 //FindGlobalRoles finds a set of global user roles

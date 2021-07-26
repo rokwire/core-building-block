@@ -21,6 +21,7 @@ import (
 const (
 	authTypeOidc          string      = "oidc"
 	typeOidcAuthConfig    log.LogData = "oidc auth config"
+	typeOidcBaseParams    log.LogData = "oidc base params"
 	typeOidcMobileParams  log.LogData = "oidc mobile params"
 	typeOidcCheckParams   log.LogData = "oidc check params"
 	typeOidcLoginParams   log.LogData = "oidc login params"
@@ -50,28 +51,29 @@ type oidcCreds struct {
 	Sub string `json:"sub" validate:"required"`
 }
 
+type oidcBaseParams struct {
+	OrgID string `json:"org_id" validate:"required"`
+	AppID string `json:"app_id" validate:"required"`
+}
+
 type oidcMobileParams struct {
-	OrgID         string `json:"org_id" validate:"required"`
-	AppID         string `json:"app_id" validate:"required"`
+	oidcBaseParams
 	CodeChallenge string `json:"pkce_challenge"`
 	RedirectURI   string `json:"redirect_uri" validate:"required"`
 }
 
 type oidcCheckParams struct {
-	OrgID string `json:"org_id" validate:"required"`
-	AppID string `json:"app_id" validate:"required"`
+	oidcBaseParams
 }
 
 type oidcLoginParams struct {
-	OrgID        string `json:"org_id" validate:"required"`
-	AppID        string `json:"app_id" validate:"required"`
+	oidcBaseParams
 	CodeVerifier string `json:"pkce_verifier"`
 	RedirectURI  string `json:"redirect_uri" validate:"required"`
 }
 
 type oidcRefreshParams struct {
-	OrgID       string `json:"org_id" validate:"required"`
-	AppID       string `json:"app_id" validate:"required"`
+	oidcBaseParams
 	RedirectURI string `json:"redirect_uri" validate:"required"`
 }
 
@@ -154,6 +156,35 @@ func (a *oidcAuthImpl) check(creds string, params string, l *log.Log) (*model.Us
 	}
 }
 
+func (a *oidcAuthImpl) set(user *model.User, params string) error {
+	var baseParams oidcBaseParams
+	err := json.Unmarshal([]byte(params), &baseParams)
+	if err != nil {
+		return log.WrapActionError(log.ActionUnmarshal, typeOidcBaseParams, nil, err)
+	}
+
+	newCreds, err := a.createCredentials(user, baseParams.OrgID)
+	if err != nil {
+		return log.WrapDataError(log.StatusInvalid, model.TypeAuthCred, &log.FieldArgs{"user_id": user.ID, "account_id": user.Account.ID}, err)
+	}
+
+	authCred := model.AuthCred{
+		OrgID:     baseParams.OrgID,
+		AppID:     baseParams.AppID,
+		Type:      authTypeOidc,
+		UserID:    user.ID,
+		AccountID: user.Account.ID,
+		Creds:     newCreds,
+	}
+
+	err = a.auth.storage.InsertCredentials(&authCred)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials interface{}) (bool, error) {
 	credBytes, err := json.Marshal(credentials)
 	if err != nil {
@@ -174,6 +205,20 @@ func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials interf
 		return false, log.DataError(log.StatusInvalid, model.TypeUserAuth, log.StringArgs(userAuth.UserID))
 	}
 	return true, nil
+}
+
+func (a *oidcAuthImpl) createCredentials(user *model.User, orgID string) (map[string]interface{}, error) {
+	for _, m := range user.OrganizationsMemberships {
+		membershipOrgID, ok := m.OrgUserData["orgID"].(string)
+		if ok && membershipOrgID == orgID {
+			creds := map[string]interface{}{
+				"sub": m.OrgUserData["sub"],
+			}
+			return creds, nil
+		}
+	}
+
+	return nil, log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs("orgID"))
 }
 
 func (a *oidcAuthImpl) mobileLoginURL(params string, l *log.Log) (string, error) {

@@ -5,6 +5,7 @@ import log "github.com/rokmetro/logging-library/loglib"
 const (
 	TypeUserAuth   log.LogData = "user auth"
 	TypeAuthConfig log.LogData = "auth config"
+	TypeAuthCred   log.LogData = "auth cred"
 	TypeServiceReg log.LogData = "service reg"
 )
 

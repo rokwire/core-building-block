@@ -30,6 +30,9 @@ const (
 type authType interface {
 	//Check validity of provided credentials
 	check(creds string, params string, l *log.Log) (*model.UserAuth, error)
+
+	//Set new credentials
+	set(user *model.User, params string) error
 }
 
 //Auth represents the auth functionality unit
@@ -144,7 +147,7 @@ func (a *Auth) Login(authType string, creds string, params string, l *log.Log) (
 	if len(claims.AccountID) > 0 {
 		user, err = a.findAccount(claims)
 		if err != nil {
-			return "", nil, log.WrapActionError(log.ActionFind, model.TypeUser, nil, err)
+			return "", nil, err
 		}
 		user, update, newMembership := a.needsUserUpdate(claims, user)
 		if update {
@@ -154,23 +157,30 @@ func (a *Auth) Login(authType string, creds string, params string, l *log.Log) (
 			}
 			_, err = a.updateAccount(user, newMembershipOrgData)
 			if err != nil {
-				return "", nil, log.WrapActionError(log.ActionUpdate, model.TypeUser, nil, err)
+				return "", nil, err
 			}
 		}
 	} else {
 		if strings.Contains(err.Error(), "no credentials found") {
 			user, err = a.createAccount(claims)
 			if err != nil {
-				return "", nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
+				return "", nil, err
+			}
+
+			setErr := auth.set(user, params)
+			if setErr != nil {
+				err = a.deleteAccount(user.ID)
+				if err != nil {
+					return "", nil, err
+				}
+				return "", nil, setErr
 			}
 		} else {
-			return "", nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
+			return "", nil, log.WrapActionError(log.ActionValidate, model.TypeAuthCred, nil, err)
 		}
 	}
 
-	// generate token
-
-	//TODO: Implement account management and return token and user using claims
+	//TODO: return token and user using claims
 
 	return "", user, nil
 }
@@ -249,8 +259,8 @@ func (a *Auth) updateAccount(user *model.User, newOrgData *map[string]interface{
 }
 
 //deleteAccount deletes a user account
-func (a *Auth) deleteAccount(userAuth *model.UserAuth) error {
-	return a.storage.DeleteUser(userAuth.AccountID)
+func (a *Auth) deleteAccount(id string) error {
+	return a.storage.DeleteUser(id)
 }
 
 //needsUserUpdate determines if user should be updated by userAuth (assumes userAuth is most up-to-date)
@@ -395,7 +405,7 @@ type Storage interface {
 	DeleteUser(id string) error
 
 	FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCred, error)
-	InsertCredentials(creds *model.AuthCred) (*model.AuthCred, error)
+	InsertCredentials(creds *model.AuthCred) error
 
 	FindOrganization(id string) (*model.Organization, error)
 

@@ -16,6 +16,10 @@ func (a *apiKeyAuthImpl) check(creds string, params string, l *log.Log) (*model.
 	return nil, log.NewError(log.Unimplemented)
 }
 
+func (a *apiKeyAuthImpl) set(user *model.User, params string) error {
+	return log.NewError(log.Unimplemented)
+}
+
 //initAPIKeyAuth initializes and registers a new API key auth instance
 func initAPIKeyAuth(auth *Auth) (*apiKeyAuthImpl, error) {
 	apiKey := &apiKeyAuthImpl{auth: auth}
