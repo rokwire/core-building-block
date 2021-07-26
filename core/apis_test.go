@@ -125,7 +125,7 @@ func TestBBsGetTest(t *testing.T) {
 func TestAdmGetOrganization(t *testing.T) {
 	storage := genmocks.Storage{}
 	storage.On("GetOrganization", "_id").Return(&model.Organization{ID: "_id"}, nil)
-	app := core.NewCoreAPIs("1.1.1", "build", &storage, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
 	getOrganization, _ := app.Administration.AdmGetOrganization("_id")
 
@@ -135,7 +135,7 @@ func TestAdmGetOrganization(t *testing.T) {
 	// second case error
 	storage2 := genmocks.Storage{}
 	storage2.On("GetOrganization").Return(&model.Organization{ID: "_id"}, nil)
-	app = core.NewCoreAPIs("1.1.1", "build", &storage, nil)
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
 	err, _ := app.Administration.AdmGetOrganization("_id")
 
