@@ -1,6 +1,19 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+
+	log "github.com/rokmetro/logging-library/loglib"
+)
+
+const (
+	//TypeOrganization ...
+	TypeOrganization log.LogData = "organization"
+	//TypeOrganizationMembership ...
+	TypeOrganizationMembership log.LogData = "org membership"
+	//TypeOrganizationUserRelations ...
+	TypeOrganizationUserRelations log.LogData = "org user relations"
+)
 
 //TODO - Flat vs. hierarchical group management - not sure we need hierarchical, maybe no!?
 

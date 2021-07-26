@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"core-building-block/core"
 	"log"
 	"time"
 
@@ -25,7 +24,7 @@ type database struct {
 	organizations *collectionWrapper
 	serviceRegs   *collectionWrapper
 
-	listener core.StorageListener
+	listeners []Listener
 }
 
 func (m *database) start() error {
@@ -146,11 +145,18 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 	nsMap := ns.(map[string]interface{})
 	coll := nsMap["coll"]
 
-	if "auth_configs" == coll {
+	switch coll {
+	case "auth_configs":
 		log.Println("auth_configs collection changed")
 
-		if m.listener != nil {
-			m.listener.OnAuthConfigUpdated()
+		for _, listener := range m.listeners {
+			go listener.OnAuthConfigUpdated()
+		}
+	case "service_regs":
+		log.Println("service_regs collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnServiceRegsUpdated()
 		}
 	}
 }

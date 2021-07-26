@@ -2,13 +2,13 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 
 	log "github.com/rokmetro/logging-library/loglib"
 )
 
 //Services exposes APIs for the driver adapters
 type Services interface {
-	SerGetVersion(l *log.Log) string
 	SerGetAuthTest(l *log.Log) string
 	SerGetCommonTest(l *log.Log) string
 }
@@ -23,8 +23,9 @@ type Administration interface {
 	AdmUpdateGlobalConfig(setting string) error
 
 	AdmCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error)
-	AdmGetOrganizations() ([]model.Organization, error)
 	AdmUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
+	AdmGetOrganizations() ([]model.Organization, error)
+	AdmGetOrganization(ID string) (*model.Organization, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -39,31 +40,24 @@ type BBs interface {
 
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
-	SetStorageListener(storageListener StorageListener)
+	RegisterStorageListener(storageListener storage.Listener)
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	GetGlobalConfig() (*model.GlobalConfig, error)
 	SaveGlobalConfig(setting *model.GlobalConfig) error
 
 	CreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error)
-	GetOrganizations() ([]model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
+	GetOrganizations() ([]model.Organization, error)
+	GetOrganization(ID string) (*model.Organization, error)
 }
 
 //StorageListener listenes for change data storage events
-type StorageListener interface {
-	OnAuthConfigUpdated()
-}
-
-type storageListenerImpl struct {
+type StorageListener struct {
 	app *application
-}
-
-func (a *storageListenerImpl) OnAuthConfigUpdated() {
-	a.app.notifyListeners("onAuthConfigUpdated", nil)
+	storage.DefaultListenerImpl
 }
 
 //ApplicationListener represents application listener
 type ApplicationListener interface {
-	OnAuthConfigUpdated()
 }

@@ -1,7 +1,9 @@
 package auth
 
 import (
-	"errors"
+	"core-building-block/core/model"
+
+	log "github.com/rokmetro/logging-library/loglib"
 )
 
 //Signature implementation of authType
@@ -9,9 +11,9 @@ type signatureAuthImpl struct {
 	auth *Auth
 }
 
-func (a *signatureAuthImpl) check(creds string, params string) (*UserAuth, error) {
+func (a *signatureAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
 	//TODO: Implement
-	return nil, errors.New("Unimplemented")
+	return nil, log.NewError(log.Unimplemented)
 }
 
 //initSignatureAuth initializes and registers a new stignature auth instance
@@ -20,7 +22,7 @@ func initSignatureAuth(auth *Auth) (*signatureAuthImpl, error) {
 
 	err := auth.registerAuthType("signature", signature)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return signature, nil

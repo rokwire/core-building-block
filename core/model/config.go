@@ -1,6 +1,17 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+
+	log "github.com/rokmetro/logging-library/loglib"
+)
+
+const (
+	//TypeGlobalConfig ...
+	TypeGlobalConfig log.LogData = "global config"
+	//TypeOrganizationConfig ...
+	TypeOrganizationConfig log.LogData = "org config"
+)
 
 //GlobalConfig represents global config for the system
 type GlobalConfig struct {
