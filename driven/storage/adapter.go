@@ -231,6 +231,7 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 	return nil
 }
 
+//GetOrganizations gets the organizations
 func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 
 	filter := bson.D{}
