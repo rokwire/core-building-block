@@ -154,38 +154,27 @@ func (h AdminApisHandler) updateOrganization(l *log.Log, r *http.Request) log.Ht
 
 //getOrganization gets organization
 func (h AdminApisHandler) getOrganization(l *log.Log, r *http.Request) log.HttpResponse {
-	//TODO
-	return l.HttpResponseSuccess()
-	/*params := mux.Vars(r)
+	params := mux.Vars(r)
 	ID := params["id"]
 	if len(ID) <= 0 {
-		http.Error(w, "id is required", http.StatusBadRequest)
-		return
+		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
-	getOrg, err := h.coreAPIs.Administration.AdmGetOrganization(ID)
+	org, err := h.coreAPIs.Administration.AdmGetOrganization(ID)
 	if err != nil {
-		l.Errorf("Error on geting an organization - %s\n", err.Error())
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
+		return l.HttpResponseErrorAction(log.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 	}
 
 	var responseData *Def.Organization
-	if getOrg != nil {
+	if org != nil {
 		//TODO use convertion..
-		responseData = &Def.Organization{Name: getOrg.Name,
-			RequiresOwnLogin: &getOrg.RequiresOwnLogin}
+		responseData = &Def.Organization{Id: org.ID, Type: Def.OrganizationType(org.Type)}
 	}
 	data, err := json.Marshal(responseData)
 	if err != nil {
-		l.Errorf("Error on marshal the config")
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
+		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeOrganization, nil, err, http.StatusInternalServerError, false)
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
-	*/
+	return l.HttpResponseSuccessJSON(data)
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance
