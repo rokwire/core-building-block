@@ -2,6 +2,7 @@ package core
 
 //application represents the core application code based on hexagonal architecture
 type application struct {
+	env     string
 	version string
 	build   string
 
@@ -13,8 +14,8 @@ type application struct {
 //start starts the core part of the application
 func (app *application) start() {
 	//set storage listener
-	storageListener := storageListenerImpl{app: app}
-	app.storage.SetStorageListener(&storageListener)
+	storageListener := StorageListener{app: app}
+	app.storage.RegisterStorageListener(&storageListener)
 }
 
 //addListener adds application listener
@@ -27,10 +28,6 @@ func (app *application) addListener(listener ApplicationListener) {
 
 func (app *application) notifyListeners(message string, data interface{}) {
 	go func() {
-		for _, listener := range app.listeners {
-			if message == "onAuthConfigUpdated" {
-				listener.OnAuthConfigUpdated()
-			}
-		}
+		// TODO
 	}()
 }

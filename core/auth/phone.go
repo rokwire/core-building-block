@@ -2,25 +2,26 @@ package auth
 
 import (
 	"context"
+	"core-building-block/core/model"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	log "github.com/rokmetro/logging-library/loglib"
 	"gopkg.in/go-playground/validator.v9"
 )
 
-// Verify service
-// const VerifyBaseURL = "https://verify.twilio.com"
-// const VerifyVersion = "v2"
-const servicesPathPart = "https://verify.twilio.com/v2/Services"
-const verificationsPathPart = "Verifications"
-const verificationCheckPart = "VerificationCheck"
+const (
+	servicesPathPart                     = "https://verify.twilio.com/v2/Services"
+	verificationsPathPart                = "Verifications"
+	verificationCheckPart                = "VerificationCheck"
+	typeVerificationResponse log.LogData = "phone verification response"
+	typeVerificationStatus   log.LogData = "phone verification staus"
+)
 
 // Phone implementation of authType
 type phoneAuthImpl struct {
@@ -74,7 +75,7 @@ type checkStatusResponse struct {
 	DateUpdated time.Time `json:"date_updated"`
 }
 
-func (a *phoneAuthImpl) check(creds string, params string) (*UserAuth, error) {
+func (a *phoneAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
 	var verificationCreds verificationParams
 	err := json.Unmarshal([]byte(creds), &verificationCreds)
 	if err != nil {
@@ -104,151 +105,79 @@ func (a *phoneAuthImpl) check(creds string, params string) (*UserAuth, error) {
 		// handle check verification
 		code := verificationCreds.Code
 		data.Add("code", code)
+		return a.checkVerification(verifyServiceID, phone, data, l)
+	}
 
-		checkResponse, err := a.checkVerification(verifyServiceID, data)
-		if err != nil {
-			log.Printf("error in phone check verification - %s", err)
-			return nil, err
-		}
+	// handle start verification
+	data.Add("channel", "sms")
+	return a.startVerification(verifyServiceID, phone, data, l)
+}
 
-		if checkResponse.To != phone {
-			log.Printf("expected To to be %s, got %s", phone, checkResponse.To)
-			return nil, fmt.Errorf("phone verify expected To to be %s, got %s", phone, checkResponse.To)
-		}
-		if checkResponse.Status != "approved" {
-			log.Printf("expected Status to be %s, got %s", "approved", checkResponse.Status)
-			return nil, fmt.Errorf("phone verify expected Status to be %s, got %s", "approved", checkResponse.Status)
-		}
+func (a *phoneAuthImpl) startVerification(verifyServiceID string, phone string, data url.Values, l *log.Log) (*model.UserAuth, error) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	resp, err := makeRequest(ctx, "POST", servicesPathPart+"/"+verifyServiceID+"/"+verificationsPathPart, data)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionSend, log.TypeRequest, &log.FieldArgs{"verification data": data}, err)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionRead, log.TypeResponseBody, nil, err)
+	}
 
-		userAuth := UserAuth{}
-		userAuth.UserID = checkResponse.Sid
-		userAuth.Phone = checkResponse.To
+	var verifyResult verifyPhoneResponse
+	err = json.Unmarshal(body, &verifyResult)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionUnmarshal, typeVerificationResponse, nil, err)
+	}
 
-		return &userAuth, nil
-
-	} else {
-		// handle start verification
-		data.Add("channel", "sms")
-
-		verifyResponse, err := a.startVerification(verifyServiceID, data)
-		if err != nil {
-			log.Printf("error starting phone verification - %s", err)
-			return nil, err
-		}
-		if verifyResponse.To != phone {
-			log.Printf("expected To to be %s, got %s", phone, verifyResponse.To)
-			return nil, fmt.Errorf("phone verify expected To to be %s, got %s", phone, verifyResponse.To)
-		}
-		if verifyResponse.Status != "pending" {
-			log.Printf("expected Status to be %s, got %s", "pending", verifyResponse.Status)
-			return nil, fmt.Errorf("phone verify expected Status to be %s, got %s", "pending", verifyResponse.Status)
-		}
-		if verifyResponse.Channel != "sms" {
-			log.Printf("expected Channel to be %s, got %s", "sms", verifyResponse.Channel)
-			return nil, fmt.Errorf("phone verify expected Channel to be %s, got %s", "sms", verifyResponse.Channel)
-		}
-		if verifyResponse.Sid == "" {
-			log.Println("expected Sid to be non-empty")
-			return nil, errors.New("phone verify expected Sid to be non-empty")
-		}
+	if verifyResult.To != phone {
+		return nil, log.DataError(log.StatusInvalid, log.TypeString, &log.FieldArgs{"phone verify To expected to be": phone, " but got ": verifyResult.To})
+	}
+	if verifyResult.Status != "pending" {
+		return nil, log.DataError(log.StatusInvalid, typeVerificationStatus, &log.FieldArgs{"check verify response status should be approved, but got ": verifyResult.Status})
+	}
+	if verifyResult.Sid == "" {
+		return nil, log.DataError(log.StatusInvalid, typeVerificationStatus, &log.FieldArgs{"check verify response sid should be specified, but got ": verifyResult.Status})
 	}
 
 	return nil, nil
 }
 
-func (a *phoneAuthImpl) startVerification(verifyServiceID string, data url.Values) (*verifyPhoneResponse, error) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	resp, err := makeRequest(ctx, "POST", servicesPathPart+"/"+verifyServiceID+"/"+verificationsPathPart, data)
-	if err != nil {
-		log.Printf("error creating phone verification services - %s", err.Error())
-		// return fmt.Errorf("error creating phone verification service - %s", err.Error())
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Printf("error reading the body data for starting verification - %s", err)
-		return nil, err
-	}
-
-	var verifyResult verifyPhoneResponse
-	err = json.Unmarshal(body, &verifyResult)
-	if err != nil {
-		log.Printf("error converting data for starting the verification - %s", err)
-		return nil, err
-	}
-
-	return &verifyResult, nil
-}
-
-func (a *phoneAuthImpl) fetchVerification(verifyServiceID string, sid string) (*verifyPhoneResponse, error) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	resp, err := makeRequest(ctx, "GET", servicesPathPart+"/"+verifyServiceID+"/"+verificationsPathPart+"/"+sid, nil)
-	if err != nil {
-		log.Printf("error fetching phone verification - %s", err.Error())
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Printf("error reading the body data for fetching verification - %s", err)
-	}
-
-	var verifyResult verifyPhoneResponse
-	err = json.Unmarshal(body, &verifyResult)
-	if err != nil {
-		log.Printf("error converting data for fetching the verification - %s", err)
-		return nil, err
-	}
-
-	return &verifyResult, nil
-}
-
-func (a *phoneAuthImpl) updateVerification(verifyServiceID string, sid string) (*verifyPhoneResponse, error) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	resp, err := makeRequest(ctx, "PUT", servicesPathPart+"/"+verifyServiceID+"/"+verificationsPathPart+"/"+sid, nil)
-	if err != nil {
-		log.Printf("error updating phone verification - %s", err.Error())
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Printf("error reading the body data for updating verification - %s", err)
-	}
-
-	var verifyResult verifyPhoneResponse
-	err = json.Unmarshal(body, &verifyResult)
-	if err != nil {
-		log.Printf("error converting data for updating the verification - %s", err)
-		return nil, err
-	}
-
-	return &verifyResult, nil
-}
-
-func (a *phoneAuthImpl) checkVerification(verifyServiceID string, data url.Values) (*checkStatusResponse, error) {
+func (a *phoneAuthImpl) checkVerification(verifyServiceID string, phone string, data url.Values, l *log.Log) (*model.UserAuth, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	resp, err := makeRequest(ctx, "POST", servicesPathPart+"/"+verifyServiceID+"/"+verificationCheckPart, data)
 	if err != nil {
-		log.Printf("error checking phone verification - %s", err.Error())
+		return nil, log.WrapActionError(log.ActionSend, log.TypeRequest, nil, err)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("error reading the body data for checking verification - %s", err)
+		return nil, log.WrapActionError(log.ActionRead, log.TypeResponseBody, nil, err)
 	}
 
-	var checkResult checkStatusResponse
-	err = json.Unmarshal(body, &checkResult)
+	var checkResponse checkStatusResponse
+	err = json.Unmarshal(body, &checkResponse)
 	if err != nil {
-		log.Printf("error converting data for checking the verification - %s", err)
-		return nil, err
+		return nil, log.WrapActionError(log.ActionUnmarshal, typeVerificationResponse, nil, err)
 	}
 
-	return &checkResult, nil
+	if checkResponse.To != phone {
+		return nil, log.DataError(log.StatusInvalid, log.TypeString, &log.FieldArgs{"phone verify To expected to be": phone, " but got ": checkResponse.To})
+		// return nil, fmt.Errorf("phone verify expected To to be %s, got %s", phone, checkResponse.To)
+	}
+	if checkResponse.Status != "approved" {
+		return nil, log.DataError(log.StatusInvalid, typeVerificationStatus, &log.FieldArgs{"check verify response status should be approved, but got ": checkResponse.Status})
+		// return nil, fmt.Errorf("phone verify expected Status to be %s, got %s", "approved", checkResponse.Status)
+	}
+
+	userAuth := model.UserAuth{}
+	userAuth.UserID = checkResponse.Sid
+	userAuth.Phone = checkResponse.To
+
+	return &userAuth, nil
 }
 
 func (a *phoneAuthImpl) getPhoneAuthConfig(orgID string, appID string) (*phoneAuthConfig, error) {
@@ -296,13 +225,13 @@ func makeRequest(ctx context.Context, method string, pathPart string, data url.V
 	}
 
 	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		log.Printf("makeRequest() -> error with response code - %d, response body - %s\n", resp.StatusCode, resp.Body)
-		// log.Printf("makeRequest() -> error with response body - %s", resp.Body)
-		return nil, errors.New("makeRequest() -> error with response code != 200")
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionRead, log.TypeRequestBody, nil, err)
 	}
-
+	if resp.StatusCode != 200 {
+		return nil, log.DataError(log.StatusInvalid, log.TypeResponse, &log.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
+	}
 	return resp, nil
 }
 
@@ -312,8 +241,7 @@ func initPhoneAuth(auth *Auth) (*phoneAuthImpl, error) {
 
 	err := auth.registerAuthType("phone", phone)
 	if err != nil {
-		log.Printf("error initializing phone auth - %s", err)
-		return nil, err
+		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return phone, nil

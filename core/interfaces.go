@@ -2,13 +2,13 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 
 	log "github.com/rokmetro/logging-library/loglib"
 )
 
 //Services exposes APIs for the driver adapters
 type Services interface {
-	SerGetVersion(l *log.Log) string
 	SerGetAuthTest(l *log.Log) string
 	SerGetCommonTest(l *log.Log) string
 }
@@ -38,7 +38,7 @@ type BBs interface {
 
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
-	SetStorageListener(storageListener StorageListener)
+	RegisterStorageListener(storageListener storage.Listener)
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	GetGlobalConfig() (*model.GlobalConfig, error)
@@ -49,19 +49,11 @@ type Storage interface {
 }
 
 //StorageListener listenes for change data storage events
-type StorageListener interface {
-	OnAuthConfigUpdated()
-}
-
-type storageListenerImpl struct {
+type StorageListener struct {
 	app *application
-}
-
-func (a *storageListenerImpl) OnAuthConfigUpdated() {
-	a.app.notifyListeners("onAuthConfigUpdated", nil)
+	storage.DefaultListenerImpl
 }
 
 //ApplicationListener represents application listener
 type ApplicationListener interface {
-	OnAuthConfigUpdated()
 }
