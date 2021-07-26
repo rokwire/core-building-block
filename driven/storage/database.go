@@ -12,17 +12,19 @@ import (
 )
 
 type database struct {
-	mongoDBAuth  string
-	mongoDBName  string
-	mongoTimeout time.Duration
+	mongoDBAuth     string
+	mongoDBName     string
+	mongoTimeout    time.Duration
+	keysMongoDBName string
 
 	db       *mongo.Database
 	dbClient *mongo.Client
 
-	authConfigs   *collectionWrapper
-	globalConfig  *collectionWrapper
-	organizations *collectionWrapper
-	serviceRegs   *collectionWrapper
+	firebaseAdminCreds *collectionWrapper
+	authConfigs        *collectionWrapper
+	globalConfig       *collectionWrapper
+	organizations      *collectionWrapper
+	serviceRegs        *collectionWrapper
 
 	listeners []Listener
 }
@@ -49,6 +51,7 @@ func (m *database) start() error {
 
 	//apply checks
 	db := client.Database(m.mongoDBName)
+	keysDB := client.Database(m.keysMongoDBName)
 
 	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
 	err = m.applyGlobalConfigChecks(globalConfig)
@@ -56,6 +59,8 @@ func (m *database) start() error {
 		return err
 	}
 
+	firebaseAdminCreds := &collectionWrapper{database: m, coll: keysDB.Collection("firebase_admin_creds")}
+	err = m.applyFirebaseCredsChecks(firebaseAdminCreds)
 	organizations := &collectionWrapper{database: m, coll: db.Collection("organizations")}
 	err = m.applyOrganizationsChecks(organizations)
 	if err != nil {
@@ -104,6 +109,16 @@ func (m *database) applyGlobalConfigChecks(configs *collectionWrapper) error {
 	log.Println("apply global config checks.....")
 
 	log.Println("global config checks passed")
+	return nil
+}
+
+func (m *database) applyFirebaseCredsChecks(firebaseCreds *collectionWrapper) error {
+	// Add client_id index
+	err := firebaseCreds.AddIndex(bson.D{primitive.E{Key: "clientID", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+	log.Println("FirebaseCreds check passed")
 	return nil
 }
 

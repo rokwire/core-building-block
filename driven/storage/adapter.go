@@ -56,11 +56,6 @@ func (sa *Adapter) RegisterStorageListener(storageListener Listener) {
 	sa.db.listeners = append(sa.db.listeners, storageListener)
 }
 
-//ReadTODO TODO TODO
-func (sa *Adapter) ReadTODO() error {
-	return nil
-}
-
 //FindAuthConfig finds the auth document from DB by orgID and appID
 func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error) {
 	errFields := &log.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": authType}
@@ -99,6 +94,22 @@ func (sa *Adapter) CreateGlobalConfig(setting string) (*model.GlobalConfig, erro
 		return nil, log.WrapActionError(log.ActionInsert, model.TypeGlobalConfig, nil, err)
 	}
 	return &globalConfig, nil
+}
+
+//GetFirebaseAdminCreds finds the Firebase cred document from DB by clientID
+func (sa *Adapter) GetFirebaseAdminCreds(clientID string) (*model.FirebaseAdminCreds, error) {
+	filter := bson.D{primitive.E{Key: "clientID", Value: clientID}}
+	var result []*model.FirebaseAdminCreds
+	err := sa.db.firebaseAdminCreds.Find(filter, &result, nil)
+	if err != nil {
+		return nil, err
+	}
+	if result == nil || len(result) == 0 {
+		//not found
+		// log.Info("no Firebase creds found for the given clientID")
+		return nil, nil
+	}
+	return result[0], nil
 }
 
 //GetGlobalConfig give config
