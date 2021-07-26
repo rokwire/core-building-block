@@ -8,8 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"gopkg.in/go-playground/validator.v9"
-
 	"github.com/gorilla/mux"
 	log "github.com/rokmetro/logging-library/loglib"
 )
@@ -44,13 +42,6 @@ func (h AdminApisHandler) createGlobalConfig(l *log.Log, r *http.Request) log.Ht
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
-	}
-
-	//validate
-	validate := validator.New()
-	err = validate.Struct(requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionValidate, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
 	}
 
 	_, err = h.coreAPIs.Administration.AdmCreateGlobalConfig(requestData.Setting)
@@ -93,12 +84,6 @@ func (h AdminApisHandler) updateGlobalConfig(l *log.Log, r *http.Request) log.Ht
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
 	}
 
-	//validate
-	validate := validator.New()
-	err = validate.Struct(updateConfig)
-	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionValidate, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
-	}
 	setting := updateConfig.Setting
 
 	err = h.coreAPIs.Administration.AdmUpdateGlobalConfig(setting)
@@ -119,13 +104,6 @@ func (h AdminApisHandler) createOrganization(l *log.Log, r *http.Request) log.Ht
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
-	}
-
-	//validate
-	validate := validator.New()
-	err = validate.Struct(requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionValidate, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
 	}
 
 	name := requestData.Name
@@ -158,13 +136,6 @@ func (h AdminApisHandler) updateOrganization(l *log.Log, r *http.Request) log.Ht
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
-	}
-
-	//validate
-	validate := validator.New()
-	err = validate.Struct(requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionValidate, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
 	}
 
 	name := requestData.Name
