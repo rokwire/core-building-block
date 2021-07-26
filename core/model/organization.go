@@ -7,8 +7,11 @@ import (
 )
 
 const (
-	TypeOrganization              log.LogData = "organization"
-	TypeOrganizationMembership    log.LogData = "org membership"
+	//TypeOrganization ...
+	TypeOrganization log.LogData = "organization"
+	//TypeOrganizationMembership ...
+	TypeOrganizationMembership log.LogData = "org membership"
+	//TypeOrganizationUserRelations ...
 	TypeOrganizationUserRelations log.LogData = "org user relations"
 )
 

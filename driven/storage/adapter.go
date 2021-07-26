@@ -178,6 +178,7 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 	return &resOrg, nil
 }
 
+//GetOrganization gets organization
 func (sa *Adapter) GetOrganization(ID string) (*model.Organization, error) {
 
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
@@ -303,7 +304,7 @@ func (sa *Adapter) SaveServiceReg(reg *authservice.ServiceReg) error {
 	return nil
 }
 
-//SaveServiceReg deletes the service registration from storage
+//DeleteServiceReg deletes the service registration from storage
 func (sa *Adapter) DeleteServiceReg(serviceID string) error {
 	filter := bson.M{"service_id": serviceID}
 	result, err := sa.db.serviceRegs.DeleteOne(filter, nil)
@@ -347,7 +348,11 @@ type Listener interface {
 	OnServiceRegsUpdated()
 }
 
+//DefaultListenerImpl default listener implementation
 type DefaultListenerImpl struct{}
 
-func (d *DefaultListenerImpl) OnAuthConfigUpdated()  {}
+//OnAuthConfigUpdated notifies auth configs have been updated
+func (d *DefaultListenerImpl) OnAuthConfigUpdated() {}
+
+//OnServiceRegsUpdated notifies services regs have been updated
 func (d *DefaultListenerImpl) OnServiceRegsUpdated() {}

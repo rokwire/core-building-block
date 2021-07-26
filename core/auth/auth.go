@@ -23,7 +23,7 @@ const (
 	authKeyAlg    string = "RS256"
 
 	typeAuthType log.LogData = "auth type"
-	TypeAuth     log.LogData = "auth"
+	typeAuth     log.LogData = "auth"
 )
 
 //Interface for authentication mechanisms
