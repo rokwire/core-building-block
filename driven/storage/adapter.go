@@ -184,7 +184,7 @@ func (sa *Adapter) GetOrganization(ID string) (*model.Organization, error) {
 	var org organization
 	err := sa.db.organizations.FindOne(filter, &org, nil)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.ActionFind, model.TypeOrganization, nil, err)
 	}
 
 	//return the correct type

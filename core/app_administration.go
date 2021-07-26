@@ -209,12 +209,12 @@ func (app *application) admCreateOrganization(name string, requestType string, r
 }
 
 func (app *application) admGetOrganization(ID string) (*model.Organization, error) {
-	getOrganization, err := app.storage.GetOrganization(ID)
+	organization, err := app.storage.GetOrganization(ID)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.ActionGet, model.TypeOrganization, nil, err)
 	}
 
-	return getOrganization, nil
+	return organization, nil
 }
 
 func (app *application) admUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
