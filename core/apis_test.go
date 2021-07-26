@@ -117,6 +117,19 @@ func TestCreateApplication(t *testing.T) {
 		t.Error("application is nil")
 		return
 	}
+
+	storage2 := genmocks.Storage{}
+	versions = []string{"v1.1.0", "v1.2.0"}
+	storage2.On("CreateApplication", "name", &versions).Return(nil, errors.New("error occured"))
+
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage2, nil)
+
+	_, err := app.Administration.AdmCreateApplication("name", &versions)
+	if err == nil {
+		t.Error("we are expecting error")
+		return
+	}
+	assert.Equal(t, err.Error(), "error occured", "error is different")
 }
 
 ///
