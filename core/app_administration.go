@@ -220,7 +220,7 @@ func (app *application) admGetOrganization(ID string) (*model.Organization, erro
 func (app *application) admGetOrganizations() ([]model.Organization, error) {
 	getOrganization, err := app.storage.GetOrganizations()
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.ActionGet, model.TypeOrganization, nil, err)
 	}
 
 	return getOrganization, nil

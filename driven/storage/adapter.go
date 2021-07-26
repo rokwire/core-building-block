@@ -237,7 +237,7 @@ func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 	var result []model.Organization
 	err := sa.db.organizations.Find(filter, &result, nil)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.ActionFind, model.TypeOrganization, nil, err)
 	}
 
 	var resultList []model.Organization
