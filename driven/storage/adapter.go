@@ -231,6 +231,27 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 	return nil
 }
 
+//GetOrganizations gets the organizations
+func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
+
+	filter := bson.D{}
+	var result []model.Organization
+	err := sa.db.organizations.Find(filter, &result, nil)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionFind, model.TypeOrganization, nil, err)
+	}
+
+	var resultList []model.Organization
+	if result != nil {
+		for _, current := range result {
+			item := &model.Organization{ID: current.ID, Name: current.Name, Type: current.Type, RequiresOwnLogin: current.RequiresOwnLogin,
+				LoginTypes: current.LoginTypes, Config: current.Config}
+			resultList = append(resultList, *item)
+		}
+	}
+	return resultList, nil
+}
+
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records

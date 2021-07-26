@@ -176,6 +176,25 @@ func (h AdminApisHandler) getOrganization(l *log.Log, r *http.Request) log.HttpR
 	return l.HttpResponseSuccessJSON(data)
 }
 
+//getOrganizations gets organizations
+func (h AdminApisHandler) getOrganizations(l *log.Log, r *http.Request) log.HttpResponse {
+	organizations, err := h.coreAPIs.Administration.AdmGetOrganizations()
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+	var response []Def.Organization
+	for _, organization := range organizations {
+		r := organizationToDef(&organization)
+		response = append(response, *r)
+	}
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeOrganization, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
 func (h AdminApisHandler) getServiceRegistrations(l *log.Log, r *http.Request) log.HttpResponse {
 	serviceIDsParam := r.URL.Query().Get("ids")
 	if serviceIDsParam == "" {
