@@ -7,8 +7,11 @@ import (
 )
 
 const (
-	TypeOrganization              log.LogData = "organization"
-	TypeOrganizationMembership    log.LogData = "org membership"
+	//TypeOrganization ...
+	TypeOrganization log.LogData = "organization"
+	//TypeOrganizationMembership ...
+	TypeOrganizationMembership log.LogData = "org membership"
+	//TypeOrganizationUserRelations ...
 	TypeOrganizationUserRelations log.LogData = "org user relations"
 )
 
@@ -16,17 +19,17 @@ const (
 
 //Organization represents organization entity
 type Organization struct {
-	ID               string
-	Name             string
-	Type             string //micro small medium large - based on the users count
-	RequiresOwnLogin bool   //Illinois orgnization requires own login(oidc) but Champaign organization does not requires
+	ID               string `bson:"_id"`
+	Name             string `bson:"name"`
+	Type             string `bson:"type"`               //micro small medium large - based on the users count
+	RequiresOwnLogin bool   `bson:"requires_own_login"` //Illinois orgnization requires own login(oidc) but Champaign organization does not requires
 
 	//what login type/s are supported for the organization. It will be empty for Champaign and "OIDC" for university of Illinois
-	LoginTypes []string
+	LoginTypes []string `bson:"login_types"`
 
-	Config OrganizationConfig
+	Config OrganizationConfig `bson:"config"`
 
-	Applications []Application
+	Applications []Application `bson:"applications"`
 }
 
 func (c Organization) String() string {
@@ -45,7 +48,7 @@ type OrganizationMembership struct {
 	//for Champaign org - this will be empty or populated with data if there is
 	OrgUserData map[string]interface{}
 
-	Permissions []OrganizationPermission
+	Permissions []string
 	Roles       []OrganizationRole
 
 	Groups []OrganizationGroup
@@ -76,9 +79,9 @@ func (cur OrganizationUserRelations) String() string {
 
 //Application represents users application entity - safer community, uuic, etc
 type Application struct {
-	ID       string
-	Name     string   //safer community mobile, safer community web, uuic mobile, uuic web, uuic admin etc
-	Versions []string //1.1.0, 1.2.0 etc
+	ID       string   `bson:"_id"`
+	Name     string   `bson:"name"`     //safer community mobile, safer community web, uuic mobile, uuic web, uuic admin etc
+	Versions []string `bson:"versions"` //1.1.0, 1.2.0 etc
 
-	Organizations []Organization
+	Organizations []Organization `bson:"organizations"`
 }

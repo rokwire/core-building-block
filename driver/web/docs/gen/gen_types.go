@@ -25,9 +25,9 @@ type GlobalConfig struct {
 type Organization struct {
 	Config           *OrganizationConfig `json:"config,omitempty"`
 	Id               string              `json:"id"`
-	LoginTypes       *[]string           `json:"login-types,omitempty"`
+	LoginTypes       *[]string           `json:"login_types,omitempty"`
 	Name             string              `json:"name"`
-	RequiresOwnLogin *bool               `json:"requires-own-login,omitempty"`
+	RequiresOwnLogin *bool               `json:"requires_own_login,omitempty"`
 	Type             OrganizationType    `json:"type"`
 }
 
@@ -44,6 +44,19 @@ type OrganizationConfig struct {
 	Id *string `json:"id,omitempty"`
 }
 
+// PubKey defines model for PubKey.
+type PubKey struct {
+	Alg    string `json:"alg"`
+	KeyPem string `json:"key_pem"`
+}
+
+// ServiceReg defines model for ServiceReg.
+type ServiceReg struct {
+	Host      string  `json:"host"`
+	PubKey    *PubKey `json:"pub_key,omitempty"`
+	ServiceId string  `json:"service_id"`
+}
+
 // PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
 type PostAdminGlobalConfigJSONBody GlobalConfig
 
@@ -56,6 +69,33 @@ type PostAdminOrganizationsJSONBody Organization
 // PutAdminOrganizationsIdJSONBody defines parameters for PutAdminOrganizationsId.
 type PutAdminOrganizationsIdJSONBody Organization
 
+// DeleteAdminServiceRegsParams defines parameters for DeleteAdminServiceRegs.
+type DeleteAdminServiceRegsParams struct {
+
+	// The service ID of the registration to delete
+	Id string `json:"id"`
+}
+
+// GetAdminServiceRegsParams defines parameters for GetAdminServiceRegs.
+type GetAdminServiceRegsParams struct {
+
+	// A comma-separated list of service IDs to return registrations for
+	Ids string `json:"ids"`
+}
+
+// PostAdminServiceRegsJSONBody defines parameters for PostAdminServiceRegs.
+type PostAdminServiceRegsJSONBody ServiceReg
+
+// PutAdminServiceRegsJSONBody defines parameters for PutAdminServiceRegs.
+type PutAdminServiceRegsJSONBody ServiceReg
+
+// GetServicesAuthServiceRegsParams defines parameters for GetServicesAuthServiceRegs.
+type GetServicesAuthServiceRegsParams struct {
+
+	// A comma-separated list of service IDs to return registrations for
+	Ids string `json:"ids"`
+}
+
 // PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
 type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody
 
@@ -67,3 +107,9 @@ type PostAdminOrganizationsJSONRequestBody PostAdminOrganizationsJSONBody
 
 // PutAdminOrganizationsIdJSONRequestBody defines body for PutAdminOrganizationsId for application/json ContentType.
 type PutAdminOrganizationsIdJSONRequestBody PutAdminOrganizationsIdJSONBody
+
+// PostAdminServiceRegsJSONRequestBody defines body for PostAdminServiceRegs for application/json ContentType.
+type PostAdminServiceRegsJSONRequestBody PostAdminServiceRegsJSONBody
+
+// PutAdminServiceRegsJSONRequestBody defines body for PutAdminServiceRegs for application/json ContentType.
+type PutAdminServiceRegsJSONRequestBody PutAdminServiceRegsJSONBody
