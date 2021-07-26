@@ -17,9 +17,9 @@ properties:
       - medium
       - large
       - huge
-  requires-own-login:
+  requires_own_login:
     type: boolean
-  login-types:
+  login_types:
     type: array
     items:
       type: string

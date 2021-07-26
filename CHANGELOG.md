@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Expose admin API which gets an organization [#60](https://github.com/rokwire/core-building-block/issues/60)
+- Expose service registration handlers [#75](https://github.com/rokwire/core-building-block/issues/75)
 - Split OpenAPI yaml file [#84](https://github.com/rokwire/core-building-block/issues/84)
 - Standardize logging using logging library [#78](https://github.com/rokwire/core-building-block/issues/78)
 - Set up API documentation [#8](https://github.com/rokwire/core-building-block/issues/8)
