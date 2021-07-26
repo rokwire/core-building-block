@@ -181,11 +181,16 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 func (sa *Adapter) GetOrganization(ID string) (*model.Organization, error) {
 
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	var org organization
-	err := sa.db.organizations.FindOne(filter, &org, nil)
+	var result []organization
+	err := sa.db.organizations.Find(filter, &result, nil)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionFind, model.TypeOrganization, nil, err)
 	}
+	if len(result) == 0 {
+		//no record
+		return nil, nil
+	}
+	org := result[0]
 
 	//return the correct type
 	getOrgConfig := org.Config
@@ -194,7 +199,6 @@ func (sa *Adapter) GetOrganization(ID string) (*model.Organization, error) {
 	getResOrg := model.Organization{ID: org.ID, Name: org.Name, Type: org.Type,
 		RequiresOwnLogin: org.RequiresOwnLogin, LoginTypes: org.LoginTypes, Config: getResOrgConfig}
 	return &getResOrg, nil
-
 }
 
 //UpdateOrganization updates an organization

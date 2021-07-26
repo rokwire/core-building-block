@@ -164,11 +164,11 @@ func (h AdminApisHandler) getOrganization(l *log.Log, r *http.Request) log.HttpR
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 	}
-
-	var responseData *Def.Organization
-	if org != nil {
-		responseData = organizationToDef(org)
+	if org == nil {
+		return l.HttpResponseErrorData(log.StatusFound, log.TypeResponse, log.StringArgs("no organization"), nil, http.StatusNotFound, false)
 	}
+
+	responseData := organizationToDef(org)
 	data, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeOrganization, nil, err, http.StatusInternalServerError, false)
