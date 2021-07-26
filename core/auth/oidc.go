@@ -48,7 +48,7 @@ type oidcAuthConfig struct {
 }
 
 type oidcCreds struct {
-	Sub string `json:"sub" validate:"required"`
+	Sub string `json:"sub" validate:"required" bson:"sub"`
 }
 
 type oidcBaseParams struct {
@@ -118,8 +118,8 @@ func (a *oidcAuthImpl) check(creds string, params string, l *log.Log) (*model.Us
 		if err != nil {
 			errFields := log.FieldArgs{"org_id": loginParams.OrgID, "app_id": loginParams.AppID, "type": authTypeOidc, "user_id": userAuth.UserID}
 			l.LogAction(log.Warn, log.StatusError, log.ActionFind, model.TypeAuthCred, &errFields)
-			newCreds, err := a.set(userAuth, loginParams.OrgID, loginParams.AppID)
-			userAuth.NewCreds = *newCreds
+			newCreds, err := a.setCredentials(userAuth, loginParams.OrgID, loginParams.AppID)
+			userAuth.NewCreds = newCreds
 			return userAuth, fmt.Errorf("no credentials found: %s", err.Error())
 		}
 		ok, err := a.validateUser(userAuth, credentials.Creds)
@@ -149,8 +149,8 @@ func (a *oidcAuthImpl) check(creds string, params string, l *log.Log) (*model.Us
 		if err != nil {
 			errFields := log.FieldArgs{"org_id": refreshParams.OrgID, "app_id": refreshParams.AppID, "type": authTypeOidc, "user_id": userAuth.UserID}
 			l.LogAction(log.Warn, log.StatusError, log.ActionFind, model.TypeAuthCred, &errFields)
-			newCreds, err := a.set(userAuth, refreshParams.OrgID, refreshParams.AppID)
-			userAuth.NewCreds = *newCreds
+			newCreds, err := a.setCredentials(userAuth, refreshParams.OrgID, refreshParams.AppID)
+			userAuth.NewCreds = newCreds
 			return userAuth, fmt.Errorf("no credentials found: %s", err.Error())
 		}
 		ok, err := a.validateUser(userAuth, credentials.Creds)
@@ -186,24 +186,13 @@ func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials interf
 	return true, nil
 }
 
-func (a *oidcAuthImpl) set(userAuth *model.UserAuth, orgID string, appID string) (*model.AuthCred, error) {
+func (a *oidcAuthImpl) setCredentials(userAuth *model.UserAuth, orgID string, appID string) (interface{}, error) {
 	if userAuth == nil {
 		return nil, log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeUserAuth))
 	}
 
-	creds := map[string]interface{}{
-		"sub": userAuth.Sub,
-	}
-
-	authCred := model.AuthCred{
-		OrgID:  orgID,
-		AppID:  appID,
-		Type:   authTypeOidc,
-		UserID: userAuth.UserID,
-		Creds:  creds,
-	}
-
-	return &authCred, nil
+	creds := oidcCreds{Sub: userAuth.Sub}
+	return creds, nil
 }
 
 func (a *oidcAuthImpl) mobileLoginURL(params string, l *log.Log) (string, error) {

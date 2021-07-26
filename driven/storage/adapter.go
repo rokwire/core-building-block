@@ -237,7 +237,7 @@ func (sa *Adapter) findUser(key string, id string) (*model.User, error) {
 }
 
 //InsertUser inserts a user
-func (sa *Adapter) InsertUser(userAuth *model.UserAuth) (*model.User, error) {
+func (sa *Adapter) InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred) (*model.User, error) {
 	if userAuth == nil {
 		return nil, log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeUserAuth))
 	}
@@ -248,10 +248,20 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth) (*model.User, error) {
 	}
 	newUser := rawUser{ID: newID.String()}
 
-	newAccount := model.UserAccount{Email: userAuth.Email, Phone: userAuth.Phone}
+	accountID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("account_id"))
+	}
+	newAccount := model.UserAccount{ID: accountID.String(), Email: userAuth.Email, Phone: userAuth.Phone}
 	newUser.Account = newAccount
-	newProfile := model.UserProfile{FirstName: userAuth.FirstName, LastName: userAuth.LastName, Photo: string(userAuth.Picture)}
+
+	profileID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("profile_id"))
+	}
+	newProfile := model.UserProfile{ID: profileID.String(), FirstName: userAuth.FirstName, LastName: userAuth.LastName, Photo: string(userAuth.Picture)}
 	newUser.Profile = newProfile
+
 	newUser.Permissions = []string{}
 	newUser.Roles = []string{}
 	newUser.Groups = []string{}
@@ -299,7 +309,8 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth) (*model.User, error) {
 			return log.WrapActionError(log.ActionInsert, model.TypeUser, nil, err)
 		}
 
-		err = sa.InsertCredentials(&userAuth.NewCreds, sessionContext)
+		authCred.AccountID = accountID.String()
+		err = sa.InsertCredentials(authCred, sessionContext)
 		if err != nil {
 			return log.WrapDataError(log.StatusInvalid, model.TypeAuthCred, &log.FieldArgs{"user_id": userAuth.UserID, "account_id": userAuth.AccountID}, err)
 		}

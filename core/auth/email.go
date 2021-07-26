@@ -16,10 +16,6 @@ func (a *emailAuthImpl) check(creds string, params string, l *log.Log) (*model.U
 	return nil, log.NewError("Unimplemented")
 }
 
-func (a *emailAuthImpl) set(userAuth *model.UserAuth, orgID string, appID string) (*model.AuthCred, error) {
-	return nil, log.NewError(log.Unimplemented)
-}
-
 //initEmailAuth initializes and registers a new email auth instance
 func initEmailAuth(auth *Auth) (*emailAuthImpl, error) {
 	email := &emailAuthImpl{auth: auth}

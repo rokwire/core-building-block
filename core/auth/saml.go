@@ -16,10 +16,6 @@ func (a *samlAuthImpl) check(creds string, params string, l *log.Log) (*model.Us
 	return nil, log.NewError(log.Unimplemented)
 }
 
-func (a *samlAuthImpl) set(userAuth *model.UserAuth, orgID string, appID string) (*model.AuthCred, error) {
-	return nil, log.NewError(log.Unimplemented)
-}
-
 //initSamlAuth initializes and registers a new SAML auth instance
 func initSamlAuth(auth *Auth) (*samlAuthImpl, error) {
 	saml := &samlAuthImpl{auth: auth}

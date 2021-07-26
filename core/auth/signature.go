@@ -16,10 +16,6 @@ func (a *signatureAuthImpl) check(creds string, params string, l *log.Log) (*mod
 	return nil, log.NewError(log.Unimplemented)
 }
 
-func (a *signatureAuthImpl) set(userAuth *model.UserAuth, orgID string, appID string) (*model.AuthCred, error) {
-	return nil, log.NewError(log.Unimplemented)
-}
-
 //initSignatureAuth initializes and registers a new stignature auth instance
 func initSignatureAuth(auth *Auth) (*signatureAuthImpl, error) {
 	signature := &signatureAuthImpl{auth: auth}
