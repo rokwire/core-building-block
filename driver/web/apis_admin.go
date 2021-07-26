@@ -167,8 +167,7 @@ func (h AdminApisHandler) getOrganization(l *log.Log, r *http.Request) log.HttpR
 
 	var responseData *Def.Organization
 	if org != nil {
-		//TODO use convertion..
-		responseData = &Def.Organization{Id: org.ID, Type: Def.OrganizationType(org.Type)}
+		responseData = organizationToDef(org)
 	}
 	data, err := json.Marshal(responseData)
 	if err != nil {
