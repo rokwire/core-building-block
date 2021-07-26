@@ -106,6 +106,20 @@ func TestEncGetTest(t *testing.T) {
 	assert.Equal(t, got, want, "result is different")
 }
 
+func TestCreateApplication(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("CreateApplication", "name", "versions").Return(&core_model.Application{Name: "name"}, nil)
+
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	application, _ := app.Administration.AdmCreateApplication("name", nil)
+	if application == nil {
+		t.Error("application is nil")
+		return
+	}
+
+}
+
 ///
 
 //BBs
