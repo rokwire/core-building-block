@@ -84,6 +84,29 @@ func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	return r0, r1
 }
 
+// GetOrganization provides a mock function with given fields: ID
+func (_m *Storage) GetOrganization(ID string) (*model.Organization, error) {
+	ret := _m.Called(ID)
+
+	var r0 *model.Organization
+	if rf, ok := ret.Get(0).(func(string) *model.Organization); ok {
+		r0 = rf(ID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Organization)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(ID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RegisterStorageListener provides a mock function with given fields: storageListener
 func (_m *Storage) RegisterStorageListener(storageListener storage.Listener) {
 	_m.Called(storageListener)

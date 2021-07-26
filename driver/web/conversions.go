@@ -1,6 +1,7 @@
 package web
 
 import (
+	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 
 	"github.com/rokmetro/auth-library/authservice"
@@ -50,4 +51,14 @@ func serviceRegListToDef(items []authservice.ServiceReg) []Def.ServiceReg {
 		}
 	}
 	return out
+}
+
+func organizationToDef(item *model.Organization) *Def.Organization {
+	if item == nil {
+		return nil
+	}
+
+	orgConfig := Def.OrganizationConfig{Id: &item.Config.ID, Domains: &item.Config.Domains}
+	return &Def.Organization{Id: item.ID, Name: item.Name, LoginTypes: &item.LoginTypes,
+		RequiresOwnLogin: &item.RequiresOwnLogin, Config: &orgConfig, Type: Def.OrganizationType(item.Type)}
 }

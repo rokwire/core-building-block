@@ -6,6 +6,7 @@ import (
 
 	core "core-building-block/core"
 	genmocks "core-building-block/core/mocks"
+	"core-building-block/core/model"
 	core_model "core-building-block/core/model"
 
 	log "github.com/rokmetro/logging-library/loglib"
@@ -121,3 +122,26 @@ func TestBBsGetTest(t *testing.T) {
 }
 
 ///
+func TestAdmGetOrganization(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("GetOrganization", "_id").Return(&model.Organization{ID: "_id"}, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	getOrganization, _ := app.Administration.AdmGetOrganization("_id")
+
+	if getOrganization == nil {
+		t.Errorf("Error on geting the organization")
+	}
+	// second case error
+	storage2 := genmocks.Storage{}
+	storage2.On("GetOrganization").Return(&model.Organization{ID: "_id"}, nil)
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	err, _ := app.Administration.AdmGetOrganization("_id")
+
+	if err == nil {
+		t.Error("We are expecting error")
+		return
+	}
+
+}

@@ -153,6 +153,29 @@ func (h AdminApisHandler) updateOrganization(l *log.Log, r *http.Request) log.Ht
 	return l.HttpResponseSuccess()
 }
 
+//getOrganization gets organization
+func (h AdminApisHandler) getOrganization(l *log.Log, r *http.Request) log.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+	org, err := h.coreAPIs.Administration.AdmGetOrganization(ID)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+	if org == nil {
+		return l.HttpResponseErrorData(log.StatusFound, log.TypeResponse, log.StringArgs("no organization"), nil, http.StatusNotFound, false)
+	}
+
+	responseData := organizationToDef(org)
+	data, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeOrganization, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
 func (h AdminApisHandler) getServiceRegistrations(l *log.Log, r *http.Request) log.HttpResponse {
 	serviceIDsParam := r.URL.Query().Get("ids")
 	if serviceIDsParam == "" {
