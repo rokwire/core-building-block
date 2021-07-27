@@ -31,37 +31,126 @@ paths:
       summary: Test API..
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Echooo
-  /services/auth/service-regs:
-    get:
+  /services/auth/login:
+    post:
       tags:
         - Auth
-      summary: Get service registrations
+      summary: Login
       description: |
-        Returns service registration records
-      parameters:
-        - name: ids
-          in: query
-          description: A comma-separated list of service IDs to return registrations for
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
+        Login using credentials to retrieve access token, refresh token, and user data
+      requestBody:
+        description: |
+          User credential details and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLoginRequest'
+            examples:
+              email:
+                summary: Email login
+                value: |
+                  {
+                    "auth_type": "email",
+                    "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
+                    "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                    "creds": {
+                      "email": "test@test.com", 
+                      "password": "test12345"
+                    }
+                  }
+              phone:
+                summary: Phone login
+                value: |
+                  {
+                    "auth_type": "phone",
+                    "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
+                    "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                    "creds": {
+                      "phone": "+12223334444", 
+                      "code": "123456"
+                    }
+                  }
+              oidc:
+                summary: OIDC login
+                value: |
+                  {
+                    "auth_type": "oidc",
+                    "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
+                    "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                    "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
+                    "params": {
+                      "redirect_uri": "https://redirect.example.com",
+                      "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                    }
+                  }
+        required: true
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ServiceReg'
+                $ref: '#/components/schemas/AuthLoginResponse'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Refresh
+      description: |
+        Refresh access token using a refresh token
+      requestBody:
+        description: |
+          Refresh token
+        content:
+          text/plain:
+            schema:
+              type: string
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthRefreshResponse'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/login-url:
+    post:
+      tags:
+        - Auth
+      summary: Get SSO login url
+      description: |
+        Retrieve a pre-formatted SSO login URL
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLoginUrlRequest'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthLoginUrlResponse'
         '400':
           description: Bad request
         '401':
@@ -75,7 +164,7 @@ paths:
       summary: Test API..
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
@@ -90,7 +179,7 @@ paths:
         Gives the system global config
       responses:
         '200':
-          description: Successful operation
+          description: Success
           content:
             application/json:
               schema:
@@ -115,12 +204,12 @@ paths:
         required: true
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
                 type: string
-                example: Successfully created
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -141,12 +230,12 @@ paths:
         required: true
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
                 type: string
-                example: Successfully updated
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -178,12 +267,12 @@ paths:
         required: true
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
                 type: string
-                example: Successfullly created
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -257,12 +346,12 @@ paths:
         required: true
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
                 type: string
-                example: Successfullly created
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -394,7 +483,7 @@ paths:
       summary: Test API..
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
@@ -407,18 +496,49 @@ paths:
       summary: Test API..
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Echooo
+  /bbs/service-regs:
+    get:
+      tags:
+        - BBs
+      summary: Get service registrations
+      description: |
+        Returns service registration records
+      parameters:
+        - name: ids
+          in: query
+          description: A comma-separated list of service IDs to return registrations for
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceReg'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /version:
     get:
       summary: Get service version
       responses:
         '200':
-          description: successful operation
+          description: Success
           content:
             text/plain:
               schema:
@@ -433,6 +553,42 @@ components:
       properties:
         setting:
           type: string
+    GlobalRole:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+    GlobalGroup:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/GlobalRole'
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
     Organization:
       required:
         - id
@@ -474,6 +630,48 @@ components:
           description: organization domains
           items:
             type: string
+    OrganizationRole:
+      required:
+        - id
+        - name
+        - org_id
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        org_id:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+    OrganizationGroup:
+      required:
+        - id
+        - name
+        - org_id
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        org_id:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationRole'
+        org_memberships:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationMembership'
     ServiceReg:
       required:
         - service_id
@@ -496,3 +694,228 @@ components:
           type: string
         alg:
           type: string
+    AuthLoginRequest:
+      required:
+        - auth_type
+        - org_id
+        - app_id
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - email
+            - phone
+            - oidc
+        org_id:
+          type: string
+        app_id:
+          type: string
+        creds:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/AuthLoginCredsEmail'
+            - $ref: '#/components/schemas/AuthLoginCredsPhone'
+            - $ref: '#/components/schemas/AuthLoginCredsOidc'
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/AuthLoginParamsEmail'
+            - $ref: '#/components/schemas/AuthLoginParamsPhone'
+            - $ref: '#/components/schemas/AuthLoginParamsOidc'
+    AuthLoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+    AuthLoginCredsEmail:
+      required:
+        - email
+        - password
+      type: object
+      description: Auth login creds for auth_type="email"
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    AuthLoginCredsPhone:
+      type: object
+      description: Auth login creds for auth_type="phone"
+      required:
+        - phone
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+    AuthLoginCredsOidc:
+      type: string
+      description: |
+        Auth login creds for auth_type="oidc"
+          - Initial login: full redirect URI received from OIDC provider
+          - Refresh: refresh token
+    AuthLoginParamsEmail:
+      type: object
+      description: Auth login params for auth_type="email"
+      properties:
+        new_user:
+          type: boolean
+          default: false
+    AuthLoginParamsPhone:
+      type: object
+      description: Auth login params for auth_type="phone" (None)
+    AuthLoginParamsOidc:
+      type: object
+      description: Auth login params for auth_type="oidc"
+      properties:
+        redirect_uri:
+          type: string
+        pkce_verifier:
+          type: string
+    AuthRefreshResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+    AuthLoginUrlRequest:
+      required:
+        - auth_type
+        - org_id
+        - app_id
+        - redirect_uri
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - oidc
+        org_id:
+          type: string
+        app_id:
+          type: string
+        redirect_uri:
+          type: string
+    AuthLoginUrlResponse:
+      required:
+        - login_url
+      type: object
+      properties:
+        login_url:
+          type: string
+        params:
+          type: object
+          description: Params to be submitted with 'login' request (if necessary)
+    User:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        account:
+          $ref: '#/components/schemas/UserAccount'
+        profile:
+          $ref: '#/components/schemas/UserProfile'
+        permissions:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/GlobalRole'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/GlobalGroup'
+        org_memberships:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationMembership'
+        devices:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
+    UserAccount:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        username:
+          type: string
+    UserProfile:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        photo_url:
+          type: string
+    OrganizationMembership:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        org_id:
+          type: string
+        org_user_data:
+          type: object
+          description: 'map[string]object for arbitrary organization user data'
+        permissions:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationRole'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationGroup'
+    Device:
+      required:
+        - id
+        - type
+        - user_ids
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+            - mobile
+            - web
+            - desktop
+            - other
+        os:
+          type: string
+        mac_address:
+          type: string
+        user_ids:
+          type: array
+          items:
+            type: string

@@ -28,8 +28,12 @@ const (
 
 //Interface for authentication mechanisms
 type authType interface {
-	//Check validity of provided credentials
-	check(creds string, params string, l *log.Log) (*model.UserAuth, error)
+	//check checks the validity of provided credentials
+	check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error)
+	//refresh refreshes the access token using provided refresh token
+	refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error)
+	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
+	getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error)
 }
 
 //Auth represents the auth functionality unit
@@ -49,6 +53,16 @@ type Auth struct {
 
 	authConfigs     *syncmap.Map //cache authConfigs / orgID_appID -> authConfig
 	authConfigsLock *sync.RWMutex
+}
+
+//TODO: Once the profile has been transferred and the new user ID scheme has been adopted across all services
+//		this should be replaced by tokenauth.Claims directly
+//tokenClaims is a temporary claims model to provide backwards compatibility
+type tokenClaims struct {
+	tokenauth.Claims
+	UID   string `json:"uid,omitempty"`
+	Email string `json:"email,omitempty"`
+	Phone string `json:"phone,omitempty"`
 }
 
 //NewAuth creates a new auth instance
@@ -107,30 +121,74 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 //	Input:
 //		authType (string): Name of the authentication method for provided creds (eg. "email")
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
+//		orgID (string): ID of the organization that the user is logging in to
+//		appID (string): ID of the app/client that the user is logging in from
 //		params (string): JSON encoded params defined by specified auth type
 //		l (*loglib.Log): Log object pointer for request
 //	Returns:
 //		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //		User (User): User object for authenticated user
-func (a *Auth) Login(authType string, creds string, params string, l *log.Log) (string, *model.User, error) {
+//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+func (a *Auth) Login(authType string, creds string, orgID string, appID string, params string, l *log.Log) (string, string, *model.User, error) {
+	auth, err := a.getAuthType(authType)
+	if err != nil {
+		return "", "", nil, log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	userAuth, err := auth.check(creds, orgID, appID, params, l)
+	if err != nil {
+		return "", "", nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
+	}
+
+	claims := a.getStandardClaims("", userAuth.UserID, userAuth.Email, userAuth.Phone, "rokwire", orgID, appID, userAuth.Exp)
+	token, err := a.buildAccessToken(claims, "", "all")
+	if err != nil {
+		return "", "", nil, log.WrapActionError("build", log.TypeToken, nil, err)
+	}
+
+	//TODO: Implement account management
+
+	return token, userAuth.RefreshToken, nil, nil
+}
+
+//Refresh refreshes an access token using a refresh token
+//	Input:
+//		refreshToken (string): Refresh token
+//		l (*loglib.Log): Log object pointer for request
+//	Returns:
+//		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+func (a *Auth) Refresh(refreshToken string, l *log.Log) (string, string, error) {
+	return "", "", log.NewError(log.Unimplemented)
+}
+
+//GetLoginUrl returns a pre-formatted login url for SSO providers
+//	Input:
+//		authType (string): Name of the authentication method for provided creds (eg. "email")
+//		orgID (string): ID of the organization that the user is logging in to
+//		appID (string): ID of the app/client that the user is logging in from
+//		redirectUri (string): Registered redirect URI where client will receive response
+//		l (*loglib.Log): Log object pointer for request
+//	Returns:
+//		Login URL (string): SSO provider login URL to be launched in a browser
+//		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
+func (a *Auth) GetLoginUrl(authType string, orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
 	auth, err := a.getAuthType(authType)
 	if err != nil {
 		return "", nil, log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	_, err = auth.check(creds, params, l)
+	loginUrl, params, err := auth.getLoginUrl(orgID, appID, redirectUri, l)
 	if err != nil {
-		return "", nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
+		return "", nil, log.WrapActionError(log.ActionGet, "login url", nil, err)
 	}
 
-	//TODO: Implement account management and return token and user using claims
-
-	return "", nil, nil
+	return loginUrl, params, nil
 }
 
 //GetScopedAccessToken TODO
-func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scope string) (string, error) {
-	scopedClaims := a.getStandardClaims(claims.Subject, serviceID, claims.OrgID, claims.AppID, nil)
+func (a *Auth) GetScopedAccessToken(claims tokenClaims, serviceID string, scope string) (string, error) {
+	scopedClaims := a.getStandardClaims(claims.Subject, claims.UID, "", "", serviceID, claims.OrgID, claims.AppID, nil)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
@@ -193,31 +251,33 @@ func (a *Auth) getAuthType(name string) (authType, error) {
 	return nil, log.DataError(log.StatusInvalid, typeAuthType, log.StringArgs(name))
 }
 
-func (a *Auth) buildAccessToken(claims tokenauth.Claims, permissions string, scope string) (string, error) {
+func (a *Auth) buildAccessToken(claims tokenClaims, permissions string, scope string) (string, error) {
 	claims.Purpose = "access"
 	claims.Permissions = permissions
 	claims.Scope = scope
 	return a.generateToken(&claims)
 }
 
-func (a *Auth) buildCsrfToken(claims tokenauth.Claims) (string, error) {
+func (a *Auth) buildCsrfToken(claims tokenClaims) (string, error) {
 	claims.Purpose = "csrf"
 	return a.generateToken(&claims)
 }
 
-func (a *Auth) getStandardClaims(sub string, aud string, orgID string, appID string, exp *int64) tokenauth.Claims {
-	return tokenauth.Claims{
-		StandardClaims: jwt.StandardClaims{
-			Audience:  aud,
-			Subject:   sub,
-			ExpiresAt: a.getExp(exp),
-			IssuedAt:  time.Now().Unix(),
-			Issuer:    a.host,
-		}, OrgID: orgID, AppID: appID,
+func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string, exp *int64) tokenClaims {
+	return tokenClaims{
+		Claims: tokenauth.Claims{
+			StandardClaims: jwt.StandardClaims{
+				Audience:  aud,
+				Subject:   sub,
+				ExpiresAt: a.getExp(exp),
+				IssuedAt:  time.Now().Unix(),
+				Issuer:    a.host,
+			}, OrgID: orgID, AppID: appID,
+		}, UID: uid, Email: email, Phone: phone,
 	}
 }
 
-func (a *Auth) generateToken(claims *tokenauth.Claims) (string, error) {
+func (a *Auth) generateToken(claims *tokenClaims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	kid, err := authutils.GetKeyFingerprint(&a.authPrivKey.PublicKey)
 	if err != nil {

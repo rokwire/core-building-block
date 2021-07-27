@@ -1,0 +1,8 @@
+type: object
+properties:
+  access_token:
+    type: string
+  refresh_token:
+    type: string
+  user:
+    $ref: "../../schemas/user/User.yaml"
