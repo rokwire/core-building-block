@@ -16,13 +16,13 @@ type phoneAuthImpl struct {
 	authType string
 }
 
-func (a *phoneAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
+func (a *phoneAuthImpl) check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error) {
 	//TODO: Implement
 	return nil, log.NewError(log.Unimplemented)
 }
 
 //refresh is enabled for phone auth, but no operation is needed
-func (a *phoneAuthImpl) refresh(refreshToken string, l *log.Log) (*model.UserAuth, error) {
+func (a *phoneAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
 	return nil, nil
 }
 

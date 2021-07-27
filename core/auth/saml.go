@@ -16,13 +16,13 @@ type samlAuthImpl struct {
 	authType string
 }
 
-func (a *samlAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
+func (a *samlAuthImpl) check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error) {
 	//TODO: Implement
 	return nil, log.NewError(log.Unimplemented)
 }
 
 //refresh must be implemented for SAML auth
-func (a *samlAuthImpl) refresh(refreshToken string, l *log.Log) (*model.UserAuth, error) {
+func (a *samlAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
 	//TODO: Implement
 	return nil, log.NewError(log.Unimplemented)
 }

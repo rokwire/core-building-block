@@ -16,12 +16,12 @@ type firebaseAuthImpl struct {
 	authType string
 }
 
-func (a *firebaseAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
+func (a *firebaseAuthImpl) check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error) {
 	//TODO: Implement
 	return nil, log.NewError(log.Unimplemented)
 }
 
-func (a *firebaseAuthImpl) refresh(refreshToken string, l *log.Log) (*model.UserAuth, error) {
+func (a *firebaseAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
 	return nil, log.NewErrorf("refresh operation invalid for auth_type=%s", authTypeFirebase)
 }
 

@@ -29,9 +29,9 @@ const (
 //Interface for authentication mechanisms
 type authType interface {
 	//check checks the validity of provided credentials
-	check(creds string, params string, l *log.Log) (*model.UserAuth, error)
+	check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error)
 	//refresh refreshes the access token using provided refresh token
-	refresh(refreshToken string, l *log.Log) (*model.UserAuth, error)
+	refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error)
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error)
 }
@@ -135,7 +135,7 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 		return "", "", nil, log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	userAuth, err := auth.check(creds, params, l)
+	userAuth, err := auth.check(creds, orgID, appID, params, l)
 	if err != nil {
 		return "", "", nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
 	}

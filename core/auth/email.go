@@ -16,13 +16,13 @@ type emailAuthImpl struct {
 	authType string
 }
 
-func (a *emailAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
+func (a *emailAuthImpl) check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error) {
 	//TODO: Implement
 	return nil, log.NewError("Unimplemented")
 }
 
 //refresh is enabled for email auth, but no operation is needed
-func (a *emailAuthImpl) refresh(refreshToken string, l *log.Log) (*model.UserAuth, error) {
+func (a *emailAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
 	return nil, nil
 }
 

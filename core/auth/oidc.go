@@ -22,7 +22,6 @@ const (
 	authTypeOidc string = "oidc"
 
 	typeOidcAuthConfig    log.LogData = "oidc auth config"
-	typeOidcMobileParams  log.LogData = "oidc mobile params"
 	typeOidcCheckParams   log.LogData = "oidc check params"
 	typeOidcLoginParams   log.LogData = "oidc login params"
 	typeOidcRefreshParams log.LogData = "oidc refresh params"
@@ -48,28 +47,12 @@ type oidcAuthConfig struct {
 	Populations        map[string]string `json:"populations"`
 }
 
-type oidcMobileParams struct {
-	OrgID         string `json:"org_id" validate:"required"`
-	AppID         string `json:"app_id" validate:"required"`
-	CodeChallenge string `json:"pkce_challenge"`
-	RedirectURI   string `json:"redirect_uri" validate:"required"`
-}
-
-type oidcCheckParams struct {
-	OrgID string `json:"org_id" validate:"required"`
-	AppID string `json:"app_id" validate:"required"`
-}
-
 type oidcLoginParams struct {
-	OrgID        string `json:"org_id" validate:"required"`
-	AppID        string `json:"app_id" validate:"required"`
 	CodeVerifier string `json:"pkce_verifier"`
 	RedirectURI  string `json:"redirect_uri" validate:"required"`
 }
 
 type oidcRefreshParams struct {
-	OrgID       string `json:"org_id" validate:"required"`
-	AppID       string `json:"app_id" validate:"required"`
 	RedirectURI string `json:"redirect_uri" validate:"required"`
 }
 
@@ -81,7 +64,7 @@ type oidcToken struct {
 	ExpiresIn    int    `json:"expires_in"`
 }
 
-func (a *oidcAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
+func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error) {
 	paramsMap := make(map[string]interface{})
 	err := json.Unmarshal([]byte(params), &paramsMap)
 	if err != nil {
@@ -104,7 +87,7 @@ func (a *oidcAuthImpl) check(creds string, params string, l *log.Log) (*model.Us
 		if err != nil {
 			return nil, log.WrapActionError(log.ActionValidate, typeOidcLoginParams, nil, err)
 		}
-		return a.newToken(creds, &loginParams, l)
+		return a.newToken(creds, orgID, appID, &loginParams, l)
 	case "refresh_token":
 		var refreshParams oidcRefreshParams
 		err := json.Unmarshal([]byte(params), &refreshParams)
@@ -116,14 +99,14 @@ func (a *oidcAuthImpl) check(creds string, params string, l *log.Log) (*model.Us
 		if err != nil {
 			return nil, log.WrapActionError(log.ActionValidate, typeOidcRefreshParams, nil, err)
 		}
-		return a.refreshToken(creds, &refreshParams, l)
+		return a.refreshToken(creds, orgID, appID, &refreshParams, l)
 	default:
 		return nil, log.DataError(log.StatusInvalid, "cred type", log.StringArgs(credType))
 	}
 }
 
 //refresh must be implemented for OIDC auth
-func (a *oidcAuthImpl) refresh(refreshToken string, l *log.Log) (*model.UserAuth, error) {
+func (a *oidcAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
 	//TODO: Implement
 	return nil, log.NewError(log.Unimplemented)
 }
@@ -158,7 +141,10 @@ func (a *oidcAuthImpl) getLoginUrl(orgID string, appID string, redirectUri strin
 	}
 
 	if oidcConfig.UsePKCE {
-		codeChallenge, codeVerifier := generatePkceChallenge()
+		codeChallenge, codeVerifier, err := generatePkceChallenge()
+		if err != nil {
+			return "", nil, log.WrapActionError("generating", "pkce challenge", nil, err)
+		}
 		bodyData["code_challenge_method"] = "S256"
 		bodyData["code_challenge"] = codeChallenge
 
@@ -180,10 +166,10 @@ func (a *oidcAuthImpl) getLoginUrl(orgID string, appID string, redirectUri strin
 	return url.String(), responseParams, nil
 }
 
-func (a *oidcAuthImpl) checkToken(idToken string, params *oidcCheckParams, oidcConfig *oidcAuthConfig, l *log.Log) (string, error) {
+func (a *oidcAuthImpl) checkToken(idToken string, orgID string, appID string, oidcConfig *oidcAuthConfig, l *log.Log) (string, error) {
 	var err error
 	if oidcConfig == nil {
-		oidcConfig, err = a.getOidcAuthConfig(params.OrgID, params.AppID)
+		oidcConfig, err = a.getOidcAuthConfig(orgID, appID)
 		if err != nil {
 			return "", log.WrapActionError(log.ActionGet, typeOidcAuthConfig, nil, err)
 		}
@@ -216,8 +202,8 @@ func (a *oidcAuthImpl) checkToken(idToken string, params *oidcCheckParams, oidcC
 	return sub, nil
 }
 
-func (a *oidcAuthImpl) newToken(code string, params *oidcLoginParams, l *log.Log) (*model.UserAuth, error) {
-	oidcConfig, err := a.getOidcAuthConfig(params.OrgID, params.AppID)
+func (a *oidcAuthImpl) newToken(code string, orgID string, appID string, params *oidcLoginParams, l *log.Log) (*model.UserAuth, error) {
+	oidcConfig, err := a.getOidcAuthConfig(orgID, appID)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionGet, typeOidcAuthConfig, nil, err)
 	}
@@ -232,16 +218,16 @@ func (a *oidcAuthImpl) newToken(code string, params *oidcLoginParams, l *log.Log
 		bodyData["code_verifier"] = params.CodeVerifier
 	}
 
-	return a.loadOidcTokensAndInfo(bodyData, oidcConfig, l)
+	return a.loadOidcTokensAndInfo(bodyData, oidcConfig, orgID, appID, l)
 }
 
-func (a *oidcAuthImpl) refreshToken(refreshToken string, params *oidcRefreshParams, l *log.Log) (*model.UserAuth, error) {
-	oidcConfig, err := a.getOidcAuthConfig(params.OrgID, params.AppID)
+func (a *oidcAuthImpl) refreshToken(refreshToken string, orgID string, appID string, params *oidcRefreshParams, l *log.Log) (*model.UserAuth, error) {
+	oidcConfig, err := a.getOidcAuthConfig(orgID, appID)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionGet, typeOidcAuthConfig, nil, err)
 	}
 	if !oidcConfig.UseRefresh {
-		return nil, log.NewErrorf("refresh tokens not enabled for org_id=%s, app_id=%s", params.OrgID, params.AppID)
+		return nil, log.NewErrorf("refresh tokens not enabled for org_id=%s, app_id=%s", orgID, appID)
 	}
 
 	bodyData := map[string]string{
@@ -251,17 +237,17 @@ func (a *oidcAuthImpl) refreshToken(refreshToken string, params *oidcRefreshPara
 		"client_id":     oidcConfig.ClientID,
 	}
 
-	return a.loadOidcTokensAndInfo(bodyData, oidcConfig, l)
+	return a.loadOidcTokensAndInfo(bodyData, oidcConfig, orgID, appID, l)
 }
 
-func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcConfig *oidcAuthConfig, l *log.Log) (*model.UserAuth, error) {
+func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcConfig *oidcAuthConfig, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
 	oidcToken, err := a.loadOidcTokenWithParams(bodyData, oidcConfig)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionGet, typeOidcToken, nil, err)
 	}
 
 	userAuth := model.UserAuth{}
-	sub, err := a.checkToken(oidcToken.IDToken, nil, oidcConfig, l)
+	sub, err := a.checkToken(oidcToken.IDToken, orgID, appID, oidcConfig, l)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionValidate, typeOidcToken, nil, err)
 	}
@@ -463,11 +449,15 @@ func readFromClaims(key string, claimsMap *map[string]string, rawClaims *map[str
 }
 
 //generatePkceChallenge generates and returns a PKCE code challenge and verifier
-func generatePkceChallenge() (string, string) {
+func generatePkceChallenge() (string, string, error) {
+	// codeVerifier, err := utils.GenerateRandomString(50)
+	// if err != nil {
+	// 	return "", "", log.WrapActionError("generating", "code verifier", nil, err)
+	// }
 	//TODO: Translate Dart implementation
 	//	_pkceVerifier = convert.base64Url.encode(RsaKeyHelper.getSecureRandom().nextBytes(50)).replaceAll('=', '');
 	// 	return convert.base64Url.encode(sha256.convert(convert.utf8.encode(_pkceVerifier)).bytes).replaceAll('=', '');
-	return "", ""
+	return "", "", nil
 }
 
 //initOidcAuth initializes and registers a new OIDC auth instance
