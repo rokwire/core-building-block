@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/golang-jwt/jwt"
+
 	"github.com/rokmetro/auth-library/envloader"
 	log "github.com/rokmetro/logging-library/loglib"
 )
@@ -75,7 +76,6 @@ func main() {
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
-
 	//core
 	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth)
 	coreAPIs.Start()

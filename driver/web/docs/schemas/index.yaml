@@ -1,6 +1,59 @@
+# global
 GlobalConfig:
-  $ref: "./GlobalConfig.yaml"
+  $ref: "./global/GlobalConfig.yaml"
+GlobalRole:
+  $ref: "./global/GlobalRole.yaml"
+GlobalGroup:
+  $ref: "./global/GlobalGroup.yaml"
+
+# organization
 Organization:
-  $ref: "./Organization.yaml"
+  $ref: "./organization/Organization.yaml"
 OrganizationConfig:
-  $ref: "./OrganizationConfig.yaml"
+  $ref: "./organization/OrganizationConfig.yaml"
+OrganizationRole:
+  $ref: "./organization/OrganizationRole.yaml"
+OrganizationGroup:
+  $ref: "./organization/OrganizationGroup.yaml"
+  
+# auth
+ServiceReg:
+  $ref: "./auth/ServiceReg.yaml"
+PubKey:
+  $ref: "./auth/PubKey.yaml"
+AuthLoginRequest:
+  $ref: "./auth/AuthLoginRequest.yaml"
+AuthLoginResponse:
+  $ref: "./auth/AuthLoginResponse.yaml"
+AuthLoginCredsEmail:
+  $ref: "./auth/AuthLoginCredsEmail.yaml"
+AuthLoginCredsPhone:
+  $ref: "./auth/AuthLoginCredsPhone.yaml"
+AuthLoginCredsOidc:
+  $ref: "./auth/AuthLoginCredsOidc.yaml"
+AuthLoginParamsEmail:
+  $ref: "./auth/AuthLoginParamsEmail.yaml"
+AuthLoginParamsPhone:
+  $ref: "./auth/AuthLoginParamsPhone.yaml"
+AuthLoginParamsOidc:
+  $ref: "./auth/AuthLoginParamsOidc.yaml"
+
+AuthRefreshResponse:
+  $ref: "./auth/AuthRefreshResponse.yaml"
+
+AuthLoginUrlRequest:
+  $ref: "./auth/AuthLoginUrlRequest.yaml"
+AuthLoginUrlResponse:
+  $ref: "./auth/AuthLoginUrlResponse.yaml"
+
+# user
+User:
+  $ref: "./user/User.yaml"
+UserAccount:
+  $ref: "./user/UserAccount.yaml"
+UserProfile:
+  $ref: "./user/UserProfile.yaml"
+OrganizationMembership:
+  $ref: "./user/OrganizationMembership.yaml"
+Device:
+  $ref: "./user/Device.yaml"

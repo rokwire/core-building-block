@@ -1,0 +1,24 @@
+required:
+  - id
+  - name
+  - org_id
+type: object
+properties:
+  id:
+    type: string
+  name:
+    type: string
+  org_id:
+    type: string
+  permissions:
+    type: array
+    items:
+      type: string
+  roles:
+    type: array
+    items:
+      $ref: "./OrganizationRole.yaml"
+  org_memberships:
+    type: array
+    items:
+      $ref: "../user/OrganizationMembership.yaml"

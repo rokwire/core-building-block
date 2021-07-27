@@ -3,8 +3,11 @@ package model
 import log "github.com/rokmetro/logging-library/loglib"
 
 const (
-	TypeUserAuth   log.LogData = "user auth"
+	//TypeUserAuth ...
+	TypeUserAuth log.LogData = "user auth"
+	//TypeAuthConfig ...
 	TypeAuthConfig log.LogData = "user auth"
+	//TypeServiceReg ...
 	TypeServiceReg log.LogData = "service reg"
 )
 
@@ -16,8 +19,9 @@ type UserAuth struct {
 	Email        string
 	Phone        string
 	Picture      []byte
-	Exp          float64
+	Exp          *int64
 	RefreshToken string
+	Params       map[string]interface{}
 }
 
 //AuthConfig represents auth config entity

@@ -1,0 +1,25 @@
+required:
+  - id
+type: object
+properties:
+  id:
+    type: string
+  user_id:
+    type: string
+  org_id:
+    type: string
+  org_user_data:
+    type: object
+    description: map[string]object for arbitrary organization user data
+  permissions:
+    type: array
+    items:
+      type: string
+  roles:
+    type: array
+    items:
+      $ref: "../organization/OrganizationRole.yaml"
+  groups:
+    type: array
+    items:
+      $ref: "../organization/OrganizationGroup.yaml"

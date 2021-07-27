@@ -4,10 +4,10 @@ import (
 	"context"
 	"core-building-block/core/model"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -21,11 +21,19 @@ const (
 	verificationCheckPart                = "VerificationCheck"
 	typeVerificationResponse log.LogData = "phone verification response"
 	typeVerificationStatus   log.LogData = "phone verification staus"
+	typeVerificationSID      log.LogData = "phone verification sid"
+	typePhoneAuthConfig      log.LogData = "phone auth config"
+	typePhoneNumber          log.LogData = "E.164 phone number"
+)
+
+const (
+	authTypePhone string = "phone"
 )
 
 // Phone implementation of authType
 type phoneAuthImpl struct {
-	auth *Auth
+	auth     *Auth
+	authType string
 }
 
 type phoneCreds struct {
@@ -36,15 +44,11 @@ type phoneCreds struct {
 
 type phoneAuthConfig struct {
 	VerifyServiceID string `json:"verify_service_id" validate:"required"`
-	// AccountSID string `json:"account_sid" validate:"required"`
-	// AuthToken  string `json:"auth_token" validate:"required"`
 }
 
 type verificationParams struct {
 	Code string `json:"code"`
 	To   string `json:"to" validate:"required"`
-	// OrgID string `json:"org_id" validate:"required"`
-	// AppID string `json:"app_id" validate:"required"`
 }
 
 type verifyPhoneResponse struct {
@@ -75,7 +79,7 @@ type checkStatusResponse struct {
 	DateUpdated time.Time `json:"date_updated"`
 }
 
-func (a *phoneAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
+func (a *phoneAuthImpl) check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error) {
 	var verificationCreds verificationParams
 	err := json.Unmarshal([]byte(creds), &verificationCreds)
 	if err != nil {
@@ -90,25 +94,24 @@ func (a *phoneAuthImpl) check(creds string, params string, l *log.Log) (*model.U
 	// TODO: fetch phone cred from db if needed, might add password to phone creds later
 	// phoneCred := auth.storage.getCredential("phone", phoneNumber)
 
-	// TODO: orgID string, appID string will be in input params
-	orgID, appID := "", ""
 	phoneAuthConfig, err := a.getPhoneAuthConfig(orgID, appID)
 	if err != nil {
-		return nil, fmt.Errorf("auth config for orgID %s, appID %s cannot be used for phone verify: %s", appID, orgID, err.Error())
+		return nil, log.WrapActionError(log.ActionGet, typePhoneAuthConfig, nil, err)
 	}
 	verifyServiceID := phoneAuthConfig.VerifyServiceID
 	data := url.Values{}
 	phone := verificationCreds.To
-	data.Add("to", phone)
+	validPhone := regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
+	if !validPhone.MatchString(phone) {
+		return nil, log.DataError(log.StatusInvalid, typePhoneNumber, &log.FieldArgs{"phone": phone})
+	}
 
+	data.Add("to", phone)
 	if verificationCreds.Code != "" {
-		// handle check verification
-		code := verificationCreds.Code
-		data.Add("code", code)
+		data.Add("code", verificationCreds.Code)
 		return a.checkVerification(verifyServiceID, phone, data, l)
 	}
 
-	// handle start verification
 	data.Add("channel", "sms")
 	return a.startVerification(verifyServiceID, phone, data, l)
 }
@@ -118,7 +121,7 @@ func (a *phoneAuthImpl) startVerification(verifyServiceID string, phone string, 
 	defer cancel()
 	resp, err := makeRequest(ctx, "POST", servicesPathPart+"/"+verifyServiceID+"/"+verificationsPathPart, data)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionSend, log.TypeRequest, &log.FieldArgs{"verification data": data}, err)
+		return nil, log.WrapActionError(log.ActionSend, log.TypeRequest, &log.FieldArgs{"verification params": data}, err)
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -132,13 +135,13 @@ func (a *phoneAuthImpl) startVerification(verifyServiceID string, phone string, 
 	}
 
 	if verifyResult.To != phone {
-		return nil, log.DataError(log.StatusInvalid, log.TypeString, &log.FieldArgs{"phone verify To expected to be": phone, " but got ": verifyResult.To})
+		return nil, log.DataError(log.StatusInvalid, log.TypeString, &log.FieldArgs{"expected phone": phone, "actual phone": verifyResult.To})
 	}
 	if verifyResult.Status != "pending" {
-		return nil, log.DataError(log.StatusInvalid, typeVerificationStatus, &log.FieldArgs{"check verify response status should be approved, but got ": verifyResult.Status})
+		return nil, log.DataError(log.StatusInvalid, typeVerificationStatus, &log.FieldArgs{"expected approved, actual:": verifyResult.Status})
 	}
 	if verifyResult.Sid == "" {
-		return nil, log.DataError(log.StatusInvalid, typeVerificationStatus, &log.FieldArgs{"check verify response sid should be specified, but got ": verifyResult.Status})
+		return nil, log.DataError(log.StatusMissing, typeVerificationSID, nil)
 	}
 
 	return nil, nil
@@ -165,12 +168,10 @@ func (a *phoneAuthImpl) checkVerification(verifyServiceID string, phone string, 
 	}
 
 	if checkResponse.To != phone {
-		return nil, log.DataError(log.StatusInvalid, log.TypeString, &log.FieldArgs{"phone verify To expected to be": phone, " but got ": checkResponse.To})
-		// return nil, fmt.Errorf("phone verify expected To to be %s, got %s", phone, checkResponse.To)
+		return nil, log.DataError(log.StatusInvalid, log.TypeString, &log.FieldArgs{"expected phone": phone, "actual phone": checkResponse.To})
 	}
 	if checkResponse.Status != "approved" {
-		return nil, log.DataError(log.StatusInvalid, typeVerificationStatus, &log.FieldArgs{"check verify response status should be approved, but got ": checkResponse.Status})
-		// return nil, fmt.Errorf("phone verify expected Status to be %s, got %s", "approved", checkResponse.Status)
+		return nil, log.DataError(log.StatusInvalid, typeVerificationStatus, &log.FieldArgs{"expected approved, actual:": checkResponse.Status})
 	}
 
 	userAuth := model.UserAuth{}
@@ -181,24 +182,22 @@ func (a *phoneAuthImpl) checkVerification(verifyServiceID string, phone string, 
 }
 
 func (a *phoneAuthImpl) getPhoneAuthConfig(orgID string, appID string) (*phoneAuthConfig, error) {
+	errFields := &log.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": a.authType}
+
 	authConfig, err := a.auth.getAuthConfig(orgID, appID, "phone")
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.ActionFind, model.TypeAuthConfig, errFields, err)
 	}
 
-	configBytes, err := json.Marshal(authConfig.Config)
-	if err != nil {
-		return nil, err
-	}
 	var phoneConfig phoneAuthConfig
-	err = json.Unmarshal(configBytes, &phoneConfig)
+	err = json.Unmarshal(authConfig.Config, &phoneConfig)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.ActionUnmarshal, model.TypeAuthConfig, errFields, err)
 	}
 	validate := validator.New()
 	err = validate.Struct(phoneConfig)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.ActionValidate, model.TypeAuthConfig, errFields, err)
 	}
 
 	return &phoneConfig, nil
@@ -207,21 +206,24 @@ func (a *phoneAuthImpl) getPhoneAuthConfig(orgID string, appID string) (*phoneAu
 func makeRequest(ctx context.Context, method string, pathPart string, data url.Values) (*http.Response, error) {
 	client := &http.Client{}
 	rb := new(strings.Reader)
+	logAction := log.ActionSend
+
 	if data != nil && (method == "POST" || method == "PUT") {
 		rb = strings.NewReader(data.Encode())
 	}
 	if method == "GET" && data != nil {
 		pathPart = pathPart + "?" + data.Encode()
+		logAction = log.ActionRead
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, pathPart, rb)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(logAction, log.TypeRequest, &log.FieldArgs{"path": pathPart}, err)
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(logAction, log.TypeRequest, nil, err)
 	}
 
 	defer resp.Body.Close()
@@ -235,11 +237,20 @@ func makeRequest(ctx context.Context, method string, pathPart string, data url.V
 	return resp, nil
 }
 
+//refresh is enabled for phone auth, but no operation is needed
+func (a *phoneAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
+	return nil, nil
+}
+
+func (a *phoneAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
+	return "", nil, log.NewErrorf("get login url operation invalid for auth_type=%s", a.authType)
+}
+
 //initPhoneAuth initializes and registers a new phone auth instance
 func initPhoneAuth(auth *Auth) (*phoneAuthImpl, error) {
-	phone := &phoneAuthImpl{auth: auth}
+	phone := &phoneAuthImpl{auth: auth, authType: authTypePhone}
 
-	err := auth.registerAuthType("phone", phone)
+	err := auth.registerAuthType(phone.authType, phone)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
 	}

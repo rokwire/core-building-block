@@ -6,11 +6,11 @@ get:
     Gives the system global config
   responses:
       200:
-        description: Successful operation
+        description: Success
         content:
           application/json:
             schema:
-              $ref: "../../schemas/GlobalConfig.yaml"
+              $ref: "../../schemas/global/GlobalConfig.yaml"
       400:
         description: Bad request
       401:
@@ -27,16 +27,16 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/GlobalConfig.yaml"
+          $ref: "../../schemas/global/GlobalConfig.yaml"
     required: true
   responses:
       200:
-        description: successful operation
+        description: Success
         content:
           text/plain:
             schema:
               type: string
-              example: Successfully created
+              example: Success
       400:
         description: Bad request
       401:
@@ -53,16 +53,16 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/GlobalConfig.yaml"
+          $ref: "../../schemas/global/GlobalConfig.yaml"
     required: true
   responses:
     200:
-      description: successful operation
+      description: Success
       content:
         text/plain:
           schema:
             type: string
-            example: Successfully updated
+            example: Success
     400:
       description: Bad request
     401:
