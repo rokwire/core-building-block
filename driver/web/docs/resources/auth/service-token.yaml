@@ -1,0 +1,28 @@
+get:
+  tags:
+  - Auth
+  summary: Service token
+  description: |
+    Get a scoped access token that can be used to access a third-party service
+  parameters:
+    - name: service_id
+      in: query
+      description: A service ID to be accessed
+      required: true
+      style: form
+      explode: false
+      schema:
+        type: string
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../schemas/auth/AuthServiceTokenResponse.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error

@@ -46,6 +46,9 @@ AuthLoginUrlRequest:
 AuthLoginUrlResponse:
   $ref: "./auth/AuthLoginUrlResponse.yaml"
 
+AuthServiceTokenResponse:
+  $ref: "./auth/AuthServiceTokenResponse.yaml"
+
 # user
 User:
   $ref: "./user/User.yaml"
