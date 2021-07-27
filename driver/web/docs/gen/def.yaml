@@ -51,6 +51,44 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AuthLoginRequest'
+            examples:
+              email:
+                summary: Email login
+                value: |
+                  {
+                    "auth_type": "email",
+                    "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
+                    "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                    "creds": {
+                      "email": "test@test.com", 
+                      "password": "test12345"
+                    }
+                  }
+              phone:
+                summary: Phone login
+                value: |
+                  {
+                    "auth_type": "phone",
+                    "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
+                    "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                    "creds": {
+                      "phone": "+12223334444", 
+                      "code": "123456"
+                    }
+                  }
+              oidc:
+                summary: OIDC login
+                value: |
+                  {
+                    "auth_type": "oidc",
+                    "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
+                    "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                    "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
+                    "params": {
+                      "redirect_uri": "https://redirect.example.com",
+                      "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                    }
+                  }
         required: true
       responses:
         '200':
@@ -685,16 +723,6 @@ components:
             - $ref: '#/components/schemas/AuthLoginParamsEmail'
             - $ref: '#/components/schemas/AuthLoginParamsPhone'
             - $ref: '#/components/schemas/AuthLoginParamsOidc'
-      example: |
-        {
-          "auth_type": "email",
-          "org_id": "string",
-          "app_id": "string",
-          "creds": {
-            "email": "test@test.com", 
-            "password": "test12345"
-          }
-        }
     AuthLoginResponse:
       type: object
       properties:
