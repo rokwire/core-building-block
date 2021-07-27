@@ -460,6 +460,30 @@ func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.Sessio
 	return nil
 }
 
+//Update credentials updates a set of credentials
+func (sa *Adapter) UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCred) error {
+	if creds == nil {
+		return log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeAuthCred))
+	}
+
+	var filter bson.D
+	if len(orgID) > 0 {
+		filter = bson.D{
+			primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID},
+			primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.UserID},
+		}
+	} else {
+		filter = bson.D{primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.UserID}}
+	}
+
+	err := sa.db.serviceRegs.ReplaceOne(filter, creds, nil)
+	if err != nil {
+		return log.WrapActionError(log.ActionUpdate, model.TypeAuthCred, &log.FieldArgs{"user_id": creds.UserID}, err)
+	}
+
+	return nil
+}
+
 //FindGlobalRoles finds a set of global user roles
 func (sa *Adapter) FindGlobalRoles(ids *[]string, context mongo.SessionContext) (*[]model.GlobalRole, error) {
 	rolesFilter := bson.D{primitive.E{Key: "org_id", Value: "global"}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
