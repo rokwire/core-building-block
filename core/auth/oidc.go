@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"core-building-block/core/model"
+	"core-building-block/utils"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -15,6 +17,7 @@ import (
 	"github.com/coreos/go-oidc"
 	"gopkg.in/go-playground/validator.v9"
 
+	"github.com/rokmetro/auth-library/authutils"
 	log "github.com/rokmetro/logging-library/loglib"
 )
 
@@ -450,14 +453,18 @@ func readFromClaims(key string, claimsMap *map[string]string, rawClaims *map[str
 
 //generatePkceChallenge generates and returns a PKCE code challenge and verifier
 func generatePkceChallenge() (string, string, error) {
-	// codeVerifier, err := utils.GenerateRandomString(50)
-	// if err != nil {
-	// 	return "", "", log.WrapActionError("generating", "code verifier", nil, err)
-	// }
-	//TODO: Translate Dart implementation
-	//	_pkceVerifier = convert.base64Url.encode(RsaKeyHelper.getSecureRandom().nextBytes(50)).replaceAll('=', '');
-	// 	return convert.base64Url.encode(sha256.convert(convert.utf8.encode(_pkceVerifier)).bytes).replaceAll('=', '');
-	return "", "", nil
+	codeVerifier, err := utils.GenerateRandomString(50)
+	if err != nil {
+		return "", "", log.WrapActionError("generating", "code verifier", nil, err)
+	}
+
+	codeChallengeBytes, err := authutils.HashSha256([]byte(codeVerifier))
+	if err != nil {
+		return "", "", log.WrapActionError("hashing", "code verifier", nil, err)
+	}
+	codeChallenge := base64.URLEncoding.EncodeToString(codeChallengeBytes)
+
+	return codeChallenge, codeVerifier, nil
 }
 
 //initOidcAuth initializes and registers a new OIDC auth instance
