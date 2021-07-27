@@ -476,9 +476,9 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 //Storage interface to communicate with the storage
 type Storage interface {
 	ReadTODO() error
-	CreateEmailCredential(*credential) error
-	UpdateEmailCredential(*credential) error
-	GetEmailCredential(username string) (*credential, error)
+	CreateEmailCredential(*emailCreds) error
+	UpdateEmailCredential(*emailCreds) error
+	GetEmailCredential(username string) (*emailCreds, error)
 	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
 	FindUserByAccountID(accountID string) (*model.User, error)
 	InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred) (*model.User, error)
