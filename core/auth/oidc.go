@@ -538,10 +538,6 @@ func readFromClaims(key string, claimsMap *map[string]string, rawClaims *map[str
 	return nil
 }
 
-func (a *oidcAuthImpl) set(userAuth *model.UserAuth, orgID string, appID string) (*model.AuthCred, error) {
-	return nil, log.NewError(log.Unimplemented)
-}
-
 //initOidcAuth initializes and registers a new OIDC auth instance
 func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
 	oidc := &oidcAuthImpl{auth: auth}

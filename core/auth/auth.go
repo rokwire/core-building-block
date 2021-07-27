@@ -37,9 +37,6 @@ type authType interface {
 	//Check validity of provided credentials
 	check(creds string, params string, l *log.Log) (*model.UserAuth, error)
 	verify(id string, verification string, l *log.Log) error
-
-	//Set new credentials
-	set(userAuth *model.UserAuth, orgID string, appID string) (*model.AuthCred, error)
 }
 
 //Auth represents the auth functionality unit
