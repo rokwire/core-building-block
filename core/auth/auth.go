@@ -4,7 +4,10 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"crypto/rsa"
+	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -14,6 +17,7 @@ import (
 	"github.com/rokmetro/auth-library/tokenauth"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/go-playground/validator.v9"
+	"gopkg.in/gomail.v2"
 
 	log "github.com/rokmetro/logging-library/loglib"
 )
@@ -28,12 +32,9 @@ const (
 
 //Interface for authentication mechanisms
 type authType interface {
-	//check checks the validity of provided credentials
-	check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error)
-	//refresh refreshes the access token using provided refresh token
-	refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error)
-	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
-	getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error)
+	//Check validity of provided credentials
+	check(creds string, params string, l *log.Log) (*model.UserAuth, error)
+	verify(id string, verification string, l *log.Log) error
 }
 
 //Auth represents the auth functionality unit
@@ -51,6 +52,9 @@ type Auth struct {
 	minTokenExp int64  //Minimum access token expiration time in minutes
 	maxTokenExp int64  //Maximum access token expiration time in minutes
 
+	emailFrom   string
+	emailDialer *gomail.Dialer
+
 	authConfigs     *syncmap.Map //cache authConfigs / orgID_appID -> authConfig
 	authConfigsLock *sync.RWMutex
 }
@@ -66,7 +70,7 @@ type tokenClaims struct {
 }
 
 //NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, logger *log.Logger) (*Auth, error) {
+func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, smtpHost string, smtpPort string, smtpUser string, smtpPassword string, smtpFrom string, logger *log.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -76,6 +80,13 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 		var maxTokenExpVal int64 = 60
 		maxTokenExp = &maxTokenExpVal
 	}
+	smtpPortNum, err := strconv.Atoi(smtpPort)
+	if err != nil {
+		// handle error
+		logger.Fatal("Invalid SMTP port")
+	}
+	//maybe set up from config collection for diff types of auth
+	emailDialer := gomail.NewDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
 
 	authTypes := map[string]authType{}
 
@@ -83,9 +94,9 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	authConfigsLock := &sync.RWMutex{}
 	auth := &Auth{storage: storage, authTypes: authTypes, authPrivKey: authPrivKey, AuthService: nil,
 		serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp,
-		authConfigs: authConfigs, authConfigsLock: authConfigsLock}
+		authConfigs: authConfigs, authConfigsLock: authConfigsLock, emailDialer: emailDialer, emailFrom: smtpFrom}
 
-	err := auth.storeReg()
+	err = auth.storeReg()
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionSave, "reg", nil, err)
 	}
@@ -186,9 +197,46 @@ func (a *Auth) GetLoginUrl(authType string, orgID string, appID string, redirect
 	return loginUrl, params, nil
 }
 
-//GetScopedAccessToken TODO
-func (a *Auth) GetScopedAccessToken(claims tokenClaims, serviceID string, scope string) (string, error) {
-	scopedClaims := a.getStandardClaims(claims.Subject, claims.UID, "", "", serviceID, claims.OrgID, claims.AppID, nil)
+func (a *Auth) Verify(authType string, id string, verification string, l *log.Log) error {
+	auth, err := a.getAuthType(authType)
+	if err != nil {
+		return log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	err = auth.verify(id, verification, l)
+	if err != nil {
+		log.WrapActionError(log.ActionValidate, "creds", nil, err)
+	}
+
+	return nil
+}
+
+//SendEmail is used to send verification and password reset emails using Smtp connection
+func (a *Auth) SendEmail(toEmail string, subject string, body string, attachmentFilename string) error {
+	if a.emailDialer == nil {
+		return errors.New("Email dialer has not been set up")
+	}
+	if toEmail == "" {
+		return errors.New("Missing email")
+	}
+
+	emails := strings.Split(toEmail, ",")
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", a.emailFrom)
+	m.SetHeader("To", emails...)
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/plain", body)
+	m.Attach(attachmentFilename)
+
+	if err := a.emailDialer.DialAndSend(m); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scope string) (string, error) {
+	scopedClaims := a.getStandardClaims(claims.Subject, serviceID, claims.OrgID, claims.AppID, nil)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
@@ -396,11 +444,11 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 
 //Storage interface to communicate with the storage
 type Storage interface {
-	//ServiceRegs
-	FindServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
-	FindServiceReg(serviceID string) (*authservice.ServiceReg, error)
-	InsertServiceReg(reg *authservice.ServiceReg) error
-	UpdateServiceReg(reg *authservice.ServiceReg) error
+	ReadTODO() error
+	CreateEmailCredential(*credential) error
+	UpdateEmailCredential(*credential) error
+	GetEmailCredential(username string) (*credential, error)
+	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
 	SaveServiceReg(reg *authservice.ServiceReg) error
 	DeleteServiceReg(serviceID string) error
 

@@ -16,10 +16,9 @@ import (
 
 //Services
 
-func TestSerGetVersion(t *testing.T) {
+func TestGetVersion(t *testing.T) {
 	storage := genmocks.Storage{}
 	coreAPIs := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
-
 	got := coreAPIs.GetVersion()
 	want := "1.1.1"
 

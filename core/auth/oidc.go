@@ -108,14 +108,18 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 	}
 }
 
-//refresh must be implemented for OIDC auth
-func (a *oidcAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
-	//TODO: Implement
-	return nil, log.NewError(log.Unimplemented)
+func (a *oidcAuthImpl) verify(id string, verification string, l *log.Log) error {
+	return nil
 }
 
-func (a *oidcAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
-	oidcConfig, err := a.getOidcAuthConfig(orgID, appID)
+func (a *oidcAuthImpl) mobileLoginURL(params string, l *log.Log) (string, error) {
+	var mobileParams oidcMobileParams
+	err := json.Unmarshal([]byte(params), &mobileParams)
+	if err != nil {
+		return "", log.WrapActionError(log.ActionUnmarshal, typeOidcMobileParams, nil, err)
+	}
+	validate := validator.New()
+	err = validate.Struct(mobileParams)
 	if err != nil {
 		return "", nil, log.WrapActionError(log.ActionGet, typeOidcAuthConfig, nil, err)
 	}

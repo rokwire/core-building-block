@@ -246,6 +246,10 @@ func (a *phoneAuthImpl) getLoginUrl(orgID string, appID string, redirectUri stri
 	return "", nil, log.NewErrorf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
+func (a *phoneAuthImpl) verify(id string, verification string, l *log.Log) error {
+	return nil
+}
+
 //initPhoneAuth initializes and registers a new phone auth instance
 func initPhoneAuth(auth *Auth) (*phoneAuthImpl, error) {
 	phone := &phoneAuthImpl{auth: auth, authType: authTypePhone}
