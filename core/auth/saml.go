@@ -27,6 +27,9 @@ func (a *samlAuthImpl) refresh(refreshToken string, orgID string, appID string, 
 	return nil, log.NewError(log.Unimplemented)
 }
 
+func (a *samlAuthImpl) verify(id string, verification string, l *log.Log) error {
+	return log.NewError(log.Unimplemented)
+}
 func (a *samlAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
 	return "", nil, log.NewErrorf("get login url operation invalid for auth_type=%s", a.authType)
 }

@@ -1,11 +1,12 @@
 package auth
 
 import (
+	"bytes"
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"crypto/rsa"
-	"errors"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -27,14 +28,20 @@ const (
 	authKeyAlg    string = "RS256"
 
 	typeAuthType log.LogData = "auth type"
+	typeMail     log.LogData = "mail"
 	typeAuth     log.LogData = "auth"
 )
 
 //Interface for authentication mechanisms
 type authType interface {
 	//Check validity of provided credentials
-	check(creds string, params string, l *log.Log) (*model.UserAuth, error)
 	verify(id string, verification string, l *log.Log) error
+	//check checks the validity of provided credentials
+	check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error)
+	//refresh refreshes the access token using provided refresh token
+	refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error)
+	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
+	getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error)
 }
 
 //Auth represents the auth functionality unit
@@ -146,20 +153,92 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 		return "", "", nil, log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
 	}
 
+	claims, err := auth.check(creds, orgID, appID, params, l)
+	var user *model.User
+	if len(claims.AccountID) > 0 {
+		user, err := a.findAccount(claims)
+		if err != nil {
+			return "", "", nil, err
+		}
+		user, update, newMembership := a.needsUserUpdate(claims, user)
+		if update {
+			var newMembershipOrgData *map[string]interface{}
+			if newMembership {
+				newMembershipOrgData = &claims.OrgData
+			}
+			_, err = a.updateAccount(user, newMembershipOrgData)
+			if err != nil {
+				return "", "", nil, err
+			}
+		}
+	} else {
+		if claims.NewCreds != nil {
+			authCred := model.AuthCred{
+				OrgID:  orgID,
+				AppID:  appID,
+				Type:   authType,
+				UserID: claims.UserID,
+				Creds:  claims.NewCreds,
+			}
+			user, err = a.createAccount(claims, &authCred)
+			if err != nil {
+				return "", "", nil, err
+			}
+		} else {
+			return "", "", nil, log.WrapActionError(log.ActionValidate, model.TypeAuthCred, nil, err)
+		}
+	}
+
 	userAuth, err := auth.check(creds, orgID, appID, params, l)
 	if err != nil {
 		return "", "", nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
 	}
 
-	claims := a.getStandardClaims("", userAuth.UserID, userAuth.Email, userAuth.Phone, "rokwire", orgID, appID, userAuth.Exp)
-	token, err := a.buildAccessToken(claims, "", "all")
+	tokenClaims := a.getStandardClaims("", userAuth.UserID, userAuth.Email, userAuth.Phone, "rokwire", orgID, appID, userAuth.Exp)
+	token, err := a.buildAccessToken(tokenClaims, "", "all")
 	if err != nil {
 		return "", "", nil, log.WrapActionError("build", log.TypeToken, nil, err)
 	}
+	return token, userAuth.RefreshToken, user, nil
 
-	//TODO: Implement account management
+}
 
-	return token, userAuth.RefreshToken, nil, nil
+func (a *Auth) Verify(authType string, id string, verification string, l *log.Log) error {
+	auth, err := a.getAuthType(authType)
+	if err != nil {
+		return log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	err = auth.verify(id, verification, l)
+	if err != nil {
+		log.WrapActionError(log.ActionValidate, "creds", nil, err)
+	}
+
+	return nil
+}
+
+//SendEmail is used to send verification and password reset emails using Smtp connection
+func (a *Auth) SendEmail(toEmail string, subject string, body string, attachmentFilename string) error {
+	if a.emailDialer == nil {
+		return log.NewError("email Dialer is nil")
+	}
+	if toEmail == "" {
+		return log.NewError("Missing email addresses")
+	}
+
+	emails := strings.Split(toEmail, ",")
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", a.emailFrom)
+	m.SetHeader("To", emails...)
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/plain", body)
+	m.Attach(attachmentFilename)
+
+	if err := a.emailDialer.DialAndSend(m); err != nil {
+		return log.WrapActionError(log.ActionSend, typeMail, nil, err)
+	}
+	return nil
 }
 
 //Refresh refreshes an access token using a refresh token
@@ -197,46 +276,9 @@ func (a *Auth) GetLoginUrl(authType string, orgID string, appID string, redirect
 	return loginUrl, params, nil
 }
 
-func (a *Auth) Verify(authType string, id string, verification string, l *log.Log) error {
-	auth, err := a.getAuthType(authType)
-	if err != nil {
-		return log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
-	}
-
-	err = auth.verify(id, verification, l)
-	if err != nil {
-		log.WrapActionError(log.ActionValidate, "creds", nil, err)
-	}
-
-	return nil
-}
-
-//SendEmail is used to send verification and password reset emails using Smtp connection
-func (a *Auth) SendEmail(toEmail string, subject string, body string, attachmentFilename string) error {
-	if a.emailDialer == nil {
-		return errors.New("Email dialer has not been set up")
-	}
-	if toEmail == "" {
-		return errors.New("Missing email")
-	}
-
-	emails := strings.Split(toEmail, ",")
-
-	m := gomail.NewMessage()
-	m.SetHeader("From", a.emailFrom)
-	m.SetHeader("To", emails...)
-	m.SetHeader("Subject", subject)
-	m.SetBody("text/plain", body)
-	m.Attach(attachmentFilename)
-
-	if err := a.emailDialer.DialAndSend(m); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scope string) (string, error) {
-	scopedClaims := a.getStandardClaims(claims.Subject, serviceID, claims.OrgID, claims.AppID, nil)
+//GetScopedAccessToken TODO
+func (a *Auth) GetScopedAccessToken(claims tokenClaims, serviceID string, scope string) (string, error) {
+	scopedClaims := a.getStandardClaims(claims.Subject, claims.UID, "", "", serviceID, claims.OrgID, claims.AppID, nil)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
@@ -266,19 +308,67 @@ func (a *Auth) DeregisterService(serviceID string) error {
 	return a.storage.DeleteServiceReg(serviceID)
 }
 
+//findAccount retrieves a user's account information
+func (a *Auth) findAccount(userAuth *model.UserAuth) (*model.User, error) {
+	return a.storage.FindUserByAccountID(userAuth.AccountID)
+}
+
 //createAccount creates a new user account
-func (a *Auth) createAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
+func (a *Auth) createAccount(userAuth *model.UserAuth, authCred *model.AuthCred) (*model.User, error) {
+	return a.storage.InsertUser(userAuth, authCred)
 }
 
 //updateAccount updates a user's account information
-func (a *Auth) updateAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
+func (a *Auth) updateAccount(user *model.User, newOrgData *map[string]interface{}) (*model.User, error) {
+	return a.storage.UpdateUser(user, newOrgData)
 }
 
 //deleteAccount deletes a user account
-func (a *Auth) deleteAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
+func (a *Auth) deleteAccount(id string) error {
+	return a.storage.DeleteUser(id)
+}
+
+//needsUserUpdate determines if user should be updated by userAuth (assumes userAuth is most up-to-date)
+func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*model.User, bool, bool) {
+	update := false
+
+	// account
+	if userAuth.Email != user.Account.Email {
+		user.Account.Email = userAuth.Email
+		update = true
+	}
+	if userAuth.Phone != user.Account.Phone {
+		user.Account.Phone = userAuth.Phone
+		update = true
+	}
+
+	// profile
+	if !bytes.Equal(userAuth.Picture, []byte(user.Profile.Photo)) {
+		user.Profile.Photo = string(userAuth.Picture)
+		update = true
+	}
+	if user.Profile.FirstName != userAuth.FirstName {
+		user.Profile.FirstName = userAuth.FirstName
+		update = true
+	}
+	if user.Profile.LastName != userAuth.LastName {
+		user.Profile.LastName = userAuth.LastName
+		update = true
+	}
+
+	// org data
+	foundOrg := false
+	for _, m := range user.OrganizationsMemberships {
+		if m.Organization.ID == userAuth.OrgData["orgID"] {
+			foundOrg = true
+			if !reflect.DeepEqual(userAuth.OrgData, m.OrgUserData) {
+				m.OrgUserData = userAuth.OrgData
+				update = true
+			}
+		}
+	}
+
+	return user, update, !foundOrg
 }
 
 func (a *Auth) registerAuthType(name string, auth authType) error {
@@ -445,10 +535,20 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 //Storage interface to communicate with the storage
 type Storage interface {
 	ReadTODO() error
-	CreateEmailCredential(*credential) error
-	UpdateEmailCredential(*credential) error
-	GetEmailCredential(username string) (*credential, error)
-	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
+	FindUserByAccountID(accountID string) (*model.User, error)
+	InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred) (*model.User, error)
+	UpdateUser(user *model.User, newOrgData *map[string]interface{}) (*model.User, error)
+	DeleteUser(id string) error
+
+	FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCred, error)
+	UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCred) error
+	FindOrganization(id string) (*model.Organization, error)
+
+	//ServiceRegs
+	FindServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
+	FindServiceReg(serviceID string) (*authservice.ServiceReg, error)
+	InsertServiceReg(reg *authservice.ServiceReg) error
+	UpdateServiceReg(reg *authservice.ServiceReg) error
 	SaveServiceReg(reg *authservice.ServiceReg) error
 	DeleteServiceReg(serviceID string) error
 

@@ -108,18 +108,18 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 	}
 }
 
-func (a *oidcAuthImpl) verify(id string, verification string, l *log.Log) error {
-	return nil
+//refresh must be implemented for OIDC auth
+func (a *oidcAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
+	//TODO: Implement
+	return nil, log.NewError(log.Unimplemented)
 }
 
-func (a *oidcAuthImpl) mobileLoginURL(params string, l *log.Log) (string, error) {
-	var mobileParams oidcMobileParams
-	err := json.Unmarshal([]byte(params), &mobileParams)
-	if err != nil {
-		return "", log.WrapActionError(log.ActionUnmarshal, typeOidcMobileParams, nil, err)
-	}
-	validate := validator.New()
-	err = validate.Struct(mobileParams)
+func (a *oidcAuthImpl) verify(id string, verification string, l *log.Log) error {
+	return log.NewError(log.Unimplemented)
+}
+
+func (a *oidcAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
+	oidcConfig, err := a.getOidcAuthConfig(orgID, appID)
 	if err != nil {
 		return "", nil, log.WrapActionError(log.ActionGet, typeOidcAuthConfig, nil, err)
 	}
@@ -270,6 +270,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionUnmarshal, "user info", nil, err)
 	}
+	userAuth.OrgData = userClaims
 
 	userAuth.Sub = userClaims["sub"].(string)
 	if userAuth.Sub != sub {
@@ -280,9 +281,13 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	if userAuth.UserID, ok = userID.(string); !ok {
 		l.LogAction(log.Warn, log.StatusError, log.ActionCast, log.TypeString, &log.FieldArgs{"user_id": userID})
 	}
-	name := readFromClaims("name", &oidcConfig.Claims, &userClaims)
-	if userAuth.Name, ok = name.(string); !ok {
-		l.LogAction(log.Warn, log.StatusError, log.ActionCast, log.TypeString, &log.FieldArgs{"name": name})
+	firstName := readFromClaims("given_name", &oidcConfig.Claims, &userClaims)
+	if userAuth.FirstName, ok = firstName.(string); !ok {
+		l.LogAction(log.Warn, log.StatusError, log.ActionCast, log.TypeString, &log.FieldArgs{"given_name": firstName})
+	}
+	lastName := readFromClaims("family_name", &oidcConfig.Claims, &userClaims)
+	if userAuth.LastName, ok = lastName.(string); !ok {
+		l.LogAction(log.Warn, log.StatusError, log.ActionCast, log.TypeString, &log.FieldArgs{"family_name": lastName})
 	}
 	email := readFromClaims("email", &oidcConfig.Claims, &userClaims)
 	if userAuth.Email, ok = email.(string); !ok {

@@ -4,13 +4,13 @@ info:
   description: Core Building Block API Documentation
   version: 1.0.0
 servers:
-  - url: 'https://api.rokwire.illinois.edu/core'
+  - url: "https://api.rokwire.illinois.edu/core"
     description: Production server
-  - url: 'https://api-test.rokwire.illinois.edu/core'
+  - url: "https://api-test.rokwire.illinois.edu/core"
     description: Test server
-  - url: 'https://api-dev.rokwire.illinois.edu/core'
+  - url: "https://api-dev.rokwire.illinois.edu/core"
     description: Development server
-  - url: 'http://localhost/core'
+  - url: "http://localhost/core"
     description: Local server
 tags:
   - name: Auth
@@ -30,13 +30,61 @@ paths:
         - Auth
       summary: Test API..
       responses:
-        '200':
+        "200":
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Echooo
+  "/services/auth/verify/{auth-type}/{id}/{code}":
+    post:
+      tags:
+        - Auth
+      summary: Send verify code
+      description: |
+        Sends code as path parameter for verification of the auth type
+      parameters:
+        - name: auth-type
+          in: path
+          description: Auth type of the verification code
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: ID of the verification code
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: code
+          in: path
+          description: Verification code
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Successfully verified code
+        "400":
+          description: Bad request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal error
+  /services/auth/service-regs:
+    get:
   /services/auth/login:
     post:
       tags:
@@ -50,7 +98,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AuthLoginRequest'
+              $ref: "#/components/schemas/AuthLoginRequest"
             examples:
               email:
                 summary: Email login
@@ -91,17 +139,17 @@ paths:
                   }
         required: true
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthLoginResponse'
-        '400':
+                $ref: "#/components/schemas/AuthLoginResponse"
+        "400":
           description: Bad request
-        '401':
+        "401":
           description: Unauthorized
-        '500':
+        "500":
           description: Internal error
   /services/auth/refresh:
     post:
@@ -119,17 +167,17 @@ paths:
               type: string
         required: true
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthRefreshResponse'
-        '400':
+                $ref: "#/components/schemas/AuthRefreshResponse"
+        "400":
           description: Bad request
-        '401':
+        "401":
           description: Unauthorized
-        '500':
+        "500":
           description: Internal error
   /services/auth/login-url:
     post:
@@ -142,20 +190,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AuthLoginUrlRequest'
+              $ref: "#/components/schemas/AuthLoginUrlRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthLoginUrlResponse'
-        '400':
+                $ref: "#/components/schemas/AuthLoginUrlResponse"
+        "400":
           description: Bad request
-        '401':
+        "401":
           description: Unauthorized
-        '500':
+        "500":
           description: Internal error
   /services/common/test:
     get:
@@ -163,7 +211,7 @@ paths:
         - Common
       summary: Test API..
       responses:
-        '200':
+        "200":
           description: Success
           content:
             text/plain:
@@ -178,17 +226,17 @@ paths:
       description: |
         Gives the system global config
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GlobalConfig'
-        '400':
+                $ref: "#/components/schemas/GlobalConfig"
+        "400":
           description: Bad request
-        '401':
+        "401":
           description: Unauthorized
-        '500':
+        "500":
           description: Internal error
     post:
       tags:
@@ -200,21 +248,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GlobalConfig'
+              $ref: "#/components/schemas/GlobalConfig"
         required: true
       responses:
-        '200':
+        "200":
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        '400':
+        "400":
           description: Bad request
-        '401':
+        "401":
           description: Unauthorized
-        '500':
+        "500":
           description: Internal error
     put:
       tags:
@@ -226,23 +274,23 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GlobalConfig'
+              $ref: "#/components/schemas/GlobalConfig"
         required: true
       responses:
-        '200':
+        "200":
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        '400':
+        "400":
           description: Bad request
-        '401':
+        "401":
           description: Unauthorized
-        '500':
+        "500":
           description: Internal error
-  '/admin/organizations/{id}':
+  "/admin/organizations/{id}":
     put:
       tags:
         - Admin
@@ -263,21 +311,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Organization'
+              $ref: "#/components/schemas/Organization"
         required: true
       responses:
-        '200':
+        "200":
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        '400':
+        "400":
           description: Bad request
-        '401':
+        "401":
           description: Unauthorized
-        '500':
+        "500":
           description: Internal error
     get:
       tags:
@@ -295,19 +343,19 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Organization'
-        '400':
+                $ref: "#/components/schemas/Organization"
+        "400":
           description: Bad request
-        '401':
+        "401":
           description: Unauthorized
-        '404':
+        "404":
           description: Not Found
-        '500':
+        "500":
           description: Internal error
   /admin/organizations:
     get:
@@ -317,19 +365,19 @@ paths:
       description: |
         Gets organizations
       responses:
-        '200':
+        "200":
           description: Successful operation
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Organization'
-        '400':
+                  $ref: "#/components/schemas/Organization"
+        "400":
           description: Bad request
-        '401':
+        "401":
           description: Unauthorized
-        '500':
+        "500":
           description: Internal error
     post:
       tags:
@@ -342,21 +390,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Organization'
+              $ref: "#/components/schemas/Organization"
         required: true
       responses:
-        '200':
+        "200":
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        '400':
+        "400":
           description: Bad request
-        '401':
+        "401":
           description: Unauthorized
-        '500':
+        "500":
           description: Internal error
   /admin/service-regs:
     get:
@@ -375,19 +423,19 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ServiceReg'
-        '400':
+                  $ref: "#/components/schemas/ServiceReg"
+        "400":
           description: Bad request
-        '401':
+        "401":
           description: Unauthorized
-        '500':
+        "500":
           description: Internal error
     post:
       tags:
@@ -396,27 +444,27 @@ paths:
       description: |
         Creates a new service registration
 
-        The "service_id" of the registration must not match an existing registration  
+        The "service_id" of the registration must not match an existing registration
       requestBody:
         description: service registration record to be added
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ServiceReg'
+              $ref: "#/components/schemas/ServiceReg"
         required: true
       responses:
-        '200':
+        "200":
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        '400':
+        "400":
           description: Bad request
-        '401':
+        "401":
           description: Unauthorized
-        '500':
+        "500":
           description: Internal error
     put:
       tags:
@@ -431,21 +479,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ServiceReg'
+              $ref: "#/components/schemas/ServiceReg"
         required: true
       responses:
-        '200':
+        "200":
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        '400':
+        "400":
           description: Bad request
-        '401':
+        "401":
           description: Unauthorized
-        '500':
+        "500":
           description: Internal error
     delete:
       tags:
@@ -463,18 +511,18 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        '400':
+        "400":
           description: Bad request
-        '401':
+        "401":
           description: Unauthorized
-        '500':
+        "500":
           description: Internal error
   /enc/test:
     get:
@@ -482,7 +530,7 @@ paths:
         - Enc
       summary: Test API..
       responses:
-        '200':
+        "200":
           description: Success
           content:
             text/plain:
@@ -495,7 +543,7 @@ paths:
         - BBs
       summary: Test API..
       responses:
-        '200':
+        "200":
           description: Success
           content:
             text/plain:
@@ -519,25 +567,25 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ServiceReg'
-        '400':
+                  $ref: "#/components/schemas/ServiceReg"
+        "400":
           description: Bad request
-        '401':
+        "401":
           description: Unauthorized
-        '500':
+        "500":
           description: Internal error
   /version:
     get:
       summary: Get service version
       responses:
-        '200':
+        "200":
           description: Success
           content:
             text/plain:
@@ -584,11 +632,11 @@ components:
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/GlobalRole'
+            $ref: "#/components/schemas/GlobalRole"
         users:
           type: array
           items:
-            $ref: '#/components/schemas/User'
+            $ref: "#/components/schemas/User"
     Organization:
       required:
         - id
@@ -617,7 +665,7 @@ components:
           items:
             type: string
         config:
-          $ref: '#/components/schemas/OrganizationConfig'
+          $ref: "#/components/schemas/OrganizationConfig"
     OrganizationConfig:
       type: object
       properties:
@@ -667,11 +715,11 @@ components:
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/OrganizationRole'
+            $ref: "#/components/schemas/OrganizationRole"
         org_memberships:
           type: array
           items:
-            $ref: '#/components/schemas/OrganizationMembership'
+            $ref: "#/components/schemas/OrganizationMembership"
     ServiceReg:
       required:
         - service_id
@@ -683,7 +731,7 @@ components:
         host:
           type: string
         pub_key:
-          $ref: '#/components/schemas/PubKey'
+          $ref: "#/components/schemas/PubKey"
     PubKey:
       required:
         - key_pem
@@ -714,15 +762,15 @@ components:
         creds:
           type: object
           anyOf:
-            - $ref: '#/components/schemas/AuthLoginCredsEmail'
-            - $ref: '#/components/schemas/AuthLoginCredsPhone'
-            - $ref: '#/components/schemas/AuthLoginCredsOidc'
+            - $ref: "#/components/schemas/AuthLoginCredsEmail"
+            - $ref: "#/components/schemas/AuthLoginCredsPhone"
+            - $ref: "#/components/schemas/AuthLoginCredsOidc"
         params:
           type: object
           anyOf:
-            - $ref: '#/components/schemas/AuthLoginParamsEmail'
-            - $ref: '#/components/schemas/AuthLoginParamsPhone'
-            - $ref: '#/components/schemas/AuthLoginParamsOidc'
+            - $ref: "#/components/schemas/AuthLoginParamsEmail"
+            - $ref: "#/components/schemas/AuthLoginParamsPhone"
+            - $ref: "#/components/schemas/AuthLoginParamsOidc"
     AuthLoginResponse:
       type: object
       properties:
@@ -731,7 +779,7 @@ components:
         refresh_token:
           type: string
         user:
-          $ref: '#/components/schemas/User'
+          $ref: "#/components/schemas/User"
     AuthLoginCredsEmail:
       required:
         - email
@@ -820,9 +868,9 @@ components:
         id:
           type: string
         account:
-          $ref: '#/components/schemas/UserAccount'
+          $ref: "#/components/schemas/UserAccount"
         profile:
-          $ref: '#/components/schemas/UserProfile'
+          $ref: "#/components/schemas/UserProfile"
         permissions:
           type: array
           items:
@@ -830,19 +878,19 @@ components:
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/GlobalRole'
+            $ref: "#/components/schemas/GlobalRole"
         groups:
           type: array
           items:
-            $ref: '#/components/schemas/GlobalGroup'
+            $ref: "#/components/schemas/GlobalGroup"
         org_memberships:
           type: array
           items:
-            $ref: '#/components/schemas/OrganizationMembership'
+            $ref: "#/components/schemas/OrganizationMembership"
         devices:
           type: array
           items:
-            $ref: '#/components/schemas/Device'
+            $ref: "#/components/schemas/Device"
     UserAccount:
       required:
         - id
@@ -882,7 +930,7 @@ components:
           type: string
         org_user_data:
           type: object
-          description: 'map[string]object for arbitrary organization user data'
+          description: "map[string]object for arbitrary organization user data"
         permissions:
           type: array
           items:
@@ -890,11 +938,11 @@ components:
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/OrganizationRole'
+            $ref: "#/components/schemas/OrganizationRole"
         groups:
           type: array
           items:
-            $ref: '#/components/schemas/OrganizationGroup'
+            $ref: "#/components/schemas/OrganizationGroup"
     Device:
       required:
         - id

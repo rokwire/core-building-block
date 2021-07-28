@@ -5,15 +5,12 @@ import (
 	"core-building-block/utils"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
 	log "github.com/rokmetro/logging-library/loglib"
-)
-
-const (
-	authTypeEmail string = "email"
 )
 
 // Email implementation of authType
@@ -23,12 +20,13 @@ type emailAuthImpl struct {
 }
 
 const (
-	typeTime  log.LogData = "time.Time"
-	typeCreds log.LogData = "creds"
+	typeTime      log.LogData = "time.Time"
+	typeCreds     log.LogData = "creds"
+	authTypeEmail string      = "email"
 )
 
-//credentials represents the credential struct for email auth
-type credential struct {
+//credentials represents the emailCreds struct for email auth
+type emailCreds struct {
 	Email              string    `json:"email" bson:"email" validate:"required"`
 	Password           string    `json:"password" bson:"password"`
 	IsVerified         bool      `json:"is_verified" bson:"is_verified"`
@@ -36,8 +34,8 @@ type credential struct {
 	VerificationExpiry time.Time `json:"verification_expiry" bson:"verification_expiry"`
 }
 
-func (a *emailAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
-	var c *credential
+func (a *emailAuthImpl) check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error) {
+	var c *emailCreds
 	err := json.Unmarshal([]byte(creds), &c)
 	if err != nil {
 		return nil, err
@@ -52,54 +50,66 @@ func (a *emailAuthImpl) check(creds string, params string, l *log.Log) (*model.U
 		return nil, errors.New("newUser flag missing or invalid")
 	}
 
-	user, err := a.auth.storage.GetEmailCredential(c.Email)
+	authCreds, err := a.auth.storage.FindCredentials("", "", authTypeEmail, c.Email)
 	if err != nil {
-		return nil, errors.New("failed to get user credentials")
+		errFields := log.FieldArgs{"org_id": "", "app_id": "", "type": authTypeEmail, "user_id": c.Email}
+		l.LogAction(log.Warn, log.StatusError, log.ActionFind, model.TypeAuthCred, &errFields)
+		return nil, fmt.Errorf("no credentials found: %s", err.Error())
 	}
 
+	credBytes, err := json.Marshal(authCreds.Creds)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionMarshal, model.TypeAuthCred, nil, err)
+	}
+
+	var user *emailCreds
+	err = json.Unmarshal(credBytes, &user)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionUnmarshal, model.TypeAuthCred, nil, err)
+	}
+	claims := &model.UserAuth{Email: c.Email, UserID: c.Email}
 	//Handle sign up
 	if newUser {
-		if err = a.handleSignup(c, user); err != nil {
+		newCreds, err := a.handleSignup(c, user)
+		if err != nil {
 			return nil, err
 		}
-		return &model.UserAuth{Email: c.Email}, nil
+		claims.NewCreds = newCreds
+		return claims, nil
 	}
 
 	if err = a.handleSignin(c, user); err != nil {
 		return nil, err
 	}
-	claims := &model.UserAuth{Email: c.Email}
+	claims.AccountID = authCreds.AccountID
 	return claims, nil
 }
 
-func (a *emailAuthImpl) handleSignup(c *credential, user *credential) error {
-	if user != nil {
-		return errors.New("email already in use")
+func (a *emailAuthImpl) handleSignup(requestCreds *emailCreds, storageCreds *emailCreds) (*emailCreds, error) {
+	if storageCreds != nil {
+		return nil, log.WrapActionError(log.ActionFind, typeCreds, nil, log.NewError("email already in use"))
 	}
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(c.Password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(requestCreds.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return errors.New("failed to generate hash from password")
+		return nil, log.WrapActionError(log.ActionCompute, typeCreds, nil, log.NewError("failed to generate hash from password"))
 	}
-
-	c.VerificationCode = utils.RandSeq(8)
-	c.Password = string(hashedPassword)
-	c.VerificationExpiry = time.Now().Add(time.Hour * 24)
-	if err = a.sendVerificationCode(c.Email, c.VerificationCode); err != nil {
-		return errors.New("failed to send verification email for user")
+	newCreds := emailCreds{}
+	newCreds.Email = requestCreds.Email
+	newCreds.VerificationCode = utils.RandSeq(8)
+	newCreds.Password = string(hashedPassword)
+	newCreds.VerificationExpiry = time.Now().Add(time.Hour * 24)
+	if err = a.sendVerificationCode(newCreds.Email, newCreds.VerificationCode); err != nil {
+		return nil, log.WrapActionError(log.ActionFind, typeCreds, nil, log.NewError("failed to send verification email for user"))
 	}
-	err = a.auth.storage.CreateEmailCredential(c)
-	if err != nil {
-		return errors.New("failed to store credentials to DB")
-	}
-	return nil
+	return &newCreds, nil
 }
 
-func (a *emailAuthImpl) handleSignin(c *credential, user *credential) error {
-	if user == nil {
-		return errors.New("no user credentials found")
+func (a *emailAuthImpl) handleSignin(requestCreds *emailCreds, storageCreds *emailCreds) error {
+	if storageCreds == nil {
+		return log.WrapActionError(log.ActionValidate, typeCreds, nil, log.NewError("no credentials found in storage"))
 	}
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(c.Password)); err != nil {
-		return errors.New("invalid password")
+	if err := bcrypt.CompareHashAndPassword([]byte(storageCreds.Password), []byte(requestCreds.Password)); err != nil {
+		return log.WrapActionError(log.ActionValidate, typeCreds, nil, err)
 	}
 	return nil
 }
@@ -108,14 +118,28 @@ func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode stri
 	return a.auth.SendEmail(email, "Verify your email", "Your verification code is "+verificationCode, "")
 }
 
-func (a *emailAuthImpl) sendPasswordReset(email string, password string) error {
-	return a.auth.SendEmail(email, "Password Reset", "Your temporary password is "+password, "")
-}
+//TODO: To be used in password reset flow
+// func (a *emailAuthImpl) sendPasswordReset(email string, password string) error {
+// 	return a.auth.SendEmail(email, "Password Reset", "Your temporary password is "+password, "")
+// }
 
 func (a *emailAuthImpl) verify(id string, verification string, l *log.Log) error {
-	creds, err := a.auth.storage.GetEmailCredential(id)
+	authCreds, err := a.auth.storage.FindCredentials("", "", authTypeEmail, id)
 	if err != nil {
-		return log.WrapActionError(log.ActionFind, typeCreds, nil, err)
+		errFields := log.FieldArgs{"org_id": "", "app_id": "", "type": authTypeEmail, "user_id": id}
+		l.LogAction(log.Warn, log.StatusError, log.ActionFind, model.TypeAuthCred, &errFields)
+		return log.WrapActionError(log.ActionFind, typeCreds, nil, log.NewError("no credentials found in storage"))
+	}
+
+	credBytes, err := json.Marshal(authCreds.Creds)
+	if err != nil {
+		return log.WrapActionError(log.ActionMarshal, typeCreds, nil, err)
+	}
+
+	var creds *emailCreds
+	err = json.Unmarshal(credBytes, &creds)
+	if err != nil {
+		return log.WrapActionError(log.ActionUnmarshal, typeCreds, nil, err)
 	}
 	valid, err := a.compareVerifyCode(creds.VerificationCode, verification, creds.VerificationExpiry, l)
 	if err != nil {
@@ -128,7 +152,8 @@ func (a *emailAuthImpl) verify(id string, verification string, l *log.Log) error
 	creds.IsVerified = true
 	creds.VerificationCode = ""
 	creds.VerificationExpiry = time.Time{}
-	if err = a.auth.storage.UpdateEmailCredential(creds); err != nil {
+	authCreds.Creds = creds
+	if err = a.auth.storage.UpdateCredentials("", "", authTypeEmail, authCreds); err != nil {
 		return err
 	}
 	return nil

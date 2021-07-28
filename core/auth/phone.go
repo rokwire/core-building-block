@@ -237,6 +237,10 @@ func makeRequest(ctx context.Context, method string, pathPart string, data url.V
 	return resp, nil
 }
 
+func (a *phoneAuthImpl) verify(id string, verification string, l *log.Log) error {
+	return nil
+}
+
 //refresh is enabled for phone auth, but no operation is needed
 func (a *phoneAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
 	return nil, nil
@@ -244,10 +248,6 @@ func (a *phoneAuthImpl) refresh(refreshToken string, orgID string, appID string,
 
 func (a *phoneAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
 	return "", nil, log.NewErrorf("get login url operation invalid for auth_type=%s", a.authType)
-}
-
-func (a *phoneAuthImpl) verify(id string, verification string, l *log.Log) error {
-	return nil
 }
 
 //initPhoneAuth initializes and registers a new phone auth instance

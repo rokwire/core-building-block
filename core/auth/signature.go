@@ -21,6 +21,11 @@ func (a *signatureAuthImpl) check(creds string, orgID string, appID string, para
 	return nil, log.NewError(log.Unimplemented)
 }
 
+func (a *signatureAuthImpl) verify(id string, verification string, l *log.Log) error {
+	return log.NewError(log.Unimplemented)
+}
+
+//initSignatureAuth initializes and registers a new stignature auth instance
 func (a *signatureAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
 	return nil, log.NewErrorf("refresh operation invalid for auth_type=%s", authTypeSignature)
 }

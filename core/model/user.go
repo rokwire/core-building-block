@@ -3,6 +3,12 @@ package model
 import (
 	"bytes"
 	"fmt"
+
+	log "github.com/rokmetro/logging-library/loglib"
+)
+
+const (
+	TypeUser log.LogData = "user"
 )
 
 //User represents user entity
@@ -12,7 +18,7 @@ type User struct {
 	Account UserAccount
 	Profile UserProfile
 
-	Permissions []GlobalPermission
+	Permissions []string
 	Roles       []GlobalRole
 
 	Groups []GlobalGroup
@@ -43,18 +49,18 @@ func (u User) String() string {
 //It is also a good practive internally the system to generate unique number and(or) unique username which are not changable.
 //At some moment the user could be needed to change his phone or email so we need to rely on the number or on the username which cannot be changed.
 type UserAccount struct {
-	ID string
+	ID string `bson:"id"`
 
-	Email string
-	Phone string
+	Email string `bson:"email"`
+	Phone string `bson:"phone"`
 
-	Username string
+	Username string `bson:"username"`
 
 	//for Champaign org - basically this will be one or many of  - email, phone, number, username
 	//for Illinois university org - this will be empty because this organization requires it own login
-	LoginTypes []string
+	LoginTypes []string `bson:"login_types"`
 
-	AllowLogin bool
+	AllowLogin bool `bson:"allow_login"`
 
 	//TODO
 	//has 2FA ???
@@ -67,44 +73,35 @@ func (ua UserAccount) String() string {
 
 //UserProfile represents user profile entity. The user profile is an information about the user.
 type UserProfile struct {
-	ID        string
-	PhotoURL  string
-	FirstName string
-	LastName  string
+	ID        string `bson:"id"`
+	Photo     string `bson:"photo"`
+	PhotoURL  string `bson:"photo_url"`
+	FirstName string `bson:"firstname"`
+	LastName  string `bson:"lastname"`
 }
 
 func (up UserProfile) String() string {
 	return fmt.Sprintf("[ID:%s\tPhotoURL:%s\tFirstName:%s\tLastName:%s]",
-		up.ID, up.PhotoURL, up.FirstName, up.LastName)
+		up.ID, up.Photo, up.FirstName, up.LastName)
 }
 
 //GlobalGroup represents global group entity. It is a collection of users
 type GlobalGroup struct {
-	ID   string
-	Name string
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
 
-	Permissions []GlobalPermission
+	Permissions []string `bson:"permissions"`
 	Roles       []GlobalRole
 
 	Users []User
 }
 
-//GlobalPermission represents global permission entity
-type GlobalPermission struct {
-	ID   string
-	Name string
-}
-
-func (c GlobalPermission) String() string {
-	return fmt.Sprintf("[ID:%s\tName:%s]", c.ID, c.Name)
-}
-
 //GlobalRole represents global role entity. It is a collection of permissions
 type GlobalRole struct {
-	ID   string
-	Name string
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
 
-	Permissions []GlobalPermission
+	Permissions []string `bson:"permissions"`
 }
 
 func (c GlobalRole) String() string {
@@ -113,10 +110,10 @@ func (c GlobalRole) String() string {
 
 //OrganizationGroup represents organization group entity. It is a collection of users
 type OrganizationGroup struct {
-	ID   string
-	Name string
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
 
-	Permissions []OrganizationPermission
+	Permissions []string `bson:"permissions"`
 	Roles       []OrganizationRole
 
 	Organization Organization
@@ -128,24 +125,12 @@ func (cg OrganizationGroup) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nOrganization:%s]", cg.ID, cg.Name, cg.Organization)
 }
 
-//OrganizationPermission represents organization permission entity
-type OrganizationPermission struct {
-	ID   string
-	Name string
-
-	Organization Organization
-}
-
-func (c OrganizationPermission) String() string {
-	return fmt.Sprintf("[ID:%s\nName:%s\nOrganization:%s]", c.ID, c.Name, c.Organization)
-}
-
 //OrganizationRole represents organization role entity. It is a collection of permissions
 type OrganizationRole struct {
-	ID   string
-	Name string
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
 
-	Permissions []OrganizationPermission
+	Permissions []string `bson:"permissions"`
 
 	Organization Organization
 }
@@ -156,12 +141,12 @@ func (c OrganizationRole) String() string {
 
 //Device represents user devices entity.
 type Device struct {
-	ID   string
-	Type string //mobile, web, desktop, other
+	ID   string `bson:"_id"`
+	Type string `bson:"type"` //mobile, web, desktop, other
 
 	//TODO - other fields when they are clear
-	OS         string //?
-	MacAddress string //?
+	OS         string `bson:"os"`          //?
+	MacAddress string `bson:"mac_address"` //?
 	///
 
 	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
