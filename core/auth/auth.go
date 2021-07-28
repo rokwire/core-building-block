@@ -535,7 +535,6 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 //Storage interface to communicate with the storage
 type Storage interface {
 	ReadTODO() error
-	GetServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
 	FindUserByAccountID(accountID string) (*model.User, error)
 	InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred) (*model.User, error)
 	UpdateUser(user *model.User, newOrgData *map[string]interface{}) (*model.User, error)
