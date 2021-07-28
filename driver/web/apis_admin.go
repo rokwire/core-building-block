@@ -165,7 +165,7 @@ func (h AdminApisHandler) getOrganization(l *log.Log, r *http.Request) log.HttpR
 		return l.HttpResponseErrorAction(log.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 	}
 	if org == nil {
-		return l.HttpResponseErrorData(log.StatusFound, log.TypeResponse, log.StringArgs("no organization"), nil, http.StatusNotFound, false)
+		return l.HttpResponseErrorData(log.StatusMissing, model.TypeOrganization, &log.FieldArgs{"id": ID}, nil, http.StatusNotFound, false)
 	}
 
 	responseData := organizationToDef(org)

@@ -75,6 +75,7 @@ func (ua UserAccount) String() string {
 type UserProfile struct {
 	ID        string `bson:"id"`
 	Photo     string `bson:"photo"`
+	PhotoURL  string `bson:"photo_url"`
 	FirstName string `bson:"firstname"`
 	LastName  string `bson:"lastname"`
 }

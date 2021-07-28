@@ -67,7 +67,9 @@ func (we Adapter) Start() {
 	authSubrouter := servicesSubRouter.PathPrefix("/auth").Subrouter()
 	authSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getAuthTest)).Methods("GET")
 	authSubrouter.HandleFunc("/verify/{auth-type}/{id}/{code}", we.wrapFunc(we.servicesApisHandler.verifyCode)).Methods("GET")
-	authSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.servicesApisHandler.getAuthServiceRegistrations)).Methods("GET")
+	authSubrouter.HandleFunc("/login", we.wrapFunc(we.servicesApisHandler.authLogin)).Methods("POST")
+	authSubrouter.HandleFunc("/login-url", we.wrapFunc(we.servicesApisHandler.authLoginUrl)).Methods("POST")
+	authSubrouter.HandleFunc("/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh)).Methods("POST")
 
 	//common
 	commonSubrouter := servicesSubRouter.PathPrefix("/common").Subrouter()
@@ -102,6 +104,7 @@ func (we Adapter) Start() {
 	///bbs ///
 	bbsSubrouter := subRouter.PathPrefix("/bbs").Subrouter()
 	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.getTest)).Methods("GET")
+	bbsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.bbsApisHandler.getServiceRegistrations)).Methods("GET")
 	///
 
 	err := http.ListenAndServe(":80", router)
