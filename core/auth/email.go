@@ -22,8 +22,8 @@ func (a *emailAuthImpl) check(creds string, orgID string, appID string, params s
 }
 
 //refresh is enabled for email auth, but no operation is needed
-func (a *emailAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
-	return nil, nil
+func (a *emailAuthImpl) refresh(params interface{}, orgID string, appID string, l *log.Log) (interface{}, *int64, error) {
+	return nil, nil, nil
 }
 
 func (a *emailAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {

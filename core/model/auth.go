@@ -31,3 +31,13 @@ type AuthConfig struct {
 	Type   string `json:"type" bson:"type" validate:"required"`
 	Config []byte `json:"config" bson:"config" validate:"required"`
 }
+
+type AuthCred struct {
+	OrgID     string      `bson:"org_id"`
+	AppID     string      `bson:"app_id"`
+	Type      string      `bson:"type"`
+	UserID    string      `bson:"user_id"`
+	AccountID string      `bson:"account_id"`
+	Creds     interface{} `bson:"creds"`
+	Refresh   interface{} `bson:"refresh"`
+}

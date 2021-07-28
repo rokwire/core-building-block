@@ -21,8 +21,8 @@ func (a *apiKeyAuthImpl) check(creds string, orgID string, appID string, params 
 	return nil, log.NewError(log.Unimplemented)
 }
 
-func (a *apiKeyAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
-	return nil, log.NewErrorf("refresh operation invalid for auth_type=%s", authTypeApiKey)
+func (a *apiKeyAuthImpl) refresh(params interface{}, orgID string, appID string, l *log.Log) (interface{}, *int64, error) {
+	return nil, nil, log.NewErrorf("refresh operation invalid for auth_type=%s", authTypeApiKey)
 }
 
 func (a *apiKeyAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {

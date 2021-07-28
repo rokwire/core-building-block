@@ -21,8 +21,8 @@ func (a *firebaseAuthImpl) check(creds string, orgID string, appID string, param
 	return nil, log.NewError(log.Unimplemented)
 }
 
-func (a *firebaseAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
-	return nil, log.NewErrorf("refresh operation invalid for auth_type=%s", authTypeFirebase)
+func (a *firebaseAuthImpl) refresh(params interface{}, orgID string, appID string, l *log.Log) (interface{}, *int64, error) {
+	return nil, nil, log.NewErrorf("refresh operation invalid for auth_type=%s", authTypeFirebase)
 }
 
 func (a *firebaseAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {

@@ -21,8 +21,8 @@ func (a *signatureAuthImpl) check(creds string, orgID string, appID string, para
 	return nil, log.NewError(log.Unimplemented)
 }
 
-func (a *signatureAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
-	return nil, log.NewErrorf("refresh operation invalid for auth_type=%s", authTypeSignature)
+func (a *signatureAuthImpl) refresh(params interface{}, orgID string, appID string, l *log.Log) (interface{}, *int64, error) {
+	return nil, nil, log.NewErrorf("refresh operation invalid for auth_type=%s", authTypeSignature)
 }
 
 func (a *signatureAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {

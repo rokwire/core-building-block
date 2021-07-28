@@ -22,9 +22,9 @@ func (a *samlAuthImpl) check(creds string, orgID string, appID string, params st
 }
 
 //refresh must be implemented for SAML auth
-func (a *samlAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
+func (a *samlAuthImpl) refresh(params interface{}, orgID string, appID string, l *log.Log) (interface{}, *int64, error) {
 	//TODO: Implement
-	return nil, log.NewError(log.Unimplemented)
+	return nil, nil, log.NewError(log.Unimplemented)
 }
 
 func (a *samlAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {

@@ -252,6 +252,11 @@ func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 	return resultList, nil
 }
 
+//FindCredentialsByToken finds a set of credentials by refresh token
+func (sa *Adapter) FindCredentialsByToken(token string) (*model.AuthCred, error) {
+	return nil, log.NewError(log.Unimplemented)
+}
+
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records
