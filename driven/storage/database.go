@@ -22,6 +22,7 @@ type database struct {
 	users        *collectionWrapper
 	groups       *collectionWrapper
 	roles        *collectionWrapper
+	permissions  *collectionWrapper
 	memberships  *collectionWrapper
 	applications *collectionWrapper
 	devices      *collectionWrapper
@@ -66,31 +67,37 @@ func (m *database) start() error {
 	}
 
 	groups := &collectionWrapper{database: m, coll: db.Collection("groups")}
-	err = m.applyGroupsChecks(users)
+	err = m.applyGroupsChecks(groups)
 	if err != nil {
 		return err
 	}
 
 	roles := &collectionWrapper{database: m, coll: db.Collection("roles")}
-	err = m.applyRolesChecks(users)
+	err = m.applyRolesChecks(roles)
+	if err != nil {
+		return err
+	}
+
+	permissions := &collectionWrapper{database: m, coll: db.Collection("permissions")}
+	err = m.applyPermissionsChecks(permissions)
 	if err != nil {
 		return err
 	}
 
 	memberships := &collectionWrapper{database: m, coll: db.Collection("memberships")}
-	err = m.applyMembershipsChecks(users)
+	err = m.applyMembershipsChecks(memberships)
 	if err != nil {
 		return err
 	}
 
 	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
-	err = m.applyApplicationsChecks(users)
+	err = m.applyApplicationsChecks(applications)
 	if err != nil {
 		return err
 	}
 
 	devices := &collectionWrapper{database: m, coll: db.Collection("devices")}
-	err = m.applyDevicesChecks(users)
+	err = m.applyDevicesChecks(devices)
 	if err != nil {
 		return err
 	}
@@ -119,6 +126,7 @@ func (m *database) start() error {
 	m.users = users
 	m.groups = groups
 	m.roles = roles
+	m.permissions = permissions
 	m.memberships = memberships
 	m.applications = applications
 	m.devices = devices
@@ -143,8 +151,11 @@ func (m *database) start() error {
 
 	m.credentials = credentials
 
-	//watch for auth info changes
 	go m.authConfigs.Watch(nil)
+	go m.serviceRegs.Watch(nil)
+	go m.organizations.Watch(nil)
+
+	m.listeners = []Listener{}
 
 	return nil
 }
@@ -167,6 +178,13 @@ func (m *database) applyRolesChecks(roles *collectionWrapper) error {
 	log.Println("apply roles checks.....")
 
 	log.Println("roles check passed")
+	return nil
+}
+
+func (m *database) applyPermissionsChecks(permissions *collectionWrapper) error {
+	log.Println("apply permissions checks.....")
+
+	log.Println("permissions check passed")
 	return nil
 }
 
@@ -273,6 +291,12 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 
 		for _, listener := range m.listeners {
 			go listener.OnServiceRegsUpdated()
+		}
+	case "organizations":
+		log.Println("organizations collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnOrganizationsUpdated()
 		}
 	}
 }

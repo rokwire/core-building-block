@@ -48,7 +48,7 @@ type OrganizationMembership struct {
 	//for Champaign org - this will be empty or populated with data if there is
 	OrgUserData map[string]interface{}
 
-	Permissions []string
+	Permissions []OrganizationPermission
 	Roles       []OrganizationRole
 
 	Groups []OrganizationGroup

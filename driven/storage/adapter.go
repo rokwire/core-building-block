@@ -5,6 +5,7 @@ import (
 	"core-building-block/core/model"
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,21 +15,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"golang.org/x/sync/syncmap"
+	"gopkg.in/go-playground/validator.v9"
 )
-
-type rawUser struct {
-	ID string `bson:"_id"`
-
-	Account model.UserAccount `bson:"account"`
-	Profile model.UserProfile `bson:"profile"`
-
-	Permissions              []string `bson:"permissions"`
-	Roles                    []string `bson:"roles"`
-	Groups                   []string `bson:"groups"`
-	OrganizationsMemberships []string `bson:"memberships"`
-
-	Devices []model.Device `bson:"devices"`
-}
 
 type user struct {
 	ID string `bson:"_id"`
@@ -36,44 +25,74 @@ type user struct {
 	Account model.UserAccount `bson:"account"`
 	Profile model.UserProfile `bson:"profile"`
 
-	Permissions              []string `bson:"permissions"`
-	Roles                    []role
-	Groups                   []group
-	OrganizationsMemberships []membership
+	Permissions              []model.GlobalPermission `bson:"permissions"`
+	Roles                    []model.GlobalRole       `bson:"roles"`
+	Groups                   []model.GlobalGroup      `bson:"groups"`
+	OrganizationsMemberships []userMembership         `bson:"organizations_memberships"`
 
 	Devices []model.Device `bson:"devices"`
 }
 
-type membership struct {
-	ID   string `bson:"_id"`
-	User string `bson:"user"`
+type rawMembership struct {
+	ID     string `bson:"_id"`
+	UserID string `bson:"user_id"`
 
-	OrgID       string                 `bson:"org_id"`
+	OrgID       string                 `bson:"organization_id"`
 	OrgUserData map[string]interface{} `bson:"org_user_data"`
 
 	Permissions []string `bson:"permissions"`
 	Roles       []string `bson:"roles"`
 	Groups      []string `bson:"groups"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type userMembership struct {
+	ID string `bson:"_id"`
+
+	OrgID       string                 `bson:"organization_id"`
+	OrgUserData map[string]interface{} `bson:"org_user_data"`
+
+	Permissions []model.OrganizationPermission `bson:"permissions"`
+	Roles       []model.OrganizationRole       `bson:"roles"`
+	Groups      []model.OrganizationGroup      `bson:"groups"`
 }
 
 type group struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 
-	OrgID string `bson:"org_id"`
+	OrgID string `bson:"organization_id"`
 
 	Permissions []string `bson:"permissions"`
 	Roles       []string `bson:"roles"`
-	Members     []string `bson:"members"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 type role struct {
+	ID          string `bson:"_id"`
+	Name        string `bson:"name"`
+	Description string `bson:"desciption"`
+
+	OrgID string `bson:"organization_id"`
+
+	Permissions []string `bson:"permissions"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type permission struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 
-	OrgID string `bson:"org_id"`
+	OrgID string `bson:"organization_id"`
 
-	Permissions []string `bson:"permissions"`
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 type organization struct {
@@ -100,6 +119,9 @@ type organizationConfig struct {
 //Adapter implements the Storage interface
 type Adapter struct {
 	db *database
+
+	organizations     *syncmap.Map
+	organizationsLock *sync.RWMutex
 }
 
 //Start starts the storage
@@ -109,12 +131,58 @@ func (sa *Adapter) Start() error {
 		return log.WrapActionError(log.ActionInitialize, "storage adapter", nil, err)
 	}
 
+	sl := storageListener{adapter: sa}
+	sa.RegisterStorageListener(&sl)
+
 	return err
 }
 
 //RegisterStorageListener registers a data change listener with the storage adapter
 func (sa *Adapter) RegisterStorageListener(storageListener Listener) {
 	sa.db.listeners = append(sa.db.listeners, storageListener)
+}
+
+//cacheOrganizations caches the organizations from the DB
+func (sa *Adapter) cacheOrganizations() error {
+	organizations, err := sa.GetOrganizations()
+	if err != nil {
+		return log.WrapActionError(log.ActionFind, model.TypeOrganization, nil, err)
+	}
+
+	sa.setOrganizations(&organizations)
+
+	return nil
+}
+
+func (sa *Adapter) getOrganization(orgID string) (*model.Organization, error) {
+	sa.organizationsLock.RLock()
+	defer sa.organizationsLock.RUnlock()
+
+	errArgs := &log.FieldArgs{"org_id": orgID}
+
+	item, _ := sa.organizations.Load(orgID)
+	if item != nil {
+		organization, ok := item.(model.Organization)
+		if !ok {
+			return nil, log.ActionError(log.ActionCast, model.TypeOrganization, errArgs)
+		}
+		return &organization, nil
+	}
+	return nil, log.DataError(log.StatusMissing, model.TypeAuthConfig, errArgs)
+}
+
+func (sa *Adapter) setOrganizations(organizations *[]model.Organization) {
+	sa.organizations = &syncmap.Map{}
+	validate := validator.New()
+
+	sa.organizationsLock.Lock()
+	defer sa.organizationsLock.Unlock()
+	for _, org := range *organizations {
+		err := validate.Struct(org)
+		if err == nil {
+			sa.organizations.Store(org.ID, org)
+		}
+	}
 }
 
 //ReadTODO TODO TODO
@@ -131,108 +199,30 @@ func (sa *Adapter) FindUserByAccountID(accountID string) (*model.User, error) {
 }
 
 func (sa *Adapter) findUser(key string, id string) (*model.User, error) {
-	fullUser := model.User{}
-	// transaction
-	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
-		err := sessionContext.StartTransaction()
-		if err != nil {
-			abortTransaction(sessionContext)
-			return err
-		}
-
-		pipeline := []bson.M{
-			{"$match": bson.M{key: id}},
-			{"$lookup": bson.M{
-				"from":         "roles",
-				"localField":   "roles",
-				"foreignField": "_id",
-				"as":           "roles",
-			}},
-			{"$lookup": bson.M{
-				"from":         "groups",
-				"localField":   "groups",
-				"foreignField": "_id",
-				"as":           "groups",
-			}},
-			{"$lookup": bson.M{
-				"from":         "memberships",
-				"localField":   "memberships",
-				"foreignField": "_id",
-				"as":           "memberships",
-			}},
-		}
-
-		var usersResult []*user
-		err = sa.db.users.AggregateWithContext(sessionContext, pipeline, &usersResult, nil)
-		if err != nil {
-			abortTransaction(sessionContext)
-			return err
-		}
-		if len(usersResult) > 0 {
-			//there is a user
-			existingUser := usersResult[0]
-			fullUser.ID = existingUser.ID
-			fullUser.Account = existingUser.Account
-			fullUser.Profile = existingUser.Profile
-			fullUser.Permissions = existingUser.Permissions
-			fullUser.Devices = existingUser.Devices
-
-			fullUser.Roles = []model.GlobalRole{}
-			for _, role := range existingUser.Roles {
-				fullUser.Roles = append(fullUser.Roles, model.GlobalRole{Name: role.Name, Permissions: role.Permissions})
-			}
-
-			fullUser.Groups = []model.GlobalGroup{}
-			for _, group := range existingUser.Groups {
-				groupRoles, err := sa.FindGlobalRoles(&group.Roles, sessionContext)
-				if err != nil {
-					fmt.Printf("Failed to find global roles for global group %s\n", group.ID)
-					fullUser.Groups = append(fullUser.Groups, model.GlobalGroup{Name: group.Name, Permissions: group.Permissions})
-				} else {
-					fullUser.Groups = append(fullUser.Groups, model.GlobalGroup{Name: group.Name, Permissions: group.Permissions, Roles: *groupRoles})
-				}
-			}
-
-			fullUser.OrganizationsMemberships = []model.OrganizationMembership{}
-			for _, membership := range existingUser.OrganizationsMemberships {
-				orgMembership := model.OrganizationMembership{ID: membership.ID, OrgUserData: membership.OrgUserData, Permissions: membership.Permissions}
-
-				roles, err := sa.FindOrganizationRoles(&membership.Roles, membership.OrgID, sessionContext)
-				if err != nil {
-					fmt.Printf("Failed to find org roles for org membership %s, orgID %s\n", membership.ID, membership.OrgID)
-				} else {
-					orgMembership.Roles = *roles
-				}
-
-				groups, err := sa.FindOrganizationGroups(&membership.Groups, membership.OrgID, sessionContext)
-				if err != nil {
-					fmt.Printf("Failed to find org groups for org membership %s, orgID %s\n", membership.ID, membership.OrgID)
-				} else {
-					orgMembership.Groups = *groups
-				}
-
-				org, err := sa.FindOrganization(membership.OrgID)
-				if err != nil {
-					fmt.Printf("Failed to find organization for orgID %s\n", membership.OrgID)
-				} else {
-					orgMembership.Organization = *org
-				}
-
-				fullUser.OrganizationsMemberships = append(fullUser.OrganizationsMemberships, orgMembership)
-			}
-		}
-
-		//commit the transaction
-		err = sessionContext.CommitTransaction(sessionContext)
-		if err != nil {
-			abortTransaction(sessionContext)
-			return err
-		}
-		return nil
-	})
+	filter := bson.M{key: id}
+	var user user
+	err := sa.db.users.FindOne(filter, &user, nil)
 	if err != nil {
-		return nil, err
+		return nil, log.WrapActionError(log.ActionFind, model.TypeUser, nil, err)
 	}
+
+	fullUser := model.User{ID: user.ID, Account: user.Account, Profile: user.Profile,
+		Permissions: user.Permissions, Roles: user.Roles, Groups: user.Groups,
+		OrganizationsMemberships: []model.OrganizationMembership{}, Devices: user.Devices}
+	for _, m := range user.OrganizationsMemberships {
+		membership := model.OrganizationMembership{ID: m.ID, OrgUserData: m.OrgUserData,
+			Permissions: m.Permissions, Roles: m.Roles, Groups: m.Groups}
+
+		org, err := sa.getOrganization(m.OrgID)
+		if err != nil {
+			fmt.Printf("failed to find cached organization for org_id %s\n", m.OrgID)
+		} else {
+			membership.Organization = *org
+		}
+
+		fullUser.OrganizationsMemberships = append(fullUser.OrganizationsMemberships, membership)
+	}
+
 	return &fullUser, nil
 }
 
@@ -246,7 +236,7 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred
 	if err != nil {
 		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("user_id"))
 	}
-	newUser := rawUser{ID: newID.String()}
+	newUser := user{ID: newID.String()}
 
 	accountID, err := uuid.NewUUID()
 	if err != nil {
@@ -259,12 +249,16 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred
 	if err != nil {
 		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("profile_id"))
 	}
-	newProfile := model.UserProfile{ID: profileID.String(), FirstName: userAuth.FirstName, LastName: userAuth.LastName, Photo: string(userAuth.Picture)}
+	newProfile := model.UserProfile{ID: profileID.String(), FirstName: userAuth.FirstName, LastName: userAuth.LastName}
 	newUser.Profile = newProfile
 
-	newUser.Permissions = []string{}
-	newUser.Roles = []string{}
-	newUser.Groups = []string{}
+	//TODO: populate new device with device information (search for exisiting device first)
+	deviceID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("device_id"))
+	}
+	newDevice := model.Device{ID: deviceID.String()}
+	newUser.Devices = []model.Device{newDevice}
 
 	membershipID, err := uuid.NewUUID()
 	if err != nil {
@@ -274,13 +268,15 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred
 	if !ok {
 		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("org_id"))
 	}
-	newOrgMembership := membership{ID: membershipID.String(), User: newID.String(), OrgID: orgID, OrgUserData: userAuth.OrgData,
-		Permissions: []string{}, Roles: []string{}, Groups: []string{}}
+	newOrgMembership := userMembership{ID: membershipID.String(), OrgID: orgID, OrgUserData: userAuth.OrgData}
+
+	rawMembership := rawMembership{ID: membershipID.String(), UserID: newID.String(), OrgID: orgID,
+		OrgUserData: userAuth.OrgData, DateCreated: time.Now().UTC()}
 
 	// TODO:
-	// add new membership ID to any applicable org groups, possibly set groups based on organization populations
+	// maybe set groups based on organization populations
 
-	newUser.OrganizationsMemberships = []string{newOrgMembership.ID}
+	newUser.OrganizationsMemberships = []userMembership{newOrgMembership}
 
 	// transaction
 	err = sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
@@ -288,19 +284,6 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred
 		if err != nil {
 			abortTransaction(sessionContext)
 			return log.WrapActionError(log.ActionStart, log.TypeTransaction, nil, err)
-		}
-
-		err = sa.InsertMembership(&newOrgMembership, sessionContext)
-		if err != nil {
-			abortTransaction(sessionContext)
-			return log.WrapActionError(log.ActionInsert, model.TypeOrganizationMembership, nil, err)
-		}
-
-		// pass some device info in to use here
-		newDevice := model.Device{}
-		err = sa.SaveDevice(&newDevice, sessionContext)
-		if err == nil {
-			newUser.Devices = []model.Device{newDevice}
 		}
 
 		_, err = sa.db.users.InsertOneWithContext(sessionContext, newUser)
@@ -315,6 +298,19 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred
 			return log.WrapDataError(log.StatusInvalid, model.TypeAuthCred, &log.FieldArgs{"user_id": userAuth.UserID, "account_id": userAuth.AccountID}, err)
 		}
 
+		err = sa.InsertMembership(&rawMembership, sessionContext)
+		if err != nil {
+			abortTransaction(sessionContext)
+			return log.WrapActionError(log.ActionInsert, model.TypeOrganizationMembership, nil, err)
+		}
+
+		//TODO: only save if device info has changed or it is new device
+		// err = sa.SaveDevice(&newDevice, sessionContext)
+		// if err == nil {
+		// 	abortTransaction(sessionContext)
+		// 	return log.WrapActionError(log.ActionSave, "device", nil, err)
+		// }
+
 		//commit the transaction
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
@@ -326,33 +322,61 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred
 	if err != nil {
 		return nil, err
 	}
-	return sa.FindUserByID(newID.String())
+
+	membership := model.OrganizationMembership{ID: newOrgMembership.ID, OrgUserData: newOrgMembership.OrgUserData}
+	org, err := sa.getOrganization(orgID)
+	if err != nil {
+		fmt.Printf("failed to find cached organization for org_id %s\n", orgID)
+	} else {
+		membership.Organization = *org
+	}
+
+	returnUser := model.User{ID: newUser.ID, Account: newUser.Account, Profile: newUser.Profile,
+		Permissions: newUser.Permissions, Roles: newUser.Roles, Groups: newUser.Groups,
+		OrganizationsMemberships: []model.OrganizationMembership{membership}, Devices: newUser.Devices}
+	return &returnUser, nil
 }
 
 //UpdateUser updates an existing user
-func (sa *Adapter) UpdateUser(user *model.User, newOrgData *map[string]interface{}) (*model.User, error) {
-	if user == nil {
+func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]interface{}) (*model.User, error) {
+	if updatedUser == nil {
 		return nil, log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeUser))
 	}
 
-	newUser := rawUser{ID: user.ID}
-	newUser.Account = user.Account
-	newUser.Profile = user.Profile
+	newUser := user{ID: updatedUser.ID, Account: updatedUser.Account, Profile: updatedUser.Profile,
+		Permissions: updatedUser.Permissions, Roles: updatedUser.Roles, Groups: updatedUser.Groups,
+		OrganizationsMemberships: []userMembership{}, Devices: updatedUser.Devices}
 
-	newUser.Permissions = user.Permissions
-	newUser.Roles = []string{}
-	for _, r := range user.Roles {
-		newUser.Roles = append(newUser.Roles, r.ID)
-	}
-	newUser.Groups = []string{}
-	for _, g := range user.Groups {
-		newUser.Groups = append(newUser.Groups, g.ID)
+	for _, m := range updatedUser.OrganizationsMemberships {
+		membership := userMembership{ID: m.ID, OrgID: m.Organization.ID, OrgUserData: m.OrgUserData,
+			Permissions: m.Permissions, Roles: m.Roles, Groups: m.Groups}
+		newUser.OrganizationsMemberships = append(newUser.OrganizationsMemberships, membership)
 	}
 
-	newUser.OrganizationsMemberships = []string{}
-	for _, m := range user.OrganizationsMemberships {
-		newUser.OrganizationsMemberships = append(newUser.OrganizationsMemberships, m.ID)
+	// TODO:
+	// check for device updates and add possible new device
+
+	var newMembership *rawMembership
+	if newOrgData != nil {
+		membershipID, err := uuid.NewUUID()
+		if err != nil {
+			return nil, log.WrapDataError(log.StatusInvalid, log.TypeString, log.StringArgs("membership_id"), err)
+		}
+		orgID, ok := (*newOrgData)["orgID"].(string)
+		if !ok {
+			return nil, log.WrapDataError(log.StatusInvalid, log.TypeString, log.StringArgs("org_id"), err)
+		}
+		newOrgMembership := rawMembership{ID: membershipID.String(), UserID: updatedUser.ID, OrgID: orgID,
+			OrgUserData: *newOrgData, DateCreated: time.Now().UTC()}
+		newMembership = &newOrgMembership
+
+		// TODO:
+		// possibly set groups based on organization populations
+
+		newUser.OrganizationsMemberships = append(newUser.OrganizationsMemberships,
+			userMembership{ID: membershipID.String(), OrgID: orgID, OrgUserData: *newOrgData})
 	}
+
 	// transaction
 	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
 		err := sessionContext.StartTransaction()
@@ -361,39 +385,28 @@ func (sa *Adapter) UpdateUser(user *model.User, newOrgData *map[string]interface
 			return log.WrapActionError(log.ActionStart, log.TypeTransaction, nil, err)
 		}
 
-		if newOrgData != nil {
-			membershipID, err := uuid.NewUUID()
-			if err != nil {
-				return log.WrapDataError(log.StatusInvalid, log.TypeString, log.StringArgs("membership_id"), err)
-			}
-			orgID, ok := (*newOrgData)["orgID"].(string)
-			if !ok {
-				return log.WrapDataError(log.StatusInvalid, log.TypeString, log.StringArgs("org_id"), err)
-			}
-			newOrgMembership := membership{ID: membershipID.String(), User: user.ID, OrgID: orgID, OrgUserData: *newOrgData,
-				Permissions: []string{}, Roles: []string{}, Groups: []string{}}
+		filter := bson.M{"_id": updatedUser.ID}
+		err = sa.db.users.ReplaceOneWithContext(sessionContext, filter, newUser, nil)
+		if err != nil {
+			abortTransaction(sessionContext)
+			return log.WrapActionError(log.ActionReplace, model.TypeUser, nil, err)
+		}
 
-			// TODO:
-			// add new membership ID to any applicable org groups, possibly set groups based on organization populations
-
-			newUser.OrganizationsMemberships = append(newUser.OrganizationsMemberships, newOrgMembership.ID)
-
-			err = sa.InsertMembership(&newOrgMembership, sessionContext)
+		if newMembership != nil {
+			err = sa.InsertMembership(newMembership, sessionContext)
 			if err != nil {
 				abortTransaction(sessionContext)
 				return log.WrapActionError(log.ActionInsert, model.TypeOrganizationMembership, nil, err)
 			}
 		}
 
-		// TODO:
-		// update devices list
+		//TODO: save device if some device info has changed or added new device
+		// err = sa.SaveDevice(&newDevice, sessionContext)
+		// if err == nil {
+		// 	abortTransaction(sessionContext)
+		// 	return log.WrapActionError(log.ActionSave, "device", nil, err)
+		// }
 
-		filter := bson.M{"_id": user.ID}
-		err = sa.db.users.ReplaceOneWithContext(sessionContext, filter, newUser, nil)
-		if err != nil {
-			abortTransaction(sessionContext)
-			return log.WrapActionError(log.ActionReplace, model.TypeUser, nil, err)
-		}
 		//commit the transaction
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
@@ -406,7 +419,7 @@ func (sa *Adapter) UpdateUser(user *model.User, newOrgData *map[string]interface
 		return nil, err
 	}
 
-	return sa.FindUserByID(user.ID)
+	return updatedUser, nil
 }
 
 //DeleteUser deletes a user
@@ -460,10 +473,56 @@ func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.Sessio
 	return nil
 }
 
+//FindGlobalPermissions finds a set of global user permissions
+func (sa *Adapter) FindGlobalPermissions(ids *[]string, context mongo.SessionContext) (*[]model.GlobalPermission, error) {
+	permissionsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
+	var permissionsResult []permission
+	var err error
+	if context == nil {
+		err = sa.db.permissions.Find(permissionsFilter, &permissionsResult, nil)
+	} else {
+		err = sa.db.permissions.FindWithContext(context, permissionsFilter, &permissionsResult, nil)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	globalPermissions := []model.GlobalPermission{}
+	for _, permission := range permissionsResult {
+		globalPermission := model.GlobalPermission{ID: permission.ID, Name: permission.Name}
+		globalPermissions = append(globalPermissions, globalPermission)
+	}
+
+	return &globalPermissions, nil
+}
+
+//FindOrganizationPermissions finds a set of organization user permissions
+func (sa *Adapter) FindOrganizationPermissions(ids *[]string, orgID string, context mongo.SessionContext) (*[]model.OrganizationPermission, error) {
+	permissionsFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
+	var permissionsResult []permission
+	var err error
+	if context == nil {
+		err = sa.db.permissions.Find(permissionsFilter, &permissionsResult, nil)
+	} else {
+		err = sa.db.permissions.FindWithContext(context, permissionsFilter, &permissionsResult, nil)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	orgPermissions := []model.OrganizationPermission{}
+	for _, permission := range permissionsResult {
+		orgPermission := model.OrganizationPermission{ID: permission.ID, Name: permission.Name}
+		orgPermissions = append(orgPermissions, orgPermission)
+	}
+
+	return &orgPermissions, nil
+}
+
 //FindGlobalRoles finds a set of global user roles
 func (sa *Adapter) FindGlobalRoles(ids *[]string, context mongo.SessionContext) (*[]model.GlobalRole, error) {
-	rolesFilter := bson.D{primitive.E{Key: "org_id", Value: "global"}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
-	var rolesResult []model.GlobalRole
+	rolesFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
+	var rolesResult []role
 	var err error
 	if context == nil {
 		err = sa.db.roles.Find(rolesFilter, &rolesResult, nil)
@@ -474,13 +533,26 @@ func (sa *Adapter) FindGlobalRoles(ids *[]string, context mongo.SessionContext) 
 		return nil, err
 	}
 
-	return &rolesResult, nil
+	globalRoles := []model.GlobalRole{}
+	for _, role := range rolesResult {
+		globalRole := model.GlobalRole{ID: role.ID, Name: role.Name, Description: role.Description}
+
+		permissions, err := sa.FindGlobalPermissions(&role.Permissions, context)
+		if err != nil {
+			fmt.Printf("failed to find global permissions for role ID %s\n", role.ID)
+		} else {
+			globalRole.Permissions = *permissions
+		}
+		globalRoles = append(globalRoles, globalRole)
+	}
+
+	return &globalRoles, nil
 }
 
 //FindOrganizationRoles finds a set of organization user roles
 func (sa *Adapter) FindOrganizationRoles(ids *[]string, orgID string, context mongo.SessionContext) (*[]model.OrganizationRole, error) {
-	rolesFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
-	var rolesResult []model.OrganizationRole
+	rolesFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
+	var rolesResult []role
 	var err error
 	if context == nil {
 		err = sa.db.roles.Find(rolesFilter, &rolesResult, nil)
@@ -491,61 +563,111 @@ func (sa *Adapter) FindOrganizationRoles(ids *[]string, orgID string, context mo
 		return nil, err
 	}
 
-	return &rolesResult, nil
+	orgRoles := []model.OrganizationRole{}
+	for _, role := range rolesResult {
+		orgRole := model.OrganizationRole{ID: role.ID, Name: role.Name, Description: role.Description}
+
+		permissions, err := sa.FindOrganizationPermissions(&role.Permissions, orgID, context)
+		if err != nil {
+			fmt.Printf("failed to find organization permissions for role ID %s, org_id %s\n", role.ID, orgID)
+		} else {
+			orgRole.Permissions = *permissions
+		}
+		org, err := sa.getOrganization(orgID)
+		if err != nil {
+			fmt.Printf("failed to find cached organization for org_id %s\n", orgID)
+		} else {
+			orgRole.Organization = *org
+		}
+
+		orgRoles = append(orgRoles, orgRole)
+	}
+
+	return &orgRoles, nil
 }
 
 //FindGlobalGroups finds a set of global user groups
 func (sa *Adapter) FindGlobalGroups(ids *[]string, context mongo.SessionContext) (*[]model.GlobalGroup, error) {
-	pipeline := []bson.M{
-		{"$match": bson.M{"org_id": "global", "_id": bson.M{"$in": *ids}}},
-		{"$lookup": bson.M{
-			"from":         "roles",
-			"localField":   "roles",
-			"foreignField": "_id",
-			"as":           "roles",
-		}},
-	}
-	var groupsResult []model.GlobalGroup
+	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
+	var groupsResult []group
 	var err error
 	if context == nil {
-		err = sa.db.groups.Aggregate(pipeline, &groupsResult, nil)
+		err = sa.db.groups.Find(filter, &groupsResult, nil)
 	} else {
-		err = sa.db.groups.AggregateWithContext(context, pipeline, &groupsResult, nil)
+		err = sa.db.groups.FindWithContext(context, filter, &groupsResult, nil)
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	return &groupsResult, nil
+	globalGroups := []model.GlobalGroup{}
+	for _, group := range groupsResult {
+		globalGroup := model.GlobalGroup{ID: group.ID, Name: group.Name}
+
+		permissions, err := sa.FindGlobalPermissions(&group.Permissions, context)
+		if err != nil {
+			fmt.Printf("failed to find global permissions for group ID %s\n", group.ID)
+		} else {
+			globalGroup.Permissions = *permissions
+		}
+		roles, err := sa.FindGlobalRoles(&group.Roles, context)
+		if err != nil {
+			fmt.Printf("failed to find global roles for group ID %s\n", group.ID)
+		} else {
+			globalGroup.Roles = *roles
+		}
+
+		globalGroups = append(globalGroups, globalGroup)
+	}
+
+	return &globalGroups, nil
 }
 
 //FindOrganizationGroups finds a set of organization user groups
 func (sa *Adapter) FindOrganizationGroups(ids *[]string, orgID string, context mongo.SessionContext) (*[]model.OrganizationGroup, error) {
-	pipeline := []bson.M{
-		{"$match": bson.M{"org_id": orgID, "_id": bson.M{"$in": *ids}}},
-		{"$lookup": bson.M{
-			"from":         "roles",
-			"localField":   "roles",
-			"foreignField": "_id",
-			"as":           "roles",
-		}},
-	}
-	var groupsResult []model.OrganizationGroup
+	filter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
+	var groupsResult []group
 	var err error
 	if context == nil {
-		err = sa.db.groups.Aggregate(pipeline, &groupsResult, nil)
+		err = sa.db.groups.Find(filter, &groupsResult, nil)
 	} else {
-		err = sa.db.groups.AggregateWithContext(context, pipeline, &groupsResult, nil)
+		err = sa.db.groups.FindWithContext(context, filter, &groupsResult, nil)
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	return &groupsResult, nil
+	orgGroups := []model.OrganizationGroup{}
+	for _, group := range groupsResult {
+		orgGroup := model.OrganizationGroup{ID: group.ID, Name: group.Name}
+
+		permissions, err := sa.FindOrganizationPermissions(&group.Permissions, orgID, context)
+		if err != nil {
+			fmt.Printf("failed to find organization permissions for group ID %s, org_id %s\n", group.ID, orgID)
+		} else {
+			orgGroup.Permissions = *permissions
+		}
+		roles, err := sa.FindOrganizationRoles(&group.Roles, orgID, context)
+		if err != nil {
+			fmt.Printf("failed to find organization roles for group ID %s, org_id %s\n", group.ID, orgID)
+		} else {
+			orgGroup.Roles = *roles
+		}
+		org, err := sa.getOrganization(orgID)
+		if err != nil {
+			fmt.Printf("failed to find cached organization for org_id %s\n", orgID)
+		} else {
+			orgGroup.Organization = *org
+		}
+
+		orgGroups = append(orgGroups, orgGroup)
+	}
+
+	return &orgGroups, nil
 }
 
 //InsertMembership inserts an organization membership
-func (sa *Adapter) InsertMembership(orgMembership *membership, context mongo.SessionContext) error {
+func (sa *Adapter) InsertMembership(orgMembership *rawMembership, context mongo.SessionContext) error {
 	if orgMembership == nil {
 		return log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeOrganizationMembership))
 	}
@@ -898,10 +1020,20 @@ func abortTransaction(sessionContext mongo.SessionContext) {
 	}
 }
 
+type storageListener struct {
+	adapter *Adapter
+	DefaultListenerImpl
+}
+
+func (sl *storageListener) OnOrganizationsUpdated() {
+	sl.adapter.cacheOrganizations()
+}
+
 //Listener represents storage listener
 type Listener interface {
 	OnAuthConfigUpdated()
 	OnServiceRegsUpdated()
+	OnOrganizationsUpdated()
 }
 
 //DefaultListenerImpl default listener implementation
@@ -912,3 +1044,6 @@ func (d *DefaultListenerImpl) OnAuthConfigUpdated() {}
 
 //OnServiceRegsUpdated notifies services regs have been updated
 func (d *DefaultListenerImpl) OnServiceRegsUpdated() {}
+
+//OnOrganizationsUpdated notifies organizations have been updated
+func (d *DefaultListenerImpl) OnOrganizationsUpdated() {}

@@ -33,6 +33,7 @@ type AuthConfig struct {
 	Config []byte `json:"config" bson:"config" validate:"required"`
 }
 
+//AuthCred represents represents a set of credentials used by auth
 type AuthCred struct {
 	OrgID     string      `bson:"org_id"`
 	AppID     string      `bson:"app_id"`

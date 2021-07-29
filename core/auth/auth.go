@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"bytes"
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"crypto/rsa"
@@ -231,10 +230,6 @@ func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*mod
 	}
 
 	// profile
-	if !bytes.Equal(userAuth.Picture, []byte(user.Profile.Photo)) {
-		user.Profile.Photo = string(userAuth.Picture)
-		update = true
-	}
 	if user.Profile.FirstName != userAuth.FirstName {
 		user.Profile.FirstName = userAuth.FirstName
 		update = true

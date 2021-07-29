@@ -18,7 +18,7 @@ type User struct {
 	Account UserAccount
 	Profile UserProfile
 
-	Permissions []string
+	Permissions []GlobalPermission
 	Roles       []GlobalRole
 
 	Groups []GlobalGroup
@@ -74,14 +74,14 @@ func (ua UserAccount) String() string {
 //UserProfile represents user profile entity. The user profile is an information about the user.
 type UserProfile struct {
 	ID        string `bson:"id"`
-	Photo     string `bson:"photo"`
+	PhotoURL  string `bson:"photo_url"`
 	FirstName string `bson:"firstname"`
 	LastName  string `bson:"lastname"`
 }
 
 func (up UserProfile) String() string {
 	return fmt.Sprintf("[ID:%s\tPhotoURL:%s\tFirstName:%s\tLastName:%s]",
-		up.ID, up.Photo, up.FirstName, up.LastName)
+		up.ID, up.PhotoURL, up.FirstName, up.LastName)
 }
 
 //GlobalGroup represents global group entity. It is a collection of users
@@ -89,18 +89,29 @@ type GlobalGroup struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 
-	Permissions []string `bson:"permissions"`
-	Roles       []GlobalRole
+	Permissions []GlobalPermission `bson:"permissions"`
+	Roles       []GlobalRole       `bson:"roles"`
 
 	Users []User
 }
 
-//GlobalRole represents global role entity. It is a collection of permissions
-type GlobalRole struct {
+//GlobalPermission represents global permission entity
+type GlobalPermission struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
+}
 
-	Permissions []string `bson:"permissions"`
+func (c GlobalPermission) String() string {
+	return fmt.Sprintf("[ID:%s\tName:%s]", c.ID, c.Name)
+}
+
+//GlobalRole represents global role entity. It is a collection of permissions
+type GlobalRole struct {
+	ID          string `bson:"_id"`
+	Name        string `bson:"name"`
+	Description string `bson:"desciption"`
+
+	Permissions []GlobalPermission `bson:"permissions"`
 }
 
 func (c GlobalRole) String() string {
@@ -112,7 +123,7 @@ type OrganizationGroup struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 
-	Permissions []string `bson:"permissions"`
+	Permissions []OrganizationPermission `bson:"permissions"`
 	Roles       []OrganizationRole
 
 	Organization Organization
@@ -124,12 +135,25 @@ func (cg OrganizationGroup) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nOrganization:%s]", cg.ID, cg.Name, cg.Organization)
 }
 
-//OrganizationRole represents organization role entity. It is a collection of permissions
-type OrganizationRole struct {
+//OrganizationPermission represents organization permission entity
+type OrganizationPermission struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 
-	Permissions []string `bson:"permissions"`
+	Organization Organization
+}
+
+func (c OrganizationPermission) String() string {
+	return fmt.Sprintf("[ID:%s\nName:%s\nOrganization:%s]", c.ID, c.Name, c.Organization)
+}
+
+//OrganizationRole represents organization role entity. It is a collection of permissions
+type OrganizationRole struct {
+	ID          string `bson:"_id"`
+	Name        string `bson:"name"`
+	Description string `bson:"desciption"`
+
+	Permissions []OrganizationPermission `bson:"permissions"`
 
 	Organization Organization
 }
