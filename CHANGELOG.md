@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Set up refresh tokens [#95](https://github.com/rokwire/core-building-block/issues/95)
 - Set up accounts [#18](https://github.com/rokwire/core-building-block/issues/18)
 - Expose auth APIs [#81](https://github.com/rokwire/core-building-block/issues/81)
 - Expose admin API which gives the organizations list [#61](https://github.com/rokwire/core-building-block/issues/61)
