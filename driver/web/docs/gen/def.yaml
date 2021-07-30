@@ -176,6 +176,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthAuthorizeServiceResponse'
+              examples:
+                authorized:
+                  summary: Service authorized
+                  value: |
+                    {
+                      "access_token": "string",
+                      "token_type": "Bearer",
+                      "approved_scopes": [
+                        "string"
+                      ]
+                    }
+                unauthorized:
+                  summary: Service unauthorized
+                  value: |
+                    {
+                      "service_reg": {
+                        "service_id": "string",
+                        "host": "string",
+                        "pub_key": {
+                          "key_pem": "string",
+                          "alg": "string"
+                        },
+                        "name": "string",
+                        "description": "string",
+                        "info_url": "string",
+                        "logo_url": "string",
+                        "scopes": [
+                          {
+                            "scope": "string",
+                            "required": true,
+                            "explanation": "string"
+                          }
+                        ],
+                        "first_party": true
+                      }
+                    }
         '400':
           description: Bad request
         '401':
@@ -913,6 +949,7 @@ components:
         service_id:
           type: string
         approved_scopes:
+          description: Scopes to be granted to this service in this and future tokens. Replaces existing scopes if present.
           type: array
           items:
             type: string

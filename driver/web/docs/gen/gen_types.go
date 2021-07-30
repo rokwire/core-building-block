@@ -53,6 +53,8 @@ const (
 
 // AuthAuthorizeServiceRequest defines model for AuthAuthorizeServiceRequest.
 type AuthAuthorizeServiceRequest struct {
+
+	// Scopes to be granted to this service in this and future tokens. Replaces existing scopes if present.
 	ApprovedScopes *[]string `json:"approved_scopes,omitempty"`
 	ServiceId      string    `json:"service_id"`
 }
