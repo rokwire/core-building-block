@@ -69,6 +69,8 @@ func (we Adapter) Start() {
 	authSubrouter.HandleFunc("/login", we.wrapFunc(we.servicesApisHandler.authLogin)).Methods("POST")
 	authSubrouter.HandleFunc("/login-url", we.wrapFunc(we.servicesApisHandler.authLoginUrl)).Methods("POST")
 	authSubrouter.HandleFunc("/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh)).Methods("POST")
+	authSubrouter.HandleFunc("/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService)).Methods("POST")
+	authSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations)).Methods("GET")
 
 	//common
 	commonSubrouter := servicesSubRouter.PathPrefix("/common").Subrouter()

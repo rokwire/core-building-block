@@ -1,13 +1,13 @@
 get:
   tags:
-  - Auth
-  summary: Service token
+    - Auth
+  summary: Get service registrations
   description: |
-    Get a scoped access token that can be used to access a third-party service
+    Returns service registration records
   parameters:
-    - name: service_id
+    - name: ids
       in: query
-      description: A service ID to be accessed
+      description: A comma-separated list of service IDs to return registrations for
       required: true
       style: form
       explode: false
@@ -19,7 +19,9 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../../schemas/auth/AuthServiceTokenResponse.yaml"
+            type: array
+            items: 
+              $ref: '../../schemas/auth/ServiceReg.yaml'
     400:
       description: Bad request
     401:

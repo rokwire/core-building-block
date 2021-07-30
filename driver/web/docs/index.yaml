@@ -33,6 +33,10 @@ paths:
     $ref: "./resources/auth/refresh.yaml"
   /services/auth/login-url:
     $ref: "./resources/auth/login-url.yaml"
+  /services/auth/authorize-service:
+    $ref: "./resources/auth/authorize-service.yaml"
+  /services/auth/service-regs:
+    $ref: "./resources/auth/service-regs.yaml"
 
   #common
   /services/common/test:

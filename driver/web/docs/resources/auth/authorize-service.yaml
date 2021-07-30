@@ -1,0 +1,60 @@
+post:
+  tags:
+  - Auth
+  summary: Authorize service
+  description: |
+    Authorize a third-party service and get a scoped access token that can be used to access its APIs
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: "../../schemas/auth/AuthAuthorizeServiceRequest.yaml"
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../schemas/auth/AuthAuthorizeServiceResponse.yaml"
+          examples:
+            authorized:
+              summary: Service authorized
+              value: |
+                {
+                  "access_token": "string",
+                  "token_type": "Bearer",
+                  "approved_scopes": [
+                    "string"
+                  ]
+                }
+            unauthorized:
+              summary: Service unauthorized
+              value: |
+                {
+                  "service_reg": {
+                    "service_id": "string",
+                    "host": "string",
+                    "pub_key": {
+                      "key_pem": "string",
+                      "alg": "string"
+                    },
+                    "name": "string",
+                    "description": "string",
+                    "info_url": "string",
+                    "logo_url": "string",
+                    "scopes": [
+                      {
+                        "scope": "string",
+                        "required": true,
+                        "explanation": "string"
+                      }
+                    ],
+                    "first_party": true
+                  }
+                }
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error

@@ -21,6 +21,8 @@ ServiceReg:
   $ref: "./auth/ServiceReg.yaml"
 PubKey:
   $ref: "./auth/PubKey.yaml"
+ServiceScope:
+  $ref: "./auth/ServiceScope.yaml"
 AuthLoginRequest:
   $ref: "./auth/AuthLoginRequest.yaml"
 AuthLoginResponse:
@@ -46,8 +48,10 @@ AuthLoginUrlRequest:
 AuthLoginUrlResponse:
   $ref: "./auth/AuthLoginUrlResponse.yaml"
 
-AuthServiceTokenResponse:
-  $ref: "./auth/AuthServiceTokenResponse.yaml"
+AuthAuthorizeServiceRequest:
+  $ref: "./auth/AuthAuthorizeServiceRequest.yaml"
+AuthAuthorizeServiceResponse:
+  $ref: "./auth/AuthAuthorizeServiceResponse.yaml"
 
 # user
 User:

@@ -10,7 +10,7 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/pquerna/cachecontrol v0.1.0 // indirect
-	github.com/rokmetro/auth-library v0.1.10
+	github.com/rokmetro/auth-library v0.1.13
 	github.com/rokmetro/logging-library v0.1.21
 	github.com/stretchr/testify v1.6.1
 	github.com/swaggo/http-swagger v1.0.0

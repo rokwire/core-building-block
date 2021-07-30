@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokmetro/auth-library/authservice"
 	log "github.com/rokmetro/logging-library/loglib"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -255,7 +254,7 @@ func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records
-func (sa *Adapter) FindServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error) {
+func (sa *Adapter) FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error) {
 	var filter bson.M
 	for _, serviceID := range serviceIDs {
 		if serviceID == "all" {
@@ -267,23 +266,23 @@ func (sa *Adapter) FindServiceRegs(serviceIDs []string) ([]authservice.ServiceRe
 		filter = bson.M{"service_id": bson.M{"$in": serviceIDs}}
 	}
 
-	var result []authservice.ServiceReg
+	var result []model.ServiceReg
 	err := sa.db.serviceRegs.Find(filter, &result, nil)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionFind, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceIDs}, err)
 	}
 
 	if result == nil {
-		result = []authservice.ServiceReg{}
+		result = []model.ServiceReg{}
 	}
 
 	return result, nil
 }
 
 //FindServiceReg finds the service registration in storage
-func (sa *Adapter) FindServiceReg(serviceID string) (*authservice.ServiceReg, error) {
+func (sa *Adapter) FindServiceReg(serviceID string) (*model.ServiceReg, error) {
 	filter := bson.M{"service_id": serviceID}
-	var reg *authservice.ServiceReg
+	var reg *model.ServiceReg
 	err := sa.db.serviceRegs.FindOne(filter, &reg, nil)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionFind, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceID}, err)
@@ -293,7 +292,7 @@ func (sa *Adapter) FindServiceReg(serviceID string) (*authservice.ServiceReg, er
 }
 
 //InsertServiceReg inserts the service registration to storage
-func (sa *Adapter) InsertServiceReg(reg *authservice.ServiceReg) error {
+func (sa *Adapter) InsertServiceReg(reg *model.ServiceReg) error {
 	_, err := sa.db.serviceRegs.InsertOne(reg)
 	if err != nil {
 		return log.WrapActionError(log.ActionInsert, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.ServiceID}, err)
@@ -303,7 +302,7 @@ func (sa *Adapter) InsertServiceReg(reg *authservice.ServiceReg) error {
 }
 
 //UpdateServiceReg updates the service registration in storage
-func (sa *Adapter) UpdateServiceReg(reg *authservice.ServiceReg) error {
+func (sa *Adapter) UpdateServiceReg(reg *model.ServiceReg) error {
 	filter := bson.M{"service_id": reg.ServiceID}
 	err := sa.db.serviceRegs.ReplaceOne(filter, reg, nil)
 	if err != nil {
@@ -314,7 +313,7 @@ func (sa *Adapter) UpdateServiceReg(reg *authservice.ServiceReg) error {
 }
 
 //SaveServiceReg saves the service registration to the storage
-func (sa *Adapter) SaveServiceReg(reg *authservice.ServiceReg) error {
+func (sa *Adapter) SaveServiceReg(reg *model.ServiceReg) error {
 	filter := bson.M{"service_id": reg.ServiceID}
 	opts := options.Replace().SetUpsert(true)
 	err := sa.db.serviceRegs.ReplaceOne(filter, reg, opts)
@@ -338,6 +337,48 @@ func (sa *Adapter) DeleteServiceReg(serviceID string) error {
 	deletedCount := result.DeletedCount
 	if deletedCount == 0 {
 		return log.WrapDataError(log.StatusMissing, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceID}, err)
+	}
+
+	return nil
+}
+
+//FindServiceAuthorization finds the service authorization in storage
+func (sa *Adapter) FindServiceAuthorization(userID string, serviceID string) (*model.ServiceAuthorization, error) {
+	filter := bson.M{"user_id": userID, "service_id": serviceID}
+	var reg *model.ServiceAuthorization
+	err := sa.db.serviceAuthorizations.FindOne(filter, &reg, nil)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionFind, model.TypeServiceAuthorization, &log.FieldArgs{"user_id": userID, "service_id": serviceID}, err)
+	}
+
+	return reg, nil
+}
+
+//SaveServiceAuthorization saves the service authorization to storage
+func (sa *Adapter) SaveServiceAuthorization(authorization *model.ServiceAuthorization) error {
+	filter := bson.M{"user_id": authorization.UserID, "service_id": authorization.ServiceID}
+	opts := options.Replace().SetUpsert(true)
+	err := sa.db.serviceAuthorizations.ReplaceOne(filter, authorization, opts)
+	if err != nil {
+		return log.WrapActionError(log.ActionSave, model.TypeServiceAuthorization, &log.FieldArgs{"user_id": authorization.UserID, "service_id": authorization.ServiceID}, err)
+	}
+
+	return nil
+}
+
+//DeleteServiceAuthorization deletes the service authorization from storage
+func (sa *Adapter) DeleteServiceAuthorization(userID string, serviceID string) error {
+	filter := bson.M{"user_id": userID, "service_id": serviceID}
+	result, err := sa.db.serviceAuthorizations.DeleteOne(filter, nil)
+	if err != nil {
+		return log.WrapActionError(log.ActionFind, model.TypeServiceAuthorization, &log.FieldArgs{"user_id": userID, "service_id": serviceID}, err)
+	}
+	if result == nil {
+		return log.WrapDataError(log.StatusInvalid, "result", &log.FieldArgs{"user_id": userID, "service_id": serviceID}, err)
+	}
+	deletedCount := result.DeletedCount
+	if deletedCount == 0 {
+		return log.WrapDataError(log.StatusMissing, model.TypeServiceAuthorization, &log.FieldArgs{"user_id": userID, "service_id": serviceID}, err)
 	}
 
 	return nil

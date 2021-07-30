@@ -1,6 +1,9 @@
 required:
   - service_id
   - host
+  - name
+  - description
+  - first_party
 type: object
 properties:
   service_id:
@@ -9,3 +12,17 @@ properties:
     type: string
   pub_key:
     $ref: "./PubKey.yaml"
+  name:
+    type: string
+  description:
+    type: string
+  info_url:
+    type: string
+  logo_url:
+    type: string
+  scopes:
+    type: array
+    items:
+      $ref: "./ServiceScope.yaml"
+  first_party:
+    type: boolean
