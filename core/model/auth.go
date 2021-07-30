@@ -3,16 +3,16 @@ package model
 import (
 	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/auth-library/authservice"
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/logutils"
 )
 
 const (
-	TypeUserAuth             log.LogData = "user auth"
-	TypeAuthConfig           log.LogData = "user auth"
-	TypeServiceReg           log.LogData = "service reg"
-	TypeServiceScope         log.LogData = "service scope"
-	TypeServiceAuthorization log.LogData = "service authorization"
-	TypeScope                log.LogData = "scope"
+	TypeUserAuth             logutils.MessageDataType = "user auth"
+	TypeAuthConfig           logutils.MessageDataType = "user auth"
+	TypeServiceReg           logutils.MessageDataType = "service reg"
+	TypeServiceScope         logutils.MessageDataType = "service scope"
+	TypeServiceAuthorization logutils.MessageDataType = "service authorization"
+	TypeScope                logutils.MessageDataType = "scope"
 )
 
 //UserAuth represents user auth entity
