@@ -7,6 +7,7 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"sync"
 	"time"
 
@@ -144,6 +145,8 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 //		User (User): User object for authenticated user
 //		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 func (a *Auth) Login(authType string, creds string, orgID string, appID string, params string, l *log.Log) (string, string, *model.User, error) {
+	var user *model.User
+	var err error
 	auth, err := a.getAuthType(authType)
 	if err != nil {
 		return "", "", nil, log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
@@ -151,7 +154,41 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 
 	userAuth, err := auth.check(creds, orgID, appID, params, l)
 	if err != nil {
-		return "", "", nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
+		return "", "", nil, log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	if len(userAuth.AccountID) > 0 {
+		user, err = a.findAccount(userAuth)
+		if err != nil {
+			return "", "", nil, err
+		}
+		user, update, newMembership := a.needsUserUpdate(userAuth, user)
+		if update {
+			var newMembershipOrgData *map[string]interface{}
+			if newMembership {
+				newMembershipOrgData = &userAuth.OrgData
+			}
+			_, err = a.updateAccount(user, newMembershipOrgData)
+			if err != nil {
+				return "", "", nil, err
+			}
+		}
+	} else {
+		if userAuth.NewCreds != nil {
+			authCred := model.AuthCred{
+				OrgID:  orgID,
+				AppID:  appID,
+				Type:   authType,
+				UserID: userAuth.UserID,
+				Creds:  userAuth.NewCreds,
+			}
+			user, err = a.createAccount(userAuth, &authCred)
+			if err != nil {
+				return "", "", nil, err
+			}
+		} else {
+			return "", "", nil, log.WrapActionError(log.ActionValidate, model.TypeAuthCred, nil, err)
+		}
 	}
 
 	claims := a.getStandardClaims("", userAuth.UserID, userAuth.Email, userAuth.Phone, "rokwire", orgID, appID, userAuth.Exp)
@@ -162,7 +199,7 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 
 	//TODO: Implement account management
 
-	return token, userAuth.RefreshToken, nil, nil
+	return token, userAuth.RefreshToken, user, nil
 }
 
 //Refresh refreshes an access token using a refresh token
@@ -304,19 +341,63 @@ func (a *Auth) DeregisterService(serviceID string) error {
 	return a.storage.DeleteServiceReg(serviceID)
 }
 
+//findAccount retrieves a user's account information
+func (a *Auth) findAccount(userAuth *model.UserAuth) (*model.User, error) {
+	return a.storage.FindUserByAccountID(userAuth.AccountID)
+}
+
 //createAccount creates a new user account
-func (a *Auth) createAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
+func (a *Auth) createAccount(userAuth *model.UserAuth, authCred *model.AuthCred) (*model.User, error) {
+	return a.storage.InsertUser(userAuth, authCred)
 }
 
 //updateAccount updates a user's account information
-func (a *Auth) updateAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
+func (a *Auth) updateAccount(user *model.User, newOrgData *map[string]interface{}) (*model.User, error) {
+	return a.storage.UpdateUser(user, newOrgData)
 }
 
 //deleteAccount deletes a user account
-func (a *Auth) deleteAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
+func (a *Auth) deleteAccount(id string) error {
+	return a.storage.DeleteUser(id)
+}
+
+//needsUserUpdate determines if user should be updated by userAuth (assumes userAuth is most up-to-date)
+func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*model.User, bool, bool) {
+	update := false
+
+	// account
+	if userAuth.Email != user.Account.Email {
+		user.Account.Email = userAuth.Email
+		update = true
+	}
+	if userAuth.Phone != user.Account.Phone {
+		user.Account.Phone = userAuth.Phone
+		update = true
+	}
+
+	// profile
+	if user.Profile.FirstName != userAuth.FirstName {
+		user.Profile.FirstName = userAuth.FirstName
+		update = true
+	}
+	if user.Profile.LastName != userAuth.LastName {
+		user.Profile.LastName = userAuth.LastName
+		update = true
+	}
+
+	// org data
+	foundOrg := false
+	for _, m := range user.OrganizationsMemberships {
+		if m.Organization.ID == userAuth.OrgData["orgID"] {
+			foundOrg = true
+			if !reflect.DeepEqual(userAuth.OrgData, m.OrgUserData) {
+				m.OrgUserData = userAuth.OrgData
+				update = true
+			}
+		}
+	}
+
+	return user, update, !foundOrg
 }
 
 func (a *Auth) registerAuthType(name string, auth authType) error {
@@ -490,8 +571,14 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 
 //Storage interface to communicate with the storage
 type Storage interface {
+	FindUserByAccountID(accountID string) (*model.User, error)
+	InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred) (*model.User, error)
+	UpdateUser(user *model.User, newOrgData *map[string]interface{}) (*model.User, error)
+	DeleteUser(id string) error
+
 	//Credentials
 	FindCredentialsByToken(token string) (*model.AuthCred, error)
+	FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCred, error)
 
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)

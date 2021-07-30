@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"time"
 
 	log "github.com/rokmetro/logging-library/loglib"
 )
@@ -19,17 +20,17 @@ const (
 
 //Organization represents organization entity
 type Organization struct {
-	ID               string
-	Name             string
-	Type             string //micro small medium large - based on the users count
-	RequiresOwnLogin bool   //Illinois orgnization requires own login(oidc) but Champaign organization does not requires
+	ID               string `bson:"_id"`
+	Name             string `bson:"name"`
+	Type             string `bson:"type"`               //micro small medium large - based on the users count
+	RequiresOwnLogin bool   `bson:"requires_own_login"` //Illinois orgnization requires own login(oidc) but Champaign organization does not requires
 
 	//what login type/s are supported for the organization. It will be empty for Champaign and "OIDC" for university of Illinois
-	LoginTypes []string
+	LoginTypes []string `bson:"login_types"`
 
-	Config OrganizationConfig
+	Config OrganizationConfig `bson:"config"`
 
-	Applications []Application
+	Applications []Application `bson:"applications"`
 }
 
 func (c Organization) String() string {
@@ -52,6 +53,9 @@ type OrganizationMembership struct {
 	Roles       []OrganizationRole
 
 	Groups []OrganizationGroup
+
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (cm OrganizationMembership) String() string {
@@ -79,9 +83,9 @@ func (cur OrganizationUserRelations) String() string {
 
 //Application represents users application entity - safer community, uuic, etc
 type Application struct {
-	ID       string
-	Name     string   //safer community mobile, safer community web, uuic mobile, uuic web, uuic admin etc
-	Versions []string //1.1.0, 1.2.0 etc
+	ID       string   `bson:"_id"`
+	Name     string   `bson:"name"`     //safer community mobile, safer community web, uuic mobile, uuic web, uuic admin etc
+	Versions []string `bson:"versions"` //1.1.0, 1.2.0 etc
 
 	Organizations []Organization
 }

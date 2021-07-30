@@ -3,25 +3,26 @@ package model
 import log "github.com/rokmetro/logging-library/loglib"
 
 const (
-	//TypeUserAuth ...
-	TypeUserAuth log.LogData = "user auth"
-	//TypeAuthConfig ...
-	TypeAuthConfig log.LogData = "user auth"
-	//TypeServiceReg ...
+	TypeUserAuth   log.LogData = "user auth"
+	TypeAuthConfig log.LogData = "auth config"
+	TypeAuthCred   log.LogData = "auth cred"
 	TypeServiceReg log.LogData = "service reg"
 )
 
 //UserAuth represents user auth entity
 type UserAuth struct {
 	UserID       string
+	AccountID    string
 	Sub          string
-	Name         string
+	FirstName    string
+	LastName     string
 	Email        string
 	Phone        string
 	Picture      []byte
 	Exp          *int64
 	RefreshToken string
-	Params       map[string]interface{}
+	OrgData      map[string]interface{}
+	NewCreds     interface{}
 }
 
 //AuthConfig represents auth config entity
@@ -32,6 +33,7 @@ type AuthConfig struct {
 	Config []byte `json:"config" bson:"config" validate:"required"`
 }
 
+//AuthCred represents represents a set of credentials used by auth
 type AuthCred struct {
 	OrgID     string      `bson:"org_id"`
 	AppID     string      `bson:"app_id"`

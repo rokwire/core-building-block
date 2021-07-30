@@ -298,6 +298,10 @@ func (collWrapper *collectionWrapper) DropIndex(name string) error {
 }
 
 func (collWrapper *collectionWrapper) Aggregate(pipeline interface{}, result interface{}, ops *options.AggregateOptions) error {
+	return collWrapper.AggregateWithContext(context.Background(), pipeline, result, ops)
+}
+
+func (collWrapper *collectionWrapper) AggregateWithContext(ctx context.Context, pipeline interface{}, result interface{}, ops *options.AggregateOptions) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*15000)
 	defer cancel()
 

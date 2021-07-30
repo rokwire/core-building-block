@@ -19,7 +19,17 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
-	authConfigs   *collectionWrapper
+	users        *collectionWrapper
+	groups       *collectionWrapper
+	roles        *collectionWrapper
+	permissions  *collectionWrapper
+	memberships  *collectionWrapper
+	applications *collectionWrapper
+	devices      *collectionWrapper
+
+	authConfigs *collectionWrapper
+	credentials *collectionWrapper
+
 	globalConfig  *collectionWrapper
 	organizations *collectionWrapper
 	serviceRegs   *collectionWrapper
@@ -50,6 +60,48 @@ func (m *database) start() error {
 	//apply checks
 	db := client.Database(m.mongoDBName)
 
+	users := &collectionWrapper{database: m, coll: db.Collection("users")}
+	err = m.applyUsersChecks(users)
+	if err != nil {
+		return err
+	}
+
+	groups := &collectionWrapper{database: m, coll: db.Collection("groups")}
+	err = m.applyGroupsChecks(groups)
+	if err != nil {
+		return err
+	}
+
+	roles := &collectionWrapper{database: m, coll: db.Collection("roles")}
+	err = m.applyRolesChecks(roles)
+	if err != nil {
+		return err
+	}
+
+	permissions := &collectionWrapper{database: m, coll: db.Collection("permissions")}
+	err = m.applyPermissionsChecks(permissions)
+	if err != nil {
+		return err
+	}
+
+	memberships := &collectionWrapper{database: m, coll: db.Collection("memberships")}
+	err = m.applyMembershipsChecks(memberships)
+	if err != nil {
+		return err
+	}
+
+	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
+	err = m.applyApplicationsChecks(applications)
+	if err != nil {
+		return err
+	}
+
+	devices := &collectionWrapper{database: m, coll: db.Collection("devices")}
+	err = m.applyDevicesChecks(devices)
+	if err != nil {
+		return err
+	}
+
 	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
 	err = m.applyGlobalConfigChecks(globalConfig)
 	if err != nil {
@@ -71,6 +123,13 @@ func (m *database) start() error {
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
+	m.users = users
+	m.groups = groups
+	m.roles = roles
+	m.permissions = permissions
+	m.memberships = memberships
+	m.applications = applications
+	m.devices = devices
 	m.globalConfig = globalConfig
 	m.organizations = organizations
 	m.serviceRegs = serviceRegs
@@ -84,9 +143,84 @@ func (m *database) start() error {
 
 	m.authConfigs = authConfigs
 
-	//watch for auth info changes
-	go m.authConfigs.Watch(nil)
+	credentials := &collectionWrapper{database: m, coll: db.Collection("credentials")}
+	err = m.applyCredentialChecks(credentials)
+	if err != nil {
+		return err
+	}
 
+	m.credentials = credentials
+
+	go m.authConfigs.Watch(nil)
+	go m.serviceRegs.Watch(nil)
+	go m.organizations.Watch(nil)
+
+	m.listeners = []Listener{}
+
+	return nil
+}
+
+func (m *database) applyUsersChecks(users *collectionWrapper) error {
+	log.Println("apply users checks.....")
+
+	log.Println("users check passed")
+	return nil
+}
+
+func (m *database) applyGroupsChecks(groups *collectionWrapper) error {
+	log.Println("apply groups checks.....")
+
+	log.Println("groups check passed")
+	return nil
+}
+
+func (m *database) applyRolesChecks(roles *collectionWrapper) error {
+	log.Println("apply roles checks.....")
+
+	log.Println("roles check passed")
+	return nil
+}
+
+func (m *database) applyPermissionsChecks(permissions *collectionWrapper) error {
+	log.Println("apply permissions checks.....")
+
+	log.Println("permissions check passed")
+	return nil
+}
+
+func (m *database) applyMembershipsChecks(memberships *collectionWrapper) error {
+	log.Println("apply memberships checks.....")
+
+	log.Println("memberships check passed")
+	return nil
+}
+
+func (m *database) applyApplicationsChecks(applications *collectionWrapper) error {
+	log.Println("apply applications checks.....")
+
+	log.Println("applications check passed")
+	return nil
+}
+
+func (m *database) applyDevicesChecks(devices *collectionWrapper) error {
+	log.Println("apply devices checks.....")
+
+	log.Println("devices check passed")
+	return nil
+}
+
+func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
+	// Add org_id, app_id compound index
+	err := credentials.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	err = credentials.AddIndex(bson.D{primitive.E{Key: "type", Value: 1}, primitive.E{Key: "user_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+	log.Println("authConfig check passed")
 	return nil
 }
 
@@ -157,6 +291,12 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 
 		for _, listener := range m.listeners {
 			go listener.OnServiceRegsUpdated()
+		}
+	case "organizations":
+		log.Println("organizations collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnOrganizationsUpdated()
 		}
 	}
 }
