@@ -90,14 +90,14 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	err := auth.storeReg()
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionSave, "reg", nil, err)
+		return nil, log.WrapErrorAction(log.ActionSave, "reg", nil, err)
 	}
 
 	serviceLoader := NewLocalServiceRegLoader(storage)
 
 	authService, err := authservice.NewAuthService(serviceID, host, serviceLoader)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionInitialize, "auth service", nil, err)
+		return nil, log.WrapErrorAction(log.ActionInitialize, "auth service", nil, err)
 	}
 
 	auth.AuthService = authService
@@ -135,18 +135,18 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 func (a *Auth) Login(authType string, creds string, orgID string, appID string, params string, l *log.Log) (string, string, *model.User, error) {
 	auth, err := a.getAuthType(authType)
 	if err != nil {
-		return "", "", nil, log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
+		return "", "", nil, log.WrapErrorAction(log.ActionLoadCache, typeAuthType, nil, err)
 	}
 
 	userAuth, err := auth.check(creds, orgID, appID, params, l)
 	if err != nil {
-		return "", "", nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
+		return "", "", nil, log.WrapErrorAction(log.ActionValidate, "creds", nil, err)
 	}
 
 	claims := a.getStandardClaims("", userAuth.UserID, userAuth.Email, userAuth.Phone, "rokwire", orgID, appID, userAuth.Exp)
 	token, err := a.buildAccessToken(claims, "", "all")
 	if err != nil {
-		return "", "", nil, log.WrapActionError("build", log.TypeToken, nil, err)
+		return "", "", nil, log.WrapErrorAction("build", log.TypeToken, nil, err)
 	}
 
 	//TODO: Implement account management
@@ -178,12 +178,12 @@ func (a *Auth) Refresh(refreshToken string, l *log.Log) (string, string, error) 
 func (a *Auth) GetLoginUrl(authType string, orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
 	auth, err := a.getAuthType(authType)
 	if err != nil {
-		return "", nil, log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
+		return "", nil, log.WrapErrorAction(log.ActionLoadCache, typeAuthType, nil, err)
 	}
 
 	loginUrl, params, err := auth.getLoginUrl(orgID, appID, redirectUri, l)
 	if err != nil {
-		return "", nil, log.WrapActionError(log.ActionGet, "login url", nil, err)
+		return "", nil, log.WrapErrorAction(log.ActionGet, "login url", nil, err)
 	}
 
 	return loginUrl, params, nil
@@ -208,12 +208,12 @@ func (a *Auth) AuthorizeService(claims TokenClaims, serviceID string, approvedSc
 		authorization = model.ServiceAuthorization{UserID: claims.Subject, ServiceID: serviceID, Scopes: approvedScopes}
 		err := a.storage.SaveServiceAuthorization(&authorization)
 		if err != nil {
-			return "", nil, nil, log.WrapActionError(log.ActionSave, model.TypeServiceAuthorization, nil, err)
+			return "", nil, nil, log.WrapErrorAction(log.ActionSave, model.TypeServiceAuthorization, nil, err)
 		}
 	} else {
 		serviceAuth, err := a.storage.FindServiceAuthorization(claims.Subject, serviceID)
 		if err != nil {
-			return "", nil, nil, log.WrapActionError(log.ActionFind, model.TypeServiceAuthorization, nil, err)
+			return "", nil, nil, log.WrapErrorAction(log.ActionFind, model.TypeServiceAuthorization, nil, err)
 		}
 
 		if serviceAuth != nil {
@@ -223,7 +223,7 @@ func (a *Auth) AuthorizeService(claims TokenClaims, serviceID string, approvedSc
 			//If no service authorization exists, return the service registration record
 			reg, err := a.storage.FindServiceReg(serviceID)
 			if err != nil {
-				return "", nil, nil, log.WrapActionError(log.ActionFind, model.TypeServiceReg, nil, err)
+				return "", nil, nil, log.WrapErrorAction(log.ActionFind, model.TypeServiceReg, nil, err)
 			}
 			return "", nil, reg, nil
 		}
@@ -231,7 +231,7 @@ func (a *Auth) AuthorizeService(claims TokenClaims, serviceID string, approvedSc
 
 	token, err := a.GetScopedAccessToken(claims, serviceID, authorization.Scopes)
 	if err != nil {
-		return "", nil, nil, log.WrapActionError("build", log.TypeToken, nil, err)
+		return "", nil, nil, log.WrapErrorAction("build", log.TypeToken, nil, err)
 	}
 
 	return token, authorization.Scopes, nil, nil
@@ -319,7 +319,7 @@ func (a *Auth) getAuthType(name string) (authType, error) {
 		return auth, nil
 	}
 
-	return nil, log.DataError(log.StatusInvalid, typeAuthType, log.StringArgs(name))
+	return nil, log.ErrorData(log.StatusInvalid, typeAuthType, log.StringArgs(name))
 }
 
 func (a *Auth) buildAccessToken(claims TokenClaims, permissions string, scope string) (string, error) {
@@ -352,7 +352,7 @@ func (a *Auth) generateToken(claims *TokenClaims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	kid, err := authutils.GetKeyFingerprint(&a.authPrivKey.PublicKey)
 	if err != nil {
-		return "", log.WrapActionError(log.ActionCompute, "fingerprint", log.StringArgs("auth key"), err)
+		return "", log.WrapErrorAction(log.ActionCompute, "fingerprint", log.StringArgs("auth key"), err)
 	}
 	token.Header["kid"] = kid
 	return token.SignedString(a.authPrivKey)
@@ -380,7 +380,7 @@ func (a *Auth) getExp(exp *int64) int64 {
 func (a *Auth) storeReg() error {
 	pem, err := authutils.GetPubKeyPem(&a.authPrivKey.PublicKey)
 	if err != nil {
-		return log.WrapActionError(log.ActionEncode, "auth pub key", nil, err)
+		return log.WrapErrorAction(log.ActionEncode, "auth pub key", nil, err)
 	}
 
 	key := authservice.PubKey{KeyPem: pem, Alg: authKeyAlg}
@@ -390,7 +390,7 @@ func (a *Auth) storeReg() error {
 		Name: "ROKWIRE Auth Service", Description: "The Auth Service is a subsystem of the Core Building Block that manages authentication and authorization.", FirstParty: true}
 	err = a.storage.SaveServiceReg(&authReg)
 	if err != nil {
-		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs(authServiceID), err)
+		return log.WrapErrorAction(log.ActionSave, model.TypeServiceReg, log.StringArgs(authServiceID), err)
 	}
 
 	// Setup core registration for signature validation
@@ -398,7 +398,7 @@ func (a *Auth) storeReg() error {
 		Name: "ROKWIRE Core Building Block", Description: "The Core Building Block manages user, auth, and organization data for the ROKWIRE platform.", FirstParty: true}
 	err = a.storage.SaveServiceReg(&coreReg)
 	if err != nil {
-		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs(a.serviceID), err)
+		return log.WrapErrorAction(log.ActionSave, model.TypeServiceReg, log.StringArgs(a.serviceID), err)
 	}
 
 	return nil
@@ -408,7 +408,7 @@ func (a *Auth) storeReg() error {
 func (a *Auth) LoadAuthConfigs() error {
 	authConfigDocs, err := a.storage.LoadAuthConfigs()
 	if err != nil {
-		return log.WrapActionError(log.ActionFind, model.TypeAuthConfig, nil, err)
+		return log.WrapErrorAction(log.ActionFind, model.TypeAuthConfig, nil, err)
 	}
 
 	a.setAuthConfigs(authConfigDocs)
@@ -428,12 +428,12 @@ func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*mode
 	if item != nil {
 		authConfigFromCache, ok := item.(model.AuthConfig)
 		if !ok {
-			return nil, log.ActionError(log.ActionCast, model.TypeAuthConfig, errArgs)
+			return nil, log.ErrorAction(log.ActionCast, model.TypeAuthConfig, errArgs)
 		}
 		authConfig = &authConfigFromCache
 		return authConfig, nil
 	}
-	return nil, log.DataError(log.StatusMissing, model.TypeAuthConfig, errArgs)
+	return nil, log.ErrorData(log.StatusMissing, model.TypeAuthConfig, errArgs)
 }
 
 func (a *Auth) setAuthConfigs(authConfigs *[]model.AuthConfig) {
@@ -460,7 +460,7 @@ type LocalServiceRegLoaderImpl struct {
 func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, error) {
 	regs, err := l.storage.FindServiceRegs(l.GetSubscribedServices())
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionFind, model.TypeServiceReg, nil, err)
+		return nil, log.WrapErrorAction(log.ActionFind, model.TypeServiceReg, nil, err)
 	}
 
 	authRegs := make([]authservice.ServiceReg, len(regs))

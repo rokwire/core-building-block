@@ -37,7 +37,7 @@ func initSamlAuth(auth *Auth) (*samlAuthImpl, error) {
 
 	err := auth.registerAuthType(saml.authType, saml)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
+		return nil, log.WrapErrorAction(log.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return saml, nil

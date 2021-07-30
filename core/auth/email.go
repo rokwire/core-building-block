@@ -36,7 +36,7 @@ func initEmailAuth(auth *Auth) (*emailAuthImpl, error) {
 
 	err := auth.registerAuthType(email.authType, email)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
+		return nil, log.WrapErrorAction(log.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return email, nil

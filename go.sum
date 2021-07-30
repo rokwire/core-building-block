@@ -236,8 +236,8 @@ github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFR
 github.com/rokmetro/auth-library v0.1.13 h1:tLdvh6NxC98V1+ae3K64Fx6dXSEFsaeaOKMWrawzPL4=
 github.com/rokmetro/auth-library v0.1.13/go.mod h1:1wGMAYOPWLSBuOcPeeQngfNLx+Z6ia5jU5a8Iv45arY=
 github.com/rokmetro/logging-library v0.1.15/go.mod h1:ye/3piEthlXr//IiPE/IR3K2cRM1y1/VwTY6TlWDGpw=
-github.com/rokmetro/logging-library v0.1.21 h1:gUTmt5IN9IAsf+CdNkeBefEpyScTpGXaZ0vkLDO6mnk=
-github.com/rokmetro/logging-library v0.1.21/go.mod h1:ye/3piEthlXr//IiPE/IR3K2cRM1y1/VwTY6TlWDGpw=
+github.com/rokmetro/logging-library v0.1.22 h1:j49AQ64pni03y5YHPzvdX3SD23yX+8aCS2lowg6SoHs=
+github.com/rokmetro/logging-library v0.1.22/go.mod h1:ye/3piEthlXr//IiPE/IR3K2cRM1y1/VwTY6TlWDGpw=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/shurcooL/sanitized_anchor_name v1.0.0/go.mod h1:1NzhyTcUVG4SuEtjjoZeVRXNmyL/1OwPU0+IJeTBvfc=
 github.com/sirupsen/logrus v1.4.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
