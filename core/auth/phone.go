@@ -106,16 +106,6 @@ func (a *phoneAuthImpl) check(creds string, orgID string, appID string, params s
 		return nil, log.WrapActionError(log.ActionFind, typePhoneCreds, &errFields, nil)
 	}
 
-	// credBytes, err := json.Marshal(authCreds.Creds)
-	// if err != nil {
-	// 	return nil, log.WrapActionError(log.ActionMarshal, typePhoneCreds, &errFields, err)
-	// }
-	// var phoneCred *phoneCreds
-	// err = json.Unmarshal(credBytes, &phoneCred)
-	// if err != nil {
-	// 	return nil, log.WrapActionError(log.ActionUnmarshal, typePhoneCreds, &errFields, err)
-	// }
-
 	claims := &model.UserAuth{Phone: phone, UserID: phone}
 
 	if len(authCreds.AccountID) > 0 {
