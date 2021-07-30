@@ -3,16 +3,16 @@ package model
 import (
 	"fmt"
 
-	"github.com/rokmetro/logging-library/logutils"
+	log "github.com/rokmetro/logging-library/loglib"
 )
 
 const (
 	//TypeOrganization ...
-	TypeOrganization logutils.MessageDataType = "organization"
+	TypeOrganization log.LogData = "organization"
 	//TypeOrganizationMembership ...
-	TypeOrganizationMembership logutils.MessageDataType = "org membership"
+	TypeOrganizationMembership log.LogData = "org membership"
 	//TypeOrganizationUserRelations ...
-	TypeOrganizationUserRelations logutils.MessageDataType = "org user relations"
+	TypeOrganizationUserRelations log.LogData = "org user relations"
 )
 
 //TODO - Flat vs. hierarchical group management - not sure we need hierarchical, maybe no!?

@@ -4,7 +4,7 @@ import (
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
 
-	"github.com/rokmetro/logging-library/logs"
+	log "github.com/rokmetro/logging-library/loglib"
 )
 
 //APIs exposes to the drivers adapters access to the core functionality
@@ -63,11 +63,11 @@ type servicesImpl struct {
 	app *application
 }
 
-func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
+func (s *servicesImpl) SerGetAuthTest(l *log.Log) string {
 	return s.app.serGetAuthTest(l)
 }
 
-func (s *servicesImpl) SerGetCommonTest(l *logs.Log) string {
+func (s *servicesImpl) SerGetCommonTest(l *log.Log) string {
 	return s.app.serGetCommonTest(l)
 }
 

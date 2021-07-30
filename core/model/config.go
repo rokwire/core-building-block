@@ -3,14 +3,14 @@ package model
 import (
 	"fmt"
 
-	"github.com/rokmetro/logging-library/logutils"
+	log "github.com/rokmetro/logging-library/loglib"
 )
 
 const (
 	//TypeGlobalConfig ...
-	TypeGlobalConfig logutils.MessageDataType = "global config"
+	TypeGlobalConfig log.LogData = "global config"
 	//TypeOrganizationConfig ...
-	TypeOrganizationConfig logutils.MessageDataType = "org config"
+	TypeOrganizationConfig log.LogData = "org config"
 )
 
 //GlobalConfig represents global config for the system

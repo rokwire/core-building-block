@@ -3,9 +3,7 @@ package auth
 import (
 	"core-building-block/core/model"
 
-	"github.com/rokmetro/logging-library/errors"
-	"github.com/rokmetro/logging-library/logs"
-	"github.com/rokmetro/logging-library/logutils"
+	log "github.com/rokmetro/logging-library/loglib"
 )
 
 const (
@@ -18,17 +16,17 @@ type apiKeyAuthImpl struct {
 	authType string
 }
 
-func (a *apiKeyAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
+func (a *apiKeyAuthImpl) check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error) {
 	//TODO: Implement
-	return nil, errors.New(logutils.Unimplemented)
+	return nil, log.NewError(log.Unimplemented)
 }
 
-func (a *apiKeyAuthImpl) refresh(refreshToken string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
-	return nil, errors.Newf("refresh operation invalid for auth_type=%s", authTypeApiKey)
+func (a *apiKeyAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
+	return nil, log.NewErrorf("refresh operation invalid for auth_type=%s", authTypeApiKey)
 }
 
-func (a *apiKeyAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *logs.Log) (string, map[string]interface{}, error) {
-	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
+func (a *apiKeyAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
+	return "", nil, log.NewErrorf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
 //initAPIKeyAuth initializes and registers a new API key auth instance
@@ -37,7 +35,7 @@ func initAPIKeyAuth(auth *Auth) (*apiKeyAuthImpl, error) {
 
 	err := auth.registerAuthType(apiKey.authType, apiKey)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+		return nil, log.WrapErrorAction(log.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return apiKey, nil

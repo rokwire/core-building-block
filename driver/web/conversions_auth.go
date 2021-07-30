@@ -6,8 +6,8 @@ import (
 
 	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/auth-library/authservice"
-	"github.com/rokmetro/logging-library/errors"
-	"github.com/rokmetro/logging-library/logutils"
+
+	log "github.com/rokmetro/logging-library/loglib"
 )
 
 func pubKeyFromDef(item *Def.PubKey) *authservice.PubKey {
@@ -115,7 +115,7 @@ func serviceScopeListFromDef(items *[]Def.ServiceScope) ([]model.ServiceScope, e
 	for i, item := range *items {
 		defItem, err := serviceScopeFromDef(&item)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionParse, model.TypeServiceScope, nil, err)
+			return nil, log.WrapErrorAction(log.ActionParse, model.TypeServiceScope, nil, err)
 		}
 		if defItem != nil {
 			out[i] = *defItem
@@ -150,7 +150,7 @@ func scopeListFromDef(items *[]string) ([]authorization.Scope, error) {
 	for i, item := range *items {
 		defItem, err := authorization.ScopeFromString(item)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionParse, model.TypeScope, nil, err)
+			return nil, log.WrapErrorAction(log.ActionParse, model.TypeScope, nil, err)
 		}
 		if defItem != nil {
 			out[i] = *defItem

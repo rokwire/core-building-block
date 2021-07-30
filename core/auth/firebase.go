@@ -3,9 +3,7 @@ package auth
 import (
 	"core-building-block/core/model"
 
-	"github.com/rokmetro/logging-library/errors"
-	"github.com/rokmetro/logging-library/logs"
-	"github.com/rokmetro/logging-library/logutils"
+	log "github.com/rokmetro/logging-library/loglib"
 )
 
 const (
@@ -18,17 +16,17 @@ type firebaseAuthImpl struct {
 	authType string
 }
 
-func (a *firebaseAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
+func (a *firebaseAuthImpl) check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error) {
 	//TODO: Implement
-	return nil, errors.New(logutils.Unimplemented)
+	return nil, log.NewError(log.Unimplemented)
 }
 
-func (a *firebaseAuthImpl) refresh(refreshToken string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
-	return nil, errors.Newf("refresh operation invalid for auth_type=%s", authTypeFirebase)
+func (a *firebaseAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
+	return nil, log.NewErrorf("refresh operation invalid for auth_type=%s", authTypeFirebase)
 }
 
-func (a *firebaseAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *logs.Log) (string, map[string]interface{}, error) {
-	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
+func (a *firebaseAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
+	return "", nil, log.NewErrorf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
 //initFirebaseAuth initializes and registers a new Firebase auth instance
@@ -37,7 +35,7 @@ func initFirebaseAuth(auth *Auth) (*firebaseAuthImpl, error) {
 
 	err := auth.registerAuthType(firebase.authType, firebase)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+		return nil, log.WrapErrorAction(log.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return firebase, nil

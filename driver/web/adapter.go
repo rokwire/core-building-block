@@ -10,10 +10,10 @@ import (
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
-	"github.com/rokmetro/logging-library/logs"
-	"github.com/rokmetro/logging-library/logutils"
 
 	"github.com/gorilla/mux"
+
+	log "github.com/rokmetro/logging-library/loglib"
 
 	"github.com/casbin/casbin"
 
@@ -28,7 +28,7 @@ type Adapter struct {
 	host          string
 	auth          *Auth
 	authorization *casbin.Enforcer
-	logger        *logs.Logger
+	logger        *log.Logger
 
 	defaultApisHandler  DefaultApisHandler
 	servicesApisHandler ServicesApisHandler
@@ -39,7 +39,7 @@ type Adapter struct {
 	coreAPIs *core.APIs
 }
 
-type handlerFunc = func(*logs.Log, *http.Request) logs.HttpResponse
+type handlerFunc = func(*log.Log, *http.Request) log.HttpResponse
 
 //Start starts the module
 func (we Adapter) Start() {
@@ -135,7 +135,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		//1. validate request
 		requestValidationInput, err := we.validateRequest(req)
 		if err != nil {
-			logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
+			logObj.RequestErrorAction(w, log.ActionValidate, log.TypeRequest, nil, err, http.StatusBadRequest, true)
 			return
 		}
 
@@ -146,7 +146,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		if we.env != "production" {
 			err = we.validateResponse(requestValidationInput, response)
 			if err != nil {
-				logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeResponse, nil, err, http.StatusInternalServerError, true)
+				logObj.RequestErrorAction(w, log.ActionValidate, log.TypeResponse, nil, err, http.StatusInternalServerError, true)
 				return
 			}
 		}
@@ -191,7 +191,7 @@ func (we Adapter) validateRequest(req *http.Request) (*openapi3filter.RequestVal
 	return requestValidationInput, nil
 }
 
-func (we Adapter) validateResponse(requestValidationInput *openapi3filter.RequestValidationInput, response logs.HttpResponse) error {
+func (we Adapter) validateResponse(requestValidationInput *openapi3filter.RequestValidationInput, response log.HttpResponse) error {
 	responseCode := response.ResponseCode
 	body := response.Body
 	header := response.Headers
@@ -212,7 +212,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")

@@ -1,11 +1,13 @@
 package core
 
-import "github.com/rokmetro/logging-library/logs"
+import (
+	log "github.com/rokmetro/logging-library/loglib"
+)
 
-func (app *application) serGetAuthTest(l *logs.Log) string {
+func (app *application) serGetAuthTest(l *log.Log) string {
 	return "Services - Auth - test"
 }
 
-func (app *application) serGetCommonTest(l *logs.Log) string {
+func (app *application) serGetCommonTest(l *log.Log) string {
 	return "Services - Common - test"
 }

@@ -3,9 +3,7 @@ package auth
 import (
 	"core-building-block/core/model"
 
-	"github.com/rokmetro/logging-library/errors"
-	"github.com/rokmetro/logging-library/logs"
-	"github.com/rokmetro/logging-library/logutils"
+	log "github.com/rokmetro/logging-library/loglib"
 )
 
 const (
@@ -18,18 +16,18 @@ type phoneAuthImpl struct {
 	authType string
 }
 
-func (a *phoneAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
+func (a *phoneAuthImpl) check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error) {
 	//TODO: Implement
-	return nil, errors.New(logutils.Unimplemented)
+	return nil, log.NewError(log.Unimplemented)
 }
 
 //refresh is enabled for phone auth, but no operation is needed
-func (a *phoneAuthImpl) refresh(refreshToken string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
+func (a *phoneAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
 	return nil, nil
 }
 
-func (a *phoneAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *logs.Log) (string, map[string]interface{}, error) {
-	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
+func (a *phoneAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
+	return "", nil, log.NewErrorf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
 //initPhoneAuth initializes and registers a new phone auth instance
@@ -38,7 +36,7 @@ func initPhoneAuth(auth *Auth) (*phoneAuthImpl, error) {
 
 	err := auth.registerAuthType(phone.authType, phone)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+		return nil, log.WrapErrorAction(log.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return phone, nil
