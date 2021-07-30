@@ -76,7 +76,7 @@ type tokenClaims struct {
 type authRefreshParams struct {
 	PreviousToken string      `json:"previous_token" validate:"required"`
 	CurrentToken  string      `json:"current_token" validate:"required"`
-	Expires       time.Time   `json:"exp" validate:"required"`
+	Expires       *time.Time  `json:"exp" validate:"required"`
 	IDPParams     interface{} `json:"idp_params"`
 }
 
@@ -197,9 +197,25 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 		return "", "", nil, log.WrapActionError("build", log.TypeToken, nil, err)
 	}
 
-	//TODO: Implement account management
+	refreshToken, expireTime, err := a.buildRefreshToken()
+	if err != nil {
+		return "", "", nil, err
+	}
+	refreshParams := authRefreshParams{CurrentToken: refreshToken, Expires: expireTime, IDPParams: userAuth.Refresh}
+	updatedCreds := model.AuthCred{
+		OrgID:   orgID,
+		AppID:   appID,
+		Type:    authType,
+		UserID:  userAuth.UserID,
+		Creds:   userAuth.NewCreds,
+		Refresh: refreshParams,
+	}
+	_, err = a.storage.UpdateCredentials(&updatedCreds)
+	if err != nil {
+		return "", "", nil, err
+	}
 
-	return token, userAuth.RefreshToken, user, nil
+	return token, refreshToken, user, nil
 }
 
 //Refresh refreshes an access token using a refresh token
@@ -210,7 +226,6 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 //		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 func (a *Auth) Refresh(refreshToken string, l *log.Log) (string, string, error) {
-	// TODO: find credentials by matching refresh token
 	credentials, err := a.storage.FindCredentialsByToken(refreshToken)
 	if err != nil {
 		return "", "", log.WrapActionError("refresh", log.TypeToken, nil, err)
@@ -238,7 +253,15 @@ func (a *Auth) Refresh(refreshToken string, l *log.Log) (string, string, error) 
 		return "", "", log.ActionError(log.ActionValidate, "refresh expiration", nil)
 	}
 	if refreshToken == refreshParams.PreviousToken {
-		// TODO: clear tokens in DB
+		refreshParams.CurrentToken = ""
+		refreshParams.PreviousToken = ""
+		refreshParams.Expires = nil
+		refreshParams.IDPParams = nil
+		credentials.Refresh = refreshParams
+		_, err = a.storage.UpdateCredentials(credentials)
+		if err != nil {
+			return "", "", log.WrapActionError(log.ActionValidate, "refresh reuse", nil, err)
+		}
 		return "", "", log.ActionError(log.ActionValidate, "refresh reuse", nil)
 	}
 	if refreshToken != refreshParams.CurrentToken {
@@ -263,26 +286,32 @@ func (a *Auth) Refresh(refreshToken string, l *log.Log) (string, string, error) 
 		exp = &defaultExp
 	}
 
-	newRefreshToken, err := a.buildRefreshToken()
+	newRefreshToken, expireTime, err := a.buildRefreshToken()
 	if err != nil {
 		return "", "", err
 	}
 	refreshParams.PreviousToken = refreshToken
 	refreshParams.CurrentToken = newRefreshToken
-	refreshParams.Expires = time.Now().UTC().Add(time.Minute * time.Duration(refreshTokenExpiry))
+	refreshParams.Expires = expireTime
 
-	//TODO: get user account from DB using credentials accountID
-	var account model.UserAccount
+	user, err := a.storage.FindUserByAccountID(credentials.AccountID)
+	if err != nil {
+		return "", "", err
+	}
 
-	claims := a.getStandardClaims("", account.Username, account.Email, account.Phone, "rokwire", credentials.OrgID, credentials.AppID, exp)
+	claims := a.getStandardClaims("", user.Account.Username, user.Account.Email, user.Account.Phone, "rokwire", credentials.OrgID, credentials.AppID, exp)
 	token, err := a.buildAccessToken(claims, "", "all")
 	if err != nil {
 		return "", "", log.WrapActionError("build", log.TypeToken, nil, err)
 	}
 
-	//TODO: update credentials doc in DB with new refresh params
+	credentials.Refresh = refreshParams
+	_, err = a.storage.UpdateCredentials(credentials)
+	if err != nil {
+		return "", "", err
+	}
 
-	return token, newRefreshToken, log.NewError(log.Unimplemented)
+	return token, newRefreshToken, nil
 }
 
 //GetLoginUrl returns a pre-formatted login url for SSO providers
@@ -430,12 +459,14 @@ func (a *Auth) buildCsrfToken(claims tokenClaims) (string, error) {
 	return a.generateToken(&claims)
 }
 
-func (a *Auth) buildRefreshToken() (string, error) {
+func (a *Auth) buildRefreshToken() (string, *time.Time, error) {
 	newToken, err := utils.GenerateRandomString(refreshTokenLength)
 	if err != nil {
-		return "", log.WrapActionError(log.ActionCompute, log.TypeToken, nil, err)
+		return "", nil, log.WrapActionError(log.ActionCompute, log.TypeToken, nil, err)
 	}
-	return newToken, nil
+
+	expireTime := time.Now().UTC().Add(time.Minute * time.Duration(refreshTokenExpiry))
+	return newToken, &expireTime, nil
 }
 
 func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string, exp *int64) tokenClaims {
@@ -579,6 +610,7 @@ type Storage interface {
 	//Credentials
 	FindCredentialsByToken(token string) (*model.AuthCred, error)
 	FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCred, error)
+	UpdateCredentials(creds *model.AuthCred) (*model.AuthCred, error)
 
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)

@@ -96,11 +96,13 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 			return nil, log.WrapActionError(log.ActionValidate, typeOidcLoginParams, nil, err)
 		}
 
-		userAuth, err := a.newToken(creds, orgID, appID, &loginParams, l)
+		userAuth, refreshToken, err := a.newToken(creds, orgID, appID, &loginParams, l)
 		if err != nil {
 			return nil, err
 		}
 		userAuth.OrgData["orgID"] = orgID
+		userAuth.Refresh = a.setRefreshParams(refreshToken, loginParams.RedirectURI)
+
 		credentials, err := a.auth.storage.FindCredentials(orgID, appID, authTypeOidc, userAuth.UserID)
 		if err != nil {
 			errFields := log.FieldArgs{"org_id": orgID, "app_id": appID, "type": authTypeOidc, "user_id": userAuth.UserID}
@@ -141,9 +143,14 @@ func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials interf
 	return true, nil
 }
 
-func (a *oidcAuthImpl) setCredentials(userAuth *model.UserAuth) interface{} {
+func (a *oidcAuthImpl) setCredentials(userAuth *model.UserAuth) oidcCreds {
 	creds := oidcCreds{Sub: userAuth.Sub}
 	return creds
+}
+
+func (a *oidcAuthImpl) setRefreshParams(token string, redirectURI string) oidcRefreshParams {
+	params := oidcRefreshParams{IDPToken: token, RedirectURI: redirectURI}
+	return params
 }
 
 //refresh must be implemented for OIDC auth
@@ -164,24 +171,12 @@ func (a *oidcAuthImpl) refresh(params interface{}, orgID string, appID string, l
 		return "", nil, log.WrapActionError(log.ActionValidate, typeOidcRefreshParams, nil, err)
 	}
 
-	userAuth, err := a.refreshToken(orgID, appID, &refreshParams, l)
+	userAuth, refreshToken, err := a.refreshToken(orgID, appID, &refreshParams, l)
 	if err != nil {
 		return "", nil, err
 	}
 
-	// userAuth.OrgData["orgID"] = orgID
-	// credentials, err := a.auth.storage.FindCredentials(orgID, appID, authTypeOidc, userAuth.UserID)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// ok, err := a.validateUser(userAuth, credentials.Creds)
-	// if err != nil || !ok {
-	// 	return nil, log.WrapActionError(log.ActionValidate, model.TypeAuthCred, nil, err)
-	// }
-	// userAuth.AccountID = credentials.AccountID
-	// return userAuth, nil
-
-	refreshParams.IDPToken = userAuth.RefreshToken
+	refreshParams.IDPToken = refreshToken
 	return refreshParams, userAuth.Exp, nil
 }
 
@@ -276,10 +271,10 @@ func (a *oidcAuthImpl) checkToken(idToken string, orgID string, appID string, oi
 	return sub, nil
 }
 
-func (a *oidcAuthImpl) newToken(code string, orgID string, appID string, params *oidcLoginParams, l *log.Log) (*model.UserAuth, error) {
+func (a *oidcAuthImpl) newToken(code string, orgID string, appID string, params *oidcLoginParams, l *log.Log) (*model.UserAuth, string, error) {
 	oidcConfig, err := a.getOidcAuthConfig(orgID, appID)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionGet, typeOidcAuthConfig, nil, err)
+		return nil, "", log.WrapActionError(log.ActionGet, typeOidcAuthConfig, nil, err)
 	}
 
 	bodyData := map[string]string{
@@ -295,13 +290,13 @@ func (a *oidcAuthImpl) newToken(code string, orgID string, appID string, params 
 	return a.loadOidcTokensAndInfo(bodyData, oidcConfig, orgID, appID, l)
 }
 
-func (a *oidcAuthImpl) refreshToken(orgID string, appID string, params *oidcRefreshParams, l *log.Log) (*model.UserAuth, error) {
+func (a *oidcAuthImpl) refreshToken(orgID string, appID string, params *oidcRefreshParams, l *log.Log) (*model.UserAuth, string, error) {
 	oidcConfig, err := a.getOidcAuthConfig(orgID, appID)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionGet, typeOidcAuthConfig, nil, err)
+		return nil, "", log.WrapActionError(log.ActionGet, typeOidcAuthConfig, nil, err)
 	}
 	if !oidcConfig.UseRefresh {
-		return nil, log.NewErrorf("refresh tokens not enabled for org_id=%s, app_id=%s", orgID, appID)
+		return nil, "", log.NewErrorf("refresh tokens not enabled for org_id=%s, app_id=%s", orgID, appID)
 	}
 
 	bodyData := map[string]string{
@@ -314,34 +309,33 @@ func (a *oidcAuthImpl) refreshToken(orgID string, appID string, params *oidcRefr
 	return a.loadOidcTokensAndInfo(bodyData, oidcConfig, orgID, appID, l)
 }
 
-func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcConfig *oidcAuthConfig, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
+func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcConfig *oidcAuthConfig, orgID string, appID string, l *log.Log) (*model.UserAuth, string, error) {
 	oidcToken, err := a.loadOidcTokenWithParams(bodyData, oidcConfig)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionGet, typeOidcToken, nil, err)
+		return nil, "", log.WrapActionError(log.ActionGet, typeOidcToken, nil, err)
 	}
 
 	userAuth := model.UserAuth{}
 	sub, err := a.checkToken(oidcToken.IDToken, orgID, appID, oidcConfig, l)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionValidate, typeOidcToken, nil, err)
+		return nil, "", log.WrapActionError(log.ActionValidate, typeOidcToken, nil, err)
 	}
-	userAuth.RefreshToken = oidcToken.RefreshToken
 
 	userInfo, err := a.loadOidcUserInfo(oidcToken, oidcConfig.Host+"/idp/profile/oidc/userinfo")
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionGet, "user info", nil, err)
+		return nil, "", log.WrapActionError(log.ActionGet, "user info", nil, err)
 	}
 
 	var userClaims map[string]interface{}
 	err = json.Unmarshal(userInfo, &userClaims)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionUnmarshal, "user info", nil, err)
+		return nil, "", log.WrapActionError(log.ActionUnmarshal, "user info", nil, err)
 	}
 	userAuth.OrgData = userClaims
 
 	userAuth.Sub = userClaims["sub"].(string)
 	if userAuth.Sub != sub {
-		return nil, log.NewErrorf("mismatching user info sub %s and id token sub %s", userAuth.Sub, sub)
+		return nil, "", log.NewErrorf("mismatching user info sub %s and id token sub %s", userAuth.Sub, sub)
 	}
 	var ok bool
 	userID := readFromClaims("user_id", &oidcConfig.Claims, &userClaims)
@@ -381,7 +375,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	}
 	userAuth.Picture = userPhoto
 
-	return &userAuth, nil
+	return &userAuth, oidcToken.RefreshToken, nil
 }
 
 func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcConfig *oidcAuthConfig) (*oidcToken, error) {

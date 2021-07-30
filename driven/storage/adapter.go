@@ -196,10 +196,12 @@ func (sa *Adapter) ReadTODO() error {
 	return nil
 }
 
+//FindUserByID finds a user by its _id field
 func (sa *Adapter) FindUserByID(id string) (*model.User, error) {
 	return sa.findUser("_id", id)
 }
 
+//FindUserByAccountID finds a user by its account.id field
 func (sa *Adapter) FindUserByAccountID(accountID string) (*model.User, error) {
 	return sa.findUser("account.id", accountID)
 }
@@ -250,7 +252,7 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred
 	if err != nil {
 		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("account_id"))
 	}
-	newAccount := model.UserAccount{ID: accountID.String(), Email: userAuth.Email, Phone: userAuth.Phone, DateCreated: now}
+	newAccount := model.UserAccount{ID: accountID.String(), Email: userAuth.Email, Phone: userAuth.Phone, Username: userAuth.UserID, DateCreated: now}
 	newUser.Account = newAccount
 
 	profileID, err := uuid.NewUUID()
@@ -466,7 +468,21 @@ func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, 
 	return &creds, nil
 }
 
-//Insert credentials inserts a set of credentials
+//FindCredentialsByToken finds a set of credentials by refresh token
+func (sa *Adapter) FindCredentialsByToken(token string) (*model.AuthCred, error) {
+	conditions := []bson.M{{"refresh.current_token": token}, {"refresh.previous_token": token}}
+	filter := bson.M{"$or": conditions}
+
+	var creds model.AuthCred
+	err := sa.db.credentials.FindOne(filter, &creds, nil)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionFind, model.TypeAuthCred, nil, err)
+	}
+
+	return &creds, nil
+}
+
+//InsertCredentials inserts a set of credentials
 func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.SessionContext) error {
 	if creds == nil {
 		return log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeAuthCred))
@@ -483,6 +499,21 @@ func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.Sessio
 	}
 
 	return nil
+}
+
+//UpdateCredentials updates a set of credentials
+func (sa *Adapter) UpdateCredentials(creds *model.AuthCred) (*model.AuthCred, error) {
+	if creds == nil {
+		return nil, log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeAuthCred))
+	}
+
+	filter := bson.D{primitive.E{Key: "type", Value: creds.Type}, primitive.E{Key: "user_id", Value: creds.UserID}}
+	err := sa.db.credentials.ReplaceOne(filter, creds, nil)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionInsert, model.TypeAuthCred, nil, err)
+	}
+
+	return creds, nil
 }
 
 //FindGlobalPermissions finds a set of global user permissions
@@ -898,11 +929,6 @@ func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 		resultList = append(resultList, *item)
 	}
 	return resultList, nil
-}
-
-//FindCredentialsByToken finds a set of credentials by refresh token
-func (sa *Adapter) FindCredentialsByToken(token string) (*model.AuthCred, error) {
-	return nil, log.NewError(log.Unimplemented)
 }
 
 // ============================== ServiceRegs ==============================
