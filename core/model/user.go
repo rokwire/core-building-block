@@ -3,6 +3,7 @@ package model
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	log "github.com/rokmetro/logging-library/loglib"
 )
@@ -26,6 +27,9 @@ type User struct {
 	OrganizationsMemberships []OrganizationMembership
 
 	Devices []Device
+
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (u User) String() string {
@@ -62,6 +66,9 @@ type UserAccount struct {
 
 	AllowLogin bool `bson:"allow_login"`
 
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+
 	//TODO
 	//has 2FA ???
 }
@@ -75,8 +82,11 @@ func (ua UserAccount) String() string {
 type UserProfile struct {
 	ID        string `bson:"id"`
 	PhotoURL  string `bson:"photo_url"`
-	FirstName string `bson:"firstname"`
-	LastName  string `bson:"lastname"`
+	FirstName string `bson:"first_name"`
+	LastName  string `bson:"last_name"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 func (up UserProfile) String() string {
@@ -93,12 +103,18 @@ type GlobalGroup struct {
 	Roles       []GlobalRole       `bson:"roles"`
 
 	Users []User
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 //GlobalPermission represents global permission entity
 type GlobalPermission struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 func (c GlobalPermission) String() string {
@@ -112,6 +128,9 @@ type GlobalRole struct {
 	Description string `bson:"desciption"`
 
 	Permissions []GlobalPermission `bson:"permissions"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 func (c GlobalRole) String() string {
@@ -124,11 +143,14 @@ type OrganizationGroup struct {
 	Name string `bson:"name"`
 
 	Permissions []OrganizationPermission `bson:"permissions"`
-	Roles       []OrganizationRole
+	Roles       []OrganizationRole       `bson:"roles"`
 
 	Organization Organization
 
 	OrganizationsMemberships []OrganizationMembership
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 func (cg OrganizationGroup) String() string {
@@ -141,6 +163,9 @@ type OrganizationPermission struct {
 	Name string `bson:"name"`
 
 	Organization Organization
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 func (c OrganizationPermission) String() string {
@@ -156,6 +181,9 @@ type OrganizationRole struct {
 	Permissions []OrganizationPermission `bson:"permissions"`
 
 	Organization Organization
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 func (c OrganizationRole) String() string {
@@ -174,4 +202,7 @@ type Device struct {
 
 	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
 	Users []User
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }

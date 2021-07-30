@@ -104,13 +104,12 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 		if err != nil {
 			errFields := log.FieldArgs{"org_id": orgID, "app_id": appID, "type": authTypeOidc, "user_id": userAuth.UserID}
 			l.LogAction(log.Warn, log.StatusError, log.ActionFind, model.TypeAuthCred, &errFields)
-			newCreds, err := a.setCredentials(userAuth, orgID, appID)
-			userAuth.NewCreds = newCreds
-			return userAuth, fmt.Errorf("no credentials found: %s", err.Error())
+			userAuth.NewCreds = a.setCredentials(userAuth)
+			return userAuth, nil
 		}
 		ok, err := a.validateUser(userAuth, credentials.Creds)
 		if err != nil || !ok {
-			return userAuth, fmt.Errorf("credentials do not match: %s", err.Error())
+			return userAuth, nil
 		}
 		userAuth.AccountID = credentials.AccountID
 		return userAuth, nil
@@ -133,15 +132,11 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 		userAuth.OrgData["orgID"] = orgID
 		credentials, err := a.auth.storage.FindCredentials(orgID, appID, authTypeOidc, userAuth.UserID)
 		if err != nil {
-			errFields := log.FieldArgs{"org_id": orgID, "app_id": appID, "type": authTypeOidc, "user_id": userAuth.UserID}
-			l.LogAction(log.Warn, log.StatusError, log.ActionFind, model.TypeAuthCred, &errFields)
-			newCreds, err := a.setCredentials(userAuth, orgID, appID)
-			userAuth.NewCreds = newCreds
-			return userAuth, fmt.Errorf("no credentials found: %s", err.Error())
+			return nil, err
 		}
 		ok, err := a.validateUser(userAuth, credentials.Creds)
 		if err != nil || !ok {
-			return userAuth, fmt.Errorf("credentials do not match: %s", err.Error())
+			return nil, log.WrapActionError(log.ActionValidate, model.TypeAuthCred, nil, err)
 		}
 		userAuth.AccountID = credentials.AccountID
 		return userAuth, nil
@@ -172,13 +167,9 @@ func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials interf
 	return true, nil
 }
 
-func (a *oidcAuthImpl) setCredentials(userAuth *model.UserAuth, orgID string, appID string) (interface{}, error) {
-	if userAuth == nil {
-		return nil, log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeUserAuth))
-	}
-
+func (a *oidcAuthImpl) setCredentials(userAuth *model.UserAuth) interface{} {
 	creds := oidcCreds{Sub: userAuth.Sub}
-	return creds, nil
+	return creds
 }
 
 //refresh must be implemented for OIDC auth

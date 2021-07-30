@@ -31,6 +31,9 @@ type user struct {
 	OrganizationsMemberships []userMembership         `bson:"organizations_memberships"`
 
 	Devices []model.Device `bson:"devices"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 type rawMembership struct {
@@ -57,6 +60,9 @@ type userMembership struct {
 	Permissions []model.OrganizationPermission `bson:"permissions"`
 	Roles       []model.OrganizationRole       `bson:"roles"`
 	Groups      []model.OrganizationGroup      `bson:"groups"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 type group struct {
@@ -208,10 +214,11 @@ func (sa *Adapter) findUser(key string, id string) (*model.User, error) {
 
 	fullUser := model.User{ID: user.ID, Account: user.Account, Profile: user.Profile,
 		Permissions: user.Permissions, Roles: user.Roles, Groups: user.Groups,
-		OrganizationsMemberships: []model.OrganizationMembership{}, Devices: user.Devices}
+		OrganizationsMemberships: []model.OrganizationMembership{}, Devices: user.Devices,
+		DateCreated: user.DateCreated, DateUpdated: user.DateUpdated}
 	for _, m := range user.OrganizationsMemberships {
 		membership := model.OrganizationMembership{ID: m.ID, OrgUserData: m.OrgUserData,
-			Permissions: m.Permissions, Roles: m.Roles, Groups: m.Groups}
+			Permissions: m.Permissions, Roles: m.Roles, Groups: m.Groups, DateCreated: m.DateCreated, DateUpdated: m.DateUpdated}
 
 		org, err := sa.getOrganization(m.OrgID)
 		if err != nil {
@@ -232,32 +239,33 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred
 		return nil, log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeUserAuth))
 	}
 
+	now := time.Now().UTC()
 	newID, err := uuid.NewUUID()
 	if err != nil {
 		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("user_id"))
 	}
-	newUser := user{ID: newID.String()}
+	newUser := user{ID: newID.String(), DateCreated: now}
 
 	accountID, err := uuid.NewUUID()
 	if err != nil {
 		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("account_id"))
 	}
-	newAccount := model.UserAccount{ID: accountID.String(), Email: userAuth.Email, Phone: userAuth.Phone}
+	newAccount := model.UserAccount{ID: accountID.String(), Email: userAuth.Email, Phone: userAuth.Phone, DateCreated: now}
 	newUser.Account = newAccount
 
 	profileID, err := uuid.NewUUID()
 	if err != nil {
 		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("profile_id"))
 	}
-	newProfile := model.UserProfile{ID: profileID.String(), FirstName: userAuth.FirstName, LastName: userAuth.LastName}
+	newProfile := model.UserProfile{ID: profileID.String(), FirstName: userAuth.FirstName, LastName: userAuth.LastName, DateCreated: now}
 	newUser.Profile = newProfile
 
-	//TODO: populate new device with device information (search for exisiting device first)
+	//TODO: populate new device with device information (search for existing device first)
 	deviceID, err := uuid.NewUUID()
 	if err != nil {
 		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("device_id"))
 	}
-	newDevice := model.Device{ID: deviceID.String()}
+	newDevice := model.Device{ID: deviceID.String(), DateCreated: now}
 	newUser.Devices = []model.Device{newDevice}
 
 	membershipID, err := uuid.NewUUID()
@@ -268,10 +276,10 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred
 	if !ok {
 		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("org_id"))
 	}
-	newOrgMembership := userMembership{ID: membershipID.String(), OrgID: orgID, OrgUserData: userAuth.OrgData}
+	newOrgMembership := userMembership{ID: membershipID.String(), OrgID: orgID, OrgUserData: userAuth.OrgData, DateCreated: now}
 
 	rawMembership := rawMembership{ID: membershipID.String(), UserID: newID.String(), OrgID: orgID,
-		OrgUserData: userAuth.OrgData, DateCreated: time.Now().UTC()}
+		OrgUserData: userAuth.OrgData, DateCreated: now}
 
 	// TODO:
 	// maybe set groups based on organization populations
@@ -323,7 +331,8 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred
 		return nil, err
 	}
 
-	membership := model.OrganizationMembership{ID: newOrgMembership.ID, OrgUserData: newOrgMembership.OrgUserData}
+	membership := model.OrganizationMembership{ID: newOrgMembership.ID, OrgUserData: newOrgMembership.OrgUserData,
+		DateCreated: newOrgMembership.DateCreated, DateUpdated: newOrgMembership.DateUpdated}
 	org, err := sa.getOrganization(orgID)
 	if err != nil {
 		fmt.Printf("failed to find cached organization for org_id %s\n", orgID)
@@ -333,7 +342,8 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred
 
 	returnUser := model.User{ID: newUser.ID, Account: newUser.Account, Profile: newUser.Profile,
 		Permissions: newUser.Permissions, Roles: newUser.Roles, Groups: newUser.Groups,
-		OrganizationsMemberships: []model.OrganizationMembership{membership}, Devices: newUser.Devices}
+		OrganizationsMemberships: []model.OrganizationMembership{membership}, Devices: newUser.Devices,
+		DateCreated: newUser.DateCreated, DateUpdated: newUser.DateUpdated}
 	return &returnUser, nil
 }
 
@@ -343,13 +353,15 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 		return nil, log.DataError(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeUser))
 	}
 
+	now := time.Now().UTC()
 	newUser := user{ID: updatedUser.ID, Account: updatedUser.Account, Profile: updatedUser.Profile,
 		Permissions: updatedUser.Permissions, Roles: updatedUser.Roles, Groups: updatedUser.Groups,
-		OrganizationsMemberships: []userMembership{}, Devices: updatedUser.Devices}
+		OrganizationsMemberships: []userMembership{}, Devices: updatedUser.Devices,
+		DateCreated: updatedUser.DateCreated, DateUpdated: &now}
 
 	for _, m := range updatedUser.OrganizationsMemberships {
 		membership := userMembership{ID: m.ID, OrgID: m.Organization.ID, OrgUserData: m.OrgUserData,
-			Permissions: m.Permissions, Roles: m.Roles, Groups: m.Groups}
+			Permissions: m.Permissions, Roles: m.Roles, Groups: m.Groups, DateCreated: m.DateCreated, DateUpdated: m.DateUpdated}
 		newUser.OrganizationsMemberships = append(newUser.OrganizationsMemberships, membership)
 	}
 
@@ -367,14 +379,14 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 			return nil, log.WrapDataError(log.StatusInvalid, log.TypeString, log.StringArgs("org_id"), err)
 		}
 		newOrgMembership := rawMembership{ID: membershipID.String(), UserID: updatedUser.ID, OrgID: orgID,
-			OrgUserData: *newOrgData, DateCreated: time.Now().UTC()}
+			OrgUserData: *newOrgData, DateCreated: now}
 		newMembership = &newOrgMembership
 
 		// TODO:
 		// possibly set groups based on organization populations
 
 		newUser.OrganizationsMemberships = append(newUser.OrganizationsMemberships,
-			userMembership{ID: membershipID.String(), OrgID: orgID, OrgUserData: *newOrgData})
+			userMembership{ID: membershipID.String(), OrgID: orgID, OrgUserData: *newOrgData, DateCreated: now})
 	}
 
 	// transaction

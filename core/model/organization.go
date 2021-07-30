@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"time"
 
 	log "github.com/rokmetro/logging-library/loglib"
 )
@@ -52,6 +53,9 @@ type OrganizationMembership struct {
 	Roles       []OrganizationRole
 
 	Groups []OrganizationGroup
+
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (cm OrganizationMembership) String() string {
@@ -83,5 +87,5 @@ type Application struct {
 	Name     string   `bson:"name"`     //safer community mobile, safer community web, uuic mobile, uuic web, uuic admin etc
 	Versions []string `bson:"versions"` //1.1.0, 1.2.0 etc
 
-	Organizations []Organization `bson:"organizations"`
+	Organizations []Organization
 }
