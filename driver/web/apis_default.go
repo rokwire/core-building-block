@@ -4,7 +4,7 @@ import (
 	"core-building-block/core"
 	"net/http"
 
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/logs"
 )
 
 //DefaultApisHandler handles default APIs implementation - version etc
@@ -13,7 +13,7 @@ type DefaultApisHandler struct {
 }
 
 //getVersion gives the service version
-func (h DefaultApisHandler) getVersion(l *log.Log, r *http.Request) log.HttpResponse {
+func (h DefaultApisHandler) getVersion(l *logs.Log, r *http.Request) logs.HttpResponse {
 	version := h.coreAPIs.GetVersion()
 
 	return l.HttpResponseSuccessMessage(version)
