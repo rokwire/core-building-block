@@ -263,7 +263,7 @@ func (sa *Adapter) FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, err
 		}
 	}
 	if filter == nil {
-		filter = bson.M{"service_id": bson.M{"$in": serviceIDs}}
+		filter = bson.M{"registration.service_id": bson.M{"$in": serviceIDs}}
 	}
 
 	var result []model.ServiceReg
@@ -281,7 +281,7 @@ func (sa *Adapter) FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, err
 
 //FindServiceReg finds the service registration in storage
 func (sa *Adapter) FindServiceReg(serviceID string) (*model.ServiceReg, error) {
-	filter := bson.M{"service_id": serviceID}
+	filter := bson.M{"registration.service_id": serviceID}
 	var reg *model.ServiceReg
 	err := sa.db.serviceRegs.FindOne(filter, &reg, nil)
 	if err != nil {
@@ -295,7 +295,7 @@ func (sa *Adapter) FindServiceReg(serviceID string) (*model.ServiceReg, error) {
 func (sa *Adapter) InsertServiceReg(reg *model.ServiceReg) error {
 	_, err := sa.db.serviceRegs.InsertOne(reg)
 	if err != nil {
-		return log.WrapActionError(log.ActionInsert, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.ServiceID}, err)
+		return log.WrapActionError(log.ActionInsert, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
 	}
 
 	return nil
@@ -303,10 +303,10 @@ func (sa *Adapter) InsertServiceReg(reg *model.ServiceReg) error {
 
 //UpdateServiceReg updates the service registration in storage
 func (sa *Adapter) UpdateServiceReg(reg *model.ServiceReg) error {
-	filter := bson.M{"service_id": reg.ServiceID}
+	filter := bson.M{"registration.service_id": reg.Registration.ServiceID}
 	err := sa.db.serviceRegs.ReplaceOne(filter, reg, nil)
 	if err != nil {
-		return log.WrapActionError(log.ActionInsert, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.ServiceID}, err)
+		return log.WrapActionError(log.ActionInsert, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
 	}
 
 	return nil
@@ -314,11 +314,11 @@ func (sa *Adapter) UpdateServiceReg(reg *model.ServiceReg) error {
 
 //SaveServiceReg saves the service registration to the storage
 func (sa *Adapter) SaveServiceReg(reg *model.ServiceReg) error {
-	filter := bson.M{"service_id": reg.ServiceID}
+	filter := bson.M{"registration.service_id": reg.Registration.ServiceID}
 	opts := options.Replace().SetUpsert(true)
 	err := sa.db.serviceRegs.ReplaceOne(filter, reg, opts)
 	if err != nil {
-		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.ServiceID}, err)
+		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
 	}
 
 	return nil
@@ -326,7 +326,7 @@ func (sa *Adapter) SaveServiceReg(reg *model.ServiceReg) error {
 
 //DeleteServiceReg deletes the service registration from storage
 func (sa *Adapter) DeleteServiceReg(serviceID string) error {
-	filter := bson.M{"service_id": serviceID}
+	filter := bson.M{"registration.service_id": serviceID}
 	result, err := sa.db.serviceRegs.DeleteOne(filter, nil)
 	if err != nil {
 		return log.WrapActionError(log.ActionDelete, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceID}, err)

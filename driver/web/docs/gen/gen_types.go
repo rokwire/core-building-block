@@ -61,9 +61,11 @@ type AuthAuthorizeServiceRequest struct {
 
 // AuthAuthorizeServiceResponse defines model for AuthAuthorizeServiceResponse.
 type AuthAuthorizeServiceResponse struct {
-	AccessToken    *string     `json:"access_token,omitempty"`
-	ApprovedScopes *[]string   `json:"approved_scopes,omitempty"`
-	ServiceReg     *ServiceReg `json:"service_reg,omitempty"`
+	AccessToken    *string   `json:"access_token,omitempty"`
+	ApprovedScopes *[]string `json:"approved_scopes,omitempty"`
+
+	// Full service registration record
+	ServiceReg *ServiceReg `json:"service_reg,omitempty"`
 
 	// The type of the provided tokens to be specified when they are sent in the "Authorization" header
 	TokenType *AuthAuthorizeServiceResponseTokenType `json:"token_type,omitempty"`
@@ -155,6 +157,13 @@ type AuthLoginUrlResponse struct {
 type AuthRefreshResponse struct {
 	AccessToken  *string `json:"access_token,omitempty"`
 	RefreshToken *string `json:"refresh_token,omitempty"`
+}
+
+// Service registration record used for auth
+type AuthServiceReg struct {
+	Host      string  `json:"host"`
+	PubKey    *PubKey `json:"pub_key,omitempty"`
+	ServiceId string  `json:"service_id"`
 }
 
 // Device defines model for Device.
@@ -250,7 +259,7 @@ type PubKey struct {
 	KeyPem string `json:"key_pem"`
 }
 
-// ServiceReg defines model for ServiceReg.
+// Full service registration record
 type ServiceReg struct {
 	Description string          `json:"description"`
 	FirstParty  bool            `json:"first_party"`
@@ -259,7 +268,7 @@ type ServiceReg struct {
 	LogoUrl     *string         `json:"logo_url,omitempty"`
 	Name        string          `json:"name"`
 	PubKey      *PubKey         `json:"pub_key,omitempty"`
-	Scopes      *[]ServiceScope `json:"scopes,omitempty"`
+	Scopes      *[]ServiceScope `json:"scopes"`
 	ServiceId   string          `json:"service_id"`
 }
 

@@ -38,18 +38,14 @@ type AuthConfig struct {
 
 //ServiceReg represents a service registration entity
 type ServiceReg struct {
-	authservice.ServiceReg
-	Name         string         `json:"name" bson:"name"`
-	Description  string         `json:"description" bson:"description"`
-	InfoURL      string         `json:"info_url" bson:"info_url"`
-	LogoURL      string         `json:"logo_url" bson:"logo_url"`
-	Scopes       []ServiceScope `json:"scopes" bson:"scopes"`
-	AuthEndpoint string         `json:"auth_endpoint" bson:"auth_endpoint"`
-	FirstParty   bool           `json:"first_party" bson:"first_party"`
-}
-
-func (s ServiceReg) ToAuthServiceReg() authservice.ServiceReg {
-	return authservice.ServiceReg{ServiceID: s.ServiceID, Host: s.Host, PubKey: s.PubKey}
+	Registration authservice.ServiceReg `json:"registration" bson:"registration"`
+	Name         string                 `json:"name" bson:"name"`
+	Description  string                 `json:"description" bson:"description"`
+	InfoURL      string                 `json:"info_url" bson:"info_url"`
+	LogoURL      string                 `json:"logo_url" bson:"logo_url"`
+	Scopes       []ServiceScope         `json:"scopes" bson:"scopes"`
+	AuthEndpoint string                 `json:"auth_endpoint" bson:"auth_endpoint"`
+	FirstParty   bool                   `json:"first_party" bson:"first_party"`
 }
 
 //ServiceScope represents a scope entity

@@ -19,6 +19,8 @@ OrganizationGroup:
 # auth
 ServiceReg:
   $ref: "./auth/ServiceReg.yaml"
+AuthServiceReg:
+  $ref: "./auth/AuthServiceReg.yaml"
 PubKey:
   $ref: "./auth/PubKey.yaml"
 ServiceScope:

@@ -29,11 +29,11 @@ func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceReg, error) {
 		return nil, nil
 	}
 	pubKey := pubKeyFromDef(item.PubKey)
-	scopes, err := serviceScopeListFromDef(*item.Scopes)
+	scopes, err := serviceScopeListFromDef(item.Scopes)
 	if err != nil {
 		return nil, err
 	}
-	return &model.ServiceReg{ServiceReg: authservice.ServiceReg{ServiceID: item.ServiceId, Host: item.Host, PubKey: pubKey}, Name: item.Name,
+	return &model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: item.ServiceId, Host: item.Host, PubKey: pubKey}, Name: item.Name,
 		Description: item.Description, InfoURL: defString(item.InfoUrl), LogoURL: defString(item.LogoUrl), Scopes: scopes, FirstParty: item.FirstParty}, nil
 }
 
@@ -41,9 +41,9 @@ func serviceRegToDef(item *model.ServiceReg) *Def.ServiceReg {
 	if item == nil {
 		return nil
 	}
-	pubKey := pubKeyToDef(item.PubKey)
+	pubKey := pubKeyToDef(item.Registration.PubKey)
 	scopes := serviceScopeListToDef(item.Scopes)
-	return &Def.ServiceReg{ServiceId: item.ServiceID, Host: item.Host, PubKey: pubKey, Name: item.Name, Description: item.Description,
+	return &Def.ServiceReg{ServiceId: item.Registration.ServiceID, Host: item.Registration.Host, PubKey: pubKey, Name: item.Name, Description: item.Description,
 		InfoUrl: &item.InfoURL, LogoUrl: &item.LogoURL, Scopes: &scopes, FirstParty: item.FirstParty}
 }
 
@@ -58,6 +58,30 @@ func serviceRegListToDef(items []model.ServiceReg) []Def.ServiceReg {
 			out[i] = *defItem
 		} else {
 			out[i] = Def.ServiceReg{}
+		}
+	}
+	return out
+}
+
+func authServiceRegToDef(item *authservice.ServiceReg) *Def.AuthServiceReg {
+	if item == nil {
+		return nil
+	}
+	pubKey := pubKeyToDef(item.PubKey)
+	return &Def.AuthServiceReg{ServiceId: item.ServiceID, Host: item.Host, PubKey: pubKey}
+}
+
+func authServiceRegListToDef(items []model.ServiceReg) []Def.AuthServiceReg {
+	if items == nil {
+		return nil
+	}
+	out := make([]Def.AuthServiceReg, len(items))
+	for i, item := range items {
+		defItem := authServiceRegToDef(&item.Registration)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.AuthServiceReg{}
 		}
 	}
 	return out
@@ -83,12 +107,12 @@ func serviceScopeToDef(item *model.ServiceScope) *Def.ServiceScope {
 	return &Def.ServiceScope{Scope: item.Scope.String(), Required: item.Required, Explanation: &item.Explanation}
 }
 
-func serviceScopeListFromDef(items []Def.ServiceScope) ([]model.ServiceScope, error) {
-	if items == nil {
+func serviceScopeListFromDef(items *[]Def.ServiceScope) ([]model.ServiceScope, error) {
+	if items == nil || *items == nil {
 		return nil, nil
 	}
-	out := make([]model.ServiceScope, len(items))
-	for i, item := range items {
+	out := make([]model.ServiceScope, len(*items))
+	for i, item := range *items {
 		defItem, err := serviceScopeFromDef(&item)
 		if err != nil {
 			return nil, log.WrapActionError(log.ActionParse, model.TypeServiceScope, nil, err)

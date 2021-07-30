@@ -34,7 +34,7 @@ func (h BBsApisHandler) getServiceRegistrations(l *log.Log, r *http.Request) log
 		return l.HttpResponseErrorAction(log.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
 	}
 
-	serviceRegResp := serviceRegListToDef(serviceRegs)
+	serviceRegResp := authServiceRegListToDef(serviceRegs)
 
 	data, err := json.Marshal(serviceRegResp)
 	if err != nil {

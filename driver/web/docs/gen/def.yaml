@@ -618,7 +618,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ServiceReg'
+                  $ref: '#/components/schemas/AuthServiceReg'
         '400':
           description: Bad request
         '401':
@@ -772,6 +772,7 @@ components:
         - description
         - first_party
       type: object
+      description: Full service registration record
       properties:
         service_id:
           type: string
@@ -789,10 +790,24 @@ components:
           type: string
         scopes:
           type: array
+          nullable: true
           items:
             $ref: '#/components/schemas/ServiceScope'
         first_party:
           type: boolean
+    AuthServiceReg:
+      required:
+        - service_id
+        - host
+      type: object
+      description: Service registration record used for auth
+      properties:
+        service_id:
+          type: string
+        host:
+          type: string
+        pub_key:
+          $ref: '#/components/schemas/PubKey'
     PubKey:
       required:
         - key_pem

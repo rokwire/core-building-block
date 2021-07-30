@@ -5,6 +5,7 @@ required:
   - description
   - first_party
 type: object
+description: Full service registration record
 properties:
   service_id:
     type: string
@@ -22,6 +23,7 @@ properties:
     type: string
   scopes:
     type: array
+    nullable: true
     items:
       $ref: "./ServiceScope.yaml"
   first_party:

@@ -271,8 +271,8 @@ func (a *Auth) RegisterService(reg *model.ServiceReg) error {
 //UpdateServiceRegistration updates an existing service registration
 func (a *Auth) UpdateServiceRegistration(reg *model.ServiceReg) error {
 	if reg != nil {
-		if reg.ServiceID == authServiceID || reg.ServiceID == a.serviceID {
-			return log.NewErrorf("modifying service registration not allowed for service id %v", reg.ServiceID)
+		if reg.Registration.ServiceID == authServiceID || reg.Registration.ServiceID == a.serviceID {
+			return log.NewErrorf("modifying service registration not allowed for service id %v", reg.Registration.ServiceID)
 		}
 		if !reg.FirstParty && strings.Contains(strings.ToUpper(reg.Name), rokwireKeyword) {
 			return log.NewErrorf("the name of a third-party service may not contain \"%s\"", rokwireKeyword)
@@ -386,7 +386,7 @@ func (a *Auth) storeReg() error {
 	key := authservice.PubKey{KeyPem: pem, Alg: authKeyAlg}
 
 	// Setup "auth" registration for token validation
-	authReg := model.ServiceReg{ServiceReg: authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: &key},
+	authReg := model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: &key},
 		Name: "ROKWIRE Auth Service", Description: "The Auth Service is a subsystem of the Core Building Block that manages authentication and authorization.", FirstParty: true}
 	err = a.storage.SaveServiceReg(&authReg)
 	if err != nil {
@@ -394,7 +394,7 @@ func (a *Auth) storeReg() error {
 	}
 
 	// Setup core registration for signature validation
-	coreReg := model.ServiceReg{ServiceReg: authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key},
+	coreReg := model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key},
 		Name: "ROKWIRE Core Building Block", Description: "The Core Building Block manages user, auth, and organization data for the ROKWIRE platform.", FirstParty: true}
 	err = a.storage.SaveServiceReg(&coreReg)
 	if err != nil {
@@ -465,7 +465,7 @@ func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, er
 
 	authRegs := make([]authservice.ServiceReg, len(regs))
 	for i, reg := range regs {
-		authRegs[i] = reg.ToAuthServiceReg()
+		authRegs[i] = reg.Registration
 	}
 
 	return authRegs, nil
