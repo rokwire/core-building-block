@@ -2,10 +2,10 @@ package web
 
 import (
 	"core-building-block/core"
-	"core-building-block/core/model"
+	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
-	"strings"
 
 	log "github.com/rokmetro/logging-library/loglib"
 )
@@ -22,26 +22,92 @@ func (h ServicesApisHandler) getAuthTest(l *log.Log, r *http.Request) log.HttpRe
 	return l.HttpResponseSuccessMessage(res)
 }
 
-func (h ServicesApisHandler) getAuthServiceRegistrations(l *log.Log, r *http.Request) log.HttpResponse {
-	serviceIDsParam := r.URL.Query().Get("ids")
-	if serviceIDsParam == "" {
-		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("ids"), nil, http.StatusBadRequest, false)
-	}
-	serviceIDs := strings.Split(serviceIDsParam, ",")
-
-	serviceRegs, err := h.coreAPIs.Auth.GetServiceRegistrations(serviceIDs)
+func (h ServicesApisHandler) authLogin(l *log.Log, r *http.Request) log.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	serviceRegResp := serviceRegListToDef(serviceRegs)
+	typeLoginRequest := log.LogData("auth login request")
 
-	data, err := json.Marshal(serviceRegResp)
+	var requestData Def.AuthLoginRequest
+	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeServiceReg, nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(log.ActionUnmarshal, typeLoginRequest, nil, err, http.StatusBadRequest, true)
 	}
 
-	return l.HttpResponseSuccessJSON(data)
+	requestCreds, err := interfaceToJSON(requestData.Creds)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, "creds", nil, err, http.StatusBadRequest, true)
+	}
+
+	requestParams, err := interfaceToJSON(requestData.Params)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
+	}
+
+	accessToken, refreshToken, user, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.OrgId, requestData.AppId, requestParams, l)
+	if err != nil {
+		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
+	}
+
+	responseData := &Def.AuthLoginResponse{AccessToken: &accessToken, User: userToDef(user), RefreshToken: &refreshToken}
+	respData, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, typeLoginRequest, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
+}
+
+func (h ServicesApisHandler) authRefresh(l *log.Log, r *http.Request) log.HttpResponse {
+	requestData, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	typeRefreshRequest := log.LogData("auth refresh request")
+
+	accessToken, refreshToken, err := h.coreAPIs.Auth.Refresh(string(requestData), l)
+	if err != nil {
+		return l.HttpResponseError("Error refreshing token", err, http.StatusInternalServerError, true)
+	}
+
+	responseData := &Def.AuthRefreshResponse{AccessToken: &accessToken, RefreshToken: &refreshToken}
+	respData, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, typeRefreshRequest, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
+}
+
+func (h ServicesApisHandler) authLoginUrl(l *log.Log, r *http.Request) log.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	typeLoginUrlRequest := log.LogData("auth login url request")
+
+	var requestData Def.AuthLoginUrlRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionUnmarshal, typeLoginUrlRequest, nil, err, http.StatusBadRequest, true)
+	}
+
+	loginUrl, params, err := h.coreAPIs.Auth.GetLoginUrl(string(requestData.AuthType), requestData.OrgId, requestData.AppId, requestData.RedirectUri, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionGet, "login url", nil, err, http.StatusInternalServerError, true)
+	}
+
+	responseData := &Def.AuthLoginUrlResponse{LoginUrl: loginUrl, Params: &params}
+	respData, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, typeLoginUrlRequest, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
 }
 
 //getCommonTest TODO get test
