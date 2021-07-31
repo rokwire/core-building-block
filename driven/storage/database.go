@@ -23,6 +23,7 @@ type database struct {
 	globalConfig  *collectionWrapper
 	organizations *collectionWrapper
 	serviceRegs   *collectionWrapper
+	applications  *collectionWrapper
 
 	listeners []Listener
 }
@@ -68,12 +69,19 @@ func (m *database) start() error {
 		return err
 	}
 
+	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
+	err = m.applyServiceRegsChecks(serviceRegs)
+	if err != nil {
+		return err
+	}
+
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
 	m.globalConfig = globalConfig
 	m.organizations = organizations
 	m.serviceRegs = serviceRegs
+	m.applications = applications
 
 	//TODO
 	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
@@ -130,6 +138,18 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 	}
 
 	log.Println("service regs checks passed")
+	return nil
+}
+func (m *database) applyApplicationsChecks(applications *collectionWrapper) error {
+	log.Println("apply applications checks.....")
+
+	//add name index - unique
+	err := applications.AddIndex(bson.D{primitive.E{Key: "_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	log.Println("applications checks passed")
 	return nil
 }
 
