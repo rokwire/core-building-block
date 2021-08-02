@@ -74,6 +74,13 @@ type AuthAuthorizeServiceResponse struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type AuthAuthorizeServiceResponseTokenType string
 
+// Application defines model for Application.
+type Application struct {
+	Id       string    `json:"id"`
+	Name     string    `json:"name"`
+	Versions *[]string `json:"versions"`
+}
+
 // Auth login creds for auth_type="email"
 type AuthLoginCredsEmail struct {
 	Email    string `json:"email"`

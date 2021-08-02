@@ -14,6 +14,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type application struct {
+	ID       string   `bson:"_id"`
+	Name     string   `bson:"name"`
+	Versions []string `bson:"versions"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
 type organization struct {
 	ID               string   `bson:"_id"`
 	Name             string   `bson:"name"`
@@ -249,6 +258,25 @@ func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 		}
 	}
 	return resultList, nil
+}
+
+//GetApplication gets application
+func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	var result []application
+	err := sa.db.applications.Find(filter, &result, nil)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionFind, model.TypeApplication, nil, err)
+	}
+	if len(result) == 0 {
+		//no record
+		return nil, nil
+	}
+
+	appRes := result[0]
+
+	getResApp := model.Application{ID: appRes.ID, Name: appRes.Name, Versions: appRes.Versions}
+	return &getResApp, nil
 }
 
 // ============================== ServiceRegs ==============================

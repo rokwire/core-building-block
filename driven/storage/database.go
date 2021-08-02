@@ -24,6 +24,7 @@ type database struct {
 	organizations         *collectionWrapper
 	serviceRegs           *collectionWrapper
 	serviceAuthorizations *collectionWrapper
+	applications          *collectionWrapper
 
 	listeners []Listener
 }
@@ -75,6 +76,18 @@ func (m *database) start() error {
 		return err
 	}
 
+	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
+	err = m.applyApplicationsChecks(serviceRegs)
+	if err != nil {
+		return err
+	}
+
+	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
+	err = m.applyAuthConfigChecks(authConfigs)
+	if err != nil {
+		return err
+	}
+
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
@@ -82,14 +95,7 @@ func (m *database) start() error {
 	m.organizations = organizations
 	m.serviceRegs = serviceRegs
 	m.serviceAuthorizations = serviceAuthorizations
-
-	//TODO
-	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
-	err = m.applyAuthConfigChecks(authConfigs)
-	if err != nil {
-		return err
-	}
-
+	m.applications = applications
 	m.authConfigs = authConfigs
 
 	//watch for auth info changes
@@ -151,6 +157,13 @@ func (m *database) applyServiceAuthorizationsChecks(serviceAuthorizations *colle
 	}
 
 	log.Println("service authorizations checks passed")
+	return nil
+}
+
+func (m *database) applyApplicationsChecks(applications *collectionWrapper) error {
+	log.Println("apply applications checks.....")
+
+	log.Println("applications checks passed")
 	return nil
 }
 

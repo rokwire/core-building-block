@@ -13,6 +13,8 @@ const (
 	TypeOrganizationMembership log.LogData = "org membership"
 	//TypeOrganizationUserRelations ...
 	TypeOrganizationUserRelations log.LogData = "org user relations"
+	//TypeApplication ...
+	TypeApplication log.LogData = "application"
 )
 
 //TODO - Flat vs. hierarchical group management - not sure we need hierarchical, maybe no!?
