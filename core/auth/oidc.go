@@ -104,7 +104,7 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 		if err != nil {
 			errFields := log.FieldArgs{"org_id": orgID, "app_id": appID, "type": authTypeOidc, "user_id": userAuth.UserID}
 			l.LogAction(log.Warn, log.StatusError, log.ActionFind, model.TypeAuthCred, &errFields)
-			userAuth.NewCreds = a.setCredentials(userAuth)
+			userAuth.NewCreds = oidcCreds{Sub: userAuth.Sub}
 			return userAuth, nil
 		}
 		ok, err := a.validateUser(userAuth, credentials.Creds)
@@ -165,11 +165,6 @@ func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials interf
 		return false, log.DataError(log.StatusInvalid, model.TypeUserAuth, log.StringArgs(userAuth.UserID))
 	}
 	return true, nil
-}
-
-func (a *oidcAuthImpl) setCredentials(userAuth *model.UserAuth) interface{} {
-	creds := oidcCreds{Sub: userAuth.Sub}
-	return creds
 }
 
 //refresh must be implemented for OIDC auth

@@ -140,7 +140,7 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 
 	userAuth, err := auth.check(creds, orgID, appID, params, l)
 	if err != nil {
-		return "", "", nil, log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
+		return "", "", nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
 	}
 
 	if len(userAuth.AccountID) > 0 {

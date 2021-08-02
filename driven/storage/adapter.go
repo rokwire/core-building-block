@@ -19,118 +19,6 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
-type user struct {
-	ID string `bson:"_id"`
-
-	Account model.UserAccount `bson:"account"`
-	Profile model.UserProfile `bson:"profile"`
-
-	Permissions              []model.GlobalPermission `bson:"permissions"`
-	Roles                    []model.GlobalRole       `bson:"roles"`
-	Groups                   []model.GlobalGroup      `bson:"groups"`
-	OrganizationsMemberships []userMembership         `bson:"organizations_memberships"`
-
-	Devices []model.Device `bson:"devices"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type rawMembership struct {
-	ID     string `bson:"_id"`
-	UserID string `bson:"user_id"`
-
-	OrgID       string                 `bson:"organization_id"`
-	OrgUserData map[string]interface{} `bson:"org_user_data"`
-
-	Permissions []string `bson:"permissions"`
-	Roles       []string `bson:"roles"`
-	Groups      []string `bson:"groups"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type userMembership struct {
-	ID string `bson:"_id"`
-
-	OrgID       string                 `bson:"organization_id"`
-	OrgUserData map[string]interface{} `bson:"org_user_data"`
-
-	Permissions []model.OrganizationPermission `bson:"permissions"`
-	Roles       []model.OrganizationRole       `bson:"roles"`
-	Groups      []model.OrganizationGroup      `bson:"groups"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type group struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
-
-	OrgID string `bson:"organization_id"`
-
-	Permissions []string `bson:"permissions"`
-	Roles       []string `bson:"roles"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type role struct {
-	ID          string `bson:"_id"`
-	Name        string `bson:"name"`
-	Description string `bson:"desciption"`
-
-	OrgID string `bson:"organization_id"`
-
-	Permissions []string `bson:"permissions"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type permission struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
-
-	OrgID string `bson:"organization_id"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type application struct {
-	ID       string   `bson:"_id"`
-	Name     string   `bson:"name"`
-	Versions []string `bson:"versions"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type organization struct {
-	ID               string   `bson:"_id"`
-	Name             string   `bson:"name"`
-	Type             string   `bson:"type"`
-	RequiresOwnLogin bool     `bson:"requires_own_login"`
-	LoginTypes       []string `bson:"login_types"`
-
-	Config organizationConfig `bson:"config"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type organizationConfig struct {
-	ID      string   `bson:"id"`
-	Domains []string `bson:"domains"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
 //Adapter implements the Storage interface
 type Adapter struct {
 	db *database
@@ -221,25 +109,8 @@ func (sa *Adapter) findUser(key string, id string) (*model.User, error) {
 		return nil, log.WrapActionError(log.ActionFind, model.TypeUser, nil, err)
 	}
 
-	fullUser := model.User{ID: user.ID, Account: user.Account, Profile: user.Profile,
-		Permissions: user.Permissions, Roles: user.Roles, Groups: user.Groups,
-		OrganizationsMemberships: []model.OrganizationMembership{}, Devices: user.Devices,
-		DateCreated: user.DateCreated, DateUpdated: user.DateUpdated}
-	for _, m := range user.OrganizationsMemberships {
-		membership := model.OrganizationMembership{ID: m.ID, OrgUserData: m.OrgUserData,
-			Permissions: m.Permissions, Roles: m.Roles, Groups: m.Groups, DateCreated: m.DateCreated, DateUpdated: m.DateUpdated}
-
-		org, err := sa.getOrganization(m.OrgID)
-		if err != nil {
-			fmt.Printf("failed to find cached organization for org_id %s\n", m.OrgID)
-		} else {
-			membership.Organization = *org
-		}
-
-		fullUser.OrganizationsMemberships = append(fullUser.OrganizationsMemberships, membership)
-	}
-
-	return &fullUser, nil
+	modelUser := userFromStorage(&user, sa)
+	return &modelUser, nil
 }
 
 //InsertUser inserts a user
@@ -251,7 +122,7 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred
 	now := time.Now().UTC()
 	newID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, log.DataError(log.StatusInvalid, log.TypeString, log.StringArgs("user_id"))
+		return nil, log.WrapActionError("generate", "uuid", log.StringArgs("user_id"), err)
 	}
 	newUser := user{ID: newID.String(), DateCreated: now}
 
@@ -340,19 +211,7 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred
 		return nil, err
 	}
 
-	membership := model.OrganizationMembership{ID: newOrgMembership.ID, OrgUserData: newOrgMembership.OrgUserData,
-		DateCreated: newOrgMembership.DateCreated, DateUpdated: newOrgMembership.DateUpdated}
-	org, err := sa.getOrganization(orgID)
-	if err != nil {
-		fmt.Printf("failed to find cached organization for org_id %s\n", orgID)
-	} else {
-		membership.Organization = *org
-	}
-
-	returnUser := model.User{ID: newUser.ID, Account: newUser.Account, Profile: newUser.Profile,
-		Permissions: newUser.Permissions, Roles: newUser.Roles, Groups: newUser.Groups,
-		OrganizationsMemberships: []model.OrganizationMembership{membership}, Devices: newUser.Devices,
-		DateCreated: newUser.DateCreated, DateUpdated: newUser.DateUpdated}
+	returnUser := userFromStorage(&newUser, sa)
 	return &returnUser, nil
 }
 
@@ -363,16 +222,8 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 	}
 
 	now := time.Now().UTC()
-	newUser := user{ID: updatedUser.ID, Account: updatedUser.Account, Profile: updatedUser.Profile,
-		Permissions: updatedUser.Permissions, Roles: updatedUser.Roles, Groups: updatedUser.Groups,
-		OrganizationsMemberships: []userMembership{}, Devices: updatedUser.Devices,
-		DateCreated: updatedUser.DateCreated, DateUpdated: &now}
-
-	for _, m := range updatedUser.OrganizationsMemberships {
-		membership := userMembership{ID: m.ID, OrgID: m.Organization.ID, OrgUserData: m.OrgUserData,
-			Permissions: m.Permissions, Roles: m.Roles, Groups: m.Groups, DateCreated: m.DateCreated, DateUpdated: m.DateUpdated}
-		newUser.OrganizationsMemberships = append(newUser.OrganizationsMemberships, membership)
-	}
+	newUser := userToStorage(updatedUser)
+	newUser.DateUpdated = &now
 
 	// TODO:
 	// check for device updates and add possible new device
@@ -440,7 +291,8 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 		return nil, err
 	}
 
-	return updatedUser, nil
+	returnUser := userFromStorage(newUser, sa)
+	return &returnUser, nil
 }
 
 //DeleteUser deletes a user
