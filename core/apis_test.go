@@ -140,7 +140,6 @@ func TestGetOrganizations(t *testing.T) {
 	}
 }
 
-///
 func TestAdmGetApplication(t *testing.T) {
 	storage := genmocks.Storage{}
 	storage.On("GetApplication", "_id").Return(&model.Application{ID: "_id"}, nil)
@@ -164,6 +163,8 @@ func TestAdmGetApplication(t *testing.T) {
 	}
 
 }
+
+///
 
 //Encryption
 
