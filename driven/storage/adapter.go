@@ -250,12 +250,10 @@ func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 	}
 
 	var resultList []model.Organization
-	if result != nil {
-		for _, current := range result {
-			item := &model.Organization{ID: current.ID, Name: current.Name, Type: current.Type, RequiresOwnLogin: current.RequiresOwnLogin,
-				LoginTypes: current.LoginTypes, Config: current.Config}
-			resultList = append(resultList, *item)
-		}
+	for _, current := range result {
+		item := &model.Organization{ID: current.ID, Name: current.Name, Type: current.Type, RequiresOwnLogin: current.RequiresOwnLogin,
+			LoginTypes: current.LoginTypes, Config: current.Config}
+		resultList = append(resultList, *item)
 	}
 	return resultList, nil
 }
@@ -266,7 +264,7 @@ func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 	var result []application
 	err := sa.db.applications.Find(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionFind, model.TypeApplication, nil, err)
+		return nil, log.WrapErrorAction(log.ActionFind, model.TypeApplication, nil, err)
 	}
 	if len(result) == 0 {
 		//no record

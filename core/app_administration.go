@@ -239,7 +239,7 @@ func (app *application) admUpdateOrganization(ID string, name string, requestTyp
 func (app *application) admGetApplication(ID string) (*model.Application, error) {
 	appAdm, err := app.storage.GetApplication(ID)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionGet, model.TypeApplication, nil, err)
+		return nil, log.WrapErrorAction(log.ActionGet, model.TypeApplication, nil, err)
 	}
 
 	return appAdm, nil
