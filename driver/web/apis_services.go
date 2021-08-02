@@ -16,7 +16,7 @@ type ServicesApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) log.HttpResponse {
+func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -100,7 +100,7 @@ func (h ServicesApisHandler) authLoginUrl(l *logs.Log, r *http.Request) logs.Htt
 }
 
 //getCommonTest TODO get test
-func (h ServicesApisHandler) getTest(l *log.Log, r *http.Request) log.HttpResponse {
+func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResponse {
 	res := h.coreAPIs.Services.SerGetCommonTest(l)
 
 	return l.HttpResponseSuccessMessage(res)

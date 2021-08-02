@@ -266,7 +266,7 @@ func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 	var result []application
 	err := sa.db.applications.Find(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapErrorAction(log.ActionFind, model.TypeApplication, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 	}
 	if len(result) == 0 {
 		//no record
