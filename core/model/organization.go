@@ -76,3 +76,12 @@ func (cur OrganizationUserRelations) String() string {
 	return fmt.Sprintf("[ID:%s\n\tType:%s\n\tRelationManager:%s\n\tMembers:%s\n\t]",
 		cur.ID, cur.Type, cur.Manager, cur.Members)
 }
+
+//Application represents users application entity - safer community, uuic, etc
+type Application struct {
+	ID       string
+	Name     string   //safer community mobile, safer community web, uuic mobile, uuic web, uuic admin etc
+	Versions []string //1.1.0, 1.2.0 etc
+
+	Organizations []Organization
+}
