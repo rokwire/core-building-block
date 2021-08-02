@@ -15,6 +15,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type application struct {
+	ID       string   `bson:"_id"`
+	Name     string   `bson:"name"`
+	Versions []string `bson:"versions"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
 type organization struct {
 	ID               string   `bson:"_id"`
 	Name             string   `bson:"name"`
@@ -255,7 +264,7 @@ func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 //GetApplication gets application
 func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	var result []model.Application
+	var result []application
 	err := sa.db.applications.Find(filter, &result, nil)
 	if err != nil {
 		return nil, log.WrapActionError(log.ActionFind, model.TypeApplication, nil, err)
