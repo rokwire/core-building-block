@@ -242,6 +242,26 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /admin/global-permissions:
+    get:
+      tags:
+        - Admin
+      summary: Get global permission
+      description: |
+        Gives the system global permission
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobalPermission'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   '/admin/organizations/{id}':
     put:
       tags:
@@ -552,6 +572,15 @@ components:
       type: object
       properties:
         setting:
+          type: string
+    GlobalPermission:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        name:
           type: string
     GlobalRole:
       required:
