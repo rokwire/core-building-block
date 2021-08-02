@@ -280,11 +280,11 @@ func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*mod
 	update := false
 
 	// account
-	if userAuth.Email != user.Account.Email {
+	if len(user.Account.Email) == 0 {
 		user.Account.Email = userAuth.Email
 		update = true
 	}
-	if userAuth.Phone != user.Account.Phone {
+	if len(user.Account.Phone) == 0 {
 		user.Account.Phone = userAuth.Phone
 		update = true
 	}
