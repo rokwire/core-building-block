@@ -70,7 +70,7 @@ func (m *database) start() error {
 	}
 
 	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
-	err = m.applyServiceRegsChecks(serviceRegs)
+	err = m.applyApplicationsChecks(serviceRegs)
 	if err != nil {
 		return err
 	}
@@ -140,14 +140,9 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 	log.Println("service regs checks passed")
 	return nil
 }
+
 func (m *database) applyApplicationsChecks(applications *collectionWrapper) error {
 	log.Println("apply applications checks.....")
-
-	//add name index - unique
-	err := applications.AddIndex(bson.D{primitive.E{Key: "_id", Value: 1}}, true)
-	if err != nil {
-		return err
-	}
 
 	log.Println("applications checks passed")
 	return nil
