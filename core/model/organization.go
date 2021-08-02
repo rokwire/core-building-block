@@ -13,6 +13,9 @@ const (
 	TypeOrganizationMembership logutils.MessageDataType = "org membership"
 	//TypeOrganizationUserRelations ...
 	TypeOrganizationUserRelations logutils.MessageDataType = "org user relations"
+	TypeOrganizationUserRelations log.LogData              = "org user relations"
+	//TypeApplication ...
+	TypeApplication log.LogData = "application"
 )
 
 //TODO - Flat vs. hierarchical group management - not sure we need hierarchical, maybe no!?

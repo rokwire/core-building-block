@@ -74,6 +74,13 @@ type AuthAuthorizeServiceResponse struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type AuthAuthorizeServiceResponseTokenType string
 
+// Application defines model for Application.
+type Application struct {
+	Id       string    `json:"id"`
+	Name     string    `json:"name"`
+	Versions *[]string `json:"versions"`
+}
+
 // Auth login creds for auth_type="email"
 type AuthLoginCredsEmail struct {
 	Email    string `json:"email"`
@@ -348,17 +355,17 @@ type GetBbsServiceRegsParams struct {
 	Ids string `json:"ids"`
 }
 
-// PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
-type PostServicesAuthAuthorizeServiceJSONBody AuthAuthorizeServiceRequest
-
 // PostServicesAuthLoginJSONBody defines parameters for PostServicesAuthLogin.
 type PostServicesAuthLoginJSONBody AuthLoginRequest
 
 // PostServicesAuthLoginUrlJSONBody defines parameters for PostServicesAuthLoginUrl.
 type PostServicesAuthLoginUrlJSONBody AuthLoginUrlRequest
 
-// GetServicesAuthServiceRegsParams defines parameters for GetServicesAuthServiceRegs.
-type GetServicesAuthServiceRegsParams struct {
+// PostTpsAuthAuthorizeServiceJSONBody defines parameters for PostTpsAuthAuthorizeService.
+type PostTpsAuthAuthorizeServiceJSONBody AuthAuthorizeServiceRequest
+
+// GetTpsAuthServiceRegsParams defines parameters for GetTpsAuthServiceRegs.
+type GetTpsAuthServiceRegsParams struct {
 
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
@@ -382,11 +389,11 @@ type PostAdminServiceRegsJSONRequestBody PostAdminServiceRegsJSONBody
 // PutAdminServiceRegsJSONRequestBody defines body for PutAdminServiceRegs for application/json ContentType.
 type PutAdminServiceRegsJSONRequestBody PutAdminServiceRegsJSONBody
 
-// PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
-type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody
-
 // PostServicesAuthLoginJSONRequestBody defines body for PostServicesAuthLogin for application/json ContentType.
 type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 
 // PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
 type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
+
+// PostTpsAuthAuthorizeServiceJSONRequestBody defines body for PostTpsAuthAuthorizeService for application/json ContentType.
+type PostTpsAuthAuthorizeServiceJSONRequestBody PostTpsAuthAuthorizeServiceJSONBody
