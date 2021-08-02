@@ -13,9 +13,7 @@ servers:
 - url: http://localhost/core
   description: Local server
 tags:
-- name: Auth
-  description: APIs handling the authentication.
-- name: Common
+- name: Services
   description: End users applications APIs.
 - name: Admin
   description: Administration applications APIs.
@@ -23,24 +21,18 @@ tags:
   description: APIs consumed by the Encryption building block.
 - name: BBs
   description: APIs consumed by the platform building blocks.
+- name: Third-Party Services
+  description: APIs consumed by third-party services.
 paths:
-  #auth
-  /services/auth/test:  
-    $ref: "./resources/auth/test.yaml"
+  #services
   /services/auth/login:
-    $ref: "./resources/auth/login.yaml"
+    $ref: "./resources/services/auth/login.yaml"
   /services/auth/refresh:
-    $ref: "./resources/auth/refresh.yaml"
+    $ref: "./resources/services/auth/refresh.yaml"
   /services/auth/login-url:
-    $ref: "./resources/auth/login-url.yaml"
-  /services/auth/authorize-service:
-    $ref: "./resources/auth/authorize-service.yaml"
-  /services/auth/service-regs:
-    $ref: "./resources/auth/service-regs.yaml"
-
-  #common
-  /services/common/test:
-    $ref: "./resources/common/test.yaml"
+    $ref: "./resources/services/auth/login-url.yaml"
+  /services/test:
+    $ref: "./resources/services/test.yaml"
 
   #admin
   /admin/global-config:
@@ -61,6 +53,12 @@ paths:
     $ref: "./resources/bbs/test.yaml"
   /bbs/service-regs:
     $ref: "./resources/bbs/service-regs.yaml"
+
+  #third-party services
+  /tps/auth/authorize-service:
+    $ref: "./resources/third-party-services/auth/authorize-service.yaml"
+  /tps/auth/service-regs:
+    $ref: "./resources/third-party-services/auth/service-regs.yaml"
 
   #default
   /version:

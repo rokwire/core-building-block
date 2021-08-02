@@ -1,6 +1,6 @@
 post:
   tags:
-  - Auth
+  - Third-Party Services
   summary: Authorize service
   description: |
     Authorize a third-party service and get a scoped access token that can be used to access its APIs
@@ -8,14 +8,14 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/auth/AuthAuthorizeServiceRequest.yaml"
+          $ref: "../../../schemas/auth/AuthAuthorizeServiceRequest.yaml"
   responses:
     200:
       description: Success
       content:
         application/json:
           schema:
-            $ref: "../../schemas/auth/AuthAuthorizeServiceResponse.yaml"
+            $ref: "../../../schemas/auth/AuthAuthorizeServiceResponse.yaml"
           examples:
             authorized:
               summary: Service authorized
