@@ -1,0 +1,19 @@
+get:
+  tags:
+  - Admin
+  summary: Get global permission
+  description: |
+    Gives the system global permission
+  responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: "../../schemas/global/GlobalPermission.yaml"
+      400:
+        description: Bad request
+      401:
+        description: Unauthorized
+      500:
+        description: Internal error
