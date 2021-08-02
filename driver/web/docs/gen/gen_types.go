@@ -41,6 +41,13 @@ const (
 	OrganizationTypeSmall OrganizationType = "small"
 )
 
+// Application defines model for Application.
+type Application struct {
+	Id       string    `json:"id"`
+	Name     string    `json:"name"`
+	Versions *[]string `json:"versions"`
+}
+
 // Auth login creds for auth_type="email"
 type AuthLoginCredsEmail struct {
 	Email    string `json:"email"`

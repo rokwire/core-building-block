@@ -19,13 +19,12 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
-	users        *collectionWrapper
-	groups       *collectionWrapper
-	roles        *collectionWrapper
-	permissions  *collectionWrapper
-	memberships  *collectionWrapper
-	applications *collectionWrapper
-	devices      *collectionWrapper
+	users       *collectionWrapper
+	groups      *collectionWrapper
+	roles       *collectionWrapper
+	permissions *collectionWrapper
+	memberships *collectionWrapper
+	devices     *collectionWrapper
 
 	authConfigs *collectionWrapper
 	credentials *collectionWrapper
@@ -33,6 +32,7 @@ type database struct {
 	globalConfig  *collectionWrapper
 	organizations *collectionWrapper
 	serviceRegs   *collectionWrapper
+	applications  *collectionWrapper
 
 	listeners []Listener
 }
@@ -90,12 +90,6 @@ func (m *database) start() error {
 		return err
 	}
 
-	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
-	err = m.applyApplicationsChecks(applications)
-	if err != nil {
-		return err
-	}
-
 	devices := &collectionWrapper{database: m, coll: db.Collection("devices")}
 	err = m.applyDevicesChecks(devices)
 	if err != nil {
@@ -120,6 +114,24 @@ func (m *database) start() error {
 		return err
 	}
 
+	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
+	err = m.applyApplicationsChecks(applications)
+	if err != nil {
+		return err
+	}
+
+	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
+	err = m.applyAuthConfigChecks(authConfigs)
+	if err != nil {
+		return err
+	}
+
+	credentials := &collectionWrapper{database: m, coll: db.Collection("credentials")}
+	err = m.applyCredentialChecks(credentials)
+	if err != nil {
+		return err
+	}
+
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
@@ -133,22 +145,7 @@ func (m *database) start() error {
 	m.globalConfig = globalConfig
 	m.organizations = organizations
 	m.serviceRegs = serviceRegs
-
-	//TODO
-	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
-	err = m.applyAuthConfigChecks(authConfigs)
-	if err != nil {
-		return err
-	}
-
 	m.authConfigs = authConfigs
-
-	credentials := &collectionWrapper{database: m, coll: db.Collection("credentials")}
-	err = m.applyCredentialChecks(credentials)
-	if err != nil {
-		return err
-	}
-
 	m.credentials = credentials
 
 	go m.authConfigs.Watch(nil)
@@ -192,13 +189,6 @@ func (m *database) applyMembershipsChecks(memberships *collectionWrapper) error 
 	log.Println("apply memberships checks.....")
 
 	log.Println("memberships check passed")
-	return nil
-}
-
-func (m *database) applyApplicationsChecks(applications *collectionWrapper) error {
-	log.Println("apply applications checks.....")
-
-	log.Println("applications check passed")
 	return nil
 }
 
@@ -264,6 +254,13 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 	}
 
 	log.Println("service regs checks passed")
+	return nil
+}
+
+func (m *database) applyApplicationsChecks(applications *collectionWrapper) error {
+	log.Println("apply applications checks.....")
+
+	log.Println("applications checks passed")
 	return nil
 }
 

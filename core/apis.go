@@ -115,6 +115,10 @@ func (s *administrationImpl) AdmGetOrganization(ID string) (*model.Organization,
 	return s.app.admGetOrganization(ID)
 }
 
+func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, error) {
+	return s.app.admGetApplication(ID)
+}
+
 ///
 
 //encryptionImpl

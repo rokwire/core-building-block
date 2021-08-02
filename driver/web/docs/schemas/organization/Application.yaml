@@ -1,0 +1,14 @@
+required:
+  - id
+  - name
+type: object
+properties:
+  id:
+    type: string
+  name:
+    type: string
+  versions:
+    type: array
+    nullable: true
+    items:
+      type: string

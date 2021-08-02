@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Set up accounts [#18](https://github.com/rokwire/core-building-block/issues/18)
+- Expose admin API which gets application. [#103](https://github.com/rokwire/core-building-block/issues/103)
 - Expose auth APIs [#81](https://github.com/rokwire/core-building-block/issues/81)
 - Expose admin API which gives the organizations list [#61](https://github.com/rokwire/core-building-block/issues/61)
 - Expose admin API which gets an organization [#60](https://github.com/rokwire/core-building-block/issues/60)
