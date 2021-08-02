@@ -75,6 +75,12 @@ func (m *database) start() error {
 		return err
 	}
 
+	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
+	err = m.applyAuthConfigChecks(authConfigs)
+	if err != nil {
+		return err
+	}
+
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
@@ -82,14 +88,6 @@ func (m *database) start() error {
 	m.organizations = organizations
 	m.serviceRegs = serviceRegs
 	m.applications = applications
-
-	//TODO
-	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
-	err = m.applyAuthConfigChecks(authConfigs)
-	if err != nil {
-		return err
-	}
-
 	m.authConfigs = authConfigs
 
 	//watch for auth info changes
