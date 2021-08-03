@@ -1,6 +1,6 @@
 post:
   tags:
-  - Auth
+  - Services
   summary: Login
   description: |
     Login using credentials to retrieve access token, refresh token, and user data
@@ -10,7 +10,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/auth/AuthLoginRequest.yaml"
+          $ref: "../../../schemas/auth/AuthLoginRequest.yaml"
         examples:
           email:
             summary: Email login
@@ -56,7 +56,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../schemas/auth/AuthLoginResponse.yaml"
+            $ref: "../../../schemas/auth/AuthLoginResponse.yaml"
     400:
       description: Bad request
     401:

@@ -7,7 +7,6 @@ import (
 	core "core-building-block/core"
 	genmocks "core-building-block/core/mocks"
 	"core-building-block/core/model"
-	core_model "core-building-block/core/model"
 
 	log "github.com/rokmetro/logging-library/loglib"
 
@@ -67,7 +66,7 @@ func TestAdmGetTest(t *testing.T) {
 func TestAdmCreateGlobalConfig(t *testing.T) {
 	storage := genmocks.Storage{}
 	storage.On("GetGlobalConfig").Return(nil, nil)
-	storage.On("CreateGlobalConfig", "setting").Return(&core_model.GlobalConfig{Setting: "setting"}, nil)
+	storage.On("CreateGlobalConfig", "setting").Return(&model.GlobalConfig{Setting: "setting"}, nil)
 
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
@@ -138,6 +137,30 @@ func TestGetOrganizations(t *testing.T) {
 		t.Error("We are expecting error")
 		return
 	}
+}
+
+func TestAdmGetApplication(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("GetApplication", "_id").Return(&model.Application{ID: "_id"}, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	getApplication, _ := app.Administration.AdmGetApplication("_id")
+
+	if getApplication == nil {
+		t.Errorf("Error on geting the application")
+	}
+	// second case error
+	storage2 := genmocks.Storage{}
+	storage2.On("GetApplication").Return(&model.Application{ID: "_id"}, nil)
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	err, _ := app.Administration.AdmGetApplication("_id")
+
+	if err == nil {
+		t.Error("We are expecting error")
+		return
+	}
+
 }
 
 ///

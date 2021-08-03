@@ -9,5 +9,6 @@ properties:
     type: string
   versions:
     type: array
+    nullable: true
     items:
       type: string

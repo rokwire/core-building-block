@@ -35,6 +35,7 @@ type Adapter struct {
 	adminApisHandler    AdminApisHandler
 	encApisHandler      EncApisHandler
 	bbsApisHandler      BBsApisHandler
+	tpsApisHandler      TPSApisHandler
 
 	coreAPIs *core.APIs
 }
@@ -62,17 +63,12 @@ func (we Adapter) Start() {
 
 	///services ///
 	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
-
-	//auth
-	authSubrouter := servicesSubRouter.PathPrefix("/auth").Subrouter()
-	authSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getAuthTest)).Methods("GET")
-	authSubrouter.HandleFunc("/login", we.wrapFunc(we.servicesApisHandler.authLogin)).Methods("POST")
-	authSubrouter.HandleFunc("/login-url", we.wrapFunc(we.servicesApisHandler.authLoginUrl)).Methods("POST")
-	authSubrouter.HandleFunc("/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh)).Methods("POST")
-
-	//common
-	commonSubrouter := servicesSubRouter.PathPrefix("/common").Subrouter()
-	commonSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getCommonTest)).Methods("GET")
+	servicesSubRouter.HandleFunc("/auth/login", we.wrapFunc(we.servicesApisHandler.authLogin)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations)).Methods("GET")
+	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest)).Methods("GET")
 	///
 
 	///admin ///
@@ -106,6 +102,11 @@ func (we Adapter) Start() {
 	bbsSubrouter := subRouter.PathPrefix("/bbs").Subrouter()
 	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.getTest)).Methods("GET")
 	bbsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.bbsApisHandler.getServiceRegistrations)).Methods("GET")
+	///
+
+	///third-party services ///
+	tpsSubrouter := subRouter.PathPrefix("/tps").Subrouter()
+	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations)).Methods("GET")
 	///
 
 	err := http.ListenAndServe(":80", router)
@@ -236,8 +237,10 @@ func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.Log
 	adminApisHandler := NewAdminApisHandler(coreAPIs)
 	encApisHandler := NewEncApisHandler(coreAPIs)
 	bbsApisHandler := NewBBsApisHandler(coreAPIs)
-	return Adapter{env: env, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, authorization: authorization, defaultApisHandler: defaultApisHandler,
-		servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler, encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, coreAPIs: coreAPIs}
+	tpsApisHandler := NewTPSApisHandler(coreAPIs)
+	return Adapter{env: env, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, authorization: authorization,
+		defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
+		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, coreAPIs: coreAPIs}
 }
 
 //AppListener implements core.ApplicationListener interface
