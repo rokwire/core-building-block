@@ -55,6 +55,7 @@ type ServiceScope struct {
 	Explanation string               `json:"explanation,omitempty" bson:"explanation,omitempty"`
 }
 
+//ServiceAuthorization represents service authorization entity
 type ServiceAuthorization struct {
 	UserID    string                `json:"user_id" bson:"user_id"`
 	ServiceID string                `json:"service_id" bson:"service_id"`

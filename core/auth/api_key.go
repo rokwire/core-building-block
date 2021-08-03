@@ -25,7 +25,7 @@ func (a *apiKeyAuthImpl) refresh(refreshToken string, orgID string, appID string
 	return nil, log.NewErrorf("refresh operation invalid for auth_type=%s", authTypeAPIKey)
 }
 
-func (a *apiKeyAuthImpl) getLoginURL(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
+func (a *apiKeyAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *log.Log) (string, map[string]interface{}, error) {
 	return "", nil, log.NewErrorf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
