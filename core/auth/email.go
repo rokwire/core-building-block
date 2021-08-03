@@ -26,7 +26,7 @@ func (a *emailAuthImpl) refresh(refreshToken string, orgID string, appID string,
 	return nil, nil
 }
 
-func (a *emailAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
+func (a *emailAuthImpl) getLoginURL(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
 	return "", nil, log.NewErrorf("get login url operation invalid for auth_type=%s", a.authType)
 }
 

@@ -35,8 +35,8 @@ type authType interface {
 	check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error)
 	//refresh refreshes the access token using provided refresh token
 	refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error)
-	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
-	getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error)
+	//getLoginURL retrieves and pre-formats a login url and params for the SSO provider
+	getLoginURL(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error)
 }
 
 //Auth represents the auth functionality unit
@@ -181,7 +181,7 @@ func (a *Auth) GetLoginUrl(authType string, orgID string, appID string, redirect
 		return "", nil, log.WrapErrorAction(log.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	loginUrl, params, err := auth.getLoginUrl(orgID, appID, redirectUri, l)
+	loginUrl, params, err := auth.getLoginURL(orgID, appID, redirectUri, l)
 	if err != nil {
 		return "", nil, log.WrapErrorAction(log.ActionGet, "login url", nil, err)
 	}
