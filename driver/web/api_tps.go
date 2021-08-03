@@ -2,11 +2,8 @@ package web
 
 import (
 	"core-building-block/core"
-	"core-building-block/core/auth"
 	"core-building-block/core/model"
-	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -19,10 +16,10 @@ type TPSApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-func (h TPSApisHandler) getServiceRegistrations(l *log.Log, r *http.Request) log.HttpResponse {
+func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request) logs.HttpResponse {
 	serviceIDsParam := r.URL.Query().Get("ids")
 	if serviceIDsParam == "" {
-		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("ids"), nil, http.StatusBadRequest, false)
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("ids"), nil, http.StatusBadRequest, false)
 	}
 	serviceIDs := strings.Split(serviceIDsParam, ",")
 
@@ -31,7 +28,7 @@ func (h TPSApisHandler) getServiceRegistrations(l *log.Log, r *http.Request) log
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
 	}
 
-	serviceRegResp := serviceRegListToDef(serviceRegs)
+	serviceRegResp := authServiceRegListToDef(serviceRegs)
 
 	data, err := json.Marshal(serviceRegResp)
 	if err != nil {

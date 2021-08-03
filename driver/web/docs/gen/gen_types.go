@@ -51,29 +51,6 @@ const (
 	OrganizationTypeSmall OrganizationType = "small"
 )
 
-// AuthAuthorizeServiceRequest defines model for AuthAuthorizeServiceRequest.
-type AuthAuthorizeServiceRequest struct {
-
-	// Scopes to be granted to this service in this and future tokens. Replaces existing scopes if present.
-	ApprovedScopes *[]string `json:"approved_scopes,omitempty"`
-	ServiceId      string    `json:"service_id"`
-}
-
-// AuthAuthorizeServiceResponse defines model for AuthAuthorizeServiceResponse.
-type AuthAuthorizeServiceResponse struct {
-	AccessToken    *string   `json:"access_token,omitempty"`
-	ApprovedScopes *[]string `json:"approved_scopes,omitempty"`
-
-	// Full service registration record
-	ServiceReg *ServiceReg `json:"service_reg,omitempty"`
-
-	// The type of the provided tokens to be specified when they are sent in the "Authorization" header
-	TokenType *AuthAuthorizeServiceResponseTokenType `json:"token_type,omitempty"`
-}
-
-// The type of the provided tokens to be specified when they are sent in the "Authorization" header
-type AuthAuthorizeServiceResponseTokenType string
-
 // Application defines model for Application.
 type Application struct {
 	Id       string    `json:"id"`
@@ -427,6 +404,3 @@ type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 
 // PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
 type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
-
-// PostTpsAuthAuthorizeServiceJSONRequestBody defines body for PostTpsAuthAuthorizeService for application/json ContentType.
-type PostTpsAuthAuthorizeServiceJSONRequestBody PostTpsAuthAuthorizeServiceJSONBody

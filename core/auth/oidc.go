@@ -116,7 +116,7 @@ func (a *oidcAuthImpl) refresh(refreshToken string, orgID string, appID string, 
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *oidcAuthImpl) getLoginURL(orgID string, appID string, redirectUri string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *oidcAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	oidcConfig, err := a.getOidcAuthConfig(orgID, appID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
