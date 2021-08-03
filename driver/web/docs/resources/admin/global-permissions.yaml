@@ -1,9 +1,9 @@
-get:
+post:
   tags:
   - Admin
-  summary: Get global permission
+  summary: Create global permission
   description: |
-    Gives the system global permission
+    Creates the system global permission
   responses:
       200:
         description: Success
