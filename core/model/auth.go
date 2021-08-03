@@ -7,12 +7,18 @@ import (
 )
 
 const (
-	TypeUserAuth             log.LogData = "user auth"
-	TypeAuthConfig           log.LogData = "user auth"
-	TypeServiceReg           log.LogData = "service reg"
-	TypeServiceScope         log.LogData = "service scope"
+	//TypeUserAuth user auth type
+	TypeUserAuth log.LogData = "user auth"
+	//TypeAuthConfig auth config type
+	TypeAuthConfig log.LogData = "auth config"
+	//TypeServiceReg service reg type
+	TypeServiceReg log.LogData = "service reg"
+	//TypeServiceScope service scope type
+	TypeServiceScope log.LogData = "service scope"
+	//TypeServiceAuthorization service authorization type
 	TypeServiceAuthorization log.LogData = "service authorization"
-	TypeScope                log.LogData = "scope"
+	//TypeScope scope type
+	TypeScope log.LogData = "scope"
 )
 
 //UserAuth represents user auth entity
