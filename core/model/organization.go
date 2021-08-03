@@ -33,6 +33,9 @@ type Organization struct {
 	Config OrganizationConfig `bson:"config"`
 
 	Applications []Application `bson:"applications"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 func (c Organization) String() string {
@@ -85,9 +88,12 @@ func (cur OrganizationUserRelations) String() string {
 
 //Application represents users application entity - safer community, uuic, etc
 type Application struct {
-	ID       string
-	Name     string   //safer community mobile, safer community web, uuic mobile, uuic web, uuic admin etc
-	Versions []string //1.1.0, 1.2.0 etc
+	ID       string   `bson:"_id"`
+	Name     string   `bson:"name"`     //safer community mobile, safer community web, uuic mobile, uuic web, uuic admin etc
+	Versions []string `bson:"versions"` //1.1.0, 1.2.0 etc
 
-	Organizations []Organization
+	Organizations []Organization `bson:"-"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }

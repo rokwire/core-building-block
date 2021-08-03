@@ -113,76 +113,40 @@ func (sa *Adapter) findUser(key string, id string) (*model.User, error) {
 }
 
 //InsertUser inserts a user
-func (sa *Adapter) InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred) (*model.User, error) {
-	if userAuth == nil {
-		return nil, log.ErrorData(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeUserAuth))
+func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*model.User, error) {
+	if user == nil {
+		return nil, log.ErrorData(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeUser))
 	}
 
-	now := time.Now().UTC()
-	newID, err := uuid.NewUUID()
-	if err != nil {
-		return nil, log.WrapErrorAction("generate", "uuid", log.StringArgs("user_id"), err)
-	}
-	newUser := user{ID: newID.String(), DateCreated: now}
+	storageUser := userToStorage(user)
+	membership := storageUser.OrganizationsMemberships[0]
 
-	accountID, err := uuid.NewUUID()
-	if err != nil {
-		return nil, log.ErrorData(log.StatusInvalid, log.TypeString, log.StringArgs("account_id"))
-	}
-	newAccount := model.UserAccount{ID: accountID.String(), Email: userAuth.Email, Phone: userAuth.Phone, DateCreated: now}
-	newUser.Account = newAccount
-
-	profileID, err := uuid.NewUUID()
-	if err != nil {
-		return nil, log.ErrorData(log.StatusInvalid, log.TypeString, log.StringArgs("profile_id"))
-	}
-	newProfile := model.UserProfile{ID: profileID.String(), FirstName: userAuth.FirstName, LastName: userAuth.LastName, DateCreated: now}
-	newUser.Profile = newProfile
-
-	//TODO: populate new device with device information (search for existing device first)
-	deviceID, err := uuid.NewUUID()
-	if err != nil {
-		return nil, log.ErrorData(log.StatusInvalid, log.TypeString, log.StringArgs("device_id"))
-	}
-	newDevice := model.Device{ID: deviceID.String(), DateCreated: now}
-	newUser.Devices = []model.Device{newDevice}
-
-	membershipID, err := uuid.NewUUID()
-	if err != nil {
-		return nil, log.ErrorData(log.StatusInvalid, log.TypeString, log.StringArgs("membership_id"))
-	}
-	orgID, ok := userAuth.OrgData["orgID"].(string)
+	orgID, ok := membership.OrgUserData["orgID"].(string)
 	if !ok {
 		return nil, log.ErrorData(log.StatusInvalid, log.TypeString, log.StringArgs("org_id"))
 	}
-	newOrgMembership := userMembership{ID: membershipID.String(), OrgID: orgID, OrgUserData: userAuth.OrgData, DateCreated: now}
 
-	rawMembership := rawMembership{ID: membershipID.String(), UserID: newID.String(), OrgID: orgID,
-		OrgUserData: userAuth.OrgData, DateCreated: now}
-
-	// TODO:
-	// maybe set groups based on organization populations
-
-	newUser.OrganizationsMemberships = []userMembership{newOrgMembership}
+	rawMembership := rawMembership{ID: membership.ID, UserID: user.ID, OrgID: orgID,
+		OrgUserData: membership.OrgUserData, DateCreated: storageUser.DateCreated}
 
 	// transaction
-	err = sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
 		err := sessionContext.StartTransaction()
 		if err != nil {
 			abortTransaction(sessionContext)
 			return log.WrapErrorAction(log.ActionStart, log.TypeTransaction, nil, err)
 		}
 
-		_, err = sa.db.users.InsertOneWithContext(sessionContext, newUser)
+		_, err = sa.db.users.InsertOneWithContext(sessionContext, storageUser)
 		if err != nil {
 			abortTransaction(sessionContext)
 			return log.WrapErrorAction(log.ActionInsert, model.TypeUser, nil, err)
 		}
 
-		authCred.AccountID = accountID.String()
+		authCred.AccountID = storageUser.Account.ID
 		err = sa.InsertCredentials(authCred, sessionContext)
 		if err != nil {
-			return log.WrapErrorData(log.StatusInvalid, model.TypeAuthCred, &log.FieldArgs{"user_id": userAuth.UserID, "account_id": userAuth.AccountID}, err)
+			return log.WrapErrorData(log.StatusInvalid, model.TypeAuthCred, &log.FieldArgs{"user_id": user.Account.Username, "account_id": user.Account.ID}, err)
 		}
 
 		err = sa.InsertMembership(&rawMembership, sessionContext)
@@ -210,7 +174,7 @@ func (sa *Adapter) InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred
 		return nil, err
 	}
 
-	returnUser := userFromStorage(&newUser, sa)
+	returnUser := userFromStorage(storageUser, sa)
 	return &returnUser, nil
 }
 
@@ -669,10 +633,10 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 	now := time.Now()
 
 	orgConfigID, _ := uuid.NewUUID()
-	orgConfig := organizationConfig{ID: orgConfigID.String(), Domains: organizationDomains, DateCreated: now}
+	orgConfig := model.OrganizationConfig{ID: orgConfigID.String(), Domains: organizationDomains, DateCreated: now}
 
 	organizationID, _ := uuid.NewUUID()
-	organization := organization{ID: organizationID.String(), Name: name, Type: requestType, RequiresOwnLogin: requiresOwnLogin, LoginTypes: loginTypes,
+	organization := model.Organization{ID: organizationID.String(), Name: name, Type: requestType, RequiresOwnLogin: requiresOwnLogin, LoginTypes: loginTypes,
 		Config: orgConfig, DateCreated: now}
 
 	_, err := sa.db.organizations.InsertOne(organization)
@@ -692,7 +656,7 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 func (sa *Adapter) GetOrganization(ID string) (*model.Organization, error) {
 
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	var result []organization
+	var result []model.Organization
 	err := sa.db.organizations.Find(filter, &result, nil)
 	if err != nil {
 		return nil, log.WrapErrorAction(log.ActionFind, model.TypeOrganization, nil, err)
@@ -763,7 +727,7 @@ func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 //GetApplication gets application
 func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	var result []application
+	var result []model.Application
 	err := sa.db.applications.Find(filter, &result, nil)
 	if err != nil {
 		return nil, log.WrapErrorAction(log.ActionFind, model.TypeApplication, nil, err)

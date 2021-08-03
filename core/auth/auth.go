@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/auth-library/authservice"
 	"github.com/rokmetro/auth-library/authutils"
@@ -334,7 +335,11 @@ func (a *Auth) findAccount(userAuth *model.UserAuth) (*model.User, error) {
 
 //createAccount creates a new user account
 func (a *Auth) createAccount(userAuth *model.UserAuth, authCred *model.AuthCred) (*model.User, error) {
-	return a.storage.InsertUser(userAuth, authCred)
+	newUser, err := a.setupUser(userAuth)
+	if err != nil {
+		return nil, log.WrapErrorAction(log.ActionCreate, model.TypeUser, nil, err)
+	}
+	return a.storage.InsertUser(newUser, authCred)
 }
 
 //updateAccount updates a user's account information
@@ -345,6 +350,52 @@ func (a *Auth) updateAccount(user *model.User, newOrgData *map[string]interface{
 //deleteAccount deletes a user account
 func (a *Auth) deleteAccount(id string) error {
 	return a.storage.DeleteUser(id)
+}
+
+func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.User, error) {
+	if userAuth == nil {
+		return nil, log.ErrorData(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeUserAuth))
+	}
+
+	now := time.Now().UTC()
+	newID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, log.WrapErrorAction("generate", "uuid", log.StringArgs("user_id"), err)
+	}
+	newUser := model.User{ID: newID.String(), DateCreated: now}
+
+	accountID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, log.ErrorData(log.StatusInvalid, log.TypeString, log.StringArgs("account_id"))
+	}
+	newUser.Account = model.UserAccount{ID: accountID.String(), Email: userAuth.Email, Phone: userAuth.Phone, Username: userAuth.UserID, DateCreated: now}
+
+	profileID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, log.ErrorData(log.StatusInvalid, log.TypeString, log.StringArgs("profile_id"))
+	}
+	newUser.Profile = model.UserProfile{ID: profileID.String(), FirstName: userAuth.FirstName, LastName: userAuth.LastName, DateCreated: now}
+
+	//TODO: populate new device with device information (search for existing device first)
+	deviceID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, log.ErrorData(log.StatusInvalid, log.TypeString, log.StringArgs("device_id"))
+	}
+	newDevice := model.Device{ID: deviceID.String(), DateCreated: now}
+	newUser.Devices = []model.Device{newDevice}
+
+	membershipID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, log.ErrorData(log.StatusInvalid, log.TypeString, log.StringArgs("membership_id"))
+	}
+	newOrgMembership := model.OrganizationMembership{ID: membershipID.String(), OrgUserData: userAuth.OrgData, DateCreated: now}
+
+	// TODO:
+	// maybe set groups based on organization populations
+
+	newUser.OrganizationsMemberships = []model.OrganizationMembership{newOrgMembership}
+
+	return &newUser, nil
 }
 
 //needsUserUpdate determines if user should be updated by userAuth (assumes userAuth is most up-to-date)
@@ -562,7 +613,7 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 //Storage interface to communicate with the storage
 type Storage interface {
 	FindUserByAccountID(accountID string) (*model.User, error)
-	InsertUser(userAuth *model.UserAuth, authCred *model.AuthCred) (*model.User, error)
+	InsertUser(user *model.User, authCred *model.AuthCred) (*model.User, error)
 	UpdateUser(user *model.User, newOrgData *map[string]interface{}) (*model.User, error)
 	DeleteUser(id string) error
 
