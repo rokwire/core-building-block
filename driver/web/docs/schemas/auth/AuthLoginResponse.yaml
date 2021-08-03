@@ -1,8 +1,15 @@
 type: object
 properties:
   access_token:
+    description: The user's access token to be provided to authorize access to ROKWIRE APIs
     type: string
   refresh_token:
+    description: A refresh token that can be used to get a new access token once the one provided expires
     type: string
+  token_type:
+    description: The type of the provided tokens to be specified when they are sent in the "Authorization" header
+    type: string
+    enum:
+      - Bearer
   user:
     $ref: "../../schemas/user/User.yaml"

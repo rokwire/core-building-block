@@ -6,10 +6,12 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/auth-library/authservice"
 	"github.com/rokmetro/auth-library/authutils"
 	"github.com/rokmetro/auth-library/tokenauth"
@@ -20,8 +22,9 @@ import (
 )
 
 const (
-	authServiceID string = "auth"
-	authKeyAlg    string = "RS256"
+	authServiceID  string = "auth"
+	authKeyAlg     string = "RS256"
+	rokwireKeyword string = "ROKWIRE"
 
 	typeAuthType log.LogData = "auth type"
 	typeAuth     log.LogData = "auth"
@@ -33,8 +36,8 @@ type authType interface {
 	check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error)
 	//refresh refreshes the access token using provided refresh token
 	refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error)
-	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
-	getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error)
+	//getLoginURL retrieves and pre-formats a login url and params for the SSO provider
+	getLoginURL(orgID string, appID string, redirectURI string, l *log.Log) (string, map[string]interface{}, error)
 }
 
 //Auth represents the auth functionality unit
@@ -58,8 +61,9 @@ type Auth struct {
 
 //TODO: Once the profile has been transferred and the new user ID scheme has been adopted across all services
 //		this should be replaced by tokenauth.Claims directly
-//tokenClaims is a temporary claims model to provide backwards compatibility
-type tokenClaims struct {
+
+//TokenClaims is a temporary claims model to provide backwards compatibility
+type TokenClaims struct {
 	tokenauth.Claims
 	UID   string `json:"uid,omitempty"`
 	Email string `json:"email,omitempty"`
@@ -88,14 +92,14 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	err := auth.storeReg()
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionSave, "reg", nil, err)
+		return nil, log.WrapErrorAction(log.ActionSave, "reg", nil, err)
 	}
 
 	serviceLoader := NewLocalServiceRegLoader(storage)
 
 	authService, err := authservice.NewAuthService(serviceID, host, serviceLoader)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionInitialize, "auth service", nil, err)
+		return nil, log.WrapErrorAction(log.ActionInitialize, "auth service", nil, err)
 	}
 
 	auth.AuthService = authService
@@ -135,12 +139,12 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 	var err error
 	auth, err := a.getAuthType(authType)
 	if err != nil {
-		return "", "", nil, log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
+		return "", "", nil, log.WrapErrorAction(log.ActionLoadCache, typeAuthType, nil, err)
 	}
 
 	userAuth, err := auth.check(creds, orgID, appID, params, l)
 	if err != nil {
-		return "", "", nil, log.WrapActionError(log.ActionValidate, "creds", nil, err)
+		return "", "", nil, log.WrapErrorAction(log.ActionValidate, "creds", nil, err)
 	}
 
 	if len(userAuth.AccountID) > 0 {
@@ -173,14 +177,14 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 				return "", "", nil, err
 			}
 		} else {
-			return "", "", nil, log.WrapActionError(log.ActionValidate, model.TypeAuthCred, nil, err)
+			return "", "", nil, log.WrapErrorAction(log.ActionValidate, model.TypeAuthCred, nil, err)
 		}
 	}
 
 	claims := a.getStandardClaims("", userAuth.UserID, userAuth.Email, userAuth.Phone, "rokwire", orgID, appID, userAuth.Exp)
 	token, err := a.buildAccessToken(claims, "", "all")
 	if err != nil {
-		return "", "", nil, log.WrapActionError("build", log.TypeToken, nil, err)
+		return "", "", nil, log.WrapErrorAction("build", log.TypeToken, nil, err)
 	}
 
 	//TODO: Implement account management
@@ -199,50 +203,118 @@ func (a *Auth) Refresh(refreshToken string, l *log.Log) (string, string, error) 
 	return "", "", log.NewError(log.Unimplemented)
 }
 
-//GetLoginUrl returns a pre-formatted login url for SSO providers
+//GetLoginURL returns a pre-formatted login url for SSO providers
 //	Input:
 //		authType (string): Name of the authentication method for provided creds (eg. "email")
 //		orgID (string): ID of the organization that the user is logging in to
 //		appID (string): ID of the app/client that the user is logging in from
-//		redirectUri (string): Registered redirect URI where client will receive response
+//		redirectURI (string): Registered redirect URI where client will receive response
 //		l (*loglib.Log): Log object pointer for request
 //	Returns:
 //		Login URL (string): SSO provider login URL to be launched in a browser
 //		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
-func (a *Auth) GetLoginUrl(authType string, orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
+func (a *Auth) GetLoginURL(authType string, orgID string, appID string, redirectURI string, l *log.Log) (string, map[string]interface{}, error) {
 	auth, err := a.getAuthType(authType)
 	if err != nil {
-		return "", nil, log.WrapActionError(log.ActionLoadCache, typeAuthType, nil, err)
+		return "", nil, log.WrapErrorAction(log.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	loginUrl, params, err := auth.getLoginUrl(orgID, appID, redirectUri, l)
+	loginURL, params, err := auth.getLoginURL(orgID, appID, redirectURI, l)
 	if err != nil {
-		return "", nil, log.WrapActionError(log.ActionGet, "login url", nil, err)
+		return "", nil, log.WrapErrorAction(log.ActionGet, "login url", nil, err)
 	}
 
-	return loginUrl, params, nil
+	return loginURL, params, nil
 }
 
-//GetScopedAccessToken TODO
-func (a *Auth) GetScopedAccessToken(claims tokenClaims, serviceID string, scope string) (string, error) {
-	scopedClaims := a.getStandardClaims(claims.Subject, claims.UID, "", "", serviceID, claims.OrgID, claims.AppID, nil)
+//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
+//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
+//	return a scoped access token which reflects this change.
+//	Input:
+//		claims (tokenClaims): Claims from un-scoped user access token
+//		serviceID (string): ID of the service to be authorized
+//		approvedScopes ([]string): list of scope strings to be approved
+//		l (*loglib.Log): Log object pointer for request
+//	Returns:
+//		Access token (string): Signed scoped access token to be used to authorize requests to the specified service
+//		Approved Scopes ([]authorization.Scope): The approved scopes included in the provided token
+//		Service reg (*model.ServiceReg): The service registration record for the requested service
+func (a *Auth) AuthorizeService(claims TokenClaims, serviceID string, approvedScopes []authorization.Scope, l *log.Log) (string, []authorization.Scope, *model.ServiceReg, error) {
+	var authorization model.ServiceAuthorization
+	if approvedScopes != nil {
+		//If approved scopes are being updated, save update and return token with updated scopes
+		authorization = model.ServiceAuthorization{UserID: claims.Subject, ServiceID: serviceID, Scopes: approvedScopes}
+		err := a.storage.SaveServiceAuthorization(&authorization)
+		if err != nil {
+			return "", nil, nil, log.WrapErrorAction(log.ActionSave, model.TypeServiceAuthorization, nil, err)
+		}
+	} else {
+		serviceAuth, err := a.storage.FindServiceAuthorization(claims.Subject, serviceID)
+		if err != nil {
+			return "", nil, nil, log.WrapErrorAction(log.ActionFind, model.TypeServiceAuthorization, nil, err)
+		}
+
+		if serviceAuth != nil {
+			//If service authorization exists, generate token with saved scopes
+			authorization = *serviceAuth
+		} else {
+			//If no service authorization exists, return the service registration record
+			reg, err := a.storage.FindServiceReg(serviceID)
+			if err != nil {
+				return "", nil, nil, log.WrapErrorAction(log.ActionFind, model.TypeServiceReg, nil, err)
+			}
+			return "", nil, reg, nil
+		}
+	}
+
+	token, err := a.GetScopedAccessToken(claims, serviceID, authorization.Scopes)
+	if err != nil {
+		return "", nil, nil, log.WrapErrorAction("build", log.TypeToken, nil, err)
+	}
+
+	return token, authorization.Scopes, nil, nil
+}
+
+//GetScopedAccessToken returns a scoped access token with the requested scopes
+func (a *Auth) GetScopedAccessToken(claims TokenClaims, serviceID string, scopes []authorization.Scope) (string, error) {
+	scopeStrings := []string{}
+	services := []string{serviceID}
+	for _, scope := range scopes {
+		scopeStrings = append(scopeStrings, scope.String())
+		if !authutils.ContainsString(services, scope.ServiceID) {
+			services = append(services, scope.ServiceID)
+		}
+	}
+
+	aud := strings.Join(services, ",")
+	scope := strings.Join(scopeStrings, " ")
+
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, nil)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
 //GetServiceRegistrations retrieves all service registrations
-func (a *Auth) GetServiceRegistrations(serviceIDs []string) ([]authservice.ServiceReg, error) {
+func (a *Auth) GetServiceRegistrations(serviceIDs []string) ([]model.ServiceReg, error) {
 	return a.storage.FindServiceRegs(serviceIDs)
 }
 
 //RegisterService creates a new service registration
-func (a *Auth) RegisterService(reg *authservice.ServiceReg) error {
+func (a *Auth) RegisterService(reg *model.ServiceReg) error {
+	if reg != nil && !reg.FirstParty && strings.Contains(strings.ToUpper(reg.Name), rokwireKeyword) {
+		return log.NewErrorf("the name of a third-party service may not contain \"%s\"", rokwireKeyword)
+	}
 	return a.storage.InsertServiceReg(reg)
 }
 
 //UpdateServiceRegistration updates an existing service registration
-func (a *Auth) UpdateServiceRegistration(reg *authservice.ServiceReg) error {
-	if reg.ServiceID == authServiceID || reg.ServiceID == a.serviceID {
-		return log.NewErrorf("modifying service registration not allowed for service id %v", reg.ServiceID)
+func (a *Auth) UpdateServiceRegistration(reg *model.ServiceReg) error {
+	if reg != nil {
+		if reg.Registration.ServiceID == authServiceID || reg.Registration.ServiceID == a.serviceID {
+			return log.NewErrorf("modifying service registration not allowed for service id %v", reg.Registration.ServiceID)
+		}
+		if !reg.FirstParty && strings.Contains(strings.ToUpper(reg.Name), rokwireKeyword) {
+			return log.NewErrorf("the name of a third-party service may not contain \"%s\"", rokwireKeyword)
+		}
 	}
 	return a.storage.UpdateServiceReg(reg)
 }
@@ -329,23 +401,23 @@ func (a *Auth) getAuthType(name string) (authType, error) {
 		return auth, nil
 	}
 
-	return nil, log.DataError(log.StatusInvalid, typeAuthType, log.StringArgs(name))
+	return nil, log.ErrorData(log.StatusInvalid, typeAuthType, log.StringArgs(name))
 }
 
-func (a *Auth) buildAccessToken(claims tokenClaims, permissions string, scope string) (string, error) {
+func (a *Auth) buildAccessToken(claims TokenClaims, permissions string, scope string) (string, error) {
 	claims.Purpose = "access"
 	claims.Permissions = permissions
 	claims.Scope = scope
 	return a.generateToken(&claims)
 }
 
-func (a *Auth) buildCsrfToken(claims tokenClaims) (string, error) {
+func (a *Auth) buildCsrfToken(claims TokenClaims) (string, error) {
 	claims.Purpose = "csrf"
 	return a.generateToken(&claims)
 }
 
-func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string, exp *int64) tokenClaims {
-	return tokenClaims{
+func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string, exp *int64) TokenClaims {
+	return TokenClaims{
 		Claims: tokenauth.Claims{
 			StandardClaims: jwt.StandardClaims{
 				Audience:  aud,
@@ -358,11 +430,11 @@ func (a *Auth) getStandardClaims(sub string, uid string, email string, phone str
 	}
 }
 
-func (a *Auth) generateToken(claims *tokenClaims) (string, error) {
+func (a *Auth) generateToken(claims *TokenClaims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	kid, err := authutils.GetKeyFingerprint(&a.authPrivKey.PublicKey)
 	if err != nil {
-		return "", log.WrapActionError(log.ActionCompute, "fingerprint", log.StringArgs("auth key"), err)
+		return "", log.WrapErrorAction(log.ActionCompute, "fingerprint", log.StringArgs("auth key"), err)
 	}
 	token.Header["kid"] = kid
 	return token.SignedString(a.authPrivKey)
@@ -390,23 +462,25 @@ func (a *Auth) getExp(exp *int64) int64 {
 func (a *Auth) storeReg() error {
 	pem, err := authutils.GetPubKeyPem(&a.authPrivKey.PublicKey)
 	if err != nil {
-		return log.WrapActionError(log.ActionEncode, "auth pub key", nil, err)
+		return log.WrapErrorAction(log.ActionEncode, "auth pub key", nil, err)
 	}
 
 	key := authservice.PubKey{KeyPem: pem, Alg: authKeyAlg}
 
 	// Setup "auth" registration for token validation
-	authReg := authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: &key}
+	authReg := model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: &key},
+		Name: "ROKWIRE Auth Service", Description: "The Auth Service is a subsystem of the Core Building Block that manages authentication and authorization.", FirstParty: true}
 	err = a.storage.SaveServiceReg(&authReg)
 	if err != nil {
-		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs(authServiceID), err)
+		return log.WrapErrorAction(log.ActionSave, model.TypeServiceReg, log.StringArgs(authServiceID), err)
 	}
 
 	// Setup core registration for signature validation
-	coreReg := authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key}
+	coreReg := model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key},
+		Name: "ROKWIRE Core Building Block", Description: "The Core Building Block manages user, auth, and organization data for the ROKWIRE platform.", FirstParty: true}
 	err = a.storage.SaveServiceReg(&coreReg)
 	if err != nil {
-		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, log.StringArgs(a.serviceID), err)
+		return log.WrapErrorAction(log.ActionSave, model.TypeServiceReg, log.StringArgs(a.serviceID), err)
 	}
 
 	return nil
@@ -416,7 +490,7 @@ func (a *Auth) storeReg() error {
 func (a *Auth) LoadAuthConfigs() error {
 	authConfigDocs, err := a.storage.LoadAuthConfigs()
 	if err != nil {
-		return log.WrapActionError(log.ActionFind, model.TypeAuthConfig, nil, err)
+		return log.WrapErrorAction(log.ActionFind, model.TypeAuthConfig, nil, err)
 	}
 
 	a.setAuthConfigs(authConfigDocs)
@@ -436,12 +510,12 @@ func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*mode
 	if item != nil {
 		authConfigFromCache, ok := item.(model.AuthConfig)
 		if !ok {
-			return nil, log.ActionError(log.ActionCast, model.TypeAuthConfig, errArgs)
+			return nil, log.ErrorAction(log.ActionCast, model.TypeAuthConfig, errArgs)
 		}
 		authConfig = &authConfigFromCache
 		return authConfig, nil
 	}
-	return nil, log.DataError(log.StatusMissing, model.TypeAuthConfig, errArgs)
+	return nil, log.ErrorData(log.StatusMissing, model.TypeAuthConfig, errArgs)
 }
 
 func (a *Auth) setAuthConfigs(authConfigs *[]model.AuthConfig) {
@@ -466,7 +540,17 @@ type LocalServiceRegLoaderImpl struct {
 
 //LoadServices implements ServiceRegLoader interface
 func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, error) {
-	return l.storage.FindServiceRegs(l.GetSubscribedServices())
+	regs, err := l.storage.FindServiceRegs(l.GetSubscribedServices())
+	if err != nil {
+		return nil, log.WrapErrorAction(log.ActionFind, model.TypeServiceReg, nil, err)
+	}
+
+	authRegs := make([]authservice.ServiceReg, len(regs))
+	for i, reg := range regs {
+		authRegs[i] = reg.Registration
+	}
+
+	return authRegs, nil
 }
 
 //NewLocalServiceRegLoader creates and configures a new LocalServiceRegLoaderImpl instance
@@ -487,16 +571,21 @@ type Storage interface {
 	FindOrganization(id string) (*model.Organization, error)
 
 	//ServiceRegs
-	FindServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error)
-	FindServiceReg(serviceID string) (*authservice.ServiceReg, error)
-	InsertServiceReg(reg *authservice.ServiceReg) error
-	UpdateServiceReg(reg *authservice.ServiceReg) error
-	SaveServiceReg(reg *authservice.ServiceReg) error
+	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)
+	FindServiceReg(serviceID string) (*model.ServiceReg, error)
+	InsertServiceReg(reg *model.ServiceReg) error
+	UpdateServiceReg(reg *model.ServiceReg) error
+	SaveServiceReg(reg *model.ServiceReg) error
 	DeleteServiceReg(serviceID string) error
 
 	//AuthConfigs
 	FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error)
 	LoadAuthConfigs() (*[]model.AuthConfig, error)
+
+	//ServiceAuthorizations
+	FindServiceAuthorization(userID string, orgID string) (*model.ServiceAuthorization, error)
+	SaveServiceAuthorization(authorization *model.ServiceAuthorization) error
+	DeleteServiceAuthorization(userID string, orgID string) error
 }
 
 //StorageListener represents storage listener implementation for the auth package

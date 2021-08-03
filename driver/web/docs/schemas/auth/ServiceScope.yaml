@@ -1,0 +1,12 @@
+required:
+  - scope
+  - required
+type: object
+properties:
+  scope:
+    type: string
+  required:
+    type: boolean
+  explanation:
+    description: Explanation displayed to users for why this scope is requested/required
+    type: string

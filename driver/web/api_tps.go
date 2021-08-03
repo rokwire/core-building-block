@@ -10,19 +10,12 @@ import (
 	log "github.com/rokmetro/logging-library/loglib"
 )
 
-//BBsApisHandler handles the APIs implementation used by the platform building blocks
-type BBsApisHandler struct {
+//TPSApisHandler handles the APIs implementation used by third-party services
+type TPSApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-//getTest TODO get test
-func (h BBsApisHandler) getTest(l *log.Log, r *http.Request) log.HttpResponse {
-	res := h.coreAPIs.BBs.BBsGetTest()
-
-	return l.HttpResponseSuccessMessage(res)
-}
-
-func (h BBsApisHandler) getServiceRegistrations(l *log.Log, r *http.Request) log.HttpResponse {
+func (h TPSApisHandler) getServiceRegistrations(l *log.Log, r *http.Request) log.HttpResponse {
 	serviceIDsParam := r.URL.Query().Get("ids")
 	if serviceIDsParam == "" {
 		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("ids"), nil, http.StatusBadRequest, false)
@@ -34,7 +27,7 @@ func (h BBsApisHandler) getServiceRegistrations(l *log.Log, r *http.Request) log
 		return l.HttpResponseErrorAction(log.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
 	}
 
-	serviceRegResp := authServiceRegListToDef(serviceRegs)
+	serviceRegResp := serviceRegListToDef(serviceRegs)
 
 	data, err := json.Marshal(serviceRegResp)
 	if err != nil {
@@ -44,7 +37,7 @@ func (h BBsApisHandler) getServiceRegistrations(l *log.Log, r *http.Request) log
 	return l.HttpResponseSuccessJSON(data)
 }
 
-//NewBBsApisHandler creates new bbs Handler instance
-func NewBBsApisHandler(coreAPIs *core.APIs) BBsApisHandler {
-	return BBsApisHandler{coreAPIs: coreAPIs}
+//NewTPSApisHandler creates new tps Handler instance
+func NewTPSApisHandler(coreAPIs *core.APIs) TPSApisHandler {
+	return TPSApisHandler{coreAPIs: coreAPIs}
 }

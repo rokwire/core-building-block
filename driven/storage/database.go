@@ -26,13 +26,13 @@ type database struct {
 	memberships *collectionWrapper
 	devices     *collectionWrapper
 
-	authConfigs *collectionWrapper
-	credentials *collectionWrapper
-
-	globalConfig  *collectionWrapper
-	organizations *collectionWrapper
-	serviceRegs   *collectionWrapper
-	applications  *collectionWrapper
+	credentials           *collectionWrapper
+	authConfigs           *collectionWrapper
+	globalConfig          *collectionWrapper
+	organizations         *collectionWrapper
+	serviceRegs           *collectionWrapper
+	serviceAuthorizations *collectionWrapper
+	applications          *collectionWrapper
 
 	listeners []Listener
 }
@@ -114,6 +114,12 @@ func (m *database) start() error {
 		return err
 	}
 
+	serviceAuthorizations := &collectionWrapper{database: m, coll: db.Collection("service_authorizations")}
+	err = m.applyServiceAuthorizationsChecks(serviceAuthorizations)
+	if err != nil {
+		return err
+	}
+
 	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
 	err = m.applyApplicationsChecks(applications)
 	if err != nil {
@@ -140,11 +146,12 @@ func (m *database) start() error {
 	m.roles = roles
 	m.permissions = permissions
 	m.memberships = memberships
-	m.applications = applications
 	m.devices = devices
 	m.globalConfig = globalConfig
 	m.organizations = organizations
 	m.serviceRegs = serviceRegs
+	m.serviceAuthorizations = serviceAuthorizations
+	m.applications = applications
 	m.authConfigs = authConfigs
 	m.credentials = credentials
 
@@ -248,12 +255,25 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 	log.Println("apply service regs checks.....")
 
 	//add service_id index - unique
-	err := serviceRegs.AddIndex(bson.D{primitive.E{Key: "service_id", Value: 1}}, true)
+	err := serviceRegs.AddIndex(bson.D{primitive.E{Key: "registration.service_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
 
 	log.Println("service regs checks passed")
+	return nil
+}
+
+func (m *database) applyServiceAuthorizationsChecks(serviceAuthorizations *collectionWrapper) error {
+	log.Println("apply service authorizations checks.....")
+
+	//add user_id, service_id index - unique
+	err := serviceAuthorizations.AddIndex(bson.D{primitive.E{Key: "user_id", Value: 1}, primitive.E{Key: "service_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	log.Println("service authorizations checks passed")
 	return nil
 }
 

@@ -7,7 +7,6 @@ import (
 	core "core-building-block/core"
 	genmocks "core-building-block/core/mocks"
 	"core-building-block/core/model"
-	core_model "core-building-block/core/model"
 
 	log "github.com/rokmetro/logging-library/loglib"
 
@@ -67,7 +66,7 @@ func TestAdmGetTest(t *testing.T) {
 func TestAdmCreateGlobalConfig(t *testing.T) {
 	storage := genmocks.Storage{}
 	storage.On("GetGlobalConfig").Return(nil, nil)
-	storage.On("CreateGlobalConfig", "setting").Return(&core_model.GlobalConfig{Setting: "setting"}, nil)
+	storage.On("CreateGlobalConfig", "setting").Return(&model.GlobalConfig{Setting: "setting"}, nil)
 
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
