@@ -75,7 +75,7 @@ func (h ServicesApisHandler) authRefresh(l *log.Log, r *http.Request) log.HttpRe
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-func (h ServicesApisHandler) authLoginUrl(l *log.Log, r *http.Request) log.HttpResponse {
+func (h ServicesApisHandler) authLoginURL(l *log.Log, r *http.Request) log.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -87,12 +87,12 @@ func (h ServicesApisHandler) authLoginUrl(l *log.Log, r *http.Request) log.HttpR
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, log.LogData("auth login url request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	loginUrl, params, err := h.coreAPIs.Auth.GetLoginUrl(string(requestData.AuthType), requestData.OrgId, requestData.AppId, requestData.RedirectUri, l)
+	loginURL, params, err := h.coreAPIs.Auth.GetLoginURL(string(requestData.AuthType), requestData.OrgId, requestData.AppId, requestData.RedirectUri, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionGet, "login url", nil, err, http.StatusInternalServerError, true)
 	}
 
-	responseData := &Def.AuthLoginUrlResponse{LoginUrl: loginUrl, Params: &params}
+	responseData := &Def.AuthLoginUrlResponse{LoginUrl: loginURL, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionMarshal, log.LogData("auth login url response"), nil, err, http.StatusInternalServerError, false)

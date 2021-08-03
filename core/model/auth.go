@@ -7,12 +7,18 @@ import (
 )
 
 const (
-	TypeUserAuth             log.LogData = "user auth"
-	TypeAuthConfig           log.LogData = "user auth"
-	TypeServiceReg           log.LogData = "service reg"
-	TypeServiceScope         log.LogData = "service scope"
+	//TypeUserAuth user auth type
+	TypeUserAuth log.LogData = "user auth"
+	//TypeAuthConfig auth config type
+	TypeAuthConfig log.LogData = "auth config"
+	//TypeServiceReg service reg type
+	TypeServiceReg log.LogData = "service reg"
+	//TypeServiceScope service scope type
+	TypeServiceScope log.LogData = "service scope"
+	//TypeServiceAuthorization service authorization type
 	TypeServiceAuthorization log.LogData = "service authorization"
-	TypeScope                log.LogData = "scope"
+	//TypeScope scope type
+	TypeScope log.LogData = "scope"
 )
 
 //UserAuth represents user auth entity
@@ -55,6 +61,7 @@ type ServiceScope struct {
 	Explanation string               `json:"explanation,omitempty" bson:"explanation,omitempty"`
 }
 
+//ServiceAuthorization represents service authorization entity
 type ServiceAuthorization struct {
 	UserID    string                `json:"user_id" bson:"user_id"`
 	ServiceID string                `json:"service_id" bson:"service_id"`

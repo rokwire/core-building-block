@@ -25,7 +25,7 @@ func (a *firebaseAuthImpl) refresh(refreshToken string, orgID string, appID stri
 	return nil, log.NewErrorf("refresh operation invalid for auth_type=%s", authTypeFirebase)
 }
 
-func (a *firebaseAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
+func (a *firebaseAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *log.Log) (string, map[string]interface{}, error) {
 	return "", nil, log.NewErrorf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
