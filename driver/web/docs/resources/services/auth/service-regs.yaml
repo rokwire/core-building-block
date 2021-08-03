@@ -1,6 +1,6 @@
 get:
   tags:
-    - Third-Party Services
+    - Services
   summary: Get service registrations
   description: |
     Returns service registration records

@@ -144,6 +144,98 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/auth/authorize-service:
+    post:
+      tags:
+        - Services
+      summary: Authorize service
+      description: |
+        Authorize a third-party service and get a scoped access token that can be used to access its APIs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthAuthorizeServiceRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthAuthorizeServiceResponse'
+              examples:
+                authorized:
+                  summary: Service authorized
+                  value: |
+                    {
+                      "access_token": "string",
+                      "token_type": "Bearer",
+                      "approved_scopes": [
+                        "string"
+                      ]
+                    }
+                unauthorized:
+                  summary: Service unauthorized
+                  value: |
+                    {
+                      "service_reg": {
+                        "service_id": "string",
+                        "host": "string",
+                        "pub_key": {
+                          "key_pem": "string",
+                          "alg": "string"
+                        },
+                        "name": "string",
+                        "description": "string",
+                        "info_url": "string",
+                        "logo_url": "string",
+                        "scopes": [
+                          {
+                            "scope": "string",
+                            "required": true,
+                            "explanation": "string"
+                          }
+                        ],
+                        "first_party": true
+                      }
+                    }
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/service-regs:
+    get:
+      tags:
+        - Services
+      summary: Get service registrations
+      description: |
+        Returns service registration records
+      parameters:
+        - name: ids
+          in: query
+          description: A comma-separated list of service IDs to return registrations for
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceReg'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/test:
     get:
       tags:
@@ -551,68 +643,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /tps/auth/authorize-service:
-    post:
-      tags:
-        - Third-Party Services
-      summary: Authorize service
-      description: |
-        Authorize a third-party service and get a scoped access token that can be used to access its APIs
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AuthAuthorizeServiceRequest'
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthAuthorizeServiceResponse'
-              examples:
-                authorized:
-                  summary: Service authorized
-                  value: |
-                    {
-                      "access_token": "string",
-                      "token_type": "Bearer",
-                      "approved_scopes": [
-                        "string"
-                      ]
-                    }
-                unauthorized:
-                  summary: Service unauthorized
-                  value: |
-                    {
-                      "service_reg": {
-                        "service_id": "string",
-                        "host": "string",
-                        "pub_key": {
-                          "key_pem": "string",
-                          "alg": "string"
-                        },
-                        "name": "string",
-                        "description": "string",
-                        "info_url": "string",
-                        "logo_url": "string",
-                        "scopes": [
-                          {
-                            "scope": "string",
-                            "required": true,
-                            "explanation": "string"
-                          }
-                        ],
-                        "first_party": true
-                      }
-                    }
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /tps/auth/service-regs:
+  /tps/service-regs:
     get:
       tags:
         - Third-Party Services
