@@ -194,5 +194,27 @@ func TestBBsGetTest(t *testing.T) {
 ///
 
 func TestAdmCreateGlobalPermission(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("CreateGlobalPermissions", "name").Return(&model.GlobalPermission{Name: "name"}, nil)
 
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	gp, _ := app.Administration.AdmCreateGlobalPermissions("name")
+	if gp == nil {
+		t.Error("gc is nil")
+		return
+	}
+	assert.Equal(t, gp.Name, "name", "name is different")
+
+	//second case - error
+	storage2 := genmocks.Storage{}
+	storage2.On("CreateGlobalPermissions", "name").Return(nil, errors.New("error occured"))
+
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage2, nil)
+
+	_, err := app.Administration.AdmCreateGlobalPermissions("name")
+	if err == nil {
+		t.Error("we are expecting error")
+		return
+	}
 }
