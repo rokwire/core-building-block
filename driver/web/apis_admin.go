@@ -275,6 +275,27 @@ func (h AdminApisHandler) deregisterService(l *log.Log, r *http.Request) log.Htt
 	return l.HttpResponseSuccess()
 }
 
+//createGlobalPermissions creates a global permissions
+func (h AdminApisHandler) createGlobalPermissions(l *log.Log, r *http.Request) log.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+	var requestData Def.GlobalPermission
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeGlobalPermission, nil, err, http.StatusBadRequest, true)
+	}
+	name := requestData.Name
+
+	_, err = h.coreAPIs.Administration.AdmCreateGlobalPermissions(*name)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionCreate, model.TypeGlobalPermission, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 //NewAdminApisHandler creates new admin rest Handler instance
 func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
 	return AdminApisHandler{coreAPIs: coreAPIs}

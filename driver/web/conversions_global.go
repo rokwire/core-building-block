@@ -71,3 +71,12 @@ func globalRoleListToDef(items []model.GlobalRole) []Def.GlobalRole {
 	}
 	return out
 }
+
+//GlobalPersmission
+func globalPermission(item *Def.GlobalPermission) *model.GlobalPermission {
+	if item == nil {
+		return nil
+	}
+	//TODO: handle permissions and roles
+	return &model.GlobalPermission{ID: item.Id, Name: *item.Name}
+}
