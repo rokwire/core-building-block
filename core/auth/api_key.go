@@ -35,7 +35,7 @@ func initAPIKeyAuth(auth *Auth) (*apiKeyAuthImpl, error) {
 
 	err := auth.registerAuthType(apiKey.authType, apiKey)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
+		return nil, log.WrapErrorAction(log.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return apiKey, nil

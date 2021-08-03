@@ -23,7 +23,7 @@ func defMap(pointer *map[string]interface{}) map[string]interface{} {
 func interfaceToJSON(item interface{}) (string, error) {
 	json, err := json.Marshal(item)
 	if err != nil {
-		return "", log.WrapActionError(log.ActionMarshal, "interface", nil, err)
+		return "", log.WrapErrorAction(log.ActionMarshal, "interface", nil, err)
 	}
 	return string(json), nil
 }

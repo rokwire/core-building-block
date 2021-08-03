@@ -1,6 +1,6 @@
 get:
   tags:
-    - BBs
+    - Services
   summary: Get service registrations
   description: |
     Returns service registration records
@@ -21,7 +21,7 @@ get:
           schema:
             type: array
             items: 
-              $ref: '../../schemas/auth/AuthServiceReg.yaml'
+              $ref: '../../../schemas/auth/ServiceReg.yaml'
     400:
       description: Bad request
     401:

@@ -21,8 +21,12 @@ OrganizationGroup:
 # auth
 ServiceReg:
   $ref: "./auth/ServiceReg.yaml"
+AuthServiceReg:
+  $ref: "./auth/AuthServiceReg.yaml"
 PubKey:
   $ref: "./auth/PubKey.yaml"
+ServiceScope:
+  $ref: "./auth/ServiceScope.yaml"
 AuthLoginRequest:
   $ref: "./auth/AuthLoginRequest.yaml"
 AuthLoginResponse:
@@ -47,6 +51,11 @@ AuthLoginUrlRequest:
   $ref: "./auth/AuthLoginUrlRequest.yaml"
 AuthLoginUrlResponse:
   $ref: "./auth/AuthLoginUrlResponse.yaml"
+
+AuthAuthorizeServiceRequest:
+  $ref: "./auth/AuthAuthorizeServiceRequest.yaml"
+AuthAuthorizeServiceResponse:
+  $ref: "./auth/AuthAuthorizeServiceResponse.yaml"
 
 # user
 User:
