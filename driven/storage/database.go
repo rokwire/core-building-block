@@ -84,17 +84,6 @@ func (m *database) start() error {
 		return err
 	}
 
-	//asign the db, db client and the collections
-	m.db = db
-	m.dbClient = client
-	m.globalConfig = globalConfig
-	m.organizations = organizations
-	m.serviceRegs = serviceRegs
-	m.globalPermissions = globalPermissions
-	m.serviceAuthorizations = serviceAuthorizations
-	m.applications = applications
-	m.authConfigs = authConfigs
-
 	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
 	err = m.applyApplicationsChecks(serviceRegs)
 	if err != nil {
@@ -106,6 +95,17 @@ func (m *database) start() error {
 	if err != nil {
 		return err
 	}
+
+	//asign the db, db client and the collections
+	m.db = db
+	m.dbClient = client
+	m.globalConfig = globalConfig
+	m.organizations = organizations
+	m.serviceRegs = serviceRegs
+	m.globalPermissions = globalPermissions
+	m.serviceAuthorizations = serviceAuthorizations
+	m.applications = applications
+	m.authConfigs = authConfigs
 
 	//watch for auth info changes
 	go m.authConfigs.Watch(nil)
@@ -147,10 +147,10 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 	log.Println("apply service regs checks.....")
 
 	//add service_id index - unique
-	err := serviceRegs.AddIndex(bson.D{primitive.E{Key: "registration.service_id", Value: 1}}, true)
+	/*err := serviceRegs.AddIndex(bson.D{primitive.E{Key: "registration.service_id", Value: 1}}, true)
 	if err != nil {
 		return err
-	}
+	}*/
 
 	log.Println("service regs checks passed")
 	return nil
@@ -159,12 +159,8 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 func (m *database) applyGlobalPermissionChecks(globalPermissions *collectionWrapper) error {
 	log.Println("apply global permisions checks.....")
 
-	/*err := globalPermissions.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}}, true)
-	if err != nil {
-		return err
-	}*/
-
 	log.Println("global permissions checks passed")
+	return nil
 }
 
 func (m *database) applyServiceAuthorizationsChecks(serviceAuthorizations *collectionWrapper) error {

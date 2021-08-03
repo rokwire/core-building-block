@@ -275,7 +275,7 @@ func (sa *Adapter) CreateGlobalPermissions(name string) (*model.GlobalPermission
 
 	_, err := sa.db.globalPermissions.InsertOne(permissions)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionInsert, model.TypeGlobalPermission, nil, err)
+		return nil, log.WrapErrorAction(log.ActionInsert, model.TypeGlobalPermission, nil, err)
 	}
 	//return the correct type
 	resPermission := model.GlobalPermission{ID: permissions.ID, Name: permissions.Name}

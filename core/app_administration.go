@@ -238,7 +238,7 @@ func (app *application) admUpdateOrganization(ID string, name string, requestTyp
 func (app *application) admCreateGlobalPermissions(name string) (*model.GlobalPermission, error) {
 	permission, err := app.storage.CreateGlobalPermissions(name)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionFind, model.TypeGlobalPermission, nil, err)
+		return nil, log.WrapErrorAction(log.ActionFind, model.TypeGlobalPermission, nil, err)
 	}
 	return permission, nil
 }
