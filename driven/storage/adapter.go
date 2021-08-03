@@ -36,6 +36,14 @@ type organizationConfig struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
+type permissions struct {
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
 //Adapter implements the Storage interface
 type Adapter struct {
 	db *database
@@ -250,6 +258,22 @@ func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 		}
 	}
 	return resultList, nil
+}
+
+//CreateGlobalPermissions creates global permitions
+func (sa *Adapter) CreateGlobalPermissions(name string) (*model.GlobalPermission, error) {
+	now := time.Now()
+
+	permissionsID, _ := uuid.NewUUID()
+	permissions := permissions{ID: permissionsID.String(), Name: name, DateCreated: now}
+
+	_, err := sa.db.globalPermissions.InsertOne(permissions)
+	if err != nil {
+		return nil, log.WrapActionError(log.ActionInsert, model.TypeGlobalPermission, nil, err)
+	}
+	//return the correct type
+	resPermission := model.GlobalPermission{ID: permissions.ID, Name: permissions.Name}
+	return &resPermission, nil
 }
 
 // ============================== ServiceRegs ==============================

@@ -19,10 +19,11 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
-	authConfigs   *collectionWrapper
-	globalConfig  *collectionWrapper
-	organizations *collectionWrapper
-	serviceRegs   *collectionWrapper
+	authConfigs       *collectionWrapper
+	globalConfig      *collectionWrapper
+	organizations     *collectionWrapper
+	serviceRegs       *collectionWrapper
+	globalPermissions *collectionWrapper
 
 	listeners []Listener
 }
@@ -68,12 +69,19 @@ func (m *database) start() error {
 		return err
 	}
 
+	globalPermissions := &collectionWrapper{database: m, coll: db.Collection("global_permissions")}
+	err = m.applyGlobalPermissionChecks(globalPermissions)
+	if err != nil {
+		return err
+	}
+
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
 	m.globalConfig = globalConfig
 	m.organizations = organizations
 	m.serviceRegs = serviceRegs
+	m.globalPermissions = globalPermissions
 
 	//TODO
 	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
@@ -130,6 +138,18 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 	}
 
 	log.Println("service regs checks passed")
+	return nil
+}
+
+func (m *database) applyGlobalPermissionChecks(globalPermissions *collectionWrapper) error {
+	log.Println("apply global permisions checks.....")
+
+	/*err := globalPermissions.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}}, true)
+	if err != nil {
+		return err
+	}*/
+
+	log.Println("global permissions checks passed")
 	return nil
 }
 
