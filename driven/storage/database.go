@@ -85,7 +85,7 @@ func (m *database) start() error {
 	}
 
 	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
-	err = m.applyApplicationsChecks(serviceRegs)
+	err = m.applyApplicationsChecks(applications)
 	if err != nil {
 		return err
 	}
@@ -147,10 +147,10 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 	log.Println("apply service regs checks.....")
 
 	//add service_id index - unique
-	/*err := serviceRegs.AddIndex(bson.D{primitive.E{Key: "registration.service_id", Value: 1}}, true)
+	err := serviceRegs.AddIndex(bson.D{primitive.E{Key: "registration.service_id", Value: 1}}, true)
 	if err != nil {
 		return err
-	}*/
+	}
 
 	log.Println("service regs checks passed")
 	return nil
@@ -158,6 +158,12 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 
 func (m *database) applyGlobalPermissionChecks(globalPermissions *collectionWrapper) error {
 	log.Println("apply global permisions checks.....")
+
+	//add name index - unique
+	err := globalPermissions.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
 
 	log.Println("global permissions checks passed")
 	return nil
