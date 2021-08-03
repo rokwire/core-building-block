@@ -116,14 +116,14 @@ func (a *oidcAuthImpl) refresh(refreshToken string, orgID string, appID string, 
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *oidcAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *oidcAuthImpl) getLoginURL(orgID string, appID string, redirectUri string, l *logs.Log) (string, map[string]interface{}, error) {
 	oidcConfig, err := a.getOidcAuthConfig(orgID, appID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
 	}
 
 	responseParams := map[string]interface{}{
-		"redirect_uri": redirectUri,
+		"redirect_uri": redirectURI,
 	}
 
 	scopes := oidcConfig.Scopes
@@ -134,7 +134,7 @@ func (a *oidcAuthImpl) getLoginUrl(orgID string, appID string, redirectUri strin
 	bodyData := map[string]string{
 		"scope":         scopes,
 		"response_type": "code",
-		"redirect_uri":  redirectUri,
+		"redirect_uri":  redirectURI,
 		"client_id":     oidcConfig.ClientID,
 	}
 

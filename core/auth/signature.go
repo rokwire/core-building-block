@@ -27,7 +27,7 @@ func (a *signatureAuthImpl) refresh(refreshToken string, orgID string, appID str
 	return nil, errors.Newf("refresh operation invalid for auth_type=%s", authTypeSignature)
 }
 
-func (a *signatureAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *signatureAuthImpl) getLoginURL(orgID string, appID string, redirectUri string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
@@ -37,7 +37,7 @@ func initSignatureAuth(auth *Auth) (*signatureAuthImpl, error) {
 
 	err := auth.registerAuthType(signature.authType, signature)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+		return nil, log.WrapErrorAction(log.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return signature, nil

@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	authTypeApiKey string = "api_key"
+	authTypeAPIKey string = "api_key"
 )
 
 //API Key implementation of authType
@@ -27,13 +27,13 @@ func (a *apiKeyAuthImpl) refresh(refreshToken string, orgID string, appID string
 	return nil, errors.Newf("refresh operation invalid for auth_type=%s", authTypeApiKey)
 }
 
-func (a *apiKeyAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *apiKeyAuthImpl) getLoginURL(orgID string, appID string, redirectUri string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
 //initAPIKeyAuth initializes and registers a new API key auth instance
 func initAPIKeyAuth(auth *Auth) (*apiKeyAuthImpl, error) {
-	apiKey := &apiKeyAuthImpl{auth: auth, authType: authTypeApiKey}
+	apiKey := &apiKeyAuthImpl{auth: auth, authType: authTypeAPIKey}
 
 	err := auth.registerAuthType(apiKey.authType, apiKey)
 	if err != nil {

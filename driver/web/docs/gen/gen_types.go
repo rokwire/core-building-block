@@ -81,6 +81,29 @@ type Application struct {
 	Versions *[]string `json:"versions"`
 }
 
+// AuthAuthorizeServiceRequest defines model for AuthAuthorizeServiceRequest.
+type AuthAuthorizeServiceRequest struct {
+
+	// Scopes to be granted to this service in this and future tokens. Replaces existing scopes if present.
+	ApprovedScopes *[]string `json:"approved_scopes,omitempty"`
+	ServiceId      string    `json:"service_id"`
+}
+
+// AuthAuthorizeServiceResponse defines model for AuthAuthorizeServiceResponse.
+type AuthAuthorizeServiceResponse struct {
+	AccessToken    *string   `json:"access_token,omitempty"`
+	ApprovedScopes *[]string `json:"approved_scopes,omitempty"`
+
+	// Full service registration record
+	ServiceReg *ServiceReg `json:"service_reg,omitempty"`
+
+	// The type of the provided tokens to be specified when they are sent in the "Authorization" header
+	TokenType *AuthAuthorizeServiceResponseTokenType `json:"token_type,omitempty"`
+}
+
+// The type of the provided tokens to be specified when they are sent in the "Authorization" header
+type AuthAuthorizeServiceResponseTokenType string
+
 // Auth login creds for auth_type="email"
 type AuthLoginCredsEmail struct {
 	Email    string `json:"email"`
@@ -355,17 +378,24 @@ type GetBbsServiceRegsParams struct {
 	Ids string `json:"ids"`
 }
 
+// PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
+type PostServicesAuthAuthorizeServiceJSONBody AuthAuthorizeServiceRequest
+
 // PostServicesAuthLoginJSONBody defines parameters for PostServicesAuthLogin.
 type PostServicesAuthLoginJSONBody AuthLoginRequest
 
 // PostServicesAuthLoginUrlJSONBody defines parameters for PostServicesAuthLoginUrl.
 type PostServicesAuthLoginUrlJSONBody AuthLoginUrlRequest
 
-// PostTpsAuthAuthorizeServiceJSONBody defines parameters for PostTpsAuthAuthorizeService.
-type PostTpsAuthAuthorizeServiceJSONBody AuthAuthorizeServiceRequest
+// GetServicesAuthServiceRegsParams defines parameters for GetServicesAuthServiceRegs.
+type GetServicesAuthServiceRegsParams struct {
 
-// GetTpsAuthServiceRegsParams defines parameters for GetTpsAuthServiceRegs.
-type GetTpsAuthServiceRegsParams struct {
+	// A comma-separated list of service IDs to return registrations for
+	Ids string `json:"ids"`
+}
+
+// GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
+type GetTpsServiceRegsParams struct {
 
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
@@ -388,6 +418,9 @@ type PostAdminServiceRegsJSONRequestBody PostAdminServiceRegsJSONBody
 
 // PutAdminServiceRegsJSONRequestBody defines body for PutAdminServiceRegs for application/json ContentType.
 type PutAdminServiceRegsJSONRequestBody PutAdminServiceRegsJSONBody
+
+// PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
+type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody
 
 // PostServicesAuthLoginJSONRequestBody defines body for PostServicesAuthLogin for application/json ContentType.
 type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody

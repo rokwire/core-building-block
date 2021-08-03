@@ -31,6 +31,10 @@ paths:
     $ref: "./resources/services/auth/refresh.yaml"
   /services/auth/login-url:
     $ref: "./resources/services/auth/login-url.yaml"
+  /services/auth/authorize-service:
+    $ref: "./resources/services/auth/authorize-service.yaml"
+  /services/auth/service-regs:
+    $ref: "./resources/services/auth/service-regs.yaml"
   /services/test:
     $ref: "./resources/services/test.yaml"
 
@@ -57,10 +61,8 @@ paths:
     $ref: "./resources/bbs/service-regs.yaml"
 
   #third-party services
-  /tps/auth/authorize-service:
-    $ref: "./resources/third-party-services/auth/authorize-service.yaml"
-  /tps/auth/service-regs:
-    $ref: "./resources/third-party-services/auth/service-regs.yaml"
+  /tps/service-regs:
+    $ref: "./resources/third-party-services/service-regs.yaml"
 
   #default
   /version:

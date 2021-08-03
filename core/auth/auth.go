@@ -38,7 +38,7 @@ type authType interface {
 	//refresh refreshes the access token using provided refresh token
 	refresh(refreshToken string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error)
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
-	getLoginUrl(orgID string, appID string, redirectUri string, l *logs.Log) (string, map[string]interface{}, error)
+	getLoginURL(orgID string, appID string, redirectUri string, l *logs.Log) (string, map[string]interface{}, error)
 }
 
 //Auth represents the auth functionality unit
@@ -167,28 +167,28 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, error)
 	return "", "", errors.New(logutils.Unimplemented)
 }
 
-//GetLoginUrl returns a pre-formatted login url for SSO providers
+//GetLoginURL returns a pre-formatted login url for SSO providers
 //	Input:
 //		authType (string): Name of the authentication method for provided creds (eg. "email")
 //		orgID (string): ID of the organization that the user is logging in to
 //		appID (string): ID of the app/client that the user is logging in from
-//		redirectUri (string): Registered redirect URI where client will receive response
-//		l (*logs.Log): Log object pointer for request
+//		redirectURI (string): Registered redirect URI where client will receive response
+//		l (*loglib.Log): Log object pointer for request
 //	Returns:
 //		Login URL (string): SSO provider login URL to be launched in a browser
 //		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
-func (a *Auth) GetLoginUrl(authType string, orgID string, appID string, redirectUri string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *Auth) GetLoginURL(authType string, orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	auth, err := a.getAuthType(authType)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	loginUrl, params, err := auth.getLoginUrl(orgID, appID, redirectUri, l)
+	loginURL, params, err := auth.getLoginURL(orgID, appID, redirectURI, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "login url", nil, err)
 	}
 
-	return loginUrl, params, nil
+	return loginURL, params, nil
 }
 
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
