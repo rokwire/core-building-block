@@ -1,0 +1,11 @@
+required:
+  - service_id
+type: object
+properties:
+  service_id:
+    type: string
+  approved_scopes:
+    description: Scopes to be granted to this service in this and future tokens. Replaces existing scopes if present.
+    type: array
+    items:
+      type: string

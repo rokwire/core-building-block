@@ -35,7 +35,7 @@ func initSignatureAuth(auth *Auth) (*signatureAuthImpl, error) {
 
 	err := auth.registerAuthType(signature.authType, signature)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
+		return nil, log.WrapErrorAction(log.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return signature, nil
