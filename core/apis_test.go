@@ -169,3 +169,7 @@ func TestBBsGetTest(t *testing.T) {
 }
 
 ///
+
+func TestAdmCreateGlobalPermission(t *testing.T) {
+
+}

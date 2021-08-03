@@ -12,6 +12,10 @@ const (
 	//TypeOrganizationConfig ...
 	TypeOrganizationConfig log.LogData = "org config"
 )
+const (
+	//TypeGlobalPermission ...
+	TypeGlobalPermission log.LogData = "global permissions"
+)
 
 //GlobalConfig represents global config for the system
 type GlobalConfig struct {
