@@ -288,7 +288,7 @@ func (a *phoneAuthImpl) getLoginUrl(orgID string, appID string, redirectUri stri
 
 //initPhoneAuth initializes and registers a new phone auth instance
 func initPhoneAuth(auth *Auth) (*phoneAuthImpl, error) {
-	phone := &phoneAuthImpl{auth: auth, authType: authTypePhone}
+	phone := &phoneAuthImpl{auth: auth, authType: authTypePhone, verifyServiceID: auth.phoneVerifyServiceID}
 
 	err := auth.registerAuthType(phone.authType, phone)
 	if err != nil {

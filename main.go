@@ -53,6 +53,7 @@ func main() {
 	smtpUser := envLoader.GetAndLogEnvVar("HEALTH_SMTP_USER", false, true)
 	smtpPassword := envLoader.GetAndLogEnvVar("HEALTH_SMTP_PASSWORD", false, true)
 	smtpFrom := envLoader.GetAndLogEnvVar("HEALTH_EMAIL_FROM", false, false)
+	phoneVerifyServiceID := envLoader.GetAndLogEnvVar("HEALTH_PHONE_VERIFY_SERVICE_ID", false, true)
 
 	authPrivKeyPem := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", true, true)
 	authPrivKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(authPrivKeyPem))
@@ -78,7 +79,7 @@ func main() {
 		logger.Infof("Error parsing max token exp, applying defaults: %v", err)
 	}
 
-	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, smtpHost, smtpPort, smtpUser, smtpPassword, smtpFrom, logger)
+	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, smtpHost, smtpPort, smtpUser, smtpPassword, smtpFrom, phoneVerifyServiceID, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}

@@ -62,6 +62,8 @@ type Auth struct {
 	emailFrom   string
 	emailDialer *gomail.Dialer
 
+	phoneVerifyServiceID string
+
 	authConfigs     *syncmap.Map //cache authConfigs / orgID_appID -> authConfig
 	authConfigsLock *sync.RWMutex
 }
@@ -77,7 +79,7 @@ type tokenClaims struct {
 }
 
 //NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, smtpHost string, smtpPort string, smtpUser string, smtpPassword string, smtpFrom string, logger *log.Logger) (*Auth, error) {
+func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, smtpHost string, smtpPort string, smtpUser string, smtpPassword string, smtpFrom string, phoneVerifyServiceID string, logger *log.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -101,7 +103,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	authConfigsLock := &sync.RWMutex{}
 	auth := &Auth{storage: storage, authTypes: authTypes, authPrivKey: authPrivKey, AuthService: nil,
 		serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp,
-		authConfigs: authConfigs, authConfigsLock: authConfigsLock, emailDialer: emailDialer, emailFrom: smtpFrom}
+		authConfigs: authConfigs, authConfigsLock: authConfigsLock, emailDialer: emailDialer, emailFrom: smtpFrom, phoneVerifyServiceID: phoneVerifyServiceID}
 
 	err = auth.storeReg()
 	if err != nil {
