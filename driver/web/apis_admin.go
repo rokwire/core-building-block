@@ -229,7 +229,10 @@ func (h AdminApisHandler) registerService(l *log.Log, r *http.Request) log.HttpR
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeServiceReg, nil, err, http.StatusBadRequest, true)
 	}
 
-	serviceReg := serviceRegFromDef(&requestData)
+	serviceReg, err := serviceRegFromDef(&requestData)
+	if err != nil {
+		return l.HttpResponseErrorData(log.StatusInvalid, model.TypeServiceReg, nil, err, http.StatusBadRequest, true)
+	}
 
 	err = h.coreAPIs.Auth.RegisterService(serviceReg)
 	if err != nil {
@@ -251,7 +254,10 @@ func (h AdminApisHandler) updateServiceRegistration(l *log.Log, r *http.Request)
 		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeServiceReg, nil, err, http.StatusBadRequest, true)
 	}
 
-	serviceReg := serviceRegFromDef(&requestData)
+	serviceReg, err := serviceRegFromDef(&requestData)
+	if err != nil {
+		return l.HttpResponseErrorData(log.StatusInvalid, model.TypeServiceReg, nil, err, http.StatusBadRequest, true)
+	}
 
 	err = h.coreAPIs.Auth.UpdateServiceRegistration(serviceReg)
 	if err != nil {
@@ -273,6 +279,28 @@ func (h AdminApisHandler) deregisterService(l *log.Log, r *http.Request) log.Htt
 	}
 
 	return l.HttpResponseSuccess()
+}
+
+func (h AdminApisHandler) getApplication(l *log.Log, r *http.Request) log.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+	app, err := h.coreAPIs.Administration.AdmGetApplication(ID)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
+	}
+	if app == nil {
+		return l.HttpResponseErrorData(log.StatusMissing, model.TypeApplication, &log.FieldArgs{"id": ID}, nil, http.StatusNotFound, false)
+	}
+
+	responseData := applicationToDef(app)
+	data, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance

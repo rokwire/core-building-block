@@ -7,13 +7,21 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokmetro/auth-library/authservice"
 	log "github.com/rokmetro/logging-library/loglib"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+type application struct {
+	ID       string   `bson:"_id"`
+	Name     string   `bson:"name"`
+	Versions []string `bson:"versions"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
 
 type organization struct {
 	ID               string   `bson:"_id"`
@@ -45,7 +53,7 @@ type Adapter struct {
 func (sa *Adapter) Start() error {
 	err := sa.db.start()
 	if err != nil {
-		return log.WrapActionError(log.ActionInitialize, "storage adapter", nil, err)
+		return log.WrapErrorAction(log.ActionInitialize, "storage adapter", nil, err)
 	}
 
 	return err
@@ -68,10 +76,10 @@ func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (
 	var result *model.AuthConfig
 	err := sa.db.authConfigs.FindOne(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionFind, model.TypeAuthConfig, errFields, err)
+		return nil, log.WrapErrorAction(log.ActionFind, model.TypeAuthConfig, errFields, err)
 	}
 	if result == nil {
-		return nil, log.WrapDataError(log.StatusMissing, model.TypeAuthConfig, errFields, err)
+		return nil, log.WrapErrorData(log.StatusMissing, model.TypeAuthConfig, errFields, err)
 	}
 	return result, nil
 }
@@ -82,10 +90,10 @@ func (sa *Adapter) LoadAuthConfigs() (*[]model.AuthConfig, error) {
 	var result []model.AuthConfig
 	err := sa.db.authConfigs.Find(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionFind, model.TypeAuthConfig, nil, err)
+		return nil, log.WrapErrorAction(log.ActionFind, model.TypeAuthConfig, nil, err)
 	}
 	if len(result) == 0 {
-		return nil, log.WrapDataError(log.StatusMissing, model.TypeAuthConfig, nil, err)
+		return nil, log.WrapErrorData(log.StatusMissing, model.TypeAuthConfig, nil, err)
 	}
 
 	return &result, nil
@@ -96,7 +104,7 @@ func (sa *Adapter) CreateGlobalConfig(setting string) (*model.GlobalConfig, erro
 	globalConfig := model.GlobalConfig{Setting: setting}
 	_, err := sa.db.globalConfig.InsertOne(globalConfig)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionInsert, model.TypeGlobalConfig, nil, err)
+		return nil, log.WrapErrorAction(log.ActionInsert, model.TypeGlobalConfig, nil, err)
 	}
 	return &globalConfig, nil
 }
@@ -107,7 +115,7 @@ func (sa *Adapter) GetGlobalConfig() (*model.GlobalConfig, error) {
 	var result []model.GlobalConfig
 	err := sa.db.globalConfig.Find(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionFind, model.TypeGlobalConfig, nil, err)
+		return nil, log.WrapErrorAction(log.ActionFind, model.TypeGlobalConfig, nil, err)
 	}
 	if len(result) == 0 {
 		//no record
@@ -123,7 +131,7 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
 		err := sessionContext.StartTransaction()
 		if err != nil {
-			return log.WrapActionError(log.ActionStart, log.TypeTransaction, nil, err)
+			return log.WrapErrorAction(log.ActionStart, log.TypeTransaction, nil, err)
 		}
 
 		//clear the global config - we always keep only one global config
@@ -131,20 +139,20 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 		_, err = sa.db.globalConfig.DeleteManyWithContext(sessionContext, delFilter, nil)
 		if err != nil {
 			abortTransaction(sessionContext)
-			return log.WrapActionError(log.ActionDelete, model.TypeGlobalConfig, nil, err)
+			return log.WrapErrorAction(log.ActionDelete, model.TypeGlobalConfig, nil, err)
 		}
 
 		//add the new one
 		_, err = sa.db.globalConfig.InsertOneWithContext(sessionContext, gc)
 		if err != nil {
 			abortTransaction(sessionContext)
-			return log.WrapActionError(log.ActionInsert, model.TypeGlobalConfig, nil, err)
+			return log.WrapErrorAction(log.ActionInsert, model.TypeGlobalConfig, nil, err)
 		}
 
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
 			abortTransaction(sessionContext)
-			return log.WrapActionError(log.ActionCommit, log.TypeTransaction, nil, err)
+			return log.WrapErrorAction(log.ActionCommit, log.TypeTransaction, nil, err)
 		}
 		return nil
 	})
@@ -167,7 +175,7 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 
 	_, err := sa.db.organizations.InsertOne(organization)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionInsert, model.TypeOrganization, nil, err)
+		return nil, log.WrapErrorAction(log.ActionInsert, model.TypeOrganization, nil, err)
 	}
 
 	//return the correct type
@@ -185,7 +193,7 @@ func (sa *Adapter) GetOrganization(ID string) (*model.Organization, error) {
 	var result []organization
 	err := sa.db.organizations.Find(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionFind, model.TypeOrganization, nil, err)
+		return nil, log.WrapErrorAction(log.ActionFind, model.TypeOrganization, nil, err)
 	}
 	if len(result) == 0 {
 		//no record
@@ -222,10 +230,10 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 
 	result, err := sa.db.organizations.UpdateOne(updatOrganizationFilter, updateOrganization, nil)
 	if err != nil {
-		return log.WrapActionError(log.ActionUpdate, model.TypeOrganization, &log.FieldArgs{"id": ID}, err)
+		return log.WrapErrorAction(log.ActionUpdate, model.TypeOrganization, &log.FieldArgs{"id": ID}, err)
 	}
 	if result.MatchedCount == 0 {
-		return log.WrapDataError(log.StatusMissing, model.TypeOrganization, &log.FieldArgs{"id": ID}, err)
+		return log.WrapErrorData(log.StatusMissing, model.TypeOrganization, &log.FieldArgs{"id": ID}, err)
 	}
 
 	return nil
@@ -238,24 +246,41 @@ func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 	var result []model.Organization
 	err := sa.db.organizations.Find(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionFind, model.TypeOrganization, nil, err)
+		return nil, log.WrapErrorAction(log.ActionFind, model.TypeOrganization, nil, err)
 	}
 
 	var resultList []model.Organization
-	if result != nil {
-		for _, current := range result {
-			item := &model.Organization{ID: current.ID, Name: current.Name, Type: current.Type, RequiresOwnLogin: current.RequiresOwnLogin,
-				LoginTypes: current.LoginTypes, Config: current.Config}
-			resultList = append(resultList, *item)
-		}
+	for _, current := range result {
+		item := &model.Organization{ID: current.ID, Name: current.Name, Type: current.Type, RequiresOwnLogin: current.RequiresOwnLogin,
+			LoginTypes: current.LoginTypes, Config: current.Config}
+		resultList = append(resultList, *item)
 	}
 	return resultList, nil
+}
+
+//GetApplication gets application
+func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	var result []application
+	err := sa.db.applications.Find(filter, &result, nil)
+	if err != nil {
+		return nil, log.WrapErrorAction(log.ActionFind, model.TypeApplication, nil, err)
+	}
+	if len(result) == 0 {
+		//no record
+		return nil, nil
+	}
+
+	appRes := result[0]
+
+	getResApp := model.Application{ID: appRes.ID, Name: appRes.Name, Versions: appRes.Versions}
+	return &getResApp, nil
 }
 
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records
-func (sa *Adapter) FindServiceRegs(serviceIDs []string) ([]authservice.ServiceReg, error) {
+func (sa *Adapter) FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error) {
 	var filter bson.M
 	for _, serviceID := range serviceIDs {
 		if serviceID == "all" {
@@ -264,62 +289,62 @@ func (sa *Adapter) FindServiceRegs(serviceIDs []string) ([]authservice.ServiceRe
 		}
 	}
 	if filter == nil {
-		filter = bson.M{"service_id": bson.M{"$in": serviceIDs}}
+		filter = bson.M{"registration.service_id": bson.M{"$in": serviceIDs}}
 	}
 
-	var result []authservice.ServiceReg
+	var result []model.ServiceReg
 	err := sa.db.serviceRegs.Find(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionFind, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceIDs}, err)
+		return nil, log.WrapErrorAction(log.ActionFind, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceIDs}, err)
 	}
 
 	if result == nil {
-		result = []authservice.ServiceReg{}
+		result = []model.ServiceReg{}
 	}
 
 	return result, nil
 }
 
 //FindServiceReg finds the service registration in storage
-func (sa *Adapter) FindServiceReg(serviceID string) (*authservice.ServiceReg, error) {
-	filter := bson.M{"service_id": serviceID}
-	var reg *authservice.ServiceReg
+func (sa *Adapter) FindServiceReg(serviceID string) (*model.ServiceReg, error) {
+	filter := bson.M{"registration.service_id": serviceID}
+	var reg *model.ServiceReg
 	err := sa.db.serviceRegs.FindOne(filter, &reg, nil)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionFind, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceID}, err)
+		return nil, log.WrapErrorAction(log.ActionFind, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceID}, err)
 	}
 
 	return reg, nil
 }
 
 //InsertServiceReg inserts the service registration to storage
-func (sa *Adapter) InsertServiceReg(reg *authservice.ServiceReg) error {
+func (sa *Adapter) InsertServiceReg(reg *model.ServiceReg) error {
 	_, err := sa.db.serviceRegs.InsertOne(reg)
 	if err != nil {
-		return log.WrapActionError(log.ActionInsert, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.ServiceID}, err)
+		return log.WrapErrorAction(log.ActionInsert, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
 	}
 
 	return nil
 }
 
 //UpdateServiceReg updates the service registration in storage
-func (sa *Adapter) UpdateServiceReg(reg *authservice.ServiceReg) error {
-	filter := bson.M{"service_id": reg.ServiceID}
+func (sa *Adapter) UpdateServiceReg(reg *model.ServiceReg) error {
+	filter := bson.M{"registration.service_id": reg.Registration.ServiceID}
 	err := sa.db.serviceRegs.ReplaceOne(filter, reg, nil)
 	if err != nil {
-		return log.WrapActionError(log.ActionInsert, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.ServiceID}, err)
+		return log.WrapErrorAction(log.ActionInsert, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
 	}
 
 	return nil
 }
 
 //SaveServiceReg saves the service registration to the storage
-func (sa *Adapter) SaveServiceReg(reg *authservice.ServiceReg) error {
-	filter := bson.M{"service_id": reg.ServiceID}
+func (sa *Adapter) SaveServiceReg(reg *model.ServiceReg) error {
+	filter := bson.M{"registration.service_id": reg.Registration.ServiceID}
 	opts := options.Replace().SetUpsert(true)
 	err := sa.db.serviceRegs.ReplaceOne(filter, reg, opts)
 	if err != nil {
-		return log.WrapActionError(log.ActionSave, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.ServiceID}, err)
+		return log.WrapErrorAction(log.ActionSave, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
 	}
 
 	return nil
@@ -327,17 +352,59 @@ func (sa *Adapter) SaveServiceReg(reg *authservice.ServiceReg) error {
 
 //DeleteServiceReg deletes the service registration from storage
 func (sa *Adapter) DeleteServiceReg(serviceID string) error {
-	filter := bson.M{"service_id": serviceID}
+	filter := bson.M{"registration.service_id": serviceID}
 	result, err := sa.db.serviceRegs.DeleteOne(filter, nil)
 	if err != nil {
-		return log.WrapActionError(log.ActionDelete, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceID}, err)
+		return log.WrapErrorAction(log.ActionDelete, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceID}, err)
 	}
 	if result == nil {
-		return log.WrapDataError(log.StatusInvalid, "result", &log.FieldArgs{"service_id": serviceID}, err)
+		return log.WrapErrorData(log.StatusInvalid, "result", &log.FieldArgs{"service_id": serviceID}, err)
 	}
 	deletedCount := result.DeletedCount
 	if deletedCount == 0 {
-		return log.WrapDataError(log.StatusMissing, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceID}, err)
+		return log.WrapErrorData(log.StatusMissing, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceID}, err)
+	}
+
+	return nil
+}
+
+//FindServiceAuthorization finds the service authorization in storage
+func (sa *Adapter) FindServiceAuthorization(userID string, serviceID string) (*model.ServiceAuthorization, error) {
+	filter := bson.M{"user_id": userID, "service_id": serviceID}
+	var reg *model.ServiceAuthorization
+	err := sa.db.serviceAuthorizations.FindOne(filter, &reg, nil)
+	if err != nil {
+		return nil, log.WrapErrorAction(log.ActionFind, model.TypeServiceAuthorization, &log.FieldArgs{"user_id": userID, "service_id": serviceID}, err)
+	}
+
+	return reg, nil
+}
+
+//SaveServiceAuthorization saves the service authorization to storage
+func (sa *Adapter) SaveServiceAuthorization(authorization *model.ServiceAuthorization) error {
+	filter := bson.M{"user_id": authorization.UserID, "service_id": authorization.ServiceID}
+	opts := options.Replace().SetUpsert(true)
+	err := sa.db.serviceAuthorizations.ReplaceOne(filter, authorization, opts)
+	if err != nil {
+		return log.WrapErrorAction(log.ActionSave, model.TypeServiceAuthorization, &log.FieldArgs{"user_id": authorization.UserID, "service_id": authorization.ServiceID}, err)
+	}
+
+	return nil
+}
+
+//DeleteServiceAuthorization deletes the service authorization from storage
+func (sa *Adapter) DeleteServiceAuthorization(userID string, serviceID string) error {
+	filter := bson.M{"user_id": userID, "service_id": serviceID}
+	result, err := sa.db.serviceAuthorizations.DeleteOne(filter, nil)
+	if err != nil {
+		return log.WrapErrorAction(log.ActionFind, model.TypeServiceAuthorization, &log.FieldArgs{"user_id": userID, "service_id": serviceID}, err)
+	}
+	if result == nil {
+		return log.WrapErrorData(log.StatusInvalid, "result", &log.FieldArgs{"user_id": userID, "service_id": serviceID}, err)
+	}
+	deletedCount := result.DeletedCount
+	if deletedCount == 0 {
+		return log.WrapErrorData(log.StatusMissing, model.TypeServiceAuthorization, &log.FieldArgs{"user_id": userID, "service_id": serviceID}, err)
 	}
 
 	return nil

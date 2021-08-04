@@ -19,10 +19,12 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
-	authConfigs   *collectionWrapper
-	globalConfig  *collectionWrapper
-	organizations *collectionWrapper
-	serviceRegs   *collectionWrapper
+	authConfigs           *collectionWrapper
+	globalConfig          *collectionWrapper
+	organizations         *collectionWrapper
+	serviceRegs           *collectionWrapper
+	serviceAuthorizations *collectionWrapper
+	applications          *collectionWrapper
 
 	listeners []Listener
 }
@@ -68,20 +70,32 @@ func (m *database) start() error {
 		return err
 	}
 
-	//asign the db, db client and the collections
-	m.db = db
-	m.dbClient = client
-	m.globalConfig = globalConfig
-	m.organizations = organizations
-	m.serviceRegs = serviceRegs
+	serviceAuthorizations := &collectionWrapper{database: m, coll: db.Collection("service_authorizations")}
+	err = m.applyServiceAuthorizationsChecks(serviceAuthorizations)
+	if err != nil {
+		return err
+	}
 
-	//TODO
+	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
+	err = m.applyApplicationsChecks(serviceRegs)
+	if err != nil {
+		return err
+	}
+
 	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
 	err = m.applyAuthConfigChecks(authConfigs)
 	if err != nil {
 		return err
 	}
 
+	//asign the db, db client and the collections
+	m.db = db
+	m.dbClient = client
+	m.globalConfig = globalConfig
+	m.organizations = organizations
+	m.serviceRegs = serviceRegs
+	m.serviceAuthorizations = serviceAuthorizations
+	m.applications = applications
 	m.authConfigs = authConfigs
 
 	//watch for auth info changes
@@ -124,12 +138,32 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 	log.Println("apply service regs checks.....")
 
 	//add service_id index - unique
-	err := serviceRegs.AddIndex(bson.D{primitive.E{Key: "service_id", Value: 1}}, true)
+	err := serviceRegs.AddIndex(bson.D{primitive.E{Key: "registration.service_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
 
 	log.Println("service regs checks passed")
+	return nil
+}
+
+func (m *database) applyServiceAuthorizationsChecks(serviceAuthorizations *collectionWrapper) error {
+	log.Println("apply service authorizations checks.....")
+
+	//add user_id, service_id index - unique
+	err := serviceAuthorizations.AddIndex(bson.D{primitive.E{Key: "user_id", Value: 1}, primitive.E{Key: "service_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	log.Println("service authorizations checks passed")
+	return nil
+}
+
+func (m *database) applyApplicationsChecks(applications *collectionWrapper) error {
+	log.Println("apply applications checks.....")
+
+	log.Println("applications checks passed")
 	return nil
 }
 
