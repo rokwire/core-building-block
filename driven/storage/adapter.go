@@ -277,6 +277,31 @@ func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 	return &getResApp, nil
 }
 
+//UpdateApplication updates an application
+func (sa *Adapter) UpdateApplication(ID string, name string, versions []string) error {
+
+	now := time.Now()
+
+	updatApplicationFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	updateAppliaction := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "name", Value: name},
+			primitive.E{Key: "versions", Value: versions},
+			primitive.E{Key: "date_updated", Value: now},
+		}},
+	}
+
+	result, err := sa.db.applications.UpdateOne(updatApplicationFilter, updateAppliaction, nil)
+	if err != nil {
+		return log.WrapErrorAction(log.ActionUpdate, model.TypeApplication, &log.FieldArgs{"id": ID}, err)
+	}
+	if result.MatchedCount == 0 {
+		return log.WrapErrorData(log.StatusMissing, model.TypeApplication, &log.FieldArgs{"id": ID}, err)
+	}
+
+	return nil
+}
+
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records

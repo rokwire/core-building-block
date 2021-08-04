@@ -281,6 +281,35 @@ func (h AdminApisHandler) deregisterService(l *log.Log, r *http.Request) log.Htt
 	return l.HttpResponseSuccess()
 }
 
+//updateApplication updates applications
+func (h AdminApisHandler) updateApplication(l *log.Log, r *http.Request) log.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorData(log.StatusInvalid, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+	var requestData Def.Application
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
+	}
+
+	name := requestData.Name
+	versions := requestData.Versions
+
+	err = h.coreAPIs.Administration.AdmUpdateApplication(ID, name, *versions)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionUpdate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 func (h AdminApisHandler) getApplication(l *log.Log, r *http.Request) log.HttpResponse {
 	params := mux.Vars(r)
 	ID := params["id"]
