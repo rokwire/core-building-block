@@ -131,12 +131,6 @@ func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) er
 func (m *database) applyApplicationChecks(applications *collectionWrapper) error {
 	log.Println("apply applications checks.....")
 
-	//add name index - unique
-	err := applications.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}}, true)
-	if err != nil {
-		return err
-	}
-
 	log.Println("applications checks passed")
 	return nil
 }
