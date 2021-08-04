@@ -106,7 +106,7 @@ type AuthLoginParamsEmail struct {
 // Auth login params for auth_type="oidc"
 type AuthLoginParamsOidc struct {
 	PkceVerifier *string `json:"pkce_verifier,omitempty"`
-	RedirectURI  *string `json:"redirect_uri,omitempty"`
+	RedirectUri  *string `json:"redirect_uri,omitempty"`
 }
 
 // Auth login params for auth_type="phone" (None)
@@ -146,7 +146,7 @@ type AuthLoginUrlRequest struct {
 	AppId       string                      `json:"app_id"`
 	AuthType    AuthLoginUrlRequestAuthType `json:"auth_type"`
 	OrgId       string                      `json:"org_id"`
-	RedirectURI string                      `json:"redirect_uri"`
+	RedirectUri string                      `json:"redirect_uri"`
 }
 
 // AuthLoginUrlRequestAuthType defines model for AuthLoginUrlRequest.AuthType.
@@ -310,10 +310,18 @@ type UserAccount struct {
 
 // UserProfile defines model for UserProfile.
 type UserProfile struct {
-	FirstName *string `json:"first_name,omitempty"`
-	Id        string  `json:"id"`
-	LastName  *string `json:"last_name,omitempty"`
-	PhotoUrl  *string `json:"photo_url,omitempty"`
+	Address     *string `json:"address,omitempty"`
+	Country     *string `json:"country,omitempty"`
+	DateOfBirth *string `json:"date_of_birth,omitempty"`
+	FirstName   *string `json:"first_name,omitempty"`
+	HomeCounty  *string `json:"home_county,omitempty"`
+	Id          string  `json:"id"`
+	LastName    *string `json:"last_name,omitempty"`
+	MiddleName  *string `json:"middle_name,omitempty"`
+	PhotoUrl    *string `json:"photo_url,omitempty"`
+	State       *string `json:"state,omitempty"`
+	WorkCounty  *string `json:"work_county,omitempty"`
+	ZipCode     *string `json:"zip_code,omitempty"`
 }
 
 // PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
@@ -371,6 +379,12 @@ type GetServicesAuthServiceRegsParams struct {
 	Ids string `json:"ids"`
 }
 
+// PostServicesProfilesPiiIdJSONBody defines parameters for PostServicesProfilesPiiId.
+type PostServicesProfilesPiiIdJSONBody UserProfile
+
+// PutServicesProfilesPiiIdJSONBody defines parameters for PutServicesProfilesPiiId.
+type PutServicesProfilesPiiIdJSONBody UserProfile
+
 // GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
 type GetTpsServiceRegsParams struct {
 
@@ -404,3 +418,9 @@ type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 
 // PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
 type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
+
+// PostServicesProfilesPiiIdJSONRequestBody defines body for PostServicesProfilesPiiId for application/json ContentType.
+type PostServicesProfilesPiiIdJSONRequestBody PostServicesProfilesPiiIdJSONBody
+
+// PutServicesProfilesPiiIdJSONRequestBody defines body for PutServicesProfilesPiiId for application/json ContentType.
+type PutServicesProfilesPiiIdJSONRequestBody PutServicesProfilesPiiIdJSONBody

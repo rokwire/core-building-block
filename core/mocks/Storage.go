@@ -61,6 +61,34 @@ func (_m *Storage) CreateOrganization(name string, requestType string, requiresO
 	return r0, r1
 }
 
+// CreatePII provides a mock function with given fields: profile, ID
+func (_m *Storage) CreatePII(profile *model.UserProfile, ID string) error {
+	ret := _m.Called(profile, ID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*model.UserProfile, string) error); ok {
+		r0 = rf(profile, ID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeletePII provides a mock function with given fields: ID
+func (_m *Storage) DeletePII(ID string) error {
+	ret := _m.Called(ID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(ID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GetApplication provides a mock function with given fields: ID
 func (_m *Storage) GetApplication(ID string) (*model.Application, error) {
 	ret := _m.Called(ID)
@@ -153,6 +181,29 @@ func (_m *Storage) GetOrganizations() ([]model.Organization, error) {
 	return r0, r1
 }
 
+// GetPII provides a mock function with given fields: ID
+func (_m *Storage) GetPII(ID string) (*model.UserProfile, error) {
+	ret := _m.Called(ID)
+
+	var r0 *model.UserProfile
+	if rf, ok := ret.Get(0).(func(string) *model.UserProfile); ok {
+		r0 = rf(ID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.UserProfile)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(ID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RegisterStorageListener provides a mock function with given fields: storageListener
 func (_m *Storage) RegisterStorageListener(storageListener storage.Listener) {
 	_m.Called(storageListener)
@@ -179,6 +230,20 @@ func (_m *Storage) UpdateOrganization(ID string, name string, requestType string
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string, string, bool, []string, []string) error); ok {
 		r0 = rf(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdatePII provides a mock function with given fields: profile, ID
+func (_m *Storage) UpdatePII(profile *model.UserProfile, ID string) error {
+	ret := _m.Called(profile, ID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*model.UserProfile, string) error); ok {
+		r0 = rf(profile, ID)
 	} else {
 		r0 = ret.Error(0)
 	}

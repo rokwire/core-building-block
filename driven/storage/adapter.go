@@ -71,6 +71,35 @@ func (sa *Adapter) ReadTODO() error {
 	return nil
 }
 
+//GetPII finds an existing user profile by its ID
+func (sa *Adapter) GetPII(ID string) (*model.UserProfile, error) {
+	//TODO: find user by ID, return profile subdocument if it exists, error if not
+	return nil, errors.New(logutils.Unimplemented)
+}
+
+//CreatePII creates a new user profile
+func (sa *Adapter) CreatePII(profile *model.UserProfile, ID string) error {
+	//TODO: find user by ID, set profile subdocument if it does not exist, error if does exist
+	//create new ID for profile subdocument
+	now := time.Now().UTC()
+	profile.DateCreated = now
+	return errors.New(logutils.Unimplemented)
+}
+
+//UpdatePII updates an existing user profile
+func (sa *Adapter) UpdatePII(profile *model.UserProfile, ID string) error {
+	//TODO: find user by ID, update profile subdocument only if it exists, error if not
+	now := time.Now().UTC()
+	profile.DateUpdated = &now
+	return errors.New(logutils.Unimplemented)
+}
+
+//DeletePII deletes an existing user profile by its ID
+func (sa *Adapter) DeletePII(ID string) error {
+	//TODO: find user by ID, delete profile subdocument only if it exists, error if not
+	return errors.New(logutils.Unimplemented)
+}
+
 //FindAuthConfig finds the auth document from DB by orgID and appID
 func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error) {
 	errFields := &logutils.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": authType}

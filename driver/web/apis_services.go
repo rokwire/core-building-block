@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
 )
@@ -88,7 +89,7 @@ func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request) logs.Htt
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "auth login url request", nil, err, http.StatusBadRequest, true)
 	}
 
-	loginURL, params, err := h.coreAPIs.Auth.GetLoginURL(string(requestData.AuthType), requestData.OrgId, requestData.AppId, requestData.RedirectURI, l)
+	loginURL, params, err := h.coreAPIs.Auth.GetLoginURL(string(requestData.AuthType), requestData.OrgId, requestData.AppId, requestData.RedirectUri, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, "login url", nil, err, http.StatusInternalServerError, true)
 	}
@@ -158,6 +159,99 @@ func (h ServicesApisHandler) getServiceRegistrations(l *logs.Log, r *http.Reques
 	}
 
 	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h ServicesApisHandler) createPII(l *logs.Log, r *http.Request) logs.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.UserProfile
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "profiles create PII request", nil, err, http.StatusBadRequest, true)
+	}
+
+	profile := userProfileFromDef(&requestData)
+
+	err = h.coreAPIs.Services.SerCreatePII(profile, ID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeUserProfile, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h ServicesApisHandler) getPII(l *logs.Log, r *http.Request) logs.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	profile, err := h.coreAPIs.Services.SerGetPII(ID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeUserProfile, nil, err, http.StatusInternalServerError, true)
+	}
+
+	profileResp := userProfileToDef(profile)
+
+	data, err := json.Marshal(profileResp)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeUserProfile, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h ServicesApisHandler) updatePII(l *logs.Log, r *http.Request) logs.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.UserProfile
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "profiles update PII request", nil, err, http.StatusBadRequest, true)
+	}
+
+	profile := userProfileFromDef(&requestData)
+
+	err = h.coreAPIs.Services.SerUpdatePII(profile, ID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeUserProfile, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h ServicesApisHandler) deletePII(l *logs.Log, r *http.Request) logs.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	err := h.coreAPIs.Services.SerDeletePII(ID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeUserProfile, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
 }
 
 //getCommonTest TODO get test

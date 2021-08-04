@@ -63,6 +63,22 @@ type servicesImpl struct {
 	app *application
 }
 
+func (s *servicesImpl) SerGetPII(ID string) (*model.UserProfile, error) {
+	return s.app.serGetPII(ID)
+}
+
+func (s *servicesImpl) SerCreatePII(profile *model.UserProfile, ID string) error {
+	return s.app.serCreatePII(profile, ID)
+}
+
+func (s *servicesImpl) SerUpdatePII(profile *model.UserProfile, ID string) error {
+	return s.app.serUpdatePII(profile, ID)
+}
+
+func (s *servicesImpl) SerDeletePII(ID string) error {
+	return s.app.serDeletePII(ID)
+}
+
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
 	return s.app.serGetAuthTest(l)
 }

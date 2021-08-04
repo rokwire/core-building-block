@@ -3,6 +3,14 @@ package model
 import (
 	"bytes"
 	"fmt"
+	"time"
+
+	"github.com/rokmetro/logging-library/logutils"
+)
+
+const (
+	//TypeUserProfile user profile type
+	TypeUserProfile logutils.MessageDataType = "user profile"
 )
 
 //User represents user entity
@@ -67,15 +75,27 @@ func (ua UserAccount) String() string {
 
 //UserProfile represents user profile entity. The user profile is an information about the user.
 type UserProfile struct {
-	ID        string
-	PhotoURL  string
-	FirstName string
-	LastName  string
+	ID          string
+	PhotoURL    string
+	FirstName   string
+	LastName    string
+	Address     string
+	Country     string
+	DateOfBirth string
+	HomeCounty  string
+	MiddleName  string
+	State       string
+	WorkCounty  string
+	ZipCode     string
+
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (up UserProfile) String() string {
-	return fmt.Sprintf("[ID:%s\tPhotoURL:%s\tFirstName:%s\tLastName:%s]",
-		up.ID, up.PhotoURL, up.FirstName, up.LastName)
+	return fmt.Sprintf("[ID:%s\tPhotoURL:%s\tFirstName:%s\tLastName:%s\tAddress:%s\tCountry:%s\tDateOfBirth:%s\tHomeCounty:%s\tMiddleName:%s\tState:%s\tWorkCounty:%s\tZipCode:%s]",
+		up.ID, up.PhotoURL, up.FirstName, up.LastName, up.Address, up.Country, up.DateOfBirth, up.HomeCounty,
+		up.MiddleName, up.State, up.WorkCounty, up.ZipCode)
 }
 
 //GlobalGroup represents global group entity. It is a collection of users

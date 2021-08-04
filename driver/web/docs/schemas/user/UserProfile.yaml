@@ -10,3 +10,19 @@ properties:
     type: string
   photo_url:
     type: string
+  middle_name:
+    type: string
+  date_of_birth:
+    type: string
+  address:
+    type: string
+  zip_code:
+    type: string
+  home_county:
+    type: string
+  work_county:
+    type: string
+  state:
+    type: string
+  country:
+    type: string
