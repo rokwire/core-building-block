@@ -84,6 +84,29 @@ func (_m *Storage) GetApplication(ID string) (*model.Application, error) {
 	return r0, r1
 }
 
+// GetApplicationsList provides a mock function with given fields:
+func (_m *Storage) GetApplicationsList() ([]model.Application, error) {
+	ret := _m.Called()
+
+	var r0 []model.Application
+	if rf, ok := ret.Get(0).(func() []model.Application); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Application)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetGlobalConfig provides a mock function with given fields:
 func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	ret := _m.Called()
