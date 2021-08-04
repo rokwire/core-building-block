@@ -7,10 +7,14 @@ import (
 )
 
 const (
-	TypeOrganization              logutils.MessageDataType = "organization"
-	TypeOrganizationMembership    logutils.MessageDataType = "org membership"
+	//TypeOrganization ...
+	TypeOrganization logutils.MessageDataType = "organization"
+	//TypeOrganizationMembership ...
+	TypeOrganizationMembership logutils.MessageDataType = "org membership"
+	//TypeOrganizationUserRelations ...
 	TypeOrganizationUserRelations logutils.MessageDataType = "org user relations"
-	TypeApplication               logutils.MessageDataType = "application"
+	//TypeApplication ...
+	TypeApplication logutils.MessageDataType = "application"
 )
 
 //TODO - Flat vs. hierarchical group management - not sure we need hierarchical, maybe no!?

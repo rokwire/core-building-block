@@ -88,7 +88,7 @@ func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request) logs.Htt
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "auth login url request", nil, err, http.StatusBadRequest, true)
 	}
 
-	loginURL, params, err := h.coreAPIs.Auth.GetLoginURL(string(requestData.AuthType), requestData.OrgId, requestData.AppId, requestData.RedirectUri, l)
+	loginURL, params, err := h.coreAPIs.Auth.GetLoginURL(string(requestData.AuthType), requestData.OrgId, requestData.AppId, requestData.RedirectURI, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, "login url", nil, err, http.StatusInternalServerError, true)
 	}

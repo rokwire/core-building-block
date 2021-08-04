@@ -38,7 +38,7 @@ type authType interface {
 	//refresh refreshes the access token using provided refresh token
 	refresh(refreshToken string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error)
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
-	getLoginURL(orgID string, appID string, redirectUri string, l *logs.Log) (string, map[string]interface{}, error)
+	getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 }
 
 //Auth represents the auth functionality unit
@@ -60,9 +60,9 @@ type Auth struct {
 	authConfigsLock *sync.RWMutex
 }
 
+//TokenClaims is a temporary claims model to provide backwards compatibility
 //TODO: Once the profile has been transferred and the new user ID scheme has been adopted across all services
 //		this should be replaced by tokenauth.Claims directly
-//TokenClaims is a temporary claims model to provide backwards compatibility
 type TokenClaims struct {
 	tokenauth.Claims
 	UID   string `json:"uid,omitempty"`

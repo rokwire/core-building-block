@@ -7,12 +7,18 @@ import (
 )
 
 const (
-	TypeUserAuth             logutils.MessageDataType = "user auth"
-	TypeAuthConfig           logutils.MessageDataType = "user auth"
-	TypeServiceReg           logutils.MessageDataType = "service reg"
-	TypeServiceScope         logutils.MessageDataType = "service scope"
+	//TypeUserAuth ...
+	TypeUserAuth logutils.MessageDataType = "user auth"
+	//TypeAuthConfig ...
+	TypeAuthConfig logutils.MessageDataType = "user auth"
+	//TypeServiceReg ...
+	TypeServiceReg logutils.MessageDataType = "service reg"
+	//TypeServiceScope ...
+	TypeServiceScope logutils.MessageDataType = "service scope"
+	//TypeServiceAuthorization ...
 	TypeServiceAuthorization logutils.MessageDataType = "service authorization"
-	TypeScope                logutils.MessageDataType = "scope"
+	//TypeScope ...
+	TypeScope logutils.MessageDataType = "scope"
 )
 
 //UserAuth represents user auth entity
