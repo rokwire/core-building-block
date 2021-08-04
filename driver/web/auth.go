@@ -32,15 +32,13 @@ func (auth *Auth) Start() error {
 
 //NewAuth creates new auth handler
 func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.AuthService) *Auth {
-	// scopes
 	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("./permissions_authorization_policy_services_auth.csv", serviceID)
-	// servicesPermissionAuth := authorization.NewCasbinAuthorization("./scope_authorization_policy_services_auth.csv")
 	servicesTokenAuth, err := tokenauth.NewTokenAuth(true, authService, nil, servicesScopeAuth)
 	if err != nil {
 		log.Fatalf("Error intitializing token auth for servicesAuth: %v", err)
 	}
 	servicesAuth := newServicesAuth(coreAPIs, servicesTokenAuth)
-	// permissions
+
 	adminPermissionAuth := authorization.NewCasbinAuthorization("./scope_authorization_policy_admin_auth.csv")
 	adminTokenAuth, err := tokenauth.NewTokenAuth(true, authService, adminPermissionAuth, nil)
 	if err != nil {

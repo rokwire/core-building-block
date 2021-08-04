@@ -3,7 +3,7 @@ module core-building-block
 go 1.16
 
 require (
-	github.com/casbin/casbin v1.9.1
+	github.com/casbin/casbin v1.9.1 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/getkin/kin-openapi v0.66.0
 	github.com/golang-jwt/jwt v3.2.1+incompatible
