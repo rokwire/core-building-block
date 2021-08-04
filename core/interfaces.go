@@ -4,13 +4,13 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/logs"
 )
 
 //Services exposes APIs for the driver adapters
 type Services interface {
-	SerGetAuthTest(l *log.Log) string
-	SerGetCommonTest(l *log.Log) string
+	SerGetAuthTest(l *logs.Log) string
+	SerGetCommonTest(l *logs.Log) string
 }
 
 //Administration exposes administration APIs for the driver adapters

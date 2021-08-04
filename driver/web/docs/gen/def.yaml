@@ -667,7 +667,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ServiceReg'
+                  $ref: '#/components/schemas/AuthServiceReg'
         '400':
           description: Bad request
         '401':
