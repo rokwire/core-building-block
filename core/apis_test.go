@@ -160,7 +160,29 @@ func TestAdmGetApplication(t *testing.T) {
 		t.Error("We are expecting error")
 		return
 	}
+}
 
+func TestGetApplicationsList(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("GetApplicationsList").Return([]model.Application{}, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	getApplicationsList, _ := app.Administration.AdmGetApplicationsList()
+
+	if getApplicationsList == nil {
+		t.Errorf("Error on geting the list of applications")
+	}
+	// second case error
+	storage2 := genmocks.Storage{}
+	storage2.On("GetApplicationsList").Return([]model.Application{}, nil)
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	err, _ := app.Administration.AdmGetApplicationsList()
+
+	if err == nil {
+		t.Error("We are expecting error")
+		return
+	}
 }
 
 ///
