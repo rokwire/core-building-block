@@ -91,6 +91,8 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.deregisterService)).Methods("DELETE")
 
 	adminSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.adminApisHandler.getApplication)).Methods("GET")
+	adminSubrouter.HandleFunc("/applications", we.wrapFunc(we.adminApisHandler.getApplicationList)).Methods("GET")
+
 	///
 
 	///enc ///

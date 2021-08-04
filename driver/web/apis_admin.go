@@ -176,21 +176,21 @@ func (h AdminApisHandler) getOrganization(l *log.Log, r *http.Request) log.HttpR
 	return l.HttpResponseSuccessJSON(data)
 }
 
-//getOrganizations gets organizations
-func (h AdminApisHandler) getOrganizations(l *log.Log, r *http.Request) log.HttpResponse {
-	organizations, err := h.coreAPIs.Administration.AdmGetOrganizations()
+//getApplicationList gets list of applications
+func (h AdminApisHandler) getApplicationList(l *log.Log, r *http.Request) log.HttpResponse {
+	applicationList, err := h.coreAPIs.Administration.AdmGetApplicationsList()
 	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(log.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}
-	var response []Def.Organization
-	for _, organization := range organizations {
-		r := organizationToDef(&organization)
+	var response []Def.Application
+	for _, applications := range applicationList {
+		r := applicationToDef(&applications)
 		response = append(response, *r)
 	}
 
 	data, err := json.Marshal(response)
 	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeOrganization, nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
 	}
 	return l.HttpResponseSuccessJSON(data)
 }
@@ -299,6 +299,25 @@ func (h AdminApisHandler) getApplication(l *log.Log, r *http.Request) log.HttpRe
 	data, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
+//getApplications gets organizations
+func (h AdminApisHandler) getOrganizations(l *log.Log, r *http.Request) log.HttpResponse {
+	organizations, err := h.coreAPIs.Administration.AdmGetOrganizations()
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+	var response []Def.Organization
+	for _, organization := range organizations {
+		r := organizationToDef(&organization)
+		response = append(response, *r)
+	}
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeOrganization, nil, err, http.StatusInternalServerError, false)
 	}
 	return l.HttpResponseSuccessJSON(data)
 }

@@ -244,3 +244,12 @@ func (app *application) admGetApplication(ID string) (*model.Application, error)
 
 	return appAdm, nil
 }
+
+func (app *application) admGetApplicationsList() ([]model.Application, error) {
+	getApplication, err := app.storage.GetApplicationsList()
+	if err != nil {
+		return nil, log.WrapErrorAction(log.ActionGet, model.TypeApplication, nil, err)
+	}
+
+	return getApplication, nil
+}

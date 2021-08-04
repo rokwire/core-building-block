@@ -277,6 +277,24 @@ func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 	return &getResApp, nil
 }
 
+//GetApplicationsList gets list of the applications
+func (sa *Adapter) GetApplicationsList() ([]model.Application, error) {
+
+	filter := bson.D{}
+	var result []model.Application
+	err := sa.db.applications.Find(filter, &result, nil)
+	if err != nil {
+		return nil, log.WrapErrorAction(log.ActionFind, model.TypeApplication, nil, err)
+	}
+
+	var resultList []model.Application
+	for _, current := range result {
+		item := &model.Application{ID: current.ID, Name: current.Name, Versions: current.Versions}
+		resultList = append(resultList, *item)
+	}
+	return resultList, nil
+}
+
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records
