@@ -13,22 +13,21 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/rokmetro/auth-library/authservice"
 	log "github.com/rokmetro/logging-library/loglib"
-
-	"github.com/casbin/casbin"
-
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 //Adapter entity
 type Adapter struct {
-	env string
+	env       string
+	serviceID string
 
 	openAPIRouter routers.Router
 	host          string
 	auth          *Auth
-	authorization *casbin.Enforcer
-	logger        *log.Logger
+	// authorization *casbin.Enforcer
+	logger *log.Logger
 
 	defaultApisHandler  DefaultApisHandler
 	servicesApisHandler ServicesApisHandler
@@ -210,7 +209,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.Logger) Adapter {
+func NewWebAdapter(env string, serviceID string, authService *authservice.AuthService, coreAPIs *core.APIs, host string, logger *log.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -226,15 +225,15 @@ func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.Log
 		logger.Fatal(err.Error())
 	}
 
-	auth := NewAuth(coreAPIs)
-	authorization := casbin.NewEnforcer("driver/web/authorization_model.conf", "driver/web/authorization_policy.csv")
+	auth := NewAuth(coreAPIs, serviceID, authService)
+	// authorization := casbin.NewEnforcer("driver/web/authorization_model.conf", "driver/web/authorization_policy.csv")
 
 	defaultApisHandler := NewDefaultApisHandler(coreAPIs)
 	servicesApisHandler := NewServicesApisHandler(coreAPIs)
 	adminApisHandler := NewAdminApisHandler(coreAPIs)
 	encApisHandler := NewEncApisHandler(coreAPIs)
 	bbsApisHandler := NewBBsApisHandler(coreAPIs)
-	return Adapter{env: env, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, authorization: authorization, defaultApisHandler: defaultApisHandler,
+	return Adapter{env: env, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler,
 		servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler, encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, coreAPIs: coreAPIs}
 }
 

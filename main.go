@@ -81,6 +81,6 @@ func main() {
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, coreAPIs, host, logger)
+	webAdapter := web.NewWebAdapter(env, serviceID, auth.AuthService, coreAPIs, host, logger)
 	webAdapter.Start()
 }

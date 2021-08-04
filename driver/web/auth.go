@@ -3,10 +3,15 @@ package web
 import (
 	"core-building-block/core"
 	"log"
+
+	"github.com/rokmetro/auth-library/authorization"
+	"github.com/rokmetro/auth-library/authservice"
+	"github.com/rokmetro/auth-library/tokenauth"
 )
 
 //Auth handler
 type Auth struct {
+	authService  *authservice.AuthService
 	servicesAuth *ServicesAuth
 	adminAuth    *AdminAuth
 	encAuth      *EncAuth
@@ -26,41 +31,58 @@ func (auth *Auth) Start() error {
 }
 
 //NewAuth creates new auth handler
-func NewAuth(coreAPIs *core.APIs) *Auth {
-	servicesAuth := newServicesAuth(coreAPIs)
-	adminAuth := newAdminAuth(coreAPIs)
+func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.AuthService) *Auth {
+	// scopes
+	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("./permissions_authorization_policy_services_auth.csv", serviceID)
+	// servicesPermissionAuth := authorization.NewCasbinAuthorization("./scope_authorization_policy_services_auth.csv")
+	servicesTokenAuth, err := tokenauth.NewTokenAuth(true, authService, nil, servicesScopeAuth)
+	if err != nil {
+		log.Fatalf("Error intitializing token auth for servicesAuth: %v", err)
+	}
+	servicesAuth := newServicesAuth(coreAPIs, servicesTokenAuth)
+	// permissions
+	adminPermissionAuth := authorization.NewCasbinAuthorization("./scope_authorization_policy_admin_auth.csv")
+	adminTokenAuth, err := tokenauth.NewTokenAuth(true, authService, adminPermissionAuth, nil)
+	if err != nil {
+		log.Fatalf("Error intitializing token auth for adminAuth: %v", err)
+	}
+	adminAuth := newAdminAuth(coreAPIs, adminTokenAuth)
+
 	encAuth := newEncAuth(coreAPIs)
 	bbsAuth := newBBsAuth(coreAPIs)
 
 	auth := Auth{servicesAuth: servicesAuth, adminAuth: adminAuth, encAuth: encAuth, bbsAuth: bbsAuth}
+
 	return &auth
 }
 
 //ServicesAuth entity
 type ServicesAuth struct {
-	coreAPIs *core.APIs
+	coreAPIs  *core.APIs
+	tokenAuth *tokenauth.TokenAuth
 }
 
 func (auth *ServicesAuth) start() {
 	log.Println("ServicesAuth -> start")
 }
 
-func newServicesAuth(coreAPIs *core.APIs) *ServicesAuth {
-	auth := ServicesAuth{coreAPIs: coreAPIs}
+func newServicesAuth(coreAPIs *core.APIs, tokenAuth *tokenauth.TokenAuth) *ServicesAuth {
+	auth := ServicesAuth{coreAPIs: coreAPIs, tokenAuth: tokenAuth}
 	return &auth
 }
 
 //AdminAuth entity
 type AdminAuth struct {
-	coreAPIs *core.APIs
+	coreAPIs  *core.APIs
+	tokenAuth *tokenauth.TokenAuth
 }
 
 func (auth *AdminAuth) start() {
 	log.Println("AdminAuth -> start")
 }
 
-func newAdminAuth(coreAPIs *core.APIs) *AdminAuth {
-	auth := AdminAuth{coreAPIs: coreAPIs}
+func newAdminAuth(coreAPIs *core.APIs, tokenAuth *tokenauth.TokenAuth) *AdminAuth {
+	auth := AdminAuth{coreAPIs: coreAPIs, tokenAuth: tokenAuth}
 	return &auth
 }
 
