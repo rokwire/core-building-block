@@ -525,7 +525,7 @@ func (sa *Adapter) InsertMembership(orgMembership *rawMembership, context mongo.
 	return nil
 }
 
-//FindPII finds an existing user profile by its ID
+//FindPII finds a user profile by profile ID
 func (sa *Adapter) FindPII(ID string) (*model.UserProfile, error) {
 	user, err := sa.FindUserByProfileID(ID)
 	if err != nil {
@@ -539,7 +539,7 @@ func (sa *Adapter) FindPII(ID string) (*model.UserProfile, error) {
 	return &user.Profile, nil
 }
 
-//UpdatePII updates an existing user profile
+//UpdatePII updates a user profile
 func (sa *Adapter) UpdatePII(profile *model.UserProfile) error {
 	user, err := sa.FindUserByProfileID(profile.ID)
 	if err != nil {
@@ -574,7 +574,7 @@ func (sa *Adapter) UpdatePII(profile *model.UserProfile) error {
 	return nil
 }
 
-//DeletePII deletes an existing user profile by its ID
+//DeletePII deletes a user profile by profile ID
 func (sa *Adapter) DeletePII(ID string) error {
 	user, err := sa.FindUserByProfileID(ID)
 	if err != nil {
