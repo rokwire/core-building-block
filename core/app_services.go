@@ -10,8 +10,8 @@ func (app *application) serGetPII(ID string) (*model.UserProfile, error) {
 	return app.storage.FindPII(ID)
 }
 
-func (app *application) serUpdatePII(profile *model.UserProfile, ID string) error {
-	return app.storage.UpdatePII(profile, ID)
+func (app *application) serUpdatePII(profile *model.UserProfile) error {
+	return app.storage.UpdatePII(profile)
 }
 
 func (app *application) serDeletePII(ID string) error {

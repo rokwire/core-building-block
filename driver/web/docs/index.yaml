@@ -35,6 +35,8 @@ paths:
     $ref: "./resources/services/auth/authorize-service.yaml"
   /services/auth/service-regs:
     $ref: "./resources/services/auth/service-regs.yaml"
+  /services/profiles/pii:
+    $ref: "./resources/services/profiles/pii.yaml" 
   /services/profiles/pii/{id}:
     $ref: "./resources/services/profiles/piiId.yaml"  
   /services/test:

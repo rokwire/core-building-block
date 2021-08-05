@@ -99,6 +99,11 @@ func (sa *Adapter) FindUserByAccountID(accountID string) (*model.User, error) {
 	return sa.findUser("account.id", accountID)
 }
 
+//FindUserByProfileID finds an user by profile id
+func (sa *Adapter) FindUserByProfileID(profileID string) (*model.User, error) {
+	return sa.findUser("profile.id", profileID)
+}
+
 func (sa *Adapter) findUser(key string, id string) (*model.User, error) {
 	filter := bson.M{key: id}
 	var user user
@@ -522,33 +527,45 @@ func (sa *Adapter) InsertMembership(orgMembership *rawMembership, context mongo.
 
 //FindPII finds an existing user profile by its ID
 func (sa *Adapter) FindPII(ID string) (*model.UserProfile, error) {
-	user, err := sa.FindUserByID(ID)
+	user, err := sa.FindUserByProfileID(ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUserProfile, nil, err)
 	}
 
-	if user.Profile.IsZero() {
-		return nil, errors.ErrorData(logutils.StatusMissing, "profile id", &logutils.FieldArgs{"user_id": ID})
+	if user == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeUser, logutils.StringArgs(ID))
 	}
 
-	return &user.Profile, errors.New(logutils.Unimplemented)
+	return &user.Profile, nil
 }
 
 //UpdatePII updates an existing user profile
-func (sa *Adapter) UpdatePII(profile *model.UserProfile, ID string) error {
-	user, err := sa.FindUserByID(ID)
+func (sa *Adapter) UpdatePII(profile *model.UserProfile) error {
+	user, err := sa.FindUserByProfileID(profile.ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserProfile, nil, err)
 	}
 
-	if user.Profile.IsZero() {
-		return errors.ErrorData(logutils.StatusMissing, "profile id", &logutils.FieldArgs{"user_id": ID})
+	if user == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeUser, logutils.StringArgs(profile.ID))
+	}
+
+	if user.Profile.ID != profile.ID {
+		return errors.ErrorData(logutils.StatusInvalid, "profile id", logutils.StringArgs(profile.ID))
 	}
 
 	now := time.Now().UTC()
 	profile.DateUpdated = &now
 
-	user.Profile = *profile
+	user.Profile.Address = profile.Address
+	user.Profile.Country = profile.Country
+	user.Profile.DateOfBirth = profile.DateOfBirth
+	user.Profile.HomeCounty = profile.HomeCounty
+	user.Profile.MiddleName = profile.MiddleName
+	user.Profile.State = profile.State
+	user.Profile.WorkCounty = profile.WorkCounty
+	user.Profile.ZipCode = profile.ZipCode
+
 	_, err = sa.UpdateUser(user, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserProfile, nil, err)
@@ -559,22 +576,33 @@ func (sa *Adapter) UpdatePII(profile *model.UserProfile, ID string) error {
 
 //DeletePII deletes an existing user profile by its ID
 func (sa *Adapter) DeletePII(ID string) error {
-	user, err := sa.FindUserByID(ID)
+	user, err := sa.FindUserByProfileID(ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeUserProfile, nil, err)
 	}
 
-	if user.Profile.IsZero() {
-		return errors.ErrorData(logutils.StatusMissing, "profile id", &logutils.FieldArgs{"user_id": ID})
+	if user == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeUser, logutils.StringArgs(ID))
 	}
 
-	user.Profile = model.UserProfile{}
+	user.Profile.Address = ""
+	user.Profile.Country = ""
+	user.Profile.DateOfBirth = ""
+	user.Profile.HomeCounty = ""
+	user.Profile.MiddleName = ""
+	user.Profile.PhotoURL = ""
+	user.Profile.State = ""
+	user.Profile.WorkCounty = ""
+	user.Profile.ZipCode = ""
+
+	now := time.Now().UTC()
+	user.Profile.DateUpdated = &now
 	_, err = sa.UpdateUser(user, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeUserProfile, nil, err)
 	}
 
-	return errors.New(logutils.Unimplemented)
+	return nil
 }
 
 //FindAuthConfig finds the auth document from DB by orgID and appID

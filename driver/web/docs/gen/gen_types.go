@@ -379,8 +379,8 @@ type GetServicesAuthServiceRegsParams struct {
 	Ids string `json:"ids"`
 }
 
-// PutServicesProfilesPiiIdJSONBody defines parameters for PutServicesProfilesPiiId.
-type PutServicesProfilesPiiIdJSONBody UserProfile
+// PutServicesProfilesPiiJSONBody defines parameters for PutServicesProfilesPii.
+type PutServicesProfilesPiiJSONBody UserProfile
 
 // GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
 type GetTpsServiceRegsParams struct {
@@ -416,5 +416,5 @@ type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 // PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
 type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
 
-// PutServicesProfilesPiiIdJSONRequestBody defines body for PutServicesProfilesPiiId for application/json ContentType.
-type PutServicesProfilesPiiIdJSONRequestBody PutServicesProfilesPiiIdJSONBody
+// PutServicesProfilesPiiJSONRequestBody defines body for PutServicesProfilesPii for application/json ContentType.
+type PutServicesProfilesPiiJSONRequestBody PutServicesProfilesPiiJSONBody

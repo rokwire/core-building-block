@@ -168,8 +168,6 @@ func (h ServicesApisHandler) getPII(l *logs.Log, r *http.Request) logs.HttpRespo
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	//TODO: validate ID against user ID in access token (from profile service)
-
 	profile, err := h.coreAPIs.Services.SerGetPII(ID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeUserProfile, nil, err, http.StatusInternalServerError, true)
@@ -186,14 +184,6 @@ func (h ServicesApisHandler) getPII(l *logs.Log, r *http.Request) logs.HttpRespo
 }
 
 func (h ServicesApisHandler) updatePII(l *logs.Log, r *http.Request) logs.HttpResponse {
-	params := mux.Vars(r)
-	ID := params["id"]
-	if len(ID) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
-	}
-
-	//TODO: validate ID against user ID in access token (from profile service)
-
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -207,7 +197,7 @@ func (h ServicesApisHandler) updatePII(l *logs.Log, r *http.Request) logs.HttpRe
 
 	profile := userProfileFromDef(&requestData)
 
-	err = h.coreAPIs.Services.SerUpdatePII(profile, ID)
+	err = h.coreAPIs.Services.SerUpdatePII(profile)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeUserProfile, nil, err, http.StatusInternalServerError, true)
 	}
@@ -221,8 +211,6 @@ func (h ServicesApisHandler) deletePII(l *logs.Log, r *http.Request) logs.HttpRe
 	if len(ID) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
-
-	//TODO: validate ID against user ID in access token (from profile service)
 
 	err := h.coreAPIs.Services.SerDeletePII(ID)
 	if err != nil {
