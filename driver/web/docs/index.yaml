@@ -49,6 +49,8 @@ paths:
     $ref: "./resources/admin/service-regs.yaml"
   /admin/applications/{id}:
     $ref: "./resources/admin/applicationsId.yaml"
+  /admin/applications/{id}:
+    $ref: "./resources/admin/applicationsId.yaml"
 
   #enc
   /enc/test:
