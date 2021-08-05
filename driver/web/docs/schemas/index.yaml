@@ -17,7 +17,7 @@ OrganizationRole:
   $ref: "./organization/OrganizationRole.yaml"
 OrganizationGroup:
   $ref: "./organization/OrganizationGroup.yaml"
-  
+
 # auth
 ServiceReg:
   $ref: "./auth/ServiceReg.yaml"
@@ -68,3 +68,5 @@ OrganizationMembership:
   $ref: "./user/OrganizationMembership.yaml"
 Device:
   $ref: "./user/Device.yaml"
+AnonymousProfile:
+  $ref: "./user/AnonymousProfile.yaml"

@@ -1,0 +1,26 @@
+required:
+  - id
+  - client_id
+type: object
+description: Anonymous data of user profile
+properties:
+  id:
+    type: string
+  client_id:
+    type: string
+  interests:
+    type: string
+  favorites:
+    type: string
+  over_13:
+    type: string
+  positive_interest_tags:
+    type: string
+  negative_interest_tags:
+    type: string
+  creation_date:
+    type: string
+  last_modified_date:
+    type: string
+  privacy_settings:
+    type: string
