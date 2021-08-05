@@ -312,9 +312,9 @@ func (sa *Adapter) FindGlobalPermissions(ids *[]string, context mongo.SessionCon
 	var permissionsResult []permission
 	var err error
 	if context == nil {
-		err = sa.db.permissions.Find(permissionsFilter, &permissionsResult, nil)
+		err = sa.db.globalPermissions.Find(permissionsFilter, &permissionsResult, nil)
 	} else {
-		err = sa.db.permissions.FindWithContext(context, permissionsFilter, &permissionsResult, nil)
+		err = sa.db.globalPermissions.FindWithContext(context, permissionsFilter, &permissionsResult, nil)
 	}
 	if err != nil {
 		return nil, err
@@ -331,7 +331,9 @@ func (sa *Adapter) FindGlobalPermissions(ids *[]string, context mongo.SessionCon
 
 //FindOrganizationPermissions finds a set of organization user permissions
 func (sa *Adapter) FindOrganizationPermissions(ids *[]string, orgID string, context mongo.SessionContext) (*[]model.OrganizationPermission, error) {
-	permissionsFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
+	//TODO
+	return nil, nil
+	/*permissionsFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
 	var permissionsResult []permission
 	var err error
 	if context == nil {
@@ -349,7 +351,7 @@ func (sa *Adapter) FindOrganizationPermissions(ids *[]string, orgID string, cont
 		orgPermissions = append(orgPermissions, orgPermission)
 	}
 
-	return &orgPermissions, nil
+	return &orgPermissions, nil */
 }
 
 //FindGlobalRoles finds a set of global user roles
@@ -358,9 +360,9 @@ func (sa *Adapter) FindGlobalRoles(ids *[]string, context mongo.SessionContext) 
 	var rolesResult []role
 	var err error
 	if context == nil {
-		err = sa.db.roles.Find(rolesFilter, &rolesResult, nil)
+		err = sa.db.globalRoles.Find(rolesFilter, &rolesResult, nil)
 	} else {
-		err = sa.db.roles.FindWithContext(context, rolesFilter, &rolesResult, nil)
+		err = sa.db.globalRoles.FindWithContext(context, rolesFilter, &rolesResult, nil)
 	}
 	if err != nil {
 		return nil, err
@@ -384,7 +386,9 @@ func (sa *Adapter) FindGlobalRoles(ids *[]string, context mongo.SessionContext) 
 
 //FindOrganizationRoles finds a set of organization user roles
 func (sa *Adapter) FindOrganizationRoles(ids *[]string, orgID string, context mongo.SessionContext) (*[]model.OrganizationRole, error) {
-	rolesFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
+	//TODO
+	return nil, nil
+	/*rolesFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
 	var rolesResult []role
 	var err error
 	if context == nil {
@@ -416,7 +420,7 @@ func (sa *Adapter) FindOrganizationRoles(ids *[]string, orgID string, context mo
 		orgRoles = append(orgRoles, orgRole)
 	}
 
-	return &orgRoles, nil
+	return &orgRoles, nil */
 }
 
 //FindGlobalGroups finds a set of global user groups
@@ -425,9 +429,9 @@ func (sa *Adapter) FindGlobalGroups(ids *[]string, context mongo.SessionContext)
 	var groupsResult []group
 	var err error
 	if context == nil {
-		err = sa.db.groups.Find(filter, &groupsResult, nil)
+		err = sa.db.globalGroups.Find(filter, &groupsResult, nil)
 	} else {
-		err = sa.db.groups.FindWithContext(context, filter, &groupsResult, nil)
+		err = sa.db.globalGroups.FindWithContext(context, filter, &groupsResult, nil)
 	}
 	if err != nil {
 		return nil, err
@@ -458,7 +462,9 @@ func (sa *Adapter) FindGlobalGroups(ids *[]string, context mongo.SessionContext)
 
 //FindOrganizationGroups finds a set of organization user groups
 func (sa *Adapter) FindOrganizationGroups(ids *[]string, orgID string, context mongo.SessionContext) (*[]model.OrganizationGroup, error) {
-	filter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
+	//TODO
+	return nil, nil
+	/*filter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
 	var groupsResult []group
 	var err error
 	if context == nil {
@@ -496,7 +502,7 @@ func (sa *Adapter) FindOrganizationGroups(ids *[]string, orgID string, context m
 		orgGroups = append(orgGroups, orgGroup)
 	}
 
-	return &orgGroups, nil
+	return &orgGroups, nil */
 }
 
 //InsertMembership inserts an organization membership

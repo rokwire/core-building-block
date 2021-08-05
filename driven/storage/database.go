@@ -19,13 +19,12 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
-	users       *collectionWrapper
-	groups      *collectionWrapper
-	roles       *collectionWrapper
-	permissions *collectionWrapper
-	memberships *collectionWrapper
-	devices     *collectionWrapper
-
+	users                 *collectionWrapper
+	globalGroups          *collectionWrapper
+	globalRoles           *collectionWrapper
+	globalPermissions     *collectionWrapper
+	memberships           *collectionWrapper
+	devices               *collectionWrapper
 	credentials           *collectionWrapper
 	authConfigs           *collectionWrapper
 	globalConfig          *collectionWrapper
@@ -66,20 +65,20 @@ func (m *database) start() error {
 		return err
 	}
 
-	groups := &collectionWrapper{database: m, coll: db.Collection("groups")}
-	err = m.applyGroupsChecks(groups)
+	globalGroups := &collectionWrapper{database: m, coll: db.Collection("global_groups")}
+	err = m.applyGlobalGroupsChecks(globalGroups)
 	if err != nil {
 		return err
 	}
 
-	roles := &collectionWrapper{database: m, coll: db.Collection("roles")}
-	err = m.applyRolesChecks(roles)
+	globalRoles := &collectionWrapper{database: m, coll: db.Collection("global_roles")}
+	err = m.applyGlobalRolesChecks(globalRoles)
 	if err != nil {
 		return err
 	}
 
-	permissions := &collectionWrapper{database: m, coll: db.Collection("permissions")}
-	err = m.applyPermissionsChecks(permissions)
+	globalPermissions := &collectionWrapper{database: m, coll: db.Collection("global_permissions")}
+	err = m.applyGlobalPermissionsChecks(globalPermissions)
 	if err != nil {
 		return err
 	}
@@ -141,10 +140,11 @@ func (m *database) start() error {
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
+
 	m.users = users
-	m.groups = groups
-	m.roles = roles
-	m.permissions = permissions
+	m.globalGroups = globalGroups
+	m.globalRoles = globalRoles
+	m.globalPermissions = globalPermissions
 	m.memberships = memberships
 	m.devices = devices
 	m.globalConfig = globalConfig
@@ -171,24 +171,24 @@ func (m *database) applyUsersChecks(users *collectionWrapper) error {
 	return nil
 }
 
-func (m *database) applyGroupsChecks(groups *collectionWrapper) error {
-	log.Println("apply groups checks.....")
+func (m *database) applyGlobalGroupsChecks(groups *collectionWrapper) error {
+	log.Println("apply global groups checks.....")
 
-	log.Println("groups check passed")
+	log.Println("global groups check passed")
 	return nil
 }
 
-func (m *database) applyRolesChecks(roles *collectionWrapper) error {
-	log.Println("apply roles checks.....")
+func (m *database) applyGlobalRolesChecks(roles *collectionWrapper) error {
+	log.Println("apply global roles checks.....")
 
-	log.Println("roles check passed")
+	log.Println("global roles check passed")
 	return nil
 }
 
-func (m *database) applyPermissionsChecks(permissions *collectionWrapper) error {
-	log.Println("apply permissions checks.....")
+func (m *database) applyGlobalPermissionsChecks(permissions *collectionWrapper) error {
+	log.Println("apply global permissions checks.....")
 
-	log.Println("permissions check passed")
+	log.Println("global permissions check passed")
 	return nil
 }
 
