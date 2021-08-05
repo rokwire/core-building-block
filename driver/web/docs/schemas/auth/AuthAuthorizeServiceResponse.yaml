@@ -1,0 +1,15 @@
+type: object
+properties:
+  access_token:
+    type: string
+  token_type:
+    description: The type of the provided tokens to be specified when they are sent in the "Authorization" header
+    type: string
+    enum:
+      - Bearer
+  approved_scopes:
+    type: array
+    items:
+      type: string
+  service_reg:
+    $ref: "./ServiceReg.yaml"

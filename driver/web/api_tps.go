@@ -11,19 +11,12 @@ import (
 	"github.com/rokmetro/logging-library/logutils"
 )
 
-//BBsApisHandler handles the APIs implementation used by the platform building blocks
-type BBsApisHandler struct {
+//TPSApisHandler handles the APIs implementation used by third-party services
+type TPSApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-//getTest TODO get test
-func (h BBsApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResponse {
-	res := h.coreAPIs.BBs.BBsGetTest()
-
-	return l.HttpResponseSuccessMessage(res)
-}
-
-func (h BBsApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request) logs.HttpResponse {
 	serviceIDsParam := r.URL.Query().Get("ids")
 	if serviceIDsParam == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("ids"), nil, http.StatusBadRequest, false)
@@ -45,7 +38,7 @@ func (h BBsApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request) lo
 	return l.HttpResponseSuccessJSON(data)
 }
 
-//NewBBsApisHandler creates new bbs Handler instance
-func NewBBsApisHandler(coreAPIs *core.APIs) BBsApisHandler {
-	return BBsApisHandler{coreAPIs: coreAPIs}
+//NewTPSApisHandler creates new tps Handler instance
+func NewTPSApisHandler(coreAPIs *core.APIs) TPSApisHandler {
+	return TPSApisHandler{coreAPIs: coreAPIs}
 }

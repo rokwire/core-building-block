@@ -1,12 +1,26 @@
 package model
 
-import log "github.com/rokmetro/logging-library/loglib"
+import (
+	"github.com/rokmetro/auth-library/authorization"
+	"github.com/rokmetro/auth-library/authservice"
+	"github.com/rokmetro/logging-library/logutils"
+)
 
 const (
-	TypeUserAuth   log.LogData = "user auth"
-	TypeAuthConfig log.LogData = "auth config"
-	TypeAuthCred   log.LogData = "auth cred"
-	TypeServiceReg log.LogData = "service reg"
+	//TypeUserAuth user auth type
+	TypeUserAuth logutils.MessageDataType = "user auth"
+	//TypeAuthConfig auth config type
+	TypeAuthConfig logutils.MessageDataType = "auth config"
+	//TypeAuthCred auth cred type
+	TypeAuthCred logutils.MessageDataType = "auth cred"
+	//TypeServiceReg service reg type
+	TypeServiceReg logutils.MessageDataType = "service reg"
+	//TypeServiceScope service scope type
+	TypeServiceScope logutils.MessageDataType = "service scope"
+	//TypeServiceAuthorization service authorization type
+	TypeServiceAuthorization logutils.MessageDataType = "service authorization"
+	//TypeScope scope type
+	TypeScope logutils.MessageDataType = "scope"
 )
 
 //UserAuth represents user auth entity
@@ -42,4 +56,30 @@ type AuthCred struct {
 	AccountID string      `bson:"account_id"`
 	Creds     interface{} `bson:"creds"`
 	Refresh   interface{} `bson:"refresh"`
+}
+
+//ServiceReg represents a service registration entity
+type ServiceReg struct {
+	Registration authservice.ServiceReg `json:"registration" bson:"registration"`
+	Name         string                 `json:"name" bson:"name"`
+	Description  string                 `json:"description" bson:"description"`
+	InfoURL      string                 `json:"info_url" bson:"info_url"`
+	LogoURL      string                 `json:"logo_url" bson:"logo_url"`
+	Scopes       []ServiceScope         `json:"scopes" bson:"scopes"`
+	AuthEndpoint string                 `json:"auth_endpoint" bson:"auth_endpoint"`
+	FirstParty   bool                   `json:"first_party" bson:"first_party"`
+}
+
+//ServiceScope represents a scope entity
+type ServiceScope struct {
+	Scope       *authorization.Scope `json:"scope" bson:"scope"`
+	Required    bool                 `json:"required" bson:"required"`
+	Explanation string               `json:"explanation,omitempty" bson:"explanation,omitempty"`
+}
+
+//ServiceAuthorization represents service authorization entity
+type ServiceAuthorization struct {
+	UserID    string                `json:"user_id" bson:"user_id"`
+	ServiceID string                `json:"service_id" bson:"service_id"`
+	Scopes    []authorization.Scope `json:"scopes" bson:"scopes"`
 }

@@ -302,7 +302,7 @@ func (collWrapper *collectionWrapper) Aggregate(pipeline interface{}, result int
 }
 
 func (collWrapper *collectionWrapper) AggregateWithContext(ctx context.Context, pipeline interface{}, result interface{}, ops *options.AggregateOptions) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*15000)
+	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*15000)
 	defer cancel()
 
 	cursor, err := collWrapper.coll.Aggregate(ctx, pipeline, ops)

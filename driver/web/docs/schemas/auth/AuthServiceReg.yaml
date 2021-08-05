@@ -2,6 +2,7 @@ required:
   - service_id
   - host
 type: object
+description: Service registration record used for auth
 properties:
   service_id:
     type: string

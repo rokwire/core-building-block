@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/logutils"
 )
 
 const (
-	TypeUser log.LogData = "user"
+	//TypeUser user type
+	TypeUser logutils.MessageDataType = "user"
 )
 
 //User represents user entity
@@ -102,7 +103,7 @@ type GlobalGroup struct {
 	Permissions []GlobalPermission `bson:"permissions"`
 	Roles       []GlobalRole       `bson:"roles"`
 
-	Users []User
+	Users []User `bson:"-"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -145,9 +146,9 @@ type OrganizationGroup struct {
 	Permissions []OrganizationPermission `bson:"permissions"`
 	Roles       []OrganizationRole       `bson:"roles"`
 
-	Organization Organization
+	Organization Organization `bson:"-"`
 
-	OrganizationsMemberships []OrganizationMembership
+	OrganizationsMemberships []OrganizationMembership `bson:"-"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -162,7 +163,7 @@ type OrganizationPermission struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 
-	Organization Organization
+	Organization Organization `bson:"-"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -180,7 +181,7 @@ type OrganizationRole struct {
 
 	Permissions []OrganizationPermission `bson:"permissions"`
 
-	Organization Organization
+	Organization Organization `bson:"-"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -201,7 +202,7 @@ type Device struct {
 	///
 
 	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
-	Users []User
+	Users []User `bson:"-"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

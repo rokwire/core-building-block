@@ -19,20 +19,22 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
-	users        *collectionWrapper
-	groups       *collectionWrapper
-	roles        *collectionWrapper
-	permissions  *collectionWrapper
-	memberships  *collectionWrapper
-	applications *collectionWrapper
-	devices      *collectionWrapper
-
-	authConfigs *collectionWrapper
-	credentials *collectionWrapper
-
-	globalConfig  *collectionWrapper
-	organizations *collectionWrapper
-	serviceRegs   *collectionWrapper
+	users                    *collectionWrapper
+	devices                  *collectionWrapper
+	credentials              *collectionWrapper
+	globalConfig             *collectionWrapper
+	globalGroups             *collectionWrapper
+	globalRoles              *collectionWrapper
+	globalPermissions        *collectionWrapper
+	organizations            *collectionWrapper
+	organizationsGroups      *collectionWrapper
+	organizationsRoles       *collectionWrapper
+	organizationsPermissions *collectionWrapper
+	organizationsMemberships *collectionWrapper
+	authConfigs              *collectionWrapper
+	serviceRegs              *collectionWrapper
+	serviceAuthorizations    *collectionWrapper
+	applications             *collectionWrapper
 
 	listeners []Listener
 }
@@ -66,38 +68,14 @@ func (m *database) start() error {
 		return err
 	}
 
-	groups := &collectionWrapper{database: m, coll: db.Collection("groups")}
-	err = m.applyGroupsChecks(groups)
-	if err != nil {
-		return err
-	}
-
-	roles := &collectionWrapper{database: m, coll: db.Collection("roles")}
-	err = m.applyRolesChecks(roles)
-	if err != nil {
-		return err
-	}
-
-	permissions := &collectionWrapper{database: m, coll: db.Collection("permissions")}
-	err = m.applyPermissionsChecks(permissions)
-	if err != nil {
-		return err
-	}
-
-	memberships := &collectionWrapper{database: m, coll: db.Collection("memberships")}
-	err = m.applyMembershipsChecks(memberships)
-	if err != nil {
-		return err
-	}
-
-	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
-	err = m.applyApplicationsChecks(applications)
-	if err != nil {
-		return err
-	}
-
 	devices := &collectionWrapper{database: m, coll: db.Collection("devices")}
 	err = m.applyDevicesChecks(devices)
+	if err != nil {
+		return err
+	}
+
+	credentials := &collectionWrapper{database: m, coll: db.Collection("credentials")}
+	err = m.applyCredentialChecks(credentials)
 	if err != nil {
 		return err
 	}
@@ -108,8 +86,56 @@ func (m *database) start() error {
 		return err
 	}
 
+	globalGroups := &collectionWrapper{database: m, coll: db.Collection("global_groups")}
+	err = m.applyGlobalGroupsChecks(globalGroups)
+	if err != nil {
+		return err
+	}
+
+	globalRoles := &collectionWrapper{database: m, coll: db.Collection("global_roles")}
+	err = m.applyGlobalRolesChecks(globalRoles)
+	if err != nil {
+		return err
+	}
+
+	globalPermissions := &collectionWrapper{database: m, coll: db.Collection("global_permissions")}
+	err = m.applyGlobalPermissionsChecks(globalPermissions)
+	if err != nil {
+		return err
+	}
+
 	organizations := &collectionWrapper{database: m, coll: db.Collection("organizations")}
 	err = m.applyOrganizationsChecks(organizations)
+	if err != nil {
+		return err
+	}
+
+	organizationsGroups := &collectionWrapper{database: m, coll: db.Collection("organizations_groups")}
+	err = m.applyOrganizationsGroupsChecks(organizationsGroups)
+	if err != nil {
+		return err
+	}
+
+	organizationsRoles := &collectionWrapper{database: m, coll: db.Collection("organizations_roles")}
+	err = m.applyOrganizationsRolesChecks(organizationsRoles)
+	if err != nil {
+		return err
+	}
+
+	organizationsPermissions := &collectionWrapper{database: m, coll: db.Collection("organizations_permissions")}
+	err = m.applyOrganizationsPermissionsChecks(organizationsPermissions)
+	if err != nil {
+		return err
+	}
+
+	organizationsMemberships := &collectionWrapper{database: m, coll: db.Collection("organizations_memberships")}
+	err = m.applyOrganizationsMembershipsChecks(organizationsMemberships)
+	if err != nil {
+		return err
+	}
+
+	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
+	err = m.applyAuthConfigChecks(authConfigs)
 	if err != nil {
 		return err
 	}
@@ -120,36 +146,38 @@ func (m *database) start() error {
 		return err
 	}
 
+	serviceAuthorizations := &collectionWrapper{database: m, coll: db.Collection("service_authorizations")}
+	err = m.applyServiceAuthorizationsChecks(serviceAuthorizations)
+	if err != nil {
+		return err
+	}
+
+	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
+	err = m.applyApplicationsChecks(applications)
+	if err != nil {
+		return err
+	}
+
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
+
 	m.users = users
-	m.groups = groups
-	m.roles = roles
-	m.permissions = permissions
-	m.memberships = memberships
-	m.applications = applications
 	m.devices = devices
-	m.globalConfig = globalConfig
-	m.organizations = organizations
-	m.serviceRegs = serviceRegs
-
-	//TODO
-	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
-	err = m.applyAuthConfigChecks(authConfigs)
-	if err != nil {
-		return err
-	}
-
-	m.authConfigs = authConfigs
-
-	credentials := &collectionWrapper{database: m, coll: db.Collection("credentials")}
-	err = m.applyCredentialChecks(credentials)
-	if err != nil {
-		return err
-	}
-
 	m.credentials = credentials
+	m.globalConfig = globalConfig
+	m.globalGroups = globalGroups
+	m.globalRoles = globalRoles
+	m.globalPermissions = globalPermissions
+	m.organizations = organizations
+	m.organizationsGroups = organizationsGroups
+	m.organizationsRoles = organizationsRoles
+	m.organizationsPermissions = organizationsPermissions
+	m.organizationsMemberships = organizationsMemberships
+	m.authConfigs = authConfigs
+	m.serviceRegs = serviceRegs
+	m.serviceAuthorizations = serviceAuthorizations
+	m.applications = applications
 
 	go m.authConfigs.Watch(nil)
 	go m.serviceRegs.Watch(nil)
@@ -167,38 +195,31 @@ func (m *database) applyUsersChecks(users *collectionWrapper) error {
 	return nil
 }
 
-func (m *database) applyGroupsChecks(groups *collectionWrapper) error {
-	log.Println("apply groups checks.....")
+func (m *database) applyGlobalGroupsChecks(groups *collectionWrapper) error {
+	log.Println("apply global groups checks.....")
 
-	log.Println("groups check passed")
+	log.Println("global groups check passed")
 	return nil
 }
 
-func (m *database) applyRolesChecks(roles *collectionWrapper) error {
-	log.Println("apply roles checks.....")
+func (m *database) applyGlobalRolesChecks(roles *collectionWrapper) error {
+	log.Println("apply global roles checks.....")
 
-	log.Println("roles check passed")
+	log.Println("global roles check passed")
 	return nil
 }
 
-func (m *database) applyPermissionsChecks(permissions *collectionWrapper) error {
-	log.Println("apply permissions checks.....")
+func (m *database) applyGlobalPermissionsChecks(permissions *collectionWrapper) error {
+	log.Println("apply global permissions checks.....")
 
-	log.Println("permissions check passed")
+	log.Println("global permissions check passed")
 	return nil
 }
 
-func (m *database) applyMembershipsChecks(memberships *collectionWrapper) error {
-	log.Println("apply memberships checks.....")
+func (m *database) applyOrganizationsMembershipsChecks(organizationsMemberships *collectionWrapper) error {
+	log.Println("apply organizations memberships checks.....")
 
-	log.Println("memberships check passed")
-	return nil
-}
-
-func (m *database) applyApplicationsChecks(applications *collectionWrapper) error {
-	log.Println("apply applications checks.....")
-
-	log.Println("applications check passed")
+	log.Println("organizations memberships check passed")
 	return nil
 }
 
@@ -254,16 +275,57 @@ func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) er
 	return nil
 }
 
+func (m *database) applyOrganizationsGroupsChecks(organizationsGroups *collectionWrapper) error {
+	log.Println("apply organizations groups checks.....")
+
+	log.Println("organizations groups checks passed")
+	return nil
+}
+
+func (m *database) applyOrganizationsRolesChecks(organizationsRoles *collectionWrapper) error {
+	log.Println("apply organizations roles checks.....")
+
+	log.Println("organizations roles checks passed")
+	return nil
+}
+
+func (m *database) applyOrganizationsPermissionsChecks(organizationsPermissions *collectionWrapper) error {
+	log.Println("apply organizations permissions checks.....")
+
+	log.Println("organizations permissions checks passed")
+	return nil
+}
+
 func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error {
 	log.Println("apply service regs checks.....")
 
 	//add service_id index - unique
-	err := serviceRegs.AddIndex(bson.D{primitive.E{Key: "service_id", Value: 1}}, true)
+	err := serviceRegs.AddIndex(bson.D{primitive.E{Key: "registration.service_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
 
 	log.Println("service regs checks passed")
+	return nil
+}
+
+func (m *database) applyServiceAuthorizationsChecks(serviceAuthorizations *collectionWrapper) error {
+	log.Println("apply service authorizations checks.....")
+
+	//add user_id, service_id index - unique
+	err := serviceAuthorizations.AddIndex(bson.D{primitive.E{Key: "user_id", Value: 1}, primitive.E{Key: "service_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	log.Println("service authorizations checks passed")
+	return nil
+}
+
+func (m *database) applyApplicationsChecks(applications *collectionWrapper) error {
+	log.Println("apply applications checks.....")
+
+	log.Println("applications checks passed")
 	return nil
 }
 
