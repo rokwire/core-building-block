@@ -520,32 +520,89 @@ func (sa *Adapter) InsertMembership(orgMembership *rawMembership, context mongo.
 	return nil
 }
 
-//GetPII finds an existing user profile by its ID
-func (sa *Adapter) GetPII(ID string) (*model.UserProfile, error) {
-	//TODO: find user by ID, return profile subdocument if it exists, error if not
-	return nil, errors.New(logutils.Unimplemented)
+//FindPII finds an existing user profile by its ID
+func (sa *Adapter) FindPII(ID string) (*model.UserProfile, error) {
+	user, err := sa.FindUserByID(ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUserProfile, nil, err)
+	}
+
+	if user.Profile.IsZero() {
+		return nil, errors.ErrorData(logutils.StatusMissing, "profile id", &logutils.FieldArgs{"user_id": ID})
+	}
+
+	return &user.Profile, errors.New(logutils.Unimplemented)
 }
 
 //CreatePII creates a new user profile
 func (sa *Adapter) CreatePII(profile *model.UserProfile, ID string) error {
-	//TODO: find user by ID, set profile subdocument if it does not exist, error if does exist
-	//create new ID for profile subdocument
+	user, err := sa.FindUserByID(ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionCreate, model.TypeUserProfile, nil, err)
+	}
+
+	if !user.Profile.IsZero() {
+		return errors.ErrorData(logutils.StatusFound, "profile id", &logutils.FieldArgs{"user_id": ID})
+	}
+
+	profileID, err := uuid.NewUUID()
+	if err != nil {
+		return errors.ErrorData(logutils.StatusInvalid, "uuid", logutils.StringArgs("profile_id"))
+	}
+	profile.ID = profileID.String()
+
 	now := time.Now().UTC()
 	profile.DateCreated = now
-	return errors.New(logutils.Unimplemented)
+
+	user.Profile = *profile
+	_, err = sa.UpdateUser(user, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionCreate, model.TypeUserProfile, nil, err)
+	}
+
+	return nil
 }
 
 //UpdatePII updates an existing user profile
 func (sa *Adapter) UpdatePII(profile *model.UserProfile, ID string) error {
-	//TODO: find user by ID, update profile subdocument only if it exists, error if not
+	user, err := sa.FindUserByID(ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserProfile, nil, err)
+	}
+
+	if user.Profile.IsZero() {
+		return errors.ErrorData(logutils.StatusMissing, "profile id", &logutils.FieldArgs{"user_id": ID})
+	}
+
 	now := time.Now().UTC()
 	profile.DateUpdated = &now
-	return errors.New(logutils.Unimplemented)
+
+	user.Profile = *profile
+	_, err = sa.UpdateUser(user, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserProfile, nil, err)
+	}
+
+	return nil
 }
 
 //DeletePII deletes an existing user profile by its ID
 func (sa *Adapter) DeletePII(ID string) error {
-	//TODO: find user by ID, delete profile subdocument only if it exists, error if not
+	user, err := sa.FindUserByID(ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeUserProfile, nil, err)
+	}
+
+	if user.Profile.IsZero() {
+		return errors.ErrorData(logutils.StatusMissing, "profile id", &logutils.FieldArgs{"user_id": ID})
+	}
+
+	user.Profile = model.UserProfile{}
+	_, err = sa.UpdateUser(user, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeUserProfile, nil, err)
+	}
+
 	return errors.New(logutils.Unimplemented)
 }
 

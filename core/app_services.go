@@ -7,7 +7,7 @@ import (
 )
 
 func (app *application) serGetPII(ID string) (*model.UserProfile, error) {
-	return app.storage.GetPII(ID)
+	return app.storage.FindPII(ID)
 }
 
 func (app *application) serCreatePII(profile *model.UserProfile, ID string) error {

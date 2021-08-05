@@ -181,8 +181,8 @@ func (_m *Storage) InsertOrganization(organization model.Organization) (*model.O
 	return r0, r1
 }
 
-// GetPII provides a mock function with given fields: ID
-func (_m *Storage) GetPII(ID string) (*model.UserProfile, error) {
+// FindPII provides a mock function with given fields: ID
+func (_m *Storage) FindPII(ID string) (*model.UserProfile, error) {
 	ret := _m.Called(ID)
 
 	var r0 *model.UserProfile

@@ -9,7 +9,7 @@ type user struct {
 	ID string `bson:"_id"`
 
 	Account model.UserAccount `bson:"account"`
-	Profile model.UserProfile `bson:"profile"`
+	Profile model.UserProfile `bson:"profile,omitempty"`
 
 	Permissions              []model.GlobalPermission `bson:"permissions"`
 	Roles                    []model.GlobalRole       `bson:"roles"`

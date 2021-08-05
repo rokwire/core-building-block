@@ -49,7 +49,7 @@ type BBs interface {
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
-	GetPII(ID string) (*model.UserProfile, error)
+	FindPII(ID string) (*model.UserProfile, error)
 	CreatePII(profile *model.UserProfile, ID string) error
 	UpdatePII(profile *model.UserProfile, ID string) error
 	DeletePII(ID string) error

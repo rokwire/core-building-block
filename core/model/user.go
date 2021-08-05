@@ -106,6 +106,10 @@ func (up UserProfile) String() string {
 		up.MiddleName, up.State, up.WorkCounty, up.ZipCode)
 }
 
+func (up UserProfile) IsZero() bool {
+	return len(up.ID) == 0
+}
+
 //GlobalGroup represents global group entity. It is a collection of users
 type GlobalGroup struct {
 	ID   string `bson:"_id"`
