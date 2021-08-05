@@ -525,9 +525,9 @@ func (sa *Adapter) InsertMembership(orgMembership *rawMembership, context mongo.
 	return nil
 }
 
-//FindPII finds a user profile by profile ID
+//FindPII finds PII from user profile
 func (sa *Adapter) FindPII(ID string) (*model.UserProfile, error) {
-	user, err := sa.FindUserByProfileID(ID)
+	user, err := sa.FindUserByID(ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUserProfile, nil, err)
 	}
@@ -540,8 +540,8 @@ func (sa *Adapter) FindPII(ID string) (*model.UserProfile, error) {
 }
 
 //UpdatePII updates a user profile
-func (sa *Adapter) UpdatePII(profile *model.UserProfile) error {
-	user, err := sa.FindUserByProfileID(profile.ID)
+func (sa *Adapter) UpdatePII(profile *model.UserProfile, ID string) error {
+	user, err := sa.FindUserByID(ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserProfile, nil, err)
 	}
@@ -574,9 +574,9 @@ func (sa *Adapter) UpdatePII(profile *model.UserProfile) error {
 	return nil
 }
 
-//DeletePII deletes a user profile by profile ID
+//DeletePII deletes PII from user profile
 func (sa *Adapter) DeletePII(ID string) error {
-	user, err := sa.FindUserByProfileID(ID)
+	user, err := sa.FindUserByID(ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeUserProfile, nil, err)
 	}

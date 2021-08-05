@@ -223,13 +223,13 @@ func (_m *Storage) UpdateOrganization(ID string, name string, requestType string
 	return r0
 }
 
-// UpdatePII provides a mock function with given fields: profile
-func (_m *Storage) UpdatePII(profile *model.UserProfile) error {
-	ret := _m.Called(profile)
+// UpdatePII provides a mock function with given fields: profile, ID
+func (_m *Storage) UpdatePII(profile *model.UserProfile, ID string) error {
+	ret := _m.Called(profile, ID)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*model.UserProfile) error); ok {
-		r0 = rf(profile)
+	if rf, ok := ret.Get(0).(func(*model.UserProfile, string) error); ok {
+		r0 = rf(profile, ID)
 	} else {
 		r0 = ret.Error(0)
 	}

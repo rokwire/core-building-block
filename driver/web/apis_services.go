@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
 )
@@ -162,13 +161,9 @@ func (h ServicesApisHandler) getServiceRegistrations(l *logs.Log, r *http.Reques
 }
 
 func (h ServicesApisHandler) getPII(l *logs.Log, r *http.Request) logs.HttpResponse {
-	params := mux.Vars(r)
-	ID := params["id"]
-	if len(ID) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
-	}
+	//TODO: get user ID from access token to pass to SerGetPII
 
-	profile, err := h.coreAPIs.Services.SerGetPII(ID)
+	profile, err := h.coreAPIs.Services.SerGetPII("")
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeUserProfile, nil, err, http.StatusInternalServerError, true)
 	}
@@ -184,6 +179,8 @@ func (h ServicesApisHandler) getPII(l *logs.Log, r *http.Request) logs.HttpRespo
 }
 
 func (h ServicesApisHandler) updatePII(l *logs.Log, r *http.Request) logs.HttpResponse {
+	//TODO: get user ID from access token to pass to SerUpdatePII
+
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -197,7 +194,7 @@ func (h ServicesApisHandler) updatePII(l *logs.Log, r *http.Request) logs.HttpRe
 
 	profile := userProfileFromDef(&requestData)
 
-	err = h.coreAPIs.Services.SerUpdatePII(profile)
+	err = h.coreAPIs.Services.SerUpdatePII(profile, "")
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeUserProfile, nil, err, http.StatusInternalServerError, true)
 	}
@@ -206,13 +203,9 @@ func (h ServicesApisHandler) updatePII(l *logs.Log, r *http.Request) logs.HttpRe
 }
 
 func (h ServicesApisHandler) deletePII(l *logs.Log, r *http.Request) logs.HttpResponse {
-	params := mux.Vars(r)
-	ID := params["id"]
-	if len(ID) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
-	}
+	//TODO: get user ID from access token to pass to SerDeletePII
 
-	err := h.coreAPIs.Services.SerDeletePII(ID)
+	err := h.coreAPIs.Services.SerDeletePII("")
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeUserProfile, nil, err, http.StatusInternalServerError, true)
 	}

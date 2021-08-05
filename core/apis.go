@@ -67,8 +67,8 @@ func (s *servicesImpl) SerGetPII(ID string) (*model.UserProfile, error) {
 	return s.app.serGetPII(ID)
 }
 
-func (s *servicesImpl) SerUpdatePII(profile *model.UserProfile) error {
-	return s.app.serUpdatePII(profile)
+func (s *servicesImpl) SerUpdatePII(profile *model.UserProfile, ID string) error {
+	return s.app.serUpdatePII(profile, ID)
 }
 
 func (s *servicesImpl) SerDeletePII(ID string) error {

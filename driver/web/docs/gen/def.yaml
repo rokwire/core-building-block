@@ -237,6 +237,25 @@ paths:
         '500':
           description: Internal error
   /services/profiles/pii:
+    get:
+      tags:
+        - Services
+      summary: Get PII by user profile ID
+      description: |
+        Returns a single user profile entry 
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
     put:
       tags:
         - Services
@@ -264,50 +283,12 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  '/services/profiles/pii/{id}':
-    get:
-      tags:
-        - Services
-      summary: Get PII by user profile ID
-      description: |
-        Returns a single user profile entry 
-      parameters:
-        - name: id
-          in: path
-          description: user profile ID to return
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserProfile'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
     delete:
       tags:
         - Services
       summary: Delete profile
       description: |
         Deletes user profile
-      parameters:
-        - name: id
-          in: path
-          description: user profile ID to delete
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
       responses:
         '200':
           description: Success
