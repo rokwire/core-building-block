@@ -23,7 +23,7 @@ type database struct {
 	globalGroups             *collectionWrapper
 	globalRoles              *collectionWrapper
 	globalPermissions        *collectionWrapper
-	memberships              *collectionWrapper
+	organizationsMemberships *collectionWrapper
 	devices                  *collectionWrapper
 	credentials              *collectionWrapper
 	authConfigs              *collectionWrapper
@@ -86,8 +86,8 @@ func (m *database) start() error {
 		return err
 	}
 
-	memberships := &collectionWrapper{database: m, coll: db.Collection("memberships")}
-	err = m.applyMembershipsChecks(memberships)
+	organizationsMemberships := &collectionWrapper{database: m, coll: db.Collection("organizations_memberships")}
+	err = m.applyOrganizationsMembershipsChecks(organizationsMemberships)
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,7 @@ func (m *database) start() error {
 	m.globalGroups = globalGroups
 	m.globalRoles = globalRoles
 	m.globalPermissions = globalPermissions
-	m.memberships = memberships
+	m.organizationsMemberships = organizationsMemberships
 	m.devices = devices
 	m.globalConfig = globalConfig
 	m.organizations = organizations
@@ -216,10 +216,10 @@ func (m *database) applyGlobalPermissionsChecks(permissions *collectionWrapper) 
 	return nil
 }
 
-func (m *database) applyMembershipsChecks(memberships *collectionWrapper) error {
-	log.Println("apply memberships checks.....")
+func (m *database) applyOrganizationsMembershipsChecks(organizationsMemberships *collectionWrapper) error {
+	log.Println("apply organizations memberships checks.....")
 
-	log.Println("memberships check passed")
+	log.Println("organizations memberships check passed")
 	return nil
 }
 

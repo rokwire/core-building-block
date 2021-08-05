@@ -507,9 +507,9 @@ func (sa *Adapter) InsertMembership(orgMembership *rawMembership, context mongo.
 
 	var err error
 	if context == nil {
-		_, err = sa.db.memberships.InsertOne(orgMembership)
+		_, err = sa.db.organizationsMemberships.InsertOne(orgMembership)
 	} else {
-		_, err = sa.db.memberships.InsertOneWithContext(context, orgMembership)
+		_, err = sa.db.organizationsMemberships.InsertOneWithContext(context, orgMembership)
 	}
 
 	if err != nil {
