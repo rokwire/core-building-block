@@ -402,24 +402,29 @@ func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.User, error) {
 //needsUserUpdate determines if user should be updated by userAuth (assumes userAuth is most up-to-date)
 func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*model.User, bool, bool) {
 	update := false
+	now := time.Now().UTC()
 
 	// account
 	if len(user.Account.Email) == 0 {
 		user.Account.Email = userAuth.Email
+		user.Account.DateUpdated = &now
 		update = true
 	}
 	if len(user.Account.Phone) == 0 {
 		user.Account.Phone = userAuth.Phone
+		user.Account.DateUpdated = &now
 		update = true
 	}
 
 	// profile
 	if user.Profile.FirstName != userAuth.FirstName {
 		user.Profile.FirstName = userAuth.FirstName
+		user.Profile.DateUpdated = &now
 		update = true
 	}
 	if user.Profile.LastName != userAuth.LastName {
 		user.Profile.LastName = userAuth.LastName
+		user.Profile.DateUpdated = &now
 		update = true
 	}
 
@@ -430,6 +435,7 @@ func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*mod
 			foundOrg = true
 			if !reflect.DeepEqual(userAuth.OrgData, m.OrgUserData) {
 				m.OrgUserData = userAuth.OrgData
+				m.DateUpdated = &now
 				update = true
 			}
 		}

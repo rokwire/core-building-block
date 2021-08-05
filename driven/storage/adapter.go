@@ -534,35 +534,6 @@ func (sa *Adapter) FindPII(ID string) (*model.UserProfile, error) {
 	return &user.Profile, errors.New(logutils.Unimplemented)
 }
 
-//CreatePII creates a new user profile
-func (sa *Adapter) CreatePII(profile *model.UserProfile, ID string) error {
-	user, err := sa.FindUserByID(ID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionCreate, model.TypeUserProfile, nil, err)
-	}
-
-	if !user.Profile.IsZero() {
-		return errors.ErrorData(logutils.StatusFound, "profile id", &logutils.FieldArgs{"user_id": ID})
-	}
-
-	profileID, err := uuid.NewUUID()
-	if err != nil {
-		return errors.ErrorData(logutils.StatusInvalid, "uuid", logutils.StringArgs("profile_id"))
-	}
-	profile.ID = profileID.String()
-
-	now := time.Now().UTC()
-	profile.DateCreated = now
-
-	user.Profile = *profile
-	_, err = sa.UpdateUser(user, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionCreate, model.TypeUserProfile, nil, err)
-	}
-
-	return nil
-}
-
 //UpdatePII updates an existing user profile
 func (sa *Adapter) UpdatePII(profile *model.UserProfile, ID string) error {
 	user, err := sa.FindUserByID(ID)

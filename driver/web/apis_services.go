@@ -161,36 +161,6 @@ func (h ServicesApisHandler) getServiceRegistrations(l *logs.Log, r *http.Reques
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h ServicesApisHandler) createPII(l *logs.Log, r *http.Request) logs.HttpResponse {
-	params := mux.Vars(r)
-	ID := params["id"]
-	if len(ID) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
-	}
-
-	//TODO: validate ID against user ID in access token (from profile service)
-
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.UserProfile
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "profiles create PII request", nil, err, http.StatusBadRequest, true)
-	}
-
-	profile := userProfileFromDef(&requestData)
-
-	err = h.coreAPIs.Services.SerCreatePII(profile, ID)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeUserProfile, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HttpResponseSuccess()
-}
-
 func (h ServicesApisHandler) getPII(l *logs.Log, r *http.Request) logs.HttpResponse {
 	params := mux.Vars(r)
 	ID := params["id"]

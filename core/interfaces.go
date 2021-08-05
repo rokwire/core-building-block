@@ -10,7 +10,6 @@ import (
 //Services exposes APIs for the driver adapters
 type Services interface {
 	SerGetPII(ID string) (*model.UserProfile, error)
-	SerCreatePII(profile *model.UserProfile, ID string) error
 	SerUpdatePII(profile *model.UserProfile, ID string) error
 	SerDeletePII(ID string) error
 
@@ -50,7 +49,6 @@ type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
 	FindPII(ID string) (*model.UserProfile, error)
-	CreatePII(profile *model.UserProfile, ID string) error
 	UpdatePII(profile *model.UserProfile, ID string) error
 	DeletePII(ID string) error
 
