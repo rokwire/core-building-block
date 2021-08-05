@@ -20,18 +20,18 @@ type database struct {
 	dbClient *mongo.Client
 
 	users                    *collectionWrapper
+	devices                  *collectionWrapper
+	credentials              *collectionWrapper
+	globalConfig             *collectionWrapper
 	globalGroups             *collectionWrapper
 	globalRoles              *collectionWrapper
 	globalPermissions        *collectionWrapper
-	organizationsMemberships *collectionWrapper
-	devices                  *collectionWrapper
-	credentials              *collectionWrapper
-	authConfigs              *collectionWrapper
-	globalConfig             *collectionWrapper
 	organizations            *collectionWrapper
 	organizationsGroups      *collectionWrapper
 	organizationsRoles       *collectionWrapper
 	organizationsPermissions *collectionWrapper
+	organizationsMemberships *collectionWrapper
+	authConfigs              *collectionWrapper
 	serviceRegs              *collectionWrapper
 	serviceAuthorizations    *collectionWrapper
 	applications             *collectionWrapper
@@ -68,6 +68,24 @@ func (m *database) start() error {
 		return err
 	}
 
+	devices := &collectionWrapper{database: m, coll: db.Collection("devices")}
+	err = m.applyDevicesChecks(devices)
+	if err != nil {
+		return err
+	}
+
+	credentials := &collectionWrapper{database: m, coll: db.Collection("credentials")}
+	err = m.applyCredentialChecks(credentials)
+	if err != nil {
+		return err
+	}
+
+	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
+	err = m.applyGlobalConfigChecks(globalConfig)
+	if err != nil {
+		return err
+	}
+
 	globalGroups := &collectionWrapper{database: m, coll: db.Collection("global_groups")}
 	err = m.applyGlobalGroupsChecks(globalGroups)
 	if err != nil {
@@ -82,24 +100,6 @@ func (m *database) start() error {
 
 	globalPermissions := &collectionWrapper{database: m, coll: db.Collection("global_permissions")}
 	err = m.applyGlobalPermissionsChecks(globalPermissions)
-	if err != nil {
-		return err
-	}
-
-	organizationsMemberships := &collectionWrapper{database: m, coll: db.Collection("organizations_memberships")}
-	err = m.applyOrganizationsMembershipsChecks(organizationsMemberships)
-	if err != nil {
-		return err
-	}
-
-	devices := &collectionWrapper{database: m, coll: db.Collection("devices")}
-	err = m.applyDevicesChecks(devices)
-	if err != nil {
-		return err
-	}
-
-	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
-	err = m.applyGlobalConfigChecks(globalConfig)
 	if err != nil {
 		return err
 	}
@@ -128,6 +128,18 @@ func (m *database) start() error {
 		return err
 	}
 
+	organizationsMemberships := &collectionWrapper{database: m, coll: db.Collection("organizations_memberships")}
+	err = m.applyOrganizationsMembershipsChecks(organizationsMemberships)
+	if err != nil {
+		return err
+	}
+
+	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
+	err = m.applyAuthConfigChecks(authConfigs)
+	if err != nil {
+		return err
+	}
+
 	serviceRegs := &collectionWrapper{database: m, coll: db.Collection("service_regs")}
 	err = m.applyServiceRegsChecks(serviceRegs)
 	if err != nil {
@@ -146,38 +158,26 @@ func (m *database) start() error {
 		return err
 	}
 
-	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
-	err = m.applyAuthConfigChecks(authConfigs)
-	if err != nil {
-		return err
-	}
-
-	credentials := &collectionWrapper{database: m, coll: db.Collection("credentials")}
-	err = m.applyCredentialChecks(credentials)
-	if err != nil {
-		return err
-	}
-
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
 
 	m.users = users
+	m.devices = devices
+	m.credentials = credentials
+	m.globalConfig = globalConfig
 	m.globalGroups = globalGroups
 	m.globalRoles = globalRoles
 	m.globalPermissions = globalPermissions
-	m.organizationsMemberships = organizationsMemberships
-	m.devices = devices
-	m.globalConfig = globalConfig
 	m.organizations = organizations
 	m.organizationsGroups = organizationsGroups
 	m.organizationsRoles = organizationsRoles
 	m.organizationsPermissions = organizationsPermissions
+	m.organizationsMemberships = organizationsMemberships
+	m.authConfigs = authConfigs
 	m.serviceRegs = serviceRegs
 	m.serviceAuthorizations = serviceAuthorizations
 	m.applications = applications
-	m.authConfigs = authConfigs
-	m.credentials = credentials
 
 	go m.authConfigs.Watch(nil)
 	go m.serviceRegs.Watch(nil)
