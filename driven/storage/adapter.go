@@ -89,10 +89,12 @@ func (sa *Adapter) setOrganizations(organizations *[]model.Organization) {
 	}
 }
 
+//FindUserByID finds an user by id
 func (sa *Adapter) FindUserByID(id string) (*model.User, error) {
 	return sa.findUser("_id", id)
 }
 
+//FindUserByAccountID finds an user by account id
 func (sa *Adapter) FindUserByAccountID(accountID string) (*model.User, error) {
 	return sa.findUser("account.id", accountID)
 }
@@ -287,7 +289,7 @@ func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, 
 	return &creds, nil
 }
 
-//Insert credentials inserts a set of credentials
+//InsertCredentials credentials inserts a set of credentials
 func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.SessionContext) error {
 	if creds == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
@@ -849,6 +851,7 @@ func (sa *Adapter) DeleteServiceAuthorization(userID string, serviceID string) e
 	return nil
 }
 
+//SaveDevice saves device
 func (sa *Adapter) SaveDevice(device *model.Device, context mongo.SessionContext) error {
 	if device == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("device"))

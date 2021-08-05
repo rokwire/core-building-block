@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	//TypeUser user type
 	TypeUser logutils.MessageDataType = "user"
 )
 
