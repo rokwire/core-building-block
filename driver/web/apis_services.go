@@ -10,7 +10,13 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gorilla/mux"
 	log "github.com/rokmetro/logging-library/loglib"
+)
+
+const (
+	//TypeUserAuth user auth type
+	TypeAnonymousProfile log.LogData = "anonymous profile"
 )
 
 //ServicesApisHandler handles the rest APIs implementation
@@ -164,6 +170,82 @@ func (h ServicesApisHandler) getTest(l *log.Log, r *http.Request) log.HttpRespon
 	res := h.coreAPIs.Services.SerGetCommonTest(l)
 
 	return l.HttpResponseSuccessMessage(res)
+}
+
+func (h ServicesApisHandler) createAnonymousProfile(l *log.Log, r *http.Request) log.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.AnonymousProfile
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionUnmarshal, TypeAnonymousProfile, nil, err, http.StatusBadRequest, true)
+	}
+
+	_, err = h.coreAPIs.Services.CreateAnonymousProfile(l, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionGet, TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
+	}
+	return l.HttpResponseSuccess()
+}
+
+func (h ServicesApisHandler) updateAnonymousProfile(l *log.Log, r *http.Request) log.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionRead, log.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.AnonymousProfile
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionUnmarshal, log.LogData("invalid anonymous profile request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Services.UpdateAnonymousProfile(l, requestData.Id, requestData.Favorites, requestData.Interests, requestData.LastModifiedDate, requestData.NegativeInterestTags, requestData.PositiveInterestTags, requestData.PrivacySettings, requestData.Over13)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionGet, TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
+	}
+	return l.HttpResponseSuccess()
+}
+
+func (h ServicesApisHandler) getAnonymousProfile(l *log.Log, r *http.Request) log.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	profile, err := h.coreAPIs.Services.GetAnonymousProfile(l, ID)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionDelete, TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
+	}
+
+	data, err := json.Marshal(profile)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionMarshal, TypeAnonymousProfile, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h ServicesApisHandler) deleteAnonymousProfile(l *log.Log, r *http.Request) log.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(log.StatusMissing, log.TypeQueryParam, log.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	err := h.coreAPIs.Services.DeleteAnonymousProfile(l, ID)
+	if err != nil {
+		return l.HttpResponseErrorAction(log.ActionDelete, TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
+	}
+	return l.HttpResponseSuccess()
 }
 
 //NewServicesApisHandler creates new rest services Handler instance

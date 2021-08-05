@@ -10,5 +10,5 @@ properties:
     type: string
   photo_url:
     type: string
-  anonymous_profile:
-    $ref: "./AnonymousProfile.yaml"
+  user_anonymous_profile:
+    $ref: "./UserAnonymousProfile.yaml"

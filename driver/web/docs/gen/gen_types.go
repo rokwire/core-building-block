@@ -53,16 +53,15 @@ const (
 
 // Anonymous data of user profile
 type AnonymousProfile struct {
-	ClientId             string  `json:"client_id"`
-	CreationDate         *string `json:"creation_date,omitempty"`
-	Favorites            *string `json:"favorites,omitempty"`
-	Id                   string  `json:"id"`
-	Interests            *string `json:"interests,omitempty"`
-	LastModifiedDate     *string `json:"last_modified_date,omitempty"`
-	NegativeInterestTags *string `json:"negative_interest_tags,omitempty"`
-	Over13               *string `json:"over_13,omitempty"`
-	PositiveInterestTags *string `json:"positive_interest_tags,omitempty"`
-	PrivacySettings      *string `json:"privacy_settings,omitempty"`
+	CreationDate         *string   `json:"creation_date,omitempty"`
+	Favorites            *[]string `json:"favorites,omitempty"`
+	Id                   string    `json:"id"`
+	Interests            *[]string `json:"interests,omitempty"`
+	LastModifiedDate     *string   `json:"last_modified_date,omitempty"`
+	NegativeInterestTags *[]string `json:"negative_interest_tags,omitempty"`
+	Over13               *string   `json:"over_13,omitempty"`
+	PositiveInterestTags *[]string `json:"positive_interest_tags,omitempty"`
+	PrivacySettings      *string   `json:"privacy_settings,omitempty"`
 }
 
 // Application defines model for Application.
@@ -320,12 +319,23 @@ type UserAccount struct {
 
 // UserProfile defines model for UserProfile.
 type UserProfile struct {
+	FirstName *string `json:"first_name,omitempty"`
+	Id        string  `json:"id"`
+	LastName  *string `json:"last_name,omitempty"`
+	PhotoUrl  *string `json:"photo_url,omitempty"`
+
 	// Anonymous data of user profile
-	AnonymousProfile *AnonymousProfile `json:"anonymous_profile,omitempty"`
-	FirstName        *string           `json:"first_name,omitempty"`
-	Id               string            `json:"id"`
-	LastName         *string           `json:"last_name,omitempty"`
-	PhotoUrl         *string           `json:"photo_url,omitempty"`
+	UserAnonymousProfile *struct {
+		CreationDate         *string   `json:"creation_date,omitempty"`
+		Favorites            *[]string `json:"favorites,omitempty"`
+		Id                   string    `json:"id"`
+		Interests            *[]string `json:"interests,omitempty"`
+		LastModifiedDate     *string   `json:"last_modified_date,omitempty"`
+		NegativeInterestTags *[]string `json:"negative_interest_tags,omitempty"`
+		Over13               *string   `json:"over_13,omitempty"`
+		PositiveInterestTags *[]string `json:"positive_interest_tags,omitempty"`
+		PrivacySettings      *string   `json:"privacy_settings,omitempty"`
+	} `json:"user_anonymous_profile,omitempty"`
 }
 
 // PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.

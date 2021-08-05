@@ -3,6 +3,7 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	Def "core-building-block/driver/web/docs/gen"
 
 	log "github.com/rokmetro/logging-library/loglib"
 )
@@ -11,6 +12,11 @@ import (
 type Services interface {
 	SerGetAuthTest(l *log.Log) string
 	SerGetCommonTest(l *log.Log) string
+	CreateAnonymousProfile(l *log.Log, profile *Def.AnonymousProfile) (*Def.AnonymousProfile, error)
+	GetAnonymousProfile(l *log.Log, uuid string) (*Def.AnonymousProfile, error)
+	UpdateAnonymousProfile(l *log.Log, id string, favorites *[]string, interests *[]string, lastModifiedDate *string,
+		negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *string) error
+	DeleteAnonymousProfile(l *log.Log, id string) error
 }
 
 //Administration exposes administration APIs for the driver adapters
