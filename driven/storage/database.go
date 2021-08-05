@@ -19,19 +19,22 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
-	users                 *collectionWrapper
-	globalGroups          *collectionWrapper
-	globalRoles           *collectionWrapper
-	globalPermissions     *collectionWrapper
-	memberships           *collectionWrapper
-	devices               *collectionWrapper
-	credentials           *collectionWrapper
-	authConfigs           *collectionWrapper
-	globalConfig          *collectionWrapper
-	organizations         *collectionWrapper
-	serviceRegs           *collectionWrapper
-	serviceAuthorizations *collectionWrapper
-	applications          *collectionWrapper
+	users                    *collectionWrapper
+	globalGroups             *collectionWrapper
+	globalRoles              *collectionWrapper
+	globalPermissions        *collectionWrapper
+	memberships              *collectionWrapper
+	devices                  *collectionWrapper
+	credentials              *collectionWrapper
+	authConfigs              *collectionWrapper
+	globalConfig             *collectionWrapper
+	organizations            *collectionWrapper
+	organizationsGroups      *collectionWrapper
+	organizationsRoles       *collectionWrapper
+	organizationsPermissions *collectionWrapper
+	serviceRegs              *collectionWrapper
+	serviceAuthorizations    *collectionWrapper
+	applications             *collectionWrapper
 
 	listeners []Listener
 }
@@ -107,6 +110,24 @@ func (m *database) start() error {
 		return err
 	}
 
+	organizationsGroups := &collectionWrapper{database: m, coll: db.Collection("organizations_groups")}
+	err = m.applyOrganizationsGroupsChecks(organizationsGroups)
+	if err != nil {
+		return err
+	}
+
+	organizationsRoles := &collectionWrapper{database: m, coll: db.Collection("organizations_roles")}
+	err = m.applyOrganizationsRolesChecks(organizationsRoles)
+	if err != nil {
+		return err
+	}
+
+	organizationsPermissions := &collectionWrapper{database: m, coll: db.Collection("organizations_permissions")}
+	err = m.applyOrganizationsPermissionsChecks(organizationsPermissions)
+	if err != nil {
+		return err
+	}
+
 	serviceRegs := &collectionWrapper{database: m, coll: db.Collection("service_regs")}
 	err = m.applyServiceRegsChecks(serviceRegs)
 	if err != nil {
@@ -149,6 +170,9 @@ func (m *database) start() error {
 	m.devices = devices
 	m.globalConfig = globalConfig
 	m.organizations = organizations
+	m.organizationsGroups = organizationsGroups
+	m.organizationsRoles = organizationsRoles
+	m.organizationsPermissions = organizationsPermissions
 	m.serviceRegs = serviceRegs
 	m.serviceAuthorizations = serviceAuthorizations
 	m.applications = applications
@@ -248,6 +272,27 @@ func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) er
 	}
 
 	log.Println("organizations checks passed")
+	return nil
+}
+
+func (m *database) applyOrganizationsGroupsChecks(organizationsGroups *collectionWrapper) error {
+	log.Println("apply organizations groups checks.....")
+
+	log.Println("organizations groups checks passed")
+	return nil
+}
+
+func (m *database) applyOrganizationsRolesChecks(organizationsRoles *collectionWrapper) error {
+	log.Println("apply organizations roles checks.....")
+
+	log.Println("organizations roles checks passed")
+	return nil
+}
+
+func (m *database) applyOrganizationsPermissionsChecks(organizationsPermissions *collectionWrapper) error {
+	log.Println("apply organizations permissions checks.....")
+
+	log.Println("organizations permissions checks passed")
 	return nil
 }
 
