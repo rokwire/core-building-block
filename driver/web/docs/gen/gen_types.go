@@ -312,6 +312,9 @@ type UserProfile struct {
 	PhotoUrl  *string `json:"photo_url,omitempty"`
 }
 
+// PutAdminApplicationsIdJSONBody defines parameters for PutAdminApplicationsId.
+type PutAdminApplicationsIdJSONBody Application
+
 // PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
 type PostAdminGlobalConfigJSONBody GlobalConfig
 
@@ -368,6 +371,9 @@ type GetTpsServiceRegsParams struct {
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
+
+// PutAdminApplicationsIdJSONRequestBody defines body for PutAdminApplicationsId for application/json ContentType.
+type PutAdminApplicationsIdJSONRequestBody PutAdminApplicationsIdJSONBody
 
 // PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
 type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody

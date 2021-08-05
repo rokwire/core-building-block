@@ -70,6 +70,15 @@ delete:
   summary: Delete application
   description: |
     Delete application
+  parameters:
+   - name: id
+     in: path
+     description: ID of the application that needs to be deleted
+     required: true
+     style: simple
+     explode: false
+     schema:
+       type: string
   responses:
       200:
         description: Successful operation
