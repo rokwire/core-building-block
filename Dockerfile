@@ -1,6 +1,7 @@
 FROM golang:1.16-buster as builder
 
 ENV CGO_ENABLED=0
+ENV ENV_TYPE=aws_secrets_manager
 
 RUN mkdir /core-app
 WORKDIR /core-app
