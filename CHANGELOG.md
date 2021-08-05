@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - User PII endpoints [#128](https://github.com/rokwire/core-building-block/issues/128)
+- Set up accounts [#18](https://github.com/rokwire/core-building-block/issues/18)
 - Set up scoped tokens [#98](https://github.com/rokwire/core-building-block/issues/98)
 - Expose admin API which gets application. [#103](https://github.com/rokwire/core-building-block/issues/103)
 - Expose auth APIs [#81](https://github.com/rokwire/core-building-block/issues/81)
