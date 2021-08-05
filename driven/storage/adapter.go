@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/errors"
+	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokmetro/logging-library/logutils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -30,7 +32,7 @@ type Adapter struct {
 func (sa *Adapter) Start() error {
 	err := sa.db.start()
 	if err != nil {
-		return log.WrapErrorAction(log.ActionInitialize, "storage adapter", nil, err)
+		return errors.WrapErrorAction(logutils.ActionInitialize, "storage adapter", nil, err)
 	}
 
 	sl := storageListener{adapter: sa}
@@ -48,7 +50,7 @@ func (sa *Adapter) RegisterStorageListener(storageListener Listener) {
 func (sa *Adapter) cacheOrganizations() error {
 	organizations, err := sa.GetOrganizations()
 	if err != nil {
-		return log.WrapErrorAction(log.ActionFind, model.TypeOrganization, nil, err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
 
 	sa.setOrganizations(&organizations)
@@ -60,17 +62,17 @@ func (sa *Adapter) getOrganization(orgID string) (*model.Organization, error) {
 	sa.organizationsLock.RLock()
 	defer sa.organizationsLock.RUnlock()
 
-	errArgs := &log.FieldArgs{"org_id": orgID}
+	errArgs := &logutils.FieldArgs{"org_id": orgID}
 
 	item, _ := sa.organizations.Load(orgID)
 	if item != nil {
 		organization, ok := item.(model.Organization)
 		if !ok {
-			return nil, log.ErrorAction(log.ActionCast, model.TypeOrganization, errArgs)
+			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeOrganization, errArgs)
 		}
 		return &organization, nil
 	}
-	return nil, log.ErrorData(log.StatusMissing, model.TypeAuthConfig, errArgs)
+	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthConfig, errArgs)
 }
 
 func (sa *Adapter) setOrganizations(organizations *[]model.Organization) {
@@ -105,7 +107,7 @@ func (sa *Adapter) findUser(key string, id string) (*model.User, error) {
 	var user user
 	err := sa.db.users.FindOne(filter, &user, nil)
 	if err != nil {
-		return nil, log.WrapErrorAction(log.ActionFind, model.TypeUser, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUser, nil, err)
 	}
 
 	modelUser := userFromStorage(&user, sa)
@@ -115,7 +117,7 @@ func (sa *Adapter) findUser(key string, id string) (*model.User, error) {
 //InsertUser inserts a user
 func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*model.User, error) {
 	if user == nil {
-		return nil, log.ErrorData(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeUser))
+		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUser))
 	}
 
 	storageUser := userToStorage(user)
@@ -123,7 +125,7 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 
 	orgID, ok := membership.OrgUserData["orgID"].(string)
 	if !ok {
-		return nil, log.ErrorData(log.StatusInvalid, log.TypeString, log.StringArgs("org_id"))
+		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("org_id"))
 	}
 
 	rawMembership := rawMembership{ID: membership.ID, UserID: user.ID, OrgID: orgID,
@@ -134,25 +136,25 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 		err := sessionContext.StartTransaction()
 		if err != nil {
 			abortTransaction(sessionContext)
-			return log.WrapErrorAction(log.ActionStart, log.TypeTransaction, nil, err)
+			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
 		}
 
 		_, err = sa.db.users.InsertOneWithContext(sessionContext, storageUser)
 		if err != nil {
 			abortTransaction(sessionContext)
-			return log.WrapErrorAction(log.ActionInsert, model.TypeUser, nil, err)
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeUser, nil, err)
 		}
 
 		authCred.AccountID = storageUser.Account.ID
 		err = sa.InsertCredentials(authCred, sessionContext)
 		if err != nil {
-			return log.WrapErrorData(log.StatusInvalid, model.TypeAuthCred, &log.FieldArgs{"user_id": user.Account.Username, "account_id": user.Account.ID}, err)
+			return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAuthCred, &logutils.FieldArgs{"user_id": user.Account.Username, "account_id": user.Account.ID}, err)
 		}
 
 		err = sa.InsertMembership(&rawMembership, sessionContext)
 		if err != nil {
 			abortTransaction(sessionContext)
-			return log.WrapErrorAction(log.ActionInsert, model.TypeOrganizationMembership, nil, err)
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganizationMembership, nil, err)
 		}
 
 		//TODO: only save if device info has changed or it is new device
@@ -166,7 +168,7 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
 			abortTransaction(sessionContext)
-			return log.WrapErrorAction(log.ActionCommit, log.TypeTransaction, nil, err)
+			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
 		}
 		return nil
 	})
@@ -181,7 +183,7 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 //UpdateUser updates an existing user
 func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]interface{}) (*model.User, error) {
 	if updatedUser == nil {
-		return nil, log.ErrorData(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeUser))
+		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUser))
 	}
 
 	now := time.Now().UTC()
@@ -195,11 +197,11 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 	if newOrgData != nil {
 		membershipID, err := uuid.NewUUID()
 		if err != nil {
-			return nil, log.WrapErrorData(log.StatusInvalid, log.TypeString, log.StringArgs("membership_id"), err)
+			return nil, errors.WrapErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("membership_id"), err)
 		}
 		orgID, ok := (*newOrgData)["orgID"].(string)
 		if !ok {
-			return nil, log.WrapErrorData(log.StatusInvalid, log.TypeString, log.StringArgs("org_id"), err)
+			return nil, errors.WrapErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("org_id"), err)
 		}
 		newOrgMembership := rawMembership{ID: membershipID.String(), UserID: updatedUser.ID, OrgID: orgID,
 			OrgUserData: *newOrgData, DateCreated: now}
@@ -217,21 +219,21 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 		err := sessionContext.StartTransaction()
 		if err != nil {
 			abortTransaction(sessionContext)
-			return log.WrapErrorAction(log.ActionStart, log.TypeTransaction, nil, err)
+			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
 		}
 
 		filter := bson.M{"_id": updatedUser.ID}
 		err = sa.db.users.ReplaceOneWithContext(sessionContext, filter, newUser, nil)
 		if err != nil {
 			abortTransaction(sessionContext)
-			return log.WrapErrorAction(log.ActionReplace, model.TypeUser, nil, err)
+			return errors.WrapErrorAction(logutils.ActionReplace, model.TypeUser, nil, err)
 		}
 
 		if newMembership != nil {
 			err = sa.InsertMembership(newMembership, sessionContext)
 			if err != nil {
 				abortTransaction(sessionContext)
-				return log.WrapErrorAction(log.ActionInsert, model.TypeOrganizationMembership, nil, err)
+				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganizationMembership, nil, err)
 			}
 		}
 
@@ -246,7 +248,7 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
 			abortTransaction(sessionContext)
-			return log.WrapErrorAction(log.ActionCommit, log.TypeTransaction, nil, err)
+			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
 		}
 		return nil
 	})
@@ -263,7 +265,7 @@ func (sa *Adapter) DeleteUser(id string) error {
 	filter := bson.M{"_id": id}
 	_, err := sa.db.users.DeleteOne(filter, nil)
 	if err != nil {
-		return log.WrapErrorAction(log.ActionDelete, model.TypeUser, nil, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeUser, nil, err)
 	}
 
 	return nil
@@ -284,7 +286,7 @@ func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, 
 	var creds model.AuthCred
 	err := sa.db.credentials.FindOne(filter, &creds, nil)
 	if err != nil {
-		return nil, log.WrapErrorAction(log.ActionFind, model.TypeAuthCred, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
 	}
 
 	return &creds, nil
@@ -293,7 +295,7 @@ func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, 
 //Insert credentials inserts a set of credentials
 func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.SessionContext) error {
 	if creds == nil {
-		return log.ErrorData(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeAuthCred))
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
 	}
 
 	var err error
@@ -303,7 +305,7 @@ func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.Sessio
 		_, err = sa.db.credentials.InsertOneWithContext(context, creds)
 	}
 	if err != nil {
-		return log.WrapErrorAction(log.ActionInsert, model.TypeAuthCred, nil, err)
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthCred, nil, err)
 	}
 
 	return nil
@@ -505,7 +507,7 @@ func (sa *Adapter) FindOrganizationGroups(ids *[]string, orgID string, context m
 //InsertMembership inserts an organization membership
 func (sa *Adapter) InsertMembership(orgMembership *rawMembership, context mongo.SessionContext) error {
 	if orgMembership == nil {
-		return log.ErrorData(log.StatusInvalid, log.TypeArg, log.StringArgs(model.TypeOrganizationMembership))
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeOrganizationMembership))
 	}
 
 	var err error
@@ -516,22 +518,22 @@ func (sa *Adapter) InsertMembership(orgMembership *rawMembership, context mongo.
 	}
 
 	if err != nil {
-		return log.WrapErrorAction(log.ActionInsert, model.TypeOrganizationMembership, nil, err)
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganizationMembership, nil, err)
 	}
 	return nil
 }
 
 //FindAuthConfig finds the auth document from DB by orgID and appID
 func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error) {
-	errFields := &log.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": authType}
+	errFields := &logutils.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": authType}
 	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "type", Value: authType}}
 	var result *model.AuthConfig
 	err := sa.db.authConfigs.FindOne(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapErrorAction(log.ActionFind, model.TypeAuthConfig, errFields, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthConfig, errFields, err)
 	}
 	if result == nil {
-		return nil, log.WrapErrorData(log.StatusMissing, model.TypeAuthConfig, errFields, err)
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAuthConfig, errFields, err)
 	}
 	return result, nil
 }
@@ -542,10 +544,10 @@ func (sa *Adapter) LoadAuthConfigs() (*[]model.AuthConfig, error) {
 	var result []model.AuthConfig
 	err := sa.db.authConfigs.Find(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapErrorAction(log.ActionFind, model.TypeAuthConfig, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthConfig, nil, err)
 	}
 	if len(result) == 0 {
-		return nil, log.WrapErrorData(log.StatusMissing, model.TypeAuthConfig, nil, err)
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAuthConfig, nil, err)
 	}
 
 	return &result, nil
@@ -556,7 +558,7 @@ func (sa *Adapter) CreateGlobalConfig(setting string) (*model.GlobalConfig, erro
 	globalConfig := model.GlobalConfig{Setting: setting}
 	_, err := sa.db.globalConfig.InsertOne(globalConfig)
 	if err != nil {
-		return nil, log.WrapErrorAction(log.ActionInsert, model.TypeGlobalConfig, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
 	}
 	return &globalConfig, nil
 }
@@ -567,7 +569,7 @@ func (sa *Adapter) GetGlobalConfig() (*model.GlobalConfig, error) {
 	var result []model.GlobalConfig
 	err := sa.db.globalConfig.Find(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapErrorAction(log.ActionFind, model.TypeGlobalConfig, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalConfig, nil, err)
 	}
 	if len(result) == 0 {
 		//no record
@@ -583,7 +585,7 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
 		err := sessionContext.StartTransaction()
 		if err != nil {
-			return log.WrapErrorAction(log.ActionStart, log.TypeTransaction, nil, err)
+			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
 		}
 
 		//clear the global config - we always keep only one global config
@@ -591,20 +593,20 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 		_, err = sa.db.globalConfig.DeleteManyWithContext(sessionContext, delFilter, nil)
 		if err != nil {
 			abortTransaction(sessionContext)
-			return log.WrapErrorAction(log.ActionDelete, model.TypeGlobalConfig, nil, err)
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeGlobalConfig, nil, err)
 		}
 
 		//add the new one
 		_, err = sa.db.globalConfig.InsertOneWithContext(sessionContext, gc)
 		if err != nil {
 			abortTransaction(sessionContext)
-			return log.WrapErrorAction(log.ActionInsert, model.TypeGlobalConfig, nil, err)
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
 		}
 
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
 			abortTransaction(sessionContext)
-			return log.WrapErrorAction(log.ActionCommit, log.TypeTransaction, nil, err)
+			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
 		}
 		return nil
 	})
@@ -616,13 +618,13 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 
 //FindOrganization finds an organization
 func (sa *Adapter) FindOrganization(id string) (*model.Organization, error) {
-	errFields := &log.FieldArgs{"id": id}
+	errFields := &logutils.FieldArgs{"id": id}
 	filter := bson.D{primitive.E{Key: "_id", Value: id}}
 	var org model.Organization
 
 	err := sa.db.organizations.FindOne(filter, &org, nil)
 	if err != nil {
-		return nil, log.WrapErrorAction(log.ActionFind, model.TypeOrganization, errFields, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, errFields, err)
 	}
 
 	return &org, nil
@@ -641,7 +643,7 @@ func (sa *Adapter) CreateOrganization(name string, requestType string, requiresO
 
 	_, err := sa.db.organizations.InsertOne(organization)
 	if err != nil {
-		return nil, log.WrapErrorAction(log.ActionInsert, model.TypeOrganization, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganization, nil, err)
 	}
 
 	//return the correct type
@@ -659,7 +661,7 @@ func (sa *Adapter) GetOrganization(ID string) (*model.Organization, error) {
 	var result []model.Organization
 	err := sa.db.organizations.Find(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapErrorAction(log.ActionFind, model.TypeOrganization, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
 	if len(result) == 0 {
 		//no record
@@ -696,10 +698,10 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 
 	result, err := sa.db.organizations.UpdateOne(updatOrganizationFilter, updateOrganization, nil)
 	if err != nil {
-		return log.WrapErrorAction(log.ActionUpdate, model.TypeOrganization, &log.FieldArgs{"id": ID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeOrganization, &logutils.FieldArgs{"id": ID}, err)
 	}
 	if result.MatchedCount == 0 {
-		return log.WrapErrorData(log.StatusMissing, model.TypeOrganization, &log.FieldArgs{"id": ID}, err)
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"id": ID}, err)
 	}
 
 	return nil
@@ -712,7 +714,7 @@ func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 	var result []model.Organization
 	err := sa.db.organizations.Find(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapErrorAction(log.ActionFind, model.TypeOrganization, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
 
 	var resultList []model.Organization
@@ -730,7 +732,7 @@ func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 	var result []model.Application
 	err := sa.db.applications.Find(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapErrorAction(log.ActionFind, model.TypeApplication, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 	}
 	if len(result) == 0 {
 		//no record
@@ -761,7 +763,7 @@ func (sa *Adapter) FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, err
 	var result []model.ServiceReg
 	err := sa.db.serviceRegs.Find(filter, &result, nil)
 	if err != nil {
-		return nil, log.WrapErrorAction(log.ActionFind, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceIDs}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"service_id": serviceIDs}, err)
 	}
 
 	if result == nil {
@@ -777,7 +779,7 @@ func (sa *Adapter) FindServiceReg(serviceID string) (*model.ServiceReg, error) {
 	var reg *model.ServiceReg
 	err := sa.db.serviceRegs.FindOne(filter, &reg, nil)
 	if err != nil {
-		return nil, log.WrapErrorAction(log.ActionFind, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceID}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"service_id": serviceID}, err)
 	}
 
 	return reg, nil
@@ -787,7 +789,7 @@ func (sa *Adapter) FindServiceReg(serviceID string) (*model.ServiceReg, error) {
 func (sa *Adapter) InsertServiceReg(reg *model.ServiceReg) error {
 	_, err := sa.db.serviceRegs.InsertOne(reg)
 	if err != nil {
-		return log.WrapErrorAction(log.ActionInsert, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceReg, &logutils.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
 	}
 
 	return nil
@@ -798,7 +800,7 @@ func (sa *Adapter) UpdateServiceReg(reg *model.ServiceReg) error {
 	filter := bson.M{"registration.service_id": reg.Registration.ServiceID}
 	err := sa.db.serviceRegs.ReplaceOne(filter, reg, nil)
 	if err != nil {
-		return log.WrapErrorAction(log.ActionInsert, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceReg, &logutils.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
 	}
 
 	return nil
@@ -810,7 +812,7 @@ func (sa *Adapter) SaveServiceReg(reg *model.ServiceReg) error {
 	opts := options.Replace().SetUpsert(true)
 	err := sa.db.serviceRegs.ReplaceOne(filter, reg, opts)
 	if err != nil {
-		return log.WrapErrorAction(log.ActionSave, model.TypeServiceReg, &log.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
+		return errors.WrapErrorAction(logutils.ActionSave, model.TypeServiceReg, &logutils.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
 	}
 
 	return nil
@@ -821,14 +823,14 @@ func (sa *Adapter) DeleteServiceReg(serviceID string) error {
 	filter := bson.M{"registration.service_id": serviceID}
 	result, err := sa.db.serviceRegs.DeleteOne(filter, nil)
 	if err != nil {
-		return log.WrapErrorAction(log.ActionDelete, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceID}, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceReg, &logutils.FieldArgs{"service_id": serviceID}, err)
 	}
 	if result == nil {
-		return log.WrapErrorData(log.StatusInvalid, "result", &log.FieldArgs{"service_id": serviceID}, err)
+		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"service_id": serviceID}, err)
 	}
 	deletedCount := result.DeletedCount
 	if deletedCount == 0 {
-		return log.WrapErrorData(log.StatusMissing, model.TypeServiceReg, &log.FieldArgs{"service_id": serviceID}, err)
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeServiceReg, &logutils.FieldArgs{"service_id": serviceID}, err)
 	}
 
 	return nil
@@ -840,7 +842,7 @@ func (sa *Adapter) FindServiceAuthorization(userID string, serviceID string) (*m
 	var reg *model.ServiceAuthorization
 	err := sa.db.serviceAuthorizations.FindOne(filter, &reg, nil)
 	if err != nil {
-		return nil, log.WrapErrorAction(log.ActionFind, model.TypeServiceAuthorization, &log.FieldArgs{"user_id": userID, "service_id": serviceID}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAuthorization, &logutils.FieldArgs{"user_id": userID, "service_id": serviceID}, err)
 	}
 
 	return reg, nil
@@ -852,7 +854,7 @@ func (sa *Adapter) SaveServiceAuthorization(authorization *model.ServiceAuthoriz
 	opts := options.Replace().SetUpsert(true)
 	err := sa.db.serviceAuthorizations.ReplaceOne(filter, authorization, opts)
 	if err != nil {
-		return log.WrapErrorAction(log.ActionSave, model.TypeServiceAuthorization, &log.FieldArgs{"user_id": authorization.UserID, "service_id": authorization.ServiceID}, err)
+		return errors.WrapErrorAction(logutils.ActionSave, model.TypeServiceAuthorization, &logutils.FieldArgs{"user_id": authorization.UserID, "service_id": authorization.ServiceID}, err)
 	}
 
 	return nil
@@ -863,14 +865,14 @@ func (sa *Adapter) DeleteServiceAuthorization(userID string, serviceID string) e
 	filter := bson.M{"user_id": userID, "service_id": serviceID}
 	result, err := sa.db.serviceAuthorizations.DeleteOne(filter, nil)
 	if err != nil {
-		return log.WrapErrorAction(log.ActionFind, model.TypeServiceAuthorization, &log.FieldArgs{"user_id": userID, "service_id": serviceID}, err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAuthorization, &logutils.FieldArgs{"user_id": userID, "service_id": serviceID}, err)
 	}
 	if result == nil {
-		return log.WrapErrorData(log.StatusInvalid, "result", &log.FieldArgs{"user_id": userID, "service_id": serviceID}, err)
+		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"user_id": userID, "service_id": serviceID}, err)
 	}
 	deletedCount := result.DeletedCount
 	if deletedCount == 0 {
-		return log.WrapErrorData(log.StatusMissing, model.TypeServiceAuthorization, &log.FieldArgs{"user_id": userID, "service_id": serviceID}, err)
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeServiceAuthorization, &logutils.FieldArgs{"user_id": userID, "service_id": serviceID}, err)
 	}
 
 	return nil
@@ -878,7 +880,7 @@ func (sa *Adapter) DeleteServiceAuthorization(userID string, serviceID string) e
 
 func (sa *Adapter) SaveDevice(device *model.Device, context mongo.SessionContext) error {
 	if device == nil {
-		return log.ErrorData(log.StatusInvalid, log.TypeArg, log.StringArgs("device"))
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("device"))
 	}
 
 	var err error
@@ -891,14 +893,14 @@ func (sa *Adapter) SaveDevice(device *model.Device, context mongo.SessionContext
 	}
 
 	if err != nil {
-		return log.WrapErrorAction(log.ActionSave, "device", &log.FieldArgs{"device_id": device.ID}, nil)
+		return errors.WrapErrorAction(logutils.ActionSave, "device", &logutils.FieldArgs{"device_id": device.ID}, nil)
 	}
 
 	return nil
 }
 
 //NewStorageAdapter creates a new storage adapter instance
-func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *log.Logger) *Adapter {
+func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *logs.Logger) *Adapter {
 	timeoutInt, err := strconv.Atoi(mongoTimeout)
 	if err != nil {
 		logger.Warn("Setting default Mongo timeout - 500")

@@ -8,8 +8,7 @@ import (
 	genmocks "core-building-block/core/mocks"
 	"core-building-block/core/model"
 
-	log "github.com/rokmetro/logging-library/loglib"
-
+	"github.com/rokmetro/logging-library/logs"
 	"gotest.tools/assert"
 )
 
@@ -29,7 +28,7 @@ func TestSerGetAuthTest(t *testing.T) {
 	storage := genmocks.Storage{}
 	coreAPIs := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
-	l := log.NewLogger("test", nil).NewLog("1", log.RequestContext{})
+	l := logs.NewLogger("test", nil).NewLog("1", logs.RequestContext{})
 	got := coreAPIs.Services.SerGetAuthTest(l)
 	want := "Services - Auth - test"
 
@@ -40,7 +39,7 @@ func TestSerGetCommonTest(t *testing.T) {
 	storage := genmocks.Storage{}
 	coreAPIs := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
-	l := log.NewLogger("test", nil).NewLog("1", log.RequestContext{})
+	l := logs.NewLogger("test", nil).NewLog("1", logs.RequestContext{})
 	got := coreAPIs.Services.SerGetCommonTest(l)
 	want := "Services - Common - test"
 

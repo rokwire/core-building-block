@@ -4,7 +4,7 @@ import (
 	"core-building-block/core"
 	"net/http"
 
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/logs"
 )
 
 //EncApisHandler handles the APIs implementation used by the Encryption BB
@@ -13,7 +13,7 @@ type EncApisHandler struct {
 }
 
 //getTest TODO get test
-func (h EncApisHandler) getTest(l *log.Log, r *http.Request) log.HttpResponse {
+func (h EncApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResponse {
 	res := h.coreAPIs.Encryption.EncGetTest()
 
 	return l.HttpResponseSuccessMessage(res)

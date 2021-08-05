@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
+
 ### Added
 - Set up accounts [#18](https://github.com/rokwire/core-building-block/issues/18)
 - Set up scoped tokens [#98](https://github.com/rokwire/core-building-block/issues/98)

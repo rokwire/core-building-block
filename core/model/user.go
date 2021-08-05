@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/logutils"
 )
 
 const (
-	TypeUser log.LogData = "user"
+	TypeUser logutils.MessageDataType = "user"
 )
 
 //User represents user entity
