@@ -89,11 +89,6 @@ func (sa *Adapter) setOrganizations(organizations *[]model.Organization) {
 	}
 }
 
-//ReadTODO TODO TODO
-func (sa *Adapter) ReadTODO() error {
-	return nil
-}
-
 func (sa *Adapter) FindUserByID(id string) (*model.User, error) {
 	return sa.findUser("_id", id)
 }
