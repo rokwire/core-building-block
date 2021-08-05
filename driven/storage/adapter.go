@@ -613,71 +613,47 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 
 //FindOrganization finds an organization
 func (sa *Adapter) FindOrganization(id string) (*model.Organization, error) {
-	errFields := &logutils.FieldArgs{"id": id}
-	filter := bson.D{primitive.E{Key: "_id", Value: id}}
-	var org model.Organization
+	//no transactions for get operations..
 
-	err := sa.db.organizations.FindOne(filter, &org, nil)
+	//1. find organization
+	orgFilter := bson.D{primitive.E{Key: "_id", Value: id}}
+	var org organization
+
+	err := sa.db.organizations.FindOne(orgFilter, &org, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, errFields, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"id": id}, err)
 	}
 
-	return &org, nil
+	//2. find the organization applications
+	var applications []model.Application
+	if len(org.Applications) > 0 {
+		appsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": org.Applications}}}
+		err := sa.db.applications.Find(appsFilter, &applications, nil)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		}
+	}
+
+	organization := organizationFromStorage(&org, applications)
+	return &organization, nil
 }
 
-//CreateOrganization creates an organization
-func (sa *Adapter) CreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
-	now := time.Now()
-
-	orgConfigID, _ := uuid.NewUUID()
-	orgConfig := model.OrganizationConfig{ID: orgConfigID.String(), Domains: organizationDomains, DateCreated: now}
-
-	organizationID, _ := uuid.NewUUID()
-	organization := model.Organization{ID: organizationID.String(), Name: name, Type: requestType, RequiresOwnLogin: requiresOwnLogin, LoginTypes: loginTypes,
-		Config: orgConfig, DateCreated: now}
-
-	_, err := sa.db.organizations.InsertOne(organization)
+//InsertOrganization inserts an organization
+func (sa *Adapter) InsertOrganization(organization model.Organization) (*model.Organization, error) {
+	org := organizationToStorage(&organization)
+	_, err := sa.db.organizations.InsertOne(org)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganization, nil, err)
 	}
 
-	//return the correct type
-	resOrgConfig := model.OrganizationConfig{ID: orgConfig.ID, Domains: orgConfig.Domains}
-
-	resOrg := model.Organization{ID: organization.ID, Name: organization.Name, Type: organization.Type,
-		RequiresOwnLogin: organization.RequiresOwnLogin, LoginTypes: organization.LoginTypes, Config: resOrgConfig}
-	return &resOrg, nil
-}
-
-//GetOrganization gets organization
-func (sa *Adapter) GetOrganization(ID string) (*model.Organization, error) {
-
-	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	var result []model.Organization
-	err := sa.db.organizations.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
-	}
-	if len(result) == 0 {
-		//no record
-		return nil, nil
-	}
-	org := result[0]
-
-	//return the correct type
-	getOrgConfig := org.Config
-	getResOrgConfig := model.OrganizationConfig{ID: getOrgConfig.ID, Domains: getOrgConfig.Domains}
-
-	getResOrg := model.Organization{ID: org.ID, Name: org.Name, Type: org.Type,
-		RequiresOwnLogin: org.RequiresOwnLogin, LoginTypes: org.LoginTypes, Config: getResOrgConfig}
-	return &getResOrg, nil
+	return &organization, nil
 }
 
 //UpdateOrganization updates an organization
 func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
 
 	now := time.Now()
-
+	//TODO - use pointers and update only what not nil
 	updatOrganizationFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	updateOrganization := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
