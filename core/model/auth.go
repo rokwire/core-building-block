@@ -3,35 +3,40 @@ package model
 import (
 	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/auth-library/authservice"
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/logutils"
 )
 
 const (
 	//TypeUserAuth user auth type
-	TypeUserAuth log.LogData = "user auth"
+	TypeUserAuth logutils.MessageDataType = "user auth"
 	//TypeAuthConfig auth config type
-	TypeAuthConfig log.LogData = "auth config"
+	TypeAuthConfig logutils.MessageDataType = "auth config"
+	//TypeAuthCred auth cred type
+	TypeAuthCred logutils.MessageDataType = "auth cred"
 	//TypeServiceReg service reg type
-	TypeServiceReg log.LogData = "service reg"
+	TypeServiceReg logutils.MessageDataType = "service reg"
 	//TypeServiceScope service scope type
-	TypeServiceScope log.LogData = "service scope"
+	TypeServiceScope logutils.MessageDataType = "service scope"
 	//TypeServiceAuthorization service authorization type
-	TypeServiceAuthorization log.LogData = "service authorization"
+	TypeServiceAuthorization logutils.MessageDataType = "service authorization"
 	//TypeScope scope type
-	TypeScope log.LogData = "scope"
+	TypeScope logutils.MessageDataType = "scope"
 )
 
 //UserAuth represents user auth entity
 type UserAuth struct {
 	UserID       string
+	AccountID    string
 	Sub          string
-	Name         string
+	FirstName    string
+	LastName     string
 	Email        string
 	Phone        string
 	Picture      []byte
 	Exp          *int64
 	RefreshToken string
-	Params       map[string]interface{}
+	OrgData      map[string]interface{}
+	NewCreds     interface{}
 }
 
 //AuthConfig represents auth config entity
@@ -40,6 +45,16 @@ type AuthConfig struct {
 	AppID  string `json:"app_id" bson:"app_id" validate:"required"`
 	Type   string `json:"type" bson:"type" validate:"required"`
 	Config []byte `json:"config" bson:"config" validate:"required"`
+}
+
+//AuthCred represents represents a set of credentials used by auth
+type AuthCred struct {
+	OrgID     string      `bson:"org_id"`
+	AppID     string      `bson:"app_id"`
+	Type      string      `bson:"type"`
+	UserID    string      `bson:"user_id"`
+	AccountID string      `bson:"account_id"`
+	Creds     interface{} `bson:"creds"`
 }
 
 //ServiceReg represents a service registration entity
