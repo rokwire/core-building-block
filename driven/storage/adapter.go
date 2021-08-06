@@ -24,8 +24,8 @@ import (
 type Adapter struct {
 	db *database
 
-	organizations     *syncmap.Map
-	organizationsLock *sync.RWMutex
+	cachedOrganizations *syncmap.Map
+	organizationsLock   *sync.RWMutex
 }
 
 //Start starts the storage
@@ -53,18 +53,18 @@ func (sa *Adapter) cacheOrganizations() error {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
 
-	sa.setOrganizations(&organizations)
+	sa.setCachedOrganizations(&organizations)
 
 	return nil
 }
 
-func (sa *Adapter) getOrganization(orgID string) (*model.Organization, error) {
+func (sa *Adapter) getCachedOrganization(orgID string) (*model.Organization, error) {
 	sa.organizationsLock.RLock()
 	defer sa.organizationsLock.RUnlock()
 
 	errArgs := &logutils.FieldArgs{"org_id": orgID}
 
-	item, _ := sa.organizations.Load(orgID)
+	item, _ := sa.cachedOrganizations.Load(orgID)
 	if item != nil {
 		organization, ok := item.(model.Organization)
 		if !ok {
@@ -75,8 +75,8 @@ func (sa *Adapter) getOrganization(orgID string) (*model.Organization, error) {
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthConfig, errArgs)
 }
 
-func (sa *Adapter) setOrganizations(organizations *[]model.Organization) {
-	sa.organizations = &syncmap.Map{}
+func (sa *Adapter) setCachedOrganizations(organizations *[]model.Organization) {
+	sa.cachedOrganizations = &syncmap.Map{}
 	validate := validator.New()
 
 	sa.organizationsLock.Lock()
@@ -84,7 +84,7 @@ func (sa *Adapter) setOrganizations(organizations *[]model.Organization) {
 	for _, org := range *organizations {
 		err := validate.Struct(org)
 		if err == nil {
-			sa.organizations.Store(org.ID, org)
+			sa.cachedOrganizations.Store(org.ID, org)
 		}
 	}
 }
@@ -408,7 +408,7 @@ func (sa *Adapter) FindOrganizationRoles(ids *[]string, orgID string, context mo
 		} else {
 			orgRole.Permissions = *permissions
 		}
-		org, err := sa.getOrganization(orgID)
+		org, err := sa.getCachedOrganization(orgID)
 		if err != nil {
 			fmt.Printf("failed to find cached organization for org_id %s\n", orgID)
 		} else {
@@ -488,7 +488,7 @@ func (sa *Adapter) FindOrganizationGroups(ids *[]string, orgID string, context m
 		} else {
 			orgGroup.Roles = *roles
 		}
-		org, err := sa.getOrganization(orgID)
+		org, err := sa.getCachedOrganization(orgID)
 		if err != nil {
 			fmt.Printf("failed to find cached organization for org_id %s\n", orgID)
 		} else {
