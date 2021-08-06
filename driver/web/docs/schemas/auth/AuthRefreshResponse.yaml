@@ -4,3 +4,7 @@ properties:
     type: string
   refresh_token:
     type: string
+  token_type:
+    type: string
+    enum:
+      - Bearer

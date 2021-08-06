@@ -27,6 +27,11 @@ const (
 	AuthLoginUrlRequestAuthTypeOidc AuthLoginUrlRequestAuthType = "oidc"
 )
 
+// Defines values for AuthRefreshResponseTokenType.
+const (
+	AuthRefreshResponseTokenTypeBearer AuthRefreshResponseTokenType = "Bearer"
+)
+
 // Defines values for DeviceType.
 const (
 	DeviceTypeDesktop DeviceType = "desktop"
@@ -106,7 +111,7 @@ type AuthLoginParamsEmail struct {
 // Auth login params for auth_type="oidc"
 type AuthLoginParamsOidc struct {
 	PkceVerifier *string `json:"pkce_verifier,omitempty"`
-	RedirectURI  *string `json:"redirect_uri,omitempty"`
+	RedirectUri  *string `json:"redirect_uri,omitempty"`
 }
 
 // Auth login params for auth_type="phone" (None)
@@ -146,7 +151,7 @@ type AuthLoginUrlRequest struct {
 	AppId       string                      `json:"app_id"`
 	AuthType    AuthLoginUrlRequestAuthType `json:"auth_type"`
 	OrgId       string                      `json:"org_id"`
-	RedirectURI string                      `json:"redirect_uri"`
+	RedirectUri string                      `json:"redirect_uri"`
 }
 
 // AuthLoginUrlRequestAuthType defines model for AuthLoginUrlRequest.AuthType.
@@ -162,9 +167,13 @@ type AuthLoginUrlResponse struct {
 
 // AuthRefreshResponse defines model for AuthRefreshResponse.
 type AuthRefreshResponse struct {
-	AccessToken  *string `json:"access_token,omitempty"`
-	RefreshToken *string `json:"refresh_token,omitempty"`
+	AccessToken  *string                       `json:"access_token,omitempty"`
+	RefreshToken *string                       `json:"refresh_token,omitempty"`
+	TokenType    *AuthRefreshResponseTokenType `json:"token_type,omitempty"`
 }
+
+// AuthRefreshResponseTokenType defines model for AuthRefreshResponse.TokenType.
+type AuthRefreshResponseTokenType string
 
 // Service registration record used for auth
 type AuthServiceReg struct {
