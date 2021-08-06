@@ -10,6 +10,12 @@ servers:
     description: Test server
   - url: 'https://api-dev.rokwire.illinois.edu/core'
     description: Development server
+  - url: 'https://core.api.prod.services.rokmetro.com/core'
+    description: ROKMETRO production server
+  - url: 'https://core.api.qa.services.rokmetro.com/core'
+    description: ROKMETRO test server
+  - url: 'https://core.api.dev.services.rokmetro.com/core'
+    description: ROKMETRO development server
   - url: 'http://localhost/core'
     description: Local server
 tags:
