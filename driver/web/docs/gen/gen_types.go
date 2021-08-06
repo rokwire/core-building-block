@@ -109,7 +109,7 @@ type AuthLoginParamsEmail struct {
 // Auth login params for auth_type="oidc"
 type AuthLoginParamsOidc struct {
 	PkceVerifier *string `json:"pkce_verifier,omitempty"`
-	RedirectUri  *string `json:"redirect_uri,omitempty"`
+	RedirectURI  *string `json:"redirect_uri,omitempty"`
 }
 
 // Auth login params for auth_type="phone" (None)
@@ -149,7 +149,7 @@ type AuthLoginUrlRequest struct {
 	AppId       string                      `json:"app_id"`
 	AuthType    AuthLoginUrlRequestAuthType `json:"auth_type"`
 	OrgId       string                      `json:"org_id"`
-	RedirectUri string                      `json:"redirect_uri"`
+	RedirectURI string                      `json:"redirect_uri"`
 }
 
 // AuthLoginUrlRequestAuthType defines model for AuthLoginUrlRequest.AuthType.
