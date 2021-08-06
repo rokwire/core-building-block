@@ -43,6 +43,8 @@ AuthLoginParamsPhone:
   $ref: "./auth/AuthLoginParamsPhone.yaml"
 AuthLoginParamsOidc:
   $ref: "./auth/AuthLoginParamsOidc.yaml"
+AuthResponseParamsOidc:
+  $ref: "./auth/AuthResponseParamsOidc.yaml"
 
 AuthRefreshResponse:
   $ref: "./auth/AuthRefreshResponse.yaml"

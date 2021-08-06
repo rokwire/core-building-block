@@ -10,10 +10,5 @@ properties:
       - Bearer
   params:
     type: object
-    properties:
-      id_token:
-        type: string
-      access_token:
-        type: string
-      token_type:
-        type: string
+    anyOf:
+      - $ref: "./AuthResponseParamsOidc.yaml"
