@@ -4,7 +4,6 @@ import (
 	"context"
 	"core-building-block/core/model"
 	"fmt"
-	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -24,6 +23,8 @@ import (
 //Adapter implements the Storage interface
 type Adapter struct {
 	db *database
+
+	logger *logs.Logger
 
 	cachedOrganizations *syncmap.Map
 	organizationsLock   *sync.RWMutex
@@ -57,7 +58,7 @@ func (sa *Adapter) RegisterStorageListener(storageListener Listener) {
 
 //cacheOrganizations caches the organizations from the DB
 func (sa *Adapter) cacheOrganizations() error {
-	log.Println("cacheOrganizations..")
+	sa.logger.Info("cacheOrganizations..")
 
 	organizations, err := sa.GetOrganizations()
 	if err != nil {
@@ -916,7 +917,7 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	organizationsLock := &sync.RWMutex{}
 
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout}
-	return &Adapter{db: db, cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock}
+	return &Adapter{db: db, logger: logger, cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock}
 }
 
 func abortTransaction(sessionContext mongo.SessionContext) {
