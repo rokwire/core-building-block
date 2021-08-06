@@ -134,6 +134,11 @@ type AuthLoginResponse struct {
 
 	// The user's access token to be provided to authorize access to ROKWIRE APIs
 	AccessToken *string `json:"access_token,omitempty"`
+	Params      *struct {
+		AccessToken *string `json:"access_token,omitempty"`
+		IdToken     *string `json:"id_token,omitempty"`
+		TokenType   *string `json:"token_type,omitempty"`
+	} `json:"params,omitempty"`
 
 	// A refresh token that can be used to get a new access token once the one provided expires
 	RefreshToken *string `json:"refresh_token,omitempty"`
@@ -167,7 +172,12 @@ type AuthLoginUrlResponse struct {
 
 // AuthRefreshResponse defines model for AuthRefreshResponse.
 type AuthRefreshResponse struct {
-	AccessToken  *string                       `json:"access_token,omitempty"`
+	AccessToken *string `json:"access_token,omitempty"`
+	Params      *struct {
+		AccessToken *string `json:"access_token,omitempty"`
+		IdToken     *string `json:"id_token,omitempty"`
+		TokenType   *string `json:"token_type,omitempty"`
+	} `json:"params,omitempty"`
 	RefreshToken *string                       `json:"refresh_token,omitempty"`
 	TokenType    *AuthRefreshResponseTokenType `json:"token_type,omitempty"`
 }

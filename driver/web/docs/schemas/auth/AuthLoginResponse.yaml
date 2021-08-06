@@ -13,3 +13,12 @@ properties:
       - Bearer
   user:
     $ref: "../../schemas/user/User.yaml"
+  params:
+    type: object
+    properties:
+      id_token:
+        type: string
+      access_token:
+        type: string
+      token_type:
+        type: string

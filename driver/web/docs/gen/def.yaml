@@ -946,6 +946,15 @@ components:
             - Bearer
         user:
           $ref: '#/components/schemas/User'
+        params:
+          type: object
+          properties:
+            id_token:
+              type: string
+            access_token:
+              type: string
+            token_type:
+              type: string
     AuthLoginCredsEmail:
       required:
         - email
@@ -1002,6 +1011,15 @@ components:
           type: string
           enum:
             - Bearer
+        params:
+          type: object
+          properties:
+            id_token:
+              type: string
+            access_token:
+              type: string
+            token_type:
+              type: string
     AuthLoginUrlRequest:
       required:
         - auth_type
