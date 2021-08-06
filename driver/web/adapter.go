@@ -181,11 +181,13 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 	}
 }
 
-func (we Adapter) adminTokenWrapFunc(handler handlerFunc) http.HandlerFunc {
+func (we Adapter) adminTokenWrapFunc(logObj *logs.Log, handler handlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		logObj := we.logger.NewRequestLog(req)
-		logObj.RequestReceived()
-
+		if logObj == nil {
+			logObj := we.logger.NewRequestLog(req)
+			logObj.RequestReceived()
+		}
+		
 		// Authenticate token
 		claims, err := we.adminApisHandler.tokenAuth.CheckRequestTokens(req)
 		if err != nil {
