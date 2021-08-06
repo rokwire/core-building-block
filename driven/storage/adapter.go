@@ -24,19 +24,29 @@ import (
 type Adapter struct {
 	db *database
 
-	organizations     *syncmap.Map
-	organizationsLock *sync.RWMutex
+	logger *logs.Logger
+
+	cachedOrganizations *syncmap.Map
+	organizationsLock   *sync.RWMutex
 }
 
 //Start starts the storage
 func (sa *Adapter) Start() error {
+	//start db
 	err := sa.db.start()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInitialize, "storage adapter", nil, err)
 	}
 
+	//register storage listener
 	sl := storageListener{adapter: sa}
 	sa.RegisterStorageListener(&sl)
+
+	//cache the organizations
+	err = sa.cacheOrganizations()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionCache, model.TypeOrganization, nil, err)
+	}
 
 	return err
 }
@@ -48,23 +58,25 @@ func (sa *Adapter) RegisterStorageListener(storageListener Listener) {
 
 //cacheOrganizations caches the organizations from the DB
 func (sa *Adapter) cacheOrganizations() error {
+	sa.logger.Info("cacheOrganizations..")
+
 	organizations, err := sa.GetOrganizations()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
 
-	sa.setOrganizations(&organizations)
+	sa.setCachedOrganizations(&organizations)
 
 	return nil
 }
 
-func (sa *Adapter) getOrganization(orgID string) (*model.Organization, error) {
+func (sa *Adapter) getCachedOrganization(orgID string) (*model.Organization, error) {
 	sa.organizationsLock.RLock()
 	defer sa.organizationsLock.RUnlock()
 
 	errArgs := &logutils.FieldArgs{"org_id": orgID}
 
-	item, _ := sa.organizations.Load(orgID)
+	item, _ := sa.cachedOrganizations.Load(orgID)
 	if item != nil {
 		organization, ok := item.(model.Organization)
 		if !ok {
@@ -75,16 +87,17 @@ func (sa *Adapter) getOrganization(orgID string) (*model.Organization, error) {
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthConfig, errArgs)
 }
 
-func (sa *Adapter) setOrganizations(organizations *[]model.Organization) {
-	sa.organizations = &syncmap.Map{}
-	validate := validator.New()
-
+func (sa *Adapter) setCachedOrganizations(organizations *[]model.Organization) {
 	sa.organizationsLock.Lock()
 	defer sa.organizationsLock.Unlock()
+
+	sa.cachedOrganizations = &syncmap.Map{}
+	validate := validator.New()
+
 	for _, org := range *organizations {
 		err := validate.Struct(org)
 		if err == nil {
-			sa.organizations.Store(org.ID, org)
+			sa.cachedOrganizations.Store(org.ID, org)
 		}
 	}
 }
@@ -132,13 +145,13 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
 		err := sessionContext.StartTransaction()
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
 		}
 
 		_, err = sa.db.users.InsertOneWithContext(sessionContext, storageUser)
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeUser, nil, err)
 		}
 
@@ -150,7 +163,7 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 
 		err = sa.InsertMembership(&rawMembership, sessionContext)
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganizationMembership, nil, err)
 		}
 
@@ -164,7 +177,7 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 		//commit the transaction
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
 		}
 		return nil
@@ -215,21 +228,21 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
 		err := sessionContext.StartTransaction()
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
 		}
 
 		filter := bson.M{"_id": updatedUser.ID}
 		err = sa.db.users.ReplaceOneWithContext(sessionContext, filter, newUser, nil)
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionReplace, model.TypeUser, nil, err)
 		}
 
 		if newMembership != nil {
 			err = sa.InsertMembership(newMembership, sessionContext)
 			if err != nil {
-				abortTransaction(sessionContext)
+				sa.abortTransaction(sessionContext)
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganizationMembership, nil, err)
 			}
 		}
@@ -244,7 +257,7 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 		//commit the transaction
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
 		}
 		return nil
@@ -437,7 +450,7 @@ func (sa *Adapter) FindOrganizationRoles(ids *[]string, orgID string, context mo
 		} else {
 			orgRole.Permissions = *permissions
 		}
-		org, err := sa.getOrganization(orgID)
+		org, err := sa.getCachedOrganization(orgID)
 		if err != nil {
 			fmt.Printf("failed to find cached organization for org_id %s\n", orgID)
 		} else {
@@ -517,7 +530,7 @@ func (sa *Adapter) FindOrganizationGroups(ids *[]string, orgID string, context m
 		} else {
 			orgGroup.Roles = *roles
 		}
-		org, err := sa.getOrganization(orgID)
+		org, err := sa.getCachedOrganization(orgID)
 		if err != nil {
 			fmt.Printf("failed to find cached organization for org_id %s\n", orgID)
 		} else {
@@ -618,20 +631,20 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 		delFilter := bson.D{}
 		_, err = sa.db.globalConfig.DeleteManyWithContext(sessionContext, delFilter, nil)
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeGlobalConfig, nil, err)
 		}
 
 		//add the new one
 		_, err = sa.db.globalConfig.InsertOneWithContext(sessionContext, gc)
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
 		}
 
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
 		}
 		return nil
@@ -711,21 +724,39 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 
 //GetOrganizations gets the organizations
 func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
+	//no transactions for get operations..
 
-	filter := bson.D{}
-	var result []model.Organization
-	err := sa.db.organizations.Find(filter, &result, nil)
+	//1. find the organizations
+	orgsFilter := bson.D{}
+	var orgsResult []organization
+	err := sa.db.organizations.Find(orgsFilter, &orgsResult, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
-
-	var resultList []model.Organization
-	for _, current := range result {
-		item := &model.Organization{ID: current.ID, Name: current.Name, Type: current.Type, RequiresOwnLogin: current.RequiresOwnLogin,
-			LoginTypes: current.LoginTypes, Config: current.Config}
-		resultList = append(resultList, *item)
+	if len(orgsResult) == 0 {
+		//no data
+		return make([]model.Organization, 0), nil
 	}
-	return resultList, nil
+
+	//2. find the applications for the organization
+	var applicationsIDs []string
+	for _, org := range orgsResult {
+		if len(org.Applications) > 0 {
+			applicationsIDs = append(applicationsIDs, org.Applications...)
+		}
+	}
+	var applicationsResult []model.Application
+	if len(applicationsIDs) > 0 {
+		orgsAppsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": applicationsIDs}}}
+		err := sa.db.applications.Find(orgsAppsFilter, &applicationsResult, nil)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		}
+	}
+
+	//3. prepare the response
+	organizations := organizationsFromStorage(orgsResult, applicationsResult)
+	return organizations, nil
 }
 
 //GetApplication gets application
@@ -902,6 +933,13 @@ func (sa *Adapter) SaveDevice(device *model.Device, context mongo.SessionContext
 	return nil
 }
 
+func (sa *Adapter) abortTransaction(sessionContext mongo.SessionContext) {
+	err := sessionContext.AbortTransaction(sessionContext)
+	if err != nil {
+		sa.logger.Errorf("error aborting a transaction - %s", err)
+	}
+}
+
 //NewStorageAdapter creates a new storage adapter instance
 func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *logs.Logger) *Adapter {
 	timeoutInt, err := strconv.Atoi(mongoTimeout)
@@ -911,15 +949,11 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	}
 	timeout := time.Millisecond * time.Duration(timeoutInt)
 
-	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout}
-	return &Adapter{db: db}
-}
+	cachedOrganizations := &syncmap.Map{}
+	organizationsLock := &sync.RWMutex{}
 
-func abortTransaction(sessionContext mongo.SessionContext) {
-	err := sessionContext.AbortTransaction(sessionContext)
-	if err != nil {
-		//TODO - log
-	}
+	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout, logger: logger}
+	return &Adapter{db: db, logger: logger, cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock}
 }
 
 type storageListener struct {
@@ -931,11 +965,16 @@ func (sl *storageListener) OnOrganizationsUpdated() {
 	sl.adapter.cacheOrganizations()
 }
 
+func (sl *storageListener) OnApplicationsUpdated() {
+	sl.adapter.cacheOrganizations()
+}
+
 //Listener represents storage listener
 type Listener interface {
 	OnAuthConfigUpdated()
 	OnServiceRegsUpdated()
 	OnOrganizationsUpdated()
+	OnApplicationsUpdated()
 }
 
 //DefaultListenerImpl default listener implementation
@@ -949,3 +988,6 @@ func (d *DefaultListenerImpl) OnServiceRegsUpdated() {}
 
 //OnOrganizationsUpdated notifies organizations have been updated
 func (d *DefaultListenerImpl) OnOrganizationsUpdated() {}
+
+//OnApplicationsUpdated notifies applications have been updated
+func (d *DefaultListenerImpl) OnApplicationsUpdated() {}

@@ -35,7 +35,7 @@ func organizationMembershipFromUserStorage(item *userMembership, sa *Adapter) *m
 		Permissions: item.Permissions, Roles: item.Roles, Groups: item.Groups,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 
-	org, err := sa.getOrganization(item.OrgID)
+	org, err := sa.getCachedOrganization(item.OrgID)
 	if err != nil {
 		fmt.Printf("failed to find cached organization for org_id %s\n", item.OrgID)
 	} else {
