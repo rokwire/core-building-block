@@ -3,7 +3,7 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
-	Def "core-building-block/driver/web/docs/gen"
+	"time"
 
 	log "github.com/rokmetro/logging-library/loglib"
 )
@@ -12,10 +12,10 @@ import (
 type Services interface {
 	SerGetAuthTest(l *log.Log) string
 	SerGetCommonTest(l *log.Log) string
-	CreateAnonymousProfile(l *log.Log, profile *Def.AnonymousProfile) (*Def.AnonymousProfile, error)
-	GetAnonymousProfile(l *log.Log, uuid string) (*Def.AnonymousProfile, error)
-	UpdateAnonymousProfile(l *log.Log, id string, favorites *[]string, interests *[]string, lastModifiedDate *string,
-		negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *string) error
+	CreateAnonymousProfile(l *log.Log, profile *model.AnonymousProfile) (*model.AnonymousProfile, error)
+	GetAnonymousProfile(l *log.Log, id string) (*model.AnonymousProfile, error)
+	UpdateAnonymousProfile(l *log.Log, id string, favorites *[]string, interests *[]string, lastModifiedDate *time.Time,
+		negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error
 	DeleteAnonymousProfile(l *log.Log, id string) error
 }
 
@@ -58,6 +58,11 @@ type Storage interface {
 	UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
 	GetOrganizations() ([]model.Organization, error)
 	GetOrganization(ID string) (*model.Organization, error)
+	CreateAnonymousProfile(profile *model.AnonymousProfile) (*model.AnonymousProfile, error)
+	GetAnonymousProfile(id string) (*model.AnonymousProfile, error)
+	UpdateAnonymousProfile(id string, favorites *[]string, interests *[]string, lastModifiedDate *time.Time,
+		negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error
+	DeleteAnonymousProfile(id string) error
 
 	GetApplication(ID string) (*model.Application, error)
 }

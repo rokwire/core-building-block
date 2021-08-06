@@ -3,6 +3,7 @@ package core
 import (
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
+	"time"
 
 	log "github.com/rokmetro/logging-library/loglib"
 )
@@ -69,6 +70,23 @@ func (s *servicesImpl) SerGetAuthTest(l *log.Log) string {
 
 func (s *servicesImpl) SerGetCommonTest(l *log.Log) string {
 	return s.app.serGetCommonTest(l)
+}
+
+func (s *servicesImpl) CreateAnonymousProfile(l *log.Log, profile *model.AnonymousProfile) (*model.AnonymousProfile, error) {
+	return s.app.createAnonymousProfile(l, profile)
+}
+
+func (s *servicesImpl) UpdateAnonymousProfile(l *log.Log, id string, favorites *[]string, interests *[]string, lastModifiedDate *time.Time,
+	negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error {
+	return s.app.updateAnonymousProfile(l, id, favorites, interests, lastModifiedDate, negativeInterestTags, positiveInterestTags, privacySettings, over13)
+}
+
+func (s *servicesImpl) DeleteAnonymousProfile(l *log.Log, id string) error {
+	return s.app.deleteAnonymousProfile(l, id)
+}
+
+func (s *servicesImpl) GetAnonymousProfile(l *log.Log, id string) (*model.AnonymousProfile, error) {
+	return s.app.getAnonymousProfile(l, id)
 }
 
 ///

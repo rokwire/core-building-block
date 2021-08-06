@@ -22,6 +22,7 @@ type database struct {
 	authConfigs           *collectionWrapper
 	globalConfig          *collectionWrapper
 	organizations         *collectionWrapper
+	anonymousProfile      *collectionWrapper
 	serviceRegs           *collectionWrapper
 	serviceAuthorizations *collectionWrapper
 	applications          *collectionWrapper
@@ -60,6 +61,12 @@ func (m *database) start() error {
 
 	organizations := &collectionWrapper{database: m, coll: db.Collection("organizations")}
 	err = m.applyOrganizationsChecks(organizations)
+	if err != nil {
+		return err
+	}
+
+	anonymousProfile := &collectionWrapper{database: m, coll: db.Collection("anonymous_profile")}
+	err = m.applyAnonymousProfileChecks(anonymousProfile)
 	if err != nil {
 		return err
 	}
@@ -131,6 +138,19 @@ func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) er
 	}
 
 	log.Println("organizations checks passed")
+	return nil
+}
+
+func (m *database) applyAnonymousProfileChecks(organizations *collectionWrapper) error {
+	log.Println("apply anonymous profile checks.....")
+
+	//add name index - unique
+	err := organizations.AddIndex(bson.D{primitive.E{Key: "id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	log.Println("anonymous profile checks passed")
 	return nil
 }
 

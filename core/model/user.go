@@ -3,6 +3,14 @@ package model
 import (
 	"bytes"
 	"fmt"
+	"time"
+
+	log "github.com/rokmetro/logging-library/loglib"
+)
+
+const (
+	//TypeOrganization ...
+	TypeAnonymousProfile log.LogData = "anonymous profile"
 )
 
 //User represents user entity
@@ -71,6 +79,18 @@ type UserProfile struct {
 	PhotoURL  string
 	FirstName string
 	LastName  string
+}
+
+type AnonymousProfile struct {
+	ID                   string    `json:"id" bson:"id"`
+	Interests            []string  `json:"interests" bson:"interests"`
+	Favorites            []string  `json:"favorites" bson:"favorites"`
+	Over13               bool      `json:"over_13" bson:"over_13"`
+	PositiveInterestTags []string  `json:"positive_interest_tags" bson:"positive_interest_tags"`
+	NegativeInterestTags []string  `json:"negative_interest_tags" bson:"negative_interest_tags"`
+	CreationDate         time.Time `json:"creation_date" bson:"creation_date"`
+	LastModifiedDate     time.Time `json:"last_modified_date" bson:"last_modified_date"`
+	PrivacySettings      string    `json:"privacy_settings" bson:"privacy_settings"`
 }
 
 func (up UserProfile) String() string {

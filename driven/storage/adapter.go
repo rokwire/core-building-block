@@ -277,6 +277,89 @@ func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 	return &getResApp, nil
 }
 
+// ============================== Anonymous Profile ==============================
+
+//CreateAnonymousProfile inserts an object in the anonymous profile coll
+func (sa *Adapter) CreateAnonymousProfile(profile *model.AnonymousProfile) (*model.AnonymousProfile, error) {
+	now := time.Now()
+	profile.CreationDate = now
+	profile.LastModifiedDate = now
+
+	_, err := sa.db.anonymousProfile.InsertOne(profile)
+	if err != nil {
+		return nil, log.WrapErrorAction(log.ActionInsert, model.TypeAnonymousProfile, nil, err)
+	}
+	return profile, nil
+}
+
+//UpdateOrganization updates an organization
+func (sa *Adapter) UpdateAnonymousProfile(id string, favorites *[]string, interests *[]string, lastModifiedDate *time.Time,
+	negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error {
+
+	now := time.Now()
+	filter := bson.M{"id": id}
+	updates := bson.M{"lastModifiedDate": now}
+
+	if favorites != nil {
+		updates["favorites"] = *favorites
+	}
+	if interests != nil {
+		updates["interests"] = *interests
+	}
+	if negativeInterestTags != nil {
+		updates["negativeInterestTags"] = *negativeInterestTags
+	}
+	if privacySettings != nil {
+		updates["privacySettings"] = *privacySettings
+	}
+	if over13 != nil {
+		updates["over13"] = *over13
+	}
+	if lastModifiedDate != nil {
+		updates["lastModifiedDate"] = *lastModifiedDate
+	}
+
+	// The "ReturnDocument" option must be set to after to get the updated document
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+	var item *model.AnonymousProfile
+	err := sa.db.anonymousProfile.FindOneAndUpdate(filter, updates, item, opts)
+	if err != nil {
+		return log.WrapErrorAction(log.ActionUpdate, model.TypeOrganization, &log.FieldArgs{"id": id}, err)
+	}
+
+	return nil
+}
+
+//GetAnonymousProfile gets anonymous profile
+func (sa *Adapter) GetAnonymousProfile(id string) (*model.AnonymousProfile, error) {
+	filter := bson.M{"id": id}
+	var profile *model.AnonymousProfile
+	err := sa.db.anonymousProfile.FindOne(filter, &profile, nil)
+	if err != nil {
+		return nil, log.WrapErrorAction(log.ActionFind, model.TypeAnonymousProfile, &log.FieldArgs{"id": id}, err)
+	}
+
+	return profile, nil
+}
+
+//DeleteAnonymousProfile deletes the anonymous profile from storage
+func (sa *Adapter) DeleteAnonymousProfile(id string) error {
+	filter := bson.M{"id": id}
+	result, err := sa.db.anonymousProfile.DeleteOne(filter, nil)
+	if err != nil {
+		return log.WrapErrorAction(log.ActionDelete, model.TypeAnonymousProfile, &log.FieldArgs{"id": id}, err)
+	}
+	if result == nil {
+		return log.WrapErrorData(log.StatusInvalid, "result", &log.FieldArgs{"id": id}, err)
+	}
+	deletedCount := result.DeletedCount
+	if deletedCount == 0 {
+		return log.WrapErrorData(log.StatusMissing, model.TypeServiceReg, &log.FieldArgs{"id": id}, err)
+	}
+
+	return nil
+}
+
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records

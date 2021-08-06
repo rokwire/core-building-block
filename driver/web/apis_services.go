@@ -14,11 +14,6 @@ import (
 	log "github.com/rokmetro/logging-library/loglib"
 )
 
-const (
-	//TypeUserAuth user auth type
-	TypeAnonymousProfile log.LogData = "anonymous profile"
-)
-
 //ServicesApisHandler handles the rest APIs implementation
 type ServicesApisHandler struct {
 	coreAPIs *core.APIs
@@ -180,13 +175,16 @@ func (h ServicesApisHandler) createAnonymousProfile(l *log.Log, r *http.Request)
 
 	var requestData Def.AnonymousProfile
 	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionUnmarshal, TypeAnonymousProfile, nil, err, http.StatusBadRequest, true)
+	if err != nil || requestData.Id == "" {
+		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeAnonymousProfile, nil, err, http.StatusBadRequest, true)
 	}
-
-	_, err = h.coreAPIs.Services.CreateAnonymousProfile(l, &requestData)
+	profile := anonymousProfileFromDef(&requestData)
+	if profile.ID == "" {
+		return l.HttpResponseErrorAction(log.ActionCast, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
+	}
+	_, err = h.coreAPIs.Services.CreateAnonymousProfile(l, &profile)
 	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionGet, TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(log.ActionGet, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
 	}
 	return l.HttpResponseSuccess()
 }
@@ -205,12 +203,15 @@ func (h ServicesApisHandler) updateAnonymousProfile(l *log.Log, r *http.Request)
 	var requestData Def.AnonymousProfile
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionUnmarshal, log.LogData("invalid anonymous profile request"), nil, err, http.StatusBadRequest, true)
+		return l.HttpResponseErrorAction(log.ActionUnmarshal, model.TypeAnonymousProfile, nil, err, http.StatusBadRequest, true)
 	}
-
-	err = h.coreAPIs.Services.UpdateAnonymousProfile(l, requestData.Id, requestData.Favorites, requestData.Interests, requestData.LastModifiedDate, requestData.NegativeInterestTags, requestData.PositiveInterestTags, requestData.PrivacySettings, requestData.Over13)
+	profile := anonymousProfileFromDef(&requestData)
+	if profile.ID == "" {
+		return l.HttpResponseErrorAction(log.ActionCast, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
+	}
+	err = h.coreAPIs.Services.UpdateAnonymousProfile(l, profile.ID, &profile.Favorites, &profile.Interests, &profile.LastModifiedDate, &profile.NegativeInterestTags, &profile.PositiveInterestTags, &profile.PrivacySettings, &profile.Over13)
 	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionGet, TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(log.ActionGet, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
 	}
 	return l.HttpResponseSuccess()
 }
@@ -224,12 +225,12 @@ func (h ServicesApisHandler) getAnonymousProfile(l *log.Log, r *http.Request) lo
 
 	profile, err := h.coreAPIs.Services.GetAnonymousProfile(l, ID)
 	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionDelete, TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(log.ActionDelete, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
 	}
 
 	data, err := json.Marshal(profile)
 	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionMarshal, TypeAnonymousProfile, nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(log.ActionMarshal, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, false)
 	}
 	return l.HttpResponseSuccessJSON(data)
 }
@@ -243,7 +244,7 @@ func (h ServicesApisHandler) deleteAnonymousProfile(l *log.Log, r *http.Request)
 
 	err := h.coreAPIs.Services.DeleteAnonymousProfile(l, ID)
 	if err != nil {
-		return l.HttpResponseErrorAction(log.ActionDelete, TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(log.ActionDelete, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
 	}
 	return l.HttpResponseSuccess()
 }
