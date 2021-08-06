@@ -15,6 +15,29 @@ type Storage struct {
 	mock.Mock
 }
 
+// CreateAnonymousProfile provides a mock function with given fields: profile
+func (_m *Storage) CreateAnonymousProfile(profile *model.AnonymousProfile) (*model.AnonymousProfile, error) {
+	ret := _m.Called(profile)
+
+	var r0 *model.AnonymousProfile
+	if rf, ok := ret.Get(0).(func(*model.AnonymousProfile) *model.AnonymousProfile); ok {
+		r0 = rf(profile)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.AnonymousProfile)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*model.AnonymousProfile) error); ok {
+		r1 = rf(profile)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CreateGlobalConfig provides a mock function with given fields: setting
 func (_m *Storage) CreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
 	ret := _m.Called(setting)
@@ -54,6 +77,43 @@ func (_m *Storage) CreateOrganization(name string, requestType string, requiresO
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, string, bool, []string, []string) error); ok {
 		r1 = rf(name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DeleteAnonymousProfile provides a mock function with given fields: id
+func (_m *Storage) DeleteAnonymousProfile(id string) error {
+	ret := _m.Called(id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// GetAnonymousProfile provides a mock function with given fields: id
+func (_m *Storage) GetAnonymousProfile(id string) (*model.AnonymousProfile, error) {
+	ret := _m.Called(id)
+
+	var r0 *model.AnonymousProfile
+	if rf, ok := ret.Get(0).(func(string) *model.AnonymousProfile); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.AnonymousProfile)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -165,6 +225,20 @@ func (_m *Storage) SaveGlobalConfig(setting *model.GlobalConfig) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(*model.GlobalConfig) error); ok {
 		r0 = rf(setting)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateAnonymousProfile provides a mock function with given fields: id, favorites, interests, negativeInterestTags, positiveInterestTags, privacySettings, over13
+func (_m *Storage) UpdateAnonymousProfile(id string, favorites *[]string, interests *[]string, negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error {
+	ret := _m.Called(id, favorites, interests, negativeInterestTags, positiveInterestTags, privacySettings, over13)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, *[]string, *[]string, *[]string, *[]string, *string, *bool) error); ok {
+		r0 = rf(id, favorites, interests, negativeInterestTags, positiveInterestTags, privacySettings, over13)
 	} else {
 		r0 = ret.Error(0)
 	}

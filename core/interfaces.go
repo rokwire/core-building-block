@@ -3,7 +3,6 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
-	"time"
 
 	log "github.com/rokmetro/logging-library/loglib"
 )
@@ -14,7 +13,7 @@ type Services interface {
 	SerGetCommonTest(l *log.Log) string
 	CreateAnonymousProfile(l *log.Log, profile *model.AnonymousProfile) (*model.AnonymousProfile, error)
 	GetAnonymousProfile(l *log.Log, id string) (*model.AnonymousProfile, error)
-	UpdateAnonymousProfile(l *log.Log, id string, favorites *[]string, interests *[]string, lastModifiedDate *time.Time,
+	UpdateAnonymousProfile(l *log.Log, id string, favorites *[]string, interests *[]string,
 		negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error
 	DeleteAnonymousProfile(l *log.Log, id string) error
 }
@@ -60,7 +59,7 @@ type Storage interface {
 	GetOrganization(ID string) (*model.Organization, error)
 	CreateAnonymousProfile(profile *model.AnonymousProfile) (*model.AnonymousProfile, error)
 	GetAnonymousProfile(id string) (*model.AnonymousProfile, error)
-	UpdateAnonymousProfile(id string, favorites *[]string, interests *[]string, lastModifiedDate *time.Time,
+	UpdateAnonymousProfile(id string, favorites *[]string, interests *[]string,
 		negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error
 	DeleteAnonymousProfile(id string) error
 

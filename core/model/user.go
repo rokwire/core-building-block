@@ -82,7 +82,7 @@ type UserProfile struct {
 }
 
 type AnonymousProfile struct {
-	ID                   string    `json:"id" bson:"id"`
+	ID                   string    `json:"id" bson:"_id"`
 	Interests            []string  `json:"interests" bson:"interests"`
 	Favorites            []string  `json:"favorites" bson:"favorites"`
 	Over13               bool      `json:"over_13" bson:"over_13"`

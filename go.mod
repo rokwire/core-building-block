@@ -14,6 +14,7 @@ require (
 	github.com/rokmetro/logging-library v0.1.22
 	github.com/stretchr/testify v1.6.1
 	github.com/swaggo/http-swagger v1.0.0
+	github.com/vektra/mockery/v2 v2.9.0 // indirect
 	go.mongodb.org/mongo-driver v1.4.6
 	golang.org/x/crypto v0.0.0-20201217014255-9d1352758620 // indirect
 	golang.org/x/mod v0.4.1 // indirect

@@ -3,7 +3,6 @@ package core
 import (
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
-	"time"
 
 	log "github.com/rokmetro/logging-library/loglib"
 )
@@ -76,9 +75,9 @@ func (s *servicesImpl) CreateAnonymousProfile(l *log.Log, profile *model.Anonymo
 	return s.app.createAnonymousProfile(l, profile)
 }
 
-func (s *servicesImpl) UpdateAnonymousProfile(l *log.Log, id string, favorites *[]string, interests *[]string, lastModifiedDate *time.Time,
+func (s *servicesImpl) UpdateAnonymousProfile(l *log.Log, id string, favorites *[]string, interests *[]string,
 	negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error {
-	return s.app.updateAnonymousProfile(l, id, favorites, interests, lastModifiedDate, negativeInterestTags, positiveInterestTags, privacySettings, over13)
+	return s.app.updateAnonymousProfile(l, id, favorites, interests, negativeInterestTags, positiveInterestTags, privacySettings, over13)
 }
 
 func (s *servicesImpl) DeleteAnonymousProfile(l *log.Log, id string) error {

@@ -209,7 +209,7 @@ func (h ServicesApisHandler) updateAnonymousProfile(l *log.Log, r *http.Request)
 	if profile.ID == "" {
 		return l.HttpResponseErrorAction(log.ActionCast, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
 	}
-	err = h.coreAPIs.Services.UpdateAnonymousProfile(l, profile.ID, &profile.Favorites, &profile.Interests, &profile.LastModifiedDate, &profile.NegativeInterestTags, &profile.PositiveInterestTags, &profile.PrivacySettings, &profile.Over13)
+	err = h.coreAPIs.Services.UpdateAnonymousProfile(l, profile.ID, &profile.Favorites, &profile.Interests, &profile.NegativeInterestTags, &profile.PositiveInterestTags, &profile.PrivacySettings, &profile.Over13)
 	if err != nil {
 		return l.HttpResponseErrorAction(log.ActionGet, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
 	}

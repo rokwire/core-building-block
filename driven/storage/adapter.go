@@ -293,11 +293,11 @@ func (sa *Adapter) CreateAnonymousProfile(profile *model.AnonymousProfile) (*mod
 }
 
 //UpdateOrganization updates an organization
-func (sa *Adapter) UpdateAnonymousProfile(id string, favorites *[]string, interests *[]string, lastModifiedDate *time.Time,
+func (sa *Adapter) UpdateAnonymousProfile(id string, favorites *[]string, interests *[]string,
 	negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error {
 
 	now := time.Now()
-	filter := bson.M{"id": id}
+	filter := bson.M{"_id": id}
 	updates := bson.M{"lastModifiedDate": now}
 
 	if favorites != nil {
@@ -315,9 +315,6 @@ func (sa *Adapter) UpdateAnonymousProfile(id string, favorites *[]string, intere
 	if over13 != nil {
 		updates["over13"] = *over13
 	}
-	if lastModifiedDate != nil {
-		updates["lastModifiedDate"] = *lastModifiedDate
-	}
 
 	// The "ReturnDocument" option must be set to after to get the updated document
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
@@ -332,7 +329,7 @@ func (sa *Adapter) UpdateAnonymousProfile(id string, favorites *[]string, intere
 
 //GetAnonymousProfile gets anonymous profile
 func (sa *Adapter) GetAnonymousProfile(id string) (*model.AnonymousProfile, error) {
-	filter := bson.M{"id": id}
+	filter := bson.M{"_id": id}
 	var profile *model.AnonymousProfile
 	err := sa.db.anonymousProfile.FindOne(filter, &profile, nil)
 	if err != nil {
@@ -344,7 +341,7 @@ func (sa *Adapter) GetAnonymousProfile(id string) (*model.AnonymousProfile, erro
 
 //DeleteAnonymousProfile deletes the anonymous profile from storage
 func (sa *Adapter) DeleteAnonymousProfile(id string) error {
-	filter := bson.M{"id": id}
+	filter := bson.M{"_id": id}
 	result, err := sa.db.anonymousProfile.DeleteOne(filter, nil)
 	if err != nil {
 		return log.WrapErrorAction(log.ActionDelete, model.TypeAnonymousProfile, &log.FieldArgs{"id": id}, err)
