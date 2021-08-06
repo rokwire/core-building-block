@@ -3,7 +3,9 @@ package auth
 import (
 	"core-building-block/core/model"
 
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/errors"
+	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokmetro/logging-library/logutils"
 )
 
 const (
@@ -16,18 +18,18 @@ type emailAuthImpl struct {
 	authType string
 }
 
-func (a *emailAuthImpl) check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error) {
+func (a *emailAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
 	//TODO: Implement
-	return nil, log.NewError("Unimplemented")
+	return nil, errors.New("Unimplemented")
 }
 
 //refresh is enabled for email auth, but no operation is needed
-func (a *emailAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
+func (a *emailAuthImpl) refresh(refreshToken string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
 	return nil, nil
 }
 
-func (a *emailAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
-	return "", nil, log.NewErrorf("get login url operation invalid for auth_type=%s", a.authType)
+func (a *emailAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
 //initEmailAuth initializes and registers a new email auth instance
@@ -36,7 +38,7 @@ func initEmailAuth(auth *Auth) (*emailAuthImpl, error) {
 
 	err := auth.registerAuthType(email.authType, email)
 	if err != nil {
-		return nil, log.WrapErrorAction(log.ActionRegister, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return email, nil

@@ -10,10 +10,10 @@ import (
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
+	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokmetro/logging-library/logutils"
 
 	"github.com/gorilla/mux"
-
-	log "github.com/rokmetro/logging-library/loglib"
 
 	"github.com/casbin/casbin"
 
@@ -28,7 +28,7 @@ type Adapter struct {
 	host          string
 	auth          *Auth
 	authorization *casbin.Enforcer
-	logger        *log.Logger
+	logger        *logs.Logger
 
 	defaultApisHandler  DefaultApisHandler
 	servicesApisHandler ServicesApisHandler
@@ -40,7 +40,7 @@ type Adapter struct {
 	coreAPIs *core.APIs
 }
 
-type handlerFunc = func(*log.Log, *http.Request) log.HttpResponse
+type handlerFunc = func(*logs.Log, *http.Request) logs.HttpResponse
 
 //Start starts the module
 func (we Adapter) Start() {
@@ -64,7 +64,7 @@ func (we Adapter) Start() {
 	///services ///
 	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
 	servicesSubRouter.HandleFunc("/auth/login", we.wrapFunc(we.servicesApisHandler.authLogin)).Methods("POST")
-	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginUrl)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations)).Methods("GET")
@@ -139,7 +139,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		//1. validate request
 		requestValidationInput, err := we.validateRequest(req)
 		if err != nil {
-			logObj.RequestErrorAction(w, log.ActionValidate, log.TypeRequest, nil, err, http.StatusBadRequest, true)
+			logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
 			return
 		}
 
@@ -150,7 +150,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		if we.env != "production" {
 			err = we.validateResponse(requestValidationInput, response)
 			if err != nil {
-				logObj.RequestErrorAction(w, log.ActionValidate, log.TypeResponse, nil, err, http.StatusInternalServerError, true)
+				logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeResponse, nil, err, http.StatusInternalServerError, true)
 				return
 			}
 		}
@@ -195,7 +195,7 @@ func (we Adapter) validateRequest(req *http.Request) (*openapi3filter.RequestVal
 	return requestValidationInput, nil
 }
 
-func (we Adapter) validateResponse(requestValidationInput *openapi3filter.RequestValidationInput, response log.HttpResponse) error {
+func (we Adapter) validateResponse(requestValidationInput *openapi3filter.RequestValidationInput, response logs.HttpResponse) error {
 	responseCode := response.ResponseCode
 	body := response.Body
 	header := response.Headers
@@ -216,7 +216,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.Logger) Adapter {
+func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -232,7 +232,7 @@ func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.Log
 		logger.Fatal(err.Error())
 	}
 
-	auth := NewAuth(coreAPIs)
+	auth := NewAuth(coreAPIs, logger)
 	authorization := casbin.NewEnforcer("driver/web/authorization_model.conf", "driver/web/authorization_policy.csv")
 
 	defaultApisHandler := NewDefaultApisHandler(coreAPIs)
