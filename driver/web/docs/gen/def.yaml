@@ -13,9 +13,7 @@ servers:
   - url: 'http://localhost/core'
     description: Local server
 tags:
-  - name: Auth
-    description: APIs handling the authentication.
-  - name: Common
+  - name: Services
     description: End users applications APIs.
   - name: Admin
     description: Administration applications APIs.
@@ -23,24 +21,13 @@ tags:
     description: APIs consumed by the Encryption building block.
   - name: BBs
     description: APIs consumed by the platform building blocks.
+  - name: Third-Party Services
+    description: APIs consumed by third-party services.
 paths:
-  /services/auth/test:
-    get:
-      tags:
-        - Auth
-      summary: Test API..
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Echooo
   /services/auth/login:
     post:
       tags:
-        - Auth
+        - Services
       summary: Login
       description: |
         Login using credentials to retrieve access token, refresh token, and user data
@@ -106,7 +93,7 @@ paths:
   /services/auth/refresh:
     post:
       tags:
-        - Auth
+        - Services
       summary: Refresh
       description: |
         Refresh access token using a refresh token
@@ -134,7 +121,7 @@ paths:
   /services/auth/login-url:
     post:
       tags:
-        - Auth
+        - Services
       summary: Get SSO login url
       description: |
         Retrieve a pre-formatted SSO login URL
@@ -157,10 +144,102 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/common/test:
+  /services/auth/authorize-service:
+    post:
+      tags:
+        - Services
+      summary: Authorize service
+      description: |
+        Authorize a third-party service and get a scoped access token that can be used to access its APIs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthAuthorizeServiceRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthAuthorizeServiceResponse'
+              examples:
+                authorized:
+                  summary: Service authorized
+                  value: |
+                    {
+                      "access_token": "string",
+                      "token_type": "Bearer",
+                      "approved_scopes": [
+                        "string"
+                      ]
+                    }
+                unauthorized:
+                  summary: Service unauthorized
+                  value: |
+                    {
+                      "service_reg": {
+                        "service_id": "string",
+                        "host": "string",
+                        "pub_key": {
+                          "key_pem": "string",
+                          "alg": "string"
+                        },
+                        "name": "string",
+                        "description": "string",
+                        "info_url": "string",
+                        "logo_url": "string",
+                        "scopes": [
+                          {
+                            "scope": "string",
+                            "required": true,
+                            "explanation": "string"
+                          }
+                        ],
+                        "first_party": true
+                      }
+                    }
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/service-regs:
     get:
       tags:
-        - Common
+        - Services
+      summary: Get service registrations
+      description: |
+        Returns service registration records
+      parameters:
+        - name: ids
+          in: query
+          description: A comma-separated list of service IDs to return registrations for
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceReg'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/test:
+    get:
+      tags:
+        - Services
       summary: Test API..
       responses:
         '200':
@@ -476,6 +555,37 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  '/admin/applications/{id}':
+    get:
+      tags:
+        - Admin
+      summary: Get application
+      description: |
+        Gets application
+      parameters:
+        - name: id
+          in: path
+          description: ID of the application
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+        '500':
+          description: Internal error
   /enc/test:
     get:
       tags:
@@ -526,7 +636,38 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ServiceReg'
+                  $ref: '#/components/schemas/AuthServiceReg'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /tps/service-regs:
+    get:
+      tags:
+        - Third-Party Services
+      summary: Get service registrations
+      description: |
+        Returns service registration records
+      parameters:
+        - name: ids
+          in: query
+          description: A comma-separated list of service IDs to return registrations for
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuthServiceReg'
         '400':
           description: Bad request
         '401':
@@ -589,6 +730,21 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/User'
+    Application:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        versions:
+          type: array
+          nullable: true
+          items:
+            type: string
     Organization:
       required:
         - id
@@ -676,7 +832,39 @@ components:
       required:
         - service_id
         - host
+        - name
+        - description
+        - first_party
       type: object
+      description: Full service registration record
+      properties:
+        service_id:
+          type: string
+        host:
+          type: string
+        pub_key:
+          $ref: '#/components/schemas/PubKey'
+        name:
+          type: string
+        description:
+          type: string
+        info_url:
+          type: string
+        logo_url:
+          type: string
+        scopes:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/ServiceScope'
+        first_party:
+          type: boolean
+    AuthServiceReg:
+      required:
+        - service_id
+        - host
+      type: object
+      description: Service registration record used for auth
       properties:
         service_id:
           type: string
@@ -693,6 +881,19 @@ components:
         key_pem:
           type: string
         alg:
+          type: string
+    ServiceScope:
+      required:
+        - scope
+        - required
+      type: object
+      properties:
+        scope:
+          type: string
+        required:
+          type: boolean
+        explanation:
+          description: Explanation displayed to users for why this scope is requested/required
           type: string
     AuthLoginRequest:
       required:
@@ -727,9 +928,16 @@ components:
       type: object
       properties:
         access_token:
+          description: The user's access token to be provided to authorize access to ROKWIRE APIs
           type: string
         refresh_token:
+          description: A refresh token that can be used to get a new access token once the one provided expires
           type: string
+        token_type:
+          description: The type of the provided tokens to be specified when they are sent in the "Authorization" header
+          type: string
+          enum:
+            - Bearer
         user:
           $ref: '#/components/schemas/User'
     AuthLoginCredsEmail:
@@ -812,6 +1020,34 @@ components:
         params:
           type: object
           description: Params to be submitted with 'login' request (if necessary)
+    AuthAuthorizeServiceRequest:
+      required:
+        - service_id
+      type: object
+      properties:
+        service_id:
+          type: string
+        approved_scopes:
+          description: Scopes to be granted to this service in this and future tokens. Replaces existing scopes if present.
+          type: array
+          items:
+            type: string
+    AuthAuthorizeServiceResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          description: The type of the provided tokens to be specified when they are sent in the "Authorization" header
+          type: string
+          enum:
+            - Bearer
+        approved_scopes:
+          type: array
+          items:
+            type: string
+        service_reg:
+          $ref: '#/components/schemas/ServiceReg'
     User:
       required:
         - id

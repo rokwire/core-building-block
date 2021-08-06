@@ -4,13 +4,13 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/logs"
 )
 
 //Services exposes APIs for the driver adapters
 type Services interface {
-	SerGetAuthTest(l *log.Log) string
-	SerGetCommonTest(l *log.Log) string
+	SerGetAuthTest(l *logs.Log) string
+	SerGetCommonTest(l *logs.Log) string
 }
 
 //Administration exposes administration APIs for the driver adapters
@@ -26,6 +26,8 @@ type Administration interface {
 	AdmUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
 	AdmGetOrganizations() ([]model.Organization, error)
 	AdmGetOrganization(ID string) (*model.Organization, error)
+
+	AdmGetApplication(ID string) (*model.Application, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -50,6 +52,8 @@ type Storage interface {
 	UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
 	GetOrganizations() ([]model.Organization, error)
 	GetOrganization(ID string) (*model.Organization, error)
+
+	GetApplication(ID string) (*model.Application, error)
 }
 
 //StorageListener listenes for change data storage events

@@ -10,12 +10,19 @@ import (
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
+	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokmetro/logging-library/logutils"
 
 	"github.com/gorilla/mux"
 
 	"github.com/rokmetro/auth-library/authservice"
-	log "github.com/rokmetro/logging-library/loglib"
+
 	httpSwagger "github.com/swaggo/http-swagger"
+)
+
+const (
+	typeAdminAuthentication logutils.MessageActionType = "checking admin authentication"
+	typeAdminAuthRequestToken logutils.MessageActionType = "checking admin auth request token"
 )
 
 //Adapter entity
@@ -27,18 +34,19 @@ type Adapter struct {
 	host          string
 	auth          *Auth
 	// authorization *casbin.Enforcer
-	logger *log.Logger
+	logger *logs.Logger
 
 	defaultApisHandler  DefaultApisHandler
 	servicesApisHandler ServicesApisHandler
 	adminApisHandler    AdminApisHandler
 	encApisHandler      EncApisHandler
 	bbsApisHandler      BBsApisHandler
+	tpsApisHandler      TPSApisHandler
 
 	coreAPIs *core.APIs
 }
 
-type handlerFunc = func(*log.Log, *http.Request) log.HttpResponse
+type handlerFunc = func(*logs.Log, *http.Request) logs.HttpResponse
 
 //Start starts the module
 func (we Adapter) Start() {
@@ -61,17 +69,12 @@ func (we Adapter) Start() {
 
 	///services ///
 	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
-
-	//auth
-	authSubrouter := servicesSubRouter.PathPrefix("/auth").Subrouter()
-	authSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getAuthTest)).Methods("GET")
-	authSubrouter.HandleFunc("/login", we.wrapFunc(we.servicesApisHandler.authLogin)).Methods("POST")
-	authSubrouter.HandleFunc("/login-url", we.wrapFunc(we.servicesApisHandler.authLoginUrl)).Methods("POST")
-	authSubrouter.HandleFunc("/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh)).Methods("POST")
-
-	//common
-	commonSubrouter := servicesSubRouter.PathPrefix("/common").Subrouter()
-	commonSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getCommonTest)).Methods("GET")
+	servicesSubRouter.HandleFunc("/auth/login", we.wrapFunc(we.servicesApisHandler.authLogin)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations)).Methods("GET")
+	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest)).Methods("GET")
 	///
 
 	///admin ///
@@ -92,6 +95,8 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.registerService)).Methods("POST")
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.updateServiceRegistration)).Methods("PUT")
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.deregisterService)).Methods("DELETE")
+
+	adminSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.adminApisHandler.getApplication)).Methods("GET")
 	///
 
 	///enc ///
@@ -103,6 +108,11 @@ func (we Adapter) Start() {
 	bbsSubrouter := subRouter.PathPrefix("/bbs").Subrouter()
 	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.getTest)).Methods("GET")
 	bbsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.bbsApisHandler.getServiceRegistrations)).Methods("GET")
+	///
+
+	///third-party services ///
+	tpsSubrouter := subRouter.PathPrefix("/tps").Subrouter()
+	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations)).Methods("GET")
 	///
 
 	err := http.ListenAndServe(":80", router)
@@ -124,15 +134,15 @@ func (we Adapter) serveDocUI() http.Handler {
 func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		logObj := we.logger.NewRequestLog(req)
-
+		
 		logObj.RequestReceived()
-
+		
 		var err error
 
 		//1. validate request
 		requestValidationInput, err := we.validateRequest(req)
 		if err != nil {
-			logObj.RequestErrorAction(w, log.ActionValidate, log.TypeRequest, nil, err, http.StatusBadRequest, true)
+			logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
 			return
 		}
 
@@ -143,7 +153,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		if we.env != "production" {
 			err = we.validateResponse(requestValidationInput, response)
 			if err != nil {
-				logObj.RequestErrorAction(w, log.ActionValidate, log.TypeResponse, nil, err, http.StatusInternalServerError, true)
+				logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeResponse, nil, err, http.StatusInternalServerError, true)
 				return
 			}
 		}
@@ -171,6 +181,31 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 	}
 }
 
+func (we Adapter) adminTokenWrapFunc(handler handlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		logObj := we.logger.NewRequestLog(req)
+		logObj.RequestReceived()
+
+		// Authenticate token
+		claims, err := we.adminApisHandler.tokenAuth.CheckRequestTokens(req)
+		if err != nil {
+			// log.Printf("Authentication error: %v\n", err)
+			// http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			logObj.RequestErrorAction(w, typeAdminAuthRequestToken, logutils.TypeToken, nil, err, http.StatusUnauthorized, true)
+
+			return
+		}
+		err = we.adminApisHandler.tokenAuth.AuthorizeRequestPermissions(claims, req)
+		if err != nil {
+			// log.Printf("Permission error: %v\n", err)
+			// http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+			logObj.RequestErrorAction(w, typeAdminAuthentication, logutils.TypeClaims, nil, err, http.StatusForbidden, true)
+			return
+		}
+
+		// log.Printf("Authentication successful for user: %v", claims)
+	}
+}
 func (we Adapter) validateRequest(req *http.Request) (*openapi3filter.RequestValidationInput, error) {
 	route, pathParams, err := we.openAPIRouter.FindRoute(req)
 	if err != nil {
@@ -188,7 +223,7 @@ func (we Adapter) validateRequest(req *http.Request) (*openapi3filter.RequestVal
 	return requestValidationInput, nil
 }
 
-func (we Adapter) validateResponse(requestValidationInput *openapi3filter.RequestValidationInput, response log.HttpResponse) error {
+func (we Adapter) validateResponse(requestValidationInput *openapi3filter.RequestValidationInput, response logs.HttpResponse) error {
 	responseCode := response.ResponseCode
 	body := response.Body
 	header := response.Headers
@@ -209,7 +244,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, serviceID string, authService *authservice.AuthService, coreAPIs *core.APIs, host string, logger *log.Logger) Adapter {
+func NewWebAdapter(env string, serviceID string, authService *authservice.AuthService, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -233,8 +268,9 @@ func NewWebAdapter(env string, serviceID string, authService *authservice.AuthSe
 	adminApisHandler := NewAdminApisHandler(coreAPIs)
 	encApisHandler := NewEncApisHandler(coreAPIs)
 	bbsApisHandler := NewBBsApisHandler(coreAPIs)
-	return Adapter{env: env, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler,
-		servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler, encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, coreAPIs: coreAPIs}
+	tpsApisHandler := NewTPSApisHandler(coreAPIs)
+	return Adapter{env: env, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
+		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, coreAPIs: coreAPIs}
 }
 
 //AppListener implements core.ApplicationListener interface

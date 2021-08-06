@@ -10,7 +10,7 @@ import (
 	"github.com/golang-jwt/jwt"
 
 	"github.com/rokmetro/auth-library/envloader"
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/logs"
 )
 
 var (
@@ -24,11 +24,11 @@ func main() {
 	if len(Version) == 0 {
 		Version = "dev"
 	}
-	logger := log.NewLogger("core", nil)
+	logger := logs.NewLogger("core", nil)
 	envLoader := envloader.NewEnvLoader(Version, logger)
 
 	level := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_LOG_LEVEL", false, false)
-	logLevel := log.LogLevelFromString(level)
+	logLevel := logs.LogLevelFromString(level)
 	if logLevel != nil {
 		logger.SetLevel(*logLevel)
 	}
