@@ -22,7 +22,8 @@ import (
 
 //Adapter entity
 type Adapter struct {
-	env string
+	env  string
+	port string
 
 	openAPIRouter routers.Router
 	host          string
@@ -109,7 +110,7 @@ func (we Adapter) Start() {
 	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations)).Methods("GET")
 	///
 
-	err := http.ListenAndServe(":80", router)
+	err := http.ListenAndServe(":"+we.port, router)
 	if err != nil {
 		we.logger.Fatal(err.Error())
 	}
@@ -133,6 +134,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 
 		var err error
 
+		logObj.Debugf("URL: %v%v", req.Host, req.URL)
 		//1. validate request
 		requestValidationInput, err := we.validateRequest(req)
 		if err != nil {
@@ -213,7 +215,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, port string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -238,7 +240,7 @@ func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *logs.Lo
 	encApisHandler := NewEncApisHandler(coreAPIs)
 	bbsApisHandler := NewBBsApisHandler(coreAPIs)
 	tpsApisHandler := NewTPSApisHandler(coreAPIs)
-	return Adapter{env: env, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, authorization: authorization,
+	return Adapter{env: env, port: port, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, authorization: authorization,
 		defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
 		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, coreAPIs: coreAPIs}
 }

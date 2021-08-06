@@ -1,5 +1,6 @@
 vendor/
 bin/
 .vscode/
-run.sh
+*.sh
 *.pem
+env.list
