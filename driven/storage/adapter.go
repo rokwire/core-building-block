@@ -4,6 +4,7 @@ import (
 	"context"
 	"core-building-block/core/model"
 	"fmt"
+	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -56,6 +57,8 @@ func (sa *Adapter) RegisterStorageListener(storageListener Listener) {
 
 //cacheOrganizations caches the organizations from the DB
 func (sa *Adapter) cacheOrganizations() error {
+	log.Println("cacheOrganizations..")
+
 	organizations, err := sa.GetOrganizations()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
@@ -932,11 +935,16 @@ func (sl *storageListener) OnOrganizationsUpdated() {
 	sl.adapter.cacheOrganizations()
 }
 
+func (sl *storageListener) OnApplicationsUpdated() {
+	sl.adapter.cacheOrganizations()
+}
+
 //Listener represents storage listener
 type Listener interface {
 	OnAuthConfigUpdated()
 	OnServiceRegsUpdated()
 	OnOrganizationsUpdated()
+	OnApplicationsUpdated()
 }
 
 //DefaultListenerImpl default listener implementation
@@ -950,3 +958,6 @@ func (d *DefaultListenerImpl) OnServiceRegsUpdated() {}
 
 //OnOrganizationsUpdated notifies organizations have been updated
 func (d *DefaultListenerImpl) OnOrganizationsUpdated() {}
+
+//OnApplicationsUpdated notifies applications have been updated
+func (d *DefaultListenerImpl) OnApplicationsUpdated() {}

@@ -182,6 +182,7 @@ func (m *database) start() error {
 	go m.authConfigs.Watch(nil)
 	go m.serviceRegs.Watch(nil)
 	go m.organizations.Watch(nil)
+	go m.applications.Watch(nil)
 
 	m.listeners = []Listener{}
 
@@ -360,5 +361,12 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 		for _, listener := range m.listeners {
 			go listener.OnOrganizationsUpdated()
 		}
+	case "applications":
+		log.Println("applications collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnApplicationsUpdated()
+		}
 	}
+
 }
