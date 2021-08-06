@@ -923,7 +923,7 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	cachedOrganizations := &syncmap.Map{}
 	organizationsLock := &sync.RWMutex{}
 
-	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout}
+	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout, logger: logger}
 	return &Adapter{db: db, logger: logger, cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock}
 }
 
