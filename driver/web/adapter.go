@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	typeAdminAuthentication logutils.MessageActionType = "checking admin authentication"
+	typeAdminAuthentication   logutils.MessageActionType = "checking admin authentication"
 	typeAdminAuthRequestToken logutils.MessageActionType = "checking admin auth request token"
 )
 
@@ -134,9 +134,9 @@ func (we Adapter) serveDocUI() http.Handler {
 func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		logObj := we.logger.NewRequestLog(req)
-		
+
 		logObj.RequestReceived()
-		
+
 		var err error
 
 		//1. validate request
@@ -187,7 +187,7 @@ func (we Adapter) adminTokenWrapFunc(logObj *logs.Log, handler handlerFunc) http
 			logObj := we.logger.NewRequestLog(req)
 			logObj.RequestReceived()
 		}
-		
+
 		// Authenticate token
 		claims, err := we.adminApisHandler.tokenAuth.CheckRequestTokens(req)
 		if err != nil {
