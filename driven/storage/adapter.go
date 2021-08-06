@@ -908,8 +908,11 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	}
 	timeout := time.Millisecond * time.Duration(timeoutInt)
 
+	cachedOrganizations := &syncmap.Map{}
+	organizationsLock := &sync.RWMutex{}
+
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout}
-	return &Adapter{db: db}
+	return &Adapter{db: db, cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock}
 }
 
 func abortTransaction(sessionContext mongo.SessionContext) {
