@@ -30,13 +30,21 @@ type Adapter struct {
 
 //Start starts the storage
 func (sa *Adapter) Start() error {
+	//start db
 	err := sa.db.start()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInitialize, "storage adapter", nil, err)
 	}
 
+	//register storage listener
 	sl := storageListener{adapter: sa}
 	sa.RegisterStorageListener(&sl)
+
+	//cache the organizations
+	err = sa.cacheOrganizations()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionCache, model.TypeOrganization, nil, err)
+	}
 
 	return err
 }
