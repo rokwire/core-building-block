@@ -84,11 +84,12 @@ func (sa *Adapter) getCachedOrganization(orgID string) (*model.Organization, err
 }
 
 func (sa *Adapter) setCachedOrganizations(organizations *[]model.Organization) {
+	sa.organizationsLock.Lock()
+	defer sa.organizationsLock.Unlock()
+
 	sa.cachedOrganizations = &syncmap.Map{}
 	validate := validator.New()
 
-	sa.organizationsLock.Lock()
-	defer sa.organizationsLock.Unlock()
 	for _, org := range *organizations {
 		err := validate.Struct(org)
 		if err == nil {
