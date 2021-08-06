@@ -278,6 +278,12 @@ func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) er
 		return err
 	}
 
+	//add applications index
+	err = organizations.AddIndex(bson.D{primitive.E{Key: "applications", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("organizations checks passed")
 	return nil
 }
