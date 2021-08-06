@@ -229,7 +229,7 @@ func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *logs.Lo
 		logger.Fatal(err.Error())
 	}
 
-	auth := NewAuth(coreAPIs)
+	auth := NewAuth(coreAPIs, logger)
 	authorization := casbin.NewEnforcer("driver/web/authorization_model.conf", "driver/web/authorization_policy.csv")
 
 	defaultApisHandler := NewDefaultApisHandler(coreAPIs)

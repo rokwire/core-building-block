@@ -145,13 +145,13 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
 		err := sessionContext.StartTransaction()
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
 		}
 
 		_, err = sa.db.users.InsertOneWithContext(sessionContext, storageUser)
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeUser, nil, err)
 		}
 
@@ -163,7 +163,7 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 
 		err = sa.InsertMembership(&rawMembership, sessionContext)
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganizationMembership, nil, err)
 		}
 
@@ -177,7 +177,7 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 		//commit the transaction
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
 		}
 		return nil
@@ -228,21 +228,21 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
 		err := sessionContext.StartTransaction()
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
 		}
 
 		filter := bson.M{"_id": updatedUser.ID}
 		err = sa.db.users.ReplaceOneWithContext(sessionContext, filter, newUser, nil)
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionReplace, model.TypeUser, nil, err)
 		}
 
 		if newMembership != nil {
 			err = sa.InsertMembership(newMembership, sessionContext)
 			if err != nil {
-				abortTransaction(sessionContext)
+				sa.abortTransaction(sessionContext)
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganizationMembership, nil, err)
 			}
 		}
@@ -257,7 +257,7 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 		//commit the transaction
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
 		}
 		return nil
@@ -602,20 +602,20 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 		delFilter := bson.D{}
 		_, err = sa.db.globalConfig.DeleteManyWithContext(sessionContext, delFilter, nil)
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeGlobalConfig, nil, err)
 		}
 
 		//add the new one
 		_, err = sa.db.globalConfig.InsertOneWithContext(sessionContext, gc)
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
 		}
 
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
-			abortTransaction(sessionContext)
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
 		}
 		return nil
@@ -904,6 +904,13 @@ func (sa *Adapter) SaveDevice(device *model.Device, context mongo.SessionContext
 	return nil
 }
 
+func (sa *Adapter) abortTransaction(sessionContext mongo.SessionContext) {
+	err := sessionContext.AbortTransaction(sessionContext)
+	if err != nil {
+		sa.logger.Errorf("error aborting a transaction - %s", err)
+	}
+}
+
 //NewStorageAdapter creates a new storage adapter instance
 func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *logs.Logger) *Adapter {
 	timeoutInt, err := strconv.Atoi(mongoTimeout)
@@ -916,15 +923,8 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	cachedOrganizations := &syncmap.Map{}
 	organizationsLock := &sync.RWMutex{}
 
-	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout}
+	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout, logger: logger}
 	return &Adapter{db: db, logger: logger, cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock}
-}
-
-func abortTransaction(sessionContext mongo.SessionContext) {
-	err := sessionContext.AbortTransaction(sessionContext)
-	if err != nil {
-		//TODO - log
-	}
 }
 
 type storageListener struct {
