@@ -119,6 +119,10 @@ func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, e
 	return s.app.admGetApplication(ID)
 }
 
+func (s *administrationImpl) AdmDeleteApplication(ID string) (*model.Application, error) {
+	return s.app.admDeleteApplication(ID)
+}
+
 ///
 
 //encryptionImpl

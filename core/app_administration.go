@@ -256,3 +256,12 @@ func (app *application) admGetApplication(ID string) (*model.Application, error)
 
 	return appAdm, nil
 }
+
+func (app *application) admDeleteApplication(ID string) (*model.Application, error) {
+	_, err := app.storage.DeleteApplication(ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplication, nil, err)
+	}
+
+	return nil, nil
+}
