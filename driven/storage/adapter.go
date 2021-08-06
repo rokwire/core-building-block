@@ -567,9 +567,6 @@ func (sa *Adapter) UpdatePII(profile *model.UserProfile, ID string) error {
 		return errors.ErrorData(logutils.StatusInvalid, "profile id", logutils.StringArgs(profile.ID))
 	}
 
-	now := time.Now().UTC()
-	profile.DateUpdated = &now
-
 	user.Profile.Address = profile.Address
 	user.Profile.Country = profile.Country
 	user.Profile.DateOfBirth = profile.DateOfBirth
@@ -579,6 +576,8 @@ func (sa *Adapter) UpdatePII(profile *model.UserProfile, ID string) error {
 	user.Profile.WorkCounty = profile.WorkCounty
 	user.Profile.ZipCode = profile.ZipCode
 
+	now := time.Now().UTC()
+	profile.DateUpdated = &now
 	_, err = sa.UpdateUser(user, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserProfile, nil, err)

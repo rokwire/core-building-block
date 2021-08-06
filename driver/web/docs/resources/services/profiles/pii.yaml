@@ -1,30 +1,30 @@
 get:
   tags:
   - Services
-  summary: Get PII by user profile ID
+  summary: Get user PII
   description: |
-    Returns a single user profile entry 
+    Returns PII in a user profile 
   responses:
-    '200':
+    200:
       description: Success
       content:
         application/json:
           schema:
             $ref: "../../../schemas/user/UserProfile.yaml"
-    '400':
+    400:
       description: Bad request
-    '401':
+    401:
       description: Unauthorized
-    '500':
+    500:
       description: Internal error
 put:
   tags:
   - Services
-  summary: Update profile
+  summary: Update user PII
   description: |
-    Updates user profile
+    Updates PII in a user profile
   requestBody:
-    description: update a user profile
+    description: PII update
     content:
       application/json:
         schema:
@@ -47,9 +47,9 @@ put:
 delete:
   tags:
   - Services
-  summary: Delete profile
+  summary: Delete user PII
   description: |
-    Deletes user profile
+    Deletes PII in a user profile
   responses:
     200:
       description: Success
