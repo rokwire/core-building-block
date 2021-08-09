@@ -19,3 +19,39 @@ type organization struct {
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
+
+type organizationGroup struct {
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
+
+	OrgID string `bson:"organization_id"`
+
+	Permissions []organizationPermission `bson:"permissions"`
+	Roles       []organizationRole       `bson:"roles"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type organizationRole struct {
+	ID          string `bson:"_id"`
+	Name        string `bson:"name"`
+	Description string `bson:"description"`
+
+	OrgID string `bson:"organization_id"`
+
+	Permissions []organizationPermission `bson:"permissions"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type organizationPermission struct {
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
+
+	OrgID string `bson:"organization_id"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}

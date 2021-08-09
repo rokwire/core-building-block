@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"core-building-block/core/model"
-	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -357,106 +356,63 @@ func (sa *Adapter) FindGlobalGroups(ids []string) ([]model.GlobalGroup, error) {
 }
 
 //FindOrganizationPermissions finds a set of organization user permissions
-func (sa *Adapter) FindOrganizationPermissions(ids *[]string, orgID string, context mongo.SessionContext) (*[]model.OrganizationPermission, error) {
-	permissionsFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
-	var permissionsResult []permission
-	var err error
-	if context == nil {
-		err = sa.db.organizationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
-	} else {
-		err = sa.db.organizationsPermissions.FindWithContext(context, permissionsFilter, &permissionsResult, nil)
-	}
+func (sa *Adapter) FindOrganizationPermissions(ids []string, orgID string) ([]model.OrganizationPermission, error) {
+	permissionsFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	var permissionsResult []organizationPermission
+	err := sa.db.organizationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	orgPermissions := []model.OrganizationPermission{}
-	for _, permission := range permissionsResult {
-		orgPermission := model.OrganizationPermission{ID: permission.ID, Name: permission.Name}
-		orgPermissions = append(orgPermissions, orgPermission)
+	//get the organization from the cached ones
+	organization, err := sa.getCachedOrganization(orgID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"org_id": orgID}, err)
 	}
 
-	return &orgPermissions, nil
+	result := organizationPermissionsFromStorage(permissionsResult, *organization)
+
+	return result, nil
 }
 
 //FindOrganizationRoles finds a set of organization user roles
-func (sa *Adapter) FindOrganizationRoles(ids *[]string, orgID string, context mongo.SessionContext) (*[]model.OrganizationRole, error) {
-	rolesFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
-	var rolesResult []role
-	var err error
-	if context == nil {
-		err = sa.db.organizationsRoles.Find(rolesFilter, &rolesResult, nil)
-	} else {
-		err = sa.db.organizationsRoles.FindWithContext(context, rolesFilter, &rolesResult, nil)
-	}
+func (sa *Adapter) FindOrganizationRoles(ids []string, orgID string) ([]model.OrganizationRole, error) {
+	rolesFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	var rolesResult []organizationRole
+	err := sa.db.organizationsRoles.Find(rolesFilter, &rolesResult, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	orgRoles := []model.OrganizationRole{}
-	for _, role := range rolesResult {
-		orgRole := model.OrganizationRole{ID: role.ID, Name: role.Name, Description: role.Description}
-
-		permissions, err := sa.FindOrganizationPermissions(&role.Permissions, orgID, context)
-		if err != nil {
-			fmt.Printf("failed to find organization permissions for role ID %s, org_id %s\n", role.ID, orgID)
-		} else {
-			orgRole.Permissions = *permissions
-		}
-		org, err := sa.getCachedOrganization(orgID)
-		if err != nil {
-			fmt.Printf("failed to find cached organization for org_id %s\n", orgID)
-		} else {
-			orgRole.Organization = *org
-		}
-
-		orgRoles = append(orgRoles, orgRole)
+	//get the organization from the cached ones
+	organization, err := sa.getCachedOrganization(orgID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"org_id": orgID}, err)
 	}
 
-	return &orgRoles, nil
+	result := organizationRolesFromStorage(rolesResult, *organization)
+
+	return result, nil
 }
 
 //FindOrganizationGroups finds a set of organization user groups
-func (sa *Adapter) FindOrganizationGroups(ids *[]string, orgID string, context mongo.SessionContext) (*[]model.OrganizationGroup, error) {
-	filter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
-	var groupsResult []group
-	var err error
-	if context == nil {
-		err = sa.db.organizationsGroups.Find(filter, &groupsResult, nil)
-	} else {
-		err = sa.db.organizationsGroups.FindWithContext(context, filter, &groupsResult, nil)
-	}
+func (sa *Adapter) FindOrganizationGroups(ids []string, orgID string) ([]model.OrganizationGroup, error) {
+	filter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	var groupsResult []organizationGroup
+	err := sa.db.organizationsGroups.Find(filter, &groupsResult, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	orgGroups := []model.OrganizationGroup{}
-	for _, group := range groupsResult {
-		orgGroup := model.OrganizationGroup{ID: group.ID, Name: group.Name}
-
-		permissions, err := sa.FindOrganizationPermissions(&group.Permissions, orgID, context)
-		if err != nil {
-			fmt.Printf("failed to find organization permissions for group ID %s, org_id %s\n", group.ID, orgID)
-		} else {
-			orgGroup.Permissions = *permissions
-		}
-		roles, err := sa.FindOrganizationRoles(&group.Roles, orgID, context)
-		if err != nil {
-			fmt.Printf("failed to find organization roles for group ID %s, org_id %s\n", group.ID, orgID)
-		} else {
-			orgGroup.Roles = *roles
-		}
-		org, err := sa.getCachedOrganization(orgID)
-		if err != nil {
-			fmt.Printf("failed to find cached organization for org_id %s\n", orgID)
-		} else {
-			orgGroup.Organization = *org
-		}
-
-		orgGroups = append(orgGroups, orgGroup)
+	//get the organization from the cached ones
+	organization, err := sa.getCachedOrganization(orgID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"org_id": orgID}, err)
 	}
 
-	return &orgGroups, nil
+	result := organizationGroupsFromStorage(groupsResult, *organization)
+
+	return result, nil
 }
 
 //InsertMembership inserts an organization membership

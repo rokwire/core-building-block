@@ -140,18 +140,18 @@ func (c GlobalRole) String() string {
 
 //OrganizationGroup represents organization group entity. It is a collection of users
 type OrganizationGroup struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	ID   string
+	Name string
 
-	Permissions []OrganizationPermission `bson:"permissions"`
-	Roles       []OrganizationRole       `bson:"roles"`
+	Permissions []OrganizationPermission
+	Roles       []OrganizationRole
 
-	Organization Organization `bson:"-"`
+	Organization Organization
 
-	OrganizationsMemberships []OrganizationMembership `bson:"-"`
+	OrganizationsMemberships []OrganizationMembership
 
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (cg OrganizationGroup) String() string {
@@ -160,13 +160,13 @@ func (cg OrganizationGroup) String() string {
 
 //OrganizationPermission represents organization permission entity
 type OrganizationPermission struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	ID   string
+	Name string
 
-	Organization Organization `bson:"-"`
+	Organization Organization
 
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (c OrganizationPermission) String() string {
@@ -175,16 +175,16 @@ func (c OrganizationPermission) String() string {
 
 //OrganizationRole represents organization role entity. It is a collection of permissions
 type OrganizationRole struct {
-	ID          string `bson:"_id"`
-	Name        string `bson:"name"`
-	Description string `bson:"desciption"`
+	ID          string
+	Name        string
+	Description string
 
-	Permissions []OrganizationPermission `bson:"permissions"`
+	Permissions []OrganizationPermission
 
-	Organization Organization `bson:"-"`
+	Organization Organization
 
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (c OrganizationRole) String() string {

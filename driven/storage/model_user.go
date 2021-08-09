@@ -50,39 +50,3 @@ type userMembership struct {
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
-
-type group struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
-
-	OrgID string `bson:"organization_id"`
-
-	Permissions []string `bson:"permissions"`
-	Roles       []string `bson:"roles"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type role struct {
-	ID          string `bson:"_id"`
-	Name        string `bson:"name"`
-	Description string `bson:"desciption"`
-
-	OrgID string `bson:"organization_id"`
-
-	Permissions []string `bson:"permissions"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type permission struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
-
-	OrgID string `bson:"organization_id"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
