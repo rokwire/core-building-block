@@ -344,29 +344,6 @@ func (sa *Adapter) FindGlobalPermissions(ids *[]string, context mongo.SessionCon
 	return &globalPermissions, nil
 }
 
-//FindOrganizationPermissions finds a set of organization user permissions
-func (sa *Adapter) FindOrganizationPermissions(ids *[]string, orgID string, context mongo.SessionContext) (*[]model.OrganizationPermission, error) {
-	permissionsFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
-	var permissionsResult []permission
-	var err error
-	if context == nil {
-		err = sa.db.organizationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
-	} else {
-		err = sa.db.organizationsPermissions.FindWithContext(context, permissionsFilter, &permissionsResult, nil)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	orgPermissions := []model.OrganizationPermission{}
-	for _, permission := range permissionsResult {
-		orgPermission := model.OrganizationPermission{ID: permission.ID, Name: permission.Name}
-		orgPermissions = append(orgPermissions, orgPermission)
-	}
-
-	return &orgPermissions, nil
-}
-
 //FindGlobalRoles finds a set of global user roles
 func (sa *Adapter) FindGlobalRoles(ids *[]string, context mongo.SessionContext) (*[]model.GlobalRole, error) {
 	rolesFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
@@ -395,43 +372,6 @@ func (sa *Adapter) FindGlobalRoles(ids *[]string, context mongo.SessionContext) 
 	}
 
 	return &globalRoles, nil
-}
-
-//FindOrganizationRoles finds a set of organization user roles
-func (sa *Adapter) FindOrganizationRoles(ids *[]string, orgID string, context mongo.SessionContext) (*[]model.OrganizationRole, error) {
-	rolesFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
-	var rolesResult []role
-	var err error
-	if context == nil {
-		err = sa.db.organizationsRoles.Find(rolesFilter, &rolesResult, nil)
-	} else {
-		err = sa.db.organizationsRoles.FindWithContext(context, rolesFilter, &rolesResult, nil)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	orgRoles := []model.OrganizationRole{}
-	for _, role := range rolesResult {
-		orgRole := model.OrganizationRole{ID: role.ID, Name: role.Name, Description: role.Description}
-
-		permissions, err := sa.FindOrganizationPermissions(&role.Permissions, orgID, context)
-		if err != nil {
-			fmt.Printf("failed to find organization permissions for role ID %s, org_id %s\n", role.ID, orgID)
-		} else {
-			orgRole.Permissions = *permissions
-		}
-		org, err := sa.getCachedOrganization(orgID)
-		if err != nil {
-			fmt.Printf("failed to find cached organization for org_id %s\n", orgID)
-		} else {
-			orgRole.Organization = *org
-		}
-
-		orgRoles = append(orgRoles, orgRole)
-	}
-
-	return &orgRoles, nil
 }
 
 //FindGlobalGroups finds a set of global user groups
@@ -469,6 +409,66 @@ func (sa *Adapter) FindGlobalGroups(ids *[]string, context mongo.SessionContext)
 	}
 
 	return &globalGroups, nil
+}
+
+//FindOrganizationPermissions finds a set of organization user permissions
+func (sa *Adapter) FindOrganizationPermissions(ids *[]string, orgID string, context mongo.SessionContext) (*[]model.OrganizationPermission, error) {
+	permissionsFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
+	var permissionsResult []permission
+	var err error
+	if context == nil {
+		err = sa.db.organizationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
+	} else {
+		err = sa.db.organizationsPermissions.FindWithContext(context, permissionsFilter, &permissionsResult, nil)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	orgPermissions := []model.OrganizationPermission{}
+	for _, permission := range permissionsResult {
+		orgPermission := model.OrganizationPermission{ID: permission.ID, Name: permission.Name}
+		orgPermissions = append(orgPermissions, orgPermission)
+	}
+
+	return &orgPermissions, nil
+}
+
+//FindOrganizationRoles finds a set of organization user roles
+func (sa *Adapter) FindOrganizationRoles(ids *[]string, orgID string, context mongo.SessionContext) (*[]model.OrganizationRole, error) {
+	rolesFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
+	var rolesResult []role
+	var err error
+	if context == nil {
+		err = sa.db.organizationsRoles.Find(rolesFilter, &rolesResult, nil)
+	} else {
+		err = sa.db.organizationsRoles.FindWithContext(context, rolesFilter, &rolesResult, nil)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	orgRoles := []model.OrganizationRole{}
+	for _, role := range rolesResult {
+		orgRole := model.OrganizationRole{ID: role.ID, Name: role.Name, Description: role.Description}
+
+		permissions, err := sa.FindOrganizationPermissions(&role.Permissions, orgID, context)
+		if err != nil {
+			fmt.Printf("failed to find organization permissions for role ID %s, org_id %s\n", role.ID, orgID)
+		} else {
+			orgRole.Permissions = *permissions
+		}
+		org, err := sa.getCachedOrganization(orgID)
+		if err != nil {
+			fmt.Printf("failed to find cached organization for org_id %s\n", orgID)
+		} else {
+			orgRole.Organization = *org
+		}
+
+		orgRoles = append(orgRoles, orgRole)
+	}
+
+	return &orgRoles, nil
 }
 
 //FindOrganizationGroups finds a set of organization user groups
