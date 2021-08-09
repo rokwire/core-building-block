@@ -201,6 +201,24 @@ func (m *database) applyUsersChecks(users *collectionWrapper) error {
 func (m *database) applyGlobalGroupsChecks(groups *collectionWrapper) error {
 	m.logger.Info("apply global groups checks.....")
 
+	//add permissions index
+	err := groups.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add roles index
+	err = groups.AddIndex(bson.D{primitive.E{Key: "roles._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add roles permissions index
+	err = groups.AddIndex(bson.D{primitive.E{Key: "roles.permissions._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("global groups check passed")
 	return nil
 }
