@@ -22,21 +22,6 @@ type user struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-type rawMembership struct {
-	ID     string `bson:"_id"`
-	UserID string `bson:"user_id"`
-
-	OrgID       string                 `bson:"organization_id"`
-	OrgUserData map[string]interface{} `bson:"org_user_data"`
-
-	Permissions []string `bson:"permissions"`
-	Roles       []string `bson:"roles"`
-	Groups      []string `bson:"groups"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
 type userMembership struct {
 	ID string `bson:"_id"`
 
@@ -51,37 +36,14 @@ type userMembership struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-type group struct {
+type device struct {
 	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	Type string `bson:"type"`
 
-	OrgID string `bson:"organization_id"`
+	OS         string `bson:"os"`
+	MacAddress string `bson:"mac_address"`
 
-	Permissions []string `bson:"permissions"`
-	Roles       []string `bson:"roles"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type role struct {
-	ID          string `bson:"_id"`
-	Name        string `bson:"name"`
-	Description string `bson:"desciption"`
-
-	OrgID string `bson:"organization_id"`
-
-	Permissions []string `bson:"permissions"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type permission struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
-
-	OrgID string `bson:"organization_id"`
+	Users []string `bson:"users"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
