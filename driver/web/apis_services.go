@@ -10,15 +10,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
 )
 
 //ServicesApisHandler handles the rest APIs implementation
 type ServicesApisHandler struct {
-	coreAPIs  *core.APIs
-	tokenAuth *tokenauth.TokenAuth
+	coreAPIs *core.APIs
 }
 
 func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpResponse {

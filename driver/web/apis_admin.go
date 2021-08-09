@@ -10,15 +10,13 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
 )
 
 //AdminApisHandler handles the admin rest APIs implementation
 type AdminApisHandler struct {
-	coreAPIs  *core.APIs
-	tokenAuth *tokenauth.TokenAuth
+	coreAPIs *core.APIs
 }
 
 //getTest TODO get test

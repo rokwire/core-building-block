@@ -20,11 +20,6 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-const (
-	typeAdminAuthentication   logutils.MessageActionType = "checking admin authentication"
-	typeAdminAuthRequestToken logutils.MessageActionType = "checking admin auth request token"
-)
-
 //Adapter entity
 type Adapter struct {
 	env       string
@@ -69,34 +64,34 @@ func (we Adapter) Start() {
 
 	///services ///
 	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
-	servicesSubRouter.HandleFunc("/auth/login", we.wrapFunc(we.servicesApisHandler.authLogin)).Methods("POST")
-	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL)).Methods("POST")
-	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh)).Methods("POST")
-	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService)).Methods("POST")
-	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations)).Methods("GET")
-	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest)).Methods("GET")
+	servicesSubRouter.HandleFunc("/auth/login", we.wrapFunc(we.servicesApisHandler.authLogin, we.auth.servicesAuth.scopeAuth)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL, we.auth.servicesAuth.scopeAuth)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh, we.auth.servicesAuth.scopeAuth)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService, we.auth.servicesAuth.scopeAuth)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations, we.auth.servicesAuth.scopeAuth)).Methods("GET")
+	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest, we.auth.servicesAuth.scopeAuth)).Methods("GET")
 	///
 
 	///admin ///
 	adminSubrouter := subRouter.PathPrefix("/admin").Subrouter()
-	adminSubrouter.HandleFunc("/test", we.wrapFunc(we.adminApisHandler.getTest)).Methods("GET")
-	adminSubrouter.HandleFunc("/test-model", we.wrapFunc(we.adminApisHandler.getTestModel)).Methods("GET")
+	adminSubrouter.HandleFunc("/test", we.wrapFunc(we.adminApisHandler.getTest, we.auth.adminAuth.permissionAuth)).Methods("GET")
+	adminSubrouter.HandleFunc("/test-model", we.wrapFunc(we.adminApisHandler.getTestModel, we.auth.adminAuth.permissionAuth)).Methods("GET")
 
-	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.createGlobalConfig)).Methods("POST")
-	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.getGlobalConfig)).Methods("GET")
-	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.updateGlobalConfig)).Methods("PUT")
+	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.createGlobalConfig, we.auth.adminAuth.permissionAuth)).Methods("POST")
+	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.getGlobalConfig, we.auth.adminAuth.permissionAuth)).Methods("GET")
+	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.updateGlobalConfig, we.auth.adminAuth.permissionAuth)).Methods("PUT")
 
-	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.createOrganization)).Methods("POST")
-	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.updateOrganization)).Methods("PUT")
-	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.getOrganization)).Methods("GET")
-	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.getOrganizations)).Methods("GET")
+	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.createOrganization, we.auth.adminAuth.permissionAuth)).Methods("POST")
+	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.updateOrganization, we.auth.adminAuth.permissionAuth)).Methods("PUT")
+	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.getOrganization, we.auth.adminAuth.permissionAuth)).Methods("GET")
+	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.getOrganizations, we.auth.adminAuth.permissionAuth)).Methods("GET")
 
-	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.getServiceRegistrations)).Methods("GET")
-	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.registerService)).Methods("POST")
-	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.updateServiceRegistration)).Methods("PUT")
-	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.deregisterService)).Methods("DELETE")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.getServiceRegistrations, we.auth.adminAuth.permissionAuth)).Methods("GET")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.registerService, we.auth.adminAuth.permissionAuth)).Methods("POST")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.updateServiceRegistration, we.auth.adminAuth.permissionAuth)).Methods("PUT")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.deregisterService, we.auth.adminAuth.permissionAuth)).Methods("DELETE")
 
-	adminSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.adminApisHandler.getApplication)).Methods("GET")
+	adminSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.adminApisHandler.getApplication, we.auth.adminAuth.permissionAuth)).Methods("GET")
 	///
 
 	///enc ///
@@ -131,7 +126,7 @@ func (we Adapter) serveDocUI() http.Handler {
 	return httpSwagger.Handler(httpSwagger.URL(url))
 }
 
-func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
+func (we Adapter) wrapFunc(handler handlerFunc, authorization ...Authorization) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		logObj := we.logger.NewRequestLog(req)
 
@@ -144,6 +139,16 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		if err != nil {
 			logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
 			return
+		}
+
+		if authorization != nil {
+			for _, auth := range authorization {
+				responseStatus, err := auth.check(req)
+				if err != nil {
+					logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeRequest, nil, err, responseStatus, true)
+					return
+				}
+			}
 		}
 
 		//2. process it
@@ -181,33 +186,6 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 	}
 }
 
-func (we Adapter) adminTokenWrapFunc(logObj *logs.Log, handler handlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-		if logObj == nil {
-			logObj := we.logger.NewRequestLog(req)
-			logObj.RequestReceived()
-		}
-
-		// Authenticate token
-		claims, err := we.adminApisHandler.tokenAuth.CheckRequestTokens(req)
-		if err != nil {
-			// log.Printf("Authentication error: %v\n", err)
-			// http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			logObj.RequestErrorAction(w, typeAdminAuthRequestToken, logutils.TypeToken, nil, err, http.StatusUnauthorized, true)
-
-			return
-		}
-		err = we.adminApisHandler.tokenAuth.AuthorizeRequestPermissions(claims, req)
-		if err != nil {
-			// log.Printf("Permission error: %v\n", err)
-			// http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
-			logObj.RequestErrorAction(w, typeAdminAuthentication, logutils.TypeClaims, nil, err, http.StatusForbidden, true)
-			return
-		}
-
-		// log.Printf("Authentication successful for user: %v", claims)
-	}
-}
 func (we Adapter) validateRequest(req *http.Request) (*openapi3filter.RequestValidationInput, error) {
 	route, pathParams, err := we.openAPIRouter.FindRoute(req)
 	if err != nil {
