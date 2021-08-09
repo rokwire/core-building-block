@@ -605,6 +605,7 @@ paths:
           content:
             application/json:
               schema:
+                nullable: true
                 type: array
                 items:
                   $ref: '#/components/schemas/GlobalPermissions'
@@ -734,6 +735,7 @@ components:
           type: string
         permissions:
           type: array
+          nullable: true
           items:
             type: string
     GlobalGroup:

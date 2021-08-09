@@ -207,7 +207,7 @@ type GlobalPermissions struct {
 type GlobalRole struct {
 	Id          string    `json:"id"`
 	Name        string    `json:"name"`
-	Permissions *[]string `json:"permissions,omitempty"`
+	Permissions *[]string `json:"permissions"`
 }
 
 // Organization defines model for Organization.

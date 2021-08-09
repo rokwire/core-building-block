@@ -9,5 +9,6 @@ properties:
     type: string
   permissions:
     type: array
+    nullable: true
     items:
       type: string
