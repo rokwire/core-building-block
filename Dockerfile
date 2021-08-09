@@ -1,7 +1,6 @@
 FROM golang:1.16-buster as builder
 
 ENV CGO_ENABLED=0
-ENV ENV_TYPE=aws_secrets_manager
 
 RUN mkdir /core-app
 WORKDIR /core-app
@@ -21,6 +20,8 @@ COPY --from=builder /etc/passwd /etc/passwd
 
 #we need timezone database
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo 
+
+ENV ENV_TYPE=aws_secrets_manager
 
 EXPOSE 80
 ENTRYPOINT ["/core-building-block"]
