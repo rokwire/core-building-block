@@ -789,13 +789,15 @@ func (sa *Adapter) SaveDevice(device *model.Device, context mongo.SessionContext
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("device"))
 	}
 
+	storageDevice := deviceToStorage(device)
+
 	var err error
 	filter := bson.M{"_id": device.ID}
 	opts := options.Replace().SetUpsert(true)
 	if context == nil {
-		err = sa.db.devices.ReplaceOne(filter, device, opts)
+		err = sa.db.devices.ReplaceOne(filter, storageDevice, opts)
 	} else {
-		err = sa.db.devices.ReplaceOneWithContext(context, filter, device, opts)
+		err = sa.db.devices.ReplaceOneWithContext(context, filter, storageDevice, opts)
 	}
 
 	if err != nil {

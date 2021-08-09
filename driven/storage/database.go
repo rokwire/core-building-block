@@ -265,6 +265,12 @@ func (m *database) applyOrganizationsMembershipsChecks(organizationsMemberships 
 func (m *database) applyDevicesChecks(devices *collectionWrapper) error {
 	m.logger.Info("apply devices checks.....")
 
+	//add users index
+	err := devices.AddIndex(bson.D{primitive.E{Key: "users", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("devices check passed")
 	return nil
 }

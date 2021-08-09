@@ -1,6 +1,9 @@
 package storage
 
-import "core-building-block/core/model"
+import (
+	"core-building-block/core/model"
+	"fmt"
+)
 
 //Organization
 func organizationFromStorage(item *organization, applications []model.Application) model.Organization {
@@ -132,4 +135,66 @@ func organizationGroupsFromStorage(items []organizationGroup, organization model
 		res[i] = organizationGroupFromStorage(&orgGroup, organization)
 	}
 	return res
+}
+
+//OrganizationMembership
+func organizationMembershipFromUserStorage(item *userMembership, sa *Adapter) *model.OrganizationMembership {
+	if item == nil {
+		return nil
+	}
+
+	membership := model.OrganizationMembership{ID: item.ID, OrgUserData: item.OrgUserData,
+		Permissions: item.Permissions, Roles: item.Roles, Groups: item.Groups,
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+
+	org, err := sa.getCachedOrganization(item.OrgID)
+	if err != nil {
+		fmt.Printf("failed to find cached organization for org_id %s\n", item.OrgID)
+	} else {
+		membership.Organization = *org
+	}
+
+	return &membership
+}
+
+func organizationMembershipToUserStorage(item *model.OrganizationMembership) *userMembership {
+	if item == nil {
+		return nil
+	}
+
+	return &userMembership{ID: item.ID, OrgID: item.Organization.ID, OrgUserData: item.OrgUserData,
+		Permissions: item.Permissions, Roles: item.Roles, Groups: item.Groups,
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func organizationMembershipListFromUserStorage(items []userMembership, sa *Adapter) []model.OrganizationMembership {
+	if items == nil {
+		return nil
+	}
+	out := make([]model.OrganizationMembership, len(items))
+	for i, item := range items {
+		defItem := organizationMembershipFromUserStorage(&item, sa)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = model.OrganizationMembership{}
+		}
+	}
+	return out
+}
+
+func organizationMembershipListToUserStorage(items []model.OrganizationMembership) []userMembership {
+	if items == nil {
+		return nil
+	}
+	out := make([]userMembership, len(items))
+	for i, item := range items {
+		defItem := organizationMembershipToUserStorage(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = userMembership{}
+		}
+	}
+	return out
 }

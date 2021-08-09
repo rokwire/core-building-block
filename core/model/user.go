@@ -193,17 +193,17 @@ func (c OrganizationRole) String() string {
 
 //Device represents user devices entity.
 type Device struct {
-	ID   string `bson:"_id"`
-	Type string `bson:"type"` //mobile, web, desktop, other
+	ID   string
+	Type string //mobile, web, desktop, other
 
 	//TODO - other fields when they are clear
-	OS         string `bson:"os"`          //?
-	MacAddress string `bson:"mac_address"` //?
+	OS         string //?
+	MacAddress string //?
 	///
 
 	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
-	Users []User `bson:"-"`
+	Users []User
 
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
