@@ -304,6 +304,25 @@ func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.Http
 	return l.HttpResponseSuccessJSON(data)
 }
 
+//getGlobalPersmissionsList gets global-permissions list
+func (h AdminApisHandler) getGlobalPermissionList(l *logs.Log, r *http.Request) logs.HttpResponse {
+	globalPermissions, err := h.coreAPIs.Administration.AdmGetGlobalPermissions()
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeGlobalPermissions, nil, err, http.StatusInternalServerError, true)
+	}
+	var response []Def.GlobalPermissions
+	for _, gp := range globalPermissions {
+		r := globalPermissionsToDef(&gp)
+		response = append(response, *r)
+	}
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeGlobalPermissions, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
 //NewAdminApisHandler creates new admin rest Handler instance
 func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
 	return AdminApisHandler{coreAPIs: coreAPIs}

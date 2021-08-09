@@ -25,6 +25,7 @@ type database struct {
 	serviceRegs           *collectionWrapper
 	serviceAuthorizations *collectionWrapper
 	applications          *collectionWrapper
+	globalPermissions     *collectionWrapper
 
 	listeners []Listener
 }
@@ -88,6 +89,12 @@ func (m *database) start() error {
 		return err
 	}
 
+	globalPermissions := &collectionWrapper{database: m, coll: db.Collection("global_permissions")}
+	err = m.applyGlobalPermissionsChecks(globalPermissions)
+	if err != nil {
+		return err
+	}
+
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
@@ -97,6 +104,7 @@ func (m *database) start() error {
 	m.serviceAuthorizations = serviceAuthorizations
 	m.applications = applications
 	m.authConfigs = authConfigs
+	m.globalPermissions = globalPermissions
 
 	//watch for auth info changes
 	go m.authConfigs.Watch(nil)
@@ -144,6 +152,13 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 	}
 
 	log.Println("service regs checks passed")
+	return nil
+}
+
+func (m *database) applyGlobalPermissionsChecks(globalPermissions *collectionWrapper) error {
+	log.Println("apply global permissions checks.....")
+
+	log.Println("global permissions checks passed")
 	return nil
 }
 

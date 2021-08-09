@@ -92,6 +92,8 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.deregisterService)).Methods("DELETE")
 
 	adminSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.adminApisHandler.getApplication)).Methods("GET")
+
+	adminSubrouter.HandleFunc("/global-permission", we.wrapFunc(we.adminApisHandler.getGlobalPermissionList)).Methods("GET")
 	///
 
 	///enc ///

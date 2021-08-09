@@ -28,6 +28,8 @@ type Administration interface {
 	AdmGetOrganization(ID string) (*model.Organization, error)
 
 	AdmGetApplication(ID string) (*model.Application, error)
+
+	AdmGetGlobalPermissions() ([]model.GlobalPermission, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -54,6 +56,8 @@ type Storage interface {
 	GetOrganization(ID string) (*model.Organization, error)
 
 	GetApplication(ID string) (*model.Application, error)
+
+	GetGlobalPermissions() ([]model.GlobalPermission, error)
 }
 
 //StorageListener listenes for change data storage events

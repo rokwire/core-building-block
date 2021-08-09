@@ -279,6 +279,24 @@ func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 	return &getResApp, nil
 }
 
+//GetOrganizations gets the organizations
+func (sa *Adapter) GetGlobalPermissions() ([]model.GlobalPermission, error) {
+
+	filter := bson.D{}
+	var result []model.GlobalPermission
+	err := sa.db.organizations.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalPermissions, nil, err)
+	}
+
+	var resultList []model.GlobalPermission
+	for _, current := range result {
+		item := &model.GlobalPermission{ID: current.ID, Name: current.Name}
+		resultList = append(resultList, *item)
+	}
+	return resultList, nil
+}
+
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records

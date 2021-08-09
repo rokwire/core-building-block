@@ -71,3 +71,34 @@ func globalRoleListToDef(items []model.GlobalRole) []Def.GlobalRole {
 	}
 	return out
 }
+
+//GlobalPermissions
+func globalPermissionsFromDef(item *Def.GlobalPermissions) *model.GlobalPermission {
+	if item == nil {
+		return nil
+	}
+	return &model.GlobalPermission{ID: item.Id, Name: *item.Name}
+}
+
+func globalPermissionsToDef(item *model.GlobalPermission) *Def.GlobalPermissions {
+	if item == nil {
+		return nil
+	}
+	return &Def.GlobalPermissions{Id: item.ID, Name: &item.Name}
+}
+
+func globalPermissionsListToDef(items []model.GlobalPermission) []Def.GlobalPermissions {
+	if items == nil {
+		return nil
+	}
+	out := make([]Def.GlobalPermissions, len(items))
+	for i, item := range items {
+		defItem := globalPermissionsToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.GlobalPermissions{}
+		}
+	}
+	return out
+}
