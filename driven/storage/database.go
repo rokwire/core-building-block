@@ -201,12 +201,36 @@ func (m *database) applyUsersChecks(users *collectionWrapper) error {
 func (m *database) applyGlobalGroupsChecks(groups *collectionWrapper) error {
 	m.logger.Info("apply global groups checks.....")
 
+	//add permissions index
+	err := groups.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add roles index
+	err = groups.AddIndex(bson.D{primitive.E{Key: "roles._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add roles permissions index
+	err = groups.AddIndex(bson.D{primitive.E{Key: "roles.permissions._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("global groups check passed")
 	return nil
 }
 
 func (m *database) applyGlobalRolesChecks(roles *collectionWrapper) error {
 	m.logger.Info("apply global roles checks.....")
+
+	//add permissions index
+	err := roles.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
 
 	m.logger.Info("global roles check passed")
 	return nil
@@ -222,12 +246,30 @@ func (m *database) applyGlobalPermissionsChecks(permissions *collectionWrapper) 
 func (m *database) applyOrganizationsMembershipsChecks(organizationsMemberships *collectionWrapper) error {
 	m.logger.Info("apply organizations memberships checks.....")
 
+	//add user id index
+	err := organizationsMemberships.AddIndex(bson.D{primitive.E{Key: "user_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add organization id index
+	err = organizationsMemberships.AddIndex(bson.D{primitive.E{Key: "organization_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("organizations memberships check passed")
 	return nil
 }
 
 func (m *database) applyDevicesChecks(devices *collectionWrapper) error {
 	m.logger.Info("apply devices checks.....")
+
+	//add users index
+	err := devices.AddIndex(bson.D{primitive.E{Key: "users", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
 
 	m.logger.Info("devices check passed")
 	return nil
@@ -291,6 +333,30 @@ func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) er
 func (m *database) applyOrganizationsGroupsChecks(organizationsGroups *collectionWrapper) error {
 	m.logger.Info("apply organizations groups checks.....")
 
+	//add organization index
+	err := organizationsGroups.AddIndex(bson.D{primitive.E{Key: "organization_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add permissions index
+	err = organizationsGroups.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add roles index
+	err = organizationsGroups.AddIndex(bson.D{primitive.E{Key: "roles._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add roles permissions index
+	err = organizationsGroups.AddIndex(bson.D{primitive.E{Key: "roles.permissions._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("organizations groups checks passed")
 	return nil
 }
@@ -298,12 +364,30 @@ func (m *database) applyOrganizationsGroupsChecks(organizationsGroups *collectio
 func (m *database) applyOrganizationsRolesChecks(organizationsRoles *collectionWrapper) error {
 	m.logger.Info("apply organizations roles checks.....")
 
+	//add organization index
+	err := organizationsRoles.AddIndex(bson.D{primitive.E{Key: "organization_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add permissions index
+	err = organizationsRoles.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("organizations roles checks passed")
 	return nil
 }
 
 func (m *database) applyOrganizationsPermissionsChecks(organizationsPermissions *collectionWrapper) error {
 	m.logger.Info("apply organizations permissions checks.....")
+
+	//add organization index
+	err := organizationsPermissions.AddIndex(bson.D{primitive.E{Key: "organization_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
 
 	m.logger.Info("organizations permissions checks passed")
 	return nil
