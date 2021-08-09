@@ -56,7 +56,7 @@ paths:
   /admin/applications/{id}:
     $ref: "./resources/admin/applicationsId.yaml"
   /admin/application:
-    $ref: "./resources/admin/applicationsId.yaml"
+    $ref: "./resources/admin/applications.yaml"
 
   #enc
   /enc/test:

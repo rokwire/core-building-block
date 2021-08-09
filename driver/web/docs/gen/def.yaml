@@ -562,8 +562,6 @@ paths:
         '500':
           description: Internal error
   '/admin/applications/{id}':
-    $ref: '#/paths/~1admin~1application'
-  /admin/application:
     get:
       tags:
         - Admin
@@ -592,6 +590,34 @@ paths:
           description: Unauthorized
         '404':
           description: Not Found
+        '500':
+          description: Internal error
+  /admin/application:
+    post:
+      tags:
+        - Admin
+      summary: Create application
+      description: |
+        Creates application
+      requestBody:
+        description: creates one application
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Application'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
         '500':
           description: Internal error
   /enc/test:
