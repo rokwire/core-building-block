@@ -34,6 +34,12 @@ func main() {
 	}
 
 	env := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_ENVIRONMENT", true, false) //local, dev, staging, prod
+	port := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PORT", false, false)
+	//Default port of 80
+	if port == "" {
+		port = "80"
+	}
+
 	serviceID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SERVICE_ID", true, false)
 	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
 
@@ -81,6 +87,6 @@ func main() {
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, coreAPIs, host, logger)
+	webAdapter := web.NewWebAdapter(env, port, coreAPIs, host, logger)
 	webAdapter.Start()
 }
