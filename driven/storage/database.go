@@ -329,6 +329,12 @@ func (m *database) applyOrganizationsRolesChecks(organizationsRoles *collectionW
 func (m *database) applyOrganizationsPermissionsChecks(organizationsPermissions *collectionWrapper) error {
 	m.logger.Info("apply organizations permissions checks.....")
 
+	//add organization index
+	err := organizationsPermissions.AddIndex(bson.D{primitive.E{Key: "organization_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("organizations permissions checks passed")
 	return nil
 }
