@@ -246,6 +246,18 @@ func (m *database) applyGlobalPermissionsChecks(permissions *collectionWrapper) 
 func (m *database) applyOrganizationsMembershipsChecks(organizationsMemberships *collectionWrapper) error {
 	m.logger.Info("apply organizations memberships checks.....")
 
+	//add user id index
+	err := organizationsMemberships.AddIndex(bson.D{primitive.E{Key: "user_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add organization id index
+	err = organizationsMemberships.AddIndex(bson.D{primitive.E{Key: "organization_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("organizations memberships check passed")
 	return nil
 }
