@@ -322,93 +322,38 @@ func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.Sessio
 }
 
 //FindGlobalPermissions finds a set of global user permissions
-func (sa *Adapter) FindGlobalPermissions(ids *[]string, context mongo.SessionContext) (*[]model.GlobalPermission, error) {
-	permissionsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
-	var permissionsResult []permission
-	var err error
-	if context == nil {
-		err = sa.db.globalPermissions.Find(permissionsFilter, &permissionsResult, nil)
-	} else {
-		err = sa.db.globalPermissions.FindWithContext(context, permissionsFilter, &permissionsResult, nil)
-	}
+func (sa *Adapter) FindGlobalPermissions(ids []string) ([]model.GlobalPermission, error) {
+	permissionsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	var permissionsResult []model.GlobalPermission
+	err := sa.db.globalPermissions.Find(permissionsFilter, &permissionsResult, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	globalPermissions := []model.GlobalPermission{}
-	for _, permission := range permissionsResult {
-		globalPermission := model.GlobalPermission{ID: permission.ID, Name: permission.Name}
-		globalPermissions = append(globalPermissions, globalPermission)
-	}
-
-	return &globalPermissions, nil
+	return permissionsResult, nil
 }
 
 //FindGlobalRoles finds a set of global user roles
-func (sa *Adapter) FindGlobalRoles(ids *[]string, context mongo.SessionContext) (*[]model.GlobalRole, error) {
-	rolesFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
-	var rolesResult []role
-	var err error
-	if context == nil {
-		err = sa.db.globalRoles.Find(rolesFilter, &rolesResult, nil)
-	} else {
-		err = sa.db.globalRoles.FindWithContext(context, rolesFilter, &rolesResult, nil)
-	}
+func (sa *Adapter) FindGlobalRoles(ids []string) ([]model.GlobalRole, error) {
+	rolesFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	var rolesResult []model.GlobalRole
+	err := sa.db.globalRoles.Find(rolesFilter, &rolesResult, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	globalRoles := []model.GlobalRole{}
-	for _, role := range rolesResult {
-		globalRole := model.GlobalRole{ID: role.ID, Name: role.Name, Description: role.Description}
-
-		permissions, err := sa.FindGlobalPermissions(&role.Permissions, context)
-		if err != nil {
-			fmt.Printf("failed to find global permissions for role ID %s\n", role.ID)
-		} else {
-			globalRole.Permissions = *permissions
-		}
-		globalRoles = append(globalRoles, globalRole)
-	}
-
-	return &globalRoles, nil
+	return rolesResult, nil
 }
 
 //FindGlobalGroups finds a set of global user groups
-func (sa *Adapter) FindGlobalGroups(ids *[]string, context mongo.SessionContext) (*[]model.GlobalGroup, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": *ids}}}
-	var groupsResult []group
-	var err error
-	if context == nil {
-		err = sa.db.globalGroups.Find(filter, &groupsResult, nil)
-	} else {
-		err = sa.db.globalGroups.FindWithContext(context, filter, &groupsResult, nil)
-	}
+func (sa *Adapter) FindGlobalGroups(ids []string) ([]model.GlobalGroup, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	var groupsResult []model.GlobalGroup
+	err := sa.db.globalGroups.Find(filter, &groupsResult, nil)
 	if err != nil {
 		return nil, err
 	}
-
-	globalGroups := []model.GlobalGroup{}
-	for _, group := range groupsResult {
-		globalGroup := model.GlobalGroup{ID: group.ID, Name: group.Name}
-
-		permissions, err := sa.FindGlobalPermissions(&group.Permissions, context)
-		if err != nil {
-			fmt.Printf("failed to find global permissions for group ID %s\n", group.ID)
-		} else {
-			globalGroup.Permissions = *permissions
-		}
-		roles, err := sa.FindGlobalRoles(&group.Roles, context)
-		if err != nil {
-			fmt.Printf("failed to find global roles for group ID %s\n", group.ID)
-		} else {
-			globalGroup.Roles = *roles
-		}
-
-		globalGroups = append(globalGroups, globalGroup)
-	}
-
-	return &globalGroups, nil
+	return groupsResult, nil
 }
 
 //FindOrganizationPermissions finds a set of organization user permissions

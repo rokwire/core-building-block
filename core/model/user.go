@@ -126,7 +126,7 @@ func (c GlobalPermission) String() string {
 type GlobalRole struct {
 	ID          string `bson:"_id"`
 	Name        string `bson:"name"`
-	Description string `bson:"desciption"`
+	Description string `bson:"description"`
 
 	Permissions []GlobalPermission `bson:"permissions"`
 
