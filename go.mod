@@ -3,6 +3,7 @@ module core-building-block
 go 1.16
 
 require (
+	github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15 // indirect
 	github.com/casbin/casbin v1.9.1
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/getkin/kin-openapi v0.66.0
@@ -21,6 +22,7 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210616094352-59db8d763f22 // indirect
 	golang.org/x/tools v0.0.0-20210114065538-d78b04bdf963 // indirect
+	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gotest.tools v2.2.0+incompatible
