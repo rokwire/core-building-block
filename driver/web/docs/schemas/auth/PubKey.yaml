@@ -1,0 +1,9 @@
+required:
+  - key_pem
+  - alg
+type: object
+properties:
+  key_pem:
+    type: string
+  alg:
+    type: string

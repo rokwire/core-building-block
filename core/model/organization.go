@@ -1,6 +1,21 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/rokmetro/logging-library/logutils"
+)
+
+const (
+	//TypeOrganization ...
+	TypeOrganization logutils.MessageDataType = "organization"
+	//TypeOrganizationMembership ...
+	TypeOrganizationMembership logutils.MessageDataType = "org membership"
+	//TypeOrganizationUserRelations ...
+	TypeOrganizationUserRelations logutils.MessageDataType = "org user relations"
+	//TypeApplication ...
+	TypeApplication logutils.MessageDataType = "application"
+)
 
 //TODO - Flat vs. hierarchical group management - not sure we need hierarchical, maybe no!?
 

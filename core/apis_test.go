@@ -6,10 +6,9 @@ import (
 
 	core "core-building-block/core"
 	genmocks "core-building-block/core/mocks"
-	core_model "core-building-block/core/model"
+	"core-building-block/core/model"
 
-	log "github.com/rokmetro/logging-library/loglib"
-
+	"github.com/rokmetro/logging-library/logs"
 	"gotest.tools/assert"
 )
 
@@ -29,7 +28,7 @@ func TestSerGetAuthTest(t *testing.T) {
 	storage := genmocks.Storage{}
 	coreAPIs := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
-	l := log.NewLogger("test").NewLog("1", "1")
+	l := logs.NewLogger("test", nil).NewLog("1", logs.RequestContext{})
 	got := coreAPIs.Services.SerGetAuthTest(l)
 	want := "Services - Auth - test"
 
@@ -40,7 +39,7 @@ func TestSerGetCommonTest(t *testing.T) {
 	storage := genmocks.Storage{}
 	coreAPIs := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
-	l := log.NewLogger("test").NewLog("1", "1")
+	l := logs.NewLogger("test", nil).NewLog("1", logs.RequestContext{})
 	got := coreAPIs.Services.SerGetCommonTest(l)
 	want := "Services - Common - test"
 
@@ -66,7 +65,7 @@ func TestAdmGetTest(t *testing.T) {
 func TestAdmCreateGlobalConfig(t *testing.T) {
 	storage := genmocks.Storage{}
 	storage.On("GetGlobalConfig").Return(nil, nil)
-	storage.On("CreateGlobalConfig", "setting").Return(&core_model.GlobalConfig{Setting: "setting"}, nil)
+	storage.On("CreateGlobalConfig", "setting").Return(&model.GlobalConfig{Setting: "setting"}, nil)
 
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
@@ -89,7 +88,78 @@ func TestAdmCreateGlobalConfig(t *testing.T) {
 		t.Error("we are expecting error")
 		return
 	}
-	assert.Equal(t, err.Error(), "error occured", "error is different")
+	assert.Equal(t, err.Error(), "core-building-block/core.(*application).admCreateGlobalConfig() error inserting global config: error occured", "error is different: "+err.Error())
+}
+
+func TestAdmGetOrganization(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("GetOrganization", "_id").Return(&model.Organization{ID: "_id"}, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	getOrganization, _ := app.Administration.AdmGetOrganization("_id")
+
+	if getOrganization == nil {
+		t.Errorf("Error on geting the organization")
+	}
+	// second case error
+	storage2 := genmocks.Storage{}
+	storage2.On("GetOrganization").Return(&model.Organization{ID: "_id"}, nil)
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	err, _ := app.Administration.AdmGetOrganization("_id")
+
+	if err == nil {
+		t.Error("We are expecting error")
+		return
+	}
+
+}
+
+func TestGetOrganizations(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("GetOrganizations").Return([]model.Organization{}, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	getOrganization, _ := app.Administration.AdmGetOrganizations()
+
+	if getOrganization == nil {
+		t.Errorf("Error on geting the organizations")
+	}
+	// second case error
+	storage2 := genmocks.Storage{}
+	storage2.On("GetOrganizations").Return([]model.Organization{}, nil)
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	err, _ := app.Administration.AdmGetOrganizations()
+
+	if err == nil {
+		t.Error("We are expecting error")
+		return
+	}
+}
+
+func TestAdmGetApplication(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("GetApplication", "_id").Return(&model.Application{ID: "_id"}, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	getApplication, _ := app.Administration.AdmGetApplication("_id")
+
+	if getApplication == nil {
+		t.Errorf("Error on geting the application")
+	}
+	// second case error
+	storage2 := genmocks.Storage{}
+	storage2.On("GetApplication").Return(&model.Application{ID: "_id"}, nil)
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	err, _ := app.Administration.AdmGetApplication("_id")
+
+	if err == nil {
+		t.Error("We are expecting error")
+		return
+	}
+
 }
 
 ///
@@ -109,7 +179,7 @@ func TestEncGetTest(t *testing.T) {
 func TestCreateApplication(t *testing.T) {
 	storage := genmocks.Storage{}
 	versions := []string{"v1.1.0", "v1.2.0"}
-	storage.On("CreateApplication", "name", &versions).Return(&core_model.Application{Name: "name", Versions: []string{"v1.1.0", "v1.2.0"}}, nil)
+	storage.On("CreateApplication", "name", &versions).Return(&model.Application{Name: "name", Versions: []string{"v1.1.0", "v1.2.0"}}, nil)
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
 	application, _ := app.Administration.AdmCreateApplication("name", &versions)
