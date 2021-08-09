@@ -592,6 +592,28 @@ paths:
           description: Not Found
         '500':
           description: Internal error
+  /admin/global-permission:
+    get:
+      tags:
+        - Admin
+      summary: Get global permissions
+      description: |
+        Gets global permissions
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GlobalPermissions'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /enc/test:
     get:
       tags:
@@ -736,6 +758,17 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/User'
+    GlobalPermissions:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
     Application:
       required:
         - id

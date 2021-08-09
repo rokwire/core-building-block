@@ -55,6 +55,8 @@ paths:
     $ref: "./resources/admin/service-regs.yaml"
   /admin/applications/{id}:
     $ref: "./resources/admin/applicationsId.yaml"
+  /admin/global-permission:
+    $ref: "./resources/admin/global-permissions.yaml"
 
   #enc
   /enc/test:
