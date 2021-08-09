@@ -159,7 +159,29 @@ func TestAdmGetApplication(t *testing.T) {
 		t.Error("We are expecting error")
 		return
 	}
+}
 
+func TestGetGlobalPermissions(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("GetGlobalPermissions").Return([]model.GlobalPermission{}, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	getGlobalPermissionList, _ := app.Administration.AdmGetGlobalPermissions()
+
+	if getGlobalPermissionList == nil {
+		t.Errorf("Error on geting the global")
+	}
+	// second case error
+	storage = genmocks.Storage{}
+	storage.On("GetGlobalPermissions").Return([]model.GlobalPermission{}, nil)
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	err, _ := app.Administration.AdmGetGlobalPermissions()
+
+	if err == nil {
+		t.Error("We are expecting error")
+		return
+	}
 }
 
 ///
