@@ -761,7 +761,6 @@ components:
     GlobalPermissions:
       required:
         - id
-        - name
       type: object
       properties:
         id:
