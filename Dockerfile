@@ -16,6 +16,9 @@ RUN apk --no-cache add tzdata
 COPY --from=builder /core-app/bin/core-building-block /
 COPY --from=builder /core-app/driver/web/docs/gen/def.yaml /driver/web/docs/gen/def.yaml
 
+COPY --from=builder /core-app/driver/web/authorization_model.conf /driver/web/authorization_model.conf
+COPY --from=builder /core-app/driver/web/authorization_policy.csv /driver/web/authorization_policy.csv
+
 COPY --from=builder /etc/passwd /etc/passwd
 
 #we need timezone database

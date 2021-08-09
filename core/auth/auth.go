@@ -116,7 +116,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	err = auth.LoadAuthConfigs()
 	if err != nil {
-		logger.Warn("NewAuth() failed to cache auth configs")
+		logger.Warnf("NewAuth() failed to cache auth configs: %v", err)
 	}
 
 	return auth, nil
