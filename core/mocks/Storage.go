@@ -107,6 +107,29 @@ func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	return r0, r1
 }
 
+// GetGlobalPermissions provides a mock function with given fields:
+func (_m *Storage) GetGlobalPermissions() ([]model.GlobalPermission, error) {
+	ret := _m.Called()
+
+	var r0 []model.GlobalPermission
+	if rf, ok := ret.Get(0).(func() []model.GlobalPermission); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.GlobalPermission)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetOrganization provides a mock function with given fields: ID
 func (_m *Storage) GetOrganization(ID string) (*model.Organization, error) {
 	ret := _m.Called(ID)
