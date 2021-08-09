@@ -137,7 +137,7 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("org_id"))
 	}
 
-	rawMembership := rawMembership{ID: membership.ID, UserID: user.ID, OrgID: orgID,
+	organizationMembership := organizationMembership{ID: membership.ID, UserID: user.ID, OrgID: orgID,
 		OrgUserData: membership.OrgUserData, DateCreated: storageUser.DateCreated}
 
 	// transaction
@@ -160,7 +160,7 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 			return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAuthCred, &logutils.FieldArgs{"user_id": user.Account.Username, "account_id": user.Account.ID}, err)
 		}
 
-		err = sa.InsertMembership(&rawMembership, sessionContext)
+		err = sa.InsertMembership(&organizationMembership, sessionContext)
 		if err != nil {
 			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganizationMembership, nil, err)
@@ -202,7 +202,7 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 	// TODO:
 	// check for device updates and add possible new device
 
-	var newMembership *rawMembership
+	var newMembership *organizationMembership
 	if newOrgData != nil {
 		membershipID, err := uuid.NewUUID()
 		if err != nil {
@@ -212,7 +212,7 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 		if !ok {
 			return nil, errors.WrapErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("org_id"), err)
 		}
-		newOrgMembership := rawMembership{ID: membershipID.String(), UserID: updatedUser.ID, OrgID: orgID,
+		newOrgMembership := organizationMembership{ID: membershipID.String(), UserID: updatedUser.ID, OrgID: orgID,
 			OrgUserData: *newOrgData, DateCreated: now}
 		newMembership = &newOrgMembership
 
@@ -416,7 +416,7 @@ func (sa *Adapter) FindOrganizationGroups(ids []string, orgID string) ([]model.O
 }
 
 //InsertMembership inserts an organization membership
-func (sa *Adapter) InsertMembership(orgMembership *rawMembership, context mongo.SessionContext) error {
+func (sa *Adapter) InsertMembership(orgMembership *organizationMembership, context mongo.SessionContext) error {
 	if orgMembership == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeOrganizationMembership))
 	}

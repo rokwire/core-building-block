@@ -22,21 +22,6 @@ type user struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-type rawMembership struct {
-	ID     string `bson:"_id"`
-	UserID string `bson:"user_id"`
-
-	OrgID       string                 `bson:"organization_id"`
-	OrgUserData map[string]interface{} `bson:"org_user_data"`
-
-	Permissions []string `bson:"permissions"`
-	Roles       []string `bson:"roles"`
-	Groups      []string `bson:"groups"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
 type userMembership struct {
 	ID string `bson:"_id"`
 
