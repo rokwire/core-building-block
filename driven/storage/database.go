@@ -322,6 +322,18 @@ func (m *database) applyOrganizationsGroupsChecks(organizationsGroups *collectio
 func (m *database) applyOrganizationsRolesChecks(organizationsRoles *collectionWrapper) error {
 	m.logger.Info("apply organizations roles checks.....")
 
+	//add organization index
+	err := organizationsRoles.AddIndex(bson.D{primitive.E{Key: "organization_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add permissions index
+	err = organizationsRoles.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("organizations roles checks passed")
 	return nil
 }
