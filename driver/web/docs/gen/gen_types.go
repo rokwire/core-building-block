@@ -17,19 +17,14 @@ const (
 	AuthLoginRequestAuthTypePhone AuthLoginRequestAuthType = "phone"
 )
 
-// Defines values for AuthLoginResponseTokenType.
-const (
-	AuthLoginResponseTokenTypeBearer AuthLoginResponseTokenType = "Bearer"
-)
-
 // Defines values for AuthLoginUrlRequestAuthType.
 const (
 	AuthLoginUrlRequestAuthTypeOidc AuthLoginUrlRequestAuthType = "oidc"
 )
 
-// Defines values for AuthRefreshResponseTokenType.
+// Defines values for AuthResponseRokwireTokenTokenType.
 const (
-	AuthRefreshResponseTokenTypeBearer AuthRefreshResponseTokenType = "Bearer"
+	AuthResponseRokwireTokenTokenTypeBearer AuthResponseRokwireTokenTokenType = "Bearer"
 )
 
 // Defines values for DeviceType.
@@ -131,21 +126,10 @@ type AuthLoginRequestAuthType string
 
 // AuthLoginResponse defines model for AuthLoginResponse.
 type AuthLoginResponse struct {
-
-	// The user's access token to be provided to authorize access to ROKWIRE APIs
-	AccessToken *string      `json:"access_token,omitempty"`
-	Params      *interface{} `json:"params,omitempty"`
-
-	// A refresh token that can be used to get a new access token once the one provided expires
-	RefreshToken *string `json:"refresh_token,omitempty"`
-
-	// The type of the provided tokens to be specified when they are sent in the "Authorization" header
-	TokenType *AuthLoginResponseTokenType `json:"token_type,omitempty"`
-	User      *User                       `json:"user,omitempty"`
+	Params *interface{}              `json:"params,omitempty"`
+	Token  *AuthResponseRokwireToken `json:"token,omitempty"`
+	User   *User                     `json:"user,omitempty"`
 }
-
-// The type of the provided tokens to be specified when they are sent in the "Authorization" header
-type AuthLoginResponseTokenType string
 
 // AuthLoginUrlRequest defines model for AuthLoginUrlRequest.
 type AuthLoginUrlRequest struct {
@@ -168,21 +152,34 @@ type AuthLoginUrlResponse struct {
 
 // AuthRefreshResponse defines model for AuthRefreshResponse.
 type AuthRefreshResponse struct {
-	AccessToken  *string                       `json:"access_token,omitempty"`
-	Params       *interface{}                  `json:"params,omitempty"`
-	RefreshToken *string                       `json:"refresh_token,omitempty"`
-	TokenType    *AuthRefreshResponseTokenType `json:"token_type,omitempty"`
+	Params *interface{}              `json:"params,omitempty"`
+	Token  *AuthResponseRokwireToken `json:"token,omitempty"`
 }
-
-// AuthRefreshResponseTokenType defines model for AuthRefreshResponse.TokenType.
-type AuthRefreshResponseTokenType string
 
 // AuthResponseParamsOidc defines model for AuthResponseParamsOidc.
 type AuthResponseParamsOidc struct {
-	AccessToken string `json:"access_token"`
-	IdToken     string `json:"id_token"`
-	TokenType   string `json:"token_type"`
+	OidcToken *struct {
+		AccessToken *string `json:"access_token,omitempty"`
+		IdToken     *string `json:"id_token,omitempty"`
+		TokenType   *string `json:"token_type,omitempty"`
+	} `json:"oidc_token,omitempty"`
 }
+
+// AuthResponseRokwireToken defines model for AuthResponseRokwireToken.
+type AuthResponseRokwireToken struct {
+
+	// The user's access token to be provided to authorize access to ROKWIRE APIs
+	AccessToken *string `json:"access_token,omitempty"`
+
+	// A refresh token that can be used to get a new access token once the one provided expires
+	RefreshToken *string `json:"refresh_token,omitempty"`
+
+	// The type of the provided tokens to be specified when they are sent in the "Authorization" header
+	TokenType *AuthResponseRokwireTokenTokenType `json:"token_type,omitempty"`
+}
+
+// The type of the provided tokens to be specified when they are sent in the "Authorization" header
+type AuthResponseRokwireTokenTokenType string
 
 // Service registration record used for auth
 type AuthServiceReg struct {

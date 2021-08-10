@@ -67,9 +67,13 @@ type oidcRefreshParams struct {
 }
 
 type oidcResponseParams struct {
-	IDToken     string
-	AccessToken string
-	TokenType   string
+	OIDCToken oidcTokenResponseParams `json:"oidc_token"`
+}
+
+type oidcTokenResponseParams struct {
+	IDToken     string `json:"id_token"`
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
 }
 
 type oidcToken struct {
@@ -110,7 +114,8 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 		}
 		userAuth.OrgData["orgID"] = orgID
 		userAuth.Refresh = a.setRefreshParams(oidcToken.RefreshToken, loginParams.RedirectURI)
-		responseParams := oidcResponseParams{IDToken: oidcToken.IDToken, AccessToken: oidcToken.AccessToken, TokenType: oidcToken.TokenType}
+		tokenResponseParams := oidcTokenResponseParams{IDToken: oidcToken.IDToken, AccessToken: oidcToken.AccessToken, TokenType: oidcToken.TokenType}
+		responseParams := oidcResponseParams{OIDCToken: tokenResponseParams}
 
 		credentials, err := a.auth.storage.FindCredentials(orgID, appID, authTypeOidc, userAuth.UserID)
 		if err != nil {
@@ -181,7 +186,8 @@ func (a *oidcAuthImpl) refresh(params interface{}, orgID string, appID string, l
 	}
 
 	refreshParams.IDPToken = oidcToken.RefreshToken
-	responseParams := oidcResponseParams{IDToken: oidcToken.IDToken, AccessToken: oidcToken.AccessToken, TokenType: oidcToken.TokenType}
+	tokenResponseParams := oidcTokenResponseParams{IDToken: oidcToken.IDToken, AccessToken: oidcToken.AccessToken, TokenType: oidcToken.TokenType}
+	responseParams := oidcResponseParams{OIDCToken: tokenResponseParams}
 	return refreshParams, responseParams, userAuth.Exp, nil
 }
 

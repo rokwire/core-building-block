@@ -1,12 +1,11 @@
-required:
-  - id_token
-  - access_token
-  - token_type
 type: object
 properties:
-  id_token:
-    type: string
-  access_token:
-    type: string
-  token_type:
-    type: string
+  oidc_token:
+    type: object
+    properties:
+      id_token:
+        type: string
+      access_token:
+        type: string
+      token_type:
+        type: string
