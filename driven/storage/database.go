@@ -194,6 +194,60 @@ func (m *database) start() error {
 func (m *database) applyUsersChecks(users *collectionWrapper) error {
 	m.logger.Info("apply users checks.....")
 
+	//add account index
+	err := users.AddIndex(bson.D{primitive.E{Key: "account.id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add profile index
+	err = users.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add permissions index
+	err = users.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add roles index
+	err = users.AddIndex(bson.D{primitive.E{Key: "roles._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add roles permissions index
+	err = users.AddIndex(bson.D{primitive.E{Key: "roles.permissions._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add groups index
+	err = users.AddIndex(bson.D{primitive.E{Key: "groups._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add groups permissions index
+	err = users.AddIndex(bson.D{primitive.E{Key: "groups.permissions._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add groups roles index
+	err = users.AddIndex(bson.D{primitive.E{Key: "groups.roles._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add groups roles permissions index
+	err = users.AddIndex(bson.D{primitive.E{Key: "groups.roles.permissions._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("users check passed")
 	return nil
 }
