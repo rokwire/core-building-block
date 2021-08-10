@@ -61,7 +61,6 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 type ServicesAuth struct {
 	coreAPIs  *core.APIs
 	tokenAuth *tokenauth.TokenAuth
-	scopeAuth Authorization
 }
 
 func (auth *ServicesAuth) start() {
@@ -83,7 +82,7 @@ func (auth *ServicesAuth) check(req *http.Request) (int, error) {
 }
 
 func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, serviceID string) *ServicesAuth {
-	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("./scope_authorization_policy_services_auth.csv", serviceID)
+	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/scope_authorization_policy_services_auth.csv", serviceID)
 
 	servicesTokenAuth, err := tokenauth.NewTokenAuth(true, authService, nil, servicesScopeAuth)
 
@@ -97,9 +96,8 @@ func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, 
 
 //AdminAuth entity
 type AdminAuth struct {
-	coreAPIs       *core.APIs
-	tokenAuth      *tokenauth.TokenAuth
-	permissionAuth Authorization
+	coreAPIs  *core.APIs
+	tokenAuth *tokenauth.TokenAuth
 }
 
 func (auth *AdminAuth) start() {
@@ -107,15 +105,12 @@ func (auth *AdminAuth) start() {
 }
 
 func (auth *AdminAuth) check(req *http.Request) (int, error) {
-	// Authenticate token
 	claims, err := auth.tokenAuth.CheckRequestTokens(req)
 	if err != nil {
-		// logObj.RequestErrorAction(w, typeAdminAuthRequestToken, logutils.TypeToken, nil, err, http.StatusUnauthorized, true)
 		return http.StatusUnauthorized, errors.WrapErrorAction(typeCheckAdminAuthRequestToken, logutils.TypeRequest, nil, err)
 	}
 	err = auth.tokenAuth.AuthorizeRequestPermissions(claims, req)
 	if err != nil {
-		// logObj.RequestErrorAction(w, typeAdminAuthentication, logutils.TypeClaims, nil, err, http.StatusForbidden, true)
 		return http.StatusForbidden, errors.WrapErrorAction(typeCheckAdminPermission, logutils.TypeRequest, nil, err)
 	}
 
@@ -123,12 +118,11 @@ func (auth *AdminAuth) check(req *http.Request) (int, error) {
 }
 
 func newAdminAuth(coreAPIs *core.APIs, authService *authservice.AuthService) *AdminAuth {
-	adminPermissionAuth := authorization.NewCasbinAuthorization("./permission_authorization_policy_admin_auth.csv")
-
+	adminPermissionAuth := authorization.NewCasbinAuthorization("driver/web/permission_authorization_policy_admin_auth.csv")
 	adminTokenAuth, err := tokenauth.NewTokenAuth(true, authService, adminPermissionAuth, nil)
 
 	if err != nil {
-		// log.Fatalf("Error intitializing token auth for adminAuth: %v", err)
+		log.Fatalf("Error intitializing token auth for adminAuth: %v", err)
 	}
 
 	auth := AdminAuth{coreAPIs: coreAPIs, tokenAuth: adminTokenAuth}
