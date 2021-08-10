@@ -40,16 +40,16 @@ type oidcAuthImpl struct {
 }
 
 type oidcAuthConfig struct {
-	Issuer             string            `json:"issuer"`
 	Host               string            `json:"host" validate:"required"`
 	AuthorizeURL       string            `json:"authorize_url"`
 	TokenURL           string            `json:"token_url"`
 	UserInfoURL        string            `json:"userinfo_url"`
-	Scopes             string            `json:"scopes" validate:"required"`
-	UseRefresh         bool              `json:"use_refresh" validate:"required"`
-	UsePKCE            bool              `json:"use_pkce" validate:"required"`
+	Scopes             string            `json:"scopes"`
+	UseRefresh         bool              `json:"use_refresh"`
+	UsePKCE            bool              `json:"use_pkce"`
 	ClientID           string            `json:"client_id" validate:"required"`
 	ClientSecret       string            `json:"client_secret"`
+	AuthorizeClaims    string            `json:"authorize_claims"`
 	Claims             map[string]string `json:"claims" validate:"required"`
 	RequiredPopulation string            `json:"required_population"`
 	Populations        map[string]string `json:"populations"`
@@ -141,11 +141,8 @@ func (a *oidcAuthImpl) getLoginURL(orgID string, appID string, redirectURI strin
 		"client_id":     oidcConfig.ClientID,
 	}
 
-	if len(oidcConfig.Claims) > 0 {
-		claims, err := json.Marshal(oidcConfig.Claims)
-		if err == nil {
-			bodyData["claims"] = string(claims)
-		}
+	if len(oidcConfig.AuthorizeClaims) > 0 {
+		bodyData["claims"] = oidcConfig.AuthorizeClaims
 	}
 
 	if oidcConfig.UsePKCE {
