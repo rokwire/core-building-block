@@ -279,6 +279,42 @@ func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 	return &getResApp, nil
 }
 
+//UpdateGlobalPermission saves the global permission to the storage
+func (sa *Adapter) UpdateGlobalPermision(ID string, name string) error {
+	// transaction
+	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+		err := sessionContext.StartTransaction()
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
+		}
+		updateGlobalPermissionsFilter := bson.D{primitive.E{Key: "name", Value: name}}
+
+		_, err = sa.db.globalPermissions.DeleteManyWithContext(sessionContext, updateGlobalPermissionsFilter, nil)
+		if err != nil {
+			abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeGlobalPermission, nil, err)
+		}
+
+		//add the new one
+		_, err = sa.db.globalPermissions.InsertOneWithContext(sessionContext, name)
+		if err != nil {
+			abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalPermission, nil, err)
+		}
+
+		err = sessionContext.CommitTransaction(sessionContext)
+		if err != nil {
+			abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records

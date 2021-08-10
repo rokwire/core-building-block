@@ -119,6 +119,10 @@ func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, e
 	return s.app.admGetApplication(ID)
 }
 
+func (s *administrationImpl) AdmUpdateGlobalPermission(ID string, name string) error {
+	return s.app.admUpdateGlobalPermission(ID, name)
+}
+
 ///
 
 //encryptionImpl

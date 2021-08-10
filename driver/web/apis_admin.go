@@ -304,6 +304,34 @@ func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.Http
 	return l.HttpResponseSuccessJSON(data)
 }
 
+//updateGlobalPermission updates global permissions
+func (h AdminApisHandler) updateGlobalPermission(l *logs.Log, r *http.Request) logs.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+	var requestData Def.GlobalPermission
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeGlobalPermission, nil, err, http.StatusBadRequest, true)
+	}
+
+	name := requestData.Name
+
+	err = h.coreAPIs.Administration.AdmUpdateGlobalPermission(ID, *name)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeGlobalPermission, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 //NewAdminApisHandler creates new admin rest Handler instance
 func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
 	return AdminApisHandler{coreAPIs: coreAPIs}

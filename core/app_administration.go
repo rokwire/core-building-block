@@ -245,3 +245,13 @@ func (app *application) admGetApplication(ID string) (*model.Application, error)
 
 	return appAdm, nil
 }
+
+func (app *application) admUpdateGlobalPermission(ID string, name string) error {
+	err := app.storage.UpdateGlobalPermision(ID, name)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeGlobalPermission, nil, err)
+	}
+
+	return err
+
+}
