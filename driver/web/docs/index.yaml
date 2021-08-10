@@ -50,7 +50,7 @@ paths:
   /admin/applications/{id}:
     $ref: "./resources/admin/applicationsId.yaml"
   /admin/global-permissions/{id}:
-    $ref: "./resources/admin/global-permissions.yaml"
+    $ref: "./resources/admin/global-permissionsid.yaml"
 
   #enc
   /enc/test:
