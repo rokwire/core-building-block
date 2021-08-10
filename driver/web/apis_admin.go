@@ -304,6 +304,29 @@ func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.Http
 	return l.HttpResponseSuccessJSON(data)
 }
 
+//getGlobalGroup gets global group
+func (h AdminApisHandler) getGlobalGroup(l *logs.Log, r *http.Request) logs.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+	globgr, err := h.coreAPIs.Administration.AdmGetGlobalGroup(ID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeGlobalGroup, nil, err, http.StatusInternalServerError, true)
+	}
+	if globgr == nil {
+		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeGlobalGroup, &logutils.FieldArgs{"id": ID}, nil, http.StatusNotFound, false)
+	}
+
+	responseData := globalGroupToDef(globgr)
+	data, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeGlobalGroup, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
 //NewAdminApisHandler creates new admin rest Handler instance
 func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
 	return AdminApisHandler{coreAPIs: coreAPIs}
