@@ -16,7 +16,7 @@ type user struct {
 	Groups                   []model.GlobalGroup      `bson:"groups"`
 	OrganizationsMemberships []userMembership         `bson:"organizations_memberships"`
 
-	Devices []model.Device `bson:"devices"`
+	Devices []userDevice `bson:"devices"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -28,9 +28,20 @@ type userMembership struct {
 	OrgID       string                 `bson:"organization_id"`
 	OrgUserData map[string]interface{} `bson:"org_user_data"`
 
-	Permissions []model.OrganizationPermission `bson:"permissions"`
-	Roles       []model.OrganizationRole       `bson:"roles"`
-	Groups      []model.OrganizationGroup      `bson:"groups"`
+	Permissions []organizationPermission `bson:"permissions"`
+	Roles       []organizationRole       `bson:"roles"`
+	Groups      []organizationGroup      `bson:"groups"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type userDevice struct {
+	ID   string `bson:"_id"`
+	Type string `bson:"type"`
+
+	OS         string `bson:"os"`
+	MacAddress string `bson:"mac_address"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
