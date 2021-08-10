@@ -14,9 +14,9 @@ import (
 
 const (
 	typeCheckAdminPermission          logutils.MessageActionType = "checking admin permission"
-	typeCheckAdminAuthRequestToken    logutils.MessageActionType = "checking admin auth request token"
+	typeCheckAdminAuthRequestToken    logutils.MessageActionType = "checking admin auth"
 	typeCheckServicesScope            logutils.MessageActionType = "checking services scope"
-	typeCheckServicesAuthRequestToken logutils.MessageActionType = "checking services auth request token"
+	typeCheckServicesAuthRequestToken logutils.MessageActionType = "checking services auth"
 )
 
 //Auth handler
@@ -70,7 +70,7 @@ func (auth *ServicesAuth) start() {
 func (auth *ServicesAuth) check(req *http.Request) (int, error) {
 	claims, err := auth.tokenAuth.CheckRequestTokens(req)
 	if err != nil {
-		return http.StatusUnauthorized, errors.WrapErrorAction(typeCheckServicesAuthRequestToken, logutils.TypeRequest, nil, err)
+		return http.StatusUnauthorized, errors.WrapErrorAction(typeCheckServicesAuthRequestToken, logutils.TypeToken, nil, err)
 	}
 
 	err = auth.tokenAuth.AuthorizeRequestScope(claims, req)
@@ -107,7 +107,7 @@ func (auth *AdminAuth) start() {
 func (auth *AdminAuth) check(req *http.Request) (int, error) {
 	claims, err := auth.tokenAuth.CheckRequestTokens(req)
 	if err != nil {
-		return http.StatusUnauthorized, errors.WrapErrorAction(typeCheckAdminAuthRequestToken, logutils.TypeRequest, nil, err)
+		return http.StatusUnauthorized, errors.WrapErrorAction(typeCheckAdminAuthRequestToken, logutils.TypeToken, nil, err)
 	}
 	err = auth.tokenAuth.AuthorizeRequestPermissions(claims, req)
 	if err != nil {
