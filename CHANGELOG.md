@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
+- Expose admin API which creates global group [#113] (https://github.com/rokwire/core-building-block/issues/113)
 - Automate Docker deployment process on Dev [#10](https://github.com/rokwire/core-building-block/issues/10)
 - Improve error wrapping [#83](https://github.com/rokwire/core-building-block/issues/83)
 - Set up scoped tokens [#98](https://github.com/rokwire/core-building-block/issues/98)
