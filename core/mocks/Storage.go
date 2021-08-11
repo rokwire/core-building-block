@@ -117,19 +117,10 @@ func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.GlobalConfig)
+
 		}
 	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
+	
 // GetOrganizations provides a mock function with given fields:
 func (_m *Storage) GetOrganizations() ([]model.Organization, error) {
 	ret := _m.Called()
@@ -146,6 +137,29 @@ func (_m *Storage) GetOrganizations() ([]model.Organization, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func() error); ok {
 		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// InsertOrganization provides a mock function with given fields: organization
+func (_m *Storage) InsertOrganization(organization model.Organization) (*model.Organization, error) {
+	ret := _m.Called(organization)
+
+	var r0 *model.Organization
+	if rf, ok := ret.Get(0).(func(model.Organization) *model.Organization); ok {
+		r0 = rf(organization)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Organization)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(model.Organization) error); ok {
+		r1 = rf(organization)
 	} else {
 		r1 = ret.Error(1)
 	}

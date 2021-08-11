@@ -5,6 +5,7 @@ import (
 	"core-building-block/core/auth"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
+	"io/ioutil"
 	"strconv"
 
 	"github.com/golang-jwt/jwt"
@@ -34,6 +35,12 @@ func main() {
 	}
 
 	env := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_ENVIRONMENT", true, false) //local, dev, staging, prod
+	port := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PORT", false, false)
+	//Default port of 80
+	if port == "" {
+		port = "80"
+	}
+
 	serviceID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SERVICE_ID", true, false)
 	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
 
@@ -48,9 +55,18 @@ func main() {
 	}
 
 	//auth
-	//authPrivKeyPem := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", true, true)
-	authPrivKeyPem := "-----BEGIN RSA PRIVATE KEY-----\nMIICXAIBAAKBgQCjcGqTkOq0CR3rTx0ZSQSIdTrDrFAYl29611xN8aVgMQIWtDB/\nlD0W5TpKPuU9iaiG/sSn/VYt6EzN7Sr332jj7cyl2WrrHI6ujRswNy4HojMuqtfa\nb5FFDpRmCuvl35fge18OvoQTJELhhJ1EvJ5KUeZiuJ3u3YyMnxxXzLuKbQIDAQAB\nAoGAPrNDz7TKtaLBvaIuMaMXgBopHyQd3jFKbT/tg2Fu5kYm3PrnmCoQfZYXFKCo\nZUFIS/G1FBVWWGpD/MQ9tbYZkKpwuH+t2rGndMnLXiTC296/s9uix7gsjnT4Naci\n5N6EN9pVUBwQmGrYUTHFc58ThtelSiPARX7LSU2ibtJSv8ECQQDWBRrrAYmbCUN7\nra0DFT6SppaDtvvuKtb+mUeKbg0B8U4y4wCIK5GH8EyQSwUWcXnNBO05rlUPbifs\nDLv/u82lAkEAw39sTJ0KmJJyaChqvqAJ8guulKlgucQJ0Et9ppZyet9iVwNKX/aW\n9UlwGBMQdafQ36nd1QMEA8AbAw4D+hw/KQJBANJbHDUGQtk2hrSmZNoV5HXB9Uiq\n7v4N71k5ER8XwgM5yVGs2tX8dMM3RhnBEtQXXs9LW1uJZSOQcv7JGXNnhN0CQBZe\nnzrJAWxh3XtznHtBfsHWelyCYRIAj4rpCHCmaGUM6IjCVKFUawOYKp5mmAyObkUZ\nf8ue87emJLEdynC1CLkCQHduNjP1hemAGWrd6v8BHhE3kKtcK6KHsPvJR5dOfzbd\nHAqVePERhISfN6cwZt5p8B3/JUwSR8el66DF7Jm57BM=\n-----END RSA PRIVATE KEY-----"
-	authPrivKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(authPrivKeyPem))
+	var authPrivKeyPem []byte
+	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
+	if authPrivKeyPemString != "" {
+		authPrivKeyPem = []byte(authPrivKeyPemString)
+	} else {
+		authPrivateKeyPath := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY_PATH", true, false)
+		authPrivKeyPem, err = ioutil.ReadFile(authPrivateKeyPath)
+		if err != nil {
+			logger.Fatalf("Could not find auth priv key file: %v", err)
+		}
+	}
+	authPrivKey, err := jwt.ParseRSAPrivateKeyFromPEM(authPrivKeyPem)
 	if err != nil {
 		logger.Fatalf("Failed to parse auth priv key: %v", err)
 	}
@@ -82,6 +98,6 @@ func main() {
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, coreAPIs, host, logger)
+	webAdapter := web.NewWebAdapter(env, port, coreAPIs, host, logger)
 	webAdapter.Start()
 }
