@@ -4,18 +4,18 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/logs"
 )
 
 //Services exposes APIs for the driver adapters
 type Services interface {
-	SerGetAuthTest(l *log.Log) string
-	SerGetCommonTest(l *log.Log) string
-	CreateAnonymousProfile(l *log.Log, profile *model.AnonymousProfile) (*model.AnonymousProfile, error)
-	GetAnonymousProfile(l *log.Log, id string) (*model.AnonymousProfile, error)
-	UpdateAnonymousProfile(l *log.Log, id string, favorites *[]string, interests *[]string,
+	SerGetAuthTest(l *logs.Log) string
+	SerGetCommonTest(l *logs.Log) string
+	CreateAnonymousProfile(l *logs.Log, profile *model.AnonymousProfile) (*model.AnonymousProfile, error)
+	GetAnonymousProfile(l *logs.Log, id string) (*model.AnonymousProfile, error)
+	UpdateAnonymousProfile(l *logs.Log, id string, favorites *[]string, interests *[]string,
 		negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error
-	DeleteAnonymousProfile(l *log.Log, id string) error
+	DeleteAnonymousProfile(l *logs.Log, id string) error
 }
 
 //Administration exposes administration APIs for the driver adapters
@@ -53,15 +53,15 @@ type Storage interface {
 	GetGlobalConfig() (*model.GlobalConfig, error)
 	SaveGlobalConfig(setting *model.GlobalConfig) error
 
-	CreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error)
+	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
 	GetOrganizations() ([]model.Organization, error)
-	GetOrganization(ID string) (*model.Organization, error)
 	CreateAnonymousProfile(profile *model.AnonymousProfile) (*model.AnonymousProfile, error)
 	GetAnonymousProfile(id string) (*model.AnonymousProfile, error)
 	UpdateAnonymousProfile(id string, favorites *[]string, interests *[]string,
 		negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error
 	DeleteAnonymousProfile(id string) error
+	FindOrganization(id string) (*model.Organization, error)
 
 	GetApplication(ID string) (*model.Application, error)
 }

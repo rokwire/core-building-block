@@ -4,7 +4,7 @@ import (
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
 
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/logs"
 )
 
 //APIs exposes to the drivers adapters access to the core functionality
@@ -63,28 +63,28 @@ type servicesImpl struct {
 	app *application
 }
 
-func (s *servicesImpl) SerGetAuthTest(l *log.Log) string {
+func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
 	return s.app.serGetAuthTest(l)
 }
 
-func (s *servicesImpl) SerGetCommonTest(l *log.Log) string {
+func (s *servicesImpl) SerGetCommonTest(l *logs.Log) string {
 	return s.app.serGetCommonTest(l)
 }
 
-func (s *servicesImpl) CreateAnonymousProfile(l *log.Log, profile *model.AnonymousProfile) (*model.AnonymousProfile, error) {
+func (s *servicesImpl) CreateAnonymousProfile(l *logs.Log, profile *model.AnonymousProfile) (*model.AnonymousProfile, error) {
 	return s.app.createAnonymousProfile(l, profile)
 }
 
-func (s *servicesImpl) UpdateAnonymousProfile(l *log.Log, id string, favorites *[]string, interests *[]string,
+func (s *servicesImpl) UpdateAnonymousProfile(l *logs.Log, id string, favorites *[]string, interests *[]string,
 	negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error {
 	return s.app.updateAnonymousProfile(l, id, favorites, interests, negativeInterestTags, positiveInterestTags, privacySettings, over13)
 }
 
-func (s *servicesImpl) DeleteAnonymousProfile(l *log.Log, id string) error {
+func (s *servicesImpl) DeleteAnonymousProfile(l *logs.Log, id string) error {
 	return s.app.deleteAnonymousProfile(l, id)
 }
 
-func (s *servicesImpl) GetAnonymousProfile(l *log.Log, id string) (*model.AnonymousProfile, error) {
+func (s *servicesImpl) GetAnonymousProfile(l *logs.Log, id string) (*model.AnonymousProfile, error) {
 	return s.app.getAnonymousProfile(l, id)
 }
 

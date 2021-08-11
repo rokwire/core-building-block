@@ -10,7 +10,7 @@ servers:
     description: Test server
   - url: 'https://api-dev.rokwire.illinois.edu/core'
     description: Development server
-  - url: 'http://localhost/core'
+  - url: 'http://localhost'
     description: Local server
 tags:
   - name: Services
@@ -786,7 +786,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ServiceReg'
+                  $ref: '#/components/schemas/AuthServiceReg'
         '400':
           description: Bad request
         '401':

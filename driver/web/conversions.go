@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/errors"
+	"github.com/rokmetro/logging-library/logutils"
 )
 
 func defString(pointer *string) string {
@@ -50,7 +51,7 @@ func defBool(pointer *string) bool {
 func interfaceToJSON(item interface{}) (string, error) {
 	json, err := json.Marshal(item)
 	if err != nil {
-		return "", log.WrapErrorAction(log.ActionMarshal, "interface", nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionMarshal, "interface", nil, err)
 	}
 	return string(json), nil
 }
