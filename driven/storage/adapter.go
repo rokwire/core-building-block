@@ -46,6 +46,16 @@ type organizationConfig struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
+type globalGroup struct {
+	ID   string `bson:"id"`
+	Name string `bson:"name"`
+
+	Permissions []GlobalPermission
+	Roles       []GlobalRole
+
+	Users []User
+}
+
 //Adapter implements the Storage interface
 type Adapter struct {
 	db *database
@@ -277,6 +287,11 @@ func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 
 	getResApp := model.Application{ID: appRes.ID, Name: appRes.Name, Versions: appRes.Versions}
 	return &getResApp, nil
+}
+
+//GetGlobalGroup gets global group
+func (sa *Adapter) GetGlobalGroup(ID string) (*model.GlobalGroup, error) {
+	return nil, nil
 }
 
 // ============================== ServiceRegs ==============================
