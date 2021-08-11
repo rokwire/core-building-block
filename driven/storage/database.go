@@ -248,6 +248,54 @@ func (m *database) applyUsersChecks(users *collectionWrapper) error {
 		return err
 	}
 
+	//add organizations memberships index
+	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add organizations memberships permissions index
+	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.permissions._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add organizations memberships roles index
+	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.roles._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add organizations memberships roles permissions index
+	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.roles.permissions_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add organizations memberships groups index
+	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.groups._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add organizations memberships groups permissions index
+	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.groups.permissions._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add organizations memberships groups roles index
+	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.groups.roles._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add organizations memberships groups roles permissions index
+	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.groups.roles.permissions._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
 	//add devices index
 	err = users.AddIndex(bson.D{primitive.E{Key: "devices._id", Value: 1}}, false)
 	if err != nil {
