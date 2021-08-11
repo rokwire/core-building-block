@@ -674,6 +674,26 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /tps/auth-keys:
+    get:
+      tags:
+        - Third-Party Services
+      summary: Get auth public key
+      description: |
+        Returns auth public key in JWKS format
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JWKS'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /version:
     get:
       summary: Get service version
@@ -1048,6 +1068,50 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
+    JWK:
+      required:
+        - kty
+        - use
+        - alg
+        - kid
+        - 'n'
+        - e
+      type: object
+      properties:
+        kty:
+          type: string
+          description: The "kty" (key type) parameter identifies the cryptographic algorithm family used with the key
+          enum:
+            - RSA
+        use:
+          type: string
+          description: The "use" (public key use) parameter identifies the intended use of the public key
+          enum:
+            - sig
+        alg:
+          type: string
+          description: The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
+          enum:
+            - RS256
+        kid:
+          type: string
+          description: The "kid" (key ID) parameter is used to match a specific key
+        'n':
+          type: string
+          description: The modulus (2048 bit) of the key - Base64URL encoded.
+        e:
+          type: string
+          description: The exponent of the key - Base64URL encoded
+    JWKS:
+      required:
+        - keys
+      type: object
+      description: JSON Web Key Set (JWKS)
+      properties:
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/JWK'
     User:
       required:
         - id

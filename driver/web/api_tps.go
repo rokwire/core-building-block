@@ -38,6 +38,22 @@ func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request) lo
 	return l.HttpResponseSuccessJSON(data)
 }
 
+func (h TPSApisHandler) getAuthKeys(l *logs.Log, r *http.Request) logs.HttpResponse {
+	keys, err := h.coreAPIs.Auth.GetAuthKeySet()
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeJSONWebKeySet, logutils.StringArgs("auth"), err, http.StatusInternalServerError, true)
+	}
+
+	keysResp := jsonWebKeySetDef(keys)
+
+	data, err := json.Marshal(keysResp)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeJSONWebKeySet, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
 //NewTPSApisHandler creates new tps Handler instance
 func NewTPSApisHandler(coreAPIs *core.APIs) TPSApisHandler {
 	return TPSApisHandler{coreAPIs: coreAPIs}

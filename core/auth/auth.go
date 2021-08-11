@@ -291,6 +291,24 @@ func (a *Auth) DeregisterService(serviceID string) error {
 	return a.storage.DeleteServiceReg(serviceID)
 }
 
+func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
+	authReg, err := a.AuthService.GetServiceReg("auth")
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeServiceReg, logutils.StringArgs("auth"), err)
+	}
+
+	if authReg == nil || authReg.PubKey == nil || authReg.PubKey.Key == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypePubKey, nil)
+	}
+
+	jwk, err := model.JSONWebKeyFromPubKey(authReg.PubKey)
+	if err != nil || jwk == nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeJSONWebKey, nil, err)
+	}
+
+	return &model.JSONWebKeySet{Keys: []model.JSONWebKey{*jwk}}, nil
+}
+
 //createAccount creates a new user account
 func (a *Auth) createAccount(claims *tokenauth.Claims) {
 	//TODO: Implement
@@ -382,7 +400,7 @@ func (a *Auth) getExp(exp *int64) int64 {
 func (a *Auth) storeReg() error {
 	pem, err := authutils.GetPubKeyPem(&a.authPrivKey.PublicKey)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionEncode, "auth pub key", nil, err)
+		return errors.WrapErrorAction(logutils.ActionEncode, model.TypePubKey, logutils.StringArgs("auth"), err)
 	}
 
 	key := authservice.PubKey{KeyPem: pem, Alg: authKeyAlg}
@@ -466,11 +484,22 @@ func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, er
 	}
 
 	authRegs := make([]authservice.ServiceReg, len(regs))
-	for i, reg := range regs {
-		authRegs[i] = reg.Registration
+	serviceErrors := map[string]error{}
+	for i, serviceReg := range regs {
+		reg := serviceReg.Registration
+		err = reg.PubKey.LoadKeyFromPem()
+		if err != nil {
+			serviceErrors[reg.ServiceID] = err
+		}
+		authRegs[i] = reg
 	}
 
-	return authRegs, nil
+	err = nil
+	if len(serviceErrors) > 0 {
+		err = fmt.Errorf("error loading services: %v", serviceErrors)
+	}
+
+	return authRegs, err
 }
 
 //NewLocalServiceRegLoader creates and configures a new LocalServiceRegLoaderImpl instance

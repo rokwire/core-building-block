@@ -107,6 +107,7 @@ func (we Adapter) Start() {
 	///third-party services ///
 	tpsSubrouter := router.PathPrefix("/tps").Subrouter()
 	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations)).Methods("GET")
+	tpsSubrouter.HandleFunc("/auth-keys", we.wrapFunc(we.tpsApisHandler.getAuthKeys)).Methods("GET")
 	///
 
 	err := http.ListenAndServe(":"+we.port, router)
@@ -133,7 +134,6 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 
 		var err error
 
-		logObj.Debugf("URL: %v%v", req.Host, req.URL)
 		//1. validate request
 		requestValidationInput, err := we.validateRequest(req)
 		if err != nil {
