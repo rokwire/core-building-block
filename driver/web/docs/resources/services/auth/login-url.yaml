@@ -1,6 +1,6 @@
 post:
   tags:
-  - Auth
+  - Services
   summary: Get SSO login url
   description: |
     Retrieve a pre-formatted SSO login URL
@@ -8,7 +8,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/auth/AuthLoginUrlRequest.yaml"
+          $ref: "../../../schemas/auth/AuthLoginUrlRequest.yaml"
     required: true
   responses:
     200:
@@ -16,7 +16,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../schemas/auth/AuthLoginUrlResponse.yaml"
+            $ref: "../../../schemas/auth/AuthLoginUrlResponse.yaml"
     400:
       description: Bad request
     401:

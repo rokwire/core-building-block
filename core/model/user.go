@@ -3,12 +3,14 @@ package model
 import (
 	"bytes"
 	"fmt"
+	"time"
 
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/logutils"
 )
 
 const (
-	TypeUser log.LogData = "user"
+	//TypeUser user type
+	TypeUser logutils.MessageDataType = "user"
 )
 
 //User represents user entity
@@ -18,7 +20,7 @@ type User struct {
 	Account UserAccount
 	Profile UserProfile
 
-	Permissions []string
+	Permissions []GlobalPermission
 	Roles       []GlobalRole
 
 	Groups []GlobalGroup
@@ -26,6 +28,9 @@ type User struct {
 	OrganizationsMemberships []OrganizationMembership
 
 	Devices []Device
+
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (u User) String() string {
@@ -62,6 +67,9 @@ type UserAccount struct {
 
 	AllowLogin bool `bson:"allow_login"`
 
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+
 	//TODO
 	//has 2FA ???
 }
@@ -74,15 +82,17 @@ func (ua UserAccount) String() string {
 //UserProfile represents user profile entity. The user profile is an information about the user.
 type UserProfile struct {
 	ID        string `bson:"id"`
-	Photo     string `bson:"photo"`
 	PhotoURL  string `bson:"photo_url"`
-	FirstName string `bson:"firstname"`
-	LastName  string `bson:"lastname"`
+	FirstName string `bson:"first_name"`
+	LastName  string `bson:"last_name"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 func (up UserProfile) String() string {
 	return fmt.Sprintf("[ID:%s\tPhotoURL:%s\tFirstName:%s\tLastName:%s]",
-		up.ID, up.Photo, up.FirstName, up.LastName)
+		up.ID, up.PhotoURL, up.FirstName, up.LastName)
 }
 
 //GlobalGroup represents global group entity. It is a collection of users
@@ -90,18 +100,38 @@ type GlobalGroup struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 
-	Permissions []string `bson:"permissions"`
-	Roles       []GlobalRole
+	Permissions []GlobalPermission `bson:"permissions"`
+	Roles       []GlobalRole       `bson:"roles"`
 
-	Users []User
+	Users []User `bson:"-"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+//GlobalPermission represents global permission entity
+type GlobalPermission struct {
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+func (c GlobalPermission) String() string {
+	return fmt.Sprintf("[ID:%s\tName:%s]", c.ID, c.Name)
 }
 
 //GlobalRole represents global role entity. It is a collection of permissions
 type GlobalRole struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	ID          string `bson:"_id"`
+	Name        string `bson:"name"`
+	Description string `bson:"description"`
 
-	Permissions []string `bson:"permissions"`
+	Permissions []GlobalPermission `bson:"permissions"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 func (c GlobalRole) String() string {
@@ -113,26 +143,48 @@ type OrganizationGroup struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 
-	Permissions []string `bson:"permissions"`
+	Permissions []OrganizationPermission
 	Roles       []OrganizationRole
 
 	Organization Organization
 
 	OrganizationsMemberships []OrganizationMembership
+
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (cg OrganizationGroup) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nOrganization:%s]", cg.ID, cg.Name, cg.Organization)
 }
 
-//OrganizationRole represents organization role entity. It is a collection of permissions
-type OrganizationRole struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
-
-	Permissions []string `bson:"permissions"`
+//OrganizationPermission represents organization permission entity
+type OrganizationPermission struct {
+	ID   string
+	Name string
 
 	Organization Organization
+
+	DateCreated time.Time
+	DateUpdated *time.Time
+}
+
+func (c OrganizationPermission) String() string {
+	return fmt.Sprintf("[ID:%s\nName:%s\nOrganization:%s]", c.ID, c.Name, c.Organization)
+}
+
+//OrganizationRole represents organization role entity. It is a collection of permissions
+type OrganizationRole struct {
+	ID          string
+	Name        string
+	Description string
+
+	Permissions []OrganizationPermission
+
+	Organization Organization
+
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (c OrganizationRole) String() string {
@@ -151,4 +203,7 @@ type Device struct {
 
 	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
 	Users []User
+
+	DateCreated time.Time
+	DateUpdated *time.Time
 }

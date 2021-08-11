@@ -3,11 +3,13 @@ package auth
 import (
 	"core-building-block/core/model"
 
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/errors"
+	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokmetro/logging-library/logutils"
 )
 
 const (
-	authTypeApiKey string = "api_key"
+	authTypeAPIKey string = "api_key"
 )
 
 //API Key implementation of authType
@@ -16,29 +18,26 @@ type apiKeyAuthImpl struct {
 	authType string
 }
 
-func (a *apiKeyAuthImpl) check(creds string, orgID string, appID string, params string, l *log.Log) (*model.UserAuth, error) {
+func (a *apiKeyAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
 	//TODO: Implement
-	return nil, log.NewError(log.Unimplemented)
+	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *apiKeyAuthImpl) verify(id string, verification string, l *log.Log) error {
-	return log.NewError(log.Unimplemented)
-}
-func (a *apiKeyAuthImpl) refresh(refreshToken string, orgID string, appID string, l *log.Log) (*model.UserAuth, error) {
-	return nil, log.NewErrorf("refresh operation invalid for auth_type=%s", authTypeApiKey)
+func (a *apiKeyAuthImpl) refresh(refreshToken string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
+	return nil, errors.Newf("refresh operation invalid for auth_type=%s", authTypeAPIKey)
 }
 
-func (a *apiKeyAuthImpl) getLoginUrl(orgID string, appID string, redirectUri string, l *log.Log) (string, map[string]interface{}, error) {
-	return "", nil, log.NewErrorf("get login url operation invalid for auth_type=%s", a.authType)
+func (a *apiKeyAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
 //initAPIKeyAuth initializes and registers a new API key auth instance
 func initAPIKeyAuth(auth *Auth) (*apiKeyAuthImpl, error) {
-	apiKey := &apiKeyAuthImpl{auth: auth, authType: authTypeApiKey}
+	apiKey := &apiKeyAuthImpl{auth: auth, authType: authTypeAPIKey}
 
 	err := auth.registerAuthType(apiKey.authType, apiKey)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return apiKey, nil

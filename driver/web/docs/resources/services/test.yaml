@@ -1,6 +1,6 @@
 get:
   tags:
-    - Auth
+    - Services
   summary: Test API..
   responses:
     200:

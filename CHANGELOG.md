@@ -7,10 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
+
 ### Added
 - Add phone authentication support [#24](https://github.com/rokwire/core-building-block/issues/24)
-
 - Set up accounts [#18](https://github.com/rokwire/core-building-block/issues/18)
+- Optional OIDC URL overrides [#139](https://github.com/rokwire/core-building-block/issues/139)
+- Automate Docker deployment process on Dev [#10](https://github.com/rokwire/core-building-block/issues/10)
+- Improve error wrapping [#83](https://github.com/rokwire/core-building-block/issues/83)
+- Set up scoped tokens [#98](https://github.com/rokwire/core-building-block/issues/98)
+- Expose admin API which gets application. [#103](https://github.com/rokwire/core-building-block/issues/103)
 - Expose auth APIs [#81](https://github.com/rokwire/core-building-block/issues/81)
 - Expose admin API which gives the organizations list [#61](https://github.com/rokwire/core-building-block/issues/61)
 - Expose admin API which gets an organization [#60](https://github.com/rokwire/core-building-block/issues/60)
