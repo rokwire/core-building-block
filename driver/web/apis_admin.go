@@ -14,6 +14,7 @@ import (
 	"github.com/rokmetro/logging-library/logutils"
 )
 
+//AdminApisHandler handles the admin rest APIs implementation
 type AdminApisHandler struct {
 	coreAPIs *core.APIs
 }
