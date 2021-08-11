@@ -126,7 +126,7 @@ func (c GlobalPermission) String() string {
 type GlobalRole struct {
 	ID          string `bson:"_id"`
 	Name        string `bson:"name"`
-	Description string `bson:"desciption"`
+	Description string `bson:"description"`
 
 	Permissions []GlobalPermission `bson:"permissions"`
 
@@ -148,10 +148,10 @@ type OrganizationGroup struct {
 
 	Organization Organization `bson:"-"`
 
-	OrganizationsMemberships []OrganizationMembership `bson:"-"`
+	OrganizationsMemberships []OrganizationMembership
 
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (cg OrganizationGroup) String() string {
@@ -165,8 +165,8 @@ type OrganizationPermission struct {
 
 	Organization Organization `bson:"-"`
 
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (c OrganizationPermission) String() string {
@@ -175,16 +175,16 @@ func (c OrganizationPermission) String() string {
 
 //OrganizationRole represents organization role entity. It is a collection of permissions
 type OrganizationRole struct {
-	ID          string `bson:"_id"`
-	Name        string `bson:"name"`
-	Description string `bson:"desciption"`
+	ID          string
+	Name        string
+	Description string
 
 	Permissions []OrganizationPermission `bson:"permissions"`
 
-	Organization Organization `bson:"-"`
+	Organization Organization
 
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (c OrganizationRole) String() string {
@@ -202,8 +202,8 @@ type Device struct {
 	///
 
 	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
-	Users []User `bson:"-"`
+	Users []User
 
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
