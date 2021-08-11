@@ -55,6 +55,10 @@ type oidcAuthConfig struct {
 	Populations        map[string]string `json:"populations"`
 }
 
+type oidcCreds struct {
+	Sub string `json:"sub" validate:"required" bson:"sub"`
+}
+
 type oidcLoginParams struct {
 	CodeVerifier string `json:"pkce_verifier"`
 	RedirectURI  string `json:"redirect_uri" validate:"required"`
@@ -95,7 +99,25 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcLoginParams, nil, err)
 		}
-		return a.newToken(creds, orgID, appID, &loginParams, l)
+
+		userAuth, err := a.newToken(creds, orgID, appID, &loginParams, l)
+		if err != nil {
+			return nil, err
+		}
+		userAuth.OrgData["orgID"] = orgID
+		credentials, err := a.auth.storage.FindCredentials(orgID, appID, authTypeOidc, userAuth.UserID)
+		if err != nil {
+			errFields := logutils.FieldArgs{"org_id": orgID, "app_id": appID, "type": authTypeOidc, "user_id": userAuth.UserID}
+			l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionFind, model.TypeAuthCred, &errFields)
+			userAuth.NewCreds = oidcCreds{Sub: userAuth.Sub}
+			return userAuth, nil
+		}
+		ok, err := a.validateUser(userAuth, credentials.Creds)
+		if err != nil || !ok {
+			return userAuth, nil
+		}
+		userAuth.AccountID = credentials.AccountID
+		return userAuth, nil
 	case "refresh_token":
 		var refreshParams oidcRefreshParams
 		err := json.Unmarshal([]byte(params), &refreshParams)
@@ -107,10 +129,47 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcRefreshParams, nil, err)
 		}
-		return a.refreshToken(creds, orgID, appID, &refreshParams, l)
+
+		userAuth, err := a.refreshToken(creds, orgID, appID, &refreshParams, l)
+		if err != nil {
+			return nil, err
+		}
+		userAuth.OrgData["orgID"] = orgID
+		credentials, err := a.auth.storage.FindCredentials(orgID, appID, authTypeOidc, userAuth.UserID)
+		if err != nil {
+			return nil, err
+		}
+		ok, err := a.validateUser(userAuth, credentials.Creds)
+		if err != nil || !ok {
+			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, nil, err)
+		}
+		userAuth.AccountID = credentials.AccountID
+		return userAuth, nil
 	default:
 		return nil, errors.ErrorData(logutils.StatusInvalid, "cred type", logutils.StringArgs(credType))
 	}
+}
+
+func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials interface{}) (bool, error) {
+	credBytes, err := json.Marshal(credentials)
+	if err != nil {
+		return false, err
+	}
+	var creds oidcCreds
+	err = json.Unmarshal(credBytes, &creds)
+	if err != nil {
+		return false, err
+	}
+	validate := validator.New()
+	err = validate.Struct(creds)
+	if err != nil {
+		return false, err
+	}
+
+	if userAuth.Sub != creds.Sub {
+		return false, errors.ErrorData(logutils.StatusInvalid, model.TypeUserAuth, logutils.StringArgs(userAuth.UserID))
+	}
+	return true, nil
 }
 
 //refresh must be implemented for OIDC auth
@@ -279,6 +338,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "user info", nil, err)
 	}
+	userAuth.OrgData = userClaims
 
 	userAuth.Sub = userClaims["sub"].(string)
 	if userAuth.Sub != sub {
@@ -289,9 +349,13 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	if userAuth.UserID, ok = userID.(string); !ok {
 		l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionCast, logutils.TypeString, &logutils.FieldArgs{"user_id": userID})
 	}
-	name := readFromClaims("name", &oidcConfig.Claims, &userClaims)
-	if userAuth.Name, ok = name.(string); !ok {
-		l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionCast, logutils.TypeString, &logutils.FieldArgs{"name": name})
+	firstName := readFromClaims("given_name", &oidcConfig.Claims, &userClaims)
+	if userAuth.FirstName, ok = firstName.(string); !ok {
+		l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionCast, logutils.TypeString, &logutils.FieldArgs{"given_name": firstName})
+	}
+	lastName := readFromClaims("family_name", &oidcConfig.Claims, &userClaims)
+	if userAuth.LastName, ok = lastName.(string); !ok {
+		l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionCast, logutils.TypeString, &logutils.FieldArgs{"family_name": lastName})
 	}
 	email := readFromClaims("email", &oidcConfig.Claims, &userClaims)
 	if userAuth.Email, ok = email.(string); !ok {
