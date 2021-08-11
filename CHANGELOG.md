@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
+- Storage improvements [#144](https://github.com/rokwire/core-building-block/issues/144)
 - Suppress logs from the AWS load balancer health checks [#141](https://github.com/rokwire/core-building-block/issues/141)
 - Set up accounts [#18](https://github.com/rokwire/core-building-block/issues/18)
 - Optional OIDC URL overrides [#139](https://github.com/rokwire/core-building-block/issues/139)
