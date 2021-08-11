@@ -146,32 +146,32 @@ func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials interf
 }
 
 //refresh must be implemented for OIDC auth
-func (a *oidcAuthImpl) refresh(params interface{}, orgID string, appID string, l *logs.Log) (interface{}, interface{}, *int64, error) {
+func (a *oidcAuthImpl) refresh(params interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, interface{}, error) {
 	refreshBytes, err := json.Marshal(params)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOidcRefreshParams, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOidcRefreshParams, nil, err)
 	}
 
 	var refreshParams oidcRefreshParams
 	err = json.Unmarshal([]byte(refreshBytes), &refreshParams)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOidcRefreshParams, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOidcRefreshParams, nil, err)
 	}
 	validate := validator.New()
 	err = validate.Struct(refreshParams)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcRefreshParams, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcRefreshParams, nil, err)
 	}
 
 	userAuth, oidcToken, err := a.refreshToken(orgID, appID, &refreshParams, l)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
-	refreshParams.IDPToken = oidcToken.RefreshToken
+	userAuth.Refresh = oidcToken.RefreshToken
 	tokenResponseParams := oidcTokenResponseParams{IDToken: oidcToken.IDToken, AccessToken: oidcToken.AccessToken, TokenType: oidcToken.TokenType}
 	responseParams := oidcResponseParams{OIDCToken: tokenResponseParams}
-	return refreshParams, responseParams, userAuth.Exp, nil
+	return userAuth, responseParams, nil
 }
 
 func (a *oidcAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {

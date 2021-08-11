@@ -303,7 +303,7 @@ func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, 
 }
 
 //FindCredentialsByToken finds a set of credentials by refresh token
-func (sa *Adapter) FindCredentialsByToken(token string) (*model.AuthCred, error) {
+func (sa *Adapter) FindCredentialsByRefreshToken(token string) (*model.AuthCred, error) {
 	conditions := []bson.M{{"refresh.current_token": token}, {"refresh.previous_token": token}}
 	filter := bson.M{"$or": conditions}
 
