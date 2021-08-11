@@ -276,6 +276,7 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 
 //DeleteUser deletes a user
 func (sa *Adapter) DeleteUser(id string) error {
+	//TODO - we have to decide what we do on delete user operation - removing all user relations, (or) mark the user disabled etc
 	filter := bson.M{"_id": id}
 	_, err := sa.db.users.DeleteOne(filter, nil)
 	if err != nil {
@@ -306,7 +307,21 @@ func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, 
 	return &creds, nil
 }
 
-//InsertCredentials credentials inserts a set of credentials
+//FindCredentialsByToken finds a set of credentials by refresh token
+func (sa *Adapter) FindCredentialsByToken(token string) (*model.AuthCred, error) {
+	conditions := []bson.M{{"refresh.current_token": token}, {"refresh.previous_token": token}}
+	filter := bson.M{"$or": conditions}
+
+	var creds model.AuthCred
+	err := sa.db.credentials.FindOne(filter, &creds, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
+	}
+
+	return &creds, nil
+}
+
+//InsertCredentials inserts a set of credentials
 func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.SessionContext) error {
 	if creds == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
@@ -323,6 +338,21 @@ func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.Sessio
 	}
 
 	return nil
+}
+
+//UpdateCredentials updates a set of credentials
+func (sa *Adapter) UpdateCredentials(creds *model.AuthCred) (*model.AuthCred, error) {
+	if creds == nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
+	}
+
+	filter := bson.D{primitive.E{Key: "type", Value: creds.Type}, primitive.E{Key: "user_id", Value: creds.UserID}}
+	err := sa.db.credentials.ReplaceOne(filter, creds, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthCred, nil, err)
+	}
+
+	return creds, nil
 }
 
 //FindGlobalPermissions finds a set of global user permissions

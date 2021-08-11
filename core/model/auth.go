@@ -25,18 +25,18 @@ const (
 
 //UserAuth represents user auth entity
 type UserAuth struct {
-	UserID       string
-	AccountID    string
-	Sub          string
-	FirstName    string
-	LastName     string
-	Email        string
-	Phone        string
-	Picture      []byte
-	Exp          *int64
-	RefreshToken string
-	OrgData      map[string]interface{}
-	NewCreds     interface{}
+	UserID    string
+	AccountID string
+	Sub       string
+	FirstName string
+	LastName  string
+	Email     string
+	Phone     string
+	Picture   []byte
+	Exp       *int64
+	OrgData   map[string]interface{}
+	NewCreds  interface{}
+	Refresh   interface{}
 }
 
 //AuthConfig represents auth config entity
@@ -55,6 +55,7 @@ type AuthCred struct {
 	UserID    string      `bson:"user_id"`
 	AccountID string      `bson:"account_id"`
 	Creds     interface{} `bson:"creds"`
+	Refresh   interface{} `bson:"refresh"`
 }
 
 //ServiceReg represents a service registration entity

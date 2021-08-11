@@ -12,7 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - User PII endpoints [#128](https://github.com/rokwire/core-building-block/issues/128)
+- Set up refresh tokens [#95](https://github.com/rokwire/core-building-block/issues/95)
+- Suppress logs from the AWS load balancer health checks [#141](https://github.com/rokwire/core-building-block/issues/141)
 - Set up accounts [#18](https://github.com/rokwire/core-building-block/issues/18)
+- Optional OIDC URL overrides [#139](https://github.com/rokwire/core-building-block/issues/139)
 - Automate Docker deployment process on Dev [#10](https://github.com/rokwire/core-building-block/issues/10)
 - Improve error wrapping [#83](https://github.com/rokwire/core-building-block/issues/83)
 - Set up scoped tokens [#98](https://github.com/rokwire/core-building-block/issues/98)
