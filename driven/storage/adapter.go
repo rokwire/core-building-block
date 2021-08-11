@@ -358,7 +358,7 @@ func (sa *Adapter) FindGlobalGroups(ids []string) ([]model.GlobalGroup, error) {
 
 //FindOrganizationPermissions finds a set of organization user permissions
 func (sa *Adapter) FindOrganizationPermissions(ids []string, orgID string) ([]model.OrganizationPermission, error) {
-	permissionsFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	permissionsFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var permissionsResult []organizationPermission
 	err := sa.db.organizationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
 	if err != nil {
@@ -378,7 +378,7 @@ func (sa *Adapter) FindOrganizationPermissions(ids []string, orgID string) ([]mo
 
 //FindOrganizationRoles finds a set of organization user roles
 func (sa *Adapter) FindOrganizationRoles(ids []string, orgID string) ([]model.OrganizationRole, error) {
-	rolesFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	rolesFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var rolesResult []organizationRole
 	err := sa.db.organizationsRoles.Find(rolesFilter, &rolesResult, nil)
 	if err != nil {
@@ -398,7 +398,7 @@ func (sa *Adapter) FindOrganizationRoles(ids []string, orgID string) ([]model.Or
 
 //FindOrganizationGroups finds a set of organization user groups
 func (sa *Adapter) FindOrganizationGroups(ids []string, orgID string) ([]model.OrganizationGroup, error) {
-	filter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var groupsResult []organizationGroup
 	err := sa.db.organizationsGroups.Find(filter, &groupsResult, nil)
 	if err != nil {
