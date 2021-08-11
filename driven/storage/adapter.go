@@ -271,6 +271,7 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 
 //DeleteUser deletes a user
 func (sa *Adapter) DeleteUser(id string) error {
+	//TODO - we have to decide what we do on delete user operation - removing all user relations, (or) mark the user disabled etc
 	filter := bson.M{"_id": id}
 	_, err := sa.db.users.DeleteOne(filter, nil)
 	if err != nil {
