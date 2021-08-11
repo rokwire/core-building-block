@@ -42,6 +42,9 @@ type oidcAuthImpl struct {
 type oidcAuthConfig struct {
 	Issuer             string            `json:"issuer"`
 	Host               string            `json:"host" validate:"required"`
+	AuthorizeURL       string            `json:"authorize_url"`
+	TokenURL           string            `json:"token_url"`
+	UserInfoURL        string            `json:"userinfo_url"`
 	Scopes             string            `json:"scopes" validate:"required"`
 	UseRefresh         bool              `json:"use_refresh" validate:"required"`
 	UsePKCE            bool              `json:"use_pkce" validate:"required"`
@@ -101,7 +104,7 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 		return nil, nil, err
 	}
 	userAuth.OrgData["orgID"] = orgID
-	userAuth.Refresh = a.setRefreshParams(oidcToken.RefreshToken, loginParams.RedirectURI)
+	userAuth.Refresh = oidcRefreshParams{IDPToken: oidcToken.RefreshToken, RedirectURI: loginParams.RedirectURI}
 	tokenResponseParams := oidcTokenResponseParams{IDToken: oidcToken.IDToken, AccessToken: oidcToken.AccessToken, TokenType: oidcToken.TokenType}
 	responseParams := oidcResponseParams{OIDCToken: tokenResponseParams}
 
@@ -140,11 +143,6 @@ func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials interf
 		return false, errors.ErrorData(logutils.StatusInvalid, model.TypeUserAuth, logutils.StringArgs(userAuth.UserID))
 	}
 	return true, nil
-}
-
-func (a *oidcAuthImpl) setRefreshParams(token string, redirectURI string) oidcRefreshParams {
-	params := oidcRefreshParams{IDPToken: token, RedirectURI: redirectURI}
-	return params
 }
 
 //refresh must be implemented for OIDC auth
@@ -216,7 +214,11 @@ func (a *oidcAuthImpl) getLoginURL(orgID string, appID string, redirectURI strin
 		responseParams["pkce_verifier"] = codeVerifier
 	}
 
-	url, err := url.Parse(oidcConfig.Host + "/idp/profile/oidc/authorize")
+	authURL := oidcConfig.Host + "/idp/profile/oidc/authorize"
+	if len(oidcConfig.AuthorizeURL) > 0 {
+		authURL = oidcConfig.AuthorizeURL
+	}
+	url, err := url.Parse(authURL)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionParse, "auth url", &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
 	}
@@ -317,7 +319,11 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcToken, nil, err)
 	}
 
-	userInfo, err := a.loadOidcUserInfo(oidcToken, oidcConfig.Host+"/idp/profile/oidc/userinfo")
+	userInfoURL := oidcConfig.Host + "/idp/profile/oidc/userinfo"
+	if len(oidcConfig.UserInfoURL) > 0 {
+		userInfoURL = oidcConfig.UserInfoURL
+	}
+	userInfo, err := a.loadOidcUserInfo(oidcToken, userInfoURL)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, "user info", nil, err)
 	}
@@ -377,6 +383,9 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcConfig *oidcAuthConfig) (*oidcToken, error) {
 	tokenURI := ""
 	oidcTokenURL := oidcConfig.Host + "/idp/profile/oidc/token"
+	if len(oidcConfig.TokenURL) > 0 {
+		oidcTokenURL = oidcConfig.TokenURL
+	}
 	if strings.Contains(oidcTokenURL, "{shibboleth_client_id}") {
 		tokenURI = strings.ReplaceAll(oidcTokenURL, "{shibboleth_client_id}", oidcConfig.ClientID)
 		tokenURI = strings.ReplaceAll(tokenURI, "{shibboleth_client_secret}", oidcConfig.ClientSecret)

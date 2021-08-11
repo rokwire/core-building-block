@@ -201,6 +201,40 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 		}
 	}
 
+	if len(userAuth.AccountID) > 0 {
+		user, err = a.findAccount(userAuth)
+		if err != nil {
+			return "", "", nil, nil, err
+		}
+		user, update, newMembership := a.needsUserUpdate(userAuth, user)
+		if update {
+			var newMembershipOrgData *map[string]interface{}
+			if newMembership {
+				newMembershipOrgData = &userAuth.OrgData
+			}
+			_, err = a.updateAccount(user, newMembershipOrgData)
+			if err != nil {
+				return "", "", nil, nil, err
+			}
+		}
+	} else {
+		if userAuth.NewCreds != nil {
+			authCred := model.AuthCred{
+				OrgID:  orgID,
+				AppID:  appID,
+				Type:   authType,
+				UserID: userAuth.UserID,
+				Creds:  userAuth.NewCreds,
+			}
+			user, err = a.createAccount(userAuth, &authCred)
+			if err != nil {
+				return "", "", nil, nil, err
+			}
+		} else {
+			return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, nil, err)
+		}
+	}
+
 	claims := a.getStandardClaims("", userAuth.UserID, userAuth.Email, userAuth.Phone, "rokwire", orgID, appID, userAuth.Exp)
 	token, err := a.buildAccessToken(claims, "", "all")
 	if err != nil {

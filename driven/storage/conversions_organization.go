@@ -2,7 +2,6 @@ package storage
 
 import (
 	"core-building-block/core/model"
-	"fmt"
 )
 
 //Organization
@@ -77,6 +76,22 @@ func organizationPermissionsFromStorage(items []organizationPermission, organiza
 	return res
 }
 
+func organizationPermissionToStorage(item model.OrganizationPermission) organizationPermission {
+	return organizationPermission{ID: item.ID, Name: item.Name, OrgID: item.Organization.ID, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func organizationPermissionsToStorage(items []model.OrganizationPermission) []organizationPermission {
+	if len(items) == 0 {
+		return make([]organizationPermission, 0)
+	}
+
+	res := make([]organizationPermission, len(items))
+	for i, permission := range items {
+		res[i] = organizationPermissionToStorage(permission)
+	}
+	return res
+}
+
 //OrganizationRole
 func organizationRoleFromStorage(item *organizationRole, organization model.Organization) model.OrganizationRole {
 	if item == nil {
@@ -101,6 +116,25 @@ func organizationRolesFromStorage(items []organizationRole, organization model.O
 	res := make([]model.OrganizationRole, len(items))
 	for i, org := range items {
 		res[i] = organizationRoleFromStorage(&org, organization)
+	}
+	return res
+}
+
+func organizationRoleToStorage(item model.OrganizationRole) organizationRole {
+	permissions := organizationPermissionsToStorage(item.Permissions)
+	return organizationRole{ID: item.ID, Name: item.Name, Description: item.Description,
+		OrgID: item.Organization.ID, Permissions: permissions,
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func organizationRolesToStorage(items []model.OrganizationRole) []organizationRole {
+	if len(items) == 0 {
+		return make([]organizationRole, 0)
+	}
+
+	res := make([]organizationRole, len(items))
+	for i, role := range items {
+		res[i] = organizationRoleToStorage(role)
 	}
 	return res
 }
@@ -137,21 +171,43 @@ func organizationGroupsFromStorage(items []organizationGroup, organization model
 	return res
 }
 
+func organizationGroupToStorage(item model.OrganizationGroup) organizationGroup {
+	permissions := organizationPermissionsToStorage(item.Permissions)
+	roles := organizationRolesToStorage(item.Roles)
+	return organizationGroup{ID: item.ID, Name: item.Name, OrgID: item.Organization.ID,
+		Permissions: permissions, Roles: roles, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func organizationGroupsToStorage(items []model.OrganizationGroup) []organizationGroup {
+	if len(items) == 0 {
+		return make([]organizationGroup, 0)
+	}
+
+	res := make([]organizationGroup, len(items))
+	for i, group := range items {
+		res[i] = organizationGroupToStorage(group)
+	}
+	return res
+}
+
 //OrganizationMembership
+/*
 func organizationMembershipFromUserStorage(item *userMembership, sa *Adapter) *model.OrganizationMembership {
 	if item == nil {
 		return nil
 	}
 
 	membership := model.OrganizationMembership{ID: item.ID, OrgUserData: item.OrgUserData,
-		Permissions: item.Permissions, Roles: item.Roles, Groups: item.Groups,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 
 	org, err := sa.getCachedOrganization(item.OrgID)
 	if err != nil {
-		fmt.Printf("failed to find cached organization for org_id %s\n", item.OrgID)
+		sa.db.logger.Warnf("failed to find cached organization for org_id %s\n", item.OrgID)
 	} else {
 		membership.Organization = *org
+		membership.Permissions = organizationPermissionsFromStorage(item.Permissions, *org)
+		membership.Roles = organizationRolesFromStorage(item.Roles, *org)
+		membership.Groups = organizationGroupsFromStorage(item.Groups, *org)
 	}
 
 	return &membership
@@ -162,9 +218,11 @@ func organizationMembershipToUserStorage(item *model.OrganizationMembership) *us
 		return nil
 	}
 
+	permissions := organizationPermissionsToStorage(item.Permissions)
+	roles := organizationRolesToStorage(item.Roles)
+	groups := organizationGroupsToStorage(item.Groups)
 	return &userMembership{ID: item.ID, OrgID: item.Organization.ID, OrgUserData: item.OrgUserData,
-		Permissions: item.Permissions, Roles: item.Roles, Groups: item.Groups,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Permissions: permissions, Roles: roles, Groups: groups, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func organizationMembershipListFromUserStorage(items []userMembership, sa *Adapter) []model.OrganizationMembership {
@@ -198,3 +256,4 @@ func organizationMembershipListToUserStorage(items []model.OrganizationMembershi
 	}
 	return out
 }
+*/
