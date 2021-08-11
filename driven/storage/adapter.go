@@ -595,26 +595,6 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 	return nil
 }
 
-//CreateApplication creates an application
-func (sa *Adapter) CreateApplication(name string, versions *[]string) (*model.Application, error) {
-
-	/*now := time.Now()
-
-	appID, _ := uuid.NewUUID()
-	app := application{ID: appID.String(), Name: name, Versions: *versions, DateCreated: now}
-
-	_, err := sa.db.applications.InsertOne(app)
-	if err != nil {
-		return nil, err
-	}
-
-	//return the correct type
-
-	resApp := model.Application{Name: app.Name, Versions: app.Versions}
-	return &resApp, nil */
-	return nil, nil
-}
-
 //GetOrganizations gets the organizations
 func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 	//no transactions for get operations..
@@ -652,8 +632,28 @@ func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 	return organizations, nil
 }
 
-//GetApplication gets application
-func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
+//InsertApplication inserts an application
+func (sa *Adapter) InsertApplication(application model.Application) (*model.Application, error) {
+
+	/*now := time.Now()
+
+	appID, _ := uuid.NewUUID()
+	app := application{ID: appID.String(), Name: name, Versions: *versions, DateCreated: now}
+
+	_, err := sa.db.applications.InsertOne(app)
+	if err != nil {
+		return nil, err
+	}
+
+	//return the correct type
+
+	resApp := model.Application{Name: app.Name, Versions: app.Versions}
+	return &resApp, nil */
+	return nil, nil
+}
+
+//FindApplication finds application
+func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	var result []model.Application
 	err := sa.db.applications.Find(filter, &result, nil)

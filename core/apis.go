@@ -107,7 +107,7 @@ func (s *administrationImpl) AdmUpdateOrganization(ID string, name string, reque
 	return s.app.admUpdateOrganization(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
 }
 
-func (s *administrationImpl) AdmCreateApplication(name string, versions *[]string) (*model.Application, error) {
+func (s *administrationImpl) AdmCreateApplication(name string, versions []string) (*model.Application, error) {
 	return s.app.admCreateApplication(name, versions)
 }
 

@@ -323,7 +323,7 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.H
 	name := requestData.Name
 	versions := requestData.Versions
 
-	_, err = h.coreAPIs.Administration.AdmCreateApplication(name, versions)
+	_, err = h.coreAPIs.Administration.AdmCreateApplication(name, *versions)
 	if err != nil {
 		l.Errorf(err.Error())
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
