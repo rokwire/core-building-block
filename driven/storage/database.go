@@ -248,6 +248,12 @@ func (m *database) applyUsersChecks(users *collectionWrapper) error {
 		return err
 	}
 
+	//add devices index
+	err = users.AddIndex(bson.D{primitive.E{Key: "devices._id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("users check passed")
 	return nil
 }
