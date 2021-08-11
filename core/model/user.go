@@ -3,6 +3,14 @@ package model
 import (
 	"bytes"
 	"fmt"
+	"time"
+
+	"github.com/rokmetro/logging-library/logutils"
+)
+
+const (
+	//TypeUser user type
+	TypeUser logutils.MessageDataType = "user"
 )
 
 //User represents user entity
@@ -20,6 +28,9 @@ type User struct {
 	OrganizationsMemberships []OrganizationMembership
 
 	Devices []Device
+
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (u User) String() string {
@@ -43,18 +54,21 @@ func (u User) String() string {
 //It is also a good practive internally the system to generate unique number and(or) unique username which are not changable.
 //At some moment the user could be needed to change his phone or email so we need to rely on the number or on the username which cannot be changed.
 type UserAccount struct {
-	ID string
+	ID string `bson:"id"`
 
-	Email string
-	Phone string
+	Email string `bson:"email"`
+	Phone string `bson:"phone"`
 
-	Username string
+	Username string `bson:"username"`
 
 	//for Champaign org - basically this will be one or many of  - email, phone, number, username
 	//for Illinois university org - this will be empty because this organization requires it own login
-	LoginTypes []string
+	LoginTypes []string `bson:"login_types"`
 
-	AllowLogin bool
+	AllowLogin bool `bson:"allow_login"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 
 	//TODO
 	//has 2FA ???
@@ -67,10 +81,13 @@ func (ua UserAccount) String() string {
 
 //UserProfile represents user profile entity. The user profile is an information about the user.
 type UserProfile struct {
-	ID        string
-	PhotoURL  string
-	FirstName string
-	LastName  string
+	ID        string `bson:"id"`
+	PhotoURL  string `bson:"photo_url"`
+	FirstName string `bson:"first_name"`
+	LastName  string `bson:"last_name"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 func (up UserProfile) String() string {
@@ -80,19 +97,25 @@ func (up UserProfile) String() string {
 
 //GlobalGroup represents global group entity. It is a collection of users
 type GlobalGroup struct {
-	ID   string
-	Name string
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
 
-	Permissions []GlobalPermission
-	Roles       []GlobalRole
+	Permissions []GlobalPermission `bson:"permissions"`
+	Roles       []GlobalRole       `bson:"roles"`
 
-	Users []User
+	Users []User `bson:"-"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 //GlobalPermission represents global permission entity
 type GlobalPermission struct {
-	ID   string
-	Name string
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 func (c GlobalPermission) String() string {
@@ -101,10 +124,14 @@ func (c GlobalPermission) String() string {
 
 //GlobalRole represents global role entity. It is a collection of permissions
 type GlobalRole struct {
-	ID   string
-	Name string
+	ID          string `bson:"_id"`
+	Name        string `bson:"name"`
+	Description string `bson:"description"`
 
-	Permissions []GlobalPermission
+	Permissions []GlobalPermission `bson:"permissions"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 func (c GlobalRole) String() string {
@@ -122,6 +149,9 @@ type OrganizationGroup struct {
 	Organization Organization
 
 	OrganizationsMemberships []OrganizationMembership
+
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (cg OrganizationGroup) String() string {
@@ -134,6 +164,9 @@ type OrganizationPermission struct {
 	Name string
 
 	Organization Organization
+
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (c OrganizationPermission) String() string {
@@ -142,12 +175,16 @@ func (c OrganizationPermission) String() string {
 
 //OrganizationRole represents organization role entity. It is a collection of permissions
 type OrganizationRole struct {
-	ID   string
-	Name string
+	ID          string
+	Name        string
+	Description string
 
 	Permissions []OrganizationPermission
 
 	Organization Organization
+
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 func (c OrganizationRole) String() string {
@@ -166,4 +203,7 @@ type Device struct {
 
 	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
 	Users []User
+
+	DateCreated time.Time
+	DateUpdated *time.Time
 }

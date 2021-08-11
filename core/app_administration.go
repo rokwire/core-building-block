@@ -3,7 +3,9 @@ package core
 import (
 	"core-building-block/core/model"
 	"fmt"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokmetro/logging-library/errors"
 	"github.com/rokmetro/logging-library/logutils"
 )
@@ -202,15 +204,24 @@ func (app *application) admUpdateGlobalConfig(setting string) error {
 }
 
 func (app *application) admCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
-	organization, err := app.storage.CreateOrganization(name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+	now := time.Now()
+
+	orgConfigID, _ := uuid.NewUUID()
+	orgConfig := model.OrganizationConfig{ID: orgConfigID.String(), Domains: organizationDomains, DateCreated: now}
+
+	organizationID, _ := uuid.NewUUID()
+	organization := model.Organization{ID: organizationID.String(), Name: name, Type: requestType, RequiresOwnLogin: requiresOwnLogin, LoginTypes: loginTypes,
+		Config: orgConfig, DateCreated: now}
+
+	insertedOrg, err := app.storage.InsertOrganization(organization)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
-	return organization, nil
+	return insertedOrg, nil
 }
 
 func (app *application) admGetOrganization(ID string) (*model.Organization, error) {
-	organization, err := app.storage.GetOrganization(ID)
+	organization, err := app.storage.FindOrganization(ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err)
 	}
