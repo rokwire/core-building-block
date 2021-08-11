@@ -22,7 +22,8 @@ import (
 
 //Adapter entity
 type Adapter struct {
-	env string
+	env  string
+	port string
 
 	openAPIRouter routers.Router
 	host          string
@@ -53,16 +54,15 @@ func (we Adapter) Start() {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// handle apis
-	subRouter := router.PathPrefix("/core").Subrouter()
-	subRouter.PathPrefix("/doc/ui").Handler(we.serveDocUI())
-	subRouter.HandleFunc("/doc", we.serveDoc)
+	router.PathPrefix("/doc/ui").Handler(we.serveDocUI())
+	router.HandleFunc("/doc", we.serveDoc)
 
 	///default ///
-	subRouter.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion)).Methods("GET")
+	router.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion)).Methods("GET")
 	///
 
 	///services ///
-	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
+	servicesSubRouter := router.PathPrefix("/services").Subrouter()
 	servicesSubRouter.HandleFunc("/auth/login", we.wrapFunc(we.servicesApisHandler.authLogin)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh)).Methods("POST")
@@ -72,7 +72,7 @@ func (we Adapter) Start() {
 	///
 
 	///admin ///
-	adminSubrouter := subRouter.PathPrefix("/admin").Subrouter()
+	adminSubrouter := router.PathPrefix("/admin").Subrouter()
 	adminSubrouter.HandleFunc("/test", we.wrapFunc(we.adminApisHandler.getTest)).Methods("GET")
 	adminSubrouter.HandleFunc("/test-model", we.wrapFunc(we.adminApisHandler.getTestModel)).Methods("GET")
 
@@ -97,22 +97,22 @@ func (we Adapter) Start() {
 	///
 
 	///enc ///
-	encSubrouter := subRouter.PathPrefix("/enc").Subrouter()
+	encSubrouter := router.PathPrefix("/enc").Subrouter()
 	encSubrouter.HandleFunc("/test", we.wrapFunc(we.encApisHandler.getTest)).Methods("GET")
 	///
 
 	///bbs ///
-	bbsSubrouter := subRouter.PathPrefix("/bbs").Subrouter()
+	bbsSubrouter := router.PathPrefix("/bbs").Subrouter()
 	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.getTest)).Methods("GET")
 	bbsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.bbsApisHandler.getServiceRegistrations)).Methods("GET")
 	///
 
 	///third-party services ///
-	tpsSubrouter := subRouter.PathPrefix("/tps").Subrouter()
+	tpsSubrouter := router.PathPrefix("/tps").Subrouter()
 	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations)).Methods("GET")
 	///
 
-	err := http.ListenAndServe(":80", router)
+	err := http.ListenAndServe(":"+we.port, router)
 	if err != nil {
 		we.logger.Fatal(err.Error())
 	}
@@ -136,6 +136,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 
 		var err error
 
+		logObj.Debugf("URL: %v%v", req.Host, req.URL)
 		//1. validate request
 		requestValidationInput, err := we.validateRequest(req)
 		if err != nil {
@@ -216,7 +217,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, port string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -227,6 +228,10 @@ func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *logs.Lo
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
+
+	//Ignore servers. Validating reqeusts against the documented servers can cause issues when routing traffic through proxies/load-balancers.
+	doc.Servers = nil
+
 	openAPIRouter, err := gorillamux.NewRouter(doc)
 	if err != nil {
 		logger.Fatal(err.Error())
@@ -241,7 +246,7 @@ func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *logs.Lo
 	encApisHandler := NewEncApisHandler(coreAPIs)
 	bbsApisHandler := NewBBsApisHandler(coreAPIs)
 	tpsApisHandler := NewTPSApisHandler(coreAPIs)
-	return Adapter{env: env, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, authorization: authorization,
+	return Adapter{env: env, port: port, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, authorization: authorization,
 		defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
 		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, coreAPIs: coreAPIs}
 }

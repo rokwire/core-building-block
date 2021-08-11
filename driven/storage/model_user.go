@@ -16,22 +16,7 @@ type user struct {
 	Groups                   []model.GlobalGroup      `bson:"groups"`
 	OrganizationsMemberships []userMembership         `bson:"organizations_memberships"`
 
-	Devices []model.Device `bson:"devices"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type rawMembership struct {
-	ID     string `bson:"_id"`
-	UserID string `bson:"user_id"`
-
-	OrgID       string                 `bson:"organization_id"`
-	OrgUserData map[string]interface{} `bson:"org_user_data"`
-
-	Permissions []string `bson:"permissions"`
-	Roles       []string `bson:"roles"`
-	Groups      []string `bson:"groups"`
+	Devices []userDevice `bson:"devices"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -43,45 +28,33 @@ type userMembership struct {
 	OrgID       string                 `bson:"organization_id"`
 	OrgUserData map[string]interface{} `bson:"org_user_data"`
 
-	Permissions []model.OrganizationPermission `bson:"permissions"`
-	Roles       []model.OrganizationRole       `bson:"roles"`
-	Groups      []model.OrganizationGroup      `bson:"groups"`
+	Permissions []organizationPermission `bson:"permissions"`
+	Roles       []organizationRole       `bson:"roles"`
+	Groups      []organizationGroup      `bson:"groups"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-type group struct {
+type userDevice struct {
 	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	Type string `bson:"type"`
 
-	OrgID string `bson:"organization_id"`
-
-	Permissions []string `bson:"permissions"`
-	Roles       []string `bson:"roles"`
+	OS         string `bson:"os"`
+	MacAddress string `bson:"mac_address"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-type role struct {
-	ID          string `bson:"_id"`
-	Name        string `bson:"name"`
-	Description string `bson:"desciption"`
-
-	OrgID string `bson:"organization_id"`
-
-	Permissions []string `bson:"permissions"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type permission struct {
+type device struct {
 	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	Type string `bson:"type"`
 
-	OrgID string `bson:"organization_id"`
+	OS         string `bson:"os"`
+	MacAddress string `bson:"mac_address"`
+
+	Users []string `bson:"users"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

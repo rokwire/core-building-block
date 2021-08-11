@@ -10,7 +10,7 @@ servers:
   description: Test server
 - url: https://api-dev.rokwire.illinois.edu/core
   description: Development server
-- url: http://localhost/core
+- url: http://localhost
   description: Local server
 tags:
 - name: Services
