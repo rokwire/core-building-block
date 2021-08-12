@@ -107,16 +107,16 @@ func (s *administrationImpl) AdmUpdateOrganization(ID string, name string, reque
 	return s.app.admUpdateOrganization(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
 }
 
-func (s *administrationImpl) AdmCreateApplication(name string, versions []string) (*model.Application, error) {
-	return s.app.admCreateApplication(name, versions)
-}
-
 func (s *administrationImpl) AdmGetOrganizations() ([]model.Organization, error) {
 	return s.app.admGetOrganizations()
 }
 
 func (s *administrationImpl) AdmGetOrganization(ID string) (*model.Organization, error) {
 	return s.app.admGetOrganization(ID)
+}
+
+func (s *administrationImpl) AdmCreateApplication(name string, versions []string) (*model.Application, error) {
+	return s.app.admCreateApplication(name, versions)
 }
 
 func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, error) {

@@ -306,7 +306,6 @@ func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.Http
 
 //createApplication creates an application
 func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
-
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		l.Errorf("Error on marshal create application - %s\n", err.Error())

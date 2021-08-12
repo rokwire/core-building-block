@@ -634,22 +634,12 @@ func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 
 //InsertApplication inserts an application
 func (sa *Adapter) InsertApplication(application model.Application) (*model.Application, error) {
-
-	/*now := time.Now()
-
-	appID, _ := uuid.NewUUID()
-	app := application{ID: appID.String(), Name: name, Versions: *versions, DateCreated: now}
-
-	_, err := sa.db.applications.InsertOne(app)
+	_, err := sa.db.applications.InsertOne(application)
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, &logutils.FieldArgs{"id": application.ID}, err)
 	}
 
-	//return the correct type
-
-	resApp := model.Application{Name: app.Name, Versions: app.Versions}
-	return &resApp, nil */
-	return nil, nil
+	return &application, nil
 }
 
 //FindApplication finds application
