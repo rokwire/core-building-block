@@ -47,6 +47,11 @@ AuthLoginParamsOidc:
 AuthRefreshResponse:
   $ref: "./auth/AuthRefreshResponse.yaml"
 
+AuthResponseRokwireToken:
+  $ref: "./auth/AuthResponseRokwireToken.yaml"
+AuthResponseParamsOidc:
+  $ref: "./auth/AuthResponseParamsOidc.yaml"
+
 AuthLoginUrlRequest:
   $ref: "./auth/AuthLoginUrlRequest.yaml"
 AuthLoginUrlResponse:

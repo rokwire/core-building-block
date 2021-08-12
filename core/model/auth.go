@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/auth-library/authservice"
 	"github.com/rokmetro/logging-library/logutils"
@@ -25,18 +27,19 @@ const (
 
 //UserAuth represents user auth entity
 type UserAuth struct {
-	UserID       string
-	AccountID    string
-	Sub          string
-	FirstName    string
-	LastName     string
-	Email        string
-	Phone        string
-	Picture      []byte
-	Exp          *int64
-	RefreshToken string
-	OrgData      map[string]interface{}
-	NewCreds     interface{}
+	UserID    string
+	AccountID string
+	Sub       string
+	FirstName string
+	LastName  string
+	Email     string
+	Phone     string
+	Picture   []byte
+	Exp       *int64
+	OrgData   map[string]interface{}
+	NewCreds  interface{}
+	Refresh   interface{}
+	Params    interface{}
 }
 
 //AuthConfig represents auth config entity
@@ -49,12 +52,20 @@ type AuthConfig struct {
 
 //AuthCred represents represents a set of credentials used by auth
 type AuthCred struct {
-	OrgID     string      `bson:"org_id"`
-	AppID     string      `bson:"app_id"`
-	Type      string      `bson:"type"`
-	UserID    string      `bson:"user_id"`
-	AccountID string      `bson:"account_id"`
-	Creds     interface{} `bson:"creds"`
+	OrgID     string             `bson:"org_id"`
+	AppID     string             `bson:"app_id"`
+	Type      string             `bson:"type"`
+	UserID    string             `bson:"user_id"`
+	AccountID string             `bson:"account_id"`
+	Creds     interface{}        `bson:"creds"`
+	Refresh   *AuthRefreshParams `bson:"refresh"`
+}
+
+type AuthRefreshParams struct {
+	PreviousToken string      `json:"previous_token"`
+	CurrentToken  string      `json:"current_token" validate:"required"`
+	Expires       *time.Time  `json:"exp" validate:"required"`
+	IDPParams     interface{} `json:"idp_params"`
 }
 
 //ServiceReg represents a service registration entity
