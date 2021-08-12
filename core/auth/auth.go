@@ -5,11 +5,13 @@ import (
 	"core-building-block/driven/storage"
 	"crypto/rsa"
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/auth-library/authservice"
 	"github.com/rokmetro/auth-library/authutils"
@@ -116,7 +118,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	err = auth.LoadAuthConfigs()
 	if err != nil {
-		logger.Warn("NewAuth() failed to cache auth configs")
+		logger.Warnf("NewAuth() failed to cache auth configs: %v", err)
 	}
 
 	return auth, nil
@@ -135,6 +137,8 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 //		User (User): User object for authenticated user
 //		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 func (a *Auth) Login(authType string, creds string, orgID string, appID string, params string, l *logs.Log) (string, string, *model.User, error) {
+	var user *model.User
+	var err error
 	auth, err := a.getAuthType(authType)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
@@ -145,6 +149,40 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 		return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "creds", nil, err)
 	}
 
+	if len(userAuth.AccountID) > 0 {
+		user, err = a.findAccount(userAuth)
+		if err != nil {
+			return "", "", nil, err
+		}
+		user, update, newMembership := a.needsUserUpdate(userAuth, user)
+		if update {
+			var newMembershipOrgData *map[string]interface{}
+			if newMembership {
+				newMembershipOrgData = &userAuth.OrgData
+			}
+			_, err = a.updateAccount(user, newMembershipOrgData)
+			if err != nil {
+				return "", "", nil, err
+			}
+		}
+	} else {
+		if userAuth.NewCreds != nil {
+			authCred := model.AuthCred{
+				OrgID:  orgID,
+				AppID:  appID,
+				Type:   authType,
+				UserID: userAuth.UserID,
+				Creds:  userAuth.NewCreds,
+			}
+			user, err = a.createAccount(userAuth, &authCred)
+			if err != nil {
+				return "", "", nil, err
+			}
+		} else {
+			return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, nil, err)
+		}
+	}
+
 	claims := a.getStandardClaims("", userAuth.UserID, userAuth.Email, userAuth.Phone, "rokwire", orgID, appID, userAuth.Exp)
 	token, err := a.buildAccessToken(claims, "", "all")
 	if err != nil {
@@ -153,7 +191,7 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 
 	//TODO: Implement account management
 
-	return token, userAuth.RefreshToken, nil, nil
+	return token, userAuth.RefreshToken, user, nil
 }
 
 //Refresh refreshes an access token using a refresh token
@@ -291,19 +329,113 @@ func (a *Auth) DeregisterService(serviceID string) error {
 	return a.storage.DeleteServiceReg(serviceID)
 }
 
+//findAccount retrieves a user's account information
+func (a *Auth) findAccount(userAuth *model.UserAuth) (*model.User, error) {
+	return a.storage.FindUserByAccountID(userAuth.AccountID)
+}
+
 //createAccount creates a new user account
-func (a *Auth) createAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
+func (a *Auth) createAccount(userAuth *model.UserAuth, authCred *model.AuthCred) (*model.User, error) {
+	newUser, err := a.setupUser(userAuth)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeUser, nil, err)
+	}
+	return a.storage.InsertUser(newUser, authCred)
 }
 
 //updateAccount updates a user's account information
-func (a *Auth) updateAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
+func (a *Auth) updateAccount(user *model.User, newOrgData *map[string]interface{}) (*model.User, error) {
+	return a.storage.UpdateUser(user, newOrgData)
 }
 
 //deleteAccount deletes a user account
-func (a *Auth) deleteAccount(claims *tokenauth.Claims) {
-	//TODO: Implement
+func (a *Auth) deleteAccount(id string) error {
+	return a.storage.DeleteUser(id)
+}
+
+func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.User, error) {
+	if userAuth == nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUserAuth))
+	}
+
+	now := time.Now().UTC()
+	newID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("user_id"), err)
+	}
+	newUser := model.User{ID: newID.String(), DateCreated: now}
+
+	accountID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("account_id"))
+	}
+	newUser.Account = model.UserAccount{ID: accountID.String(), Email: userAuth.Email, Phone: userAuth.Phone, Username: userAuth.UserID, DateCreated: now}
+
+	profileID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("profile_id"))
+	}
+	newUser.Profile = model.UserProfile{ID: profileID.String(), FirstName: userAuth.FirstName, LastName: userAuth.LastName, DateCreated: now}
+
+	//TODO: populate new device with device information (search for existing device first)
+	deviceID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("device_id"))
+	}
+	newDevice := model.Device{ID: deviceID.String(), DateCreated: now}
+	newUser.Devices = []model.Device{newDevice}
+
+	membershipID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("membership_id"))
+	}
+	newOrgMembership := model.OrganizationMembership{ID: membershipID.String(), OrgUserData: userAuth.OrgData, DateCreated: now}
+
+	// TODO:
+	// maybe set groups based on organization populations
+
+	newUser.OrganizationsMemberships = []model.OrganizationMembership{newOrgMembership}
+
+	return &newUser, nil
+}
+
+//needsUserUpdate determines if user should be updated by userAuth (assumes userAuth is most up-to-date)
+func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*model.User, bool, bool) {
+	update := false
+
+	// account
+	if len(user.Account.Email) == 0 {
+		user.Account.Email = userAuth.Email
+		update = true
+	}
+	if len(user.Account.Phone) == 0 {
+		user.Account.Phone = userAuth.Phone
+		update = true
+	}
+
+	// profile
+	if user.Profile.FirstName != userAuth.FirstName {
+		user.Profile.FirstName = userAuth.FirstName
+		update = true
+	}
+	if user.Profile.LastName != userAuth.LastName {
+		user.Profile.LastName = userAuth.LastName
+		update = true
+	}
+
+	// org data
+	foundOrg := false
+	for _, m := range user.OrganizationsMemberships {
+		if m.Organization.ID == userAuth.OrgData["orgID"] {
+			foundOrg = true
+			if !reflect.DeepEqual(userAuth.OrgData, m.OrgUserData) {
+				m.OrgUserData = userAuth.OrgData
+				update = true
+			}
+		}
+	}
+
+	return user, update, !foundOrg
 }
 
 func (a *Auth) registerAuthType(name string, auth authType) error {
@@ -481,6 +613,15 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 
 //Storage interface to communicate with the storage
 type Storage interface {
+	FindUserByAccountID(accountID string) (*model.User, error)
+	InsertUser(user *model.User, authCred *model.AuthCred) (*model.User, error)
+	UpdateUser(user *model.User, newOrgData *map[string]interface{}) (*model.User, error)
+	DeleteUser(id string) error
+
+	FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCred, error)
+
+	FindOrganization(id string) (*model.Organization, error)
+
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)
 	FindServiceReg(serviceID string) (*model.ServiceReg, error)

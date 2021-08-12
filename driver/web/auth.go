@@ -2,7 +2,6 @@ package web
 
 import (
 	"core-building-block/core"
-	"log"
 	"net/http"
 
 	"github.com/rokmetro/auth-library/authorization"
@@ -10,6 +9,8 @@ import (
 	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/errors"
 	"github.com/rokmetro/logging-library/logutils"
+	"github.com/rokmetro/logging-library/logs"
+
 )
 
 const (
@@ -26,6 +27,8 @@ type Auth struct {
 	adminAuth    *AdminAuth
 	encAuth      *EncAuth
 	bbsAuth      *BBsAuth
+
+	logger *logs.Logger
 }
 
 // Authorization is an interface for auth types
@@ -35,7 +38,7 @@ type Authorization interface {
 
 //Start starts the auth module
 func (auth *Auth) Start() error {
-	log.Println("Auth -> start")
+	auth.logger.Info("Auth -> start")
 
 	auth.servicesAuth.start()
 	auth.adminAuth.start()
@@ -46,13 +49,13 @@ func (auth *Auth) Start() error {
 }
 
 //NewAuth creates new auth handler
-func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.AuthService) *Auth {
-	servicesAuth := newServicesAuth(coreAPIs, authService, serviceID)
-	adminAuth := newAdminAuth(coreAPIs, authService)
-	encAuth := newEncAuth(coreAPIs)
-	bbsAuth := newBBsAuth(coreAPIs)
+func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.AuthService, logger *logs.Logger) *Auth {
+	servicesAuth := newServicesAuth(coreAPIs, authService, serviceID, logger)
+	adminAuth := newAdminAuth(coreAPIs, authService, logger)
+	encAuth := newEncAuth(coreAPIs, logger)
+	bbsAuth := newBBsAuth(coreAPIs, logger)
 
-	auth := Auth{servicesAuth: servicesAuth, adminAuth: adminAuth, encAuth: encAuth, bbsAuth: bbsAuth}
+	auth := Auth{servicesAuth: servicesAuth, adminAuth: adminAuth, encAuth: encAuth, bbsAuth: bbsAuth, logger: logger}
 
 	return &auth
 }
@@ -61,10 +64,11 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 type ServicesAuth struct {
 	coreAPIs  *core.APIs
 	tokenAuth *tokenauth.TokenAuth
+	logger *logs.Logger
 }
 
 func (auth *ServicesAuth) start() {
-	log.Println("ServicesAuth -> start")
+	auth.logger.Info("ServicesAuth -> start")
 }
 
 func (auth *ServicesAuth) check(req *http.Request) (int, error) {
@@ -81,7 +85,7 @@ func (auth *ServicesAuth) check(req *http.Request) (int, error) {
 	return http.StatusOK, nil
 }
 
-func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, serviceID string) *ServicesAuth {
+func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, serviceID string, logger *logs.Logger) *ServicesAuth {
 	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/scope_authorization_policy_services_auth.csv", serviceID)
 
 	servicesTokenAuth, err := tokenauth.NewTokenAuth(true, authService, nil, servicesScopeAuth)
@@ -90,7 +94,7 @@ func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, 
 		// log.Fatalf("Error intitializing token auth for servicesAuth: %v", err)
 	}
 
-	auth := ServicesAuth{coreAPIs: coreAPIs, tokenAuth: servicesTokenAuth}
+	auth := ServicesAuth{coreAPIs: coreAPIs, tokenAuth: servicesTokenAuth, logger: logger}
 	return &auth
 }
 
@@ -98,10 +102,11 @@ func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, 
 type AdminAuth struct {
 	coreAPIs  *core.APIs
 	tokenAuth *tokenauth.TokenAuth
+	logger *logs.Logger
 }
 
 func (auth *AdminAuth) start() {
-	log.Println("AdminAuth -> start")
+	auth.logger.Info("AdminAuth -> start")
 }
 
 func (auth *AdminAuth) check(req *http.Request) (int, error) {
@@ -117,42 +122,46 @@ func (auth *AdminAuth) check(req *http.Request) (int, error) {
 	return http.StatusOK, nil
 }
 
-func newAdminAuth(coreAPIs *core.APIs, authService *authservice.AuthService) *AdminAuth {
+func newAdminAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) *AdminAuth {
 	adminPermissionAuth := authorization.NewCasbinAuthorization("driver/web/permission_authorization_policy_admin_auth.csv")
 	adminTokenAuth, err := tokenauth.NewTokenAuth(true, authService, adminPermissionAuth, nil)
 
 	if err != nil {
-		log.Fatalf("Error intitializing token auth for adminAuth: %v", err)
+		errors.Newf("Error intitializing token auth for adminAuth: %v", err)
 	}
 
-	auth := AdminAuth{coreAPIs: coreAPIs, tokenAuth: adminTokenAuth}
+	auth := AdminAuth{coreAPIs: coreAPIs, tokenAuth: adminTokenAuth, logger: logger}
 	return &auth
 }
 
 //EncAuth entity
 type EncAuth struct {
 	coreAPIs *core.APIs
+
+	logger *logs.Logger
 }
 
 func (auth *EncAuth) start() {
-	log.Println("EncAuth -> start")
+	auth.logger.Info("EncAuth -> start")
 }
 
-func newEncAuth(coreAPIs *core.APIs) *EncAuth {
-	auth := EncAuth{coreAPIs: coreAPIs}
+func newEncAuth(coreAPIs *core.APIs, logger *logs.Logger) *EncAuth {
+	auth := EncAuth{coreAPIs: coreAPIs, logger: logger}
 	return &auth
 }
 
 //BBsAuth entity
 type BBsAuth struct {
 	coreAPIs *core.APIs
+
+	logger *logs.Logger
 }
 
 func (auth *BBsAuth) start() {
-	log.Println("BBsAuth -> start")
+	auth.logger.Info("BBsAuth -> start")
 }
 
-func newBBsAuth(coreAPIs *core.APIs) *BBsAuth {
-	auth := BBsAuth{coreAPIs: coreAPIs}
+func newBBsAuth(coreAPIs *core.APIs, logger *logs.Logger) *BBsAuth {
+	auth := BBsAuth{coreAPIs: coreAPIs, logger: logger}
 	return &auth
 }

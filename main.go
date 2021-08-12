@@ -5,6 +5,7 @@ import (
 	"core-building-block/core/auth"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
+	"io/ioutil"
 	"strconv"
 
 	"github.com/golang-jwt/jwt"
@@ -24,7 +25,8 @@ func main() {
 	if len(Version) == 0 {
 		Version = "dev"
 	}
-	logger := logs.NewLogger("core", nil)
+	loggerOpts := logs.LoggerOpts{SuppressRequests: []logs.HttpRequestProperties{logs.NewAwsHealthCheckHttpRequestProperties("")}}
+	logger := logs.NewLogger("core", &loggerOpts)
 	envLoader := envloader.NewEnvLoader(Version, logger)
 
 	level := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_LOG_LEVEL", false, false)
@@ -34,6 +36,12 @@ func main() {
 	}
 
 	env := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_ENVIRONMENT", true, false) //local, dev, staging, prod
+	port := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PORT", false, false)
+	//Default port of 80
+	if port == "" {
+		port = "80"
+	}
+
 	serviceID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SERVICE_ID", true, false)
 	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
 
@@ -48,8 +56,18 @@ func main() {
 	}
 
 	//auth
-	authPrivKeyPem := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", true, true)
-	authPrivKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(authPrivKeyPem))
+	var authPrivKeyPem []byte
+	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
+	if authPrivKeyPemString != "" {
+		authPrivKeyPem = []byte(authPrivKeyPemString)
+	} else {
+		authPrivateKeyPath := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY_PATH", true, false)
+		authPrivKeyPem, err = ioutil.ReadFile(authPrivateKeyPath)
+		if err != nil {
+			logger.Fatalf("Could not find auth priv key file: %v", err)
+		}
+	}
+	authPrivKey, err := jwt.ParseRSAPrivateKeyFromPEM(authPrivKeyPem)
 	if err != nil {
 		logger.Fatalf("Failed to parse auth priv key: %v", err)
 	}
@@ -81,6 +99,6 @@ func main() {
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, serviceID, auth.AuthService, coreAPIs, host, logger)
+	webAdapter := web.NewWebAdapter(env, serviceID, auth.AuthService, port, coreAPIs, host, logger)
 	webAdapter.Start()
 }

@@ -48,10 +48,10 @@ type Storage interface {
 	GetGlobalConfig() (*model.GlobalConfig, error)
 	SaveGlobalConfig(setting *model.GlobalConfig) error
 
-	CreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error)
+	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
 	GetOrganizations() ([]model.Organization, error)
-	GetOrganization(ID string) (*model.Organization, error)
+	FindOrganization(id string) (*model.Organization, error)
 
 	GetApplication(ID string) (*model.Application, error)
 }
