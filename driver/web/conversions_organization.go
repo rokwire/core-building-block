@@ -84,3 +84,11 @@ func organizationRoleListToDef(items []model.OrganizationRole) []Def.Organizatio
 	}
 	return out
 }
+
+//Application
+func applicationToDef(item *model.Application) *Def.Application {
+	if item == nil {
+		return nil
+	}
+	return &Def.Application{Id: item.ID, Name: item.Name, Versions: &item.Versions}
+}

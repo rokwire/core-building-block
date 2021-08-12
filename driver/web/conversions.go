@@ -3,7 +3,8 @@ package web
 import (
 	"encoding/json"
 
-	log "github.com/rokmetro/logging-library/loglib"
+	"github.com/rokmetro/logging-library/errors"
+	"github.com/rokmetro/logging-library/logutils"
 )
 
 func defString(pointer *string) string {
@@ -23,7 +24,7 @@ func defMap(pointer *map[string]interface{}) map[string]interface{} {
 func interfaceToJSON(item interface{}) (string, error) {
 	json, err := json.Marshal(item)
 	if err != nil {
-		return "", log.WrapActionError(log.ActionMarshal, "interface", nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionMarshal, "interface", nil, err)
 	}
 	return string(json), nil
 }
