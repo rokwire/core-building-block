@@ -15,29 +15,6 @@ type Storage struct {
 	mock.Mock
 }
 
-// CreateApplication provides a mock function with given fields: name, versions
-func (_m *Storage) CreateApplication(name string, versions *[]string) (*model.Application, error) {
-	ret := _m.Called(name, versions)
-
-	var r0 *model.Application
-	if rf, ok := ret.Get(0).(func(string, *[]string) *model.Application); ok {
-		r0 = rf(name, versions)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.Application)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string, *[]string) error); ok {
-		r1 = rf(name, versions)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // CreateGlobalConfig provides a mock function with given fields: setting
 func (_m *Storage) CreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
 	ret := _m.Called(setting)
@@ -61,6 +38,29 @@ func (_m *Storage) CreateGlobalConfig(setting string) (*model.GlobalConfig, erro
 	return r0, r1
 }
 
+// FindApplication provides a mock function with given fields: ID
+func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
+	ret := _m.Called(ID)
+
+	var r0 *model.Application
+	if rf, ok := ret.Get(0).(func(string) *model.Application); ok {
+		r0 = rf(ID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Application)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(ID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindOrganization provides a mock function with given fields: id
 func (_m *Storage) FindOrganization(id string) (*model.Organization, error) {
 	ret := _m.Called(id)
@@ -77,29 +77,6 @@ func (_m *Storage) FindOrganization(id string) (*model.Organization, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(id)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetApplication provides a mock function with given fields: ID
-func (_m *Storage) GetApplication(ID string) (*model.Application, error) {
-	ret := _m.Called(ID)
-
-	var r0 *model.Application
-	if rf, ok := ret.Get(0).(func(string) *model.Application); ok {
-		r0 = rf(ID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.Application)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(ID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -146,6 +123,29 @@ func (_m *Storage) GetOrganizations() ([]model.Organization, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func() error); ok {
 		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// InsertApplication provides a mock function with given fields: application
+func (_m *Storage) InsertApplication(application model.Application) (*model.Application, error) {
+	ret := _m.Called(application)
+
+	var r0 *model.Application
+	if rf, ok := ret.Get(0).(func(model.Application) *model.Application); ok {
+		r0 = rf(application)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Application)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(model.Application) error); ok {
+		r1 = rf(application)
 	} else {
 		r1 = ret.Error(1)
 	}
