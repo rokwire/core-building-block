@@ -661,8 +661,18 @@ func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 	return organizations, nil
 }
 
-//GetApplication gets application
-func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
+//InsertApplication inserts an application
+func (sa *Adapter) InsertApplication(application model.Application) (*model.Application, error) {
+	_, err := sa.db.applications.InsertOne(application)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, &logutils.FieldArgs{"id": application.ID}, err)
+	}
+
+	return &application, nil
+}
+
+//FindApplication finds application
+func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	var result []model.Application
 	err := sa.db.applications.Find(filter, &result, nil)
