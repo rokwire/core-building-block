@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/rokmetro/logging-library/logs"
@@ -513,18 +512,6 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 	m.logger.Info("service regs checks passed")
 	return nil
 }
-func (m *database) applyApplicationsChecks(applications *collectionWrapper) error {
-	log.Println("apply applications checks.....")
-
-	//add name index - unique
-	err := applications.AddIndex(bson.D{primitive.E{Key: "_id", Value: 1}}, true)
-	if err != nil {
-		return err
-	}
-
-	log.Println("applications checks passed")
-	return nil
-}
 
 func (m *database) applyServiceAuthorizationsChecks(serviceAuthorizations *collectionWrapper) error {
 	m.logger.Info("apply service authorizations checks.....")
@@ -536,6 +523,13 @@ func (m *database) applyServiceAuthorizationsChecks(serviceAuthorizations *colle
 	}
 
 	m.logger.Info("service authorizations checks passed")
+	return nil
+}
+
+func (m *database) applyApplicationsChecks(applications *collectionWrapper) error {
+	m.logger.Info("apply applications checks.....")
+
+	m.logger.Info("applications checks passed")
 	return nil
 }
 
