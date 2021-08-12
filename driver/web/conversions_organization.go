@@ -37,7 +37,7 @@ func organizationGroupToDef(item *model.OrganizationGroup) *Def.OrganizationGrou
 
 func organizationGroupListToDef(items []model.OrganizationGroup) []Def.OrganizationGroup {
 	if items == nil {
-		return nil
+		return make([]Def.OrganizationGroup, 0)
 	}
 	out := make([]Def.OrganizationGroup, len(items))
 	for i, item := range items {

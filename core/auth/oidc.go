@@ -55,7 +55,7 @@ type oidcAuthConfig struct {
 }
 
 type oidcCreds struct {
-	Sub string `json:"sub" validate:"required" bson:"sub"`
+	Sub string `json:"sub" bson:"sub" validate:"required"`
 }
 
 type oidcLoginParams struct {
@@ -64,8 +64,8 @@ type oidcLoginParams struct {
 }
 
 type oidcRefreshParams struct {
-	IDPToken    string `json:"idp_token" validate:"required"`
-	RedirectURI string `json:"redirect_uri" validate:"required"`
+	IDPToken    string `json:"idp_token" bson:"idp_token" validate:"required"`
+	RedirectURI string `json:"redirect_uri" bson:"redirect_uri" validate:"required"`
 }
 
 type oidcResponseParams struct {
@@ -98,7 +98,11 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcLoginParams, nil, err)
 	}
 
-	userAuth, oidcToken, err := a.newToken(creds, orgID, appID, &loginParams, l)
+	parsedCreds, err := url.Parse(strings.ReplaceAll(creds, `"`, ""))
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionParse, "oidc login creds", nil, err)
+	}
+	userAuth, oidcToken, err := a.newToken(parsedCreds.Query().Get("code"), orgID, appID, &loginParams, l)
 	if err != nil {
 		return nil, err
 	}

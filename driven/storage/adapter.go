@@ -176,7 +176,7 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 		authCred.AccountID = storageUser.Account.ID
 		err = sa.InsertCredentials(authCred, sessionContext)
 		if err != nil {
-			return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAuthCred, &logutils.FieldArgs{"user_id": user.Account.Username, "account_id": user.Account.ID}, err)
+			return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAuthCred, &logutils.FieldArgs{"user_id": storageUser.Account.Username, "account_id": storageUser.Account.ID}, err)
 		}
 
 		err = sa.InsertMembership(&organizationMembership, sessionContext)
@@ -186,11 +186,11 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 		}
 
 		//TODO: only save if device info has changed or it is new device
-		// err = sa.SaveDevice(&newDevice, sessionContext)
-		// if err == nil {
-		// 	abortTransaction(sessionContext)
-		// 	return log.WrapErrorAction(log.ActionSave, "device", nil, err)
-		// }
+		err = sa.SaveDevice(&user.Devices[0], sessionContext)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionSave, "device", nil, err)
+		}
 
 		//commit the transaction
 		err = sessionContext.CommitTransaction(sessionContext)

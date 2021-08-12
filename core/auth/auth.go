@@ -203,12 +203,13 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 	}
 	refreshParams := model.AuthRefreshParams{CurrentToken: refreshToken, Expires: expireTime, IDPParams: userAuth.Refresh}
 	updatedCreds := model.AuthCred{
-		OrgID:   orgID,
-		AppID:   appID,
-		Type:    authType,
-		UserID:  userAuth.UserID,
-		Creds:   userAuth.NewCreds,
-		Refresh: &refreshParams,
+		OrgID:     orgID,
+		AppID:     appID,
+		Type:      authType,
+		UserID:    userAuth.UserID,
+		AccountID: user.Account.ID,
+		Creds:     userAuth.NewCreds,
+		Refresh:   &refreshParams,
 	}
 	_, err = a.storage.UpdateCredentials(&updatedCreds)
 	if err != nil {
@@ -478,7 +479,7 @@ func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.User, error) {
 	if err != nil {
 		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("device_id"), err)
 	}
-	newDevice := model.Device{ID: deviceID.String(), DateCreated: now}
+	newDevice := model.Device{ID: deviceID.String(), Type: "other", DateCreated: now}
 	newUser.Devices = []model.Device{newDevice}
 
 	membershipID, err := uuid.NewUUID()

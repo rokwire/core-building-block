@@ -62,10 +62,10 @@ type AuthCred struct {
 }
 
 type AuthRefreshParams struct {
-	PreviousToken string      `json:"previous_token"`
-	CurrentToken  string      `json:"current_token" validate:"required"`
-	Expires       *time.Time  `json:"exp" validate:"required"`
-	IDPParams     interface{} `json:"idp_params"`
+	PreviousToken string      `json:"previous_token" bson:"previous_token"`
+	CurrentToken  string      `json:"current_token" bson:"current_token" validate:"required"`
+	Expires       *time.Time  `json:"exp" bson:"exp" validate:"required"`
+	IDPParams     interface{} `json:"idp_params" bson:"idp_params"`
 }
 
 //ServiceReg represents a service registration entity
