@@ -25,7 +25,7 @@ type user struct {
 type userMembership struct {
 	ID string `bson:"_id"`
 
-	OrgID       string                 `bson:"organization_id"`
+	OrgID       string                 `bson:"org_id"`
 	OrgUserData map[string]interface{} `bson:"org_user_data"`
 
 	Permissions []organizationPermission `bson:"permissions"`
