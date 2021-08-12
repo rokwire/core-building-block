@@ -249,10 +249,22 @@ func (app *application) admUpdateOrganization(ID string, name string, requestTyp
 }
 
 func (app *application) admGetApplication(ID string) (*model.Application, error) {
-	appAdm, err := app.storage.GetApplication(ID)
+	appAdm, err := app.storage.FindApplication(ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplication, nil, err)
 	}
 
 	return appAdm, nil
+}
+
+func (app *application) admCreateApplication(name string, versions []string) (*model.Application, error) {
+	id, _ := uuid.NewUUID()
+	now := time.Now()
+	application := model.Application{ID: id.String(), Name: name, Versions: versions, DateCreated: now}
+
+	inserted, err := app.storage.InsertApplication(application)
+	if err != nil {
+		return nil, err
+	}
+	return inserted, nil
 }

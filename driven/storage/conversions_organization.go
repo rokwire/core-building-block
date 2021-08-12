@@ -51,7 +51,7 @@ func organizationToStorage(item *model.Organization) *organization {
 	}
 
 	return &organization{ID: item.ID, Name: item.Name, Type: item.Type, RequiresOwnLogin: item.RequiresOwnLogin,
-		LoginTypes: item.LoginTypes, Config: item.Config, Applications: nil, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		LoginTypes: item.LoginTypes, Config: item.Config, Applications: applicationsIDs, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 //OrganizationPermission
@@ -98,11 +98,7 @@ func organizationRoleFromStorage(item *organizationRole, organization model.Orga
 		return model.OrganizationRole{}
 	}
 
-	permissions := make([]model.OrganizationPermission, len(item.Permissions))
-	for i, permission := range item.Permissions {
-		permissions[i] = organizationPermissionFromStorage(&permission, organization)
-	}
-
+	permissions := organizationPermissionsFromStorage(item.Permissions, organization)
 	return model.OrganizationRole{ID: item.ID, Name: item.Name, Description: item.Description,
 		Permissions: permissions, Organization: organization,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
@@ -145,16 +141,8 @@ func organizationGroupFromStorage(item *organizationGroup, organization model.Or
 		return model.OrganizationGroup{}
 	}
 
-	permissions := make([]model.OrganizationPermission, len(item.Permissions))
-	for i, permission := range item.Permissions {
-		permissions[i] = organizationPermissionFromStorage(&permission, organization)
-	}
-
-	roles := make([]model.OrganizationRole, len(item.Roles))
-	for i, role := range item.Roles {
-		roles[i] = organizationRoleFromStorage(&role, organization)
-	}
-
+	permissions := organizationPermissionsFromStorage(item.Permissions, organization)
+	roles := organizationRolesFromStorage(item.Roles, organization)
 	return model.OrganizationGroup{ID: item.ID, Name: item.Name, Permissions: permissions, Roles: roles,
 		Organization: organization, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
