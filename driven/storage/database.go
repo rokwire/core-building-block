@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/rokmetro/logging-library/logs"
@@ -499,13 +498,6 @@ func (m *database) applyOrganizationsPermissionsChecks(organizationsPermissions 
 	}
 
 	m.logger.Info("organizations permissions checks passed")
-	return nil
-}
-
-func (m *database) applyApplicationChecks(applications *collectionWrapper) error {
-	log.Println("apply applications checks.....")
-
-	log.Println("applications checks passed")
 	return nil
 }
 
