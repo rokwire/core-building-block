@@ -28,7 +28,7 @@ type Administration interface {
 	AdmGetOrganization(ID string) (*model.Organization, error)
 
 	AdmGetApplication(ID string) (*model.Application, error)
-	AdmGetApplicationsList() ([]model.Application, error)
+	AdmGetApplicationList() ([]model.Application, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -55,7 +55,7 @@ type Storage interface {
 	FindOrganization(id string) (*model.Organization, error)
 
 	GetApplication(ID string) (*model.Application, error)
-	GetApplicationsList() ([]model.Application, error)
+	GetApplicationList() ([]model.Application, error)
 }
 
 //StorageListener listenes for change data storage events

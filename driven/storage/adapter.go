@@ -652,7 +652,7 @@ func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 }
 
 //GetApplicationsList gets list of the applications
-func (sa *Adapter) GetApplicationsList() ([]model.Application, error) {
+func (sa *Adapter) GetApplicationList() ([]model.Application, error) {
 
 	filter := bson.D{}
 	var result []model.Application

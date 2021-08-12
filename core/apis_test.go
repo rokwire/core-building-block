@@ -166,7 +166,7 @@ func TestGetApplicationsList(t *testing.T) {
 	storage.On("GetApplicationsList").Return([]model.Application{}, nil)
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
-	getApplicationsList, _ := app.Administration.AdmGetApplicationsList()
+	getApplicationsList, _ := app.Administration.AdmGetApplicationList()
 
 	if getApplicationsList == nil {
 		t.Errorf("Error on geting the list of applications")
@@ -176,7 +176,7 @@ func TestGetApplicationsList(t *testing.T) {
 	storage2.On("GetApplicationsList").Return([]model.Application{}, nil)
 	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
-	err, _ := app.Administration.AdmGetApplicationsList()
+	err, _ := app.Administration.AdmGetApplicationList()
 
 	if err == nil {
 		t.Error("We are expecting error")

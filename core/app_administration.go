@@ -257,8 +257,8 @@ func (app *application) admGetApplication(ID string) (*model.Application, error)
 	return appAdm, nil
 }
 
-func (app *application) admGetApplicationsList() ([]model.Application, error) {
-	getApplication, err := app.storage.GetApplicationsList()
+func (app *application) admGetApplicationList() ([]model.Application, error) {
+	getApplication, err := app.storage.GetApplicationList()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplication, nil, err)
 	}
