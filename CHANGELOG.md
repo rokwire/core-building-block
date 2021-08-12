@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Expose admin API which creates application [#82](https://github.com/rokwire/core-building-block/issues/82)
+- Suppress logs from the AWS load balancer health checks [#141](https://github.com/rokwire/core-building-block/issues/141)
 - Set up accounts [#18](https://github.com/rokwire/core-building-block/issues/18)
 - Optional OIDC URL overrides [#139](https://github.com/rokwire/core-building-block/issues/139)
 - Automate Docker deployment process on Dev [#10](https://github.com/rokwire/core-building-block/issues/10)
