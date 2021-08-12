@@ -267,7 +267,7 @@ func (m *database) applyUsersChecks(users *collectionWrapper) error {
 	}
 
 	//add organizations memberships roles permissions index
-	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.roles.permissions_id", Value: 1}}, false)
+	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.roles.permissions._id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -361,7 +361,7 @@ func (m *database) applyOrganizationsMembershipsChecks(organizationsMemberships 
 	}
 
 	//add organization id index
-	err = organizationsMemberships.AddIndex(bson.D{primitive.E{Key: "organization_id", Value: 1}}, false)
+	err = organizationsMemberships.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -442,7 +442,7 @@ func (m *database) applyOrganizationsGroupsChecks(organizationsGroups *collectio
 	m.logger.Info("apply organizations groups checks.....")
 
 	//add organization index
-	err := organizationsGroups.AddIndex(bson.D{primitive.E{Key: "organization_id", Value: 1}}, false)
+	err := organizationsGroups.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -473,7 +473,7 @@ func (m *database) applyOrganizationsRolesChecks(organizationsRoles *collectionW
 	m.logger.Info("apply organizations roles checks.....")
 
 	//add organization index
-	err := organizationsRoles.AddIndex(bson.D{primitive.E{Key: "organization_id", Value: 1}}, false)
+	err := organizationsRoles.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -492,7 +492,7 @@ func (m *database) applyOrganizationsPermissionsChecks(organizationsPermissions 
 	m.logger.Info("apply organizations permissions checks.....")
 
 	//add organization index
-	err := organizationsPermissions.AddIndex(bson.D{primitive.E{Key: "organization_id", Value: 1}}, false)
+	err := organizationsPermissions.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
