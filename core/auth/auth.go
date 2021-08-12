@@ -42,9 +42,9 @@ const (
 //Interface for authentication mechanisms
 type authType interface {
 	//check checks the validity of provided credentials
-	check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, interface{}, error)
+	check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error)
 	//refresh refreshes the access token using provided refresh token
-	refresh(params interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, interface{}, error)
+	refresh(params interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error)
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 }
@@ -142,8 +142,8 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 //		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //		User (User): User object for authenticated user
-//		IDP tokens (*interface{}): Set of IDP tokens that can be used to access IDP specific services
-func (a *Auth) Login(authType string, creds string, orgID string, appID string, params string, l *logs.Log) (string, string, *model.User, *interface{}, error) {
+//		Params (interface{}): authType-specific set of parameters passed back to client
+func (a *Auth) Login(authType string, creds string, orgID string, appID string, params string, l *logs.Log) (string, string, *model.User, interface{}, error) {
 	var user *model.User
 	var err error
 	auth, err := a.getAuthType(authType)
@@ -151,13 +151,9 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	var responseParams *interface{}
-	userAuth, extraParams, err := auth.check(creds, orgID, appID, params, l)
+	userAuth, err := auth.check(creds, orgID, appID, params, l)
 	if err != nil {
 		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "creds", nil, err)
-	}
-	if extraParams != nil {
-		responseParams = &extraParams
 	}
 
 	if len(userAuth.AccountID) > 0 {
@@ -219,7 +215,7 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 		return "", "", nil, nil, err
 	}
 
-	return token, refreshToken, user, responseParams, nil
+	return token, refreshToken, user, userAuth.Params, nil
 }
 
 //Refresh refreshes an access token using a refresh token
@@ -229,8 +225,8 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 //	Returns:
 //		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //		Refresh token (string): Refresh token that can be sent to refresh the access token once it expires
-//		IDP tokens (*interface{}): Set of IDP tokens that can be used to access IDP specific services
-func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, *interface{}, error) {
+//		Params (interface{}): authType-specific set of parameters passed back to client
+func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interface{}, error) {
 	credentials, err := a.storage.FindCredentialsByRefreshToken(refreshToken)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction("refresh", logutils.TypeToken, nil, err)
@@ -265,13 +261,9 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, *inter
 		return "", "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	var responseParams *interface{}
-	userAuth, extraParams, err := auth.refresh(credentials.Refresh.IDPParams, credentials.OrgID, credentials.AppID, l)
+	userAuth, err := auth.refresh(credentials.Refresh.IDPParams, credentials.OrgID, credentials.AppID, l)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction("refresh", logutils.TypeToken, nil, err)
-	}
-	if extraParams != nil {
-		responseParams = &extraParams
 	}
 
 	if userAuth.Refresh != nil {
@@ -306,7 +298,7 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, *inter
 		return "", "", nil, err
 	}
 
-	return token, newRefreshToken, responseParams, nil
+	return token, newRefreshToken, userAuth.Params, nil
 }
 
 //GetLoginURL returns a pre-formatted login url for SSO providers

@@ -18,14 +18,14 @@ type phoneAuthImpl struct {
 	authType string
 }
 
-func (a *phoneAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, interface{}, error) {
+func (a *phoneAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
 	//TODO: Implement
-	return nil, nil, errors.New(logutils.Unimplemented)
+	return nil, errors.New(logutils.Unimplemented)
 }
 
 //refresh is enabled for phone auth, but no operation is needed
-func (a *phoneAuthImpl) refresh(params interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, interface{}, error) {
-	return nil, nil, nil
+func (a *phoneAuthImpl) refresh(params interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
+	return nil, nil
 }
 
 func (a *phoneAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {

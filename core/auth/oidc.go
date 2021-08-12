@@ -87,40 +87,40 @@ type oidcToken struct {
 	ExpiresIn    int    `json:"expires_in"`
 }
 
-func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, interface{}, error) {
+func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
 	var loginParams oidcLoginParams
 	err := json.Unmarshal([]byte(params), &loginParams)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOidcLoginParams, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOidcLoginParams, nil, err)
 	}
 	validate := validator.New()
 	err = validate.Struct(loginParams)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcLoginParams, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcLoginParams, nil, err)
 	}
 
 	userAuth, oidcToken, err := a.newToken(creds, orgID, appID, &loginParams, l)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	userAuth.OrgData["orgID"] = orgID
 	userAuth.Refresh = oidcRefreshParams{IDPToken: oidcToken.RefreshToken, RedirectURI: loginParams.RedirectURI}
 	tokenResponseParams := oidcTokenResponseParams{IDToken: oidcToken.IDToken, AccessToken: oidcToken.AccessToken, TokenType: oidcToken.TokenType}
-	responseParams := oidcResponseParams{OIDCToken: tokenResponseParams}
+	userAuth.Params = oidcResponseParams{OIDCToken: tokenResponseParams}
 
 	credentials, err := a.auth.storage.FindCredentials(orgID, appID, authTypeOidc, userAuth.UserID)
 	if err != nil {
 		errFields := logutils.FieldArgs{"org_id": orgID, "app_id": appID, "type": authTypeOidc, "user_id": userAuth.UserID}
 		l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionFind, model.TypeAuthCred, &errFields)
 		userAuth.NewCreds = oidcCreds{Sub: userAuth.Sub}
-		return userAuth, responseParams, nil
+		return userAuth, nil
 	}
 	ok, err := a.validateUser(userAuth, credentials.Creds)
 	if err != nil || !ok {
-		return userAuth, responseParams, nil
+		return userAuth, nil
 	}
 	userAuth.AccountID = credentials.AccountID
-	return userAuth, responseParams, nil
+	return userAuth, nil
 }
 
 func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials interface{}) (bool, error) {
@@ -146,32 +146,32 @@ func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials interf
 }
 
 //refresh must be implemented for OIDC auth
-func (a *oidcAuthImpl) refresh(params interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, interface{}, error) {
+func (a *oidcAuthImpl) refresh(params interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
 	refreshBytes, err := json.Marshal(params)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOidcRefreshParams, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOidcRefreshParams, nil, err)
 	}
 
 	var refreshParams oidcRefreshParams
 	err = json.Unmarshal([]byte(refreshBytes), &refreshParams)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOidcRefreshParams, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOidcRefreshParams, nil, err)
 	}
 	validate := validator.New()
 	err = validate.Struct(refreshParams)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcRefreshParams, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcRefreshParams, nil, err)
 	}
 
 	userAuth, oidcToken, err := a.refreshToken(orgID, appID, &refreshParams, l)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	userAuth.Refresh = oidcToken.RefreshToken
 	tokenResponseParams := oidcTokenResponseParams{IDToken: oidcToken.IDToken, AccessToken: oidcToken.AccessToken, TokenType: oidcToken.TokenType}
-	responseParams := oidcResponseParams{OIDCToken: tokenResponseParams}
-	return userAuth, responseParams, nil
+	userAuth.Params = oidcResponseParams{OIDCToken: tokenResponseParams}
+	return userAuth, nil
 }
 
 func (a *oidcAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {

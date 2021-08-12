@@ -39,6 +39,7 @@ type UserAuth struct {
 	OrgData   map[string]interface{}
 	NewCreds  interface{}
 	Refresh   interface{}
+	Params    interface{}
 }
 
 //AuthConfig represents auth config entity

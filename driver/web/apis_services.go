@@ -48,7 +48,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 
 	tokenType := Def.AuthResponseRokwireTokenTokenTypeBearer
 	rokwireToken := Def.AuthResponseRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
-	responseData := &Def.AuthLoginResponse{Token: &rokwireToken, User: userToDef(user), Params: params}
+	responseData := &Def.AuthLoginResponse{Token: &rokwireToken, User: userToDef(user), Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
@@ -70,7 +70,7 @@ func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request) logs.Http
 
 	tokenType := Def.AuthResponseRokwireTokenTokenTypeBearer
 	rokwireToken := Def.AuthResponseRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
-	responseData := &Def.AuthRefreshResponse{Token: &rokwireToken, Params: params}
+	responseData := &Def.AuthRefreshResponse{Token: &rokwireToken, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth refresh response"), nil, err, http.StatusInternalServerError, false)
