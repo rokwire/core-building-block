@@ -51,7 +51,7 @@ type Storage interface {
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
-	GetOrganizations() ([]model.Organization, error)
+	FindOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)
 
 	InsertApplication(application model.Application) (*model.Application, error)

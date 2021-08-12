@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"bytes"
 	"context"
 	"core-building-block/core/model"
 	"core-building-block/utils"
@@ -393,25 +392,17 @@ func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcCon
 		tokenURI = oidcTokenURL
 	}
 
-	uri := url.URL{}
+	data := url.Values{}
 	for k, v := range params {
-		if len(uri.RawQuery) < 1 {
-			uri.RawQuery += fmt.Sprintf("%s=%s", k, v)
-		} else {
-			uri.RawQuery += fmt.Sprintf("&%s=%s", k, v)
-		}
+		data.Set(k, v)
 	}
 	headers := map[string]string{
 		"Content-Type":   "application/x-www-form-urlencoded",
-		"Content-Length": strconv.Itoa(len(uri.Query().Encode())),
-	}
-	jsonData, err := json.Marshal(params)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "params", nil, err)
+		"Content-Length": strconv.Itoa(len(data.Encode())),
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", tokenURI, bytes.NewReader(jsonData))
+	req, err := http.NewRequest(http.MethodPost, tokenURI, strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
 	}
@@ -458,7 +449,7 @@ func (a *oidcAuthImpl) loadOidcUserInfo(token *oidcToken, url string) ([]byte, e
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
 	}

@@ -463,29 +463,37 @@ func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.User, error) {
 
 	accountID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("account_id"))
+		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("account_id"), err)
 	}
 	newUser.Account = model.UserAccount{ID: accountID.String(), Email: userAuth.Email, Phone: userAuth.Phone, Username: userAuth.UserID, DateCreated: now}
 
 	profileID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("profile_id"))
+		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("profile_id"), err)
 	}
 	newUser.Profile = model.UserProfile{ID: profileID.String(), FirstName: userAuth.FirstName, LastName: userAuth.LastName, DateCreated: now}
 
 	//TODO: populate new device with device information (search for existing device first)
 	deviceID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("device_id"))
+		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("device_id"), err)
 	}
 	newDevice := model.Device{ID: deviceID.String(), DateCreated: now}
 	newUser.Devices = []model.Device{newDevice}
 
 	membershipID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("membership_id"))
+		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("membership_id"), err)
 	}
-	newOrgMembership := model.OrganizationMembership{ID: membershipID.String(), OrgUserData: userAuth.OrgData, DateCreated: now}
+	orgID, ok := userAuth.OrgData["orgID"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("org_id"))
+	}
+	organization, err := a.storage.FindOrganization(orgID)
+	if err != nil {
+		return nil, err
+	}
+	newOrgMembership := model.OrganizationMembership{ID: membershipID.String(), Organization: *organization, OrgUserData: userAuth.OrgData, DateCreated: now}
 
 	// TODO:
 	// maybe set groups based on organization populations
@@ -719,10 +727,14 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 
 //Storage interface to communicate with the storage
 type Storage interface {
+	//Users
 	FindUserByAccountID(accountID string) (*model.User, error)
 	InsertUser(user *model.User, authCred *model.AuthCred) (*model.User, error)
 	UpdateUser(user *model.User, newOrgData *map[string]interface{}) (*model.User, error)
 	DeleteUser(id string) error
+
+	//Organizations
+	FindOrganization(id string) (*model.Organization, error)
 
 	//Credentials
 	FindCredentialsByRefreshToken(token string) (*model.AuthCred, error)

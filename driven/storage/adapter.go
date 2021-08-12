@@ -59,7 +59,7 @@ func (sa *Adapter) RegisterStorageListener(storageListener Listener) {
 func (sa *Adapter) cacheOrganizations() error {
 	sa.logger.Info("cacheOrganizations..")
 
-	organizations, err := sa.GetOrganizations()
+	organizations, err := sa.FindOrganizations()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
@@ -67,6 +67,21 @@ func (sa *Adapter) cacheOrganizations() error {
 	sa.setCachedOrganizations(&organizations)
 
 	return nil
+}
+
+func (sa *Adapter) setCachedOrganizations(organizations *[]model.Organization) {
+	sa.organizationsLock.Lock()
+	defer sa.organizationsLock.Unlock()
+
+	sa.cachedOrganizations = &syncmap.Map{}
+	validate := validator.New()
+
+	for _, org := range *organizations {
+		err := validate.Struct(org)
+		if err == nil {
+			sa.cachedOrganizations.Store(org.ID, org)
+		}
+	}
 }
 
 func (sa *Adapter) getCachedOrganization(orgID string) (*model.Organization, error) {
@@ -86,19 +101,29 @@ func (sa *Adapter) getCachedOrganization(orgID string) (*model.Organization, err
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthConfig, errArgs)
 }
 
-func (sa *Adapter) setCachedOrganizations(organizations *[]model.Organization) {
-	sa.organizationsLock.Lock()
-	defer sa.organizationsLock.Unlock()
+func (sa *Adapter) getCachedOrganizations() ([]model.Organization, error) {
+	sa.organizationsLock.RLock()
+	defer sa.organizationsLock.RUnlock()
 
-	sa.cachedOrganizations = &syncmap.Map{}
-	validate := validator.New()
-
-	for _, org := range *organizations {
-		err := validate.Struct(org)
-		if err == nil {
-			sa.cachedOrganizations.Store(org.ID, org)
+	var err error
+	organizationList := make([]model.Organization, 0)
+	sa.cachedOrganizations.Range(func(key, item interface{}) bool {
+		errArgs := &logutils.FieldArgs{"org_id": key}
+		if item == nil {
+			err = errors.ErrorData(logutils.StatusInvalid, model.TypeOrganization, errArgs)
+			return false
 		}
-	}
+
+		organization, ok := item.(model.Organization)
+		if !ok {
+			err = errors.ErrorAction(logutils.ActionCast, model.TypeOrganization, errArgs)
+			return false
+		}
+		organizationList = append(organizationList, organization)
+		return true
+	})
+
+	return organizationList, err
 }
 
 //FindUserByID finds an user by id
@@ -131,13 +156,7 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 
 	storageUser := userToStorage(user)
 	membership := storageUser.OrganizationsMemberships[0]
-
-	orgID, ok := membership.OrgUserData["orgID"].(string)
-	if !ok {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("org_id"))
-	}
-
-	organizationMembership := organizationMembership{ID: membership.ID, UserID: user.ID, OrgID: orgID,
+	organizationMembership := organizationMembership{ID: membership.ID, UserID: user.ID, OrgID: membership.OrgID,
 		OrgUserData: membership.OrgUserData, DateCreated: storageUser.DateCreated}
 
 	// transaction
@@ -560,12 +579,17 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 //FindOrganization finds an organization
 func (sa *Adapter) FindOrganization(id string) (*model.Organization, error) {
 	//no transactions for get operations..
+	cachedOrg, err := sa.getCachedOrganization(id)
+	if cachedOrg != nil && err == nil {
+		return cachedOrg, nil
+	}
+	sa.logger.Warn(err.Error())
 
 	//1. find organization
 	orgFilter := bson.D{primitive.E{Key: "_id", Value: id}}
 	var org organization
 
-	err := sa.db.organizations.FindOne(orgFilter, &org, nil)
+	err = sa.db.organizations.FindOne(orgFilter, &org, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"id": id}, err)
 	}
@@ -624,14 +648,19 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 	return nil
 }
 
-//GetOrganizations gets the organizations
-func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
+//FindOrganizations gets the organizations
+func (sa *Adapter) FindOrganizations() ([]model.Organization, error) {
 	//no transactions for get operations..
+	cachedOrgs, err := sa.getCachedOrganizations()
+	if err == nil {
+		return cachedOrgs, nil
+	}
+	sa.logger.Warn(err.Error())
 
 	//1. find the organizations
 	orgsFilter := bson.D{}
 	var orgsResult []organization
-	err := sa.db.organizations.Find(orgsFilter, &orgsResult, nil)
+	err = sa.db.organizations.Find(orgsFilter, &orgsResult, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
