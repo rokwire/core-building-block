@@ -304,6 +304,35 @@ func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.Http
 	return l.HttpResponseSuccessJSON(data)
 }
 
+//createApplication creates an application
+func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		l.Errorf("Error on marshal create application - %s\n", err.Error())
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+	}
+
+	var requestData Def.Application
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		l.Errorf("Error on unmarshal the create application - %s\n", err.Error())
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
+	}
+
+	name := requestData.Name
+	versions := requestData.Versions
+
+	_, err = h.coreAPIs.Administration.AdmCreateApplication(name, *versions)
+	if err != nil {
+		l.Errorf(err.Error())
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
+	}
+
+	headers := map[string]string{}
+	headers["Content-Type"] = "text/plain"
+	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+}
+
 //NewAdminApisHandler creates new admin rest Handler instance
 func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
 	return AdminApisHandler{coreAPIs: coreAPIs}
