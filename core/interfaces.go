@@ -55,7 +55,7 @@ type Storage interface {
 	GetOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)
 
-	CreateGlobalPermissions(name string) (*model.GlobalPermission, error)
+	InsertGlobalPermission(globalPermission model.GlobalPermission) (*model.GlobalPermission, error)
 
 	GetApplication(ID string) (*model.Application, error)
 }

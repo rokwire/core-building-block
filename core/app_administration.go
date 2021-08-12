@@ -248,11 +248,16 @@ func (app *application) admUpdateOrganization(ID string, name string, requestTyp
 }
 
 func (app *application) admCreateGlobalPermissions(name string) (*model.GlobalPermission, error) {
-	permission, err := app.storage.CreateGlobalPermissions(name)
+	now := time.Now()
+
+	globalPermissionID, _ := uuid.NewUUID()
+	globalPermission := model.GlobalPermission{ID: globalPermissionID.String(), Name: name, DateCreated: now}
+
+	gp, err := app.storage.InsertGlobalPermission(globalPermission)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalPermission, nil, err)
+		return &globalPermission, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalPermission, nil, err)
 	}
-	return permission, nil
+	return gp, nil
 }
 
 func (app *application) admGetApplication(ID string) (*model.Application, error) {

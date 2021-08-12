@@ -652,6 +652,16 @@ func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 
 }
 
+//InsertGlobalPermission inserts the global permission
+func (sa *Adapter) InsertGlobalPermission(globalPermission model.GlobalPermission) (*model.GlobalPermission, error) {
+	gp := globalPermissionToStorage(&globalPermission)
+	_, err := sa.db.globalPermissions.InsertOne(gp)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalPermission, nil, err)
+	}
+	return &globalPermission, nil
+}
+
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records

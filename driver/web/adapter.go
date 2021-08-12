@@ -93,7 +93,6 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/global-permissions", we.wrapFunc(we.adminApisHandler.createGlobalPermissions)).Methods("POST")
 
 	adminSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.adminApisHandler.getApplication)).Methods("GET")
-
 	///
 
 	///enc ///

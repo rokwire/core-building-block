@@ -189,7 +189,6 @@ func (m *database) start() error {
 
 	m.listeners = []Listener{}
 
-	m.logger.Info("global groups check passed")
 	return nil
 }
 

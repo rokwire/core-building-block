@@ -140,13 +140,13 @@ func (c GlobalRole) String() string {
 
 //OrganizationGroup represents organization group entity. It is a collection of users
 type OrganizationGroup struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	ID   string
+	Name string
 
-	Permissions []OrganizationPermission `bson:"permissions"`
-	Roles       []OrganizationRole       `bson:"roles"`
+	Permissions []OrganizationPermission
+	Roles       []OrganizationRole
 
-	Organization Organization `bson:"-"`
+	Organization Organization
 
 	OrganizationsMemberships []OrganizationMembership
 
@@ -160,10 +160,10 @@ func (cg OrganizationGroup) String() string {
 
 //OrganizationPermission represents organization permission entity
 type OrganizationPermission struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	ID   string
+	Name string
 
-	Organization Organization `bson:"-"`
+	Organization Organization
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -193,12 +193,12 @@ func (c OrganizationRole) String() string {
 
 //Device represents user devices entity.
 type Device struct {
-	ID   string `bson:"_id"`
-	Type string `bson:"type"` //mobile, web, desktop, other
+	ID   string
+	Type string //mobile, web, desktop, other
 
 	//TODO - other fields when they are clear
-	OS         string `bson:"os"`          //?
-	MacAddress string `bson:"mac_address"` //?
+	OS         string //?
+	MacAddress string //?
 	///
 
 	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
