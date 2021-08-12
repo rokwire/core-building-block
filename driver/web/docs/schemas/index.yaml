@@ -61,6 +61,10 @@ JWK:
   $ref: "./auth/JWK.yaml"
 JWKS:
   $ref: "./auth/JWKS.yaml"
+
+OidcDiscovery:
+  $ref: "./auth/OIDCDiscovery.yaml"
+
 # user
 User:
   $ref: "./user/User.yaml"

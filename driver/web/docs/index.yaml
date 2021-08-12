@@ -69,6 +69,8 @@ paths:
   #default
   /version:
     $ref: "./resources/default/version.yaml"
+  /.well-known/openid-configuration:
+    $ref: "./resources/default/openid-configuration.yaml"
 components:
   schemas:
     $ref: "./schemas/index.yaml"

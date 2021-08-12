@@ -124,6 +124,11 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	return auth, nil
 }
 
+//GetHost returns the host/issuer of the auth service
+func (a *Auth) GetHost() string {
+	return a.host
+}
+
 //Login logs a user in using the specified credentials and authentication method
 //	Input:
 //		authType (string): Name of the authentication method for provided creds (eg. "email")

@@ -221,7 +221,7 @@ type GlobalRole struct {
 	Permissions *[]string `json:"permissions,omitempty"`
 }
 
-// JWK defines model for JWK.
+// JSON Web Key (JWK)
 type JWK struct {
 
 	// The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
@@ -255,6 +255,12 @@ type JWKUse string
 // JSON Web Key Set (JWKS)
 type JWKS struct {
 	Keys []JWK `json:"keys"`
+}
+
+// OpenID Connect Discovery Metadata
+type OidcDiscovery struct {
+	Issuer  string `json:"issuer"`
+	JwksUri string `json:"jwks_uri"`
 }
 
 // Organization defines model for Organization.

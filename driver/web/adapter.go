@@ -59,6 +59,7 @@ func (we Adapter) Start() {
 
 	///default ///
 	router.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion)).Methods("GET")
+	router.HandleFunc("/.well-known/openid-configuration", we.wrapFunc(we.defaultApisHandler.getOpenIDConfiguration)).Methods("GET")
 	///
 
 	///services ///
