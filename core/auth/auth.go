@@ -742,9 +742,8 @@ func (a *Auth) getAPIKey(key string) (*model.APIKey, error) {
 			return &key, nil
 		}
 		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil)
-	} else {
-		return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeAPIKey, nil)
 	}
+	return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeAPIKey, nil)
 }
 
 func (a *Auth) setAPIKeys(apiKeys []model.APIKey) {
