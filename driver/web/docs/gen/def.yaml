@@ -586,23 +586,22 @@ paths:
           description: Not Found
         '500':
           description: Internal error
-  /admin/global-permission:
+  /admin/global-permissions:
     get:
       tags:
         - Admin
       summary: Get global permissions
       description: |
-        Gets global permissions
+        Gets global persmissions
       responses:
         '200':
           description: Successful operation
           content:
             application/json:
               schema:
-                nullable: true
                 type: array
                 items:
-                  $ref: '#/components/schemas/GlobalPermissions'
+                  $ref: '#/components/schemas/GlobalPermission'
         '400':
           description: Bad request
         '401':
@@ -754,9 +753,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/User'
-    GlobalPermissions:
+    GlobalPermission:
       required:
         - id
+        - name
       type: object
       properties:
         id:
@@ -764,6 +764,8 @@ components:
           type: string
         name:
           type: string
+          items:
+            type: string
     Application:
       required:
         - id

@@ -119,8 +119,8 @@ func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, e
 	return s.app.admGetApplication(ID)
 }
 
-func (s *administrationImpl) AdmGetGlobalPermissions() ([]model.GlobalPermission, error) {
-	return s.app.admGetGlobalPermissions()
+func (s *administrationImpl) AdmFindGlobalPermissions() ([]model.GlobalPermission, error) {
+	return s.app.admFindGlobalPermissions()
 }
 
 ///

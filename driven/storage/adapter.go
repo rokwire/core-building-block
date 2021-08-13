@@ -651,22 +651,16 @@ func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 	return &getResApp, nil
 }
 
-//GetOrganizations gets the organizations
-func (sa *Adapter) GetGlobalPermissions() ([]model.GlobalPermission, error) {
-
+//FindOrganizationsList gets the list of the global permissions
+func (sa *Adapter) FindGlobalPermissionsList() ([]model.GlobalPermission, error) {
 	filter := bson.D{}
 	var result []model.GlobalPermission
-	err := sa.db.organizations.Find(filter, &result, nil)
+	err := sa.db.globalPermissions.Find(filter, &result, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalPermissions, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalPermission, nil, err)
 	}
 
-	var resultList []model.GlobalPermission
-	for _, current := range result {
-		item := &model.GlobalPermission{ID: current.ID, Name: current.Name}
-		resultList = append(resultList, *item)
-	}
-	return resultList, nil
+	return result, nil
 }
 
 // ============================== ServiceRegs ==============================

@@ -257,11 +257,11 @@ func (app *application) admGetApplication(ID string) (*model.Application, error)
 	return appAdm, nil
 }
 
-func (app *application) admGetGlobalPermissions() ([]model.GlobalPermission, error) {
-	getGlobalPermissions, err := app.storage.GetGlobalPermissions()
+func (app *application) admFindGlobalPermissions() ([]model.GlobalPermission, error) {
+	findGlobalPermissions, err := app.storage.FindGlobalPermissionsList()
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeGlobalPermissions, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeGlobalPermission, nil, err)
 	}
 
-	return getGlobalPermissions, nil
+	return findGlobalPermissions, nil
 }

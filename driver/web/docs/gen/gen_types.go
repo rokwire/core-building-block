@@ -197,10 +197,10 @@ type GlobalGroup struct {
 	Users       *[]User       `json:"users,omitempty"`
 }
 
-// GlobalPermissions defines model for GlobalPermissions.
-type GlobalPermissions struct {
-	Id   string  `json:"id"`
-	Name *string `json:"name,omitempty"`
+// GlobalPermission defines model for GlobalPermission.
+type GlobalPermission struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
 
 // GlobalRole defines model for GlobalRole.

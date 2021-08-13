@@ -304,13 +304,13 @@ func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.Http
 	return l.HttpResponseSuccessJSON(data)
 }
 
-//getGlobalPersmissionsList gets global-permissions list
+//getGlobalPermissionsList gets global-permissions list
 func (h AdminApisHandler) getGlobalPermissionList(l *logs.Log, r *http.Request) logs.HttpResponse {
-	globalPermissions, err := h.coreAPIs.Administration.AdmGetGlobalPermissions()
+	globalPermissions, err := h.coreAPIs.Administration.AdmFindGlobalPermissions()
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeGlobalPermissions, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeGlobalPermission, nil, err, http.StatusInternalServerError, true)
 	}
-	var response []Def.GlobalPermissions
+	var response []Def.GlobalPermission
 	for _, gp := range globalPermissions {
 		r := globalPermissionsToDef(&gp)
 		response = append(response, *r)
@@ -318,7 +318,7 @@ func (h AdminApisHandler) getGlobalPermissionList(l *logs.Log, r *http.Request) 
 
 	data, err := json.Marshal(response)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeGlobalPermissions, nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeGlobalPermission, nil, err, http.StatusInternalServerError, false)
 	}
 	return l.HttpResponseSuccessJSON(data)
 }
