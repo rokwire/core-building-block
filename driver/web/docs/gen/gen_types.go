@@ -38,6 +38,21 @@ const (
 	DeviceTypeWeb DeviceType = "web"
 )
 
+// Defines values for JWKAlg.
+const (
+	JWKAlgRS256 JWKAlg = "RS256"
+)
+
+// Defines values for JWKKty.
+const (
+	JWKKtyRSA JWKKty = "RSA"
+)
+
+// Defines values for JWKUse.
+const (
+	JWKUseSig JWKUse = "sig"
+)
+
 // Defines values for OrganizationType.
 const (
 	OrganizationTypeHuge OrganizationType = "huge"
@@ -204,6 +219,48 @@ type GlobalRole struct {
 	Id          string    `json:"id"`
 	Name        string    `json:"name"`
 	Permissions *[]string `json:"permissions,omitempty"`
+}
+
+// JSON Web Key (JWK)
+type JWK struct {
+
+	// The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
+	Alg JWKAlg `json:"alg"`
+
+	// The exponent of the key - Base64URL encoded
+	E string `json:"e"`
+
+	// The "kid" (key ID) parameter is used to match a specific key
+	Kid string `json:"kid"`
+
+	// The "kty" (key type) parameter identifies the cryptographic algorithm family used with the key
+	Kty JWKKty `json:"kty"`
+
+	// The modulus (2048 bit) of the key - Base64URL encoded.
+	N string `json:"n"`
+
+	// The "use" (public key use) parameter identifies the intended use of the public key
+	Use JWKUse `json:"use"`
+}
+
+// The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
+type JWKAlg string
+
+// The "kty" (key type) parameter identifies the cryptographic algorithm family used with the key
+type JWKKty string
+
+// The "use" (public key use) parameter identifies the intended use of the public key
+type JWKUse string
+
+// JSON Web Key Set (JWKS)
+type JWKS struct {
+	Keys []JWK `json:"keys"`
+}
+
+// OpenID Connect Discovery Metadata
+type OidcDiscovery struct {
+	Issuer  string `json:"issuer"`
+	JwksUri string `json:"jwks_uri"`
 }
 
 // Organization defines model for Organization.
