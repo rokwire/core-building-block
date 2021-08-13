@@ -121,6 +121,7 @@ type JSONWebKey struct {
 	E   string `json:"e" bson:"e"`
 }
 
+//JSONWebKeyFromPubKey generates a JSON Web Key from a PubKey
 func JSONWebKeyFromPubKey(key *authservice.PubKey) (*JSONWebKey, error) {
 	if key == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, TypePubKey, logutils.StringArgs("nil"))

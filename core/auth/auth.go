@@ -430,6 +430,7 @@ func (a *Auth) DeregisterService(serviceID string) error {
 	return a.storage.DeleteServiceReg(serviceID)
 }
 
+//GetAuthKeySet generates a JSON Web Key Set for auth service registration
 func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
 	authReg, err := a.AuthService.GetServiceReg("auth")
 	if err != nil {
