@@ -986,19 +986,14 @@ components:
     AuthLoginResponse:
       type: object
       properties:
-        access_token:
-          description: The user's access token to be provided to authorize access to ROKWIRE APIs
-          type: string
-        refresh_token:
-          description: A refresh token that can be used to get a new access token once the one provided expires
-          type: string
-        token_type:
-          description: The type of the provided tokens to be specified when they are sent in the "Authorization" header
-          type: string
-          enum:
-            - Bearer
+        token:
+          $ref: '#/components/schemas/AuthResponseRokwireToken'
         user:
           $ref: '#/components/schemas/User'
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/AuthResponseParamsOidc'
     AuthLoginCredsEmail:
       required:
         - email
@@ -1047,10 +1042,38 @@ components:
     AuthRefreshResponse:
       type: object
       properties:
+        token:
+          $ref: '#/components/schemas/AuthResponseRokwireToken'
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/AuthResponseParamsOidc'
+    AuthResponseRokwireToken:
+      type: object
+      properties:
         access_token:
+          description: The user's access token to be provided to authorize access to ROKWIRE APIs
           type: string
         refresh_token:
+          description: A refresh token that can be used to get a new access token once the one provided expires
           type: string
+        token_type:
+          description: The type of the provided tokens to be specified when they are sent in the "Authorization" header
+          type: string
+          enum:
+            - Bearer
+    AuthResponseParamsOidc:
+      type: object
+      properties:
+        oidc_token:
+          type: object
+          properties:
+            id_token:
+              type: string
+            access_token:
+              type: string
+            token_type:
+              type: string
     AuthLoginUrlRequest:
       required:
         - auth_type
