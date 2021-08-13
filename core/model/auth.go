@@ -72,6 +72,7 @@ type AuthCred struct {
 	Refresh   *AuthRefreshParams `bson:"refresh"`
 }
 
+//AuthRefreshParams represents refresh token info used by auth
 type AuthRefreshParams struct {
 	PreviousToken string      `json:"previous_token"`
 	CurrentToken  string      `json:"current_token" validate:"required"`
