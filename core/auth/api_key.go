@@ -53,7 +53,7 @@ func (a *apiKeyAuthImpl) check(creds string, orgID string, appID string, params 
 	return &userAuth, nil
 }
 
-func (a *apiKeyAuthImpl) refresh(refreshToken string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
+func (a *apiKeyAuthImpl) refresh(params interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
 	return nil, errors.Newf("refresh operation invalid for auth_type=%s", a.authType)
 }
 

@@ -25,7 +25,7 @@ func (a *samlAuthImpl) check(creds string, orgID string, appID string, params st
 }
 
 //refresh must be implemented for SAML auth
-func (a *samlAuthImpl) refresh(refreshToken string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
+func (a *samlAuthImpl) refresh(params interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
 	//TODO: Implement
 	return nil, errors.New(logutils.Unimplemented)
 }

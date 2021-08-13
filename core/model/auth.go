@@ -4,6 +4,7 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/binary"
+	"time"
 
 	"github.com/rokmetro/logging-library/errors"
 
@@ -46,19 +47,20 @@ type APIKey struct {
 
 //UserAuth represents user auth entity
 type UserAuth struct {
-	UserID       string
-	AccountID    string
-	Sub          string
-	FirstName    string
-	LastName     string
-	Email        string
-	Phone        string
-	Picture      []byte
-	Exp          *int64
-	RefreshToken string
-	OrgData      map[string]interface{}
-	NewCreds     interface{}
-	Anonymous    bool
+	UserID    string
+	AccountID string
+	Sub       string
+	FirstName string
+	LastName  string
+	Email     string
+	Phone     string
+	Picture   []byte
+	Exp       *int64
+	OrgData   map[string]interface{}
+	NewCreds  interface{}
+	Refresh   interface{}
+	Params    interface{}
+	Anonymous bool
 }
 
 //AuthConfig represents auth config entity
@@ -71,12 +73,21 @@ type AuthConfig struct {
 
 //AuthCred represents represents a set of credentials used by auth
 type AuthCred struct {
-	OrgID     string      `bson:"org_id"`
-	AppID     string      `bson:"app_id"`
-	Type      string      `bson:"type"`
-	UserID    string      `bson:"user_id"`
-	AccountID string      `bson:"account_id"`
-	Creds     interface{} `bson:"creds"`
+	OrgID     string             `bson:"org_id"`
+	AppID     string             `bson:"app_id"`
+	Type      string             `bson:"type"`
+	UserID    string             `bson:"user_id"`
+	AccountID string             `bson:"account_id"`
+	Creds     interface{}        `bson:"creds"`
+	Refresh   *AuthRefreshParams `bson:"refresh"`
+}
+
+//AuthRefreshParams represents refresh token info used by auth
+type AuthRefreshParams struct {
+	PreviousToken string      `json:"previous_token"`
+	CurrentToken  string      `json:"current_token" validate:"required"`
+	Expires       *time.Time  `json:"exp" validate:"required"`
+	IDPParams     interface{} `json:"idp_params"`
 }
 
 //ServiceReg represents a service registration entity
@@ -120,6 +131,7 @@ type JSONWebKey struct {
 	E   string `json:"e" bson:"e"`
 }
 
+//JSONWebKeyFromPubKey generates a JSON Web Key from a PubKey
 func JSONWebKeyFromPubKey(key *authservice.PubKey) (*JSONWebKey, error) {
 	if key == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, TypePubKey, logutils.StringArgs("nil"))
