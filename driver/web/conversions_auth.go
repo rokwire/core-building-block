@@ -172,3 +172,26 @@ func scopeListToDef(items []authorization.Scope) []string {
 	}
 	return out
 }
+
+func jsonWebKeyToDef(item *model.JSONWebKey) *Def.JWK {
+	if item == nil {
+		return nil
+	}
+	return &Def.JWK{Alg: Def.JWKAlg(item.Alg), Kid: item.Kid, Kty: Def.JWKKty(item.Kty), Use: Def.JWKUse(item.Use), N: item.N, E: item.E}
+}
+
+func jsonWebKeySetDef(items *model.JSONWebKeySet) *Def.JWKS {
+	if items == nil || items.Keys == nil {
+		return nil
+	}
+	out := make([]Def.JWK, len(items.Keys))
+	for i, item := range items.Keys {
+		defItem := jsonWebKeyToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.JWK{}
+		}
+	}
+	return &Def.JWKS{Keys: out}
+}

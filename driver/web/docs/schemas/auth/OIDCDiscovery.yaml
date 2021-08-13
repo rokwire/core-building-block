@@ -1,0 +1,10 @@
+required:
+  - issuer
+  - jwks_uri
+type: object
+description: OpenID Connect Discovery Metadata
+properties:
+  issuer:
+    type: string
+  jwks_uri:
+    type: string

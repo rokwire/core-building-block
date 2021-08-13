@@ -130,6 +130,11 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	return auth, nil
 }
 
+//GetHost returns the host/issuer of the auth service
+func (a *Auth) GetHost() string {
+	return a.host
+}
+
 //Login logs a user in using the specified credentials and authentication method
 //	Input:
 //		authType (string): Name of the authentication method for provided creds (eg. "email")
@@ -426,6 +431,25 @@ func (a *Auth) DeregisterService(serviceID string) error {
 	return a.storage.DeleteServiceReg(serviceID)
 }
 
+//GetAuthKeySet generates a JSON Web Key Set for auth service registration
+func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
+	authReg, err := a.AuthService.GetServiceReg("auth")
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeServiceReg, logutils.StringArgs("auth"), err)
+	}
+
+	if authReg == nil || authReg.PubKey == nil || authReg.PubKey.Key == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypePubKey, nil)
+	}
+
+	jwk, err := model.JSONWebKeyFromPubKey(authReg.PubKey)
+	if err != nil || jwk == nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeJSONWebKey, nil, err)
+	}
+
+	return &model.JSONWebKeySet{Keys: []model.JSONWebKey{*jwk}}, nil
+}
+
 //findAccount retrieves a user's account information
 func (a *Auth) findAccount(userAuth *model.UserAuth) (*model.User, error) {
 	return a.storage.FindUserByAccountID(userAuth.AccountID)
@@ -629,7 +653,7 @@ func (a *Auth) getExp(exp *int64) int64 {
 func (a *Auth) storeReg() error {
 	pem, err := authutils.GetPubKeyPem(&a.authPrivKey.PublicKey)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionEncode, "auth pub key", nil, err)
+		return errors.WrapErrorAction(logutils.ActionEncode, model.TypePubKey, logutils.StringArgs("auth"), err)
 	}
 
 	key := authservice.PubKey{KeyPem: pem, Alg: authKeyAlg}
@@ -713,11 +737,22 @@ func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, er
 	}
 
 	authRegs := make([]authservice.ServiceReg, len(regs))
-	for i, reg := range regs {
-		authRegs[i] = reg.Registration
+	serviceErrors := map[string]error{}
+	for i, serviceReg := range regs {
+		reg := serviceReg.Registration
+		err = reg.PubKey.LoadKeyFromPem()
+		if err != nil {
+			serviceErrors[reg.ServiceID] = err
+		}
+		authRegs[i] = reg
 	}
 
-	return authRegs, nil
+	err = nil
+	if len(serviceErrors) > 0 {
+		err = fmt.Errorf("error loading services: %v", serviceErrors)
+	}
+
+	return authRegs, err
 }
 
 //NewLocalServiceRegLoader creates and configures a new LocalServiceRegLoaderImpl instance
