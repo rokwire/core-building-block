@@ -44,9 +44,11 @@ type authType interface {
 	//check checks the validity of provided credentials
 	check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error)
 	//refresh refreshes the access token using provided refresh token
-	refresh(params interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error)
+	refresh(params map[string]string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error)
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
+	//isGlobal returns whether an authType is orgID, appID independent
+	isGlobal() bool
 }
 
 //Auth represents the auth functionality unit
@@ -180,12 +182,14 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 	} else {
 		if userAuth.NewCreds != nil {
 			authCred := model.AuthCred{
-				OrgID:   orgID,
-				AppID:   appID,
 				Type:    authType,
 				UserID:  userAuth.UserID,
 				Creds:   userAuth.NewCreds,
 				Refresh: nil,
+			}
+			if !auth.isGlobal() {
+				authCred.OrgID = orgID
+				authCred.AppID = appID
 			}
 			user, err = a.createAccount(userAuth, &authCred)
 			if err != nil {
@@ -206,22 +210,22 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 	if err != nil {
 		return "", "", nil, nil, err
 	}
-	refreshParams := model.AuthRefreshParams{CurrentToken: refreshToken, Expires: expireTime, IDPParams: userAuth.Refresh}
-	updatedCreds := model.AuthCred{
-		OrgID:     orgID,
-		AppID:     appID,
-		Type:      authType,
-		UserID:    userAuth.UserID,
-		AccountID: user.Account.ID,
-		Creds:     userAuth.NewCreds,
-		Refresh:   &refreshParams,
+
+	refreshParams := model.AuthRefreshParams{CurrentToken: refreshToken, Expires: expireTime, IDPParams: userAuth.IDPParams}
+	if len(userAuth.IDPParams["current_token"]) > 0 {
+		refreshParams.PreviousToken = userAuth.IDPParams["current_token"]
+		delete(refreshParams.IDPParams, "current_token")
 	}
-	_, err = a.storage.UpdateCredentials(&updatedCreds)
+	if auth.isGlobal() {
+		err = a.storage.UpdateCredentials("", "", authType, userAuth.UserID, &refreshParams)
+	} else {
+		err = a.storage.UpdateCredentials(orgID, appID, authType, userAuth.UserID, &refreshParams)
+	}
 	if err != nil {
 		return "", "", nil, nil, err
 	}
 
-	return token, refreshToken, user, userAuth.Params, nil
+	return token, refreshToken, user, userAuth.ResponseParams, nil
 }
 
 //Refresh refreshes an access token using a refresh token
@@ -252,7 +256,7 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 	}
 	if refreshToken == credentials.Refresh.PreviousToken {
 		credentials.Refresh = nil
-		_, err = a.storage.UpdateCredentials(credentials)
+		err = a.storage.UpdateCredentials(credentials.OrgID, credentials.AppID, credentials.Type, credentials.UserID, credentials.Refresh)
 		if err != nil {
 			return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh reuse", nil, err)
 		}
@@ -272,8 +276,8 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 		return "", "", nil, errors.WrapErrorAction("refresh", logutils.TypeToken, nil, err)
 	}
 
-	if userAuth.Refresh != nil {
-		credentials.Refresh.IDPParams = userAuth.Refresh
+	if userAuth.IDPParams != nil {
+		credentials.Refresh.IDPParams = userAuth.IDPParams
 	}
 	if userAuth.Exp == nil {
 		defaultExp := accessTokenExpiry
@@ -299,12 +303,12 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 		return "", "", nil, errors.WrapErrorAction("build", logutils.TypeToken, nil, err)
 	}
 
-	_, err = a.storage.UpdateCredentials(credentials)
+	err = a.storage.UpdateCredentials(credentials.OrgID, credentials.AppID, credentials.Type, credentials.UserID, credentials.Refresh)
 	if err != nil {
 		return "", "", nil, err
 	}
 
-	return token, newRefreshToken, userAuth.Params, nil
+	return token, newRefreshToken, userAuth.ResponseParams, nil
 }
 
 //GetLoginURL returns a pre-formatted login url for SSO providers
@@ -498,19 +502,11 @@ func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.User, error) {
 	}
 	newUser.Profile = model.UserProfile{ID: profileID.String(), FirstName: userAuth.FirstName, LastName: userAuth.LastName, DateCreated: now}
 
-	//TODO: populate new device with device information (search for existing device first)
-	deviceID, err := uuid.NewUUID()
-	if err != nil {
-		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("device_id"), err)
-	}
-	newDevice := model.Device{ID: deviceID.String(), Type: "other", DateCreated: now}
-	newUser.Devices = []model.Device{newDevice}
-
 	membershipID, err := uuid.NewUUID()
 	if err != nil {
 		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("membership_id"), err)
 	}
-	orgID, ok := userAuth.OrgData["orgID"].(string)
+	orgID, ok := userAuth.OrgData["org_id"].(string)
 	if !ok {
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("org_id"))
 	}
@@ -524,6 +520,14 @@ func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.User, error) {
 	// maybe set groups based on organization populations
 
 	newUser.OrganizationsMemberships = []model.OrganizationMembership{newOrgMembership}
+
+	//TODO: populate new device with device information (search for existing device first)
+	deviceID, err := uuid.NewUUID()
+	if err != nil {
+		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("device_id"), err)
+	}
+	newDevice := model.Device{ID: deviceID.String(), Type: "other", Users: []model.User{newUser}, DateCreated: now}
+	newUser.Devices = []model.Device{newDevice}
 
 	return &newUser, nil
 }
@@ -555,7 +559,7 @@ func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*mod
 	// org data
 	foundOrg := false
 	for _, m := range user.OrganizationsMemberships {
-		if m.Organization.ID == userAuth.OrgData["orgID"] {
+		if m.Organization.ID == userAuth.OrgData["org_id"] {
 			foundOrg = true
 			if !reflect.DeepEqual(userAuth.OrgData, m.OrgUserData) {
 				m.OrgUserData = userAuth.OrgData
@@ -775,7 +779,7 @@ type Storage interface {
 	//Credentials
 	FindCredentialsByRefreshToken(token string) (*model.AuthCred, error)
 	FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCred, error)
-	UpdateCredentials(creds *model.AuthCred) (*model.AuthCred, error)
+	UpdateCredentials(orgID string, appID string, authType string, userID string, params *model.AuthRefreshParams) error
 
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)

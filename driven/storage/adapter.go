@@ -80,6 +80,8 @@ func (sa *Adapter) setCachedOrganizations(organizations *[]model.Organization) {
 		err := validate.Struct(org)
 		if err == nil {
 			sa.cachedOrganizations.Store(org.ID, org)
+		} else {
+			sa.logger.Errorf("failed to validate and cache organization with org_id %s: %s", org.ID, err.Error())
 		}
 	}
 }
@@ -98,7 +100,7 @@ func (sa *Adapter) getCachedOrganization(orgID string) (*model.Organization, err
 		}
 		return &organization, nil
 	}
-	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthConfig, errArgs)
+	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, errArgs)
 }
 
 func (sa *Adapter) getCachedOrganizations() ([]model.Organization, error) {
@@ -227,7 +229,7 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 		if err != nil {
 			return nil, errors.WrapErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("membership_id"), err)
 		}
-		orgID, ok := (*newOrgData)["orgID"].(string)
+		orgID, ok := (*newOrgData)["org_id"].(string)
 		if !ok {
 			return nil, errors.WrapErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("org_id"), err)
 		}
@@ -303,7 +305,7 @@ func (sa *Adapter) DeleteUser(id string) error {
 //FindCredentials find a set of credentials
 func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCred, error) {
 	var filter bson.D
-	if len(orgID) > 0 {
+	if len(orgID) > 0 && len(appID) > 0 {
 		filter = bson.D{
 			primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID},
 			primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: userID},
@@ -355,18 +357,35 @@ func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.Sessio
 }
 
 //UpdateCredentials updates a set of credentials
-func (sa *Adapter) UpdateCredentials(creds *model.AuthCred) (*model.AuthCred, error) {
-	if creds == nil {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
+func (sa *Adapter) UpdateCredentials(orgID string, appID string, authType string, userID string, params *model.AuthRefreshParams) error {
+	if params == nil {
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthRefreshParams))
 	}
 
-	filter := bson.D{primitive.E{Key: "type", Value: creds.Type}, primitive.E{Key: "user_id", Value: creds.UserID}}
-	err := sa.db.credentials.ReplaceOne(filter, creds, nil)
+	var filter bson.D
+	if len(orgID) > 0 && len(appID) > 0 {
+		filter = bson.D{
+			primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID},
+			primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: userID},
+		}
+	} else {
+		filter = bson.D{primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: userID}}
+	}
+
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "refresh", Value: params},
+		}},
+	}
+	res, err := sa.db.credentials.UpdateOne(filter, update, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthCred, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthCred, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAuthCred, logutils.StringArgs("unexpected modified count"))
 	}
 
-	return creds, nil
+	return nil
 }
 
 //FindGlobalPermissions finds a set of global user permissions
@@ -652,10 +671,11 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 func (sa *Adapter) FindOrganizations() ([]model.Organization, error) {
 	//no transactions for get operations..
 	cachedOrgs, err := sa.getCachedOrganizations()
-	if err == nil {
+	if err != nil {
+		sa.logger.Warn(err.Error())
+	} else if len(cachedOrgs) > 0 {
 		return cachedOrgs, nil
 	}
-	sa.logger.Warn(err.Error())
 
 	//1. find the organizations
 	orgsFilter := bson.D{}

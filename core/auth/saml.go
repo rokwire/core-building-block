@@ -24,13 +24,17 @@ func (a *samlAuthImpl) check(creds string, orgID string, appID string, params st
 }
 
 //refresh must be implemented for SAML auth
-func (a *samlAuthImpl) refresh(params interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
+func (a *samlAuthImpl) refresh(params map[string]string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
 	//TODO: Implement
 	return nil, errors.New(logutils.Unimplemented)
 }
 
 func (a *samlAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
+}
+
+func (a *samlAuthImpl) isGlobal() bool {
+	return false
 }
 
 //initSamlAuth initializes and registers a new SAML auth instance

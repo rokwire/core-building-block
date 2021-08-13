@@ -55,7 +55,7 @@ type oidcAuthConfig struct {
 }
 
 type oidcCreds struct {
-	Sub string `json:"sub" bson:"sub" validate:"required"`
+	Sub string `bson:"sub"`
 }
 
 type oidcLoginParams struct {
@@ -106,64 +106,42 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 	if err != nil {
 		return nil, err
 	}
-	userAuth.OrgData["orgID"] = orgID
-	userAuth.Refresh = oidcRefreshParams{IDPToken: oidcToken.RefreshToken, RedirectURI: loginParams.RedirectURI}
+	userAuth.OrgData["org_id"] = orgID
+	userAuth.IDPParams = map[string]string{
+		"idp_token":    oidcToken.RefreshToken,
+		"redirect_uri": loginParams.RedirectURI,
+	}
 	tokenResponseParams := oidcTokenResponseParams{IDToken: oidcToken.IDToken, AccessToken: oidcToken.AccessToken, TokenType: oidcToken.TokenType}
-	userAuth.Params = oidcResponseParams{OIDCToken: tokenResponseParams}
+	userAuth.ResponseParams = oidcResponseParams{OIDCToken: tokenResponseParams}
 
 	credentials, err := a.auth.storage.FindCredentials(orgID, appID, authTypeOidc, userAuth.UserID)
 	if err != nil {
 		errFields := logutils.FieldArgs{"org_id": orgID, "app_id": appID, "type": authTypeOidc, "user_id": userAuth.UserID}
 		l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionFind, model.TypeAuthCred, &errFields)
-		userAuth.NewCreds = oidcCreds{Sub: userAuth.Sub}
+
+		userAuth.NewCreds = map[string]interface{}{
+			"sub": userAuth.Sub,
+		}
 		return userAuth, nil
 	}
 	ok, err := a.validateUser(userAuth, credentials.Creds)
 	if err != nil || !ok {
 		return userAuth, nil
 	}
+
+	userAuth.IDPParams["current_token"] = credentials.Refresh.CurrentToken
 	userAuth.AccountID = credentials.AccountID
 	return userAuth, nil
 }
 
-func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials interface{}) (bool, error) {
-	credBytes, err := json.Marshal(credentials)
-	if err != nil {
-		return false, err
-	}
-	var creds oidcCreds
-	err = json.Unmarshal(credBytes, &creds)
-	if err != nil {
-		return false, err
-	}
-	validate := validator.New()
-	err = validate.Struct(creds)
-	if err != nil {
-		return false, err
-	}
-
-	if userAuth.Sub != creds.Sub {
-		return false, errors.ErrorData(logutils.StatusInvalid, model.TypeUserAuth, logutils.StringArgs(userAuth.UserID))
-	}
-	return true, nil
-}
-
 //refresh must be implemented for OIDC auth
-func (a *oidcAuthImpl) refresh(params interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
-	refreshBytes, err := json.Marshal(params)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOidcRefreshParams, nil, err)
+func (a *oidcAuthImpl) refresh(params map[string]string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
+	refreshParams := oidcRefreshParams{IDPToken: params["idp_token"], RedirectURI: params["redirect_uri"]}
+	if len(refreshParams.IDPToken) < 1 {
+		return nil, errors.ErrorData(logutils.StatusMissing, "IDP refresh token", nil)
 	}
-
-	var refreshParams oidcRefreshParams
-	err = json.Unmarshal([]byte(refreshBytes), &refreshParams)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOidcRefreshParams, nil, err)
-	}
-	validate := validator.New()
-	err = validate.Struct(refreshParams)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcRefreshParams, nil, err)
+	if len(refreshParams.RedirectURI) < 1 {
+		return nil, errors.ErrorData(logutils.StatusMissing, "IDP redirect URI", nil)
 	}
 
 	userAuth, oidcToken, err := a.refreshToken(orgID, appID, &refreshParams, l)
@@ -171,9 +149,12 @@ func (a *oidcAuthImpl) refresh(params interface{}, orgID string, appID string, l
 		return nil, err
 	}
 
-	userAuth.Refresh = oidcToken.RefreshToken
+	userAuth.IDPParams = map[string]string{
+		"idp_token":    oidcToken.RefreshToken,
+		"redirect_uri": refreshParams.RedirectURI,
+	}
 	tokenResponseParams := oidcTokenResponseParams{IDToken: oidcToken.IDToken, AccessToken: oidcToken.AccessToken, TokenType: oidcToken.TokenType}
-	userAuth.Params = oidcResponseParams{OIDCToken: tokenResponseParams}
+	userAuth.ResponseParams = oidcResponseParams{OIDCToken: tokenResponseParams}
 	return userAuth, nil
 }
 
@@ -231,6 +212,10 @@ func (a *oidcAuthImpl) getLoginURL(orgID string, appID string, redirectURI strin
 	}
 
 	return url.String(), responseParams, nil
+}
+
+func (a *oidcAuthImpl) isGlobal() bool {
+	return false
 }
 
 func (a *oidcAuthImpl) checkToken(idToken string, orgID string, appID string, oidcConfig *oidcAuthConfig, l *logs.Log) (string, error) {
@@ -502,6 +487,18 @@ func (a *oidcAuthImpl) getOidcAuthConfig(orgID string, appID string) (*oidcAuthC
 	return &oidcConfig, nil
 }
 
+func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials map[string]interface{}) (bool, error) {
+	creds, err := mapToOidcCreds(credentials)
+	if err != nil {
+		return false, err
+	}
+
+	if userAuth.Sub != creds.Sub {
+		return false, errors.ErrorData(logutils.StatusInvalid, model.TypeUserAuth, logutils.StringArgs(userAuth.UserID))
+	}
+	return true, nil
+}
+
 // --- Helper functions ---
 func readFromClaims(key string, claimsMap *map[string]string, rawClaims *map[string]interface{}) interface{} {
 	if claimsMap == nil {
@@ -532,6 +529,15 @@ func generatePkceChallenge() (string, string, error) {
 	codeChallenge := base64.URLEncoding.EncodeToString(codeChallengeBytes)
 
 	return codeChallenge, codeVerifier, nil
+}
+
+func mapToOidcCreds(credentials map[string]interface{}) (*oidcCreds, error) {
+	sub, ok := credentials["sub"].(string)
+	if !ok {
+		return nil, errors.ErrorAction(logutils.ActionCast, "oidc sub", &logutils.FieldArgs{"sub": credentials["sub"]})
+	}
+
+	return &oidcCreds{Sub: sub}, nil
 }
 
 //initOidcAuth initializes and registers a new OIDC auth instance

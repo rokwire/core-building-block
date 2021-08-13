@@ -23,12 +23,16 @@ func (a *firebaseAuthImpl) check(creds string, orgID string, appID string, param
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *firebaseAuthImpl) refresh(params interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
+func (a *firebaseAuthImpl) refresh(params map[string]string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
 	return nil, errors.Newf("refresh operation invalid for auth_type=%s", authTypeFirebase)
 }
 
 func (a *firebaseAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
+}
+
+func (a *firebaseAuthImpl) isGlobal() bool {
+	return true
 }
 
 //initFirebaseAuth initializes and registers a new Firebase auth instance
