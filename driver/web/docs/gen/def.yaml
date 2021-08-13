@@ -586,13 +586,13 @@ paths:
           description: Not Found
         '500':
           description: Internal error
-  /admin/global-group:
-    get:
+  /admin/global-groups:
+    post:
       tags:
         - Admin
-      summary: Get global group
+      summary: Create global group
       description: |
-        Gets global group
+        Create global group
       responses:
         '200':
           description: Successful operation
@@ -738,6 +738,7 @@ components:
       type: object
       properties:
         id:
+          readOnly: true
           type: string
         name:
           type: string
