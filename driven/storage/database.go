@@ -248,12 +248,6 @@ func (m *database) applyUsersChecks(users *collectionWrapper) error {
 		return err
 	}
 
-	//add organizations memberships index
-	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
 	//add organizations memberships permissions index
 	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.permissions._id", Value: 1}}, false)
 	if err != nil {
@@ -292,12 +286,6 @@ func (m *database) applyUsersChecks(users *collectionWrapper) error {
 
 	//add organizations memberships groups roles permissions index
 	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.groups.roles.permissions._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add devices index
-	err = users.AddIndex(bson.D{primitive.E{Key: "devices._id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
