@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	authTypeFirebase string = "firebase"
+	//AuthTypeFirebase firebase auth type
+	AuthTypeFirebase string = "firebase"
 )
 
 // Firebase implementation of authType
@@ -24,7 +25,7 @@ func (a *firebaseAuthImpl) check(creds string, orgID string, appID string, param
 }
 
 func (a *firebaseAuthImpl) refresh(refreshToken string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
-	return nil, errors.Newf("refresh operation invalid for auth_type=%s", authTypeFirebase)
+	return nil, errors.Newf("refresh operation invalid for auth_type=%s", AuthTypeFirebase)
 }
 
 func (a *firebaseAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
@@ -33,7 +34,7 @@ func (a *firebaseAuthImpl) getLoginURL(orgID string, appID string, redirectURI s
 
 //initFirebaseAuth initializes and registers a new Firebase auth instance
 func initFirebaseAuth(auth *Auth) (*firebaseAuthImpl, error) {
-	firebase := &firebaseAuthImpl{auth: auth, authType: authTypeFirebase}
+	firebase := &firebaseAuthImpl{auth: auth, authType: AuthTypeFirebase}
 
 	err := auth.registerAuthType(firebase.authType, firebase)
 	if err != nil {

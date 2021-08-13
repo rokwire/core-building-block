@@ -435,6 +435,53 @@ func (sa *Adapter) InsertMembership(orgMembership *organizationMembership, conte
 	return nil
 }
 
+//LoadAPIKeys finds all api key documents in the DB
+func (sa *Adapter) LoadAPIKeys() ([]model.APIKey, error) {
+	filter := bson.D{}
+	var result []model.APIKey
+	err := sa.db.apiKeys.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+	}
+
+	return result, nil
+}
+
+//FindAPIKey finds the api key document from DB by orgID and appID
+func (sa *Adapter) FindAPIKey(orgID string, appID string) (*model.APIKey, error) {
+	errFields := &logutils.FieldArgs{"org_id": orgID, "app_id": appID}
+	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID}}
+	var result *model.APIKey
+	err := sa.db.apiKeys.FindOne(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, errFields, err)
+	}
+	return result, nil
+}
+
+//FindAPIKeys finds the api key documents from DB for an orgID
+func (sa *Adapter) FindAPIKeys(orgID string) ([]model.APIKey, error) {
+	errFields := &logutils.FieldArgs{"org_id": orgID}
+	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}}
+	var result []model.APIKey
+	err := sa.db.apiKeys.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, errFields, err)
+	}
+	return result, nil
+}
+
+//LoadAuthConfigs finds all auth config documents in the DB
+func (sa *Adapter) LoadAuthConfigs() ([]model.AuthConfig, error) {
+	filter := bson.D{}
+	var result []model.AuthConfig
+	err := sa.db.authConfigs.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthConfig, nil, err)
+	}
+	return result, nil
+}
+
 //FindAuthConfig finds the auth document from DB by orgID and appID
 func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error) {
 	errFields := &logutils.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": authType}
@@ -448,21 +495,6 @@ func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (
 		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAuthConfig, errFields, err)
 	}
 	return result, nil
-}
-
-//LoadAuthConfigs finds all auth config documents in the DB
-func (sa *Adapter) LoadAuthConfigs() (*[]model.AuthConfig, error) {
-	filter := bson.D{}
-	var result []model.AuthConfig
-	err := sa.db.authConfigs.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthConfig, nil, err)
-	}
-	if len(result) == 0 {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAuthConfig, nil, err)
-	}
-
-	return &result, nil
 }
 
 //CreateGlobalConfig creates global config
@@ -856,6 +888,7 @@ func (sl *storageListener) OnApplicationsUpdated() {
 
 //Listener represents storage listener
 type Listener interface {
+	OnAPIKeysUpdated()
 	OnAuthConfigUpdated()
 	OnServiceRegsUpdated()
 	OnOrganizationsUpdated()
@@ -864,6 +897,9 @@ type Listener interface {
 
 //DefaultListenerImpl default listener implementation
 type DefaultListenerImpl struct{}
+
+//OnAPIKeysUpdated notifies api keys have been updated
+func (d *DefaultListenerImpl) OnAPIKeysUpdated() {}
 
 //OnAuthConfigUpdated notifies auth configs have been updated
 func (d *DefaultListenerImpl) OnAuthConfigUpdated() {}

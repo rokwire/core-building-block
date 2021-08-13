@@ -10,6 +10,7 @@ properties:
       - email
       - phone
       - oidc
+      - api_key
   org_id:
     type: string
   app_id:
@@ -20,9 +21,11 @@ properties:
       - $ref: "./AuthLoginCredsEmail.yaml"
       - $ref: "./AuthLoginCredsPhone.yaml"
       - $ref: "./AuthLoginCredsOidc.yaml"
+      - $ref: "./AuthLoginCredsAPIKey.yaml"
   params:
     type: object
     anyOf:
       - $ref: "./AuthLoginParamsEmail.yaml"
       - $ref: "./AuthLoginParamsPhone.yaml"
       - $ref: "./AuthLoginParamsOidc.yaml"
+      - $ref: "./AuthLoginParamsAPIKey.yaml"

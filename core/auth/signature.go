@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	authTypeSignature string = "signature"
+	//AuthTypeSignature signature auth type
+	AuthTypeSignature string = "signature"
 )
 
 //Signature implementation of authType
@@ -24,7 +25,7 @@ func (a *signatureAuthImpl) check(creds string, orgID string, appID string, para
 }
 
 func (a *signatureAuthImpl) refresh(refreshToken string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
-	return nil, errors.Newf("refresh operation invalid for auth_type=%s", authTypeSignature)
+	return nil, errors.Newf("refresh operation invalid for auth_type=%s", AuthTypeSignature)
 }
 
 func (a *signatureAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
@@ -33,7 +34,7 @@ func (a *signatureAuthImpl) getLoginURL(orgID string, appID string, redirectURI 
 
 //initSignatureAuth initializes and registers a new signature auth instance
 func initSignatureAuth(auth *Auth) (*signatureAuthImpl, error) {
-	signature := &signatureAuthImpl{auth: auth, authType: authTypeSignature}
+	signature := &signatureAuthImpl{auth: auth, authType: AuthTypeSignature}
 
 	err := auth.registerAuthType(signature.authType, signature)
 	if err != nil {

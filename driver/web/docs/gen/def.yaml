@@ -967,6 +967,7 @@ components:
             - email
             - phone
             - oidc
+            - api_key
         org_id:
           type: string
         app_id:
@@ -977,12 +978,24 @@ components:
             - $ref: '#/components/schemas/AuthLoginCredsEmail'
             - $ref: '#/components/schemas/AuthLoginCredsPhone'
             - $ref: '#/components/schemas/AuthLoginCredsOidc'
+            - required:
+                - api_key
+                - anonymous_profile_id
+              type: object
+              description: Auth login creds for auth_type="api_key"
+              properties:
+                api_key:
+                  type: string
+                anonymous_profile_id:
+                  type: string
         params:
           type: object
           anyOf:
             - $ref: '#/components/schemas/AuthLoginParamsEmail'
             - $ref: '#/components/schemas/AuthLoginParamsPhone'
             - $ref: '#/components/schemas/AuthLoginParamsOidc'
+            - type: object
+              description: Auth login params for auth_type="api_key" (None)
     AuthLoginResponse:
       type: object
       properties:

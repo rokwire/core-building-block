@@ -24,7 +24,8 @@ import (
 )
 
 const (
-	authTypeOidc string = "oidc"
+	//AuthTypeOidc oidc auth type
+	AuthTypeOidc string = "oidc"
 
 	typeOidcAuthConfig    logutils.MessageDataType = "oidc auth config"
 	typeOidcCheckParams   logutils.MessageDataType = "oidc check params"
@@ -105,9 +106,9 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 			return nil, err
 		}
 		userAuth.OrgData["orgID"] = orgID
-		credentials, err := a.auth.storage.FindCredentials(orgID, appID, authTypeOidc, userAuth.UserID)
+		credentials, err := a.auth.storage.FindCredentials(orgID, appID, AuthTypeOidc, userAuth.UserID)
 		if err != nil {
-			errFields := logutils.FieldArgs{"org_id": orgID, "app_id": appID, "type": authTypeOidc, "user_id": userAuth.UserID}
+			errFields := logutils.FieldArgs{"org_id": orgID, "app_id": appID, "type": AuthTypeOidc, "user_id": userAuth.UserID}
 			l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionFind, model.TypeAuthCred, &errFields)
 			userAuth.NewCreds = oidcCreds{Sub: userAuth.Sub}
 			return userAuth, nil
@@ -135,7 +136,7 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 			return nil, err
 		}
 		userAuth.OrgData["orgID"] = orgID
-		credentials, err := a.auth.storage.FindCredentials(orgID, appID, authTypeOidc, userAuth.UserID)
+		credentials, err := a.auth.storage.FindCredentials(orgID, appID, AuthTypeOidc, userAuth.UserID)
 		if err != nil {
 			return nil, err
 		}
@@ -549,7 +550,7 @@ func generatePkceChallenge() (string, string, error) {
 
 //initOidcAuth initializes and registers a new OIDC auth instance
 func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
-	oidc := &oidcAuthImpl{auth: auth, authType: authTypeOidc}
+	oidc := &oidcAuthImpl{auth: auth, authType: AuthTypeOidc}
 
 	err := auth.registerAuthType(oidc.authType, oidc)
 	if err != nil {

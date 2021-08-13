@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	authTypeEmail string = "email"
+	//AuthTypeEmail email auth type
+	AuthTypeEmail string = "email"
 )
 
 // Email implementation of authType
@@ -34,7 +35,7 @@ func (a *emailAuthImpl) getLoginURL(orgID string, appID string, redirectURI stri
 
 //initEmailAuth initializes and registers a new email auth instance
 func initEmailAuth(auth *Auth) (*emailAuthImpl, error) {
-	email := &emailAuthImpl{auth: auth, authType: authTypeEmail}
+	email := &emailAuthImpl{auth: auth, authType: AuthTypeEmail}
 
 	err := auth.registerAuthType(email.authType, email)
 	if err != nil {

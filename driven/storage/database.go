@@ -33,6 +33,7 @@ type database struct {
 	organizationsRoles       *collectionWrapper
 	organizationsPermissions *collectionWrapper
 	organizationsMemberships *collectionWrapper
+	apiKeys                  *collectionWrapper
 	authConfigs              *collectionWrapper
 	serviceRegs              *collectionWrapper
 	serviceAuthorizations    *collectionWrapper
@@ -136,8 +137,14 @@ func (m *database) start() error {
 		return err
 	}
 
+	apiKeys := &collectionWrapper{database: m, coll: db.Collection("api_keys")}
+	err = m.applyAPIKeysChecks(apiKeys)
+	if err != nil {
+		return err
+	}
+
 	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
-	err = m.applyAuthConfigChecks(authConfigs)
+	err = m.applyAuthConfigsChecks(authConfigs)
 	if err != nil {
 		return err
 	}
@@ -176,11 +183,13 @@ func (m *database) start() error {
 	m.organizationsRoles = organizationsRoles
 	m.organizationsPermissions = organizationsPermissions
 	m.organizationsMemberships = organizationsMemberships
+	m.apiKeys = apiKeys
 	m.authConfigs = authConfigs
 	m.serviceRegs = serviceRegs
 	m.serviceAuthorizations = serviceAuthorizations
 	m.applications = applications
 
+	go m.apiKeys.Watch(nil)
 	go m.authConfigs.Watch(nil)
 	go m.serviceRegs.Watch(nil)
 	go m.organizations.Watch(nil)
@@ -400,15 +409,28 @@ func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
 	return nil
 }
 
-func (m *database) applyAuthConfigChecks(authInfo *collectionWrapper) error {
-	m.logger.Info("apply auth info checks.....")
+func (m *database) applyAPIKeysChecks(apiKeys *collectionWrapper) error {
+	m.logger.Info("apply api keys checks.....")
 
-	// Add org_id, app_id compound index
-	err := authInfo.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}}, false)
+	// Add org_id, app_id compound index - unique
+	err := apiKeys.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
-	m.logger.Info("auth info check passed")
+
+	m.logger.Info("api keys check passed")
+	return nil
+}
+
+func (m *database) applyAuthConfigsChecks(authConfigs *collectionWrapper) error {
+	m.logger.Info("apply auth configs checks.....")
+
+	// Add org_id, app_id, auth_type compound index - unique
+	err := authConfigs.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "auth_type", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+	m.logger.Info("auth configs check passed")
 	return nil
 }
 
@@ -547,6 +569,12 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 	coll := nsMap["coll"]
 
 	switch coll {
+	case "api_keys":
+		m.logger.Info("api_keys collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnAPIKeysUpdated()
+		}
 	case "auth_configs":
 		m.logger.Info("auth_configs collection changed")
 
@@ -572,5 +600,4 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 			go listener.OnApplicationsUpdated()
 		}
 	}
-
 }

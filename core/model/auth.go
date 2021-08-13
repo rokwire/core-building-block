@@ -33,7 +33,16 @@ const (
 	TypeJSONWebKeySet logutils.MessageDataType = "jwks"
 	//TypePubKey pub key type
 	TypePubKey logutils.MessageDataType = "pub key"
+	//TypeAPIKey api key type
+	TypeAPIKey logutils.MessageDataType = "api key"
 )
+
+//APIKey represents an API key entity
+type APIKey struct {
+	OrgID string `json:"org_id" bson:"org_id" validate:"required"`
+	AppID string `json:"app_id" bson:"app_id" validate:"required"`
+	Key   string `json:"key" bson:"key"`
+}
 
 //UserAuth represents user auth entity
 type UserAuth struct {
@@ -49,6 +58,7 @@ type UserAuth struct {
 	RefreshToken string
 	OrgData      map[string]interface{}
 	NewCreds     interface{}
+	Anonymous    bool
 }
 
 //AuthConfig represents auth config entity

@@ -17,7 +17,6 @@ import (
 	"github.com/rokmetro/auth-library/authutils"
 	"github.com/rokmetro/auth-library/tokenauth"
 	"golang.org/x/sync/syncmap"
-	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/rokmetro/logging-library/errors"
 	"github.com/rokmetro/logging-library/logs"
@@ -60,6 +59,9 @@ type Auth struct {
 
 	authConfigs     *syncmap.Map //cache authConfigs / orgID_appID -> authConfig
 	authConfigsLock *sync.RWMutex
+
+	apiKeys     *syncmap.Map //cache api keys / api_key (string) -> APIKey
+	apiKeysLock *sync.RWMutex
 }
 
 //TokenClaims is a temporary claims model to provide backwards compatibility
@@ -88,9 +90,14 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	authConfigs := &syncmap.Map{}
 	authConfigsLock := &sync.RWMutex{}
+
+	apiKeys := &syncmap.Map{}
+	apiKeysLock := &sync.RWMutex{}
+
 	auth := &Auth{storage: storage, authTypes: authTypes, authPrivKey: authPrivKey, AuthService: nil,
 		serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp,
-		authConfigs: authConfigs, authConfigsLock: authConfigsLock}
+		authConfigs: authConfigs, authConfigsLock: authConfigsLock,
+		apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
 	err := auth.storeReg()
 	if err != nil {
@@ -116,9 +123,14 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initAPIKeyAuth(auth)
 	initSignatureAuth(auth)
 
-	err = auth.LoadAuthConfigs()
+	err = auth.loadAuthConfigs()
 	if err != nil {
 		logger.Warnf("NewAuth() failed to cache auth configs: %v", err)
+	}
+
+	err = auth.loadAPIKeys()
+	if err != nil {
+		logger.Warnf("NewAuth() failed to cache api keys: %v", err)
 	}
 
 	return auth, nil
@@ -561,8 +573,8 @@ func (a *Auth) storeReg() error {
 	return nil
 }
 
-//LoadAuthConfigs loads the auth configs
-func (a *Auth) LoadAuthConfigs() error {
+//loadAuthConfigs loads the auth configs
+func (a *Auth) loadAuthConfigs() error {
 	authConfigDocs, err := a.storage.LoadAuthConfigs()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthConfig, nil, err)
@@ -593,17 +605,47 @@ func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*mode
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthConfig, errArgs)
 }
 
-func (a *Auth) setAuthConfigs(authConfigs *[]model.AuthConfig) {
-	a.authConfigs = &syncmap.Map{}
-	validate := validator.New()
-
+func (a *Auth) setAuthConfigs(authConfigs []model.AuthConfig) {
 	a.authConfigsLock.Lock()
 	defer a.authConfigsLock.Unlock()
-	for _, authConfig := range *authConfigs {
-		err := validate.Struct(authConfig)
-		if err == nil {
-			a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, authConfig.AppID, authConfig.Type), authConfig)
+
+	a.authConfigs = &syncmap.Map{}
+	for _, authConfig := range authConfigs {
+		a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, authConfig.AppID, authConfig.Type), authConfig)
+	}
+}
+
+func (a *Auth) loadAPIKeys() error {
+	apiKeys, err := a.storage.LoadAPIKeys()
+	if err != nil {
+		return errors.WrapErrorAction("loading", model.TypeAPIKey, nil, err)
+	}
+	a.setAPIKeys(apiKeys)
+	return nil
+}
+
+func (a *Auth) getAPIKey(key string) (*model.APIKey, error) {
+	a.apiKeysLock.RLock()
+	defer a.apiKeysLock.RUnlock()
+
+	item, _ := a.apiKeys.Load(key)
+	if item != nil {
+		if key, ok := item.(model.APIKey); ok {
+			return &key, nil
 		}
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil)
+	} else {
+		return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeAPIKey, nil)
+	}
+}
+
+func (a *Auth) setAPIKeys(apiKeys []model.APIKey) {
+	a.apiKeysLock.Lock()
+	defer a.apiKeysLock.Unlock()
+
+	a.apiKeys = &syncmap.Map{}
+	for _, apiKey := range apiKeys {
+		a.apiKeys.Store(apiKey.Key, apiKey)
 	}
 }
 
@@ -665,13 +707,18 @@ type Storage interface {
 	DeleteServiceReg(serviceID string) error
 
 	//AuthConfigs
+	LoadAuthConfigs() ([]model.AuthConfig, error)
 	FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error)
-	LoadAuthConfigs() (*[]model.AuthConfig, error)
 
 	//ServiceAuthorizations
 	FindServiceAuthorization(userID string, orgID string) (*model.ServiceAuthorization, error)
 	SaveServiceAuthorization(authorization *model.ServiceAuthorization) error
 	DeleteServiceAuthorization(userID string, orgID string) error
+
+	//APIKeys
+	LoadAPIKeys() ([]model.APIKey, error)
+	FindAPIKey(orgID string, appID string) (*model.APIKey, error)
+	FindAPIKeys(orgID string) ([]model.APIKey, error)
 }
 
 //StorageListener represents storage listener implementation for the auth package
@@ -680,9 +727,14 @@ type StorageListener struct {
 	storage.DefaultListenerImpl
 }
 
+//OnAPIKeysUpdated notifies api keys have been updated
+func (al *StorageListener) OnAPIKeysUpdated() {
+	al.Auth.loadAPIKeys()
+}
+
 //OnAuthConfigUpdated notifies that an auth config has been updated
 func (al *StorageListener) OnAuthConfigUpdated() {
-	al.Auth.LoadAuthConfigs()
+	al.Auth.loadAuthConfigs()
 }
 
 //OnServiceRegsUpdated notifies that a service registration has been updated

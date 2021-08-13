@@ -10,6 +10,8 @@ const (
 
 // Defines values for AuthLoginRequestAuthType.
 const (
+	AuthLoginRequestAuthTypeApiKey AuthLoginRequestAuthType = "api_key"
+
 	AuthLoginRequestAuthTypeEmail AuthLoginRequestAuthType = "email"
 
 	AuthLoginRequestAuthTypeOidc AuthLoginRequestAuthType = "oidc"
