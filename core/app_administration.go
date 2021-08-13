@@ -256,12 +256,3 @@ func (app *application) admGetApplication(ID string) (*model.Application, error)
 
 	return appAdm, nil
 }
-
-func (app *application) admGetGlobalGroup(ID string) (*model.GlobalGroup, error) {
-	globalGroup, err := app.storage.GetGlobalGroup(ID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeGlobalGroup, nil, err)
-	}
-
-	return globalGroup, nil
-}

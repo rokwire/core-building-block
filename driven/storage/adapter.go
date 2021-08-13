@@ -651,11 +651,6 @@ func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 	return &getResApp, nil
 }
 
-//GetGlobalGroup gets global group
-func (sa *Adapter) GetGlobalGroup(ID string) (*model.GlobalGroup, error) {
-	return nil, nil
-}
-
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records
