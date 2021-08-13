@@ -21,7 +21,7 @@ func (app *application) start() {
 //addListener adds application listener
 func (app *application) addListener(listener ApplicationListener) {
 	//TODO
-	//log.Println("Application -> AddListener")
+	//logs.Println("Application -> AddListener")
 
 	app.listeners = append(app.listeners, listener)
 }

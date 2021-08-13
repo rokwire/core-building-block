@@ -5,58 +5,65 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"core-building-block/core/model"
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
+	"github.com/rokmetro/logging-library/errors"
+	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokmetro/logging-library/logutils"
+)
 
-	log "github.com/rokmetro/logging-library/loglib"
+const (
+	authTypeFirebase string = "firebase"
 )
 
 // Firebase implementation of authType
 type firebaseAuthImpl struct {
-	auth *Auth
+	auth     *Auth
+	authType string
 }
 
 const (
-	typeCred log.LogData = "creds"
+	typeCred logutils.MessageDataType = "creds"
 )
 
-func (a *firebaseAuthImpl) check(creds string, params string, l *log.Log) (*model.UserAuth, error) {
+func (a *firebaseAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
 	paramsMap := make(map[string]interface{})
 	err := json.Unmarshal([]byte(params), &paramsMap)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionUnmarshal, log.TypeString, &log.FieldArgs{"params": params}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.TypeString, &logutils.FieldArgs{"params": params}, err)
 	}
 	clientID, ok := paramsMap["clientID"].(string)
 	if !ok {
-		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
 	}
 	err = a.setFirebaseAdminCreds(clientID)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionSave, log.TypeString, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionSave, logutils.TypeString, nil, err)
 	}
 
 	firebaseApp, err := firebase.NewApp(context.Background(), nil)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionInitialize, typeCred, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionInitialize, typeCred, nil, err)
 	}
 
 	// Access auth service from the firebase app
 	firebaseAuth, err := firebaseApp.Auth(context.Background())
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionInitialize, typeCred, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionInitialize, typeCred, nil, err)
 	}
 
 	//Validate the Firebase token
 	token, err := firebaseAuth.VerifyIDToken(context.Background(), creds)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionValidate, log.TypeToken, &log.FieldArgs{"token": token}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, logutils.TypeToken, &logutils.FieldArgs{"token": token}, err)
 	}
 	user, err := firebaseAuth.GetUser(context.Background(), token.Claims["user_id"].(string))
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionGet, typeCred, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionGet, typeCred, nil, err)
 	}
 	token.Claims["uid"] = token.Claims["user_id"]
 
@@ -67,9 +74,14 @@ func (a *firebaseAuthImpl) check(creds string, params string, l *log.Log) (*mode
 		token.Claims["email"] = user.UserInfo.Email
 	}
 	if user.UserInfo.DisplayName != "" {
-		token.Claims["name"] = user.UserInfo.DisplayName
+		displayName := strings.Split(user.UserInfo.DisplayName, " ")
+		if len(displayName) > 1 {
+			token.Claims["first_name"] = displayName[0]
+			token.Claims["last_name"] = displayName[1]
+		}
 	}
-	claims := &model.UserAuth{UserID: token.Claims["uid"].(string), Name: token.Claims["name"].(string), Phone: token.Claims["phone"].(string), Email: token.Claims["email"].(string), Exp: 0}
+	var expiry int64 = 0
+	claims := &model.UserAuth{UserID: token.Claims["uid"].(string), FirstName: token.Claims["first_name"].(string), LastName: token.Claims["last_name"].(string), Phone: token.Claims["phone"].(string), Email: token.Claims["email"].(string), Exp: &expiry}
 	return claims, nil
 }
 
@@ -77,7 +89,7 @@ func (a *firebaseAuthImpl) check(creds string, params string, l *log.Log) (*mode
 func (a *firebaseAuthImpl) createAdmin(email string, password string) (string, error) {
 	firebaseAuth, err := a.getFirebaseAuthClient("admin")
 	if err != nil {
-		return "", log.WrapActionError(log.ActionGet, typeCred, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionGet, typeCred, nil, err)
 	}
 
 	params := (&auth.UserToCreate{}).
@@ -88,7 +100,7 @@ func (a *firebaseAuthImpl) createAdmin(email string, password string) (string, e
 
 	userRecord, err := firebaseAuth.CreateUser(context.Background(), params)
 	if err != nil {
-		return "", log.WrapActionError(log.ActionCreate, typeCred, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionCreate, typeCred, nil, err)
 	}
 	return userRecord.UID, nil
 }
@@ -97,12 +109,12 @@ func (a *firebaseAuthImpl) createAdmin(email string, password string) (string, e
 func (a *firebaseAuthImpl) getAdmin(email string) (string, error) {
 	firebaseAuth, err := a.getFirebaseAuthClient("admin")
 	if err != nil {
-		return "", log.WrapActionError(log.ActionGet, typeCred, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionGet, typeCred, nil, err)
 	}
 
 	userRecord, err := firebaseAuth.GetUserByEmail(context.Background(), email)
 	if err != nil {
-		return "", log.WrapActionError(log.ActionGet, typeCred, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionGet, typeCred, nil, err)
 	}
 	return userRecord.UID, nil
 }
@@ -115,7 +127,7 @@ func (a *firebaseAuthImpl) setFirebaseAdminCreds(clientID string) error {
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "./service-account-file.json")
 	err = ioutil.WriteFile("./service-account-file.json", []byte(creds.FirebaseCreds), 0644)
 	if err != nil {
-		return log.WrapActionError(log.ActionUpdate, typeCred, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, typeCred, nil, err)
 
 	}
 	return nil
@@ -124,30 +136,38 @@ func (a *firebaseAuthImpl) setFirebaseAdminCreds(clientID string) error {
 func (a *firebaseAuthImpl) getFirebaseAuthClient(clientID string) (*auth.Client, error) {
 	err := a.setFirebaseAdminCreds(clientID)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionSave, log.TypeString, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionSave, logutils.TypeString, nil, err)
 	}
 
 	firebaseApp, err := firebase.NewApp(context.Background(), nil)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionInitialize, typeCred, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionInitialize, typeCred, nil, err)
 	}
 
 	// Access auth service from the firebase app
 	firebaseAuth, err := firebaseApp.Auth(context.Background())
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionInitialize, typeCred, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionInitialize, typeCred, nil, err)
 	}
 	return firebaseAuth, nil
 }
 
+func (a *firebaseAuthImpl) refresh(refreshToken string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
+	return nil, errors.Newf("refresh operation invalid for auth_type=%s", authTypeFirebase)
+}
+
+func (a *firebaseAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
+}
+
 //initFirebaseAuth initializes and registers a new Firebase auth instance
 func initFirebaseAuth(auth *Auth) (*firebaseAuthImpl, error) {
-	firebaseAuth := &firebaseAuthImpl{auth: auth}
+	firebase := &firebaseAuthImpl{auth: auth, authType: authTypeFirebase}
 
-	err := auth.registerAuthType("firebase", firebaseAuth)
+	err := auth.registerAuthType(firebase.authType, firebase)
 	if err != nil {
-		return nil, log.WrapActionError(log.ActionRegister, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
 	}
 
-	return firebaseAuth, nil
+	return firebase, nil
 }

@@ -104,9 +104,7 @@ func (collWrapper *collectionWrapper) InsertOneWithContext(ctx context.Context, 
 	cancel()
 
 	if err == nil {
-		if id, ok := ins.InsertedID.(interface{}); ok {
-			return id, nil
-		}
+		return ins.InsertedID, nil
 	}
 
 	return nil, err
@@ -176,6 +174,25 @@ func (collWrapper *collectionWrapper) UpdateOneWithContext(ctx context.Context, 
 	return updateResult, nil
 }
 
+func (collWrapper *collectionWrapper) FindOneAndUpdate(filter interface{}, update interface{}, result interface{}, opts *options.FindOneAndUpdateOptions) error {
+	return collWrapper.FindOneAndUpdateWithContext(context.Background(), filter, update, result, opts)
+}
+
+func (collWrapper *collectionWrapper) FindOneAndUpdateWithContext(ctx context.Context, filter interface{}, update interface{}, result interface{}, opts *options.FindOneAndUpdateOptions) error {
+	ctx, cancel := context.WithTimeout(ctx, collWrapper.database.mongoTimeout)
+	defer cancel()
+
+	singleResult := collWrapper.coll.FindOneAndUpdate(ctx, filter, update, opts)
+	if singleResult.Err() != nil {
+		return singleResult.Err()
+	}
+	err := singleResult.Decode(result)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (collWrapper *collectionWrapper) CountDocuments(filter interface{}) (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), collWrapper.database.mongoTimeout)
 	defer cancel()
@@ -197,8 +214,7 @@ func (collWrapper *collectionWrapper) Watch(pipeline interface{}) error {
 		pipeline = []bson.M{}
 	}
 
-	var opts *options.ChangeStreamOptions
-	opts = options.ChangeStream()
+	opts := options.ChangeStream()
 	opts.SetFullDocument(options.UpdateLookup)
 
 	ctx := context.Background()
@@ -210,7 +226,7 @@ func (collWrapper *collectionWrapper) Watch(pipeline interface{}) error {
 	defer cur.Close(ctx)
 
 	var changeDoc map[string]interface{}
-	log.Println("waiting for changes")
+	collWrapper.database.logger.Infof("%s collection is waiting for changes", collWrapper.coll.Name())
 	for cur.Next(ctx) {
 		if e := cur.Decode(&changeDoc); e != nil {
 			log.Printf("error decoding: %s\n", e)
@@ -282,7 +298,11 @@ func (collWrapper *collectionWrapper) DropIndex(name string) error {
 }
 
 func (collWrapper *collectionWrapper) Aggregate(pipeline interface{}, result interface{}, ops *options.AggregateOptions) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*15000)
+	return collWrapper.AggregateWithContext(context.Background(), pipeline, result, ops)
+}
+
+func (collWrapper *collectionWrapper) AggregateWithContext(ctx context.Context, pipeline interface{}, result interface{}, ops *options.AggregateOptions) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*15000)
 	defer cancel()
 
 	cursor, err := collWrapper.coll.Aggregate(ctx, pipeline, ops)

@@ -1,0 +1,9 @@
+required:
+ - login_url
+type: object
+properties:
+  login_url:
+    type: string
+  params:
+    type: object
+    description: Params to be submitted with 'login' request (if necessary)

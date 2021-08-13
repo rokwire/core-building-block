@@ -10,10 +10,10 @@ import (
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
+	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokmetro/logging-library/logutils"
 
 	"github.com/gorilla/mux"
-
-	log "github.com/rokmetro/logging-library/loglib"
 
 	"github.com/casbin/casbin"
 
@@ -22,24 +22,26 @@ import (
 
 //Adapter entity
 type Adapter struct {
-	env string
+	env  string
+	port string
 
 	openAPIRouter routers.Router
 	host          string
 	auth          *Auth
 	authorization *casbin.Enforcer
-	logger        *log.Logger
+	logger        *logs.Logger
 
 	defaultApisHandler  DefaultApisHandler
 	servicesApisHandler ServicesApisHandler
 	adminApisHandler    AdminApisHandler
 	encApisHandler      EncApisHandler
 	bbsApisHandler      BBsApisHandler
+	tpsApisHandler      TPSApisHandler
 
 	coreAPIs *core.APIs
 }
 
-type handlerFunc = func(*log.Log, *http.Request) log.HttpResponse
+type handlerFunc = func(*logs.Log, *http.Request) logs.HttpResponse
 
 //Start starts the module
 func (we Adapter) Start() {
@@ -52,28 +54,25 @@ func (we Adapter) Start() {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// handle apis
-	subRouter := router.PathPrefix("/core").Subrouter()
-	subRouter.PathPrefix("/doc/ui").Handler(we.serveDocUI())
-	subRouter.HandleFunc("/doc", we.serveDoc)
+	router.PathPrefix("/doc/ui").Handler(we.serveDocUI())
+	router.HandleFunc("/doc", we.serveDoc)
 
 	///default ///
-	subRouter.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion)).Methods("GET")
+	router.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion)).Methods("GET")
 	///
 
 	///services ///
-	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
-
-	//auth
-	authSubrouter := servicesSubRouter.PathPrefix("/auth").Subrouter()
-	authSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getAuthTest)).Methods("GET")
-
-	//common
-	commonSubrouter := servicesSubRouter.PathPrefix("/common").Subrouter()
-	commonSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getCommonTest)).Methods("GET")
+	servicesSubRouter := router.PathPrefix("/services").Subrouter()
+	servicesSubRouter.HandleFunc("/auth/login", we.wrapFunc(we.servicesApisHandler.authLogin)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations)).Methods("GET")
+	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest)).Methods("GET")
 	///
 
 	///admin ///
-	adminSubrouter := subRouter.PathPrefix("/admin").Subrouter()
+	adminSubrouter := router.PathPrefix("/admin").Subrouter()
 	adminSubrouter.HandleFunc("/test", we.wrapFunc(we.adminApisHandler.getTest)).Methods("GET")
 	adminSubrouter.HandleFunc("/test-model", we.wrapFunc(we.adminApisHandler.getTestModel)).Methods("GET")
 
@@ -83,19 +82,34 @@ func (we Adapter) Start() {
 
 	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.createOrganization)).Methods("POST")
 	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.updateOrganization)).Methods("PUT")
+	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.getOrganization)).Methods("GET")
+	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.getOrganizations)).Methods("GET")
+
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.getServiceRegistrations)).Methods("GET")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.registerService)).Methods("POST")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.updateServiceRegistration)).Methods("PUT")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.deregisterService)).Methods("DELETE")
+
+	adminSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.adminApisHandler.getApplication)).Methods("GET")
 	///
 
 	///enc ///
-	encSubrouter := subRouter.PathPrefix("/enc").Subrouter()
+	encSubrouter := router.PathPrefix("/enc").Subrouter()
 	encSubrouter.HandleFunc("/test", we.wrapFunc(we.encApisHandler.getTest)).Methods("GET")
 	///
 
 	///bbs ///
-	bbsSubrouter := subRouter.PathPrefix("/bbs").Subrouter()
+	bbsSubrouter := router.PathPrefix("/bbs").Subrouter()
 	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.getTest)).Methods("GET")
+	bbsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.bbsApisHandler.getServiceRegistrations)).Methods("GET")
 	///
 
-	err := http.ListenAndServe(":80", router)
+	///third-party services ///
+	tpsSubrouter := router.PathPrefix("/tps").Subrouter()
+	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations)).Methods("GET")
+	///
+
+	err := http.ListenAndServe(":"+we.port, router)
 	if err != nil {
 		we.logger.Fatal(err.Error())
 	}
@@ -119,17 +133,12 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 
 		var err error
 
+		logObj.Debugf("URL: %v%v", req.Host, req.URL)
 		//1. validate request
-		var requestValidationInput *openapi3filter.RequestValidationInput
-		if we.env != "production" {
-			requestValidationInput, err = we.validateRequest(req)
-			if err != nil {
-				logObj.Errorf("error validating request - %s", err)
-
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(http.StatusText(http.StatusBadRequest)))
-				return
-			}
+		requestValidationInput, err := we.validateRequest(req)
+		if err != nil {
+			logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
+			return
 		}
 
 		//2. process it
@@ -139,10 +148,7 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 		if we.env != "production" {
 			err = we.validateResponse(requestValidationInput, response)
 			if err != nil {
-				logObj.Errorf("error validating response - %s", err)
-
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(http.StatusText(http.StatusBadRequest)))
+				logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeResponse, nil, err, http.StatusInternalServerError, true)
 				return
 			}
 		}
@@ -187,7 +193,7 @@ func (we Adapter) validateRequest(req *http.Request) (*openapi3filter.RequestVal
 	return requestValidationInput, nil
 }
 
-func (we Adapter) validateResponse(requestValidationInput *openapi3filter.RequestValidationInput, response log.HttpResponse) error {
+func (we Adapter) validateResponse(requestValidationInput *openapi3filter.RequestValidationInput, response logs.HttpResponse) error {
 	responseCode := response.ResponseCode
 	body := response.Body
 	header := response.Headers
@@ -208,7 +214,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.Logger) Adapter {
+func NewWebAdapter(env string, port string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -219,12 +225,16 @@ func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.Log
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
+
+	//Ignore servers. Validating reqeusts against the documented servers can cause issues when routing traffic through proxies/load-balancers.
+	doc.Servers = nil
+
 	openAPIRouter, err := gorillamux.NewRouter(doc)
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
 
-	auth := NewAuth(coreAPIs)
+	auth := NewAuth(coreAPIs, logger)
 	authorization := casbin.NewEnforcer("driver/web/authorization_model.conf", "driver/web/authorization_policy.csv")
 
 	defaultApisHandler := NewDefaultApisHandler(coreAPIs)
@@ -232,8 +242,10 @@ func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.Log
 	adminApisHandler := NewAdminApisHandler(coreAPIs)
 	encApisHandler := NewEncApisHandler(coreAPIs)
 	bbsApisHandler := NewBBsApisHandler(coreAPIs)
-	return Adapter{env: env, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, authorization: authorization, defaultApisHandler: defaultApisHandler,
-		servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler, encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, coreAPIs: coreAPIs}
+	tpsApisHandler := NewTPSApisHandler(coreAPIs)
+	return Adapter{env: env, port: port, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, authorization: authorization,
+		defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
+		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, coreAPIs: coreAPIs}
 }
 
 //AppListener implements core.ApplicationListener interface

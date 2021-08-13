@@ -1,0 +1,30 @@
+required:
+  - service_id
+  - host
+  - name
+  - description
+  - first_party
+type: object
+description: Full service registration record
+properties:
+  service_id:
+    type: string
+  host:
+    type: string
+  pub_key:
+    $ref: "./PubKey.yaml"
+  name:
+    type: string
+  description:
+    type: string
+  info_url:
+    type: string
+  logo_url:
+    type: string
+  scopes:
+    type: array
+    nullable: true
+    items:
+      $ref: "./ServiceScope.yaml"
+  first_party:
+    type: boolean
