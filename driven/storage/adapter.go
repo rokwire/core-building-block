@@ -358,10 +358,6 @@ func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.Sessio
 
 //UpdateCredentials updates a set of credentials
 func (sa *Adapter) UpdateCredentials(orgID string, appID string, authType string, userID string, params *model.AuthRefreshParams) error {
-	if params == nil {
-		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthRefreshParams))
-	}
-
 	var filter bson.D
 	if len(orgID) > 0 && len(appID) > 0 {
 		filter = bson.D{
