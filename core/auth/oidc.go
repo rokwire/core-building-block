@@ -199,19 +199,12 @@ func (a *oidcAuthImpl) getLoginURL(orgID string, appID string, redirectURI strin
 	if len(oidcConfig.AuthorizeURL) > 0 {
 		authURL = oidcConfig.AuthorizeURL
 	}
-	url, err := url.Parse(authURL)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionParse, "auth url", &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
-	}
-	for k, v := range bodyData {
-		if len(url.RawQuery) < 1 {
-			url.RawQuery += fmt.Sprintf("%s=%s", k, v)
-		} else {
-			url.RawQuery += fmt.Sprintf("&%s=%s", k, v)
-		}
-	}
 
-	return url.String(), responseParams, nil
+	query := url.Values{}
+	for k, v := range bodyData {
+		query.Set(k, v)
+	}
+	return authURL + "?" + query.Encode(), responseParams, nil
 }
 
 func (a *oidcAuthImpl) isGlobal() bool {
