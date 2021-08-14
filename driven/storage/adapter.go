@@ -59,7 +59,7 @@ func (sa *Adapter) RegisterStorageListener(storageListener Listener) {
 func (sa *Adapter) cacheOrganizations() error {
 	sa.logger.Info("cacheOrganizations..")
 
-	organizations, err := sa.FindOrganizations()
+	organizations, err := sa.LoadOrganizations()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
@@ -151,7 +151,7 @@ func (sa *Adapter) findUser(key string, id string) (*model.User, error) {
 }
 
 //InsertUser inserts a user
-func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*model.User, error) {
+func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCreds) (*model.User, error) {
 	if user == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUser))
 	}
@@ -303,7 +303,7 @@ func (sa *Adapter) DeleteUser(id string) error {
 }
 
 //FindCredentials find a set of credentials
-func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCred, error) {
+func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCreds, error) {
 	var filter bson.D
 	if len(orgID) > 0 && len(appID) > 0 {
 		filter = bson.D{
@@ -314,7 +314,7 @@ func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, 
 		filter = bson.D{primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: userID}}
 	}
 
-	var creds model.AuthCred
+	var creds model.AuthCreds
 	err := sa.db.credentials.FindOne(filter, &creds, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
@@ -324,11 +324,11 @@ func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, 
 }
 
 //FindCredentialsByRefreshToken finds a set of credentials by refresh token
-func (sa *Adapter) FindCredentialsByRefreshToken(token string) (*model.AuthCred, error) {
+func (sa *Adapter) FindCredentialsByRefreshToken(token string) (*model.AuthCreds, error) {
 	conditions := []bson.M{{"refresh.current_token": token}, {"refresh.previous_token": token}}
 	filter := bson.M{"$or": conditions}
 
-	var creds model.AuthCred
+	var creds model.AuthCreds
 	err := sa.db.credentials.FindOne(filter, &creds, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
@@ -338,7 +338,7 @@ func (sa *Adapter) FindCredentialsByRefreshToken(token string) (*model.AuthCred,
 }
 
 //InsertCredentials inserts a set of credentials
-func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.SessionContext) error {
+func (sa *Adapter) InsertCredentials(creds *model.AuthCreds, context mongo.SessionContext) error {
 	if creds == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
 	}
@@ -357,7 +357,7 @@ func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.Sessio
 }
 
 //UpdateCredentials updates a set of credentials
-func (sa *Adapter) UpdateCredentials(orgID string, appID string, authType string, userID string, params *model.AuthRefreshParams) error {
+func (sa *Adapter) UpdateCredentials(orgID string, appID string, authType string, userID string, refresh *model.AuthRefresh) error {
 	var filter bson.D
 	if len(orgID) > 0 && len(appID) > 0 {
 		filter = bson.D{
@@ -370,7 +370,7 @@ func (sa *Adapter) UpdateCredentials(orgID string, appID string, authType string
 
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "refresh", Value: params},
+			primitive.E{Key: "refresh", Value: refresh},
 		}},
 	}
 	res, err := sa.db.credentials.UpdateOne(filter, update, nil)
@@ -663,8 +663,8 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 	return nil
 }
 
-//FindOrganizations gets the organizations
-func (sa *Adapter) FindOrganizations() ([]model.Organization, error) {
+//LoadOrganizations gets the organizations
+func (sa *Adapter) LoadOrganizations() ([]model.Organization, error) {
 	//no transactions for get operations..
 	cachedOrgs, err := sa.getCachedOrganizations()
 	if err != nil {

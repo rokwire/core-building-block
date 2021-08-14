@@ -84,8 +84,8 @@ func (_m *Storage) FindOrganization(id string) (*model.Organization, error) {
 	return r0, r1
 }
 
-// FindOrganizations provides a mock function with given fields:
-func (_m *Storage) FindOrganizations() ([]model.Organization, error) {
+// LoadOrganizations provides a mock function with given fields:
+func (_m *Storage) LoadOrganizations() ([]model.Organization, error) {
 	ret := _m.Called()
 
 	var r0 []model.Organization

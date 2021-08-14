@@ -20,8 +20,10 @@ const (
 	TypeAuthConfig logutils.MessageDataType = "auth config"
 	//TypeAuthCred auth cred type
 	TypeAuthCred logutils.MessageDataType = "auth cred"
-	//TypeAuthRefreshParams auth refresh params type
-	TypeAuthRefreshParams logutils.MessageDataType = "auth refresh params"
+	//TypeAuthRefresh auth refresh type
+	TypeAuthRefresh logutils.MessageDataType = "auth refresh"
+	//TypeRefreshToken refresh token type
+	TypeRefreshToken logutils.MessageDataType = "refresh token"
 	//TypeServiceReg service reg type
 	TypeServiceReg logutils.MessageDataType = "service reg"
 	//TypeServiceScope service scope type
@@ -42,6 +44,7 @@ const (
 type UserAuth struct {
 	UserID         string
 	AccountID      string
+	OrgID          string
 	Sub            string
 	FirstName      string
 	LastName       string
@@ -49,9 +52,9 @@ type UserAuth struct {
 	Phone          string
 	Picture        []byte
 	Exp            *int64
+	Creds          *AuthCreds
 	OrgData        map[string]interface{}
-	NewCreds       map[string]interface{}
-	IDPParams      map[string]string
+	RefreshParams  map[string]interface{}
 	ResponseParams interface{}
 }
 
@@ -63,23 +66,23 @@ type AuthConfig struct {
 	Config []byte `json:"config" bson:"config" validate:"required"`
 }
 
-//AuthCred represents represents a set of credentials used by auth
-type AuthCred struct {
+//AuthCreds represents represents a set of credentials used by auth
+type AuthCreds struct {
 	OrgID     string                 `bson:"org_id"`
 	AppID     string                 `bson:"app_id"`
 	Type      string                 `bson:"type"`
 	UserID    string                 `bson:"user_id"`
 	AccountID string                 `bson:"account_id"`
 	Creds     map[string]interface{} `bson:"creds"`
-	Refresh   *AuthRefreshParams     `bson:"refresh"`
+	Refresh   *AuthRefresh           `bson:"refresh"`
 }
 
-//AuthRefreshParams represents refresh token info used by auth
-type AuthRefreshParams struct {
-	PreviousToken string            `json:"previous_token" bson:"previous_token"`
-	CurrentToken  string            `json:"current_token" bson:"current_token" validate:"required"`
-	Expires       *time.Time        `json:"exp" bson:"exp" validate:"required"`
-	IDPParams     map[string]string `json:"idp_params" bson:"idp_params"`
+//AuthRefresh represents refresh token info used by auth
+type AuthRefresh struct {
+	PreviousToken string                 `json:"previous_token" bson:"previous_token"`
+	CurrentToken  string                 `json:"current_token" bson:"current_token" validate:"required"`
+	Expires       *time.Time             `json:"exp" bson:"exp" validate:"required"`
+	Params        map[string]interface{} `json:"params" bson:"params"`
 }
 
 //ServiceReg represents a service registration entity

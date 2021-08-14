@@ -23,7 +23,7 @@ func (a *signatureAuthImpl) check(creds string, orgID string, appID string, para
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *signatureAuthImpl) refresh(params map[string]string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
+func (a *signatureAuthImpl) refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
 	return nil, errors.Newf("refresh operation invalid for auth_type=%s", authTypeSignature)
 }
 

@@ -23,7 +23,7 @@ func (a *apiKeyAuthImpl) check(creds string, orgID string, appID string, params 
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *apiKeyAuthImpl) refresh(params map[string]string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
+func (a *apiKeyAuthImpl) refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
 	return nil, errors.Newf("refresh operation invalid for auth_type=%s", authTypeAPIKey)
 }
 

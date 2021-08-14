@@ -117,7 +117,7 @@ func TestAdmGetOrganization(t *testing.T) {
 
 func TestGetOrganizations(t *testing.T) {
 	storage := genmocks.Storage{}
-	storage.On("FindOrganizations").Return([]model.Organization{}, nil)
+	storage.On("LoadOrganizations").Return([]model.Organization{}, nil)
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
 	getOrganization, _ := app.Administration.AdmGetOrganizations()
@@ -127,7 +127,7 @@ func TestGetOrganizations(t *testing.T) {
 	}
 	// second case error
 	storage2 := genmocks.Storage{}
-	storage2.On("FindOrganizations").Return([]model.Organization{}, nil)
+	storage2.On("LoadOrganizations").Return([]model.Organization{}, nil)
 	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
 	err, _ := app.Administration.AdmGetOrganizations()
