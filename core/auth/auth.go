@@ -5,6 +5,7 @@ import (
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"crypto/rsa"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -160,7 +161,7 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 
 	userAuth, err := auth.check(creds, orgID, appID, params, l)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "creds", nil, err)
+		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "login creds", nil, err)
 	}
 
 	if userAuth == nil || userAuth.Creds == nil {
@@ -195,7 +196,7 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 			if newMembership {
 				newMembershipOrgData = &userAuth.OrgData
 			}
-			_, err = a.updateAccount(user, newMembershipOrgData)
+			_, err = a.updateAccount(user, orgID, newMembershipOrgData)
 			if err != nil {
 				return "", "", nil, nil, err
 			}
@@ -211,17 +212,19 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 				return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthCred, nil, err)
 			}
 		}
-	} else {
+	} else if userAuth.OrgID == orgID {
 		user, err = a.createAccount(userAuth)
 		if err != nil {
 			return "", "", nil, nil, err
 		}
+	} else {
+		return "", "", nil, nil, errors.ErrorData(logutils.StatusInvalid, "org_id", logutils.StringArgs(orgID))
 	}
 
 	claims := a.getStandardClaims(user.ID, userAuth.UserID, userAuth.Email, userAuth.Phone, "rokwire", orgID, appID, userAuth.Exp)
 	token, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction("build", logutils.TypeToken, nil, err)
+		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
 	return token, refreshToken, user, userAuth.ResponseParams, nil
@@ -272,16 +275,28 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 
 	userAuth, err := auth.refresh(credentials.Refresh.Params, credentials.OrgID, credentials.AppID, l)
 	if err != nil {
-		return "", "", nil, errors.WrapErrorAction("refresh", logutils.TypeToken, nil, err)
+		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
 	}
 
-	if userAuth == nil || userAuth.Creds == nil {
-		return "", "", nil, errors.WrapErrorData(logutils.StatusInvalid, "user auth creds", nil, err)
+	if userAuth == nil {
+		return "", "", nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeUserAuth, nil, err)
 	}
 
 	user, err := a.storage.FindUserByAccountID(credentials.AccountID)
 	if err != nil {
 		return "", "", nil, err
+	}
+
+	user, update, newMembership := a.needsUserUpdate(userAuth, user)
+	if update {
+		var newMembershipOrgData *map[string]interface{}
+		if newMembership {
+			newMembershipOrgData = &userAuth.OrgData
+		}
+		_, err = a.updateAccount(user, credentials.OrgID, newMembershipOrgData)
+		if err != nil {
+			return "", "", nil, err
+		}
 	}
 
 	claims := a.getStandardClaims(user.ID, userAuth.UserID, user.Account.Email, user.Account.Phone, "rokwire", credentials.OrgID, credentials.AppID, userAuth.Exp)
@@ -291,7 +306,7 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 	}
 
 	newRefreshToken := ""
-	if userAuth.Creds.Refresh != nil {
+	if userAuth.RefreshParams != nil {
 		var expireTime *time.Time
 		newRefreshToken, expireTime, err = a.buildRefreshToken()
 		if err != nil {
@@ -471,8 +486,8 @@ func (a *Auth) createAccount(userAuth *model.UserAuth) (*model.User, error) {
 }
 
 //updateAccount updates a user's account information
-func (a *Auth) updateAccount(user *model.User, newOrgData *map[string]interface{}) (*model.User, error) {
-	return a.storage.UpdateUser(user, newOrgData)
+func (a *Auth) updateAccount(user *model.User, orgID string, newOrgData *map[string]interface{}) (*model.User, error) {
+	return a.storage.UpdateUser(user, orgID, newOrgData)
 }
 
 //deleteAccount deletes a user account
@@ -538,11 +553,11 @@ func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*mod
 	update := false
 
 	// account
-	if len(user.Account.Email) == 0 {
+	if len(user.Account.Email) == 0 && len(userAuth.Email) > 0 {
 		user.Account.Email = userAuth.Email
 		update = true
 	}
-	if len(user.Account.Phone) == 0 {
+	if len(user.Account.Phone) == 0 && len(userAuth.Phone) > 0 {
 		user.Account.Phone = userAuth.Phone
 		update = true
 	}
@@ -560,12 +575,21 @@ func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*mod
 	// org data
 	foundOrg := false
 	for _, m := range user.OrganizationsMemberships {
-		if m.Organization.ID == userAuth.OrgData["org_id"] {
+		if m.Organization.ID == userAuth.OrgID {
 			foundOrg = true
-			if !reflect.DeepEqual(userAuth.OrgData, m.OrgUserData) {
+
+			orgDataBytes, err := json.Marshal(m.OrgUserData)
+			if err != nil {
+				break
+			}
+			var orgData map[string]interface{}
+			json.Unmarshal(orgDataBytes, &orgData)
+
+			if !reflect.DeepEqual(userAuth.OrgData, orgData) {
 				m.OrgUserData = userAuth.OrgData
 				update = true
 			}
+			break
 		}
 	}
 
@@ -771,7 +795,7 @@ type Storage interface {
 	//Users
 	FindUserByAccountID(accountID string) (*model.User, error)
 	InsertUser(user *model.User, authCred *model.AuthCreds) (*model.User, error)
-	UpdateUser(user *model.User, newOrgData *map[string]interface{}) (*model.User, error)
+	UpdateUser(user *model.User, orgID string, newOrgData *map[string]interface{}) (*model.User, error)
 	DeleteUser(id string) error
 
 	//Organizations

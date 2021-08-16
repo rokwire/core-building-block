@@ -211,7 +211,7 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCreds) (*mod
 }
 
 //UpdateUser updates an existing user
-func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]interface{}) (*model.User, error) {
+func (sa *Adapter) UpdateUser(updatedUser *model.User, orgID string, newOrgData *map[string]interface{}) (*model.User, error) {
 	if updatedUser == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUser))
 	}
@@ -228,10 +228,6 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 		membershipID, err := uuid.NewUUID()
 		if err != nil {
 			return nil, errors.WrapErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("membership_id"), err)
-		}
-		orgID, ok := (*newOrgData)["org_id"].(string)
-		if !ok {
-			return nil, errors.WrapErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("org_id"), err)
 		}
 		newOrgMembership := organizationMembership{ID: membershipID.String(), UserID: updatedUser.ID, OrgID: orgID,
 			OrgUserData: *newOrgData, DateCreated: now}
