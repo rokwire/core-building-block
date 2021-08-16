@@ -38,6 +38,90 @@ func (_m *Storage) CreateGlobalConfig(setting string) (*model.GlobalConfig, erro
 	return r0, r1
 }
 
+// DeleteGlobalGroup provides a mock function with given fields: id
+func (_m *Storage) DeleteGlobalGroup(id string) error {
+	ret := _m.Called(id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteGlobalPermission provides a mock function with given fields: id
+func (_m *Storage) DeleteGlobalPermission(id string) error {
+	ret := _m.Called(id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteGlobalRole provides a mock function with given fields: id
+func (_m *Storage) DeleteGlobalRole(id string) error {
+	ret := _m.Called(id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteOrganizationGroup provides a mock function with given fields: id
+func (_m *Storage) DeleteOrganizationGroup(id string) error {
+	ret := _m.Called(id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteOrganizationPermission provides a mock function with given fields: id
+func (_m *Storage) DeleteOrganizationPermission(id string) error {
+	ret := _m.Called(id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteOrganizationRole provides a mock function with given fields: id
+func (_m *Storage) DeleteOrganizationRole(id string) error {
+	ret := _m.Called(id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // FindApplication provides a mock function with given fields: ID
 func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	ret := _m.Called(ID)
@@ -195,6 +279,48 @@ func (_m *Storage) SaveGlobalConfig(setting *model.GlobalConfig) error {
 	return r0
 }
 
+// UpdateGlobalGroup provides a mock function with given fields: item
+func (_m *Storage) UpdateGlobalGroup(item model.GlobalGroup) error {
+	ret := _m.Called(item)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.GlobalGroup) error); ok {
+		r0 = rf(item)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateGlobalPermission provides a mock function with given fields: item
+func (_m *Storage) UpdateGlobalPermission(item model.GlobalPermission) error {
+	ret := _m.Called(item)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.GlobalPermission) error); ok {
+		r0 = rf(item)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateGlobalRole provides a mock function with given fields: item
+func (_m *Storage) UpdateGlobalRole(item model.GlobalRole) error {
+	ret := _m.Called(item)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.GlobalRole) error); ok {
+		r0 = rf(item)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UpdateOrganization provides a mock function with given fields: ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains
 func (_m *Storage) UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
 	ret := _m.Called(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
@@ -202,6 +328,48 @@ func (_m *Storage) UpdateOrganization(ID string, name string, requestType string
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string, string, bool, []string, []string) error); ok {
 		r0 = rf(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateOrganizationGroup provides a mock function with given fields: item
+func (_m *Storage) UpdateOrganizationGroup(item model.OrganizationGroup) error {
+	ret := _m.Called(item)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.OrganizationGroup) error); ok {
+		r0 = rf(item)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateOrganizationPermission provides a mock function with given fields: item
+func (_m *Storage) UpdateOrganizationPermission(item model.OrganizationPermission) error {
+	ret := _m.Called(item)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.OrganizationPermission) error); ok {
+		r0 = rf(item)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateOrganizationRole provides a mock function with given fields: item
+func (_m *Storage) UpdateOrganizationRole(item model.OrganizationRole) error {
+	ret := _m.Called(item)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.OrganizationRole) error); ok {
+		r0 = rf(item)
 	} else {
 		r0 = ret.Error(0)
 	}
