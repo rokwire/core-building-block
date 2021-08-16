@@ -256,3 +256,16 @@ func (app *application) admGetApplication(ID string) (*model.Application, error)
 
 	return appAdm, nil
 }
+
+func (app *application) AdmCreateGlobalGroup(name string, permissions []string, roles []string) (*model.GlobalGroup, error) {
+	now := time.Now()
+
+	createGlobalGroupID, _ := uuid.NewUUID()
+	globalGroup := model.GlobalGroup{ID: createGlobalGroupID.String(), Name: name, Permissions: permissions, Roles: roles, DateCreated: now}
+
+	insertedGlobalGroup, err := app.storage.InsertGlobalGroup(globalGroup)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalGroup, nil, err)
+	}
+	return insertedGlobalGroup, nil
+}

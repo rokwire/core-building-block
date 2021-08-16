@@ -92,7 +92,7 @@ func (we Adapter) Start() {
 
 	adminSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.adminApisHandler.getApplication)).Methods("GET")
 
-	adminSubrouter.HandleFunc("/global-groups", we.wrapFunc(we.adminApisHandler.getGlobalGroup)).Methods("GET")
+	adminSubrouter.HandleFunc("/global-groups", we.wrapFunc(we.adminApisHandler.createGlobalGroup)).Methods("POST")
 	///
 
 	///enc ///

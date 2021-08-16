@@ -602,7 +602,7 @@ paths:
                 nullable: true
                 type: array
                 items:
-                  $ref: '#/components/schemas/GlobalGroup'
+                  $ref: '#/components/schemas/CreateGlobalGroupRequest'
         '400':
           description: Bad request
         '401':
@@ -745,7 +745,18 @@ components:
         permissions:
           type: array
           items:
-            type: string
+            required:
+              - id
+              - name
+            type: object
+            properties:
+              id:
+                readOnly: true
+                type: string
+              name:
+                type: string
+                items:
+                  type: string
         roles:
           type: array
           items:
@@ -754,6 +765,24 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/User'
+    CreateGlobalGroupRequest:
+      required:
+        - name
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            type: string
     Application:
       required:
         - id

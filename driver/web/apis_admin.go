@@ -304,6 +304,30 @@ func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.Http
 	return l.HttpResponseSuccessJSON(data)
 }
 
+//createGlobalGroup creates organization
+func (h AdminApisHandler) createGlobalGroup(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+	var requestData Def.CreateGlobalGroupRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeGlobalGroup, nil, err, http.StatusBadRequest, true)
+	}
+
+	name := requestData.Name
+	permissions := requestData.Permissions
+	roles := requestData.Roles
+
+	_, err = h.coreAPIs.Administration.AdmCreateGlobalGroup(name, permissions, roles)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeGlobalGroup, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 //NewAdminApisHandler creates new admin rest Handler instance
 func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
 	return AdminApisHandler{coreAPIs: coreAPIs}

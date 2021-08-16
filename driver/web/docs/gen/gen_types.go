@@ -171,6 +171,14 @@ type AuthServiceReg struct {
 	ServiceId string  `json:"service_id"`
 }
 
+// CreateGlobalGroupRequest defines model for CreateGlobalGroupRequest.
+type CreateGlobalGroupRequest struct {
+	Id          *string   `json:"id,omitempty"`
+	Name        string    `json:"name"`
+	Permissions *[]string `json:"permissions,omitempty"`
+	Roles       *[]string `json:"roles,omitempty"`
+}
+
 // Device defines model for Device.
 type Device struct {
 	Id         string     `json:"id"`
@@ -190,11 +198,14 @@ type GlobalConfig struct {
 
 // GlobalGroup defines model for GlobalGroup.
 type GlobalGroup struct {
-	Id          string        `json:"id"`
-	Name        string        `json:"name"`
-	Permissions *[]string     `json:"permissions,omitempty"`
-	Roles       *[]GlobalRole `json:"roles,omitempty"`
-	Users       *[]User       `json:"users,omitempty"`
+	Id          string `json:"id"`
+	Name        string `json:"name"`
+	Permissions *[]struct {
+		Id   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"permissions,omitempty"`
+	Roles *[]GlobalRole `json:"roles,omitempty"`
+	Users *[]User       `json:"users,omitempty"`
 }
 
 // GlobalRole defines model for GlobalRole.
