@@ -13,7 +13,7 @@ properties:
   permissions:
     type: array
     items:
-      type: string
+      $ref: "./OrganizationPermission.yaml"
   roles:
     type: array
     items:

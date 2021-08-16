@@ -10,7 +10,3 @@ properties:
     type: string
   org_id:
     type: string
-  permissions:
-    type: array
-    items:
-      $ref: "./OrganizationPermission.yaml"
