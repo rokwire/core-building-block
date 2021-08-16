@@ -19,6 +19,8 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+//TODO - handle date created and date updated in the storage!
+
 //Adapter implements the Storage interface
 type Adapter struct {
 	db *database
