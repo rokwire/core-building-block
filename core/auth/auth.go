@@ -5,6 +5,7 @@ import (
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"crypto/rsa"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -44,9 +45,11 @@ type authType interface {
 	//check checks the validity of provided credentials
 	check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error)
 	//refresh refreshes the access token using provided refresh token
-	refresh(params interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error)
+	refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error)
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
+	//isGlobal returns whether an authType is orgID, appID independent
+	isGlobal() bool
 }
 
 //Auth represents the auth functionality unit
@@ -158,7 +161,28 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 
 	userAuth, err := auth.check(creds, orgID, appID, params, l)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "creds", nil, err)
+		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "login creds", nil, err)
+	}
+
+	if userAuth == nil || userAuth.Creds == nil {
+		return "", "", nil, nil, errors.WrapErrorData(logutils.StatusInvalid, "user auth creds", nil, err)
+	}
+
+	//RefreshParams == nil indicates that a refresh token should not be generated
+	refreshToken := ""
+	hadRefresh := (userAuth.Creds.Refresh != nil)
+	if userAuth.RefreshParams != nil {
+		var expireTime *time.Time
+		refreshToken, expireTime, err = a.buildRefreshToken()
+		if err != nil {
+			return "", "", nil, nil, err
+		}
+
+		refreshParams := model.AuthRefresh{CurrentToken: refreshToken, Expires: expireTime, Params: userAuth.RefreshParams}
+
+		userAuth.Creds.Refresh = &refreshParams
+	} else {
+		userAuth.Creds.Refresh = nil
 	}
 
 	if len(userAuth.AccountID) > 0 {
@@ -172,55 +196,38 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 			if newMembership {
 				newMembershipOrgData = &userAuth.OrgData
 			}
-			_, err = a.updateAccount(user, newMembershipOrgData)
+			_, err = a.updateAccount(user, orgID, newMembershipOrgData)
 			if err != nil {
 				return "", "", nil, nil, err
 			}
+		}
+
+		if userAuth.Creds.Refresh != nil || hadRefresh {
+			if auth.isGlobal() {
+				err = a.storage.UpdateCredentials("", "", authType, userAuth.UserID, userAuth.Creds.Refresh)
+			} else {
+				err = a.storage.UpdateCredentials(orgID, appID, authType, userAuth.UserID, userAuth.Creds.Refresh)
+			}
+			if err != nil {
+				return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthCred, nil, err)
+			}
+		}
+	} else if userAuth.OrgID == orgID {
+		user, err = a.createAccount(userAuth)
+		if err != nil {
+			return "", "", nil, nil, err
 		}
 	} else {
-		if userAuth.NewCreds != nil {
-			authCred := model.AuthCred{
-				OrgID:   orgID,
-				AppID:   appID,
-				Type:    authType,
-				UserID:  userAuth.UserID,
-				Creds:   userAuth.NewCreds,
-				Refresh: nil,
-			}
-			user, err = a.createAccount(userAuth, &authCred)
-			if err != nil {
-				return "", "", nil, nil, err
-			}
-		} else {
-			return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, nil, err)
-		}
+		return "", "", nil, nil, errors.ErrorData(logutils.StatusInvalid, "org_id", logutils.StringArgs(orgID))
 	}
 
 	claims := a.getStandardClaims(user.ID, userAuth.UserID, userAuth.Email, userAuth.Phone, "rokwire", orgID, appID, userAuth.Exp)
 	token, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction("build", logutils.TypeToken, nil, err)
+		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
-	refreshToken, expireTime, err := a.buildRefreshToken()
-	if err != nil {
-		return "", "", nil, nil, err
-	}
-	refreshParams := model.AuthRefreshParams{CurrentToken: refreshToken, Expires: expireTime, IDPParams: userAuth.Refresh}
-	updatedCreds := model.AuthCred{
-		OrgID:   orgID,
-		AppID:   appID,
-		Type:    authType,
-		UserID:  userAuth.UserID,
-		Creds:   userAuth.NewCreds,
-		Refresh: &refreshParams,
-	}
-	_, err = a.storage.UpdateCredentials(&updatedCreds)
-	if err != nil {
-		return "", "", nil, nil, err
-	}
-
-	return token, refreshToken, user, userAuth.Params, nil
+	return token, refreshToken, user, userAuth.ResponseParams, nil
 }
 
 //Refresh refreshes an access token using a refresh token
@@ -234,10 +241,10 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interface{}, error) {
 	credentials, err := a.storage.FindCredentialsByRefreshToken(refreshToken)
 	if err != nil {
-		return "", "", nil, errors.WrapErrorAction("refresh", logutils.TypeToken, nil, err)
+		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
 	}
 	if credentials == nil || credentials.Refresh == nil {
-		return "", "", nil, errors.ErrorData(logutils.StatusMissing, "auth cred", nil)
+		return "", "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthRefresh, nil)
 	}
 
 	validate := validator.New()
@@ -249,16 +256,16 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 	if !credentials.Refresh.Expires.After(time.Now().UTC()) {
 		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, "refresh expiration", nil)
 	}
+
 	if refreshToken == credentials.Refresh.PreviousToken {
-		credentials.Refresh = nil
-		_, err = a.storage.UpdateCredentials(credentials)
+		err = a.storage.UpdateCredentials(credentials.OrgID, credentials.AppID, credentials.Type, credentials.UserID, nil)
 		if err != nil {
 			return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh reuse", nil, err)
 		}
 		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, "refresh reuse", nil)
 	}
 	if refreshToken != credentials.Refresh.CurrentToken {
-		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, "refresh token", nil)
+		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, model.TypeRefreshToken, nil)
 	}
 
 	auth, err := a.getAuthType(credentials.Type)
@@ -266,44 +273,55 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 		return "", "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	userAuth, err := auth.refresh(credentials.Refresh.IDPParams, credentials.OrgID, credentials.AppID, l)
+	userAuth, err := auth.refresh(credentials.Refresh.Params, credentials.OrgID, credentials.AppID, l)
 	if err != nil {
-		return "", "", nil, errors.WrapErrorAction("refresh", logutils.TypeToken, nil, err)
+		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
 	}
 
-	if userAuth.Refresh != nil {
-		credentials.Refresh.IDPParams = userAuth.Refresh
+	if userAuth == nil {
+		return "", "", nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeUserAuth, nil, err)
 	}
-	if userAuth.Exp == nil {
-		defaultExp := accessTokenExpiry
-		userAuth.Exp = &defaultExp
-	}
-
-	newRefreshToken, expireTime, err := a.buildRefreshToken()
-	if err != nil {
-		return "", "", nil, err
-	}
-	credentials.Refresh.PreviousToken = refreshToken
-	credentials.Refresh.CurrentToken = newRefreshToken
-	credentials.Refresh.Expires = expireTime
 
 	user, err := a.storage.FindUserByAccountID(credentials.AccountID)
 	if err != nil {
 		return "", "", nil, err
 	}
 
+	user, update, newMembership := a.needsUserUpdate(userAuth, user)
+	if update {
+		var newMembershipOrgData *map[string]interface{}
+		if newMembership {
+			newMembershipOrgData = &userAuth.OrgData
+		}
+		_, err = a.updateAccount(user, credentials.OrgID, newMembershipOrgData)
+		if err != nil {
+			return "", "", nil, err
+		}
+	}
+
 	claims := a.getStandardClaims(user.ID, userAuth.UserID, user.Account.Email, user.Account.Phone, "rokwire", credentials.OrgID, credentials.AppID, userAuth.Exp)
 	token, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 	if err != nil {
-		return "", "", nil, errors.WrapErrorAction("build", logutils.TypeToken, nil, err)
+		return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
-	_, err = a.storage.UpdateCredentials(credentials)
-	if err != nil {
-		return "", "", nil, err
+	newRefreshToken := ""
+	if userAuth.RefreshParams != nil {
+		var expireTime *time.Time
+		newRefreshToken, expireTime, err = a.buildRefreshToken()
+		if err != nil {
+			return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeRefreshToken, nil, err)
+		}
+
+		refresh := model.AuthRefresh{CurrentToken: newRefreshToken, PreviousToken: refreshToken, Expires: expireTime, Params: userAuth.RefreshParams}
+
+		err = a.storage.UpdateCredentials(credentials.OrgID, credentials.AppID, credentials.Type, credentials.UserID, &refresh)
+		if err != nil {
+			return "", "", nil, err
+		}
 	}
 
-	return token, newRefreshToken, userAuth.Params, nil
+	return token, newRefreshToken, userAuth.ResponseParams, nil
 }
 
 //GetLoginURL returns a pre-formatted login url for SSO providers
@@ -455,17 +473,21 @@ func (a *Auth) findAccount(userAuth *model.UserAuth) (*model.User, error) {
 }
 
 //createAccount creates a new user account
-func (a *Auth) createAccount(userAuth *model.UserAuth, authCred *model.AuthCred) (*model.User, error) {
+func (a *Auth) createAccount(userAuth *model.UserAuth) (*model.User, error) {
+	if userAuth == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeUserAuth, nil)
+	}
+
 	newUser, err := a.setupUser(userAuth)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeUser, nil, err)
 	}
-	return a.storage.InsertUser(newUser, authCred)
+	return a.storage.InsertUser(newUser, userAuth.Creds)
 }
 
 //updateAccount updates a user's account information
-func (a *Auth) updateAccount(user *model.User, newOrgData *map[string]interface{}) (*model.User, error) {
-	return a.storage.UpdateUser(user, newOrgData)
+func (a *Auth) updateAccount(user *model.User, orgID string, newOrgData *map[string]interface{}) (*model.User, error) {
+	return a.storage.UpdateUser(user, orgID, newOrgData)
 }
 
 //deleteAccount deletes a user account
@@ -487,34 +509,41 @@ func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.User, error) {
 
 	accountID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("account_id"))
+		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("account_id"), err)
 	}
 	newUser.Account = model.UserAccount{ID: accountID.String(), Email: userAuth.Email, Phone: userAuth.Phone, Username: userAuth.UserID, DateCreated: now}
 
 	profileID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("profile_id"))
+		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("profile_id"), err)
 	}
 	newUser.Profile = model.UserProfile{ID: profileID.String(), FirstName: userAuth.FirstName, LastName: userAuth.LastName, DateCreated: now}
+
+	if userAuth.OrgID != "" {
+		membershipID, err := uuid.NewUUID()
+		if err != nil {
+			return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("membership_id"), err)
+		}
+
+		organization, err := a.storage.FindOrganization(userAuth.OrgID)
+		if err != nil {
+			return nil, err
+		}
+		newOrgMembership := model.OrganizationMembership{ID: membershipID.String(), Organization: *organization, OrgUserData: userAuth.OrgData, DateCreated: now}
+
+		// TODO:
+		// maybe set groups based on organization populations
+
+		newUser.OrganizationsMemberships = []model.OrganizationMembership{newOrgMembership}
+	}
 
 	//TODO: populate new device with device information (search for existing device first)
 	deviceID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("device_id"))
+		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("device_id"), err)
 	}
-	newDevice := model.Device{ID: deviceID.String(), DateCreated: now}
+	newDevice := model.Device{ID: deviceID.String(), Type: "other", Users: []model.User{newUser}, DateCreated: now}
 	newUser.Devices = []model.Device{newDevice}
-
-	membershipID, err := uuid.NewUUID()
-	if err != nil {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("membership_id"))
-	}
-	newOrgMembership := model.OrganizationMembership{ID: membershipID.String(), OrgUserData: userAuth.OrgData, DateCreated: now}
-
-	// TODO:
-	// maybe set groups based on organization populations
-
-	newUser.OrganizationsMemberships = []model.OrganizationMembership{newOrgMembership}
 
 	return &newUser, nil
 }
@@ -524,11 +553,11 @@ func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*mod
 	update := false
 
 	// account
-	if len(user.Account.Email) == 0 {
+	if len(user.Account.Email) == 0 && len(userAuth.Email) > 0 {
 		user.Account.Email = userAuth.Email
 		update = true
 	}
-	if len(user.Account.Phone) == 0 {
+	if len(user.Account.Phone) == 0 && len(userAuth.Phone) > 0 {
 		user.Account.Phone = userAuth.Phone
 		update = true
 	}
@@ -546,12 +575,21 @@ func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*mod
 	// org data
 	foundOrg := false
 	for _, m := range user.OrganizationsMemberships {
-		if m.Organization.ID == userAuth.OrgData["orgID"] {
+		if m.Organization.ID == userAuth.OrgID {
 			foundOrg = true
-			if !reflect.DeepEqual(userAuth.OrgData, m.OrgUserData) {
+
+			orgDataBytes, err := json.Marshal(m.OrgUserData)
+			if err != nil {
+				break
+			}
+			var orgData map[string]interface{}
+			json.Unmarshal(orgDataBytes, &orgData)
+
+			if !reflect.DeepEqual(userAuth.OrgData, orgData) {
 				m.OrgUserData = userAuth.OrgData
 				update = true
 			}
+			break
 		}
 	}
 
@@ -754,15 +792,19 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 
 //Storage interface to communicate with the storage
 type Storage interface {
+	//Users
 	FindUserByAccountID(accountID string) (*model.User, error)
-	InsertUser(user *model.User, authCred *model.AuthCred) (*model.User, error)
-	UpdateUser(user *model.User, newOrgData *map[string]interface{}) (*model.User, error)
+	InsertUser(user *model.User, authCred *model.AuthCreds) (*model.User, error)
+	UpdateUser(user *model.User, orgID string, newOrgData *map[string]interface{}) (*model.User, error)
 	DeleteUser(id string) error
 
+	//Organizations
+	FindOrganization(id string) (*model.Organization, error)
+
 	//Credentials
-	FindCredentialsByRefreshToken(token string) (*model.AuthCred, error)
-	FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCred, error)
-	UpdateCredentials(creds *model.AuthCred) (*model.AuthCred, error)
+	FindCredentialsByRefreshToken(token string) (*model.AuthCreds, error)
+	FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCreds, error)
+	UpdateCredentials(orgID string, appID string, authType string, userID string, refresh *model.AuthRefresh) error
 
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)

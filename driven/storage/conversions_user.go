@@ -16,14 +16,14 @@ func userFromStorage(item *user, sa *Adapter) model.User {
 	permissions := item.Permissions
 	roles := item.Roles
 	groups := item.Groups
-	organziationsMemberships := userMembershipsFromStorage(*item, sa)
+	organizationsMemberships := userMembershipsFromStorage(*item, sa)
 	devices := userDevicesFromStorage(*item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
 	return model.User{ID: id, Account: account, Profile: profile,
 		Permissions: permissions, Roles: roles, Groups: groups,
-		OrganizationsMemberships: organziationsMemberships, Devices: devices,
+		OrganizationsMemberships: organizationsMemberships, Devices: devices,
 		DateCreated: dateCreated, DateUpdated: dateUpdated}
 
 }
@@ -39,13 +39,13 @@ func userToStorage(item *model.User) *user {
 	permissions := item.Permissions
 	roles := item.Roles
 	groups := item.Groups
-	organziationsMemberships := userMembershipsToStorage(item)
+	organizationsMemberships := userMembershipsToStorage(item)
 	devices := userDevicesToStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
 	return &user{ID: id, Account: account, Profile: profile, Permissions: permissions, Roles: roles, Groups: groups,
-		OrganizationsMemberships: organziationsMemberships, Devices: devices,
+		OrganizationsMemberships: organizationsMemberships, Devices: devices,
 		DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
@@ -55,10 +55,10 @@ func userMembershipsFromStorage(item user, sa *Adapter) []model.OrganizationMemb
 	for i, membership := range item.OrganizationsMemberships {
 		organization, err := sa.getCachedOrganization(membership.OrgID)
 		if err != nil {
-			sa.logger.Errorf("error getting organziation - %s", err)
+			sa.logger.Errorf("error getting organization - %s", err)
+		} else {
+			memberships[i] = userMembershipFromStorage(membership, *organization)
 		}
-
-		memberships[i] = userMembershipFromStorage(membership, *organization)
 	}
 	return memberships
 }

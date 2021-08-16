@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set up logging [#6](https://github.com/rokwire/core-building-block/issues/6)
 
 ### Fixed
+- OIDC auth bug fixes [#143](https://github.com/rokwire/core-building-block/issues/143)
 - Fix APIs requests validation [#89](https://github.com/rokwire/core-building-block/issues/89)
 - Fixing the Log and the Changelog for issues #35 and #36 [#54](https://github.com/rokwire/core-building-block/issues/54)
 
