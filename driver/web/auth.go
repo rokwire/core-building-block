@@ -8,9 +8,8 @@ import (
 	"github.com/rokmetro/auth-library/authservice"
 	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/errors"
-	"github.com/rokmetro/logging-library/logutils"
 	"github.com/rokmetro/logging-library/logs"
-
+	"github.com/rokmetro/logging-library/logutils"
 )
 
 const (
@@ -64,7 +63,7 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 type ServicesAuth struct {
 	coreAPIs  *core.APIs
 	tokenAuth *tokenauth.TokenAuth
-	logger *logs.Logger
+	logger    *logs.Logger
 }
 
 func (auth *ServicesAuth) start() {
@@ -102,7 +101,7 @@ func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, 
 type AdminAuth struct {
 	coreAPIs  *core.APIs
 	tokenAuth *tokenauth.TokenAuth
-	logger *logs.Logger
+	logger    *logs.Logger
 }
 
 func (auth *AdminAuth) start() {

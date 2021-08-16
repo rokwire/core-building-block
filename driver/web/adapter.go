@@ -60,6 +60,7 @@ func (we Adapter) Start() {
 
 	///default ///
 	router.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion, nil)).Methods("GET")
+	router.HandleFunc("/.well-known/openid-configuration", we.wrapFunc(we.defaultApisHandler.getOpenIDConfiguration, nil)).Methods("GET")
 	///
 
 	///services ///
@@ -86,12 +87,14 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.getOrganization, we.auth.adminAuth)).Methods("GET")
 	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.getOrganizations, we.auth.adminAuth)).Methods("GET")
 
+	adminSubrouter.HandleFunc("/application", we.wrapFunc(we.adminApisHandler.createApplication, we.auth.adminAuth)).Methods("POST")
+	adminSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.adminApisHandler.getApplication, we.auth.adminAuth)).Methods("GET")
+
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.getServiceRegistrations, we.auth.adminAuth)).Methods("GET")
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.registerService, we.auth.adminAuth)).Methods("POST")
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.updateServiceRegistration, we.auth.adminAuth)).Methods("PUT")
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.deregisterService, we.auth.adminAuth)).Methods("DELETE")
 
-	adminSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.adminApisHandler.getApplication, we.auth.adminAuth)).Methods("GET")
 	///
 
 	///enc ///
@@ -108,6 +111,7 @@ func (we Adapter) Start() {
 	///third-party services ///
 	tpsSubrouter := router.PathPrefix("/tps").Subrouter()
 	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations, nil)).Methods("GET")
+	tpsSubrouter.HandleFunc("/auth-keys", we.wrapFunc(we.tpsApisHandler.getAuthKeys, nil)).Methods("GET")
 	///
 
 	err := http.ListenAndServe(":"+we.port, router)
@@ -134,7 +138,6 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization Authorization) htt
 
 		var err error
 
-		logObj.Debugf("URL: %v%v", req.Host, req.URL)
 		//1. validate request
 		requestValidationInput, err := we.validateRequest(req)
 		if err != nil {
