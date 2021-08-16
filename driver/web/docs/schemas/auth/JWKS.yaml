@@ -1,0 +1,9 @@
+required:
+  - keys
+type: object
+description: JSON Web Key Set (JWKS)
+properties:
+  keys:
+    type: array
+    items:
+      $ref: "./JWK.yaml"

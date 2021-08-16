@@ -1,0 +1,34 @@
+required:
+  - kty
+  - use
+  - alg
+  - kid
+  - n
+  - e
+type: object
+description: JSON Web Key (JWK)
+properties:
+  kty:
+    type: string
+    description: The "kty" (key type) parameter identifies the cryptographic algorithm family used with the key
+    enum:
+      - RSA
+  use:
+    type: string
+    description: The "use" (public key use) parameter identifies the intended use of the public key
+    enum:
+      - sig
+  alg:
+    type: string
+    description: The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
+    enum:
+      - RS256
+  kid:
+    type: string
+    description: The "kid" (key ID) parameter is used to match a specific key
+  n:
+    type: string
+    description: The modulus (2048 bit) of the key - Base64URL encoded.
+  e:
+    type: string
+    description: The exponent of the key - Base64URL encoded

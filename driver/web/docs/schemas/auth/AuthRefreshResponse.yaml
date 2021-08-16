@@ -1,6 +1,8 @@
 type: object
 properties:
-  access_token:
-    type: string
-  refresh_token:
-    type: string
+  token:
+    $ref: "./AuthResponseRokwireToken.yaml"
+  params:
+    type: object
+    anyOf:
+      - $ref: "./AuthResponseParamsOidc.yaml"

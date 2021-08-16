@@ -586,23 +586,28 @@ paths:
           description: Not Found
         '500':
           description: Internal error
-  /admin/global-groups:
+  /admin/application:
     post:
       tags:
         - Admin
-      summary: Create global group
+      summary: Create application
       description: |
-        Create global group
+        Creates application
+      requestBody:
+        description: creates one application
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Application'
+        required: true
       responses:
         '200':
-          description: Successful operation
+          description: Success
           content:
-            application/json:
+            text/plain:
               schema:
-                nullable: true
-                type: array
-                items:
-                  $ref: '#/components/schemas/CreateGlobalGroupRequest'
+                type: string
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -697,6 +702,26 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /tps/auth-keys:
+    get:
+      tags:
+        - Third-Party Services
+      summary: Get auth public key
+      description: |
+        Returns auth public key in JWKS format
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JWKS'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /version:
     get:
       summary: Get service version
@@ -708,6 +733,16 @@ paths:
               schema:
                 type: string
                 example: v1.1.0
+  /.well-known/openid-configuration:
+    get:
+      summary: OpenID Connect Discovery
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OidcDiscovery'
 components:
   schemas:
     GlobalConfig:
@@ -738,25 +773,13 @@ components:
       type: object
       properties:
         id:
-          readOnly: true
           type: string
         name:
           type: string
         permissions:
           type: array
           items:
-            required:
-              - id
-              - name
-            type: object
-            properties:
-              id:
-                readOnly: true
-                type: string
-              name:
-                type: string
-                items:
-                  type: string
+            type: string
         roles:
           type: array
           items:
@@ -765,24 +788,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/User'
-    CreateGlobalGroupRequest:
-      required:
-        - name
-      type: object
-      properties:
-        id:
-          readOnly: true
-          type: string
-        name:
-          type: string
-        permissions:
-          type: array
-          items:
-            type: string
-        roles:
-          type: array
-          items:
-            type: string
     Application:
       required:
         - id
@@ -790,6 +795,7 @@ components:
       type: object
       properties:
         id:
+          readOnly: true
           type: string
         name:
           type: string
@@ -980,19 +986,14 @@ components:
     AuthLoginResponse:
       type: object
       properties:
-        access_token:
-          description: The user's access token to be provided to authorize access to ROKWIRE APIs
-          type: string
-        refresh_token:
-          description: A refresh token that can be used to get a new access token once the one provided expires
-          type: string
-        token_type:
-          description: The type of the provided tokens to be specified when they are sent in the "Authorization" header
-          type: string
-          enum:
-            - Bearer
+        token:
+          $ref: '#/components/schemas/AuthResponseRokwireToken'
         user:
           $ref: '#/components/schemas/User'
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/AuthResponseParamsOidc'
     AuthLoginCredsEmail:
       required:
         - email
@@ -1041,10 +1042,38 @@ components:
     AuthRefreshResponse:
       type: object
       properties:
+        token:
+          $ref: '#/components/schemas/AuthResponseRokwireToken'
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/AuthResponseParamsOidc'
+    AuthResponseRokwireToken:
+      type: object
+      properties:
         access_token:
+          description: The user's access token to be provided to authorize access to ROKWIRE APIs
           type: string
         refresh_token:
+          description: A refresh token that can be used to get a new access token once the one provided expires
           type: string
+        token_type:
+          description: The type of the provided tokens to be specified when they are sent in the "Authorization" header
+          type: string
+          enum:
+            - Bearer
+    AuthResponseParamsOidc:
+      type: object
+      properties:
+        oidc_token:
+          type: object
+          properties:
+            id_token:
+              type: string
+            access_token:
+              type: string
+            token_type:
+              type: string
     AuthLoginUrlRequest:
       required:
         - auth_type
@@ -1101,6 +1130,62 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
+    JWK:
+      required:
+        - kty
+        - use
+        - alg
+        - kid
+        - 'n'
+        - e
+      type: object
+      description: JSON Web Key (JWK)
+      properties:
+        kty:
+          type: string
+          description: The "kty" (key type) parameter identifies the cryptographic algorithm family used with the key
+          enum:
+            - RSA
+        use:
+          type: string
+          description: The "use" (public key use) parameter identifies the intended use of the public key
+          enum:
+            - sig
+        alg:
+          type: string
+          description: The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
+          enum:
+            - RS256
+        kid:
+          type: string
+          description: The "kid" (key ID) parameter is used to match a specific key
+        'n':
+          type: string
+          description: The modulus (2048 bit) of the key - Base64URL encoded.
+        e:
+          type: string
+          description: The exponent of the key - Base64URL encoded
+    JWKS:
+      required:
+        - keys
+      type: object
+      description: JSON Web Key Set (JWKS)
+      properties:
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/JWK'
+    OidcDiscovery:
+      required:
+        - issuer
+        - jwks_uri
+      type: object
+      description: OpenID Connect Discovery Metadata
+      properties:
+        issuer:
+          type: string
+        jwks_uri:
+          type: string
     User:
       required:
         - id

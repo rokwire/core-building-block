@@ -51,7 +51,7 @@ func organizationToStorage(item *model.Organization) *organization {
 	}
 
 	return &organization{ID: item.ID, Name: item.Name, Type: item.Type, RequiresOwnLogin: item.RequiresOwnLogin,
-		LoginTypes: item.LoginTypes, Config: item.Config, Applications: nil, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		LoginTypes: item.LoginTypes, Config: item.Config, Applications: applicationsIDs, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 //OrganizationPermission
@@ -98,11 +98,7 @@ func organizationRoleFromStorage(item *organizationRole, organization model.Orga
 		return model.OrganizationRole{}
 	}
 
-	permissions := make([]model.OrganizationPermission, len(item.Permissions))
-	for i, permission := range item.Permissions {
-		permissions[i] = organizationPermissionFromStorage(&permission, organization)
-	}
-
+	permissions := organizationPermissionsFromStorage(item.Permissions, organization)
 	return model.OrganizationRole{ID: item.ID, Name: item.Name, Description: item.Description,
 		Permissions: permissions, Organization: organization,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
@@ -145,16 +141,8 @@ func organizationGroupFromStorage(item *organizationGroup, organization model.Or
 		return model.OrganizationGroup{}
 	}
 
-	permissions := make([]model.OrganizationPermission, len(item.Permissions))
-	for i, permission := range item.Permissions {
-		permissions[i] = organizationPermissionFromStorage(&permission, organization)
-	}
-
-	roles := make([]model.OrganizationRole, len(item.Roles))
-	for i, role := range item.Roles {
-		roles[i] = organizationRoleFromStorage(&role, organization)
-	}
-
+	permissions := organizationPermissionsFromStorage(item.Permissions, organization)
+	roles := organizationRolesFromStorage(item.Roles, organization)
 	return model.OrganizationGroup{ID: item.ID, Name: item.Name, Permissions: permissions, Roles: roles,
 		Organization: organization, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
@@ -189,3 +177,71 @@ func organizationGroupsToStorage(items []model.OrganizationGroup) []organization
 	}
 	return res
 }
+
+//OrganizationMembership
+/*
+func organizationMembershipFromUserStorage(item *userMembership, sa *Adapter) *model.OrganizationMembership {
+	if item == nil {
+		return nil
+	}
+
+	membership := model.OrganizationMembership{ID: item.ID, OrgUserData: item.OrgUserData,
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+
+	org, err := sa.getCachedOrganization(item.OrgID)
+	if err != nil {
+		sa.db.logger.Warnf("failed to find cached organization for org_id %s\n", item.OrgID)
+	} else {
+		membership.Organization = *org
+		membership.Permissions = organizationPermissionsFromStorage(item.Permissions, *org)
+		membership.Roles = organizationRolesFromStorage(item.Roles, *org)
+		membership.Groups = organizationGroupsFromStorage(item.Groups, *org)
+	}
+
+	return &membership
+}
+
+func organizationMembershipToUserStorage(item *model.OrganizationMembership) *userMembership {
+	if item == nil {
+		return nil
+	}
+
+	permissions := organizationPermissionsToStorage(item.Permissions)
+	roles := organizationRolesToStorage(item.Roles)
+	groups := organizationGroupsToStorage(item.Groups)
+	return &userMembership{ID: item.ID, OrgID: item.Organization.ID, OrgUserData: item.OrgUserData,
+		Permissions: permissions, Roles: roles, Groups: groups, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func organizationMembershipListFromUserStorage(items []userMembership, sa *Adapter) []model.OrganizationMembership {
+	if items == nil {
+		return nil
+	}
+	out := make([]model.OrganizationMembership, len(items))
+	for i, item := range items {
+		defItem := organizationMembershipFromUserStorage(&item, sa)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = model.OrganizationMembership{}
+		}
+	}
+	return out
+}
+
+func organizationMembershipListToUserStorage(items []model.OrganizationMembership) []userMembership {
+	if items == nil {
+		return nil
+	}
+	out := make([]userMembership, len(items))
+	for i, item := range items {
+		defItem := organizationMembershipToUserStorage(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = userMembership{}
+		}
+	}
+	return out
+}
+*/
