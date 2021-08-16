@@ -269,15 +269,6 @@ func (app *application) admCreateApplication(name string, versions []string) (*m
 	return inserted, nil
 }
 
-func (app *application) AdmCreateGlobalGroup(name string, permissions []string, roles []string) (*model.GlobalGroup, error) {
-	now := time.Now()
-
-	createGlobalGroupID, _ := uuid.NewUUID()
-	globalGroup := model.GlobalGroup{ID: createGlobalGroupID.String(), Name: name, Permissions: permissions, Roles: roles, DateCreated: now}
-
-	insertedGlobalGroup, err := app.storage.InsertGlobalGroup(globalGroup)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalGroup, nil, err)
-	}
-	return insertedGlobalGroup, nil
+func (app *application) admCreateGlobalGroup(name string, permissions []string, roles []string) (*model.GlobalGroup, error) {
+	return nil, nil
 }

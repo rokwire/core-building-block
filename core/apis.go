@@ -123,8 +123,8 @@ func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, e
 	return s.app.admGetApplication(ID)
 }
 
-func (s *administrationImpl) AdmCreateOrganization(name string, permissions []string, roles []string) (*model.GlobalGroup, error) {
-	return s.app.admCreateOrganization(name, permissions, roles)
+func (s *administrationImpl) AdmCreateGlobalGroup(name string, permissions []string, roles []string) (*model.GlobalGroup, error) {
+	return s.app.admCreateGlobalGroup(name, permissions, roles)
 }
 
 ///

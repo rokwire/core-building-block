@@ -767,6 +767,16 @@ func (sa *Adapter) InsertApplication(application model.Application) (*model.Appl
 	return &application, nil
 }
 
+//InsertGlobalGroup inserts global Group
+func (sa *Adapter) InsertGlobalGroup(globalGroup model.GlobalGroup) (*model.GlobalGroup, error) {
+	_, err := sa.db.globalGroups.InsertOne(globalGroup)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalGroup, &logutils.FieldArgs{"id": globalGroup.ID}, err)
+	}
+
+	return &globalGroup, nil
+}
+
 //FindApplication finds application
 func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
@@ -784,6 +794,26 @@ func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
 
 	getResApp := model.Application{ID: appRes.ID, Name: appRes.Name, Versions: appRes.Versions}
 	return &getResApp, nil
+}
+
+//FindGlobalGroup finds global group
+func (sa *Adapter) FindGlobalGroup(ID string) (*model.GlobalGroup, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	var result []model.GlobalGroup
+	err := sa.db.globalGroups.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalGroup, nil, err)
+	}
+	if len(result) == 0 {
+		//no record
+		return nil, nil
+	}
+
+	globalGroupRes := result[0]
+
+	getResGlobalGroup := model.GlobalGroup{ID: globalGroupRes.ID, Name: globalGroupRes.Name, Permissions: globalGroupRes.Permissions,
+		Roles: globalGroupRes.Roles, Users: globalGroupRes.Users}
+	return &getResGlobalGroup, nil
 }
 
 // ============================== ServiceRegs ==============================

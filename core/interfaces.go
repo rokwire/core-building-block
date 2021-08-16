@@ -29,6 +29,8 @@ type Administration interface {
 
 	AdmCreateApplication(name string, versions []string) (*model.Application, error)
 	AdmGetApplication(ID string) (*model.Application, error)
+
+	AdmCreateGlobalGroup(name string, permissions []string, roles []string) (*model.GlobalGroup, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -74,6 +76,9 @@ type Storage interface {
 
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
+
+	InsertGlobalGroup(globalGroup model.GlobalGroup) (*model.GlobalGroup, error)
+	FindGlobalGroup(ID string) (*model.GlobalGroup, error)
 }
 
 //StorageListener listenes for change data storage events

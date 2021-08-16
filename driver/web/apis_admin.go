@@ -304,30 +304,6 @@ func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.Http
 	return l.HttpResponseSuccessJSON(data)
 }
 
-//createGlobalGroup creates organization
-func (h AdminApisHandler) createGlobalGroup(l *logs.Log, r *http.Request) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-	var requestData Def.CreateGlobalGroupRequest
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeGlobalGroup, nil, err, http.StatusBadRequest, true)
-	}
-
-	name := requestData.Name
-	permissions := requestData.Permissions
-	roles := requestData.Roles
-
-	_, err = h.coreAPIs.Administration.AdmCreateGlobalGroup(name, permissions, roles)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeGlobalGroup, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HttpResponseSuccess()
-}
-
 //createApplication creates an application
 func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
@@ -355,6 +331,36 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.H
 	headers := map[string]string{}
 	headers["Content-Type"] = "text/plain"
 	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+}
+
+//createGlobalGroup creates global group
+func (h AdminApisHandler) createGlobalGroup(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		l.Errorf("Error on marshal create global group - %s\n", err.Error())
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeGlobalGroup, nil, err, http.StatusInternalServerError, false)
+	}
+
+	var requestData Def.CreateGlobalGroupRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		l.Errorf("Error on unmarshal the create global group - %s\n", err.Error())
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeGlobalGroup, nil, err, http.StatusBadRequest, true)
+	}
+
+	name := requestData.Name
+	permissions := requestData.Permissions
+	roles := requestData.Roles
+
+	_, err = h.coreAPIs.Administration.AdmCreateGlobalGroup(name, *permissions, *roles)
+	if err != nil {
+		l.Errorf(err.Error())
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeGlobalGroup, nil, err, http.StatusInternalServerError, true)
+	}
+
+	headers := map[string]string{}
+	headers["Content-Type"] = "text/plain"
+	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeGlobalGroup, nil, err, http.StatusInternalServerError, false)
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance
