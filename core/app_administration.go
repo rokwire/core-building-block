@@ -2,8 +2,12 @@ package core
 
 import (
 	"core-building-block/core/model"
-	"errors"
 	"fmt"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/rokmetro/logging-library/errors"
+	"github.com/rokmetro/logging-library/logutils"
 )
 
 func (app *application) admGetTest() string {
@@ -161,15 +165,15 @@ func (app *application) admGetTestModel() string {
 func (app *application) admCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
 	gc, err := app.storage.GetGlobalConfig()
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalConfig, nil, err)
 	}
 	if gc != nil {
-		return nil, errors.New("there is already a global config")
+		return nil, errors.New("global config already exists")
 	}
 
 	gc, err = app.storage.CreateGlobalConfig(setting)
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
 	}
 	return gc, nil
 }
@@ -177,7 +181,7 @@ func (app *application) admCreateGlobalConfig(setting string) (*model.GlobalConf
 func (app *application) admGetGlobalConfig() (*model.GlobalConfig, error) {
 	gc, err := app.storage.GetGlobalConfig()
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalConfig, nil, err)
 	}
 	return gc, nil
 }
@@ -185,33 +189,82 @@ func (app *application) admGetGlobalConfig() (*model.GlobalConfig, error) {
 func (app *application) admUpdateGlobalConfig(setting string) error {
 	gc, err := app.storage.GetGlobalConfig()
 	if err != nil {
-		return err
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalConfig, nil, err)
 	}
 	if gc == nil {
-		return errors.New("there is no a global config")
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeGlobalConfig, nil, err)
 	}
 
 	gc.Setting = setting
 	err = app.storage.SaveGlobalConfig(gc)
 	if err != nil {
-		return err
+		return errors.WrapErrorAction(logutils.ActionSave, model.TypeGlobalConfig, nil, err)
 	}
 	return nil
 }
 
 func (app *application) admCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
-	organization, err := app.storage.CreateOrganization(name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+	now := time.Now()
+
+	orgConfigID, _ := uuid.NewUUID()
+	orgConfig := model.OrganizationConfig{ID: orgConfigID.String(), Domains: organizationDomains, DateCreated: now}
+
+	organizationID, _ := uuid.NewUUID()
+	organization := model.Organization{ID: organizationID.String(), Name: name, Type: requestType, RequiresOwnLogin: requiresOwnLogin, LoginTypes: loginTypes,
+		Config: orgConfig, DateCreated: now}
+
+	insertedOrg, err := app.storage.InsertOrganization(organization)
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
+	return insertedOrg, nil
+}
+
+func (app *application) admGetOrganization(ID string) (*model.Organization, error) {
+	organization, err := app.storage.FindOrganization(ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err)
+	}
+
 	return organization, nil
+}
+
+func (app *application) admGetOrganizations() ([]model.Organization, error) {
+	getOrganization, err := app.storage.GetOrganizations()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err)
+	}
+
+	return getOrganization, nil
 }
 
 func (app *application) admUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
 	err := app.storage.UpdateOrganization(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
 	if err != nil {
-		return err
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeOrganization, nil, err)
 	}
 
 	return err
+
+}
+
+func (app *application) admGetApplication(ID string) (*model.Application, error) {
+	appAdm, err := app.storage.FindApplication(ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplication, nil, err)
+	}
+
+	return appAdm, nil
+}
+
+func (app *application) admCreateApplication(name string, versions []string) (*model.Application, error) {
+	id, _ := uuid.NewUUID()
+	now := time.Now()
+	application := model.Application{ID: id.String(), Name: name, Versions: versions, DateCreated: now}
+
+	inserted, err := app.storage.InsertApplication(application)
+	if err != nil {
+		return nil, err
+	}
+	return inserted, nil
 }

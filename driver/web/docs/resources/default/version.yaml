@@ -1,0 +1,10 @@
+get:
+  summary: Get service version
+  responses:
+    200:
+      description: Success
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: v1.1.0

@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"core-building-block/core"
-	"core-building-block/utils"
 	"fmt"
 	"net/http"
 
@@ -11,65 +10,38 @@ import (
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
+	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokmetro/logging-library/logutils"
 
 	"github.com/gorilla/mux"
-
-	log "github.com/rokmetro/logging-library/loglib"
 
 	"github.com/casbin/casbin"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-type response struct {
-	responseCode int
-	header       map[string][]string
-	body         []byte
-}
-
-func createErrorResponse(body string, responseCode int) response {
-	headers := map[string][]string{}
-	headers["Content-Type"] = []string{"text/plain; charset=utf-8"}
-	headers["X-Content-Type-Options"] = []string{"nosniff"}
-
-	return response{responseCode: responseCode, header: headers, body: []byte(body)}
-}
-
-func createSuccessResponse(body string, headers map[string]string, responseCode int) response {
-	//prepare headers
-	if headers == nil {
-		headers = map[string]string{}
-	}
-
-	preparedHeaders := make(map[string][]string, len(headers))
-	if len(headers) > 0 {
-		for key, value := range headers {
-			preparedHeaders[key] = []string{value}
-		}
-	}
-	return response{responseCode: responseCode, header: preparedHeaders, body: []byte(body)}
-}
-
 //Adapter entity
 type Adapter struct {
-	env string
+	env  string
+	port string
 
 	openAPIRouter routers.Router
 	host          string
 	auth          *Auth
 	authorization *casbin.Enforcer
-	logger        *log.StandardLogger
+	logger        *logs.Logger
 
 	defaultApisHandler  DefaultApisHandler
 	servicesApisHandler ServicesApisHandler
 	adminApisHandler    AdminApisHandler
 	encApisHandler      EncApisHandler
 	bbsApisHandler      BBsApisHandler
+	tpsApisHandler      TPSApisHandler
 
 	coreAPIs *core.APIs
 }
 
-type handlerFunc = func(*log.Log, http.ResponseWriter, *http.Request) response
+type handlerFunc = func(*logs.Log, *http.Request) logs.HttpResponse
 
 //Start starts the module
 func (we Adapter) Start() {
@@ -82,28 +54,26 @@ func (we Adapter) Start() {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// handle apis
-	subRouter := router.PathPrefix("/core").Subrouter()
-	subRouter.PathPrefix("/doc/ui").Handler(we.serveDocUI())
-	subRouter.HandleFunc("/doc", we.serveDoc)
+	router.PathPrefix("/doc/ui").Handler(we.serveDocUI())
+	router.HandleFunc("/doc", we.serveDoc)
 
 	///default ///
-	subRouter.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion)).Methods("GET")
+	router.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion)).Methods("GET")
+	router.HandleFunc("/.well-known/openid-configuration", we.wrapFunc(we.defaultApisHandler.getOpenIDConfiguration)).Methods("GET")
 	///
 
 	///services ///
-	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
-
-	//auth
-	authSubrouter := servicesSubRouter.PathPrefix("/auth").Subrouter()
-	authSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getAuthTest)).Methods("GET")
-
-	//common
-	commonSubrouter := servicesSubRouter.PathPrefix("/common").Subrouter()
-	commonSubrouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getCommonTest)).Methods("GET")
+	servicesSubRouter := router.PathPrefix("/services").Subrouter()
+	servicesSubRouter.HandleFunc("/auth/login", we.wrapFunc(we.servicesApisHandler.authLogin)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations)).Methods("GET")
+	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest)).Methods("GET")
 	///
 
 	///admin ///
-	adminSubrouter := subRouter.PathPrefix("/admin").Subrouter()
+	adminSubrouter := router.PathPrefix("/admin").Subrouter()
 	adminSubrouter.HandleFunc("/test", we.wrapFunc(we.adminApisHandler.getTest)).Methods("GET")
 	adminSubrouter.HandleFunc("/test-model", we.wrapFunc(we.adminApisHandler.getTestModel)).Methods("GET")
 
@@ -113,19 +83,37 @@ func (we Adapter) Start() {
 
 	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.createOrganization)).Methods("POST")
 	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.updateOrganization)).Methods("PUT")
+	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.getOrganization)).Methods("GET")
+	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.getOrganizations)).Methods("GET")
+
+	adminSubrouter.HandleFunc("/application", we.wrapFunc(we.adminApisHandler.createApplication)).Methods("POST")
+	adminSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.adminApisHandler.getApplication)).Methods("GET")
+
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.getServiceRegistrations)).Methods("GET")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.registerService)).Methods("POST")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.updateServiceRegistration)).Methods("PUT")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.deregisterService)).Methods("DELETE")
+
 	///
 
 	///enc ///
-	encSubrouter := subRouter.PathPrefix("/enc").Subrouter()
+	encSubrouter := router.PathPrefix("/enc").Subrouter()
 	encSubrouter.HandleFunc("/test", we.wrapFunc(we.encApisHandler.getTest)).Methods("GET")
 	///
 
 	///bbs ///
-	bbsSubrouter := subRouter.PathPrefix("/bbs").Subrouter()
+	bbsSubrouter := router.PathPrefix("/bbs").Subrouter()
 	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.getTest)).Methods("GET")
+	bbsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.bbsApisHandler.getServiceRegistrations)).Methods("GET")
 	///
 
-	err := http.ListenAndServe(":80", router)
+	///third-party services ///
+	tpsSubrouter := router.PathPrefix("/tps").Subrouter()
+	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations)).Methods("GET")
+	tpsSubrouter.HandleFunc("/auth-keys", we.wrapFunc(we.tpsApisHandler.getAuthKeys)).Methods("GET")
+	///
+
+	err := http.ListenAndServe(":"+we.port, router)
 	if err != nil {
 		we.logger.Fatal(err.Error())
 	}
@@ -133,7 +121,7 @@ func (we Adapter) Start() {
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("access-control-allow-origin", "*")
-	http.ServeFile(w, r, "./driver/web/docs/def.yaml")
+	http.ServeFile(w, r, "./driver/web/docs/gen/def.yaml")
 }
 
 func (we Adapter) serveDocUI() http.Handler {
@@ -143,43 +131,35 @@ func (we Adapter) serveDocUI() http.Handler {
 
 func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		utils.LogRequest(req)
-		var logObj = we.logger.NewRequestLog(req)
+		logObj := we.logger.NewRequestLog(req)
+
+		logObj.RequestReceived()
 
 		var err error
 
 		//1. validate request
-		var requestValidationInput *openapi3filter.RequestValidationInput
-		if we.env != "production" {
-			requestValidationInput, err = we.validateRequest(req)
-			if err != nil {
-				logObj.Errorf("error validating request - %s", err)
-
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(http.StatusText(http.StatusBadRequest)))
-				return
-			}
+		requestValidationInput, err := we.validateRequest(req)
+		if err != nil {
+			logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
+			return
 		}
 
 		//2. process it
-		response := handler(logObj, w, req)
+		response := handler(logObj, req)
 
 		//3. validate the response
 		if we.env != "production" {
 			err = we.validateResponse(requestValidationInput, response)
 			if err != nil {
-				logObj.Errorf("error validating response - %s", err)
-
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(http.StatusText(http.StatusBadRequest)))
+				logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeResponse, nil, err, http.StatusInternalServerError, true)
 				return
 			}
 		}
 
 		//4. return response
 		//4.1 headers
-		if len(response.header) > 0 {
-			for key, values := range response.header {
+		if len(response.Headers) > 0 {
+			for key, values := range response.Headers {
 				if len(values) > 0 {
 					for _, value := range values {
 						w.Header().Add(key, value)
@@ -188,14 +168,14 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 			}
 		}
 		//4.2 response code
-		w.WriteHeader(response.responseCode)
+		w.WriteHeader(response.ResponseCode)
 		//4.3 body
-		if len(response.body) > 0 {
-			w.Write(response.body)
+		if len(response.Body) > 0 {
+			w.Write(response.Body)
 		}
 
 		//5. print
-		logObj.PrintContext()
+		logObj.RequestComplete()
 	}
 }
 
@@ -216,10 +196,10 @@ func (we Adapter) validateRequest(req *http.Request) (*openapi3filter.RequestVal
 	return requestValidationInput, nil
 }
 
-func (we Adapter) validateResponse(requestValidationInput *openapi3filter.RequestValidationInput, response response) error {
-	responseCode := response.responseCode
-	body := response.body
-	header := response.header
+func (we Adapter) validateResponse(requestValidationInput *openapi3filter.RequestValidationInput, response logs.HttpResponse) error {
+	responseCode := response.ResponseCode
+	body := response.Body
+	header := response.Headers
 	options := openapi3filter.Options{IncludeResponseStatus: true}
 
 	responseValidationInput := &openapi3filter.ResponseValidationInput{
@@ -237,10 +217,10 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.StandardLogger) Adapter {
+func NewWebAdapter(env string, port string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
-	doc, err := loader.LoadFromFile("driver/web/docs/def.yaml")
+	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
@@ -248,13 +228,16 @@ func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.Sta
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
+
+	//Ignore servers. Validating reqeusts against the documented servers can cause issues when routing traffic through proxies/load-balancers.
+	doc.Servers = nil
+
 	openAPIRouter, err := gorillamux.NewRouter(doc)
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
-	//
 
-	auth := NewAuth(coreAPIs)
+	auth := NewAuth(coreAPIs, logger)
 	authorization := casbin.NewEnforcer("driver/web/authorization_model.conf", "driver/web/authorization_policy.csv")
 
 	defaultApisHandler := NewDefaultApisHandler(coreAPIs)
@@ -262,8 +245,10 @@ func NewWebAdapter(env string, coreAPIs *core.APIs, host string, logger *log.Sta
 	adminApisHandler := NewAdminApisHandler(coreAPIs)
 	encApisHandler := NewEncApisHandler(coreAPIs)
 	bbsApisHandler := NewBBsApisHandler(coreAPIs)
-	return Adapter{env: env, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, authorization: authorization, defaultApisHandler: defaultApisHandler,
-		servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler, encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, coreAPIs: coreAPIs}
+	tpsApisHandler := NewTPSApisHandler(coreAPIs)
+	return Adapter{env: env, port: port, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, authorization: authorization,
+		defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
+		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, coreAPIs: coreAPIs}
 }
 
 //AppListener implements core.ApplicationListener interface

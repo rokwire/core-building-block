@@ -1,10 +1,9 @@
 DATE    ?= $(shell date +%FT%T%z)
-GOPATH   = $(CURDIR)/vendor/gopath
-BIN      = $(CURDIR)/vendor
+BIN      = $(CURDIR)/build
 BASE     = $(CURDIR)
 MODULE = $(shell cd $(BASE) && $(GO) list -m)
-PKGS     = $(or $(PKG),$(shell cd $(BASE) && env GOPATH=$(GOPATH) $(GO) list ./...))
-BUILDS   = $(or $(BUILD),$(shell cd $(BASE) && env GOPATH=$(GOPATH) $(GO) list -f "{{if eq .Name \"main\"}}{{.ImportPath}}{{end}}" ./...))
+PKGS     = $(or $(PKG),$(shell cd $(BASE) && $(GO) list ./...))
+BUILDS   = $(or $(BUILD),$(shell cd $(BASE) && $(GO) list -f "{{if eq .Name \"main\"}}{{.ImportPath}}{{end}}" ./...))
 GIT_VERSION=$(shell git describe --match "v*" 2> /dev/null || cat $(CURDIR)/.version 2> /dev/null || echo v0.0-0-)
 BASE_VERSION=$(shell echo $(GIT_VERSION) | cut -f1 -d'-')
 MAJOR_VERSION=$(shell echo $(BASE_VERSION) | cut -f1 -d'.' | cut -f2 -d'v')
@@ -16,7 +15,6 @@ BUILD_NUMBER=$(shell echo $$(( $(BUILD_VERSION) + $(CODE_OFFSET) )))
 VERSION ?= ${MAJOR_VERSION}.${MINOR_VERSION}.${BUILD_NUMBER}
 
 export -n GOBIN
-export GOPATH
 #export PATH=$(BIN): $(shell printenv PATH)
 
 GO      = go
@@ -30,7 +28,7 @@ M = $(shell printf "\033[34;1m▶\033[0m")
 SHELL=bash
 
 .PHONY: all
-all: log-variables checkfmt lint test-short | $(BASE) ; $(info $(M) building executable(s)… $(VERSION) $(DATE)) @ ## Build program binary
+all: vendor log-variables checkfmt lint test-short | $(BASE) ; $(info $(M) building executable(s)… $(VERSION) $(DATE)) @ ## Build program binary
 	$Q cd $(CURDIR) && $(GO) generate ./...
 	@ret=0 && for d in $(BUILDS); do \
 		if expr \"$$d\" : \"${MODULE}\" 1>/dev/null; then SRCPATH=$(CURDIR) ; else SRCPATH=$(CURDIR)/$${d/${MODULE}\//} ; fi ;  \
@@ -111,14 +109,21 @@ help:
 version:
 	@echo $(VERSION)
 
+.PHONY: vendor
+vendor:
+	$(GO) mod vendor
+
 .PHONY: oapi-gen-types
 oapi-gen-types: ;
-	oapi-codegen --generate types -o driver/web/docs/gen_types.go driver/web/docs/def.yaml
+	oapi-codegen --generate types -o driver/web/docs/gen/gen_types.go driver/web/docs/gen/def.yaml
+
+.PHONY: oapi-gen-docs
+oapi-gen-docs: ;
+	swagger-cli bundle driver/web/docs/index.yaml --outfile driver/web/docs/gen/def.yaml --type yaml
 
 .PHONY: log-variables
 log-variables: ; $(info $(M) Log info…) @ ## Log the variables values
 	@echo "DATE:"$(DATE)
-	@echo "GOPATH:"$(GOPATH)
 	@echo "BIN:"$(BIN)
 	@echo "BASE:"$(BASE)
 	@echo "MODULE:"$(MODULE)

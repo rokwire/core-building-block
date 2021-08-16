@@ -2,26 +2,42 @@ package auth
 
 import (
 	"core-building-block/core/model"
-	"errors"
+
+	"github.com/rokmetro/logging-library/errors"
+	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokmetro/logging-library/logutils"
+)
+
+const (
+	authTypeFirebase string = "firebase"
 )
 
 // Firebase implementation of authType
 type firebaseAuthImpl struct {
-	auth *Auth
+	auth     *Auth
+	authType string
 }
 
-func (a *firebaseAuthImpl) check(creds string, params string) (*model.UserAuth, error) {
+func (a *firebaseAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
 	//TODO: Implement
-	return nil, errors.New("Unimplemented")
+	return nil, errors.New(logutils.Unimplemented)
+}
+
+func (a *firebaseAuthImpl) refresh(params interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
+	return nil, errors.Newf("refresh operation invalid for auth_type=%s", authTypeFirebase)
+}
+
+func (a *firebaseAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
 //initFirebaseAuth initializes and registers a new Firebase auth instance
 func initFirebaseAuth(auth *Auth) (*firebaseAuthImpl, error) {
-	firebase := &firebaseAuthImpl{auth: auth}
+	firebase := &firebaseAuthImpl{auth: auth, authType: authTypeFirebase}
 
-	err := auth.registerAuthType("firebase", firebase)
+	err := auth.registerAuthType(firebase.authType, firebase)
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return firebase, nil

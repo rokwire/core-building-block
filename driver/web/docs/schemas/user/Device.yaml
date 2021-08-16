@@ -1,0 +1,23 @@
+required:
+  - id
+  - type
+  - user_ids
+type: object
+properties:
+  id:
+    type: string
+  type:
+    type: string
+    enum:
+      - mobile
+      - web
+      - desktop
+      - other
+  os:
+    type: string
+  mac_address:
+    type: string
+  user_ids:
+    type: array
+    items:
+      type: string

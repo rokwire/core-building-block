@@ -1,0 +1,28 @@
+required:
+  - auth_type
+  - org_id
+  - app_id
+type: object
+properties:
+  auth_type:
+    type: string
+    enum:
+      - email
+      - phone
+      - oidc
+  org_id:
+    type: string
+  app_id:
+    type: string
+  creds:
+    type: object
+    anyOf:
+      - $ref: "./AuthLoginCredsEmail.yaml"
+      - $ref: "./AuthLoginCredsPhone.yaml"
+      - $ref: "./AuthLoginCredsOidc.yaml"
+  params:
+    type: object
+    anyOf:
+      - $ref: "./AuthLoginParamsEmail.yaml"
+      - $ref: "./AuthLoginParamsPhone.yaml"
+      - $ref: "./AuthLoginParamsOidc.yaml"

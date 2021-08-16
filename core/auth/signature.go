@@ -2,26 +2,42 @@ package auth
 
 import (
 	"core-building-block/core/model"
-	"errors"
+
+	"github.com/rokmetro/logging-library/errors"
+	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokmetro/logging-library/logutils"
+)
+
+const (
+	authTypeSignature string = "signature"
 )
 
 //Signature implementation of authType
 type signatureAuthImpl struct {
-	auth *Auth
+	auth     *Auth
+	authType string
 }
 
-func (a *signatureAuthImpl) check(creds string, params string) (*model.UserAuth, error) {
+func (a *signatureAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
 	//TODO: Implement
-	return nil, errors.New("Unimplemented")
+	return nil, errors.New(logutils.Unimplemented)
 }
 
-//initSignatureAuth initializes and registers a new stignature auth instance
-func initSignatureAuth(auth *Auth) (*signatureAuthImpl, error) {
-	signature := &signatureAuthImpl{auth: auth}
+func (a *signatureAuthImpl) refresh(params interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
+	return nil, errors.Newf("refresh operation invalid for auth_type=%s", authTypeSignature)
+}
 
-	err := auth.registerAuthType("signature", signature)
+func (a *signatureAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
+}
+
+//initSignatureAuth initializes and registers a new signature auth instance
+func initSignatureAuth(auth *Auth) (*signatureAuthImpl, error) {
+	signature := &signatureAuthImpl{auth: auth, authType: authTypeSignature}
+
+	err := auth.registerAuthType(signature.authType, signature)
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
 	}
 
 	return signature, nil

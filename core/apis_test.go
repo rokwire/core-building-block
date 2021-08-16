@@ -6,10 +6,9 @@ import (
 
 	core "core-building-block/core"
 	genmocks "core-building-block/core/mocks"
-	core_model "core-building-block/core/model"
+	"core-building-block/core/model"
 
-	log "github.com/rokmetro/logging-library/loglib"
-
+	"github.com/rokmetro/logging-library/logs"
 	"gotest.tools/assert"
 )
 
@@ -29,7 +28,7 @@ func TestSerGetAuthTest(t *testing.T) {
 	storage := genmocks.Storage{}
 	coreAPIs := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
-	l := log.NewLogger("test").NewLog("1", "1")
+	l := logs.NewLogger("test", nil).NewLog("1", logs.RequestContext{})
 	got := coreAPIs.Services.SerGetAuthTest(l)
 	want := "Services - Auth - test"
 
@@ -40,7 +39,7 @@ func TestSerGetCommonTest(t *testing.T) {
 	storage := genmocks.Storage{}
 	coreAPIs := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
-	l := log.NewLogger("test").NewLog("1", "1")
+	l := logs.NewLogger("test", nil).NewLog("1", logs.RequestContext{})
 	got := coreAPIs.Services.SerGetCommonTest(l)
 	want := "Services - Common - test"
 
@@ -66,7 +65,7 @@ func TestAdmGetTest(t *testing.T) {
 func TestAdmCreateGlobalConfig(t *testing.T) {
 	storage := genmocks.Storage{}
 	storage.On("GetGlobalConfig").Return(nil, nil)
-	storage.On("CreateGlobalConfig", "setting").Return(&core_model.GlobalConfig{Setting: "setting"}, nil)
+	storage.On("CreateGlobalConfig", "setting").Return(&model.GlobalConfig{Setting: "setting"}, nil)
 
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
@@ -89,7 +88,78 @@ func TestAdmCreateGlobalConfig(t *testing.T) {
 		t.Error("we are expecting error")
 		return
 	}
-	assert.Equal(t, err.Error(), "error occured", "error is different")
+	assert.Equal(t, err.Error(), "core-building-block/core.(*application).admCreateGlobalConfig() error inserting global config: error occured", "error is different: "+err.Error())
+}
+
+func TestAdmGetOrganization(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("FindOrganization", "_id").Return(&model.Organization{ID: "_id"}, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	getOrganization, _ := app.Administration.AdmGetOrganization("_id")
+
+	if getOrganization == nil {
+		t.Errorf("Error on geting the organization")
+	}
+	// second case error
+	storage2 := genmocks.Storage{}
+	storage2.On("FindOrganization").Return(&model.Organization{ID: "_id"}, nil)
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	err, _ := app.Administration.AdmGetOrganization("_id")
+
+	if err == nil {
+		t.Error("We are expecting error")
+		return
+	}
+
+}
+
+func TestGetOrganizations(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("GetOrganizations").Return([]model.Organization{}, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	getOrganization, _ := app.Administration.AdmGetOrganizations()
+
+	if getOrganization == nil {
+		t.Errorf("Error on geting the organizations")
+	}
+	// second case error
+	storage2 := genmocks.Storage{}
+	storage2.On("GetOrganizations").Return([]model.Organization{}, nil)
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	err, _ := app.Administration.AdmGetOrganizations()
+
+	if err == nil {
+		t.Error("We are expecting error")
+		return
+	}
+}
+
+func TestAdmGetApplication(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("FindApplication", "_id").Return(&model.Application{ID: "_id"}, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	getApplication, _ := app.Administration.AdmGetApplication("_id")
+
+	if getApplication == nil {
+		t.Errorf("Error on geting the application")
+	}
+	// second case error
+	storage2 := genmocks.Storage{}
+	storage2.On("FindApplication").Return(&model.Application{ID: "_id"}, nil)
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	err, _ := app.Administration.AdmGetApplication("_id")
+
+	if err == nil {
+		t.Error("We are expecting error")
+		return
+	}
+
 }
 
 ///
@@ -104,6 +174,35 @@ func TestEncGetTest(t *testing.T) {
 	want := "Enc - test"
 
 	assert.Equal(t, got, want, "result is different")
+}
+
+func TestCreateApplication(t *testing.T) {
+	/*storage := genmocks.Storage{}
+	versions := []string{"v1.1.0", "v1.2.0"}
+
+	appObj := model.Application{Name: "name", Versions: versions}
+
+	storage.On("InsertApplication", appObj).Return(&appObj, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	application, _ := app.Administration.AdmCreateApplication("name", versions)
+	if application == nil {
+		t.Error("application is nil")
+		return
+	}
+
+	storage2 := genmocks.Storage{}
+	versions = []string{"v1.1.0", "v1.2.0"}
+	storage2.On("InsertApplication", model.Application{Name: "name", Versions: versions}).Return(nil, errors.New("error occured"))
+
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage2, nil)
+
+	_, err := app.Administration.AdmCreateApplication("name", versions)
+	if err == nil {
+		t.Error("we are expecting error")
+		return
+	}
+	assert.Equal(t, err.Error(), "error occured", "error is different") */
 }
 
 ///
