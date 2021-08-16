@@ -36,9 +36,6 @@ func organizationGroupToDef(item *model.OrganizationGroup) *Def.OrganizationGrou
 }
 
 func organizationGroupListToDef(items []model.OrganizationGroup) []Def.OrganizationGroup {
-	if items == nil {
-		return nil
-	}
 	out := make([]Def.OrganizationGroup, len(items))
 	for i, item := range items {
 		defItem := organizationGroupToDef(&item)
@@ -70,9 +67,6 @@ func organizationRoleToDef(item *model.OrganizationRole) *Def.OrganizationRole {
 }
 
 func organizationRoleListToDef(items []model.OrganizationRole) []Def.OrganizationRole {
-	if items == nil {
-		return nil
-	}
 	out := make([]Def.OrganizationRole, len(items))
 	for i, item := range items {
 		defItem := organizationRoleToDef(&item)

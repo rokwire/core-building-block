@@ -972,7 +972,6 @@ components:
         app_id:
           type: string
         creds:
-          type: object
           anyOf:
             - $ref: '#/components/schemas/AuthLoginCredsEmail'
             - $ref: '#/components/schemas/AuthLoginCredsPhone'
@@ -1019,8 +1018,7 @@ components:
       type: string
       description: |
         Auth login creds for auth_type="oidc"
-          - Initial login: full redirect URI received from OIDC provider
-          - Refresh: refresh token
+          - full redirect URI received from OIDC provider
     AuthLoginParamsEmail:
       type: object
       description: Auth login params for auth_type="email"
