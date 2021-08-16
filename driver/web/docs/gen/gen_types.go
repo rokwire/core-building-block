@@ -222,18 +222,24 @@ type GlobalConfig struct {
 
 // GlobalGroup defines model for GlobalGroup.
 type GlobalGroup struct {
-	Id          string        `json:"id"`
-	Name        string        `json:"name"`
-	Permissions *[]string     `json:"permissions,omitempty"`
-	Roles       *[]GlobalRole `json:"roles,omitempty"`
-	Users       *[]User       `json:"users,omitempty"`
+	Id          string              `json:"id"`
+	Name        string              `json:"name"`
+	Permissions *[]GlobalPermission `json:"permissions,omitempty"`
+	Roles       *[]GlobalRole       `json:"roles,omitempty"`
+	Users       *[]User             `json:"users,omitempty"`
+}
+
+// GlobalPermission defines model for GlobalPermission.
+type GlobalPermission struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
 
 // GlobalRole defines model for GlobalRole.
 type GlobalRole struct {
-	Id          string    `json:"id"`
-	Name        string    `json:"name"`
-	Permissions *[]string `json:"permissions,omitempty"`
+	Id          string              `json:"id"`
+	Name        string              `json:"name"`
+	Permissions *[]GlobalPermission `json:"permissions,omitempty"`
 }
 
 // JSON Web Key (JWK)
@@ -367,7 +373,7 @@ type User struct {
 	Groups         *[]GlobalGroup            `json:"groups,omitempty"`
 	Id             string                    `json:"id"`
 	OrgMemberships *[]OrganizationMembership `json:"org_memberships,omitempty"`
-	Permissions    *[]string                 `json:"permissions,omitempty"`
+	Permissions    *[]GlobalPermission       `json:"permissions,omitempty"`
 	Profile        *UserProfile              `json:"profile,omitempty"`
 	Roles          *[]GlobalRole             `json:"roles,omitempty"`
 }
