@@ -493,8 +493,13 @@ func (a *oidcAuthImpl) getOidcAuthConfig(orgID string, appID string) (*oidcAuthC
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthConfig, errFields, err)
 	}
 
+	configBytes, err := json.Marshal(authConfig.Config)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, model.TypeAuthConfig, errFields, err)
+	}
+
 	var oidcConfig oidcAuthConfig
-	err = json.Unmarshal(authConfig.Config, &oidcConfig)
+	err = json.Unmarshal(configBytes, &oidcConfig)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeAuthConfig, errFields, err)
 	}
