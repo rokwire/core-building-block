@@ -614,6 +614,29 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /admin/global-group:
+    post:
+      tags:
+        - Admin
+      summary: Create global group
+      description: |
+        Create global group
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                nullable: true
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreateGlobalGroupRequest'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /enc/test:
     get:
       tags:
@@ -773,6 +796,40 @@ components:
       type: object
       properties:
         id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            required:
+              - id
+              - name
+            type: object
+            properties:
+              id:
+                readOnly: true
+                type: string
+              name:
+                type: string
+                items:
+                  type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/GlobalRole'
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    CreateGlobalGroupRequest:
+      required:
+        - name
+      type: object
+      properties:
+        id:
+          readOnly: true
           type: string
         name:
           type: string
@@ -783,11 +840,7 @@ components:
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/GlobalRole'
-        users:
-          type: array
-          items:
-            $ref: '#/components/schemas/User'
+            type: string
     Application:
       required:
         - id
