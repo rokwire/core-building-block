@@ -1,0 +1,19 @@
+get:
+  tags:
+    - Third-Party Services
+  summary: Get auth public key
+  description: |
+    Returns auth public key in JWKS format
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/auth/JWKS.yaml'
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error

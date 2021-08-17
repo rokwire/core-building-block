@@ -5,3 +5,4 @@ build/
 *.sh
 *.pem
 env.list
+*.exe

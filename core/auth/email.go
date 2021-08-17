@@ -18,18 +18,22 @@ type emailAuthImpl struct {
 	authType string
 }
 
-func (a *emailAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, interface{}, error) {
+func (a *emailAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
 	//TODO: Implement
-	return nil, nil, errors.New("Unimplemented")
+	return nil, errors.New("Unimplemented")
 }
 
 //refresh is enabled for email auth, but no operation is needed
-func (a *emailAuthImpl) refresh(params interface{}, orgID string, appID string, l *logs.Log) (interface{}, interface{}, *int64, error) {
-	return nil, nil, nil, nil
+func (a *emailAuthImpl) refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
+	return nil, nil
 }
 
 func (a *emailAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
+}
+
+func (a *emailAuthImpl) isGlobal() bool {
+	return true
 }
 
 //initEmailAuth initializes and registers a new email auth instance

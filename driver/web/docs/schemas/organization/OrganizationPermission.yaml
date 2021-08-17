@@ -1,15 +1,12 @@
 required:
   - id
   - name
+  - org_id
 type: object
 properties:
   id:
-    readOnly: true
     type: string
   name:
     type: string
-  versions:
-    type: array
-    nullable: true
-    items:
-      type: string
+  org_id:
+    type: string

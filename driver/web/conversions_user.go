@@ -90,9 +90,6 @@ func organizationMembershipToDef(item *model.OrganizationMembership) *Def.Organi
 }
 
 func organizationMembershipListToDef(items []model.OrganizationMembership) []Def.OrganizationMembership {
-	if items == nil {
-		return nil
-	}
 	out := make([]Def.OrganizationMembership, len(items))
 	for i, item := range items {
 		defItem := organizationMembershipToDef(&item)
@@ -117,13 +114,16 @@ func deviceToDef(item *model.Device) *Def.Device {
 	if item == nil {
 		return nil
 	}
-	return &Def.Device{Id: item.ID, Type: Def.DeviceType(item.Type), Os: &item.OS, MacAddress: &item.MacAddress}
+
+	users := make([]string, len(item.Users))
+	for i, user := range item.Users {
+		users[i] = user.ID
+	}
+
+	return &Def.Device{Id: item.ID, Type: Def.DeviceType(item.Type), UserIds: users, Os: &item.OS, MacAddress: &item.MacAddress}
 }
 
 func deviceListToDef(items []model.Device) []Def.Device {
-	if items == nil {
-		return nil
-	}
 	out := make([]Def.Device, len(items))
 	for i, item := range items {
 		defItem := deviceToDef(&item)

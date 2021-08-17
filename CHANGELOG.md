@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - User PII endpoints [#128](https://github.com/rokwire/core-building-block/issues/128)
 - Set up refresh tokens [#95](https://github.com/rokwire/core-building-block/issues/95)
+- Set up OIDC compliant token validation endpoints [#51](https://github.com/rokwire/core-building-block/issues/51)
+- Storage improvements [#144](https://github.com/rokwire/core-building-block/issues/144)
+- Expose admin API which creates application [#82](https://github.com/rokwire/core-building-block/issues/82)
 - Suppress logs from the AWS load balancer health checks [#141](https://github.com/rokwire/core-building-block/issues/141)
 - Set up accounts [#18](https://github.com/rokwire/core-building-block/issues/18)
 - Optional OIDC URL overrides [#139](https://github.com/rokwire/core-building-block/issues/139)
@@ -44,5 +47,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set up logging [#6](https://github.com/rokwire/core-building-block/issues/6)
 
 ### Fixed
+- Fix GlobalPermission and OrganizationPermission in the doc APIs model [#151](https://github.com/rokwire/core-building-block/issues/151)
+- OIDC auth bug fixes [#143](https://github.com/rokwire/core-building-block/issues/143)
 - Fix APIs requests validation [#89](https://github.com/rokwire/core-building-block/issues/89)
 - Fixing the Log and the Changelog for issues #35 and #36 [#54](https://github.com/rokwire/core-building-block/issues/54)
+
+### Changed
+- Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)

@@ -18,19 +18,23 @@ type samlAuthImpl struct {
 	authType string
 }
 
-func (a *samlAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, interface{}, error) {
+func (a *samlAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
 	//TODO: Implement
-	return nil, nil, errors.New(logutils.Unimplemented)
+	return nil, errors.New(logutils.Unimplemented)
 }
 
 //refresh must be implemented for SAML auth
-func (a *samlAuthImpl) refresh(params interface{}, orgID string, appID string, l *logs.Log) (interface{}, interface{}, *int64, error) {
+func (a *samlAuthImpl) refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
 	//TODO: Implement
-	return nil, nil, nil, errors.New(logutils.Unimplemented)
+	return nil, errors.New(logutils.Unimplemented)
 }
 
 func (a *samlAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
+}
+
+func (a *samlAuthImpl) isGlobal() bool {
+	return false
 }
 
 //initSamlAuth initializes and registers a new SAML auth instance

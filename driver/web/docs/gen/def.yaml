@@ -240,9 +240,9 @@ paths:
     get:
       tags:
         - Services
-      summary: Get PII by user profile ID
+      summary: Get user PII
       description: |
-        Returns a single user profile entry 
+        Returns PII in a user profile 
       responses:
         '200':
           description: Success
@@ -259,11 +259,11 @@ paths:
     put:
       tags:
         - Services
-      summary: Update profile
+      summary: Update user PII
       description: |
-        Updates user profile
+        Updates PII in a user profile
       requestBody:
-        description: update a user profile
+        description: PII update
         content:
           application/json:
             schema:
@@ -286,9 +286,9 @@ paths:
     delete:
       tags:
         - Services
-      summary: Delete profile
+      summary: Delete user PII
       description: |
-        Deletes user profile
+        Deletes PII in a user profile
       responses:
         '200':
           description: Success
@@ -653,6 +653,34 @@ paths:
           description: Not Found
         '500':
           description: Internal error
+  /admin/application:
+    post:
+      tags:
+        - Admin
+      summary: Create application
+      description: |
+        Creates application
+      requestBody:
+        description: creates one application
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Application'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /enc/test:
     get:
       tags:
@@ -741,6 +769,26 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /tps/auth-keys:
+    get:
+      tags:
+        - Third-Party Services
+      summary: Get auth public key
+      description: |
+        Returns auth public key in JWKS format
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JWKS'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /version:
     get:
       summary: Get service version
@@ -752,6 +800,16 @@ paths:
               schema:
                 type: string
                 example: v1.1.0
+  /.well-known/openid-configuration:
+    get:
+      summary: OpenID Connect Discovery
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OidcDiscovery'
 components:
   schemas:
     GlobalConfig:
@@ -760,6 +818,16 @@ components:
       type: object
       properties:
         setting:
+          type: string
+    GlobalPermission:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
           type: string
     GlobalRole:
       required:
@@ -774,7 +842,7 @@ components:
         permissions:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/GlobalPermission'
     GlobalGroup:
       required:
         - id
@@ -788,7 +856,7 @@ components:
         permissions:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/GlobalPermission'
         roles:
           type: array
           items:
@@ -804,6 +872,7 @@ components:
       type: object
       properties:
         id:
+          readOnly: true
           type: string
         name:
           type: string
@@ -853,6 +922,19 @@ components:
           description: organization domains
           items:
             type: string
+    OrganizationPermission:
+      required:
+        - id
+        - name
+        - org_id
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        org_id:
+          type: string
     OrganizationRole:
       required:
         - id
@@ -869,7 +951,7 @@ components:
         permissions:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/OrganizationPermission'
     OrganizationGroup:
       required:
         - id
@@ -886,7 +968,7 @@ components:
         permissions:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/OrganizationPermission'
         roles:
           type: array
           items:
@@ -980,7 +1062,6 @@ components:
         app_id:
           type: string
         creds:
-          type: object
           anyOf:
             - $ref: '#/components/schemas/AuthLoginCredsEmail'
             - $ref: '#/components/schemas/AuthLoginCredsPhone'
@@ -1027,8 +1108,7 @@ components:
       type: string
       description: |
         Auth login creds for auth_type="oidc"
-          - Initial login: full redirect URI received from OIDC provider
-          - Refresh: refresh token
+          - full redirect URI received from OIDC provider
     AuthLoginParamsEmail:
       type: object
       description: Auth login params for auth_type="email"
@@ -1138,6 +1218,62 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
+    JWK:
+      required:
+        - kty
+        - use
+        - alg
+        - kid
+        - 'n'
+        - e
+      type: object
+      description: JSON Web Key (JWK)
+      properties:
+        kty:
+          type: string
+          description: The "kty" (key type) parameter identifies the cryptographic algorithm family used with the key
+          enum:
+            - RSA
+        use:
+          type: string
+          description: The "use" (public key use) parameter identifies the intended use of the public key
+          enum:
+            - sig
+        alg:
+          type: string
+          description: The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
+          enum:
+            - RS256
+        kid:
+          type: string
+          description: The "kid" (key ID) parameter is used to match a specific key
+        'n':
+          type: string
+          description: The modulus (2048 bit) of the key - Base64URL encoded.
+        e:
+          type: string
+          description: The exponent of the key - Base64URL encoded
+    JWKS:
+      required:
+        - keys
+      type: object
+      description: JSON Web Key Set (JWKS)
+      properties:
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/JWK'
+    OidcDiscovery:
+      required:
+        - issuer
+        - jwks_uri
+      type: object
+      description: OpenID Connect Discovery Metadata
+      properties:
+        issuer:
+          type: string
+        jwks_uri:
+          type: string
     User:
       required:
         - id
@@ -1152,7 +1288,7 @@ components:
         permissions:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/GlobalPermission'
         roles:
           type: array
           items:
@@ -1228,7 +1364,7 @@ components:
         permissions:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/OrganizationPermission'
         roles:
           type: array
           items:
