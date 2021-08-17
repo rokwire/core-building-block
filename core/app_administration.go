@@ -258,7 +258,7 @@ func (app *application) admGetApplication(ID string) (*model.Application, error)
 }
 
 func (app *application) admFindGlobalPermissions() ([]model.GlobalPermission, error) {
-	findGlobalPermissions, err := app.storage.FindGlobalPermissionsList()
+	findGlobalPermissions, err := app.storage.FindGlobalPermissions()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeGlobalPermission, nil, err)
 	}
