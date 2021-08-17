@@ -82,6 +82,9 @@ type AuthRefresh struct {
 	PreviousToken string                 `json:"previous_token" bson:"previous_token"`
 	CurrentToken  string                 `json:"current_token" bson:"current_token" validate:"required"`
 	Expires       *time.Time             `json:"exp" bson:"exp" validate:"required"`
+	AppID         string                 `bson:"app_id"`
+	OrgID         string                 `bson:"org_id"`
+	CredsID       string                 `bson:"creds_id"`
 	Params        map[string]interface{} `json:"params" bson:"params"`
 }
 
