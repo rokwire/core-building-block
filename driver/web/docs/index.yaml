@@ -51,8 +51,8 @@ paths:
     $ref: "./resources/admin/applicationsId.yaml"
   /admin/application:
     $ref: "./resources/admin/applications.yaml"
-  /admin/global-group:
-    $ref: "./resources/admin/global-group.yaml"
+  /admin/global-groups:
+    $ref: "./resources/admin/global-groups.yaml"
 
   #enc
   /enc/test:

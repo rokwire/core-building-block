@@ -614,7 +614,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/global-group:
+  /admin/global-groups:
     post:
       tags:
         - Admin

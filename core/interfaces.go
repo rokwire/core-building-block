@@ -51,9 +51,11 @@ type Storage interface {
 	GetGlobalConfig() (*model.GlobalConfig, error)
 	SaveGlobalConfig(setting *model.GlobalConfig) error
 
+	FindGlobalPermissions(ids []string) ([]model.GlobalPermission, error)
 	UpdateGlobalPermission(item model.GlobalPermission) error
 	DeleteGlobalPermission(id string) error
 
+	FindGlobalRoles(ids []string) ([]model.GlobalRole, error)
 	UpdateGlobalRole(item model.GlobalRole) error
 	DeleteGlobalRole(id string) error
 

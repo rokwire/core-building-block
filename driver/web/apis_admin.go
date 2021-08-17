@@ -358,8 +358,6 @@ func (h AdminApisHandler) createGlobalGroup(l *logs.Log, r *http.Request) logs.H
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeGlobalGroup, nil, err, http.StatusInternalServerError, true)
 	}
 
-	headers := map[string]string{}
-	headers["Content-Type"] = "text/plain"
 	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeGlobalGroup, nil, err, http.StatusInternalServerError, false)
 }
 
