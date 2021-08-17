@@ -279,15 +279,6 @@ func (_m *Storage) SaveGlobalConfig(setting *model.GlobalConfig) error {
 	return r0
 }
 
-<<<<<<< HEAD
-// UpdateApplication provides a mock function with given fields: ID, name, versions
-func (_m *Storage) UpdateApplication(ID string, name string, versions []string) error {
-	ret := _m.Called(ID, name, versions)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string, []string) error); ok {
-		r0 = rf(ID, name, versions)
-=======
 // UpdateGlobalGroup provides a mock function with given fields: item
 func (_m *Storage) UpdateGlobalGroup(item model.GlobalGroup) error {
 	ret := _m.Called(item)
@@ -323,7 +314,6 @@ func (_m *Storage) UpdateGlobalRole(item model.GlobalRole) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(model.GlobalRole) error); ok {
 		r0 = rf(item)
->>>>>>> develop
 	} else {
 		r0 = ret.Error(0)
 	}
