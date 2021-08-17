@@ -59,6 +59,7 @@ func (we Adapter) Start() {
 
 	///default ///
 	router.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion)).Methods("GET")
+	router.HandleFunc("/.well-known/openid-configuration", we.wrapFunc(we.defaultApisHandler.getOpenIDConfiguration)).Methods("GET")
 	///
 
 	///services ///
@@ -85,14 +86,14 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.getOrganization)).Methods("GET")
 	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.getOrganizations)).Methods("GET")
 
+	adminSubrouter.HandleFunc("/application", we.wrapFunc(we.adminApisHandler.createApplication)).Methods("POST")
+	adminSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.adminApisHandler.getApplication)).Methods("GET")
+
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.getServiceRegistrations)).Methods("GET")
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.registerService)).Methods("POST")
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.updateServiceRegistration)).Methods("PUT")
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.deregisterService)).Methods("DELETE")
 
-	adminSubrouter.HandleFunc("/global-permissions", we.wrapFunc(we.adminApisHandler.createGlobalPermissions)).Methods("POST")
-
-	adminSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.adminApisHandler.getApplication)).Methods("GET")
 	///
 
 	///enc ///
@@ -109,6 +110,7 @@ func (we Adapter) Start() {
 	///third-party services ///
 	tpsSubrouter := router.PathPrefix("/tps").Subrouter()
 	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations)).Methods("GET")
+	tpsSubrouter.HandleFunc("/auth-keys", we.wrapFunc(we.tpsApisHandler.getAuthKeys)).Methods("GET")
 	///
 
 	err := http.ListenAndServe(":"+we.port, router)
@@ -135,7 +137,6 @@ func (we Adapter) wrapFunc(handler handlerFunc) http.HandlerFunc {
 
 		var err error
 
-		logObj.Debugf("URL: %v%v", req.Host, req.URL)
 		//1. validate request
 		requestValidationInput, err := we.validateRequest(req)
 		if err != nil {

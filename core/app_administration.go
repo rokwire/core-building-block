@@ -230,7 +230,7 @@ func (app *application) admGetOrganization(ID string) (*model.Organization, erro
 }
 
 func (app *application) admGetOrganizations() ([]model.Organization, error) {
-	getOrganization, err := app.storage.GetOrganizations()
+	getOrganization, err := app.storage.LoadOrganizations()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err)
 	}
@@ -261,10 +261,22 @@ func (app *application) admCreateGlobalPermissions(name string) (*model.GlobalPe
 }
 
 func (app *application) admGetApplication(ID string) (*model.Application, error) {
-	appAdm, err := app.storage.GetApplication(ID)
+	appAdm, err := app.storage.FindApplication(ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplication, nil, err)
 	}
 
 	return appAdm, nil
+}
+
+func (app *application) admCreateApplication(name string, versions []string) (*model.Application, error) {
+	id, _ := uuid.NewUUID()
+	now := time.Now()
+	application := model.Application{ID: id.String(), Name: name, Versions: versions, DateCreated: now}
+
+	inserted, err := app.storage.InsertApplication(application)
+	if err != nil {
+		return nil, err
+	}
+	return inserted, nil
 }

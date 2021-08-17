@@ -119,6 +119,10 @@ func (s *administrationImpl) AdmCreateGlobalPermissions(name string) (*model.Glo
 	return s.app.admCreateGlobalPermissions(name)
 }
 
+func (s *administrationImpl) AdmCreateApplication(name string, versions []string) (*model.Application, error) {
+	return s.app.admCreateApplication(name, versions)
+}
+
 func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, error) {
 	return s.app.admGetApplication(ID)
 }

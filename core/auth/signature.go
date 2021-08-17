@@ -23,12 +23,16 @@ func (a *signatureAuthImpl) check(creds string, orgID string, appID string, para
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *signatureAuthImpl) refresh(refreshToken string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
+func (a *signatureAuthImpl) refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
 	return nil, errors.Newf("refresh operation invalid for auth_type=%s", authTypeSignature)
 }
 
 func (a *signatureAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
+}
+
+func (a *signatureAuthImpl) isGlobal() bool {
+	return false
 }
 
 //initSignatureAuth initializes and registers a new signature auth instance

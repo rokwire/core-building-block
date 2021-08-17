@@ -17,14 +17,14 @@ const (
 	AuthLoginRequestAuthTypePhone AuthLoginRequestAuthType = "phone"
 )
 
-// Defines values for AuthLoginResponseTokenType.
-const (
-	AuthLoginResponseTokenTypeBearer AuthLoginResponseTokenType = "Bearer"
-)
-
 // Defines values for AuthLoginUrlRequestAuthType.
 const (
 	AuthLoginUrlRequestAuthTypeOidc AuthLoginUrlRequestAuthType = "oidc"
+)
+
+// Defines values for AuthResponseRokwireTokenTokenType.
+const (
+	AuthResponseRokwireTokenTokenTypeBearer AuthResponseRokwireTokenTokenType = "Bearer"
 )
 
 // Defines values for DeviceType.
@@ -36,6 +36,21 @@ const (
 	DeviceTypeOther DeviceType = "other"
 
 	DeviceTypeWeb DeviceType = "web"
+)
+
+// Defines values for JWKAlg.
+const (
+	JWKAlgRS256 JWKAlg = "RS256"
+)
+
+// Defines values for JWKKty.
+const (
+	JWKKtyRSA JWKKty = "RSA"
+)
+
+// Defines values for JWKUse.
+const (
+	JWKUseSig JWKUse = "sig"
 )
 
 // Defines values for OrganizationType.
@@ -88,8 +103,7 @@ type AuthLoginCredsEmail struct {
 }
 
 // Auth login creds for auth_type="oidc"
-//   - Initial login: full redirect URI received from OIDC provider
-//   - Refresh: refresh token
+//   - full redirect URI received from OIDC provider
 type AuthLoginCredsOidc string
 
 // Auth login creds for auth_type="phone"
@@ -126,20 +140,10 @@ type AuthLoginRequestAuthType string
 
 // AuthLoginResponse defines model for AuthLoginResponse.
 type AuthLoginResponse struct {
-
-	// The user's access token to be provided to authorize access to ROKWIRE APIs
-	AccessToken *string `json:"access_token,omitempty"`
-
-	// A refresh token that can be used to get a new access token once the one provided expires
-	RefreshToken *string `json:"refresh_token,omitempty"`
-
-	// The type of the provided tokens to be specified when they are sent in the "Authorization" header
-	TokenType *AuthLoginResponseTokenType `json:"token_type,omitempty"`
-	User      *User                       `json:"user,omitempty"`
+	Params *interface{}              `json:"params,omitempty"`
+	Token  *AuthResponseRokwireToken `json:"token,omitempty"`
+	User   *User                     `json:"user,omitempty"`
 }
-
-// The type of the provided tokens to be specified when they are sent in the "Authorization" header
-type AuthLoginResponseTokenType string
 
 // AuthLoginUrlRequest defines model for AuthLoginUrlRequest.
 type AuthLoginUrlRequest struct {
@@ -162,9 +166,34 @@ type AuthLoginUrlResponse struct {
 
 // AuthRefreshResponse defines model for AuthRefreshResponse.
 type AuthRefreshResponse struct {
-	AccessToken  *string `json:"access_token,omitempty"`
-	RefreshToken *string `json:"refresh_token,omitempty"`
+	Params *interface{}              `json:"params,omitempty"`
+	Token  *AuthResponseRokwireToken `json:"token,omitempty"`
 }
+
+// AuthResponseParamsOidc defines model for AuthResponseParamsOidc.
+type AuthResponseParamsOidc struct {
+	OidcToken *struct {
+		AccessToken *string `json:"access_token,omitempty"`
+		IdToken     *string `json:"id_token,omitempty"`
+		TokenType   *string `json:"token_type,omitempty"`
+	} `json:"oidc_token,omitempty"`
+}
+
+// AuthResponseRokwireToken defines model for AuthResponseRokwireToken.
+type AuthResponseRokwireToken struct {
+
+	// The user's access token to be provided to authorize access to ROKWIRE APIs
+	AccessToken *string `json:"access_token,omitempty"`
+
+	// A refresh token that can be used to get a new access token once the one provided expires
+	RefreshToken *string `json:"refresh_token,omitempty"`
+
+	// The type of the provided tokens to be specified when they are sent in the "Authorization" header
+	TokenType *AuthResponseRokwireTokenTokenType `json:"token_type,omitempty"`
+}
+
+// The type of the provided tokens to be specified when they are sent in the "Authorization" header
+type AuthResponseRokwireTokenTokenType string
 
 // Service registration record used for auth
 type AuthServiceReg struct {
@@ -192,11 +221,11 @@ type GlobalConfig struct {
 
 // GlobalGroup defines model for GlobalGroup.
 type GlobalGroup struct {
-	Id          string        `json:"id"`
-	Name        string        `json:"name"`
-	Permissions *[]string     `json:"permissions,omitempty"`
-	Roles       *[]GlobalRole `json:"roles,omitempty"`
-	Users       *[]User       `json:"users,omitempty"`
+	Id          string              `json:"id"`
+	Name        string              `json:"name"`
+	Permissions *[]GlobalPermission `json:"permissions,omitempty"`
+	Roles       *[]GlobalRole       `json:"roles,omitempty"`
+	Users       *[]User             `json:"users,omitempty"`
 }
 
 // GlobalPermission defines model for GlobalPermission.
@@ -207,9 +236,51 @@ type GlobalPermission struct {
 
 // GlobalRole defines model for GlobalRole.
 type GlobalRole struct {
-	Id          string    `json:"id"`
-	Name        string    `json:"name"`
-	Permissions *[]string `json:"permissions,omitempty"`
+	Id          string              `json:"id"`
+	Name        string              `json:"name"`
+	Permissions *[]GlobalPermission `json:"permissions,omitempty"`
+}
+
+// JSON Web Key (JWK)
+type JWK struct {
+
+	// The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
+	Alg JWKAlg `json:"alg"`
+
+	// The exponent of the key - Base64URL encoded
+	E string `json:"e"`
+
+	// The "kid" (key ID) parameter is used to match a specific key
+	Kid string `json:"kid"`
+
+	// The "kty" (key type) parameter identifies the cryptographic algorithm family used with the key
+	Kty JWKKty `json:"kty"`
+
+	// The modulus (2048 bit) of the key - Base64URL encoded.
+	N string `json:"n"`
+
+	// The "use" (public key use) parameter identifies the intended use of the public key
+	Use JWKUse `json:"use"`
+}
+
+// The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
+type JWKAlg string
+
+// The "kty" (key type) parameter identifies the cryptographic algorithm family used with the key
+type JWKKty string
+
+// The "use" (public key use) parameter identifies the intended use of the public key
+type JWKUse string
+
+// JSON Web Key Set (JWKS)
+type JWKS struct {
+	Keys []JWK `json:"keys"`
+}
+
+// OpenID Connect Discovery Metadata
+type OidcDiscovery struct {
+	Issuer  string `json:"issuer"`
+	JwksUri string `json:"jwks_uri"`
 }
 
 // Organization defines model for Organization.
@@ -240,7 +311,7 @@ type OrganizationGroup struct {
 	Name           string                    `json:"name"`
 	OrgId          string                    `json:"org_id"`
 	OrgMemberships *[]OrganizationMembership `json:"org_memberships,omitempty"`
-	Permissions    *[]string                 `json:"permissions,omitempty"`
+	Permissions    *[]OrganizationPermission `json:"permissions,omitempty"`
 	Roles          *[]OrganizationRole       `json:"roles,omitempty"`
 }
 
@@ -251,18 +322,25 @@ type OrganizationMembership struct {
 	OrgId  *string              `json:"org_id,omitempty"`
 
 	// map[string]object for arbitrary organization user data
-	OrgUserData *map[string]interface{} `json:"org_user_data,omitempty"`
-	Permissions *[]string               `json:"permissions,omitempty"`
-	Roles       *[]OrganizationRole     `json:"roles,omitempty"`
-	UserId      *string                 `json:"user_id,omitempty"`
+	OrgUserData *map[string]interface{}   `json:"org_user_data,omitempty"`
+	Permissions *[]OrganizationPermission `json:"permissions,omitempty"`
+	Roles       *[]OrganizationRole       `json:"roles,omitempty"`
+	UserId      *string                   `json:"user_id,omitempty"`
+}
+
+// OrganizationPermission defines model for OrganizationPermission.
+type OrganizationPermission struct {
+	Id    string `json:"id"`
+	Name  string `json:"name"`
+	OrgId string `json:"org_id"`
 }
 
 // OrganizationRole defines model for OrganizationRole.
 type OrganizationRole struct {
-	Id          string    `json:"id"`
-	Name        string    `json:"name"`
-	OrgId       string    `json:"org_id"`
-	Permissions *[]string `json:"permissions,omitempty"`
+	Id          string                    `json:"id"`
+	Name        string                    `json:"name"`
+	OrgId       string                    `json:"org_id"`
+	Permissions *[]OrganizationPermission `json:"permissions,omitempty"`
 }
 
 // PubKey defines model for PubKey.
@@ -300,7 +378,7 @@ type User struct {
 	Groups         *[]GlobalGroup            `json:"groups,omitempty"`
 	Id             string                    `json:"id"`
 	OrgMemberships *[]OrganizationMembership `json:"org_memberships,omitempty"`
-	Permissions    *[]string                 `json:"permissions,omitempty"`
+	Permissions    *[]GlobalPermission       `json:"permissions,omitempty"`
 	Profile        *UserProfile              `json:"profile,omitempty"`
 	Roles          *[]GlobalRole             `json:"roles,omitempty"`
 }
@@ -320,6 +398,9 @@ type UserProfile struct {
 	LastName  *string `json:"last_name,omitempty"`
 	PhotoUrl  *string `json:"photo_url,omitempty"`
 }
+
+// PostAdminApplicationJSONBody defines parameters for PostAdminApplication.
+type PostAdminApplicationJSONBody Application
 
 // PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
 type PostAdminGlobalConfigJSONBody GlobalConfig
@@ -379,6 +460,9 @@ type GetTpsServiceRegsParams struct {
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
+
+// PostAdminApplicationJSONRequestBody defines body for PostAdminApplication for application/json ContentType.
+type PostAdminApplicationJSONRequestBody PostAdminApplicationJSONBody
 
 // PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
 type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody
