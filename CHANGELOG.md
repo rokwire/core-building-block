@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix auth credentials search for multiple apps [#153](https://github.com/rokwire/core-building-block/issues/153)
+- Fix GlobalPermission and OrganizationPermission in the doc APIs model [#151](https://github.com/rokwire/core-building-block/issues/151)
 - OIDC auth bug fixes [#143](https://github.com/rokwire/core-building-block/issues/143)
 - Fix APIs requests validation [#89](https://github.com/rokwire/core-building-block/issues/89)
 - Fixing the Log and the Changelog for issues #35 and #36 [#54](https://github.com/rokwire/core-building-block/issues/54)

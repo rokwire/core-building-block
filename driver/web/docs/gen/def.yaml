@@ -752,6 +752,16 @@ components:
       properties:
         setting:
           type: string
+    GlobalPermission:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
     GlobalRole:
       required:
         - id
@@ -765,7 +775,7 @@ components:
         permissions:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/GlobalPermission'
     GlobalGroup:
       required:
         - id
@@ -779,7 +789,7 @@ components:
         permissions:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/GlobalPermission'
         roles:
           type: array
           items:
@@ -845,6 +855,19 @@ components:
           description: organization domains
           items:
             type: string
+    OrganizationPermission:
+      required:
+        - id
+        - name
+        - org_id
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        org_id:
+          type: string
     OrganizationRole:
       required:
         - id
@@ -861,7 +884,7 @@ components:
         permissions:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/OrganizationPermission'
     OrganizationGroup:
       required:
         - id
@@ -878,7 +901,7 @@ components:
         permissions:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/OrganizationPermission'
         roles:
           type: array
           items:
@@ -1198,7 +1221,7 @@ components:
         permissions:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/GlobalPermission'
         roles:
           type: array
           items:
@@ -1258,7 +1281,7 @@ components:
         permissions:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/OrganizationPermission'
         roles:
           type: array
           items:
