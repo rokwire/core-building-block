@@ -49,8 +49,8 @@ paths:
     $ref: "./resources/admin/service-regs.yaml"
   /admin/applications/{id}:
     $ref: "./resources/admin/applicationsId.yaml"
-  /admin/global-permissions:
-    $ref: "./resources/admin/global-permissions.yaml"
+  /admin/application:
+    $ref: "./resources/admin/applications.yaml"
 
   #enc
   /enc/test:
@@ -65,10 +65,14 @@ paths:
   #third-party services
   /tps/service-regs:
     $ref: "./resources/third-party-services/service-regs.yaml"
+  /tps/auth-keys:
+    $ref: "./resources/third-party-services/auth-keys.yaml"
 
   #default
   /version:
     $ref: "./resources/default/version.yaml"
+  /.well-known/openid-configuration:
+    $ref: "./resources/default/openid-configuration.yaml"
 components:
   schemas:
     $ref: "./schemas/index.yaml"

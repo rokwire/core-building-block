@@ -140,7 +140,7 @@ func TestGetOrganizations(t *testing.T) {
 
 func TestAdmGetApplication(t *testing.T) {
 	storage := genmocks.Storage{}
-	storage.On("GetApplication", "_id").Return(&model.Application{ID: "_id"}, nil)
+	storage.On("FindApplication", "_id").Return(&model.Application{ID: "_id"}, nil)
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
 	getApplication, _ := app.Administration.AdmGetApplication("_id")
@@ -150,7 +150,7 @@ func TestAdmGetApplication(t *testing.T) {
 	}
 	// second case error
 	storage2 := genmocks.Storage{}
-	storage2.On("GetApplication").Return(&model.Application{ID: "_id"}, nil)
+	storage2.On("FindApplication").Return(&model.Application{ID: "_id"}, nil)
 	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
 	err, _ := app.Administration.AdmGetApplication("_id")
@@ -196,6 +196,35 @@ func TestEncGetTest(t *testing.T) {
 	want := "Enc - test"
 
 	assert.Equal(t, got, want, "result is different")
+}
+
+func TestCreateApplication(t *testing.T) {
+	/*storage := genmocks.Storage{}
+	versions := []string{"v1.1.0", "v1.2.0"}
+
+	appObj := model.Application{Name: "name", Versions: versions}
+
+	storage.On("InsertApplication", appObj).Return(&appObj, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	application, _ := app.Administration.AdmCreateApplication("name", versions)
+	if application == nil {
+		t.Error("application is nil")
+		return
+	}
+
+	storage2 := genmocks.Storage{}
+	versions = []string{"v1.1.0", "v1.2.0"}
+	storage2.On("InsertApplication", model.Application{Name: "name", Versions: versions}).Return(nil, errors.New("error occured"))
+
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage2, nil)
+
+	_, err := app.Administration.AdmCreateApplication("name", versions)
+	if err == nil {
+		t.Error("we are expecting error")
+		return
+	}
+	assert.Equal(t, err.Error(), "error occured", "error is different") */
 }
 
 ///

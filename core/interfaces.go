@@ -23,10 +23,11 @@ type Administration interface {
 	AdmUpdateGlobalConfig(setting string) error
 
 	AdmCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error)
-	AdmUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
 	AdmGetOrganizations() ([]model.Organization, error)
 	AdmGetOrganization(ID string) (*model.Organization, error)
+	AdmUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
 
+	AdmCreateApplication(name string, versions []string) (*model.Application, error)
 	AdmGetApplication(ID string) (*model.Application, error)
 
 	AdmFindGlobalPermissions() ([]model.GlobalPermission, error)
@@ -50,14 +51,32 @@ type Storage interface {
 	GetGlobalConfig() (*model.GlobalConfig, error)
 	SaveGlobalConfig(setting *model.GlobalConfig) error
 
+	UpdateGlobalPermission(item model.GlobalPermission) error
+	DeleteGlobalPermission(id string) error
+	FindGlobalPermissionsList() ([]model.GlobalPermission, error)
+
+	UpdateGlobalRole(item model.GlobalRole) error
+	DeleteGlobalRole(id string) error
+
+	UpdateGlobalGroup(item model.GlobalGroup) error
+	DeleteGlobalGroup(id string) error
+
+	UpdateOrganizationPermission(item model.OrganizationPermission) error
+	DeleteOrganizationPermission(id string) error
+
+	UpdateOrganizationRole(item model.OrganizationRole) error
+	DeleteOrganizationRole(id string) error
+
+	UpdateOrganizationGroup(item model.OrganizationGroup) error
+	DeleteOrganizationGroup(id string) error
+
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
 	GetOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)
 
-	GetApplication(ID string) (*model.Application, error)
-
-	FindGlobalPermissionsList() ([]model.GlobalPermission, error)
+	InsertApplication(application model.Application) (*model.Application, error)
+	FindApplication(ID string) (*model.Application, error)
 }
 
 //StorageListener listenes for change data storage events
