@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # global
 GlobalConfig:
   $ref: "./global/GlobalConfig.yaml"
@@ -70,3 +71,88 @@ OrganizationMembership:
   $ref: "./user/OrganizationMembership.yaml"
 Device:
   $ref: "./user/Device.yaml"
+=======
+# global
+GlobalConfig:
+  $ref: "./global/GlobalConfig.yaml"
+GlobalRole:
+  $ref: "./global/GlobalRole.yaml"
+GlobalGroup:
+  $ref: "./global/GlobalGroup.yaml"
+
+# organization
+Application:
+  $ref: "./organization/Application.yaml"
+Organization:
+  $ref: "./organization/Organization.yaml"
+OrganizationConfig:
+  $ref: "./organization/OrganizationConfig.yaml"
+OrganizationRole:
+  $ref: "./organization/OrganizationRole.yaml"
+OrganizationGroup:
+  $ref: "./organization/OrganizationGroup.yaml"
+  
+# auth
+ServiceReg:
+  $ref: "./auth/ServiceReg.yaml"
+AuthServiceReg:
+  $ref: "./auth/AuthServiceReg.yaml"
+PubKey:
+  $ref: "./auth/PubKey.yaml"
+ServiceScope:
+  $ref: "./auth/ServiceScope.yaml"
+AuthLoginRequest:
+  $ref: "./auth/AuthLoginRequest.yaml"
+AuthLoginResponse:
+  $ref: "./auth/AuthLoginResponse.yaml"
+AuthLoginCredsEmail:
+  $ref: "./auth/AuthLoginCredsEmail.yaml"
+AuthLoginCredsPhone:
+  $ref: "./auth/AuthLoginCredsPhone.yaml"
+AuthLoginCredsOidc:
+  $ref: "./auth/AuthLoginCredsOidc.yaml"
+AuthLoginParamsEmail:
+  $ref: "./auth/AuthLoginParamsEmail.yaml"
+AuthLoginParamsPhone:
+  $ref: "./auth/AuthLoginParamsPhone.yaml"
+AuthLoginParamsOidc:
+  $ref: "./auth/AuthLoginParamsOidc.yaml"
+
+AuthRefreshResponse:
+  $ref: "./auth/AuthRefreshResponse.yaml"
+
+AuthResponseRokwireToken:
+  $ref: "./auth/AuthResponseRokwireToken.yaml"
+AuthResponseParamsOidc:
+  $ref: "./auth/AuthResponseParamsOidc.yaml"
+
+AuthLoginUrlRequest:
+  $ref: "./auth/AuthLoginUrlRequest.yaml"
+AuthLoginUrlResponse:
+  $ref: "./auth/AuthLoginUrlResponse.yaml"
+
+AuthAuthorizeServiceRequest:
+  $ref: "./auth/AuthAuthorizeServiceRequest.yaml"
+AuthAuthorizeServiceResponse:
+  $ref: "./auth/AuthAuthorizeServiceResponse.yaml"
+
+JWK:
+  $ref: "./auth/JWK.yaml"
+JWKS:
+  $ref: "./auth/JWKS.yaml"
+
+OidcDiscovery:
+  $ref: "./auth/OIDCDiscovery.yaml"
+
+# user
+User:
+  $ref: "./user/User.yaml"
+UserAccount:
+  $ref: "./user/UserAccount.yaml"
+UserProfile:
+  $ref: "./user/UserProfile.yaml"
+OrganizationMembership:
+  $ref: "./user/OrganizationMembership.yaml"
+Device:
+  $ref: "./user/Device.yaml"
+>>>>>>> develop

@@ -115,12 +115,12 @@ func (s *administrationImpl) AdmGetOrganization(ID string) (*model.Organization,
 	return s.app.admGetOrganization(ID)
 }
 
-func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, error) {
-	return s.app.admGetApplication(ID)
+func (s *administrationImpl) AdmCreateApplication(name string, versions []string) (*model.Application, error) {
+	return s.app.admCreateApplication(name, versions)
 }
 
-func (s *administrationImpl) AdmGetApplicationList() ([]model.Application, error) {
-	return s.app.admGetApplicationList()
+func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, error) {
+	return s.app.admGetApplication(ID)
 }
 
 ///
