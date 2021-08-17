@@ -203,11 +203,7 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 		}
 
 		if userAuth.Creds.Refresh != nil || hadRefresh {
-			if auth.isGlobal() {
-				err = a.storage.UpdateCredentials("", "", authType, userAuth.UserID, userAuth.Creds.Refresh)
-			} else {
-				err = a.storage.UpdateCredentials(orgID, appID, authType, userAuth.UserID, userAuth.Creds.Refresh)
-			}
+			err = a.storage.UpdateCredentials(userAuth.Creds.ID, userAuth.Creds.Refresh)
 			if err != nil {
 				return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthCred, nil, err)
 			}
@@ -258,7 +254,7 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 	}
 
 	if refreshToken == credentials.Refresh.PreviousToken {
-		err = a.storage.UpdateCredentials(credentials.OrgID, credentials.AppID, credentials.Type, credentials.UserID, nil)
+		err = a.storage.UpdateCredentials(credentials.ID, nil)
 		if err != nil {
 			return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh reuse", nil, err)
 		}
@@ -268,11 +264,12 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, model.TypeRefreshToken, nil)
 	}
 
-	auth, err := a.getAuthType(credentials.Type)
+	auth, err := a.getAuthType(credentials.AuthType)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
+	//TODO: complete issues/ID-149 to get appID from AuthRefresh
 	userAuth, err := auth.refresh(credentials.Refresh.Params, credentials.OrgID, credentials.AppID, l)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
@@ -299,6 +296,7 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 		}
 	}
 
+	//TODO: complete issues/ID-149 to get appID from AuthRefresh
 	claims := a.getStandardClaims(user.ID, userAuth.UserID, user.Account.Email, user.Account.Phone, "rokwire", credentials.OrgID, credentials.AppID, userAuth.Exp)
 	token, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 	if err != nil {
@@ -315,7 +313,7 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 
 		refresh := model.AuthRefresh{CurrentToken: newRefreshToken, PreviousToken: refreshToken, Expires: expireTime, Params: userAuth.RefreshParams}
 
-		err = a.storage.UpdateCredentials(credentials.OrgID, credentials.AppID, credentials.Type, credentials.UserID, &refresh)
+		err = a.storage.UpdateCredentials(credentials.ID, &refresh)
 		if err != nil {
 			return "", "", nil, err
 		}
@@ -722,32 +720,31 @@ func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*mode
 	a.authConfigsLock.RLock()
 	defer a.authConfigsLock.RUnlock()
 
-	var authConfig *model.AuthConfig //to return
-
 	errArgs := &logutils.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": authType}
 
 	item, _ := a.authConfigs.Load(fmt.Sprintf("%s_%s_%s", orgID, appID, authType))
 	if item != nil {
-		authConfigFromCache, ok := item.(model.AuthConfig)
+		authConfig, ok := item.(*model.AuthConfig)
 		if !ok {
 			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeAuthConfig, errArgs)
 		}
-		authConfig = &authConfigFromCache
 		return authConfig, nil
 	}
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthConfig, errArgs)
 }
 
-func (a *Auth) setAuthConfigs(authConfigs *[]model.AuthConfig) {
+func (a *Auth) setAuthConfigs(authConfigs []model.AuthConfig) {
 	a.authConfigs = &syncmap.Map{}
 	validate := validator.New()
 
 	a.authConfigsLock.Lock()
 	defer a.authConfigsLock.Unlock()
-	for _, authConfig := range *authConfigs {
+	for _, authConfig := range authConfigs {
 		err := validate.Struct(authConfig)
 		if err == nil {
-			a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, authConfig.AppID, authConfig.Type), authConfig)
+			for _, appID := range authConfig.AppIDs {
+				a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, appID, authConfig.AuthType), &authConfig)
+			}
 		}
 	}
 }
@@ -803,8 +800,8 @@ type Storage interface {
 
 	//Credentials
 	FindCredentialsByRefreshToken(token string) (*model.AuthCreds, error)
-	FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCreds, error)
-	UpdateCredentials(orgID string, appID string, authType string, userID string, refresh *model.AuthRefresh) error
+	FindCredentials(orgID string, authType string, params map[string]interface{}) (*model.AuthCreds, error)
+	UpdateCredentials(ID string, refresh *model.AuthRefresh) error
 
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)
@@ -816,7 +813,7 @@ type Storage interface {
 
 	//AuthConfigs
 	FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error)
-	LoadAuthConfigs() (*[]model.AuthConfig, error)
+	LoadAuthConfigs() ([]model.AuthConfig, error)
 
 	//ServiceAuthorizations
 	FindServiceAuthorization(userID string, orgID string) (*model.ServiceAuthorization, error)

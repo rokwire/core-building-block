@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/coreos/go-oidc"
+	"github.com/google/uuid"
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/rokmetro/auth-library/authutils"
@@ -54,10 +55,6 @@ type oidcAuthConfig struct {
 	Populations        map[string]string `json:"populations"`
 }
 
-type oidcCreds struct {
-	Sub string `bson:"sub"`
-}
-
 type oidcLoginParams struct {
 	CodeVerifier string `json:"pkce_verifier"`
 	RedirectURI  string `json:"redirect_uri" validate:"required"`
@@ -79,6 +76,43 @@ type oidcToken struct {
 	RefreshToken string `json:"refresh_token"`
 	TokenType    string `json:"token_type" validate:"required"`
 	ExpiresIn    int    `json:"expires_in"`
+}
+
+type oidcCreds struct {
+	Sub         string `bson:"sub"`
+	IDPHost     string `bson:"idp_host"`
+	IDPClientID string `bson:"idp_client_id"`
+}
+
+func (o *oidcCreds) toMap() map[string]interface{} {
+	if o == nil {
+		return map[string]interface{}{}
+	}
+
+	return map[string]interface{}{
+		"sub":           o.Sub,
+		"idp_host":      o.IDPHost,
+		"idp_client_id": o.IDPClientID,
+	}
+}
+
+func oidcCredsFromMap(val map[string]interface{}) (*oidcCreds, error) {
+	sub, ok := val["sub"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "sub", nil)
+	}
+
+	idpHost, ok := val["idp_host"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "idp host", nil)
+	}
+
+	idpClientID, ok := val["idp_client_id"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "idp client id", nil)
+	}
+
+	return &oidcCreds{Sub: sub, IDPHost: idpHost, IDPClientID: idpClientID}, nil
 }
 
 type oidcRefreshParams struct {
@@ -123,30 +157,37 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcLoginParams, nil, err)
 	}
 
+	oidcConfig, err := a.getOidcAuthConfig(orgID, appID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
+	}
+
 	parsedCreds, err := url.Parse(strings.ReplaceAll(creds, `"`, ""))
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionParse, "oidc login creds", nil, err)
 	}
-	userAuth, err := a.newToken(parsedCreds.Query().Get("code"), orgID, appID, &loginParams, l)
+	userAuth, err := a.newToken(parsedCreds.Query().Get("code"), orgID, appID, &loginParams, oidcConfig, l)
 	if err != nil {
 		return nil, err
 	}
 
-	credentials, err := a.auth.storage.FindCredentials(orgID, appID, authTypeOidc, userAuth.UserID)
+	userAuthCreds := oidcCreds{Sub: userAuth.Sub, IDPHost: oidcConfig.Host, IDPClientID: oidcConfig.ClientID}
+	credentials, err := a.auth.storage.FindCredentials(orgID, authTypeOidc, userAuthCreds.toMap())
 	userAuth.Creds = credentials
 	if err != nil {
 		errFields := logutils.FieldArgs{"org_id": orgID, "app_id": appID, "type": authTypeOidc, "user_id": userAuth.UserID}
 		l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionFind, model.TypeAuthCred, &errFields)
 
+		credsID, err := uuid.NewUUID()
+		if err != nil {
+			return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("auth creds id"), err)
+		}
 		authCred := model.AuthCreds{
-			Type:   a.authType,
-			UserID: userAuth.UserID,
-			OrgID:  orgID,
-			AppID:  appID,
-			Creds: map[string]interface{}{
-				"sub": userAuth.Sub,
-			},
-			Refresh: nil,
+			ID:       credsID.String(),
+			AuthType: a.authType,
+			OrgID:    orgID,
+			Creds:    userAuthCreds.toMap(),
+			Refresh:  nil,
 		}
 		userAuth.Creds = &authCred
 		return userAuth, nil
@@ -168,7 +209,12 @@ func (a *oidcAuthImpl) refresh(params map[string]interface{}, orgID string, appI
 		return nil, errors.WrapErrorAction(logutils.ActionParse, typeAuthRefreshParams, nil, err)
 	}
 
-	userAuth, err := a.refreshToken(orgID, appID, refreshParams, l)
+	oidcConfig, err := a.getOidcAuthConfig(orgID, appID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
+	}
+
+	userAuth, err := a.refreshToken(orgID, appID, refreshParams, oidcConfig, l)
 	if err != nil {
 		return nil, err
 	}
@@ -265,12 +311,7 @@ func (a *oidcAuthImpl) checkToken(idToken string, orgID string, appID string, oi
 	return sub, nil
 }
 
-func (a *oidcAuthImpl) newToken(code string, orgID string, appID string, params *oidcLoginParams, l *logs.Log) (*model.UserAuth, error) {
-	oidcConfig, err := a.getOidcAuthConfig(orgID, appID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
-	}
-
+func (a *oidcAuthImpl) newToken(code string, orgID string, appID string, params *oidcLoginParams, oidcConfig *oidcAuthConfig, l *logs.Log) (*model.UserAuth, error) {
 	bodyData := map[string]string{
 		"code":         code,
 		"grant_type":   "authorization_code",
@@ -284,11 +325,7 @@ func (a *oidcAuthImpl) newToken(code string, orgID string, appID string, params 
 	return a.loadOidcTokensAndInfo(bodyData, oidcConfig, orgID, appID, params.RedirectURI, l)
 }
 
-func (a *oidcAuthImpl) refreshToken(orgID string, appID string, params *oidcRefreshParams, l *logs.Log) (*model.UserAuth, error) {
-	oidcConfig, err := a.getOidcAuthConfig(orgID, appID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
-	}
+func (a *oidcAuthImpl) refreshToken(orgID string, appID string, params *oidcRefreshParams, oidcConfig *oidcAuthConfig, l *logs.Log) (*model.UserAuth, error) {
 	if !oidcConfig.UseRefresh {
 		return nil, errors.Newf("refresh tokens not enabled for org_id=%s, app_id=%s", orgID, appID)
 	}
@@ -514,7 +551,7 @@ func (a *oidcAuthImpl) getOidcAuthConfig(orgID string, appID string) (*oidcAuthC
 }
 
 func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials map[string]interface{}) (bool, error) {
-	creds, err := mapToOidcCreds(credentials)
+	creds, err := oidcCredsFromMap(credentials)
 	if err != nil {
 		return false, err
 	}
@@ -555,15 +592,6 @@ func generatePkceChallenge() (string, string, error) {
 	codeChallenge := base64.URLEncoding.EncodeToString(codeChallengeBytes)
 
 	return codeChallenge, codeVerifier, nil
-}
-
-func mapToOidcCreds(credentials map[string]interface{}) (*oidcCreds, error) {
-	sub, ok := credentials["sub"].(string)
-	if !ok {
-		return nil, errors.ErrorAction(logutils.ActionCast, "oidc sub", &logutils.FieldArgs{"sub": credentials["sub"]})
-	}
-
-	return &oidcCreds{Sub: sub}, nil
 }
 
 //initOidcAuth initializes and registers a new OIDC auth instance

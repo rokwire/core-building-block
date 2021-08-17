@@ -60,18 +60,17 @@ type UserAuth struct {
 
 //AuthConfig represents auth config entity
 type AuthConfig struct {
-	OrgID  string                 `json:"org_id" bson:"org_id" validate:"required"`
-	AppID  string                 `json:"app_id" bson:"app_id" validate:"required"`
-	Type   string                 `json:"type" bson:"type" validate:"required"`
-	Config map[string]interface{} `json:"config" bson:"config" validate:"required"`
+	OrgID    string                 `json:"org_id" bson:"org_id" validate:"required"`
+	AppIDs   []string               `json:"app_ids" bson:"app_ids" validate:"required"`
+	AuthType string                 `json:"auth_type" bson:"auth_type" validate:"required"`
+	Config   map[string]interface{} `json:"config" bson:"config" validate:"required"`
 }
 
 //AuthCreds represents represents a set of credentials used by auth
 type AuthCreds struct {
+	ID        string                 `bson:"_id"`
 	OrgID     string                 `bson:"org_id"`
-	AppID     string                 `bson:"app_id"`
-	Type      string                 `bson:"type"`
-	UserID    string                 `bson:"user_id"`
+	AuthType  string                 `bson:"auth_type"`
 	AccountID string                 `bson:"account_id"`
 	Creds     map[string]interface{} `bson:"creds"`
 	Refresh   *AuthRefresh           `bson:"refresh"`
