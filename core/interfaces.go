@@ -76,7 +76,6 @@ type Storage interface {
 
 	InsertGlobalPermission(globalPermission model.GlobalPermission) (*model.GlobalPermission, error)
 
-	GetApplication(ID string) (*model.Application, error)
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 }

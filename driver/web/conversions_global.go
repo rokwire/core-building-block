@@ -67,7 +67,7 @@ func globalRoleListToDef(items []model.GlobalRole) []Def.GlobalRole {
 }
 
 //GlobalPersmission
-func globalPermission(item *Def.GlobalPermission) *model.GlobalPermission {
+func globalPermissionFromDef(item *Def.GlobalPermission) *model.GlobalPermission {
 	if item == nil {
 		return nil
 	}

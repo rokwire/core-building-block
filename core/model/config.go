@@ -10,12 +10,10 @@ import (
 const (
 	//TypeGlobalConfig ...
 	TypeGlobalConfig logutils.MessageDataType = "global config"
-	//TypeOrganizationConfig ...
-	TypeOrganizationConfig logutils.MessageDataType = "org config"
-)
-const (
 	//TypeGlobalPermission ...
 	TypeGlobalPermission logutils.MessageDataType = "global permissions"
+	//TypeOrganizationConfig ...
+	TypeOrganizationConfig logutils.MessageDataType = "org config"
 )
 
 //GlobalConfig represents global config for the system
