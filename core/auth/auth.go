@@ -81,13 +81,6 @@ type TokenClaims struct {
 	Phone string `json:"phone,omitempty"`
 }
 
-type authRefreshParams struct {
-	PreviousToken string      `json:"previous_token" validate:"required"`
-	CurrentToken  string      `json:"current_token" validate:"required"`
-	Expires       *time.Time  `json:"exp" validate:"required"`
-	IDPParams     interface{} `json:"idp_params"`
-}
-
 //NewAuth creates a new auth instance
 func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
