@@ -103,8 +103,7 @@ type AuthLoginCredsEmail struct {
 }
 
 // Auth login creds for auth_type="oidc"
-//   - Initial login: full redirect URI received from OIDC provider
-//   - Refresh: refresh token
+//   - full redirect URI received from OIDC provider
 type AuthLoginCredsOidc string
 
 // Auth login creds for auth_type="phone"
