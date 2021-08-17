@@ -302,7 +302,21 @@ func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, 
 	return &creds, nil
 }
 
-//InsertCredentials credentials inserts a set of credentials
+//FindCredentialsByRefreshToken finds a set of credentials by refresh token
+func (sa *Adapter) FindCredentialsByRefreshToken(token string) (*model.AuthCred, error) {
+	conditions := []bson.M{{"refresh.current_token": token}, {"refresh.previous_token": token}}
+	filter := bson.M{"$or": conditions}
+
+	var creds model.AuthCred
+	err := sa.db.credentials.FindOne(filter, &creds, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
+	}
+
+	return &creds, nil
+}
+
+//InsertCredentials inserts a set of credentials
 func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.SessionContext) error {
 	if creds == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
@@ -321,6 +335,21 @@ func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.Sessio
 	return nil
 }
 
+//UpdateCredentials updates a set of credentials
+func (sa *Adapter) UpdateCredentials(creds *model.AuthCred) (*model.AuthCred, error) {
+	if creds == nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
+	}
+
+	filter := bson.D{primitive.E{Key: "type", Value: creds.Type}, primitive.E{Key: "user_id", Value: creds.UserID}}
+	err := sa.db.credentials.ReplaceOne(filter, creds, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthCred, nil, err)
+	}
+
+	return creds, nil
+}
+
 //FindGlobalPermissions finds a set of global user permissions
 func (sa *Adapter) FindGlobalPermissions(ids []string) ([]model.GlobalPermission, error) {
 	permissionsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
@@ -331,6 +360,22 @@ func (sa *Adapter) FindGlobalPermissions(ids []string) ([]model.GlobalPermission
 	}
 
 	return permissionsResult, nil
+}
+
+//UpdateGlobalPermission updates global permission
+func (sa *Adapter) UpdateGlobalPermission(item model.GlobalPermission) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
+//DeleteGlobalPermission deletes global permission
+func (sa *Adapter) DeleteGlobalPermission(id string) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
 }
 
 //FindGlobalRoles finds a set of global user roles
@@ -345,6 +390,22 @@ func (sa *Adapter) FindGlobalRoles(ids []string) ([]model.GlobalRole, error) {
 	return rolesResult, nil
 }
 
+//UpdateGlobalRole updates global role
+func (sa *Adapter) UpdateGlobalRole(item model.GlobalRole) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
+//DeleteGlobalRole deletes global role
+func (sa *Adapter) DeleteGlobalRole(id string) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
 //FindGlobalGroups finds a set of global user groups
 func (sa *Adapter) FindGlobalGroups(ids []string) ([]model.GlobalGroup, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
@@ -356,9 +417,25 @@ func (sa *Adapter) FindGlobalGroups(ids []string) ([]model.GlobalGroup, error) {
 	return groupsResult, nil
 }
 
+//UpdateGlobalGroup updates global group
+func (sa *Adapter) UpdateGlobalGroup(item model.GlobalGroup) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
+//DeleteGlobalGroup deletes global group
+func (sa *Adapter) DeleteGlobalGroup(id string) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
 //FindOrganizationPermissions finds a set of organization user permissions
 func (sa *Adapter) FindOrganizationPermissions(ids []string, orgID string) ([]model.OrganizationPermission, error) {
-	permissionsFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	permissionsFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var permissionsResult []organizationPermission
 	err := sa.db.organizationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
 	if err != nil {
@@ -376,9 +453,25 @@ func (sa *Adapter) FindOrganizationPermissions(ids []string, orgID string) ([]mo
 	return result, nil
 }
 
+//UpdateOrganizationPermission updates organziation permission
+func (sa *Adapter) UpdateOrganizationPermission(item model.OrganizationPermission) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
+//DeleteOrganizationPermission deletes organization permission
+func (sa *Adapter) DeleteOrganizationPermission(id string) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
 //FindOrganizationRoles finds a set of organization user roles
 func (sa *Adapter) FindOrganizationRoles(ids []string, orgID string) ([]model.OrganizationRole, error) {
-	rolesFilter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	rolesFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var rolesResult []organizationRole
 	err := sa.db.organizationsRoles.Find(rolesFilter, &rolesResult, nil)
 	if err != nil {
@@ -396,9 +489,25 @@ func (sa *Adapter) FindOrganizationRoles(ids []string, orgID string) ([]model.Or
 	return result, nil
 }
 
+//UpdateOrganizationRole updates organization role
+func (sa *Adapter) UpdateOrganizationRole(item model.OrganizationRole) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
+//DeleteOrganizationRole deletes organization role
+func (sa *Adapter) DeleteOrganizationRole(id string) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
 //FindOrganizationGroups finds a set of organization user groups
 func (sa *Adapter) FindOrganizationGroups(ids []string, orgID string) ([]model.OrganizationGroup, error) {
-	filter := bson.D{primitive.E{Key: "organization_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var groupsResult []organizationGroup
 	err := sa.db.organizationsGroups.Find(filter, &groupsResult, nil)
 	if err != nil {
@@ -414,6 +523,22 @@ func (sa *Adapter) FindOrganizationGroups(ids []string, orgID string) ([]model.O
 	result := organizationGroupsFromStorage(groupsResult, *organization)
 
 	return result, nil
+}
+
+//UpdateOrganizationGroup updates organization group
+func (sa *Adapter) UpdateOrganizationGroup(item model.OrganizationGroup) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
+//DeleteOrganizationGroup deletes organziation group
+func (sa *Adapter) DeleteOrganizationGroup(id string) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
 }
 
 //InsertMembership inserts an organization membership
@@ -632,8 +757,18 @@ func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
 	return organizations, nil
 }
 
-//GetApplication gets application
-func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
+//InsertApplication inserts an application
+func (sa *Adapter) InsertApplication(application model.Application) (*model.Application, error) {
+	_, err := sa.db.applications.InsertOne(application)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, &logutils.FieldArgs{"id": application.ID}, err)
+	}
+
+	return &application, nil
+}
+
+//FindApplication finds application
+func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	var result []model.Application
 	err := sa.db.applications.Find(filter, &result, nil)
