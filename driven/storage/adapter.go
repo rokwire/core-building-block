@@ -298,6 +298,19 @@ func (sa *Adapter) DeleteUser(id string) error {
 	return nil
 }
 
+//FindCredentialsByID finds a set of credentials by ID
+func (sa *Adapter) FindCredentialsByID(ID string) (*model.AuthCreds, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+
+	var creds model.AuthCreds
+	err := sa.db.credentials.FindOne(filter, &creds, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
+	}
+
+	return &creds, nil
+}
+
 //FindCredentials find a set of credentials
 func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCreds, error) {
 	var filter bson.D
@@ -309,20 +322,6 @@ func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, 
 	} else {
 		filter = bson.D{primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: userID}}
 	}
-
-	var creds model.AuthCreds
-	err := sa.db.credentials.FindOne(filter, &creds, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
-	}
-
-	return &creds, nil
-}
-
-//FindCredentialsByRefreshToken finds a set of credentials by refresh token
-func (sa *Adapter) FindCredentialsByRefreshToken(token string) (*model.AuthCreds, error) {
-	conditions := []bson.M{{"refresh.current_token": token}, {"refresh.previous_token": token}}
-	filter := bson.M{"$or": conditions}
 
 	var creds model.AuthCreds
 	err := sa.db.credentials.FindOne(filter, &creds, nil)
@@ -352,29 +351,53 @@ func (sa *Adapter) InsertCredentials(creds *model.AuthCreds, context mongo.Sessi
 	return nil
 }
 
-//UpdateCredentials updates a set of credentials
-func (sa *Adapter) UpdateCredentials(orgID string, appID string, authType string, userID string, refresh *model.AuthRefresh) error {
-	var filter bson.D
-	if len(orgID) > 0 && len(appID) > 0 {
-		filter = bson.D{
-			primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID},
-			primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: userID},
-		}
-	} else {
-		filter = bson.D{primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: userID}}
+//FindRefreshToken finds a refresh token
+func (sa *Adapter) FindRefreshToken(token string) (*model.AuthRefresh, error) {
+	conditions := []bson.M{{"refresh.current_token": token}, {"refresh.previous_token": token}}
+	filter := bson.M{"$or": conditions}
+
+	var refresh model.AuthRefresh
+	err := sa.db.refreshTokens.FindOne(filter, &refresh, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
 	}
 
+	return &refresh, nil
+}
+
+//UpdateRefreshToken updates a refresh token
+func (sa *Adapter) UpdateRefreshToken(token string, refresh *model.AuthRefresh) error {
+	filter := bson.D{primitive.E{Key: "current_token", Value: token}}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "refresh", Value: refresh},
+			primitive.E{Key: "previous_token", Value: refresh.PreviousToken},
+			primitive.E{Key: "current_token", Value: refresh.CurrentToken},
+			primitive.E{Key: "exp", Value: refresh.Expires},
+			primitive.E{Key: "params", Value: refresh.Params},
 		}},
 	}
-	res, err := sa.db.credentials.UpdateOne(filter, update, nil)
+
+	res, err := sa.db.refreshTokens.UpdateOne(filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthCred, nil, err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAuthCred, logutils.StringArgs("unexpected modified count"))
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAuthRefresh, logutils.StringArgs("unexpected modified count"))
+	}
+
+	return nil
+}
+
+//DeleteRefreshToken updates a refresh token
+func (sa *Adapter) DeleteRefreshToken(token string) error {
+	filter := bson.D{primitive.E{Key: "current_token", Value: token}}
+
+	res, err := sa.db.refreshTokens.DeleteOne(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
+	}
+	if res.DeletedCount != 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeAuthRefresh, logutils.StringArgs("unexpected deleted count"))
 	}
 
 	return nil

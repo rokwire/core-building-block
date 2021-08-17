@@ -53,8 +53,8 @@ type UserAuth struct {
 	Picture        []byte
 	Exp            *int64
 	Creds          *AuthCreds
+	Refresh        *AuthRefresh
 	OrgData        map[string]interface{}
-	RefreshParams  map[string]interface{}
 	ResponseParams interface{}
 }
 
@@ -74,7 +74,6 @@ type AuthCreds struct {
 	UserID    string                 `bson:"user_id"`
 	AccountID string                 `bson:"account_id"`
 	Creds     map[string]interface{} `bson:"creds"`
-	Refresh   *AuthRefresh           `bson:"refresh"`
 }
 
 //AuthRefresh represents refresh token info used by auth

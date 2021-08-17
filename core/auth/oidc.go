@@ -146,7 +146,6 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 			Creds: map[string]interface{}{
 				"sub": userAuth.Sub,
 			},
-			Refresh: nil,
 		}
 		userAuth.Creds = &authCred
 		return userAuth, nil
@@ -375,7 +374,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 
 	if token.RefreshToken != "" {
 		refreshParams := oidcRefreshParams{RefreshToken: token.RefreshToken, RedirectURI: redirectURI}
-		userAuth.RefreshParams = refreshParams.toMap()
+		userAuth.Refresh = &model.AuthRefresh{Params: refreshParams.toMap()}
 	}
 
 	tokenResponseParams := oidcTokenResponseParams{IDToken: token.IDToken, AccessToken: token.AccessToken, TokenType: token.TokenType}
