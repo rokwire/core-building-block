@@ -268,3 +268,12 @@ func (app *application) admCreateApplication(name string, versions []string) (*m
 	}
 	return inserted, nil
 }
+
+func (app *application) admGetGlobalGroups(ids []string) ([]model.GlobalGroup, error) {
+	getGlobalGroups, err := app.storage.FindGlobalGroups(ids)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeGlobalGroup, nil, err)
+	}
+
+	return getGlobalGroups, nil
+}

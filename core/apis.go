@@ -121,6 +121,10 @@ func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, e
 	return s.app.admGetApplication(ID)
 }
 
+func (s *administrationImpl) AdmGetGlobalGroups(ids []string) ([]model.GlobalGroup, error) {
+	return s.app.admGetGlobalGroups(ids)
+}
+
 ///
 
 //encryptionImpl
