@@ -2,6 +2,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 
 	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/logging-library/logs"
@@ -95,4 +96,40 @@ type APIs interface {
 
 	//DeregisterService deletes an existing service registration
 	DeregisterService(serviceID string) error
+}
+
+//Storage interface to communicate with the storage
+type Storage interface {
+	RegisterStorageListener(storageListener storage.Listener)
+
+	//Users
+	FindUserByAccountID(accountID string) (*model.User, error)
+	InsertUser(user *model.User, authCred *model.AuthCreds) (*model.User, error)
+	UpdateUser(user *model.User, orgID string, newOrgData *map[string]interface{}) (*model.User, error)
+	DeleteUser(id string) error
+
+	//Organizations
+	FindOrganization(id string) (*model.Organization, error)
+
+	//Credentials
+	FindCredentialsByRefreshToken(token string) (*model.AuthCreds, error)
+	FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCreds, error)
+	UpdateCredentials(orgID string, appID string, authType string, userID string, refresh *model.AuthRefresh) error
+
+	//ServiceRegs
+	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)
+	FindServiceReg(serviceID string) (*model.ServiceReg, error)
+	InsertServiceReg(reg *model.ServiceReg) error
+	UpdateServiceReg(reg *model.ServiceReg) error
+	SaveServiceReg(reg *model.ServiceReg) error
+	DeleteServiceReg(serviceID string) error
+
+	//AuthConfigs
+	FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error)
+	LoadAuthConfigs() (*[]model.AuthConfig, error)
+
+	//ServiceAuthorizations
+	FindServiceAuthorization(userID string, orgID string) (*model.ServiceAuthorization, error)
+	SaveServiceAuthorization(authorization *model.ServiceAuthorization) error
+	DeleteServiceAuthorization(userID string, orgID string) error
 }
