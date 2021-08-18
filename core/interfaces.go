@@ -53,6 +53,7 @@ type Storage interface {
 
 	UpdateGlobalPermission(item model.GlobalPermission) error
 	DeleteGlobalPermission(id string) error
+	FindGlobalPermissions(ids []string) (*model.GlobalPermission, error)
 
 	InsertGlobalRole(globalRole model.GlobalRole) (*model.GlobalRole, error)
 	UpdateGlobalRole(item model.GlobalRole) error

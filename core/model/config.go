@@ -14,7 +14,8 @@ const (
 	TypeOrganizationConfig logutils.MessageDataType = "org config"
 	//TypeGlobalRole ...
 	TypeGlobalRole logutils.MessageDataType = "global role"
-	//TypeOrganizationConfig ...
+	//TypeOrganizationPermission ...
+	TypeGlobalPermission logutils.MessageDataType = "global permission"
 )
 
 //GlobalConfig represents global config for the system
