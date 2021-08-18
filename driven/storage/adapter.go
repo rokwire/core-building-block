@@ -827,6 +827,16 @@ func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
 	return &getResApp, nil
 }
 
+//InsertGlobalGroup inserts global Group
+func (sa *Adapter) InsertGlobalRole(globalRole model.GlobalRole) (*model.GlobalRole, error) {
+	_, err := sa.db.globalRoles.InsertOne(globalRole)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalRole, &logutils.FieldArgs{"id": globalRole.ID}, err)
+	}
+
+	return &globalRole, nil
+}
+
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records

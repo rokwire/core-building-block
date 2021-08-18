@@ -268,3 +268,21 @@ func (app *application) admCreateApplication(name string, versions []string) (*m
 	}
 	return inserted, nil
 }
+
+func (app *application) admCreateGlobalRole(name string, permissionsIDs []string) (*model.GlobalRole, error) {
+	now := time.Now()
+
+	permissions, err := app.storage.FindGlobalPermissions(permissionsIDs)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeGlobalPermission, nil, err)
+	}
+
+	globalPermissionID, _ := uuid.NewUUID()
+	globalPermission := model.GlobalRole{ID: globalPermissionID.String(), Name: name, Permissions: permissions, DateCreated: now}
+
+	insertedGlobalPermission, err := app.storage.InsertGlobalRole(globalPermission)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalRole, nil, err)
+	}
+	return insertedGlobalPermission, nil
+}

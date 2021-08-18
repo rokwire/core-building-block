@@ -121,6 +121,10 @@ func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, e
 	return s.app.admGetApplication(ID)
 }
 
+func (s *administrationImpl) AdmCreateGlobalRole(name string, permissions []string) (*model.GlobalRole, error) {
+	return s.app.admCreateGlobalRole(name, permissions)
+}
+
 ///
 
 //encryptionImpl
