@@ -365,6 +365,11 @@ func (sa *Adapter) FindRefreshToken(token string) (*model.AuthRefresh, error) {
 	return &refresh, nil
 }
 
+//InsertRefreshToken inserts a refresh token
+func (sa *Adapter) InsertRefreshToken(refresh *model.AuthRefresh) error {
+	return errors.New(logutils.Unimplemented)
+}
+
 //UpdateRefreshToken updates a refresh token
 func (sa *Adapter) UpdateRefreshToken(token string, refresh *model.AuthRefresh) error {
 	filter := bson.D{primitive.E{Key: "current_token", Value: token}}
@@ -394,10 +399,22 @@ func (sa *Adapter) DeleteRefreshToken(token string) error {
 
 	res, err := sa.db.refreshTokens.DeleteOne(filter, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAuthRefresh, nil, err)
 	}
 	if res.DeletedCount != 1 {
 		return errors.ErrorAction(logutils.ActionDelete, model.TypeAuthRefresh, logutils.StringArgs("unexpected deleted count"))
+	}
+
+	return nil
+}
+
+//DeleteExpiredRefreshTokens deletes expired refresh tokens
+func (sa *Adapter) DeleteExpiredRefreshTokens(now *time.Time) error {
+	filter := []bson.M{{"exp": bson.M{"$lte": now}}}
+
+	_, err := sa.db.refreshTokens.DeleteMany(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAuthRefresh, &logutils.FieldArgs{"exp": now}, err)
 	}
 
 	return nil

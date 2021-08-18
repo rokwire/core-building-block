@@ -3,6 +3,7 @@ package auth
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"time"
 
 	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/logging-library/logs"
@@ -117,8 +118,10 @@ type Storage interface {
 
 	//RefreshTokens
 	FindRefreshToken(token string) (*model.AuthRefresh, error)
+	InsertRefreshToken(refresh *model.AuthRefresh) error
 	UpdateRefreshToken(token string, refresh *model.AuthRefresh) error
 	DeleteRefreshToken(token string) error
+	DeleteExpiredRefreshTokens(now *time.Time) error
 
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)

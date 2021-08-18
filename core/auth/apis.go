@@ -18,6 +18,8 @@ import (
 func (a *Auth) Start() {
 	storageListener := StorageListener{auth: a}
 	a.storage.RegisterStorageListener(&storageListener)
+
+	go a.setupDeleteRefreshTimer()
 }
 
 //GetHost returns the host/issuer of the auth service
@@ -90,7 +92,7 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 		}
 
 		if userAuth.Refresh != nil || hadRefresh {
-			err = a.storage.UpdateRefreshToken(userAuth.Refresh)
+			err = a.storage.InsertRefreshToken(userAuth.Refresh)
 			if err != nil {
 				return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthCred, nil, err)
 			}
@@ -142,6 +144,10 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 	}
 
 	if !refresh.Expires.After(time.Now().UTC()) {
+		err = a.storage.DeleteRefreshToken(refresh.CurrentToken)
+		if err != nil {
+			return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh expiration", nil, err)
+		}
 		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, "refresh expiration", nil)
 	}
 
@@ -161,7 +167,7 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 		return "", "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	userAuth, err := auth.refresh(refresh.Params, credentials.OrgID, credentials.AppID, l)
+	userAuth, err := auth.refresh(refresh.Params, refresh.OrgID, refresh.AppID, l)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
 	}
@@ -175,19 +181,15 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 		return "", "", nil, err
 	}
 
-	user, update, newMembership := a.needsUserUpdate(userAuth, user)
+	user, update, _ := a.needsUserUpdate(userAuth, user)
 	if update {
-		var newMembershipOrgData *map[string]interface{}
-		if newMembership {
-			newMembershipOrgData = &userAuth.OrgData
-		}
-		_, err = a.updateAccount(user, credentials.OrgID, newMembershipOrgData)
+		_, err = a.updateAccount(user, "", nil)
 		if err != nil {
 			return "", "", nil, err
 		}
 	}
 
-	claims := a.getStandardClaims(user.ID, userAuth.UserID, user.Account.Email, user.Account.Phone, "rokwire", credentials.OrgID, credentials.AppID, userAuth.Exp)
+	claims := a.getStandardClaims(user.ID, userAuth.UserID, user.Account.Email, user.Account.Phone, "rokwire", refresh.OrgID, refresh.AppID, userAuth.Exp)
 	token, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
