@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Handle refresh tokens across multiple devices/apps/orgs [#149](https://github.com/rokwire/core-building-block/issues/149)
+- Restructure auth package to provide APIs interface [#161](https://github.com/rokwire/core-building-block/issues/161)
 - Set up refresh tokens [#95](https://github.com/rokwire/core-building-block/issues/95)
 - Set up OIDC compliant token validation endpoints [#51](https://github.com/rokwire/core-building-block/issues/51)
 - Storage improvements [#144](https://github.com/rokwire/core-building-block/issues/144)
