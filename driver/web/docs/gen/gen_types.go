@@ -404,6 +404,9 @@ type PostAdminGlobalConfigJSONBody GlobalConfig
 // PutAdminGlobalConfigJSONBody defines parameters for PutAdminGlobalConfig.
 type PutAdminGlobalConfigJSONBody GlobalConfig
 
+// PostAdminGlobalRolesJSONBody defines parameters for PostAdminGlobalRoles.
+type PostAdminGlobalRolesJSONBody GlobalRole
+
 // PostAdminOrganizationsJSONBody defines parameters for PostAdminOrganizations.
 type PostAdminOrganizationsJSONBody Organization
 
@@ -463,6 +466,9 @@ type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody
 
 // PutAdminGlobalConfigJSONRequestBody defines body for PutAdminGlobalConfig for application/json ContentType.
 type PutAdminGlobalConfigJSONRequestBody PutAdminGlobalConfigJSONBody
+
+// PostAdminGlobalRolesJSONRequestBody defines body for PostAdminGlobalRoles for application/json ContentType.
+type PostAdminGlobalRolesJSONRequestBody PostAdminGlobalRolesJSONBody
 
 // PostAdminOrganizationsJSONRequestBody defines body for PostAdminOrganizations for application/json ContentType.
 type PostAdminOrganizationsJSONRequestBody PostAdminOrganizationsJSONBody
