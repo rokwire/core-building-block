@@ -41,6 +41,8 @@ paths:
   #admin
   /admin/global-config:
     $ref: "./resources/admin/global-config.yaml"
+  /admin/global-groups:
+    $ref: "./resources/admin/global-groups.yaml"
   /admin/organizations/{id}:
     $ref: "./resources/admin/organizationsId.yaml"
   /admin/organizations:
