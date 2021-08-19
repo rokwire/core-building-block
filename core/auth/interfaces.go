@@ -118,6 +118,7 @@ type Storage interface {
 
 	//RefreshTokens
 	FindRefreshToken(token string) (*model.AuthRefresh, error)
+	LoadRefreshTokens(orgID string, appID string, credsID string) ([]model.AuthRefresh, error)
 	InsertRefreshToken(refresh *model.AuthRefresh) error
 	UpdateRefreshToken(token string, refresh *model.AuthRefresh) error
 	DeleteRefreshToken(token string) error

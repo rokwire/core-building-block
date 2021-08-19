@@ -59,19 +59,16 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 
 	//RefreshParams == nil indicates that a refresh token should not be generated
 	refreshToken := ""
-	hadRefresh := (userAuth.Refresh != nil)
-	if userAuth.Refresh.Params != nil {
+	var refreshParams *model.AuthRefresh
+	if userAuth.RefreshParams != nil {
 		var expireTime *time.Time
 		refreshToken, expireTime, err = a.buildRefreshToken()
 		if err != nil {
 			return "", "", nil, nil, err
 		}
 
-		refreshParams := model.AuthRefresh{CurrentToken: refreshToken, Expires: expireTime, Params: userAuth.Refresh.Params}
-
-		userAuth.Refresh = &refreshParams
-	} else {
-		userAuth.Refresh = nil
+		refreshParams = &model.AuthRefresh{CurrentToken: refreshToken, Expires: expireTime, AppID: appID, OrgID: orgID,
+			CredsID: userAuth.Creds.ID, Params: userAuth.RefreshParams}
 	}
 
 	if len(userAuth.AccountID) > 0 {
@@ -91,10 +88,15 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 			}
 		}
 
-		if userAuth.Refresh != nil || hadRefresh {
-			err = a.storage.InsertRefreshToken(userAuth.Refresh)
+		if refreshParams != nil {
+			err = a.checkRefreshTokenLimit(orgID, appID, userAuth.Creds.ID)
 			if err != nil {
-				return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthCred, nil, err)
+				a.logger.Error(err.Error())
+			} else {
+				err = a.storage.InsertRefreshToken(refreshParams)
+				if err != nil {
+					return "", "", nil, nil, err
+				}
 			}
 		}
 	} else if userAuth.OrgID == orgID {
@@ -134,7 +136,7 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
 	}
 	if credentials == nil {
-		return "", "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthRefresh, nil)
+		return "", "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthCred, nil)
 	}
 
 	validate := validator.New()
@@ -196,16 +198,16 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 	}
 
 	newRefreshToken := ""
-	if userAuth.Refresh.Params != nil {
+	if userAuth.RefreshParams != nil {
 		var expireTime *time.Time
 		newRefreshToken, expireTime, err = a.buildRefreshToken()
 		if err != nil {
 			return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeRefreshToken, nil, err)
 		}
 
-		refresh := model.AuthRefresh{CurrentToken: newRefreshToken, PreviousToken: refreshToken, Expires: expireTime, Params: userAuth.Refresh.Params}
+		updatedRefresh := model.AuthRefresh{CurrentToken: newRefreshToken, PreviousToken: refreshToken, Expires: expireTime, Params: userAuth.RefreshParams}
 
-		err = a.storage.UpdateRefreshToken(refreshToken, &refresh)
+		err = a.storage.UpdateRefreshToken(refreshToken, &updatedRefresh)
 		if err != nil {
 			return "", "", nil, err
 		}

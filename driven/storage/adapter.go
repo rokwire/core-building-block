@@ -365,9 +365,32 @@ func (sa *Adapter) FindRefreshToken(token string) (*model.AuthRefresh, error) {
 	return &refresh, nil
 }
 
+//LoadRefreshTokens loads refresh tokens by an ID triple
+func (sa *Adapter) LoadRefreshTokens(orgID string, appID string, credsID string) ([]model.AuthRefresh, error) {
+	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "creds_id", Value: credsID}}
+	opts := options.Find().SetSort(bson.D{primitive.E{Key: "exp", Value: 1}})
+
+	var refresh []model.AuthRefresh
+	err := sa.db.refreshTokens.Find(filter, &refresh, opts)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
+	}
+
+	return refresh, nil
+}
+
 //InsertRefreshToken inserts a refresh token
 func (sa *Adapter) InsertRefreshToken(refresh *model.AuthRefresh) error {
-	return errors.New(logutils.Unimplemented)
+	if refresh == nil {
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthRefresh, nil)
+	}
+
+	_, err := sa.db.refreshTokens.InsertOne(refresh)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthRefresh, nil, err)
+	}
+
+	return nil
 }
 
 //UpdateRefreshToken updates a refresh token

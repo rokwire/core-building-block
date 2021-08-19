@@ -33,10 +33,12 @@ const (
 	typeAuth              logutils.MessageDataType = "auth"
 	typeAuthRefreshParams logutils.MessageDataType = "auth refresh params"
 
-	refreshTokenLength       int   = 256
-	refreshTokenExpiry       int   = 7 * 24 * 60
-	refreshTokenDeletePeriod int   = 2
-	accessTokenExpiry        int64 = 30
+	refreshTokenLength       int = 256
+	refreshTokenExpiry       int = 7 * 24 * 60
+	refreshTokenDeletePeriod int = 2
+	refreshTokenLimit        int = 5
+
+	accessTokenExpiry int64 = 30
 )
 
 //Auth represents the auth functionality unit
@@ -411,6 +413,20 @@ func (a *Auth) setAuthConfigs(authConfigs *[]model.AuthConfig) {
 			a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, authConfig.AppID, authConfig.Type), authConfig)
 		}
 	}
+}
+
+func (a *Auth) checkRefreshTokenLimit(orgID string, appID string, credsID string) error {
+	tokens, err := a.storage.LoadRefreshTokens(orgID, appID, credsID)
+	if err != nil {
+		return errors.WrapErrorAction("limit checking", model.TypeAuthRefresh, nil, err)
+	}
+	if len(tokens) >= refreshTokenLimit {
+		err = a.storage.DeleteRefreshToken(tokens[0].CurrentToken)
+		if err != nil {
+			return errors.WrapErrorAction("limit checking", model.TypeAuthRefresh, nil, err)
+		}
+	}
+	return nil
 }
 
 func (a *Auth) setupDeleteRefreshTimer() {

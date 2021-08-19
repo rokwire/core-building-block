@@ -374,7 +374,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 
 	if token.RefreshToken != "" {
 		refreshParams := oidcRefreshParams{RefreshToken: token.RefreshToken, RedirectURI: redirectURI}
-		userAuth.Refresh = &model.AuthRefresh{Params: refreshParams.toMap()}
+		userAuth.RefreshParams = refreshParams.toMap()
 	}
 
 	tokenResponseParams := oidcTokenResponseParams{IDToken: token.IDToken, AccessToken: token.AccessToken, TokenType: token.TokenType}

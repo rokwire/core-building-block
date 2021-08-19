@@ -53,7 +53,7 @@ type UserAuth struct {
 	Picture        []byte
 	Exp            *int64
 	Creds          *AuthCreds
-	Refresh        *AuthRefresh
+	RefreshParams  map[string]interface{}
 	OrgData        map[string]interface{}
 	ResponseParams interface{}
 }
@@ -78,13 +78,13 @@ type AuthCreds struct {
 
 //AuthRefresh represents refresh token info used by auth
 type AuthRefresh struct {
-	PreviousToken string                 `json:"previous_token" bson:"previous_token"`
-	CurrentToken  string                 `json:"current_token" bson:"current_token" validate:"required"`
-	Expires       *time.Time             `json:"exp" bson:"exp" validate:"required"`
-	AppID         string                 `bson:"app_id"`
-	OrgID         string                 `bson:"org_id"`
-	CredsID       string                 `bson:"creds_id"`
-	Params        map[string]interface{} `json:"params" bson:"params"`
+	PreviousToken string                 `bson:"previous_token"`
+	CurrentToken  string                 `bson:"current_token" validate:"required"`
+	Expires       *time.Time             `bson:"exp" validate:"required"`
+	AppID         string                 `bson:"app_id" validate:"required"`
+	OrgID         string                 `bson:"org_id" validate:"required"`
+	CredsID       string                 `bson:"creds_id" validate:"required"`
+	Params        map[string]interface{} `bson:"params"`
 }
 
 //ServiceReg represents a service registration entity

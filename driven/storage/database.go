@@ -315,13 +315,22 @@ func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
 func (m *database) applyRefreshTokenChecks(refreshTokens *collectionWrapper) error {
 	m.logger.Info("apply refresh tokens checks.....")
 
-	// Add org_id, app_id compound index
 	err := refreshTokens.AddIndex(bson.D{primitive.E{Key: "current_token", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "previous_token", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "exp", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "creds_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
