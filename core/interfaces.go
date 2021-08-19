@@ -50,8 +50,7 @@ type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
 	FindPII(ID string) (*model.UserProfile, error)
-	UpdatePII(profile *model.UserProfile, ID string) error
-	DeletePII(ID string) error
+	UpdatePII(profile *model.UserProfile, ID string, delete bool) error
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	GetGlobalConfig() (*model.GlobalConfig, error)

@@ -610,65 +610,50 @@ func (sa *Adapter) FindPII(ID string) (*model.UserProfile, error) {
 }
 
 //UpdatePII updates a user profile
-func (sa *Adapter) UpdatePII(profile *model.UserProfile, ID string) error {
-	user, err := sa.FindUserByID(ID)
+func (sa *Adapter) UpdatePII(profile *model.UserProfile, ID string, delete bool) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+
+	now := time.Now().UTC()
+	var profileUpdate bson.D
+	if delete {
+		profileUpdate = bson.D{
+			primitive.E{Key: "$set", Value: bson.D{
+				primitive.E{Key: "profile.address", Value: ""},
+				primitive.E{Key: "profile.country", Value: ""},
+				primitive.E{Key: "profile.date_of_birth", Value: ""},
+				primitive.E{Key: "profile.home_county", Value: ""},
+				primitive.E{Key: "profile.middle_name", Value: ""},
+				primitive.E{Key: "profile.state", Value: ""},
+				primitive.E{Key: "profile.work_county", Value: ""},
+				primitive.E{Key: "profile.zip_code", Value: ""},
+				primitive.E{Key: "profile.date_updated", Value: &now},
+			}},
+		}
+	} else {
+		if profile == nil {
+			return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUserProfile))
+		}
+		profileUpdate = bson.D{
+			primitive.E{Key: "$set", Value: bson.D{
+				primitive.E{Key: "profile.address", Value: profile.Address},
+				primitive.E{Key: "profile.country", Value: profile.Country},
+				primitive.E{Key: "profile.date_of_birth", Value: profile.DateOfBirth},
+				primitive.E{Key: "profile.home_county", Value: profile.HomeCounty},
+				primitive.E{Key: "profile.middle_name", Value: profile.MiddleName},
+				primitive.E{Key: "profile.state", Value: profile.State},
+				primitive.E{Key: "profile.work_county", Value: profile.WorkCounty},
+				primitive.E{Key: "profile.zip_code", Value: profile.ZipCode},
+				primitive.E{Key: "profile.date_updated", Value: &now},
+			}},
+		}
+	}
+
+	res, err := sa.db.users.UpdateOne(filter, profileUpdate, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserProfile, nil, err)
 	}
-
-	if user == nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeUser, logutils.StringArgs(profile.ID))
-	}
-
-	if user.Profile.ID != profile.ID {
-		return errors.ErrorData(logutils.StatusInvalid, "profile id", logutils.StringArgs(profile.ID))
-	}
-
-	user.Profile.Address = profile.Address
-	user.Profile.Country = profile.Country
-	user.Profile.DateOfBirth = profile.DateOfBirth
-	user.Profile.HomeCounty = profile.HomeCounty
-	user.Profile.MiddleName = profile.MiddleName
-	user.Profile.State = profile.State
-	user.Profile.WorkCounty = profile.WorkCounty
-	user.Profile.ZipCode = profile.ZipCode
-
-	now := time.Now().UTC()
-	profile.DateUpdated = &now
-	_, err = sa.UpdateUser(user, "", nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserProfile, nil, err)
-	}
-
-	return nil
-}
-
-//DeletePII deletes PII from user profile
-func (sa *Adapter) DeletePII(ID string) error {
-	user, err := sa.FindUserByID(ID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeUserProfile, nil, err)
-	}
-
-	if user == nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeUser, logutils.StringArgs(ID))
-	}
-
-	user.Profile.Address = ""
-	user.Profile.Country = ""
-	user.Profile.DateOfBirth = ""
-	user.Profile.HomeCounty = ""
-	user.Profile.MiddleName = ""
-	user.Profile.PhotoURL = ""
-	user.Profile.State = ""
-	user.Profile.WorkCounty = ""
-	user.Profile.ZipCode = ""
-
-	now := time.Now().UTC()
-	user.Profile.DateUpdated = &now
-	_, err = sa.UpdateUser(user, "", nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeUserProfile, nil, err)
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeUserProfile, logutils.StringArgs("unexpected modified count"))
 	}
 
 	return nil

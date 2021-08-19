@@ -11,11 +11,11 @@ func (app *application) serGetPII(ID string) (*model.UserProfile, error) {
 }
 
 func (app *application) serUpdatePII(profile *model.UserProfile, ID string) error {
-	return app.storage.UpdatePII(profile, ID)
+	return app.storage.UpdatePII(profile, ID, false)
 }
 
 func (app *application) serDeletePII(ID string) error {
-	return app.storage.DeletePII(ID)
+	return app.storage.UpdatePII(nil, ID, true)
 }
 
 func (app *application) serGetAuthTest(l *logs.Log) string {
