@@ -333,25 +333,23 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.H
 	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
 }
 
-//getGlobalGroups gets organizations
+//getGlobalGroups gets global groups
 func (h AdminApisHandler) getGlobalGroups(l *logs.Log, r *http.Request) logs.HttpResponse {
 	params := mux.Vars(r)
 	ID := params["id"]
 	if len(ID) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("ID"), nil, http.StatusBadRequest, false)
 	}
-
-	globalGroups, err := h.coreAPIs.Administration.AdmGetGlobalGroups()
+	globalGroup, err := h.coreAPIs.Administration.AdmGetGlobalGroups(ID, name)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeGlobalGroup, nil, err, http.StatusInternalServerError, true)
 	}
-	var response []Def.GlobalGroup
-	for _, gg := range globalGroups {
-		r := globalGroupToDef(&gg)
-		response = append(response, *r)
+	if globalGroup == nil {
+		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeGlobalGroup, &logutils.FieldArgs{"id": ID}, nil, http.StatusNotFound, false)
 	}
 
-	data, err := json.Marshal(response)
+	responseData := globalGroupListToDef(globalGroup)
+	data, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeGlobalGroup, nil, err, http.StatusInternalServerError, false)
 	}

@@ -392,6 +392,26 @@ func (sa *Adapter) FindGlobalPermissions(ids []string) ([]model.GlobalPermission
 	return permissionsResult, nil
 }
 
+//FindGlobalGroupsList finds a set of global groups
+func (sa *Adapter) FindGlobalGroupList(id *string, name *string) ([]model.GlobalPermission, error) {
+	var filter bson.D
+	if len(*id) > 0 && len(*name) > 0 {
+		filter = bson.D{
+			primitive.E{Key: "_id", Value: bson.M{"$in": id}}, primitive.E{Key: "name", Value: name},
+		}
+	} else {
+		return nil, nil
+	}
+
+	var globalGroupsResult []model.GlobalGroup
+	err := sa.db.globalGroups.Find(filter, &globalGroupsResult, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return globalGroupsResult, nil
+}
+
 //UpdateGlobalPermission updates global permission
 func (sa *Adapter) UpdateGlobalPermission(item model.GlobalPermission) error {
 	//TODO
