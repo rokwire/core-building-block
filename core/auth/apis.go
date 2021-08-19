@@ -68,7 +68,7 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 		}
 
 		refreshParams = &model.AuthRefresh{CurrentToken: refreshToken, Expires: expireTime, AppID: appID, OrgID: orgID,
-			CredsID: userAuth.Creds.ID, Params: userAuth.RefreshParams}
+			CredsID: userAuth.Creds.ID, Params: userAuth.RefreshParams, DateCreated: time.Now().UTC()}
 	}
 
 	if len(userAuth.AccountID) > 0 {
@@ -103,6 +103,13 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 		user, err = a.createAccount(userAuth)
 		if err != nil {
 			return "", "", nil, nil, err
+		}
+
+		if refreshParams != nil {
+			err = a.storage.InsertRefreshToken(refreshParams)
+			if err != nil {
+				return "", "", nil, nil, err
+			}
 		}
 	} else {
 		return "", "", nil, nil, errors.ErrorData(logutils.StatusInvalid, "org_id", logutils.StringArgs(orgID))
@@ -205,7 +212,9 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 			return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeRefreshToken, nil, err)
 		}
 
-		updatedRefresh := model.AuthRefresh{CurrentToken: newRefreshToken, PreviousToken: refreshToken, Expires: expireTime, Params: userAuth.RefreshParams}
+		now := time.Now().UTC()
+		updatedRefresh := model.AuthRefresh{CurrentToken: newRefreshToken, PreviousToken: refreshToken, Expires: expireTime,
+			Params: userAuth.RefreshParams, DateUpdated: &now}
 
 		err = a.storage.UpdateRefreshToken(refreshToken, &updatedRefresh)
 		if err != nil {

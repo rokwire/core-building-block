@@ -176,8 +176,10 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCreds) (*mod
 		}
 
 		authCred.AccountID = storageUser.Account.ID
+		authCred.DateCreated = time.Now().UTC()
 		err = sa.InsertCredentials(authCred, sessionContext)
 		if err != nil {
+			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAuthCred, &logutils.FieldArgs{"user_id": storageUser.Account.Username, "account_id": storageUser.Account.ID}, err)
 		}
 
@@ -348,7 +350,7 @@ func (sa *Adapter) InsertCredentials(creds *model.AuthCreds, context mongo.Sessi
 
 //FindRefreshToken finds a refresh token
 func (sa *Adapter) FindRefreshToken(token string) (*model.AuthRefresh, error) {
-	conditions := []bson.M{{"refresh.current_token": token}, {"refresh.previous_token": token}}
+	conditions := []bson.M{{"current_token": token}, {"previous_token": token}}
 	filter := bson.M{"$or": conditions}
 
 	var refresh model.AuthRefresh
@@ -397,6 +399,7 @@ func (sa *Adapter) UpdateRefreshToken(token string, refresh *model.AuthRefresh) 
 			primitive.E{Key: "current_token", Value: refresh.CurrentToken},
 			primitive.E{Key: "exp", Value: refresh.Expires},
 			primitive.E{Key: "params", Value: refresh.Params},
+			primitive.E{Key: "date_updated", Value: refresh.DateUpdated},
 		}},
 	}
 
@@ -428,7 +431,7 @@ func (sa *Adapter) DeleteRefreshToken(token string) error {
 
 //DeleteExpiredRefreshTokens deletes expired refresh tokens
 func (sa *Adapter) DeleteExpiredRefreshTokens(now *time.Time) error {
-	filter := []bson.M{{"exp": bson.M{"$lte": now}}}
+	filter := bson.M{"exp": bson.M{"$lte": now}}
 
 	_, err := sa.db.refreshTokens.DeleteMany(filter, nil)
 	if err != nil {

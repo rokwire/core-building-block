@@ -73,6 +73,9 @@ type AuthCreds struct {
 	AuthType  string                 `bson:"auth_type"`
 	AccountID string                 `bson:"account_id"`
 	Creds     map[string]interface{} `bson:"creds"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 //AuthRefresh represents refresh token info used by auth
@@ -84,6 +87,9 @@ type AuthRefresh struct {
 	OrgID         string                 `bson:"org_id" validate:"required"`
 	CredsID       string                 `bson:"creds_id" validate:"required"`
 	Params        map[string]interface{} `bson:"params"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 //ServiceReg represents a service registration entity

@@ -36,7 +36,7 @@ const (
 	refreshTokenLength       int = 256
 	refreshTokenExpiry       int = 7 * 24 * 60
 	refreshTokenDeletePeriod int = 2
-	refreshTokenLimit        int = 5
+	refreshTokenLimit        int = 3
 )
 
 //Auth represents the auth functionality unit
