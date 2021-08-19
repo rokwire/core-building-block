@@ -312,15 +312,10 @@ func (sa *Adapter) FindCredentialsByID(ID string) (*model.AuthCreds, error) {
 }
 
 //FindCredentials find a set of credentials
-func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCreds, error) {
-	var filter bson.D
-	if len(orgID) > 0 && len(appID) > 0 {
-		filter = bson.D{
-			primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID},
-			primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: userID},
-		}
-	} else {
-		filter = bson.D{primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: userID}}
+func (sa *Adapter) FindCredentials(orgID string, authType string, params map[string]interface{}) (*model.AuthCreds, error) {
+	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "auth_type", Value: authType}}
+	for k, v := range params {
+		filter = append(filter, primitive.E{Key: "creds." + k, Value: v})
 	}
 
 	var creds model.AuthCreds
@@ -669,7 +664,7 @@ func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (
 }
 
 //LoadAuthConfigs finds all auth config documents in the DB
-func (sa *Adapter) LoadAuthConfigs() (*[]model.AuthConfig, error) {
+func (sa *Adapter) LoadAuthConfigs() ([]model.AuthConfig, error) {
 	filter := bson.D{}
 	var result []model.AuthConfig
 	err := sa.db.authConfigs.Find(filter, &result, nil)
@@ -680,7 +675,7 @@ func (sa *Adapter) LoadAuthConfigs() (*[]model.AuthConfig, error) {
 		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAuthConfig, nil, err)
 	}
 
-	return &result, nil
+	return result, nil
 }
 
 //CreateGlobalConfig creates global config

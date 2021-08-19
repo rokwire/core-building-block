@@ -37,8 +37,6 @@ const (
 	refreshTokenExpiry       int = 7 * 24 * 60
 	refreshTokenDeletePeriod int = 2
 	refreshTokenLimit        int = 5
-
-	accessTokenExpiry int64 = 30
 )
 
 //Auth represents the auth functionality unit
@@ -385,32 +383,31 @@ func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*mode
 	a.authConfigsLock.RLock()
 	defer a.authConfigsLock.RUnlock()
 
-	var authConfig *model.AuthConfig //to return
-
 	errArgs := &logutils.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": authType}
 
 	item, _ := a.authConfigs.Load(fmt.Sprintf("%s_%s_%s", orgID, appID, authType))
 	if item != nil {
-		authConfigFromCache, ok := item.(model.AuthConfig)
+		authConfig, ok := item.(*model.AuthConfig)
 		if !ok {
 			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeAuthConfig, errArgs)
 		}
-		authConfig = &authConfigFromCache
 		return authConfig, nil
 	}
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthConfig, errArgs)
 }
 
-func (a *Auth) setAuthConfigs(authConfigs *[]model.AuthConfig) {
+func (a *Auth) setAuthConfigs(authConfigs []model.AuthConfig) {
 	a.authConfigs = &syncmap.Map{}
 	validate := validator.New()
 
 	a.authConfigsLock.Lock()
 	defer a.authConfigsLock.Unlock()
-	for _, authConfig := range *authConfigs {
+	for _, authConfig := range authConfigs {
 		err := validate.Struct(authConfig)
 		if err == nil {
-			a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, authConfig.AppID, authConfig.Type), authConfig)
+			for _, appID := range authConfig.AppIDs {
+				a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, appID, authConfig.AuthType), &authConfig)
+			}
 		}
 	}
 }

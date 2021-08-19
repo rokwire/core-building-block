@@ -164,7 +164,7 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, model.TypeRefreshToken, nil)
 	}
 
-	auth, err := a.getAuthType(credentials.Type)
+	auth, err := a.getAuthType(credentials.AuthType)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}

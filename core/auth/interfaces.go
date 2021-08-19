@@ -114,7 +114,7 @@ type Storage interface {
 
 	//Credentials
 	FindCredentialsByID(ID string) (*model.AuthCreds, error)
-	FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCreds, error)
+	FindCredentials(orgID string, authType string, params map[string]interface{}) (*model.AuthCreds, error)
 
 	//RefreshTokens
 	FindRefreshToken(token string) (*model.AuthRefresh, error)
@@ -134,7 +134,7 @@ type Storage interface {
 
 	//AuthConfigs
 	FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error)
-	LoadAuthConfigs() (*[]model.AuthConfig, error)
+	LoadAuthConfigs() ([]model.AuthConfig, error)
 
 	//ServiceAuthorizations
 	FindServiceAuthorization(userID string, orgID string) (*model.ServiceAuthorization, error)
