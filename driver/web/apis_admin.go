@@ -333,7 +333,7 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.H
 	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
 }
 
-//createGlobalGroup creates global group
+//createGlobalRole creates global group
 func (h AdminApisHandler) createGlobalRole(l *logs.Log, r *http.Request) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {

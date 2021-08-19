@@ -5,8 +5,11 @@ GlobalPermission:
   $ref: "./global/GlobalPermission.yaml"
 GlobalRole:
   $ref: "./global/GlobalRole.yaml"
+CreateGlobalRole:
+  $ref: "./global/CreateGlobalRole.yaml"
 GlobalGroup:
   $ref: "./global/GlobalGroup.yaml"
+
 
 # organization
 Application:
