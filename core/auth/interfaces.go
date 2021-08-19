@@ -112,6 +112,7 @@ type Storage interface {
 	FindOrganization(id string) (*model.Organization, error)
 
 	//Credentials
+	FindCredentialsByID(ID string) (*model.AuthCreds, error)
 	FindCredentialsByRefreshToken(token string) (*model.AuthCreds, error)
 	FindCredentials(orgID string, authType string, params map[string]interface{}) (*model.AuthCreds, error)
 	UpdateCredentials(ID string, refresh *model.AuthRefresh) error

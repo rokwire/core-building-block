@@ -156,8 +156,7 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 		return "", "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	//TODO: complete issues/ID-149 to get appID from AuthRefresh
-	userAuth, err := auth.refresh(credentials.Refresh.Params, credentials.OrgID, credentials.AppID, l)
+	userAuth, err := auth.refresh(credentials.Refresh.Params, credentials.OrgID, credentials.Refresh.AppID, l)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
 	}
@@ -184,7 +183,7 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 	}
 
 	//TODO: complete issues/ID-149 to get appID from AuthRefresh
-	claims := a.getStandardClaims(user.ID, userAuth.UserID, user.Account.Email, user.Account.Phone, "rokwire", credentials.OrgID, credentials.AppID, userAuth.Exp)
+	claims := a.getStandardClaims(user.ID, userAuth.UserID, user.Account.Email, user.Account.Phone, "rokwire", credentials.OrgID, credentials.Refresh.AppID, userAuth.Exp)
 	token, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)

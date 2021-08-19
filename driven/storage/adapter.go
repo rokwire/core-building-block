@@ -314,6 +314,19 @@ func (sa *Adapter) FindCredentials(orgID string, authType string, params map[str
 	return &creds, nil
 }
 
+//FindCredentialsByID finds a set of credentials by ID
+func (sa *Adapter) FindCredentialsByID(ID string) (*model.AuthCreds, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+
+	var creds model.AuthCreds
+	err := sa.db.credentials.FindOne(filter, &creds, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
+	}
+
+	return &creds, nil
+}
+
 //FindCredentialsByRefreshToken finds a set of credentials by refresh token
 func (sa *Adapter) FindCredentialsByRefreshToken(token string) (*model.AuthCreds, error) {
 	conditions := []bson.M{{"refresh.current_token": token}, {"refresh.previous_token": token}}
