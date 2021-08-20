@@ -28,7 +28,6 @@ type Administration interface {
 	AdmUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
 
 	AdmCreateApplication(name string, versions []string) (*model.Application, error)
-	AdmGetApplication(ID string) (*model.Application, error)
 	AdmUpdateApplication(ID string, name string, versions []string) error
 }
 
@@ -73,7 +72,6 @@ type Storage interface {
 	GetOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)
 
-	GetApplication(ID string) (*model.Application, error)
 	UpdateApplication(ID string, name string, versions []string) error
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)

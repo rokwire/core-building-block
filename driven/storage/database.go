@@ -193,21 +193,6 @@ func (m *database) start() error {
 	return nil
 }
 
-func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
-	// Add org_id, app_id compound index
-	err := credentials.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	err = credentials.AddIndex(bson.D{primitive.E{Key: "type", Value: 1}, primitive.E{Key: "user_id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-	m.logger.Info("authConfig check passed")
-	return nil
-}
-
 func (m *database) applyUsersChecks(users *collectionWrapper) error {
 	m.logger.Info("apply users checks.....")
 
@@ -301,6 +286,20 @@ func (m *database) applyDevicesChecks(devices *collectionWrapper) error {
 	}
 
 	m.logger.Info("devices check passed")
+	return nil
+}
+func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
+	// Add org_id, app_id compound index
+	err := credentials.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	err = credentials.AddIndex(bson.D{primitive.E{Key: "type", Value: 1}, primitive.E{Key: "user_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+	m.logger.Info("authConfig check passed")
 	return nil
 }
 

@@ -311,29 +311,6 @@ func (h AdminApisHandler) updateApplication(l *logs.Log, r *http.Request) logs.H
 	return l.HttpResponseSuccess()
 }
 
-func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
-
-	params := mux.Vars(r)
-	ID := params["id"]
-	if len(ID) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
-	}
-	app, err := h.coreAPIs.Administration.AdmGetApplication(ID)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
-	}
-	if app == nil {
-		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeApplication, &logutils.FieldArgs{"id": ID}, nil, http.StatusNotFound, false)
-	}
-
-	responseData := applicationToDef(app)
-	data, err := json.Marshal(responseData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
-	}
-	return l.HttpResponseSuccessJSON(data)
-}
-
 //createApplication creates an application
 func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)

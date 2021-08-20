@@ -138,30 +138,6 @@ func TestGetOrganizations(t *testing.T) {
 	}
 }
 
-func TestAdmGetApplication(t *testing.T) {
-	storage := genmocks.Storage{}
-	storage.On("FindApplication", "_id").Return(&model.Application{ID: "_id"}, nil)
-	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
-
-	getApplication, _ := app.Administration.AdmGetApplication("_id")
-
-	if getApplication == nil {
-		t.Errorf("Error on geting the application")
-	}
-	// second case error
-	storage2 := genmocks.Storage{}
-	storage2.On("FindApplication").Return(&model.Application{ID: "_id"}, nil)
-	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
-
-	err, _ := app.Administration.AdmGetApplication("_id")
-
-	if err == nil {
-		t.Error("We are expecting error")
-		return
-	}
-
-}
-
 ///
 
 //Encryption

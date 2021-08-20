@@ -119,10 +119,6 @@ func (s *administrationImpl) AdmCreateApplication(name string, versions []string
 	return s.app.admCreateApplication(name, versions)
 }
 
-func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, error) {
-	return s.app.admGetApplication(ID)
-}
-
 func (s *administrationImpl) AdmUpdateApplication(ID string, name string, versions []string) error {
 	return s.app.AdmUpdateApplication(ID, name, versions)
 }
