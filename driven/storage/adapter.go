@@ -393,13 +393,15 @@ func (sa *Adapter) FindGlobalPermissions(ids []string) ([]model.GlobalPermission
 }
 
 //FindGlobalGroupsList finds a set of global groups
-func (sa *Adapter) FindGlobalGroupList(id *string, name *string) ([]model.GlobalPermission, error) {
+func (sa *Adapter) FindGlobalGroupList(id *string, name *string) ([]model.GlobalGroup, error) {
 	var filter bson.D
-	if len(*id) > 0 && len(*name) > 0 {
+	if id != nil && name != nil {
 		filter = bson.D{
-			primitive.E{Key: "_id", Value: bson.M{"$in": id}}, primitive.E{Key: "name", Value: name},
+			primitive.E{Key: "_id", Value: id}, primitive.E{Key: "name", Value: name},
 		}
-	} else {
+	} else if id == nil {
+		return nil, nil
+	} else if name == nil {
 		return nil, nil
 	}
 

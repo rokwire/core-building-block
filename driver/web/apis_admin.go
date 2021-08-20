@@ -337,10 +337,11 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.H
 func (h AdminApisHandler) getGlobalGroups(l *logs.Log, r *http.Request) logs.HttpResponse {
 	params := mux.Vars(r)
 	ID := params["id"]
+	name := params["name"]
 	if len(ID) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("ID"), nil, http.StatusBadRequest, false)
 	}
-	globalGroup, err := h.coreAPIs.Administration.AdmGetGlobalGroups(ID, name)
+	globalGroup, err := h.coreAPIs.Administration.AdmGetGlobalGroups(&ID, &name)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeGlobalGroup, nil, err, http.StatusInternalServerError, true)
 	}

@@ -134,5 +134,5 @@ type Storage interface {
 	DeleteServiceAuthorization(userID string, orgID string) error
 
 	//Global groups
-	FindGlobalGroupList(id string) ([]model.GlobalGroup, error)
+	FindGlobalGroupList(id *string, name *string) ([]model.GlobalGroup, error)
 }

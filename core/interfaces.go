@@ -77,7 +77,7 @@ type Storage interface {
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 
-	FindGlobalGroupList(id string) ([]model.GlobalGroup, error)
+	FindGlobalGroupList(id *string, name *string) ([]model.GlobalGroup, error)
 }
 
 //StorageListener listenes for change data storage events

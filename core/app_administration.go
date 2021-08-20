@@ -270,7 +270,7 @@ func (app *application) admCreateApplication(name string, versions []string) (*m
 }
 
 func (app *application) admGetGlobalGroups(ID *string, name *string) ([]model.GlobalGroup, error) {
-	globalGroup, err := app.storage.FindGlobalGroupList(*ID, name)
+	globalGroup, err := app.storage.FindGlobalGroupList(ID, name)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeGlobalGroup, nil, err)
 	}
