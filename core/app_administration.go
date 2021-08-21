@@ -268,3 +268,12 @@ func (app *application) admCreateApplication(name string, versions []string) (*m
 	}
 	return inserted, nil
 }
+
+func (app *application) admGetApplications() ([]model.Application, error) {
+	getApplications, err := app.storage.FindApplications()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err)
+	}
+
+	return getApplications, nil
+}
