@@ -181,7 +181,6 @@ type AuthResponseParamsOidc struct {
 
 // AuthResponseRokwireToken defines model for AuthResponseRokwireToken.
 type AuthResponseRokwireToken struct {
-
 	// The user's access token to be provided to authorize access to ROKWIRE APIs
 	AccessToken *string `json:"access_token,omitempty"`
 
@@ -237,7 +236,6 @@ type GlobalRole struct {
 
 // JSON Web Key (JWK)
 type JWK struct {
-
 	// The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
 	Alg JWKAlg `json:"alg"`
 
