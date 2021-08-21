@@ -168,16 +168,16 @@ func (_m *Storage) FindOrganization(id string) (*model.Organization, error) {
 	return r0, r1
 }
 
-// GetGlobalConfig provides a mock function with given fields:
-func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
+// LoadOrganizations provides a mock function with given fields:
+func (_m *Storage) LoadOrganizations() ([]model.Organization, error) {
 	ret := _m.Called()
 
-	var r0 *model.GlobalConfig
-	if rf, ok := ret.Get(0).(func() *model.GlobalConfig); ok {
+	var r0 []model.Organization
+	if rf, ok := ret.Get(0).(func() []model.Organization); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.GlobalConfig)
+			r0 = ret.Get(0).([]model.Organization)
 		}
 	}
 
@@ -191,16 +191,16 @@ func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	return r0, r1
 }
 
-// GetOrganizations provides a mock function with given fields:
-func (_m *Storage) GetOrganizations() ([]model.Organization, error) {
+// GetGlobalConfig provides a mock function with given fields:
+func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	ret := _m.Called()
 
-	var r0 []model.Organization
-	if rf, ok := ret.Get(0).(func() []model.Organization); ok {
+	var r0 *model.GlobalConfig
+	if rf, ok := ret.Get(0).(func() *model.GlobalConfig); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.Organization)
+			r0 = ret.Get(0).(*model.GlobalConfig)
 		}
 	}
 

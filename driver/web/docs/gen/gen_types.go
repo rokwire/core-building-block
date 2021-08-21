@@ -102,8 +102,7 @@ type AuthLoginCredsEmail struct {
 }
 
 // Auth login creds for auth_type="oidc"
-//   - Initial login: full redirect URI received from OIDC provider
-//   - Refresh: refresh token
+//   - full redirect URI received from OIDC provider
 type AuthLoginCredsOidc string
 
 // Auth login creds for auth_type="phone"
@@ -220,18 +219,24 @@ type GlobalConfig struct {
 
 // GlobalGroup defines model for GlobalGroup.
 type GlobalGroup struct {
-	Id          string        `json:"id"`
-	Name        string        `json:"name"`
-	Permissions *[]string     `json:"permissions,omitempty"`
-	Roles       *[]GlobalRole `json:"roles,omitempty"`
-	Users       *[]User       `json:"users,omitempty"`
+	Id          string              `json:"id"`
+	Name        string              `json:"name"`
+	Permissions *[]GlobalPermission `json:"permissions,omitempty"`
+	Roles       *[]GlobalRole       `json:"roles,omitempty"`
+	Users       *[]User             `json:"users,omitempty"`
+}
+
+// GlobalPermission defines model for GlobalPermission.
+type GlobalPermission struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
 
 // GlobalRole defines model for GlobalRole.
 type GlobalRole struct {
-	Id          string    `json:"id"`
-	Name        string    `json:"name"`
-	Permissions *[]string `json:"permissions,omitempty"`
+	Id          string              `json:"id"`
+	Name        string              `json:"name"`
+	Permissions *[]GlobalPermission `json:"permissions,omitempty"`
 }
 
 // JSON Web Key (JWK)
@@ -303,7 +308,7 @@ type OrganizationGroup struct {
 	Name           string                    `json:"name"`
 	OrgId          string                    `json:"org_id"`
 	OrgMemberships *[]OrganizationMembership `json:"org_memberships,omitempty"`
-	Permissions    *[]string                 `json:"permissions,omitempty"`
+	Permissions    *[]OrganizationPermission `json:"permissions,omitempty"`
 	Roles          *[]OrganizationRole       `json:"roles,omitempty"`
 }
 
@@ -314,18 +319,25 @@ type OrganizationMembership struct {
 	OrgId  *string              `json:"org_id,omitempty"`
 
 	// map[string]object for arbitrary organization user data
-	OrgUserData *map[string]interface{} `json:"org_user_data,omitempty"`
-	Permissions *[]string               `json:"permissions,omitempty"`
-	Roles       *[]OrganizationRole     `json:"roles,omitempty"`
-	UserId      *string                 `json:"user_id,omitempty"`
+	OrgUserData *map[string]interface{}   `json:"org_user_data,omitempty"`
+	Permissions *[]OrganizationPermission `json:"permissions,omitempty"`
+	Roles       *[]OrganizationRole       `json:"roles,omitempty"`
+	UserId      *string                   `json:"user_id,omitempty"`
+}
+
+// OrganizationPermission defines model for OrganizationPermission.
+type OrganizationPermission struct {
+	Id    string `json:"id"`
+	Name  string `json:"name"`
+	OrgId string `json:"org_id"`
 }
 
 // OrganizationRole defines model for OrganizationRole.
 type OrganizationRole struct {
-	Id          string    `json:"id"`
-	Name        string    `json:"name"`
-	OrgId       string    `json:"org_id"`
-	Permissions *[]string `json:"permissions,omitempty"`
+	Id          string                    `json:"id"`
+	Name        string                    `json:"name"`
+	OrgId       string                    `json:"org_id"`
+	Permissions *[]OrganizationPermission `json:"permissions,omitempty"`
 }
 
 // PubKey defines model for PubKey.
@@ -362,7 +374,7 @@ type User struct {
 	Groups         *[]GlobalGroup            `json:"groups,omitempty"`
 	Id             string                    `json:"id"`
 	OrgMemberships *[]OrganizationMembership `json:"org_memberships,omitempty"`
-	Permissions    *[]string                 `json:"permissions,omitempty"`
+	Permissions    *[]GlobalPermission       `json:"permissions,omitempty"`
 	Profile        *UserProfile              `json:"profile,omitempty"`
 	Roles          *[]GlobalRole             `json:"roles,omitempty"`
 }
