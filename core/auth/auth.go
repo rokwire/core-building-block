@@ -105,6 +105,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	auth.AuthService = authService
 
 	//Initialize auth types
+	initUsernameAuth(auth)
 	initEmailAuth(auth)
 	initPhoneAuth(auth)
 	initOidcAuth(auth)
