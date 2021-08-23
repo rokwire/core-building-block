@@ -295,7 +295,7 @@ func (h AdminApisHandler) createGlobalPermissions(l *logs.Log, r *http.Request) 
 	}
 	name := requestData.Name
 
-	_, err = h.coreAPIs.Administration.AdmCreateGlobalPermissions(*name)
+	_, err = h.coreAPIs.Administration.AdmCreateGlobalPermissions(name)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeGlobalPermission, nil, err, http.StatusInternalServerError, true)
 	}

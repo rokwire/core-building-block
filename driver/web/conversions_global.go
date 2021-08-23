@@ -72,5 +72,5 @@ func globalPermissionFromDef(item *Def.GlobalPermission) *model.GlobalPermission
 		return nil
 	}
 	//TODO: handle permissions and roles
-	return &model.GlobalPermission{ID: item.Id, Name: *item.Name}
+	return &model.GlobalPermission{ID: item.Id, Name: item.Name}
 }

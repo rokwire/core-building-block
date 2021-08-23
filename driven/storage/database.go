@@ -231,8 +231,6 @@ func (m *database) applyGlobalGroupsChecks(groups *collectionWrapper) error {
 	if err != nil {
 		return err
 	}
-
-	m.logger.Info("global groups check passed")
 	return nil
 }
 

@@ -643,7 +643,6 @@ func (sa *Adapter) GetGlobalConfig() (*model.GlobalConfig, error) {
 		return nil, nil
 	}
 	return &result[0], nil
-
 }
 
 //SaveGlobalConfig saves the global configuration to the storage
@@ -825,7 +824,6 @@ func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
 
 	getResApp := model.Application{ID: appRes.ID, Name: appRes.Name, Versions: appRes.Versions}
 	return &getResApp, nil
-
 }
 
 //InsertGlobalPermission inserts the global permission
