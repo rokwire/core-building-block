@@ -181,7 +181,6 @@ type AuthResponseParamsOidc struct {
 
 // AuthResponseRokwireToken defines model for AuthResponseRokwireToken.
 type AuthResponseRokwireToken struct {
-
 	// The user's access token to be provided to authorize access to ROKWIRE APIs
 	AccessToken *string `json:"access_token,omitempty"`
 
@@ -237,7 +236,6 @@ type GlobalRole struct {
 
 // JSON Web Key (JWK)
 type JWK struct {
-
 	// The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
 	Alg JWKAlg `json:"alg"`
 
@@ -388,6 +386,9 @@ type UserProfile struct {
 // PostAdminApplicationJSONBody defines parameters for PostAdminApplication.
 type PostAdminApplicationJSONBody Application
 
+// PutAdminApplicationsIdJSONBody defines parameters for PutAdminApplicationsId.
+type PutAdminApplicationsIdJSONBody Application
+
 // PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
 type PostAdminGlobalConfigJSONBody GlobalConfig
 
@@ -447,6 +448,9 @@ type GetTpsServiceRegsParams struct {
 
 // PostAdminApplicationJSONRequestBody defines body for PostAdminApplication for application/json ContentType.
 type PostAdminApplicationJSONRequestBody PostAdminApplicationJSONBody
+
+// PutAdminApplicationsIdJSONRequestBody defines body for PutAdminApplicationsId for application/json ContentType.
+type PutAdminApplicationsIdJSONRequestBody PutAdminApplicationsIdJSONBody
 
 // PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
 type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody
