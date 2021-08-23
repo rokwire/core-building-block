@@ -161,6 +161,29 @@ func TestAdmGetApplication(t *testing.T) {
 	}
 }
 
+func TestGetApplications(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("FindApplications").Return([]model.Application{}, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	getApplications, _ := app.Administration.AdmGetApplications()
+
+	if getApplications == nil {
+		t.Errorf("Error on getting the appllications")
+	}
+	// second case error
+	storage2 := genmocks.Storage{}
+	storage2.On("FindApplications").Return([]model.Application{}, nil)
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	err, _ := app.Administration.AdmGetApplications()
+
+	if err == nil {
+		t.Error("We are expecting error")
+		return
+	}
+}
+
 ///
 
 //Encryption
