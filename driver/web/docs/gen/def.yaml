@@ -321,7 +321,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/global-permissions:
+  /admin/global-permission:
     post:
       tags:
         - Admin

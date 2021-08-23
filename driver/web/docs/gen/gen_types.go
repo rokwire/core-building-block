@@ -75,7 +75,6 @@ type Application struct {
 
 // AuthAuthorizeServiceRequest defines model for AuthAuthorizeServiceRequest.
 type AuthAuthorizeServiceRequest struct {
-
 	// Scopes to be granted to this service in this and future tokens. Replaces existing scopes if present.
 	ApprovedScopes *[]string `json:"approved_scopes,omitempty"`
 	ServiceId      string    `json:"service_id"`
@@ -181,7 +180,6 @@ type AuthResponseParamsOidc struct {
 
 // AuthResponseRokwireToken defines model for AuthResponseRokwireToken.
 type AuthResponseRokwireToken struct {
-
 	// The user's access token to be provided to authorize access to ROKWIRE APIs
 	AccessToken *string `json:"access_token,omitempty"`
 
@@ -230,8 +228,8 @@ type GlobalGroup struct {
 
 // GlobalPermission defines model for GlobalPermission.
 type GlobalPermission struct {
-	Id   string  `json:"id"`
-	Name *string `json:"name,omitempty"`
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
 
 // GlobalRole defines model for GlobalRole.
@@ -243,7 +241,6 @@ type GlobalRole struct {
 
 // JSON Web Key (JWK)
 type JWK struct {
-
 	// The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
 	Alg JWKAlg `json:"alg"`
 
@@ -364,7 +361,6 @@ type ServiceReg struct {
 
 // ServiceScope defines model for ServiceScope.
 type ServiceScope struct {
-
 	// Explanation displayed to users for why this scope is requested/required
 	Explanation *string `json:"explanation,omitempty"`
 	Required    bool    `json:"required"`
@@ -449,14 +445,12 @@ type PostServicesAuthLoginUrlJSONBody AuthLoginUrlRequest
 
 // GetServicesAuthServiceRegsParams defines parameters for GetServicesAuthServiceRegs.
 type GetServicesAuthServiceRegsParams struct {
-
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
 
 // GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
 type GetTpsServiceRegsParams struct {
-
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
