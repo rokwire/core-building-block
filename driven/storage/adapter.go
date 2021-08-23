@@ -836,12 +836,13 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 	}
 
-	var resultList []model.Application
-	for _, current := range result {
-		item := &model.Application{ID: current.ID, Name: current.Name, Versions: current.Versions}
-		resultList = append(resultList, *item)
+	if len(result) == 0 {
+		//no data
+		return make([]model.Application, 0), nil
 	}
-	return resultList, nil
+
+	application := applicationsFromStorage(result)
+	return application, nil
 }
 
 // ============================== ServiceRegs ==============================
