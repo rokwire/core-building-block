@@ -138,6 +138,30 @@ func TestGetOrganizations(t *testing.T) {
 	}
 }
 
+func TestAdmUpdateApplication(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("UpdateApplication", "_id").Return(&model.Application{ID: "_id"}, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	updateAppliaction := app.Administration.AdmUpdateApplication("_id", "name", nil)
+
+	if updateAppliaction == nil {
+		t.Errorf("Error on updating the application")
+	}
+	// second case error
+	storage2 := genmocks.Storage{}
+	storage2.On("UpdateApplication", "_id").Return(&model.Application{ID: "_id", Name: "name"}, nil)
+
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	err := app.Administration.AdmUpdateApplication("_id", "name", nil)
+	if err == nil {
+		t.Error("We are expecting error")
+		return
+	}
+
+}
+
 ///
 
 //Encryption
