@@ -788,6 +788,16 @@ components:
       properties:
         setting:
           type: string
+    GlobalPermission:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
     GlobalRole:
       required:
         - id
@@ -802,6 +812,7 @@ components:
           type: array
           items:
             type: string
+            $ref: '#/components/schemas/GlobalPermission'
     GlobalGroup:
       required:
         - id
@@ -816,6 +827,7 @@ components:
           type: array
           items:
             type: string
+            $ref: '#/components/schemas/GlobalPermission'
         roles:
           type: array
           items:
@@ -881,6 +893,19 @@ components:
           description: organization domains
           items:
             type: string
+    OrganizationPermission:
+      required:
+        - id
+        - name
+        - org_id
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        org_id:
+          type: string
     OrganizationRole:
       required:
         - id
@@ -898,6 +923,7 @@ components:
           type: array
           items:
             type: string
+            $ref: '#/components/schemas/OrganizationPermission'
     OrganizationGroup:
       required:
         - id
@@ -915,6 +941,7 @@ components:
           type: array
           items:
             type: string
+            $ref: '#/components/schemas/OrganizationPermission'
         roles:
           type: array
           items:
@@ -1055,8 +1082,7 @@ components:
       type: string
       description: |
         Auth login creds for auth_type="oidc"
-          - Initial login: full redirect URI received from OIDC provider
-          - Refresh: refresh token
+          - full redirect URI received from OIDC provider
     AuthLoginParamsEmail:
       type: object
       description: Auth login params for auth_type="email"
@@ -1237,6 +1263,7 @@ components:
           type: array
           items:
             type: string
+            $ref: '#/components/schemas/GlobalPermission'
         roles:
           type: array
           items:
@@ -1297,6 +1324,7 @@ components:
           type: array
           items:
             type: string
+            $ref: '#/components/schemas/OrganizationPermission'
         roles:
           type: array
           items:

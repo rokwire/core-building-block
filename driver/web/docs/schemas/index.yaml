@@ -1,6 +1,8 @@
 # global
 GlobalConfig:
   $ref: "./global/GlobalConfig.yaml"
+GlobalPermission:
+  $ref: "./global/GlobalPermission.yaml"
 GlobalRole:
   $ref: "./global/GlobalRole.yaml"
 GlobalGroup:
@@ -13,6 +15,8 @@ Organization:
   $ref: "./organization/Organization.yaml"
 OrganizationConfig:
   $ref: "./organization/OrganizationConfig.yaml"
+OrganizationPermission:
+  $ref: "./organization/OrganizationPermission.yaml"
 OrganizationRole:
   $ref: "./organization/OrganizationRole.yaml"
 OrganizationGroup:
