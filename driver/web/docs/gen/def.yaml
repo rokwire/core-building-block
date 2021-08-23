@@ -586,7 +586,7 @@ paths:
           description: Not Found
         '500':
           description: Internal error
-  /admin/application:
+  /admin/applications:
     get:
       tags:
         - Admin
@@ -796,7 +796,6 @@ components:
         permissions:
           type: array
           items:
-            type: string
             $ref: '#/components/schemas/GlobalPermission'
     GlobalGroup:
       required:
@@ -811,7 +810,6 @@ components:
         permissions:
           type: array
           items:
-            type: string
             $ref: '#/components/schemas/GlobalPermission'
         roles:
           type: array
@@ -907,7 +905,6 @@ components:
         permissions:
           type: array
           items:
-            type: string
             $ref: '#/components/schemas/OrganizationPermission'
     OrganizationGroup:
       required:
@@ -925,7 +922,6 @@ components:
         permissions:
           type: array
           items:
-            type: string
             $ref: '#/components/schemas/OrganizationPermission'
         roles:
           type: array
@@ -1020,7 +1016,6 @@ components:
         app_id:
           type: string
         creds:
-          type: object
           anyOf:
             - $ref: '#/components/schemas/AuthLoginCredsEmail'
             - $ref: '#/components/schemas/AuthLoginCredsPhone'
@@ -1247,7 +1242,6 @@ components:
         permissions:
           type: array
           items:
-            type: string
             $ref: '#/components/schemas/GlobalPermission'
         roles:
           type: array
@@ -1308,7 +1302,6 @@ components:
         permissions:
           type: array
           items:
-            type: string
             $ref: '#/components/schemas/OrganizationPermission'
         roles:
           type: array

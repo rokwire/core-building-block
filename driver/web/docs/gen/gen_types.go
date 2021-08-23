@@ -395,8 +395,8 @@ type UserProfile struct {
 	PhotoUrl  *string `json:"photo_url,omitempty"`
 }
 
-// PostAdminApplicationJSONBody defines parameters for PostAdminApplication.
-type PostAdminApplicationJSONBody Application
+// PostAdminApplicationsJSONBody defines parameters for PostAdminApplications.
+type PostAdminApplicationsJSONBody Application
 
 // PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
 type PostAdminGlobalConfigJSONBody GlobalConfig
@@ -455,8 +455,8 @@ type GetTpsServiceRegsParams struct {
 	Ids string `json:"ids"`
 }
 
-// PostAdminApplicationJSONRequestBody defines body for PostAdminApplication for application/json ContentType.
-type PostAdminApplicationJSONRequestBody PostAdminApplicationJSONBody
+// PostAdminApplicationsJSONRequestBody defines body for PostAdminApplications for application/json ContentType.
+type PostAdminApplicationsJSONRequestBody PostAdminApplicationsJSONBody
 
 // PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
 type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody
