@@ -139,7 +139,7 @@ func TestGetOrganizations(t *testing.T) {
 }
 
 func TestAdmUpdateApplication(t *testing.T) {
-	storage := genmocks.Storage{}
+/*	storage := genmocks.Storage{}
 	storage.On("UpdateApplication", "_id").Return(&model.Application{ID: "_id"}, nil)
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
@@ -160,7 +160,7 @@ func TestAdmUpdateApplication(t *testing.T) {
 		return
 	}
 
-}
+}*/
 
 ///
 
