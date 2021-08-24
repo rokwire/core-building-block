@@ -227,7 +227,7 @@ func TestAdmCreateGlobalPermission(t *testing.T) {
 
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
-	gp, _ := app.Administration.AdmCreateGlobalPermissions("name")
+	gp, _ := app.Administration.AdmCreateGlobalPermission("name")
 	if gp == nil {
 		t.Error("gc is nil")
 		return
@@ -240,7 +240,7 @@ func TestAdmCreateGlobalPermission(t *testing.T) {
 
 	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage2, nil)
 
-	_, err := app.Administration.AdmCreateGlobalPermissions("name")
+	_, err := app.Administration.AdmCreateGlobalPermission("name")
 	if err == nil {
 		t.Error("we are expecting error")
 		return

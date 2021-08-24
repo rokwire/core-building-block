@@ -283,7 +283,7 @@ func (h AdminApisHandler) deregisterService(l *logs.Log, r *http.Request) logs.H
 }
 
 //createGlobalPermissions creates a global permissions
-func (h AdminApisHandler) createGlobalPermissions(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) createGlobalPermission(l *logs.Log, r *http.Request) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -295,7 +295,7 @@ func (h AdminApisHandler) createGlobalPermissions(l *logs.Log, r *http.Request) 
 	}
 	name := requestData.Name
 
-	_, err = h.coreAPIs.Administration.AdmCreateGlobalPermissions(name)
+	_, err = h.coreAPIs.Administration.AdmCreateGlobalPermission(name)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeGlobalPermission, nil, err, http.StatusInternalServerError, true)
 	}

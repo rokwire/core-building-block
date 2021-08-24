@@ -27,7 +27,7 @@ type Administration interface {
 	AdmGetOrganization(ID string) (*model.Organization, error)
 	AdmUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
 
-	AdmCreateGlobalPermissions(name string) (*model.GlobalPermission, error)
+	AdmCreateGlobalPermission(name string) (*model.GlobalPermission, error)
 
 	AdmCreateApplication(name string, versions []string) (*model.Application, error)
 	AdmGetApplication(ID string) (*model.Application, error)

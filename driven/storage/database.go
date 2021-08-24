@@ -178,7 +178,6 @@ func (m *database) start() error {
 	m.organizationsMemberships = organizationsMemberships
 	m.authConfigs = authConfigs
 	m.serviceRegs = serviceRegs
-	m.globalPermissions = globalPermissions
 	m.serviceAuthorizations = serviceAuthorizations
 	m.applications = applications
 

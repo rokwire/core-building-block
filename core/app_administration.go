@@ -247,7 +247,7 @@ func (app *application) admUpdateOrganization(ID string, name string, requestTyp
 	return err
 }
 
-func (app *application) admCreateGlobalPermissions(name string) (*model.GlobalPermission, error) {
+func (app *application) admCreateGlobalPermission(name string) (*model.GlobalPermission, error) {
 	now := time.Now()
 
 	globalPermissionID, _ := uuid.NewUUID()
