@@ -442,8 +442,8 @@ func (sa *Adapter) DeleteExpiredRefreshTokens(now *time.Time) error {
 }
 
 //FindGlobalPermissions finds a set of global user permissions
-func (sa *Adapter) FindGlobalPermissions(ids []string) ([]model.GlobalPermission, error) {
-	permissionsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+func (sa *Adapter) FindGlobalPermissions() ([]model.GlobalPermission, error) {
+	permissionsFilter := bson.D{}
 	var permissionsResult []model.GlobalPermission
 	err := sa.db.globalPermissions.Find(permissionsFilter, &permissionsResult, nil)
 	if err != nil {
