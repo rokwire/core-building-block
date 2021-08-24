@@ -70,3 +70,12 @@ type organizationMembership struct {
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
+
+type application struct {
+	ID       string   `bson:"_id"`
+	Name     string   `bson:"name"`     //safer community mobile, safer community web, uuic mobile, uuic web, uuic admin etc
+	Versions []string `bson:"versions"` //1.1.0, 1.2.0 etc
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}

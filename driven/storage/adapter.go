@@ -827,6 +827,24 @@ func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
 	return &getResApp, nil
 }
 
+//FindApplications finds applications
+func (sa *Adapter) FindApplications() ([]model.Application, error) {
+	filter := bson.D{}
+	var result []application
+	err := sa.db.applications.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+	}
+
+	if len(result) == 0 {
+		//no data
+		return make([]model.Application, 0), nil
+	}
+
+	application := applicationsFromStorage(result)
+	return application, nil
+}
+
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records
