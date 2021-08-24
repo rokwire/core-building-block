@@ -230,7 +230,7 @@ func (app *application) admGetOrganization(ID string) (*model.Organization, erro
 }
 
 func (app *application) admGetOrganizations() ([]model.Organization, error) {
-	getOrganization, err := app.storage.GetOrganizations()
+	getOrganization, err := app.storage.LoadOrganizations()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err)
 	}
@@ -276,4 +276,13 @@ func (app *application) admCreateApplication(name string, versions []string) (*m
 		return nil, err
 	}
 	return inserted, nil
+}
+
+func (app *application) admGetApplications() ([]model.Application, error) {
+	getApplications, err := app.storage.FindApplications()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplication, nil, err)
+	}
+
+	return getApplications, nil
 }

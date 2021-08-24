@@ -1,14 +1,12 @@
 required:
   - id
   - name
+  - org_id
 type: object
 properties:
   id:
     type: string
   name:
     type: string
-  permissions:
-    type: array
-    nullable: true
-    items:
-      $ref: "./GlobalPermission.yaml"
+  org_id:
+    type: string

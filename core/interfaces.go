@@ -29,6 +29,7 @@ type Administration interface {
 
 	AdmCreateApplication(name string, versions []string) (*model.Application, error)
 	AdmGetApplication(ID string) (*model.Application, error)
+	AdmGetApplications() ([]model.Application, error)
 
 	AdmFindGlobalPermissions() ([]model.GlobalPermission, error)
 }
@@ -72,11 +73,12 @@ type Storage interface {
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
-	GetOrganizations() ([]model.Organization, error)
+	LoadOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)
 
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
+	FindApplications() ([]model.Application, error)
 }
 
 //StorageListener listenes for change data storage events

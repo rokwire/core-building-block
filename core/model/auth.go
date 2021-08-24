@@ -20,6 +20,10 @@ const (
 	TypeAuthConfig logutils.MessageDataType = "auth config"
 	//TypeAuthCred auth cred type
 	TypeAuthCred logutils.MessageDataType = "auth cred"
+	//TypeAuthRefresh auth refresh type
+	TypeAuthRefresh logutils.MessageDataType = "auth refresh"
+	//TypeRefreshToken refresh token type
+	TypeRefreshToken logutils.MessageDataType = "refresh token"
 	//TypeServiceReg service reg type
 	TypeServiceReg logutils.MessageDataType = "service reg"
 	//TypeServiceScope service scope type
@@ -38,46 +42,54 @@ const (
 
 //UserAuth represents user auth entity
 type UserAuth struct {
-	UserID    string
-	AccountID string
-	Sub       string
-	FirstName string
-	LastName  string
-	Email     string
-	Phone     string
-	Picture   []byte
-	Exp       *int64
-	OrgData   map[string]interface{}
-	NewCreds  interface{}
-	Refresh   interface{}
-	Params    interface{}
+	UserID         string
+	AccountID      string
+	OrgID          string
+	Sub            string
+	FirstName      string
+	LastName       string
+	Email          string
+	Phone          string
+	Picture        []byte
+	Exp            *int64
+	Creds          *AuthCreds
+	RefreshParams  map[string]interface{}
+	OrgData        map[string]interface{}
+	ResponseParams interface{}
 }
 
 //AuthConfig represents auth config entity
 type AuthConfig struct {
-	OrgID  string `json:"org_id" bson:"org_id" validate:"required"`
-	AppID  string `json:"app_id" bson:"app_id" validate:"required"`
-	Type   string `json:"type" bson:"type" validate:"required"`
-	Config []byte `json:"config" bson:"config" validate:"required"`
+	OrgID    string                 `json:"org_id" bson:"org_id" validate:"required"`
+	AppIDs   []string               `json:"app_ids" bson:"app_ids" validate:"required"`
+	AuthType string                 `json:"auth_type" bson:"auth_type" validate:"required"`
+	Config   map[string]interface{} `json:"config" bson:"config" validate:"required"`
 }
 
-//AuthCred represents represents a set of credentials used by auth
-type AuthCred struct {
-	OrgID     string             `bson:"org_id"`
-	AppID     string             `bson:"app_id"`
-	Type      string             `bson:"type"`
-	UserID    string             `bson:"user_id"`
-	AccountID string             `bson:"account_id"`
-	Creds     interface{}        `bson:"creds"`
-	Refresh   *AuthRefreshParams `bson:"refresh"`
+//AuthCreds represents represents a set of credentials used by auth
+type AuthCreds struct {
+	ID        string                 `bson:"_id"`
+	OrgID     string                 `bson:"org_id"`
+	AuthType  string                 `bson:"auth_type"`
+	AccountID string                 `bson:"account_id"`
+	Creds     map[string]interface{} `bson:"creds"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-//AuthRefreshParams represents refresh token info used by auth
-type AuthRefreshParams struct {
-	PreviousToken string      `json:"previous_token"`
-	CurrentToken  string      `json:"current_token" validate:"required"`
-	Expires       *time.Time  `json:"exp" validate:"required"`
-	IDPParams     interface{} `json:"idp_params"`
+//AuthRefresh represents refresh token info used by auth
+type AuthRefresh struct {
+	PreviousToken string                 `bson:"previous_token"`
+	CurrentToken  string                 `bson:"current_token" validate:"required"`
+	Expires       *time.Time             `bson:"exp" validate:"required"`
+	AppID         string                 `bson:"app_id" validate:"required"`
+	OrgID         string                 `bson:"org_id" validate:"required"`
+	CredsID       string                 `bson:"creds_id" validate:"required"`
+	Params        map[string]interface{} `bson:"params"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 //ServiceReg represents a service registration entity
