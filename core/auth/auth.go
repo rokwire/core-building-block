@@ -431,6 +431,7 @@ func (a *Auth) getAPIKey(key string) (*model.APIKey, error) {
 	}
 	return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeAPIKey, nil)
 }
+
 func (a *Auth) setAuthConfigs(authConfigs []model.AuthConfig) {
 	validate := validator.New()
 
@@ -445,9 +446,7 @@ func (a *Auth) setAuthConfigs(authConfigs []model.AuthConfig) {
 				a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, appID, authConfig.AuthType), &authConfig)
 			}
 		}
-		return nil, errors.ErrorData(logutils.StatusInvalid, model.AuthConfig, nil)
 	}
-	return nil, errors.ErrorAction(logutils.ActionLoadCache, model.AuthConfig, nil)
 }
 
 func (a *Auth) setAPIKeys(apiKeys []model.APIKey) {
@@ -551,7 +550,7 @@ type StorageListener struct {
 
 //OnAPIKeysUpdated notifies api keys have been updated
 func (al *StorageListener) OnAPIKeysUpdated() {
-	al.Auth.loadAPIKeys()
+	al.auth.loadAPIKeys()
 }
 
 //OnAuthConfigUpdated notifies that an auth config has been updated
