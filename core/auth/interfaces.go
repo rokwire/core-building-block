@@ -112,9 +112,10 @@ type Storage interface {
 	FindOrganization(id string) (*model.Organization, error)
 
 	//Credentials
+	FindCredentialsByID(ID string) (*model.AuthCreds, error)
 	FindCredentialsByRefreshToken(token string) (*model.AuthCreds, error)
-	FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCreds, error)
-	UpdateCredentials(orgID string, appID string, authType string, userID string, refresh *model.AuthRefresh) error
+	FindCredentials(orgID string, authType string, params map[string]interface{}) (*model.AuthCreds, error)
+	UpdateCredentials(ID string, refresh *model.AuthRefresh) error
 
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)
@@ -126,7 +127,7 @@ type Storage interface {
 
 	//AuthConfigs
 	FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error)
-	LoadAuthConfigs() (*[]model.AuthConfig, error)
+	LoadAuthConfigs() ([]model.AuthConfig, error)
 
 	//ServiceAuthorizations
 	FindServiceAuthorization(userID string, orgID string) (*model.ServiceAuthorization, error)

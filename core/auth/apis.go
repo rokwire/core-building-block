@@ -90,11 +90,7 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 		}
 
 		if userAuth.Creds.Refresh != nil || hadRefresh {
-			if auth.isGlobal() {
-				err = a.storage.UpdateCredentials("", "", authType, userAuth.UserID, userAuth.Creds.Refresh)
-			} else {
-				err = a.storage.UpdateCredentials(orgID, appID, authType, userAuth.UserID, userAuth.Creds.Refresh)
-			}
+			err = a.storage.UpdateCredentials(userAuth.Creds.ID, userAuth.Creds.Refresh)
 			if err != nil {
 				return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthCred, nil, err)
 			}
@@ -145,7 +141,7 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 	}
 
 	if refreshToken == credentials.Refresh.PreviousToken {
-		err = a.storage.UpdateCredentials(credentials.OrgID, credentials.AppID, credentials.Type, credentials.UserID, nil)
+		err = a.storage.UpdateCredentials(credentials.ID, nil)
 		if err != nil {
 			return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh reuse", nil, err)
 		}
@@ -155,12 +151,12 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, model.TypeRefreshToken, nil)
 	}
 
-	auth, err := a.getAuthType(credentials.Type)
+	auth, err := a.getAuthType(credentials.AuthType)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	userAuth, err := auth.refresh(credentials.Refresh.Params, credentials.OrgID, credentials.AppID, l)
+	userAuth, err := auth.refresh(credentials.Refresh.Params, credentials.OrgID, credentials.Refresh.AppID, l)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
 	}
@@ -186,7 +182,8 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 		}
 	}
 
-	claims := a.getStandardClaims(user.ID, userAuth.UserID, user.Account.Email, user.Account.Phone, "rokwire", credentials.OrgID, credentials.AppID, userAuth.Exp)
+	//TODO: complete issues/ID-149 to get appID from AuthRefresh
+	claims := a.getStandardClaims(user.ID, userAuth.UserID, user.Account.Email, user.Account.Phone, "rokwire", credentials.OrgID, credentials.Refresh.AppID, userAuth.Exp)
 	token, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -202,7 +199,7 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 
 		refresh := model.AuthRefresh{CurrentToken: newRefreshToken, PreviousToken: refreshToken, Expires: expireTime, Params: userAuth.RefreshParams}
 
-		err = a.storage.UpdateCredentials(credentials.OrgID, credentials.AppID, credentials.Type, credentials.UserID, &refresh)
+		err = a.storage.UpdateCredentials(credentials.ID, &refresh)
 		if err != nil {
 			return "", "", nil, err
 		}
