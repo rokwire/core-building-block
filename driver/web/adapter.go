@@ -88,6 +88,7 @@ func (we Adapter) Start() {
 
 	adminSubrouter.HandleFunc("/application", we.wrapFunc(we.adminApisHandler.createApplication)).Methods("POST")
 	adminSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.adminApisHandler.getApplication)).Methods("GET")
+	adminSubrouter.HandleFunc("/applications", we.wrapFunc(we.adminApisHandler.getApplications)).Methods("GET")
 
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.getServiceRegistrations)).Methods("GET")
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.registerService)).Methods("POST")

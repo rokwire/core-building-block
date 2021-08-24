@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Expose admin API which creates global permission [#105](https://github.com/rokwire/core-building-block/issues/105)
+- Handle refresh tokens across multiple devices/apps/orgs [#149](https://github.com/rokwire/core-building-block/issues/149)
+- Expose admin API which gets applications list [#104](https://github.com/rokwire/core-building-block/issues/104)
+- Restructure auth package to provide APIs interface [#161](https://github.com/rokwire/core-building-block/issues/161)
 - Set up refresh tokens [#95](https://github.com/rokwire/core-building-block/issues/95)
 - Set up OIDC compliant token validation endpoints [#51](https://github.com/rokwire/core-building-block/issues/51)
 - Storage improvements [#144](https://github.com/rokwire/core-building-block/issues/144)
@@ -47,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set up logging [#6](https://github.com/rokwire/core-building-block/issues/6)
 
 ### Fixed
+- Fix auth credentials search for multiple apps [#153](https://github.com/rokwire/core-building-block/issues/153)
 - Fix GlobalPermission and OrganizationPermission in the doc APIs model [#151](https://github.com/rokwire/core-building-block/issues/151)
 - OIDC auth bug fixes [#143](https://github.com/rokwire/core-building-block/issues/143)
 - Fix APIs requests validation [#89](https://github.com/rokwire/core-building-block/issues/89)
