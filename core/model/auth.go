@@ -46,6 +46,14 @@ type IdentityProvider struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 	Type string `bson:"type"`
+
+	Configs []IdentityProviderConfig `bson:"configs"`
+}
+
+//IdentityProviderConfig represents identity provider config for an application
+type IdentityProviderConfig struct {
+	AppID  string                 `bson:"app_id"`
+	Config map[string]interface{} `bson:"config"`
 }
 
 //UserAuth represents user auth entity
