@@ -179,7 +179,7 @@ type OrganizationRole struct {
 	Name        string
 	Description string
 
-	Permissions []OrganizationPermission `bson:"permissions"`
+	Permissions []OrganizationPermission
 
 	Organization Organization
 
