@@ -193,7 +193,7 @@ func (c OrganizationRole) String() string {
 //Device represents user devices entity.
 type Device struct {
 	ID   string
-	Type string
+	Type string //mobile, web, desktop, other
 
 	//TODO - other fields when they are clear
 	OS         string
