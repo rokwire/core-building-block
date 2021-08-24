@@ -21,7 +21,7 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
-	authenticationTypes      *collectionWrapper
+	authTypes                *collectionWrapper
 	users                    *collectionWrapper
 	devices                  *collectionWrapper
 	credentials              *collectionWrapper
@@ -66,8 +66,8 @@ func (m *database) start() error {
 	//apply checks
 	db := client.Database(m.mongoDBName)
 
-	authenticationTypes := &collectionWrapper{database: m, coll: db.Collection("authentication_types")}
-	err = m.applyAuthenticationTypesChecks(authenticationTypes)
+	authTypes := &collectionWrapper{database: m, coll: db.Collection("auth_types")}
+	err = m.applyAuthTypesChecks(authTypes)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func (m *database) start() error {
 	m.db = db
 	m.dbClient = client
 
-	m.authenticationTypes = authenticationTypes
+	m.authTypes = authTypes
 	m.users = users
 	m.devices = devices
 	m.credentials = credentials
@@ -207,10 +207,10 @@ func (m *database) start() error {
 	return nil
 }
 
-func (m *database) applyAuthenticationTypesChecks(authenticationTypes *collectionWrapper) error {
-	m.logger.Info("apply authentication types checks.....")
+func (m *database) applyAuthTypesChecks(authenticationTypes *collectionWrapper) error {
+	m.logger.Info("apply auth types checks.....")
 
-	m.logger.Info("authentication types check passed")
+	m.logger.Info("auth types check passed")
 	return nil
 }
 
