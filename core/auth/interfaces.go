@@ -132,9 +132,8 @@ type Storage interface {
 	SaveServiceReg(reg *model.ServiceReg) error
 	DeleteServiceReg(serviceID string) error
 
-	//AuthConfigs
-	FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error)
-	LoadAuthConfigs() ([]model.AuthConfig, error)
+	//IdentityProviders
+	LoadIdentityProviders() ([]model.IdentityProvider, error)
 
 	//ServiceAuthorizations
 	FindServiceAuthorization(userID string, orgID string) (*model.ServiceAuthorization, error)

@@ -36,7 +36,6 @@ type database struct {
 	organizationsRoles       *collectionWrapper
 	organizationsPermissions *collectionWrapper
 	organizationsMemberships *collectionWrapper
-	authConfigs              *collectionWrapper
 	serviceRegs              *collectionWrapper
 	serviceAuthorizations    *collectionWrapper
 	applications             *collectionWrapper
@@ -157,12 +156,6 @@ func (m *database) start() error {
 		return err
 	}
 
-	authConfigs := &collectionWrapper{database: m, coll: db.Collection("auth_configs")}
-	err = m.applyAuthConfigChecks(authConfigs)
-	if err != nil {
-		return err
-	}
-
 	serviceRegs := &collectionWrapper{database: m, coll: db.Collection("service_regs")}
 	err = m.applyServiceRegsChecks(serviceRegs)
 	if err != nil {
@@ -200,12 +193,11 @@ func (m *database) start() error {
 	m.organizationsRoles = organizationsRoles
 	m.organizationsPermissions = organizationsPermissions
 	m.organizationsMemberships = organizationsMemberships
-	m.authConfigs = authConfigs
 	m.serviceRegs = serviceRegs
 	m.serviceAuthorizations = serviceAuthorizations
 	m.applications = applications
 
-	go m.authConfigs.Watch(nil)
+	go m.identityProviders.Watch(nil)
 	go m.serviceRegs.Watch(nil)
 	go m.organizations.Watch(nil)
 	go m.applications.Watch(nil)
@@ -364,18 +356,6 @@ func (m *database) applyRefreshTokenChecks(refreshTokens *collectionWrapper) err
 	return nil
 }
 
-func (m *database) applyAuthConfigChecks(authInfo *collectionWrapper) error {
-	m.logger.Info("apply auth info checks.....")
-
-	// Add org_id, app_id compound index
-	err := authInfo.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-	m.logger.Info("auth info check passed")
-	return nil
-}
-
 func (m *database) applyGlobalConfigChecks(configs *collectionWrapper) error {
 	m.logger.Info("apply global config checks.....")
 
@@ -511,11 +491,11 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 	coll := nsMap["coll"]
 
 	switch coll {
-	case "auth_configs":
-		m.logger.Info("auth_configs collection changed")
+	case "identity_providers":
+		m.logger.Info("identity_providers collection changed")
 
 		for _, listener := range m.listeners {
-			go listener.OnAuthConfigUpdated()
+			go listener.OnIdentityProvidersUpdated()
 		}
 	case "service_regs":
 		m.logger.Info("service_regs collection changed")

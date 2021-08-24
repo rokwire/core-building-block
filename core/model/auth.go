@@ -14,10 +14,10 @@ import (
 )
 
 const (
+	//TypeIdentityProvider identity provider type
+	TypeIdentityProvider logutils.MessageDataType = "identity provider"
 	//TypeUserAuth user auth type
 	TypeUserAuth logutils.MessageDataType = "user auth"
-	//TypeAuthConfig auth config type
-	TypeAuthConfig logutils.MessageDataType = "auth config"
 	//TypeAuthCred auth cred type
 	TypeAuthCred logutils.MessageDataType = "auth cred"
 	//TypeAuthRefresh auth refresh type
@@ -72,14 +72,6 @@ type UserAuth struct {
 	RefreshParams  map[string]interface{}
 	OrgData        map[string]interface{}
 	ResponseParams interface{}
-}
-
-//AuthConfig represents auth config entity
-type AuthConfig struct {
-	OrgID    string                 `json:"org_id" bson:"org_id" validate:"required"`
-	AppIDs   []string               `json:"app_ids" bson:"app_ids" validate:"required"`
-	AuthType string                 `json:"auth_type" bson:"auth_type" validate:"required"`
-	Config   map[string]interface{} `json:"config" bson:"config" validate:"required"`
 }
 
 //AuthCreds represents represents a set of credentials used by auth

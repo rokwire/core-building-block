@@ -651,31 +651,16 @@ func (sa *Adapter) InsertMembership(orgMembership *organizationMembership, conte
 	return nil
 }
 
-//FindAuthConfig finds the auth document from DB by orgID and appID
-func (sa *Adapter) FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error) {
-	errFields := &logutils.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": authType}
-	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "type", Value: authType}}
-	var result *model.AuthConfig
-	err := sa.db.authConfigs.FindOne(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthConfig, errFields, err)
-	}
-	if result == nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAuthConfig, errFields, err)
-	}
-	return result, nil
-}
-
-//LoadAuthConfigs finds all auth config documents in the DB
-func (sa *Adapter) LoadAuthConfigs() ([]model.AuthConfig, error) {
+//LoadIdentityProviders finds all identity providers documents in the DB
+func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 	filter := bson.D{}
-	var result []model.AuthConfig
-	err := sa.db.authConfigs.Find(filter, &result, nil)
+	var result []model.IdentityProvider
+	err := sa.db.identityProviders.Find(filter, &result, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthConfig, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeIdentityProvider, nil, err)
 	}
 	if len(result) == 0 {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAuthConfig, nil, err)
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeIdentityProvider, nil, err)
 	}
 
 	return result, nil
@@ -1101,7 +1086,7 @@ func (sl *storageListener) OnApplicationsUpdated() {
 
 //Listener represents storage listener
 type Listener interface {
-	OnAuthConfigUpdated()
+	OnIdentityProvidersUpdated()
 	OnServiceRegsUpdated()
 	OnOrganizationsUpdated()
 	OnApplicationsUpdated()
@@ -1110,8 +1095,8 @@ type Listener interface {
 //DefaultListenerImpl default listener implementation
 type DefaultListenerImpl struct{}
 
-//OnAuthConfigUpdated notifies auth configs have been updated
-func (d *DefaultListenerImpl) OnAuthConfigUpdated() {}
+//OnIdentityProvidersUpdated notifies identity providers have been updated
+func (d *DefaultListenerImpl) OnIdentityProvidersUpdated() {}
 
 //OnServiceRegsUpdated notifies services regs have been updated
 func (d *DefaultListenerImpl) OnServiceRegsUpdated() {}

@@ -522,31 +522,32 @@ func (a *oidcAuthImpl) loadOidcUserInfo(token *oidcToken, url string) ([]byte, e
 }
 
 func (a *oidcAuthImpl) getOidcAuthConfig(orgID string, appID string) (*oidcAuthConfig, error) {
-	errFields := &logutils.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": a.authType}
+	/*	errFields := &logutils.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": a.authType}
 
-	authConfig, err := a.auth.getAuthConfig(orgID, appID, a.authType)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthConfig, errFields, err)
-	}
+		authConfig, err := a.auth.getAuthConfig(orgID, appID, a.authType)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthConfig, errFields, err)
+		}
 
-	configBytes, err := json.Marshal(authConfig.Config)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, model.TypeAuthConfig, errFields, err)
-	}
+		configBytes, err := json.Marshal(authConfig.Config)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionMarshal, model.TypeAuthConfig, errFields, err)
+		}
 
-	var oidcConfig oidcAuthConfig
-	err = json.Unmarshal(configBytes, &oidcConfig)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeAuthConfig, errFields, err)
-	}
+		var oidcConfig oidcAuthConfig
+		err = json.Unmarshal(configBytes, &oidcConfig)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeAuthConfig, errFields, err)
+		}
 
-	validate := validator.New()
-	err = validate.Struct(oidcConfig)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthConfig, errFields, err)
-	}
+		validate := validator.New()
+		err = validate.Struct(oidcConfig)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthConfig, errFields, err)
+		}
 
-	return &oidcConfig, nil
+		return &oidcConfig, nil */
+	return nil, nil
 }
 
 func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials map[string]interface{}) (bool, error) {

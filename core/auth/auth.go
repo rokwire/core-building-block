@@ -59,8 +59,8 @@ type Auth struct {
 	minTokenExp int64  //Minimum access token expiration time in minutes
 	maxTokenExp int64  //Maximum access token expiration time in minutes
 
-	authConfigs     *syncmap.Map //cache authConfigs
-	authConfigsLock *sync.RWMutex
+	identityProviders     *syncmap.Map //cache identityProviders
+	identityProvidersLock *sync.RWMutex
 
 	//delete refresh tokens timer
 	deleteRefreshTimer *time.Timer
@@ -91,13 +91,13 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	authTypes := map[string]authType{}
 
-	authConfigs := &syncmap.Map{}
-	authConfigsLock := &sync.RWMutex{}
+	identityProviders := &syncmap.Map{}
+	identityProvidersLock := &sync.RWMutex{}
 
 	timerDone := make(chan bool)
 	auth := &Auth{storage: storage, logger: logger, authTypes: authTypes, authPrivKey: authPrivKey, AuthService: nil,
 		serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp,
-		authConfigs: authConfigs, authConfigsLock: authConfigsLock, timerDone: timerDone}
+		identityProviders: identityProviders, identityProvidersLock: identityProvidersLock, timerDone: timerDone}
 
 	err := auth.storeReg()
 	if err != nil {
@@ -124,7 +124,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initAPIKeyAuth(auth)
 	initSignatureAuth(auth)
 
-	err = auth.loadAuthConfigs()
+	err = auth.loadIdentityProviders()
 	if err != nil {
 		logger.Warnf("NewAuth() failed to cache auth configs: %v", err)
 	}
@@ -371,20 +371,22 @@ func (a *Auth) storeReg() error {
 	return nil
 }
 
-//loadAuthConfigs loads the auth configs
-func (a *Auth) loadAuthConfigs() error {
-	authConfigDocs, err := a.storage.LoadAuthConfigs()
+//loadIdentityProviders loads the identity providers
+func (a *Auth) loadIdentityProviders() error {
+	a.logger.Info("loadIdentityProviders..")
+
+	identityProviders, err := a.storage.LoadIdentityProviders()
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthConfig, nil, err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeIdentityProvider, nil, err)
 	}
 
-	a.setAuthConfigs(authConfigDocs)
+	a.setIdentityProviders(identityProviders)
 
 	return nil
 }
 
-func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error) {
-	a.authConfigsLock.RLock()
+func (a *Auth) getIdentityProviderConfig(id string, appID string) (*model.IdentityProviderConfig, error) {
+	/*a.authConfigsLock.RLock()
 	defer a.authConfigsLock.RUnlock()
 
 	errArgs := &logutils.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": authType}
@@ -397,21 +399,23 @@ func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*mode
 		}
 		return authConfig, nil
 	}
-	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthConfig, errArgs)
+	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthConfig, errArgs) */
+	return nil, nil
 }
 
-func (a *Auth) setAuthConfigs(authConfigs []model.AuthConfig) {
-	a.authConfigs = &syncmap.Map{}
+func (a *Auth) setIdentityProviders(identityProviders []model.IdentityProvider) {
+	a.identityProvidersLock.Lock()
+	defer a.identityProvidersLock.Unlock()
+
+	a.identityProviders = &syncmap.Map{}
 	validate := validator.New()
 
-	a.authConfigsLock.Lock()
-	defer a.authConfigsLock.Unlock()
-	for _, authConfig := range authConfigs {
-		err := validate.Struct(authConfig)
+	for _, idPr := range identityProviders {
+		err := validate.Struct(idPr)
 		if err == nil {
-			for _, appID := range authConfig.AppIDs {
-				a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, appID, authConfig.AuthType), &authConfig)
-			}
+			a.identityProviders.Store(idPr.ID, idPr)
+		} else {
+			a.logger.Errorf("failed to validate and cache identity provider with id %s: %s", idPr.ID, err.Error())
 		}
 	}
 }
@@ -505,9 +509,9 @@ type StorageListener struct {
 	storage.DefaultListenerImpl
 }
 
-//OnAuthConfigUpdated notifies that an auth config has been updated
-func (al *StorageListener) OnAuthConfigUpdated() {
-	al.auth.loadAuthConfigs()
+//OnIdentityProvidersUpdated notifies that a identity provider has been updated
+func (al *StorageListener) OnIdentityProvidersUpdated() {
+	al.auth.loadIdentityProviders()
 }
 
 //OnServiceRegsUpdated notifies that a service registration has been updated
