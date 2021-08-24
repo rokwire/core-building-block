@@ -236,7 +236,7 @@ type GlobalPermission struct {
 type GlobalRole struct {
 	Id          string              `json:"id"`
 	Name        string              `json:"name"`
-	Permissions *[]GlobalPermission `json:"permissions,omitempty"`
+	Permissions *[]GlobalPermission `json:"permissions"`
 }
 
 // JSON Web Key (JWK)

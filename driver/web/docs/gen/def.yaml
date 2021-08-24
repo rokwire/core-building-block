@@ -321,6 +321,28 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /admin/global-permissions:
+    get:
+      tags:
+        - Admin
+      summary: Get global permissions
+      description: |
+        Get global permissions
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GlobalPermission'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   '/admin/organizations/{id}':
     put:
       tags:
@@ -795,8 +817,8 @@ components:
           type: string
         permissions:
           type: array
+          nullable: true
           items:
-            type: string
             $ref: '#/components/schemas/GlobalPermission'
     GlobalGroup:
       required:
@@ -811,7 +833,6 @@ components:
         permissions:
           type: array
           items:
-            type: string
             $ref: '#/components/schemas/GlobalPermission'
         roles:
           type: array
@@ -907,7 +928,6 @@ components:
         permissions:
           type: array
           items:
-            type: string
             $ref: '#/components/schemas/OrganizationPermission'
     OrganizationGroup:
       required:
@@ -925,7 +945,6 @@ components:
         permissions:
           type: array
           items:
-            type: string
             $ref: '#/components/schemas/OrganizationPermission'
         roles:
           type: array
@@ -1020,7 +1039,6 @@ components:
         app_id:
           type: string
         creds:
-          type: object
           anyOf:
             - $ref: '#/components/schemas/AuthLoginCredsEmail'
             - $ref: '#/components/schemas/AuthLoginCredsPhone'
@@ -1247,7 +1265,6 @@ components:
         permissions:
           type: array
           items:
-            type: string
             $ref: '#/components/schemas/GlobalPermission'
         roles:
           type: array
@@ -1308,7 +1325,6 @@ components:
         permissions:
           type: array
           items:
-            type: string
             $ref: '#/components/schemas/OrganizationPermission'
         roles:
           type: array
