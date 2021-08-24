@@ -29,6 +29,7 @@ type Administration interface {
 
 	AdmCreateApplication(name string, versions []string) (*model.Application, error)
 	AdmGetApplication(ID string) (*model.Application, error)
+	AdmGetApplications() ([]model.Application, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -49,13 +50,32 @@ type Storage interface {
 	GetGlobalConfig() (*model.GlobalConfig, error)
 	SaveGlobalConfig(setting *model.GlobalConfig) error
 
+	UpdateGlobalPermission(item model.GlobalPermission) error
+	DeleteGlobalPermission(id string) error
+
+	UpdateGlobalRole(item model.GlobalRole) error
+	DeleteGlobalRole(id string) error
+
+	UpdateGlobalGroup(item model.GlobalGroup) error
+	DeleteGlobalGroup(id string) error
+
+	UpdateOrganizationPermission(item model.OrganizationPermission) error
+	DeleteOrganizationPermission(id string) error
+
+	UpdateOrganizationRole(item model.OrganizationRole) error
+	DeleteOrganizationRole(id string) error
+
+	UpdateOrganizationGroup(item model.OrganizationGroup) error
+	DeleteOrganizationGroup(id string) error
+
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
-	GetOrganizations() ([]model.Organization, error)
+	LoadOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)
 
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
+	FindApplications() ([]model.Application, error)
 }
 
 //StorageListener listenes for change data storage events

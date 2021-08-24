@@ -24,6 +24,7 @@ type database struct {
 	users                    *collectionWrapper
 	devices                  *collectionWrapper
 	credentials              *collectionWrapper
+	refreshTokens            *collectionWrapper
 	globalConfig             *collectionWrapper
 	globalGroups             *collectionWrapper
 	globalRoles              *collectionWrapper
@@ -79,6 +80,12 @@ func (m *database) start() error {
 
 	credentials := &collectionWrapper{database: m, coll: db.Collection("credentials")}
 	err = m.applyCredentialChecks(credentials)
+	if err != nil {
+		return err
+	}
+
+	refreshTokens := &collectionWrapper{database: m, coll: db.Collection("refresh_tokens")}
+	err = m.applyRefreshTokenChecks(refreshTokens)
 	if err != nil {
 		return err
 	}
@@ -174,6 +181,7 @@ func (m *database) start() error {
 	m.users = users
 	m.devices = devices
 	m.credentials = credentials
+	m.refreshTokens = refreshTokens
 	m.globalConfig = globalConfig
 	m.globalGroups = globalGroups
 	m.globalRoles = globalRoles
@@ -211,102 +219,6 @@ func (m *database) applyUsersChecks(users *collectionWrapper) error {
 
 	//add profile index
 	err = users.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add permissions index
-	err = users.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add roles index
-	err = users.AddIndex(bson.D{primitive.E{Key: "roles._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add roles permissions index
-	err = users.AddIndex(bson.D{primitive.E{Key: "roles.permissions._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add groups index
-	err = users.AddIndex(bson.D{primitive.E{Key: "groups._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add groups permissions index
-	err = users.AddIndex(bson.D{primitive.E{Key: "groups.permissions._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add groups roles index
-	err = users.AddIndex(bson.D{primitive.E{Key: "groups.roles._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add groups roles permissions index
-	err = users.AddIndex(bson.D{primitive.E{Key: "groups.roles.permissions._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add organizations memberships index
-	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add organizations memberships permissions index
-	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.permissions._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add organizations memberships roles index
-	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.roles._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add organizations memberships roles permissions index
-	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.roles.permissions._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add organizations memberships groups index
-	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.groups._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add organizations memberships groups permissions index
-	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.groups.permissions._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add organizations memberships groups roles index
-	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.groups.roles._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add organizations memberships groups roles permissions index
-	err = users.AddIndex(bson.D{primitive.E{Key: "organizations_memberships.groups.roles.permissions._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add devices index
-	err = users.AddIndex(bson.D{primitive.E{Key: "devices._id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -395,17 +307,39 @@ func (m *database) applyDevicesChecks(devices *collectionWrapper) error {
 func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
 	m.logger.Info("apply credentials checks.....")
 
-	// Add org_id, app_id compound index
-	err := credentials.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}}, false)
+	// Add org_id, auth_type compound index
+	err := credentials.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "auth_type", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
-	err = credentials.AddIndex(bson.D{primitive.E{Key: "type", Value: 1}, primitive.E{Key: "user_id", Value: 1}}, false)
+	m.logger.Info("credentials check passed")
+	return nil
+}
+
+func (m *database) applyRefreshTokenChecks(refreshTokens *collectionWrapper) error {
+	m.logger.Info("apply refresh tokens checks.....")
+
+	err := refreshTokens.AddIndex(bson.D{primitive.E{Key: "current_token", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
-	m.logger.Info("credentials check passed")
+
+	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "previous_token", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "exp", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "creds_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+	m.logger.Info("refresh tokens check passed")
 	return nil
 }
 

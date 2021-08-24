@@ -48,9 +48,6 @@ func serviceRegToDef(item *model.ServiceReg) *Def.ServiceReg {
 }
 
 func serviceRegListToDef(items []model.ServiceReg) []Def.ServiceReg {
-	if items == nil {
-		return nil
-	}
 	out := make([]Def.ServiceReg, len(items))
 	for i, item := range items {
 		defItem := serviceRegToDef(&item)
@@ -72,9 +69,6 @@ func authServiceRegToDef(item *authservice.ServiceReg) *Def.AuthServiceReg {
 }
 
 func authServiceRegListToDef(items []model.ServiceReg) []Def.AuthServiceReg {
-	if items == nil {
-		return nil
-	}
 	out := make([]Def.AuthServiceReg, len(items))
 	for i, item := range items {
 		defItem := authServiceRegToDef(&item.Registration)
@@ -127,9 +121,6 @@ func serviceScopeListFromDef(items *[]Def.ServiceScope) ([]model.ServiceScope, e
 }
 
 func serviceScopeListToDef(items []model.ServiceScope) []Def.ServiceScope {
-	if items == nil {
-		return nil
-	}
 	out := make([]Def.ServiceScope, len(items))
 	for i, item := range items {
 		defItem := serviceScopeToDef(&item)

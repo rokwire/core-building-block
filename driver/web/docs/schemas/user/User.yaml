@@ -11,7 +11,7 @@ properties:
   permissions:
     type: array
     items:
-      type: string
+      $ref: "../global/GlobalPermission.yaml"
   roles:
     type: array
     items:

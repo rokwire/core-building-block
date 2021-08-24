@@ -59,7 +59,7 @@ func (sa *Adapter) RegisterStorageListener(storageListener Listener) {
 func (sa *Adapter) cacheOrganizations() error {
 	sa.logger.Info("cacheOrganizations..")
 
-	organizations, err := sa.GetOrganizations()
+	organizations, err := sa.LoadOrganizations()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
@@ -67,6 +67,23 @@ func (sa *Adapter) cacheOrganizations() error {
 	sa.setCachedOrganizations(&organizations)
 
 	return nil
+}
+
+func (sa *Adapter) setCachedOrganizations(organizations *[]model.Organization) {
+	sa.organizationsLock.Lock()
+	defer sa.organizationsLock.Unlock()
+
+	sa.cachedOrganizations = &syncmap.Map{}
+	validate := validator.New()
+
+	for _, org := range *organizations {
+		err := validate.Struct(org)
+		if err == nil {
+			sa.cachedOrganizations.Store(org.ID, org)
+		} else {
+			sa.logger.Errorf("failed to validate and cache organization with org_id %s: %s", org.ID, err.Error())
+		}
+	}
 }
 
 func (sa *Adapter) getCachedOrganization(orgID string) (*model.Organization, error) {
@@ -83,22 +100,32 @@ func (sa *Adapter) getCachedOrganization(orgID string) (*model.Organization, err
 		}
 		return &organization, nil
 	}
-	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthConfig, errArgs)
+	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, errArgs)
 }
 
-func (sa *Adapter) setCachedOrganizations(organizations *[]model.Organization) {
-	sa.organizationsLock.Lock()
-	defer sa.organizationsLock.Unlock()
+func (sa *Adapter) getCachedOrganizations() ([]model.Organization, error) {
+	sa.organizationsLock.RLock()
+	defer sa.organizationsLock.RUnlock()
 
-	sa.cachedOrganizations = &syncmap.Map{}
-	validate := validator.New()
-
-	for _, org := range *organizations {
-		err := validate.Struct(org)
-		if err == nil {
-			sa.cachedOrganizations.Store(org.ID, org)
+	var err error
+	organizationList := make([]model.Organization, 0)
+	sa.cachedOrganizations.Range(func(key, item interface{}) bool {
+		errArgs := &logutils.FieldArgs{"org_id": key}
+		if item == nil {
+			err = errors.ErrorData(logutils.StatusInvalid, model.TypeOrganization, errArgs)
+			return false
 		}
-	}
+
+		organization, ok := item.(model.Organization)
+		if !ok {
+			err = errors.ErrorAction(logutils.ActionCast, model.TypeOrganization, errArgs)
+			return false
+		}
+		organizationList = append(organizationList, organization)
+		return true
+	})
+
+	return organizationList, err
 }
 
 //FindUserByID finds an user by id
@@ -124,20 +151,14 @@ func (sa *Adapter) findUser(key string, id string) (*model.User, error) {
 }
 
 //InsertUser inserts a user
-func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*model.User, error) {
+func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCreds) (*model.User, error) {
 	if user == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUser))
 	}
 
 	storageUser := userToStorage(user)
 	membership := storageUser.OrganizationsMemberships[0]
-
-	orgID, ok := membership.OrgUserData["orgID"].(string)
-	if !ok {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("org_id"))
-	}
-
-	organizationMembership := organizationMembership{ID: membership.ID, UserID: user.ID, OrgID: orgID,
+	organizationMembership := organizationMembership{ID: membership.ID, UserID: user.ID, OrgID: membership.OrgID,
 		OrgUserData: membership.OrgUserData, DateCreated: storageUser.DateCreated}
 
 	// transaction
@@ -155,9 +176,11 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 		}
 
 		authCred.AccountID = storageUser.Account.ID
+		authCred.DateCreated = time.Now().UTC()
 		err = sa.InsertCredentials(authCred, sessionContext)
 		if err != nil {
-			return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAuthCred, &logutils.FieldArgs{"user_id": user.Account.Username, "account_id": user.Account.ID}, err)
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAuthCred, &logutils.FieldArgs{"user_id": storageUser.Account.Username, "account_id": storageUser.Account.ID}, err)
 		}
 
 		err = sa.InsertMembership(&organizationMembership, sessionContext)
@@ -167,11 +190,11 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 		}
 
 		//TODO: only save if device info has changed or it is new device
-		// err = sa.SaveDevice(&newDevice, sessionContext)
-		// if err == nil {
-		// 	abortTransaction(sessionContext)
-		// 	return log.WrapErrorAction(log.ActionSave, "device", nil, err)
-		// }
+		err = sa.SaveDevice(&user.Devices[0], sessionContext)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionSave, "device", nil, err)
+		}
 
 		//commit the transaction
 		err = sessionContext.CommitTransaction(sessionContext)
@@ -190,7 +213,7 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCred) (*mode
 }
 
 //UpdateUser updates an existing user
-func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]interface{}) (*model.User, error) {
+func (sa *Adapter) UpdateUser(updatedUser *model.User, orgID string, newOrgData *map[string]interface{}) (*model.User, error) {
 	if updatedUser == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUser))
 	}
@@ -207,10 +230,6 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, newOrgData *map[string]in
 		membershipID, err := uuid.NewUUID()
 		if err != nil {
 			return nil, errors.WrapErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("membership_id"), err)
-		}
-		orgID, ok := (*newOrgData)["orgID"].(string)
-		if !ok {
-			return nil, errors.WrapErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("org_id"), err)
 		}
 		newOrgMembership := organizationMembership{ID: membershipID.String(), UserID: updatedUser.ID, OrgID: orgID,
 			OrgUserData: *newOrgData, DateCreated: now}
@@ -281,19 +300,11 @@ func (sa *Adapter) DeleteUser(id string) error {
 	return nil
 }
 
-//FindCredentials find a set of credentials
-func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCred, error) {
-	var filter bson.D
-	if len(orgID) > 0 {
-		filter = bson.D{
-			primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID},
-			primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: userID},
-		}
-	} else {
-		filter = bson.D{primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: userID}}
-	}
+//FindCredentialsByID finds a set of credentials by ID
+func (sa *Adapter) FindCredentialsByID(ID string) (*model.AuthCreds, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 
-	var creds model.AuthCred
+	var creds model.AuthCreds
 	err := sa.db.credentials.FindOne(filter, &creds, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
@@ -302,12 +313,14 @@ func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, 
 	return &creds, nil
 }
 
-//FindCredentialsByRefreshToken finds a set of credentials by refresh token
-func (sa *Adapter) FindCredentialsByRefreshToken(token string) (*model.AuthCred, error) {
-	conditions := []bson.M{{"refresh.current_token": token}, {"refresh.previous_token": token}}
-	filter := bson.M{"$or": conditions}
+//FindCredentials find a set of credentials
+func (sa *Adapter) FindCredentials(orgID string, authType string, params map[string]interface{}) (*model.AuthCreds, error) {
+	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "auth_type", Value: authType}}
+	for k, v := range params {
+		filter = append(filter, primitive.E{Key: "creds." + k, Value: v})
+	}
 
-	var creds model.AuthCred
+	var creds model.AuthCreds
 	err := sa.db.credentials.FindOne(filter, &creds, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
@@ -317,7 +330,7 @@ func (sa *Adapter) FindCredentialsByRefreshToken(token string) (*model.AuthCred,
 }
 
 //InsertCredentials inserts a set of credentials
-func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.SessionContext) error {
+func (sa *Adapter) InsertCredentials(creds *model.AuthCreds, context mongo.SessionContext) error {
 	if creds == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
 	}
@@ -335,19 +348,97 @@ func (sa *Adapter) InsertCredentials(creds *model.AuthCred, context mongo.Sessio
 	return nil
 }
 
-//UpdateCredentials updates a set of credentials
-func (sa *Adapter) UpdateCredentials(creds *model.AuthCred) (*model.AuthCred, error) {
-	if creds == nil {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
-	}
+//FindRefreshToken finds a refresh token
+func (sa *Adapter) FindRefreshToken(token string) (*model.AuthRefresh, error) {
+	conditions := []bson.M{{"current_token": token}, {"previous_token": token}}
+	filter := bson.M{"$or": conditions}
 
-	filter := bson.D{primitive.E{Key: "type", Value: creds.Type}, primitive.E{Key: "user_id", Value: creds.UserID}}
-	err := sa.db.credentials.ReplaceOne(filter, creds, nil)
+	var refresh model.AuthRefresh
+	err := sa.db.refreshTokens.FindOne(filter, &refresh, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthCred, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
 	}
 
-	return creds, nil
+	return &refresh, nil
+}
+
+//LoadRefreshTokens loads refresh tokens by an ID triple
+func (sa *Adapter) LoadRefreshTokens(orgID string, appID string, credsID string) ([]model.AuthRefresh, error) {
+	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "creds_id", Value: credsID}}
+	opts := options.Find().SetSort(bson.D{primitive.E{Key: "exp", Value: 1}})
+
+	var refresh []model.AuthRefresh
+	err := sa.db.refreshTokens.Find(filter, &refresh, opts)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
+	}
+
+	return refresh, nil
+}
+
+//InsertRefreshToken inserts a refresh token
+func (sa *Adapter) InsertRefreshToken(refresh *model.AuthRefresh) error {
+	if refresh == nil {
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthRefresh, nil)
+	}
+
+	_, err := sa.db.refreshTokens.InsertOne(refresh)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthRefresh, nil, err)
+	}
+
+	return nil
+}
+
+//UpdateRefreshToken updates a refresh token
+func (sa *Adapter) UpdateRefreshToken(token string, refresh *model.AuthRefresh) error {
+	filter := bson.D{primitive.E{Key: "current_token", Value: token}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "previous_token", Value: refresh.PreviousToken},
+			primitive.E{Key: "current_token", Value: refresh.CurrentToken},
+			primitive.E{Key: "exp", Value: refresh.Expires},
+			primitive.E{Key: "params", Value: refresh.Params},
+			primitive.E{Key: "date_updated", Value: refresh.DateUpdated},
+		}},
+	}
+
+	res, err := sa.db.refreshTokens.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAuthRefresh, logutils.StringArgs("unexpected modified count"))
+	}
+
+	return nil
+}
+
+//DeleteRefreshToken updates a refresh token
+func (sa *Adapter) DeleteRefreshToken(token string) error {
+	filter := bson.D{primitive.E{Key: "current_token", Value: token}}
+
+	res, err := sa.db.refreshTokens.DeleteOne(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAuthRefresh, nil, err)
+	}
+	if res.DeletedCount != 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeAuthRefresh, logutils.StringArgs("unexpected deleted count"))
+	}
+
+	return nil
+}
+
+//DeleteExpiredRefreshTokens deletes expired refresh tokens
+func (sa *Adapter) DeleteExpiredRefreshTokens(now *time.Time) error {
+	filter := bson.M{"exp": bson.M{"$lte": now}}
+
+	_, err := sa.db.refreshTokens.DeleteMany(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAuthRefresh, &logutils.FieldArgs{"exp": now}, err)
+	}
+
+	return nil
 }
 
 //FindGlobalPermissions finds a set of global user permissions
@@ -362,6 +453,22 @@ func (sa *Adapter) FindGlobalPermissions(ids []string) ([]model.GlobalPermission
 	return permissionsResult, nil
 }
 
+//UpdateGlobalPermission updates global permission
+func (sa *Adapter) UpdateGlobalPermission(item model.GlobalPermission) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
+//DeleteGlobalPermission deletes global permission
+func (sa *Adapter) DeleteGlobalPermission(id string) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
 //FindGlobalRoles finds a set of global user roles
 func (sa *Adapter) FindGlobalRoles(ids []string) ([]model.GlobalRole, error) {
 	rolesFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
@@ -374,6 +481,22 @@ func (sa *Adapter) FindGlobalRoles(ids []string) ([]model.GlobalRole, error) {
 	return rolesResult, nil
 }
 
+//UpdateGlobalRole updates global role
+func (sa *Adapter) UpdateGlobalRole(item model.GlobalRole) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
+//DeleteGlobalRole deletes global role
+func (sa *Adapter) DeleteGlobalRole(id string) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
 //FindGlobalGroups finds a set of global user groups
 func (sa *Adapter) FindGlobalGroups(ids []string) ([]model.GlobalGroup, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
@@ -383,6 +506,22 @@ func (sa *Adapter) FindGlobalGroups(ids []string) ([]model.GlobalGroup, error) {
 		return nil, err
 	}
 	return groupsResult, nil
+}
+
+//UpdateGlobalGroup updates global group
+func (sa *Adapter) UpdateGlobalGroup(item model.GlobalGroup) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
+//DeleteGlobalGroup deletes global group
+func (sa *Adapter) DeleteGlobalGroup(id string) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
 }
 
 //FindOrganizationPermissions finds a set of organization user permissions
@@ -405,6 +544,22 @@ func (sa *Adapter) FindOrganizationPermissions(ids []string, orgID string) ([]mo
 	return result, nil
 }
 
+//UpdateOrganizationPermission updates organziation permission
+func (sa *Adapter) UpdateOrganizationPermission(item model.OrganizationPermission) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
+//DeleteOrganizationPermission deletes organization permission
+func (sa *Adapter) DeleteOrganizationPermission(id string) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
 //FindOrganizationRoles finds a set of organization user roles
 func (sa *Adapter) FindOrganizationRoles(ids []string, orgID string) ([]model.OrganizationRole, error) {
 	rolesFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
@@ -425,6 +580,22 @@ func (sa *Adapter) FindOrganizationRoles(ids []string, orgID string) ([]model.Or
 	return result, nil
 }
 
+//UpdateOrganizationRole updates organization role
+func (sa *Adapter) UpdateOrganizationRole(item model.OrganizationRole) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
+//DeleteOrganizationRole deletes organization role
+func (sa *Adapter) DeleteOrganizationRole(id string) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
 //FindOrganizationGroups finds a set of organization user groups
 func (sa *Adapter) FindOrganizationGroups(ids []string, orgID string) ([]model.OrganizationGroup, error) {
 	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
@@ -443,6 +614,22 @@ func (sa *Adapter) FindOrganizationGroups(ids []string, orgID string) ([]model.O
 	result := organizationGroupsFromStorage(groupsResult, *organization)
 
 	return result, nil
+}
+
+//UpdateOrganizationGroup updates organization group
+func (sa *Adapter) UpdateOrganizationGroup(item model.OrganizationGroup) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
+}
+
+//DeleteOrganizationGroup deletes organziation group
+func (sa *Adapter) DeleteOrganizationGroup(id string) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	return errors.New(logutils.Unimplemented)
 }
 
 //InsertMembership inserts an organization membership
@@ -592,12 +779,17 @@ func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
 //FindOrganization finds an organization
 func (sa *Adapter) FindOrganization(id string) (*model.Organization, error) {
 	//no transactions for get operations..
+	cachedOrg, err := sa.getCachedOrganization(id)
+	if cachedOrg != nil && err == nil {
+		return cachedOrg, nil
+	}
+	sa.logger.Warn(err.Error())
 
 	//1. find organization
 	orgFilter := bson.D{primitive.E{Key: "_id", Value: id}}
 	var org organization
 
-	err := sa.db.organizations.FindOne(orgFilter, &org, nil)
+	err = sa.db.organizations.FindOne(orgFilter, &org, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"id": id}, err)
 	}
@@ -656,14 +848,20 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 	return nil
 }
 
-//GetOrganizations gets the organizations
-func (sa *Adapter) GetOrganizations() ([]model.Organization, error) {
+//LoadOrganizations gets the organizations
+func (sa *Adapter) LoadOrganizations() ([]model.Organization, error) {
 	//no transactions for get operations..
+	cachedOrgs, err := sa.getCachedOrganizations()
+	if err != nil {
+		sa.logger.Warn(err.Error())
+	} else if len(cachedOrgs) > 0 {
+		return cachedOrgs, nil
+	}
 
 	//1. find the organizations
 	orgsFilter := bson.D{}
 	var orgsResult []organization
-	err := sa.db.organizations.Find(orgsFilter, &orgsResult, nil)
+	err = sa.db.organizations.Find(orgsFilter, &orgsResult, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
@@ -720,6 +918,24 @@ func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
 
 	getResApp := model.Application{ID: appRes.ID, Name: appRes.Name, Versions: appRes.Versions}
 	return &getResApp, nil
+}
+
+//FindApplications finds applications
+func (sa *Adapter) FindApplications() ([]model.Application, error) {
+	filter := bson.D{}
+	var result []application
+	err := sa.db.applications.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+	}
+
+	if len(result) == 0 {
+		//no data
+		return make([]model.Application, 0), nil
+	}
+
+	application := applicationsFromStorage(result)
+	return application, nil
 }
 
 // ============================== ServiceRegs ==============================
