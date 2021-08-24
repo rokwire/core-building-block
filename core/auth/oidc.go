@@ -187,7 +187,6 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 			AuthType: a.authType,
 			OrgID:    orgID,
 			Creds:    userAuthCreds.toMap(),
-			Refresh:  nil,
 		}
 		userAuth.Creds = &authCred
 		return userAuth, nil

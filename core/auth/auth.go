@@ -33,14 +33,17 @@ const (
 	typeAuth              logutils.MessageDataType = "auth"
 	typeAuthRefreshParams logutils.MessageDataType = "auth refresh params"
 
-	refreshTokenLength int   = 256
-	refreshTokenExpiry int   = 7 * 24 * 60
-	accessTokenExpiry  int64 = 30
+	refreshTokenLength       int = 256
+	refreshTokenExpiry       int = 7 * 24 * 60
+	refreshTokenDeletePeriod int = 2
+	refreshTokenLimit        int = 3
 )
 
 //Auth represents the auth functionality unit
 type Auth struct {
 	storage Storage
+
+	logger *logs.Logger
 
 	authTypes map[string]authType
 
@@ -53,8 +56,12 @@ type Auth struct {
 	minTokenExp int64  //Minimum access token expiration time in minutes
 	maxTokenExp int64  //Maximum access token expiration time in minutes
 
-	authConfigs     *syncmap.Map //cache authConfigs / orgID_appID -> authConfig
+	authConfigs     *syncmap.Map //cache authConfigs
 	authConfigsLock *sync.RWMutex
+
+	//delete refresh tokens timer
+	deleteRefreshTimer *time.Timer
+	timerDone          chan bool
 }
 
 //TokenClaims is a temporary claims model to provide backwards compatibility
@@ -83,9 +90,11 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	authConfigs := &syncmap.Map{}
 	authConfigsLock := &sync.RWMutex{}
-	auth := &Auth{storage: storage, authTypes: authTypes, authPrivKey: authPrivKey, AuthService: nil,
+
+	timerDone := make(chan bool)
+	auth := &Auth{storage: storage, logger: logger, authTypes: authTypes, authPrivKey: authPrivKey, AuthService: nil,
 		serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp,
-		authConfigs: authConfigs, authConfigsLock: authConfigsLock}
+		authConfigs: authConfigs, authConfigsLock: authConfigsLock, timerDone: timerDone}
 
 	err := auth.storeReg()
 	if err != nil {
@@ -400,6 +409,51 @@ func (a *Auth) setAuthConfigs(authConfigs []model.AuthConfig) {
 				a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, appID, authConfig.AuthType), &authConfig)
 			}
 		}
+	}
+}
+
+func (a *Auth) checkRefreshTokenLimit(orgID string, appID string, credsID string) error {
+	tokens, err := a.storage.LoadRefreshTokens(orgID, appID, credsID)
+	if err != nil {
+		return errors.WrapErrorAction("limit checking", model.TypeAuthRefresh, nil, err)
+	}
+	if len(tokens) >= refreshTokenLimit {
+		err = a.storage.DeleteRefreshToken(tokens[0].CurrentToken)
+		if err != nil {
+			return errors.WrapErrorAction("limit checking", model.TypeAuthRefresh, nil, err)
+		}
+	}
+	return nil
+}
+
+func (a *Auth) setupDeleteRefreshTimer() {
+	//cancel if active
+	if a.deleteRefreshTimer != nil {
+		a.timerDone <- true
+		a.deleteRefreshTimer.Stop()
+	}
+
+	a.deleteExpiredRefreshTokens()
+}
+
+func (a *Auth) deleteExpiredRefreshTokens() {
+	now := time.Now().UTC()
+	err := a.storage.DeleteExpiredRefreshTokens(&now)
+	if err != nil {
+		a.logger.Error(err.Error())
+	}
+
+	duration := time.Hour * time.Duration(refreshTokenDeletePeriod)
+	a.deleteRefreshTimer = time.NewTimer(duration)
+	select {
+	case <-a.deleteRefreshTimer.C:
+		// timer expired
+		a.deleteRefreshTimer = nil
+
+		a.deleteExpiredRefreshTokens()
+	case <-a.timerDone:
+		// timer aborted
+		a.deleteRefreshTimer = nil
 	}
 }
 
