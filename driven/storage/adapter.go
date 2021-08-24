@@ -888,7 +888,7 @@ func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
 	return &getResApp, nil
 }
 
-//FindOrganizationsList gets the list of the global permissions
+//FindGloablPermissionList gets the list of the global permissions
 func (sa *Adapter) FindGlobalPermissionsList() ([]model.GlobalPermission, error) {
 	filter := bson.D{}
 	var result []model.GlobalPermission
