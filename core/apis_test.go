@@ -166,7 +166,7 @@ func TestFindGlobalPermissions(t *testing.T) {
 	storage.On("FindGlobalPermissions").Return([]model.GlobalPermission{}, nil)
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
-	getGlobalPermissionList, _ := app.Administration.AdmFindGlobalPermissions()
+	getGlobalPermissionList, _ := app.Administration.AdmGetGlobalPermissions()
 
 	if getGlobalPermissionList == nil {
 		t.Errorf("Error on geting the global")
@@ -176,7 +176,7 @@ func TestFindGlobalPermissions(t *testing.T) {
 	storage.On("FindGlobalPermissions").Return([]model.GlobalPermission{}, nil)
 	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
-	err, _ := app.Administration.AdmFindGlobalPermissions()
+	err, _ := app.Administration.AdmGetGlobalPermissions()
 	if err == nil {
 		t.Error("We are expecting error")
 		return

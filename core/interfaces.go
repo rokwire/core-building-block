@@ -31,7 +31,7 @@ type Administration interface {
 	AdmGetApplication(ID string) (*model.Application, error)
 	AdmGetApplications() ([]model.Application, error)
 
-	AdmFindGlobalPermissions() ([]model.GlobalPermission, error)
+	AdmGetGlobalPermissions() ([]model.GlobalPermission, error)
 }
 
 //Encryption exposes APIs for the Encryption building block

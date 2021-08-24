@@ -307,7 +307,7 @@ func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.Http
 
 //getGlobalPermissionsList gets global-permissions list
 func (h AdminApisHandler) getGlobalPermissionList(l *logs.Log, r *http.Request) logs.HttpResponse {
-	globalPermissions, err := h.coreAPIs.Administration.AdmFindGlobalPermissions()
+	globalPermissions, err := h.coreAPIs.Administration.AdmGetGlobalPermissions()
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeGlobalPermission, nil, err, http.StatusInternalServerError, true)
 	}
