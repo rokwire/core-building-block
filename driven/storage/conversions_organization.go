@@ -177,6 +177,8 @@ func organizationGroupsToStorage(items []model.OrganizationGroup) []organization
 	}
 	return res
 }
+
+//Application
 func applicationFromStorage(item *application) model.Application {
 	if item == nil {
 		return model.Application{}
