@@ -40,6 +40,14 @@ const (
 	TypePubKey logutils.MessageDataType = "pub key"
 )
 
+//IdentityProvider represents identity provider entity
+//	The system can integrate different identity providers - facebook, google, illinois etc
+type IdentityProvider struct {
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
+	Type string `bson:"type"`
+}
+
 //UserAuth represents user auth entity
 type UserAuth struct {
 	UserID         string
