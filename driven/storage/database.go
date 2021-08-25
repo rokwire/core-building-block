@@ -474,6 +474,18 @@ func (m *database) applyServiceAuthorizationsChecks(serviceAuthorizations *colle
 func (m *database) applyApplicationsChecks(applications *collectionWrapper) error {
 	m.logger.Info("apply applications checks.....")
 
+	//add name index - unique
+	err := applications.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	//add application type index - unique
+	err = applications.AddIndex(bson.D{primitive.E{Key: "types.id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("applications checks passed")
 	return nil
 }
