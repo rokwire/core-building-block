@@ -177,26 +177,26 @@ func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.User, error) {
 	now := time.Now().UTC()
 	newID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("user_id"), err)
+		return nil, errors.WrapErrorAction("generating", "uuid", logutils.StringArgs("user_id"), err)
 	}
 	newUser := model.User{ID: newID.String(), DateCreated: now}
 
 	accountID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("account_id"), err)
+		return nil, errors.WrapErrorAction("generating", "uuid", logutils.StringArgs("account_id"), err)
 	}
 	newUser.Account = model.UserAccount{ID: accountID.String(), Email: userAuth.Email, Phone: userAuth.Phone, Username: userAuth.UserID, DateCreated: now}
 
 	profileID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("profile_id"), err)
+		return nil, errors.WrapErrorAction("generating", "uuid", logutils.StringArgs("profile_id"), err)
 	}
 	newUser.Profile = model.UserProfile{ID: profileID.String(), FirstName: userAuth.FirstName, LastName: userAuth.LastName, DateCreated: now}
 
 	if userAuth.OrgID != "" {
 		membershipID, err := uuid.NewUUID()
 		if err != nil {
-			return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("membership_id"), err)
+			return nil, errors.WrapErrorAction("generating", "uuid", logutils.StringArgs("membership_id"), err)
 		}
 
 		organization, err := a.storage.FindOrganization(userAuth.OrgID)
@@ -214,7 +214,7 @@ func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.User, error) {
 	//TODO: populate new device with device information (search for existing device first)
 	deviceID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("device_id"), err)
+		return nil, errors.WrapErrorAction("generating", "uuid", logutils.StringArgs("device_id"), err)
 	}
 	newDevice := model.Device{ID: deviceID.String(), Type: "other", Users: []model.User{newUser}, DateCreated: now}
 	newUser.Devices = []model.Device{newDevice}

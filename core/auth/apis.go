@@ -43,79 +43,90 @@ func (a *Auth) GetHost() string {
 func (a *Auth) Login(authType string, creds string, orgID string, appID string, params string, l *logs.Log) (string, string, *model.User, interface{}, error) {
 	var user *model.User
 	var err error
+	var sub string
 	auth, err := a.getAuthType(authType)
 	if err != nil {
 		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
 	userAuth, err := auth.check(creds, orgID, appID, params, l)
-	if err != nil {
+	if err != nil || userAuth == nil {
 		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "login creds", nil, err)
 	}
 
-	if userAuth == nil || userAuth.Creds == nil {
-		return "", "", nil, nil, errors.WrapErrorData(logutils.StatusInvalid, "user auth creds", nil, err)
-	}
-
-	//RefreshParams == nil indicates that a refresh token should not be generated
 	refreshToken := ""
-	var refreshParams *model.AuthRefresh
-	if userAuth.RefreshParams != nil {
-		var expireTime *time.Time
-		refreshToken, expireTime, err = a.buildRefreshToken()
-		if err != nil {
-			return "", "", nil, nil, err
+	if userAuth.Anonymous {
+		sub = userAuth.Sub
+	} else {
+		if userAuth.Creds == nil {
+			return "", "", nil, nil, errors.WrapErrorData(logutils.StatusInvalid, "user auth creds", nil, err)
 		}
 
-		refreshParams = &model.AuthRefresh{CurrentToken: refreshToken, Expires: expireTime, AppID: appID, OrgID: orgID,
-			CredsID: userAuth.Creds.ID, Params: userAuth.RefreshParams, DateCreated: time.Now().UTC()}
-	}
-
-	if len(userAuth.AccountID) > 0 {
-		user, err = a.findAccount(userAuth)
-		if err != nil {
-			return "", "", nil, nil, err
-		}
-		user, update, newMembership := a.needsUserUpdate(userAuth, user)
-		if update {
-			var newMembershipOrgData *map[string]interface{}
-			if newMembership {
-				newMembershipOrgData = &userAuth.OrgData
-			}
-			_, err = a.updateAccount(user, orgID, newMembershipOrgData)
+		//RefreshParams == nil indicates that a refresh token should not be generated
+		var refreshParams *model.AuthRefresh
+		if userAuth.RefreshParams != nil {
+			var expireTime *time.Time
+			refreshToken, expireTime, err = a.buildRefreshToken()
 			if err != nil {
 				return "", "", nil, nil, err
 			}
+
+			refreshParams = &model.AuthRefresh{CurrentToken: refreshToken, Expires: expireTime, AppID: appID, OrgID: orgID,
+				CredsID: userAuth.Creds.ID, Params: userAuth.RefreshParams, DateCreated: time.Now().UTC()}
 		}
 
-		if refreshParams != nil {
-			err = a.checkRefreshTokenLimit(orgID, appID, userAuth.Creds.ID)
+		if len(userAuth.AccountID) > 0 {
+			user, err = a.findAccount(userAuth)
 			if err != nil {
-				a.logger.Error(err.Error())
-			} else {
+				return "", "", nil, nil, err
+			}
+			user, update, newMembership := a.needsUserUpdate(userAuth, user)
+			if update {
+				var newMembershipOrgData *map[string]interface{}
+				if newMembership {
+					newMembershipOrgData = &userAuth.OrgData
+				}
+				_, err = a.updateAccount(user, orgID, newMembershipOrgData)
+				if err != nil {
+					return "", "", nil, nil, err
+				}
+			}
+
+			if refreshParams != nil {
+				err = a.checkRefreshTokenLimit(orgID, appID, userAuth.Creds.ID)
+				if err != nil {
+					a.logger.Error(err.Error())
+				} else {
+					err = a.storage.InsertRefreshToken(refreshParams)
+					if err != nil {
+						return "", "", nil, nil, err
+					}
+				}
+			}
+		} else if userAuth.OrgID == orgID {
+			user, err = a.createAccount(userAuth)
+			if err != nil {
+				return "", "", nil, nil, err
+			}
+
+			if refreshParams != nil {
 				err = a.storage.InsertRefreshToken(refreshParams)
 				if err != nil {
 					return "", "", nil, nil, err
 				}
 			}
-		}
-	} else if userAuth.OrgID == orgID {
-		user, err = a.createAccount(userAuth)
-		if err != nil {
-			return "", "", nil, nil, err
+		} else {
+			return "", "", nil, nil, errors.ErrorData(logutils.StatusInvalid, "org id", logutils.StringArgs(orgID))
 		}
 
-		if refreshParams != nil {
-			err = a.storage.InsertRefreshToken(refreshParams)
-			if err != nil {
-				return "", "", nil, nil, err
-			}
+		if user == nil {
+			return "", "", nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeUser, nil)
 		}
-	} else {
-		return "", "", nil, nil, errors.ErrorData(logutils.StatusInvalid, "org_id", logutils.StringArgs(orgID))
+
+		sub = user.ID
 	}
 
-	claims := a.getStandardClaims(user.ID, userAuth.UserID, userAuth.Email, userAuth.Phone, "rokwire", orgID, appID, userAuth.Exp)
+	claims := a.getStandardClaims(sub, userAuth.UserID, userAuth.Email, userAuth.Phone, "rokwire", orgID, appID, userAuth.Exp)
 	token, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 	if err != nil {
 		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)

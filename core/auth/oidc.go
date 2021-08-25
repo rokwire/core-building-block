@@ -181,7 +181,7 @@ func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params st
 
 		credsID, err := uuid.NewUUID()
 		if err != nil {
-			return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("auth creds id"), err)
+			return nil, errors.WrapErrorAction("generating", "uuid", logutils.StringArgs("auth creds id"), err)
 		}
 		authCred := model.AuthCreds{
 			ID:       credsID.String(),

@@ -4,6 +4,7 @@ import (
 	"core-building-block/core/model"
 	"encoding/json"
 
+	"github.com/google/uuid"
 	"github.com/rokmetro/logging-library/errors"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
@@ -25,7 +26,7 @@ type apiKeyAuthImpl struct {
 
 type apiKeyCreds struct {
 	APIKey             string `json:"api_key" validate:"required"`
-	AnonymousProfileID string `json:"anonymous_profile_id" validate:"required"`
+	AnonymousProfileID string `json:"anonymous_profile_id"`
 }
 
 func (a *apiKeyAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
@@ -34,19 +35,28 @@ func (a *apiKeyAuthImpl) check(creds string, orgID string, appID string, params 
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeAPIKeyCreds, nil, err)
 	}
+
 	validate := validator.New()
 	err = validate.Struct(keyCreds)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeAPIKeyCreds, nil, err)
 	}
 
-	apiKey, err := a.auth.getAPIKey(creds)
+	apiKey, err := a.auth.getAPIKey(keyCreds.APIKey)
 	if err != nil || apiKey == nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAPIKey, nil, err)
 	}
 
 	if apiKey.AppID != appID || apiKey.OrgID != orgID {
 		return nil, errors.Newf("incorrect key for org_id=%v, app_id=%v", orgID, appID)
+	}
+
+	if keyCreds.AnonymousProfileID == "" {
+		id, err := uuid.NewUUID()
+		if err != nil {
+			return nil, errors.WrapErrorAction("generating", "uuid", logutils.StringArgs("anonymous profile id"), err)
+		}
+		keyCreds.AnonymousProfileID = id.String()
 	}
 
 	userAuth := model.UserAuth{Sub: keyCreds.AnonymousProfileID, Anonymous: true}
