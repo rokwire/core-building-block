@@ -258,7 +258,7 @@ func (app *application) admGetApplication(ID string) (*model.Application, error)
 }
 
 func (app *application) admCreateApplication(name string, versions []string) (*model.Application, error) {
-	id, _ := uuid.NewUUID()
+	/*id, _ := uuid.NewUUID()
 	now := time.Now()
 	application := model.Application{ID: id.String(), Name: name, Versions: versions, DateCreated: now}
 
@@ -266,7 +266,8 @@ func (app *application) admCreateApplication(name string, versions []string) (*m
 	if err != nil {
 		return nil, err
 	}
-	return inserted, nil
+	return inserted, nil */
+	return nil, nil
 }
 
 func (app *application) admGetApplications() ([]model.Application, error) {

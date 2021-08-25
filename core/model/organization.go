@@ -86,12 +86,26 @@ func (cur OrganizationUserRelations) String() string {
 
 //Application represents users application entity - safer community, uuic, etc
 type Application struct {
-	ID       string   `bson:"_id"`
-	Name     string   `bson:"name"`     //safer community mobile, safer community web, uuic mobile, uuic web, uuic admin etc
-	Versions []string `bson:"versions"` //1.1.0, 1.2.0 etc
+	ID   string `bson:"_id"`
+	Name string `bson:"name"` //safer community, uuic, etc
+
+	//if true the service will support own users for this app otherwise the user will decide if to create own user or to use the ecosystem one(shared)
+	RequiresOwnUsers bool `bson:"requires_own_users"`
+
+	//TODO add identity providers groups mapping - group to group ..
+
+	Types []ApplicationType `bson:"types"`
 
 	Organizations []Organization `bson:"-"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+//ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc
+type ApplicationType struct {
+	ID       string   `bson:"id"`
+	Name     string   `bson:"name"`     //safer community android, safer community ios, safer community web, uuic android etc
+	Versions []string `bson:"versions"` //1.1.0, 1.2.0 etc
+	//TODO add supported auth types from all auth types
 }

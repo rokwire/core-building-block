@@ -868,9 +868,7 @@ func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
 	}
 
 	appRes := result[0]
-
-	getResApp := model.Application{ID: appRes.ID, Name: appRes.Name, Versions: appRes.Versions}
-	return &getResApp, nil
+	return &appRes, nil
 }
 
 //FindApplications finds applications
