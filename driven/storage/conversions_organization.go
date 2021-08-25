@@ -178,27 +178,6 @@ func organizationGroupsToStorage(items []model.OrganizationGroup) []organization
 	return res
 }
 
-//Application
-func applicationFromStorage(item *application) model.Application {
-	if item == nil {
-		return model.Application{}
-	}
-	return model.Application{ID: item.ID, Name: item.Name, Versions: item.Versions,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
-}
-
-func applicationsFromStorage(items []application) []model.Application {
-	if len(items) == 0 {
-		return make([]model.Application, 0)
-	}
-
-	res := make([]model.Application, len(items))
-	for i, app := range items {
-		res[i] = applicationFromStorage(&app)
-	}
-	return res
-}
-
 //OrganizationMembership
 /*
 func organizationMembershipFromUserStorage(item *userMembership, sa *Adapter) *model.OrganizationMembership {

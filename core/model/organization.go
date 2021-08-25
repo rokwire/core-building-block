@@ -18,8 +18,6 @@ const (
 	TypeApplication logutils.MessageDataType = "application"
 )
 
-//TODO - Flat vs. hierarchical group management - not sure we need hierarchical, maybe no!?
-
 //Organization represents organization entity
 type Organization struct {
 	ID               string

@@ -876,7 +876,7 @@ func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
 //FindApplications finds applications
 func (sa *Adapter) FindApplications() ([]model.Application, error) {
 	filter := bson.D{}
-	var result []application
+	var result []model.Application
 	err := sa.db.applications.Find(filter, &result, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
@@ -887,8 +887,7 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 		return make([]model.Application, 0), nil
 	}
 
-	application := applicationsFromStorage(result)
-	return application, nil
+	return result, nil
 }
 
 // ============================== ServiceRegs ==============================
