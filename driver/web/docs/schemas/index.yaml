@@ -81,6 +81,8 @@ UserAccount:
   $ref: "./user/UserAccount.yaml"
 UserProfile:
   $ref: "./user/UserProfile.yaml"
+UserPII:
+  $ref: "./user/UserPII.yaml"
 OrganizationMembership:
   $ref: "./user/OrganizationMembership.yaml"
 Device:

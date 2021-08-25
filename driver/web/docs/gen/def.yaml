@@ -249,7 +249,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfile'
+                $ref: '#/components/schemas/UserPII'
         '400':
           description: Bad request
         '401':
@@ -267,7 +267,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserProfile'
+              $ref: '#/components/schemas/UserPII'
         required: true
       responses:
         '200':
@@ -1346,6 +1346,11 @@ components:
       properties:
         id:
           type: string
+        pii:
+          $ref: '#/components/schemas/UserPII'
+    UserPII:
+      type: object
+      properties:
         first_name:
           type: string
         last_name:

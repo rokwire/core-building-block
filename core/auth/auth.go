@@ -178,7 +178,7 @@ func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.User, error) {
 	if err != nil {
 		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("profile_id"), err)
 	}
-	newUser.Profile = model.UserProfile{ID: profileID.String(), FirstName: userAuth.FirstName, LastName: userAuth.LastName, DateCreated: now}
+	newUser.Profile = model.UserProfile{ID: profileID.String(), PII: &model.UserPII{FirstName: userAuth.FirstName, LastName: userAuth.LastName}, DateCreated: now}
 
 	if userAuth.OrgID != "" {
 		membershipID, err := uuid.NewUUID()
@@ -227,13 +227,13 @@ func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*mod
 	}
 
 	// profile
-	if user.Profile.FirstName != userAuth.FirstName {
-		user.Profile.FirstName = userAuth.FirstName
+	if user.Profile.PII.FirstName != userAuth.FirstName {
+		user.Profile.PII.FirstName = userAuth.FirstName
 		user.Profile.DateUpdated = &now
 		update = true
 	}
-	if user.Profile.LastName != userAuth.LastName {
-		user.Profile.LastName = userAuth.LastName
+	if user.Profile.PII.LastName != userAuth.LastName {
+		user.Profile.PII.LastName = userAuth.LastName
 		user.Profile.DateUpdated = &now
 		update = true
 	}

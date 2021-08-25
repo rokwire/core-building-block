@@ -166,16 +166,16 @@ func (h ServicesApisHandler) getServiceRegistrations(l *logs.Log, r *http.Reques
 func (h ServicesApisHandler) getPII(l *logs.Log, r *http.Request) logs.HttpResponse {
 	//TODO: get user ID from access token to pass to SerGetPII
 
-	profile, err := h.coreAPIs.Services.SerGetPII("")
+	pii, err := h.coreAPIs.Services.SerGetPII("")
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeUserProfile, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeUserPII, nil, err, http.StatusInternalServerError, true)
 	}
 
-	profileResp := userProfileToDef(profile)
+	piiResp := userPIIToDef(pii)
 
-	data, err := json.Marshal(profileResp)
+	data, err := json.Marshal(piiResp)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeUserProfile, nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeUserPII, nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HttpResponseSuccessJSON(data)
@@ -189,15 +189,15 @@ func (h ServicesApisHandler) updatePII(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.UserProfile
+	var requestData Def.UserPII
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "profiles update PII request", nil, err, http.StatusBadRequest, true)
 	}
 
-	profile := userProfileFromDef(&requestData)
+	pii := userPIIFromDef(&requestData)
 
-	err = h.coreAPIs.Services.SerUpdatePII(profile, "")
+	err = h.coreAPIs.Services.SerUpdatePII(pii, "")
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeUserProfile, nil, err, http.StatusInternalServerError, true)
 	}

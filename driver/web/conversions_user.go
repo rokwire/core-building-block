@@ -53,17 +53,36 @@ func userProfileFromDef(item *Def.UserProfile) *model.UserProfile {
 	if item == nil {
 		return nil
 	}
-	return &model.UserProfile{ID: item.Id, FirstName: defString(item.FirstName), LastName: defString(item.LastName),
-		PhotoURL: defString(item.PhotoUrl), Address: defString(item.Address), Country: defString(item.Country),
-		DateOfBirth: defString(item.DateOfBirth), HomeCounty: defString(item.HomeCounty), MiddleName: defString(item.MiddleName),
-		State: defString(item.State), WorkCounty: defString(item.WorkCounty), ZipCode: defString(item.ZipCode)}
+
+	return &model.UserProfile{ID: item.Id, PII: userPIIFromDef(item.Pii)}
 }
 
 func userProfileToDef(item *model.UserProfile) *Def.UserProfile {
 	if item == nil {
 		return nil
 	}
-	return &Def.UserProfile{Id: item.ID, FirstName: &item.FirstName, LastName: &item.LastName, PhotoUrl: &item.PhotoURL,
+
+	return &Def.UserProfile{Id: item.ID, Pii: userPIIToDef(item.PII)}
+}
+
+//UserPII
+func userPIIFromDef(item *Def.UserPII) *model.UserPII {
+	if item == nil {
+		return nil
+	}
+
+	return &model.UserPII{FirstName: defString(item.FirstName), LastName: defString(item.LastName),
+		PhotoURL: defString(item.PhotoUrl), Address: defString(item.Address), Country: defString(item.Country),
+		DateOfBirth: defString(item.DateOfBirth), HomeCounty: defString(item.HomeCounty), MiddleName: defString(item.MiddleName),
+		State: defString(item.State), WorkCounty: defString(item.WorkCounty), ZipCode: defString(item.ZipCode)}
+}
+
+func userPIIToDef(item *model.UserPII) *Def.UserPII {
+	if item == nil {
+		return nil
+	}
+
+	return &Def.UserPII{FirstName: &item.FirstName, LastName: &item.LastName, PhotoUrl: &item.PhotoURL,
 		Address: &item.Address, Country: &item.Country, DateOfBirth: &item.DateOfBirth, HomeCounty: &item.HomeCounty,
 		MiddleName: &item.MiddleName, State: &item.State, WorkCounty: &item.WorkCounty, ZipCode: &item.ZipCode}
 }

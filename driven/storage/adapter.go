@@ -657,56 +657,55 @@ func (sa *Adapter) InsertMembership(orgMembership *organizationMembership, conte
 }
 
 //FindPII finds PII from user profile
-func (sa *Adapter) FindPII(ID string) (*model.UserProfile, error) {
+func (sa *Adapter) FindPII(ID string) (*model.UserPII, error) {
 	user, err := sa.FindUserByID(ID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUserProfile, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUserPII, nil, err)
 	}
 
 	if user == nil {
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeUser, logutils.StringArgs(ID))
 	}
 
-	return &user.Profile, nil
+	return user.Profile.PII, nil
 }
 
-//UpdatePII updates a user profile
-func (sa *Adapter) UpdatePII(profile *model.UserProfile, ID string, delete bool) error {
+//UpdatePII updates user profile PII
+func (sa *Adapter) UpdatePII(pii *model.UserPII, ID string) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 
 	now := time.Now().UTC()
-	var profileUpdate bson.D
-	if delete {
-		profileUpdate = bson.D{
-			primitive.E{Key: "$set", Value: bson.D{
-				primitive.E{Key: "profile.address", Value: ""},
-				primitive.E{Key: "profile.country", Value: ""},
-				primitive.E{Key: "profile.date_of_birth", Value: ""},
-				primitive.E{Key: "profile.home_county", Value: ""},
-				primitive.E{Key: "profile.middle_name", Value: ""},
-				primitive.E{Key: "profile.state", Value: ""},
-				primitive.E{Key: "profile.work_county", Value: ""},
-				primitive.E{Key: "profile.zip_code", Value: ""},
-				primitive.E{Key: "profile.date_updated", Value: &now},
-			}},
-		}
-	} else {
-		if profile == nil {
-			return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUserProfile))
-		}
-		profileUpdate = bson.D{
-			primitive.E{Key: "$set", Value: bson.D{
-				primitive.E{Key: "profile.address", Value: profile.Address},
-				primitive.E{Key: "profile.country", Value: profile.Country},
-				primitive.E{Key: "profile.date_of_birth", Value: profile.DateOfBirth},
-				primitive.E{Key: "profile.home_county", Value: profile.HomeCounty},
-				primitive.E{Key: "profile.middle_name", Value: profile.MiddleName},
-				primitive.E{Key: "profile.state", Value: profile.State},
-				primitive.E{Key: "profile.work_county", Value: profile.WorkCounty},
-				primitive.E{Key: "profile.zip_code", Value: profile.ZipCode},
-				primitive.E{Key: "profile.date_updated", Value: &now},
-			}},
-		}
+	if pii == nil {
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUserPII))
+	}
+	profileUpdate := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "profile.pii", Value: pii},
+			primitive.E{Key: "profile.date_updated", Value: &now},
+		}},
+	}
+
+	res, err := sa.db.users.UpdateOne(filter, profileUpdate, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserProfile, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeUserProfile, logutils.StringArgs("unexpected modified count"))
+	}
+
+	return nil
+}
+
+//DeletePII deletes user profile PII
+func (sa *Adapter) DeletePII(ID string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+
+	now := time.Now().UTC()
+	profileUpdate := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "profile.pii", Value: nil},
+			primitive.E{Key: "profile.date_updated", Value: &now},
+		}},
 	}
 
 	res, err := sa.db.users.UpdateOne(filter, profileUpdate, nil)

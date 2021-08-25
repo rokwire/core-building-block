@@ -6,16 +6,16 @@ import (
 	"github.com/rokmetro/logging-library/logs"
 )
 
-func (app *application) serGetPII(ID string) (*model.UserProfile, error) {
+func (app *application) serGetPII(ID string) (*model.UserPII, error) {
 	return app.storage.FindPII(ID)
 }
 
-func (app *application) serUpdatePII(profile *model.UserProfile, ID string) error {
-	return app.storage.UpdatePII(profile, ID, false)
+func (app *application) serUpdatePII(pii *model.UserPII, ID string) error {
+	return app.storage.UpdatePII(pii, ID)
 }
 
 func (app *application) serDeletePII(ID string) error {
-	return app.storage.UpdatePII(nil, ID, true)
+	return app.storage.DeletePII(ID)
 }
 
 func (app *application) serGetAuthTest(l *logs.Log) string {

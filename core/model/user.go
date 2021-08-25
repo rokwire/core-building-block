@@ -11,6 +11,8 @@ import (
 const (
 	//TypeUserProfile user profile type
 	TypeUserProfile logutils.MessageDataType = "user profile"
+	//TypeUserPII user PII type
+	TypeUserPII logutils.MessageDataType = "user pii"
 	//TypeUser user type
 	TypeUser logutils.MessageDataType = "user"
 )
@@ -83,7 +85,19 @@ func (ua UserAccount) String() string {
 
 //UserProfile represents user profile entity. The user profile is an information about the user.
 type UserProfile struct {
-	ID          string `bson:"id"`
+	ID  string   `bson:"id"`
+	PII *UserPII `bson:"pii"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+func (up UserProfile) String() string {
+	return fmt.Sprintf("[ID:%s\t%s]", up.ID, up.PII.String())
+}
+
+//UserPII represents user PII entity. The user PII is personal information about the user.
+type UserPII struct {
 	PhotoURL    string `bson:"photo_url"`
 	FirstName   string `bson:"first_name"`
 	LastName    string `bson:"last_name"`
@@ -95,14 +109,11 @@ type UserProfile struct {
 	State       string `bson:"state"`
 	WorkCounty  string `bson:"work_county"`
 	ZipCode     string `bson:"zip_code"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-func (up UserProfile) String() string {
-	return fmt.Sprintf("[ID:%s\tPhotoURL:%s\tFirstName:%s\tLastName:%s\tAddress:%s\tCountry:%s\tDateOfBirth:%s\tHomeCounty:%s\tMiddleName:%s\tState:%s\tWorkCounty:%s\tZipCode:%s]",
-		up.ID, up.PhotoURL, up.FirstName, up.LastName, up.Address, up.Country, up.DateOfBirth, up.HomeCounty,
+func (up UserPII) String() string {
+	return fmt.Sprintf("[PhotoURL:%s\tFirstName:%s\tLastName:%s\tAddress:%s\tCountry:%s\tDateOfBirth:%s\tHomeCounty:%s\tMiddleName:%s\tState:%s\tWorkCounty:%s\tZipCode:%s]",
+		up.PhotoURL, up.FirstName, up.LastName, up.Address, up.Country, up.DateOfBirth, up.HomeCounty,
 		up.MiddleName, up.State, up.WorkCounty, up.ZipCode)
 }
 
