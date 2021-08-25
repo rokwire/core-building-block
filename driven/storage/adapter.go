@@ -652,15 +652,15 @@ func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 }
 
 //UpdateGlobalPermission saves the global permission to the storage
-func (sa *Adapter) UpdateGlobalPermision(ID string, name string) error {
+func (sa *Adapter) UpdateGlobalPermission(ID string, name string) error {
 	// transaction
 	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
 		err := sessionContext.StartTransaction()
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
 		}
-		updateGlobalPermissionsFilter := bson.D{primitive.E{Key: "name", Value: name}}
 
+		updateGlobalPermissionsFilter := bson.D{primitive.E{Key: "name", Value: name}}
 		_, err = sa.db.globalPermissions.DeleteManyWithContext(sessionContext, updateGlobalPermissionsFilter, nil)
 		if err != nil {
 			sa.abortTransaction(sessionContext)

@@ -57,7 +57,7 @@ type Storage interface {
 
 	GetApplication(ID string) (*model.Application, error)
 
-	UpdateGlobalPermision(ID string, name string) error
+	UpdateGlobalPermission(ID string, name string) error
 }
 
 //StorageListener listenes for change data storage events
