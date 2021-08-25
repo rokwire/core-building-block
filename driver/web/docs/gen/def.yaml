@@ -1011,6 +1011,7 @@ components:
             - email
             - phone
             - oidc
+            - api_key
         org_id:
           type: string
         app_id:
@@ -1020,12 +1021,14 @@ components:
             - $ref: '#/components/schemas/AuthLoginCredsEmail'
             - $ref: '#/components/schemas/AuthLoginCredsPhone'
             - $ref: '#/components/schemas/AuthLoginCredsOidc'
+            - $ref: '#/components/schemas/AuthLoginCredsAPIKey'
         params:
           type: object
           anyOf:
             - $ref: '#/components/schemas/AuthLoginParamsEmail'
             - $ref: '#/components/schemas/AuthLoginParamsPhone'
             - $ref: '#/components/schemas/AuthLoginParamsOidc'
+            - $ref: '#/components/schemas/AuthLoginParamsAPIKey'
     AuthLoginResponse:
       type: object
       properties:
@@ -1037,6 +1040,30 @@ components:
           type: object
           anyOf:
             - $ref: '#/components/schemas/AuthResponseParamsOidc'
+            - $ref: '#/components/schemas/AuthResponseParamsAPIKey'
+    AuthRefreshResponse:
+      type: object
+      properties:
+        token:
+          $ref: '#/components/schemas/AuthResponseRokwireToken'
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/AuthResponseParamsOidc'
+    AuthResponseRokwireToken:
+      type: object
+      properties:
+        access_token:
+          description: The user's access token to be provided to authorize access to ROKWIRE APIs
+          type: string
+        refresh_token:
+          description: A refresh token that can be used to get a new access token once the one provided expires
+          type: string
+        token_type:
+          description: The type of the provided tokens to be specified when they are sent in the "Authorization" header
+          type: string
+          enum:
+            - Bearer
     AuthLoginCredsEmail:
       required:
         - email
@@ -1063,6 +1090,16 @@ components:
       description: |
         Auth login creds for auth_type="oidc"
           - full redirect URI received from OIDC provider
+    AuthLoginCredsAPIKey:
+      required:
+        - api_key
+      type: object
+      description: Auth login creds for auth_type="api_key"
+      properties:
+        api_key:
+          type: string
+        anonymous_profile_id:
+          type: string
     AuthLoginParamsEmail:
       type: object
       description: Auth login params for auth_type="email"
@@ -1081,29 +1118,9 @@ components:
           type: string
         pkce_verifier:
           type: string
-    AuthRefreshResponse:
+    AuthLoginParamsAPIKey:
       type: object
-      properties:
-        token:
-          $ref: '#/components/schemas/AuthResponseRokwireToken'
-        params:
-          type: object
-          anyOf:
-            - $ref: '#/components/schemas/AuthResponseParamsOidc'
-    AuthResponseRokwireToken:
-      type: object
-      properties:
-        access_token:
-          description: The user's access token to be provided to authorize access to ROKWIRE APIs
-          type: string
-        refresh_token:
-          description: A refresh token that can be used to get a new access token once the one provided expires
-          type: string
-        token_type:
-          description: The type of the provided tokens to be specified when they are sent in the "Authorization" header
-          type: string
-          enum:
-            - Bearer
+      description: Auth login params for auth_type="api_key" (None)
     AuthResponseParamsOidc:
       type: object
       properties:
@@ -1116,6 +1133,11 @@ components:
               type: string
             token_type:
               type: string
+    AuthResponseParamsAPIKey:
+      type: object
+      properties:
+        anonymous_profile_id:
+          type: string
     AuthLoginUrlRequest:
       required:
         - auth_type

@@ -31,30 +31,38 @@ PubKey:
   $ref: "./auth/PubKey.yaml"
 ServiceScope:
   $ref: "./auth/ServiceScope.yaml"
+
 AuthLoginRequest:
   $ref: "./auth/AuthLoginRequest.yaml"
 AuthLoginResponse:
   $ref: "./auth/AuthLoginResponse.yaml"
+AuthRefreshResponse:
+  $ref: "./auth/AuthRefreshResponse.yaml"
+AuthResponseRokwireToken:
+  $ref: "./auth/AuthResponseRokwireToken.yaml"
+
 AuthLoginCredsEmail:
   $ref: "./auth/AuthLoginCredsEmail.yaml"
 AuthLoginCredsPhone:
   $ref: "./auth/AuthLoginCredsPhone.yaml"
 AuthLoginCredsOidc:
   $ref: "./auth/AuthLoginCredsOidc.yaml"
+AuthLoginCredsAPIKey:
+  $ref: "./auth/AuthLoginCredsAPIKey.yaml"
+
 AuthLoginParamsEmail:
   $ref: "./auth/AuthLoginParamsEmail.yaml"
 AuthLoginParamsPhone:
   $ref: "./auth/AuthLoginParamsPhone.yaml"
 AuthLoginParamsOidc:
   $ref: "./auth/AuthLoginParamsOidc.yaml"
-
-AuthRefreshResponse:
-  $ref: "./auth/AuthRefreshResponse.yaml"
-
-AuthResponseRokwireToken:
-  $ref: "./auth/AuthResponseRokwireToken.yaml"
+AuthLoginParamsAPIKey:
+  $ref: "./auth/AuthLoginParamsAPIKey.yaml"
+  
 AuthResponseParamsOidc:
   $ref: "./auth/AuthResponseParamsOidc.yaml"
+AuthResponseParamsAPIKey:
+  $ref: "./auth/AuthResponseParamsAPIKey.yaml"
 
 AuthLoginUrlRequest:
   $ref: "./auth/AuthLoginUrlRequest.yaml"

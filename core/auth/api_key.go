@@ -29,6 +29,10 @@ type apiKeyCreds struct {
 	AnonymousProfileID string `json:"anonymous_profile_id"`
 }
 
+type apiKeyResponseParams struct {
+	AnonymousProfileID string `json:"anonymous_profile_id"`
+}
+
 func (a *apiKeyAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
 	var keyCreds apiKeyCreds
 	err := json.Unmarshal([]byte(keyCreds.APIKey), &keyCreds)
@@ -51,15 +55,16 @@ func (a *apiKeyAuthImpl) check(creds string, orgID string, appID string, params 
 		return nil, errors.Newf("incorrect key for org_id=%v, app_id=%v", orgID, appID)
 	}
 
+	userAuth := model.UserAuth{Sub: keyCreds.AnonymousProfileID, Anonymous: true}
 	if keyCreds.AnonymousProfileID == "" {
 		id, err := uuid.NewUUID()
 		if err != nil {
 			return nil, errors.WrapErrorAction("generating", "uuid", logutils.StringArgs("anonymous profile id"), err)
 		}
-		keyCreds.AnonymousProfileID = id.String()
+		userAuth.Sub = id.String()
+		userAuth.ResponseParams = &apiKeyResponseParams{AnonymousProfileID: userAuth.Sub}
 	}
 
-	userAuth := model.UserAuth{Sub: keyCreds.AnonymousProfileID, Anonymous: true}
 	return &userAuth, nil
 }
 

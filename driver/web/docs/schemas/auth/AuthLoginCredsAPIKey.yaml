@@ -1,6 +1,5 @@
 required:
   - api_key
-  - anonymous_profile_id
 type: object
 description: Auth login creds for auth_type="api_key"
 properties:
