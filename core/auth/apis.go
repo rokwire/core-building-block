@@ -18,6 +18,8 @@ import (
 func (a *Auth) Start() {
 	storageListener := StorageListener{auth: a}
 	a.storage.RegisterStorageListener(&storageListener)
+
+	go a.setupDeleteRefreshTimer()
 }
 
 //GetHost returns the host/issuer of the auth service
@@ -57,7 +59,7 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 
 	//RefreshParams == nil indicates that a refresh token should not be generated
 	refreshToken := ""
-	hadRefresh := (userAuth.Creds.Refresh != nil)
+	var refreshParams *model.AuthRefresh
 	if userAuth.RefreshParams != nil {
 		var expireTime *time.Time
 		refreshToken, expireTime, err = a.buildRefreshToken()
@@ -65,11 +67,8 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 			return "", "", nil, nil, err
 		}
 
-		refreshParams := model.AuthRefresh{CurrentToken: refreshToken, Expires: expireTime, Params: userAuth.RefreshParams}
-
-		userAuth.Creds.Refresh = &refreshParams
-	} else {
-		userAuth.Creds.Refresh = nil
+		refreshParams = &model.AuthRefresh{CurrentToken: refreshToken, Expires: expireTime, AppID: appID, OrgID: orgID,
+			CredsID: userAuth.Creds.ID, Params: userAuth.RefreshParams, DateCreated: time.Now().UTC()}
 	}
 
 	if len(userAuth.AccountID) > 0 {
@@ -89,20 +88,28 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 			}
 		}
 
-		if userAuth.Creds.Refresh != nil || hadRefresh {
-			if auth.isGlobal() {
-				err = a.storage.UpdateCredentials("", "", authType, userAuth.UserID, userAuth.Creds.Refresh)
-			} else {
-				err = a.storage.UpdateCredentials(orgID, appID, authType, userAuth.UserID, userAuth.Creds.Refresh)
-			}
+		if refreshParams != nil {
+			err = a.checkRefreshTokenLimit(orgID, appID, userAuth.Creds.ID)
 			if err != nil {
-				return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthCred, nil, err)
+				a.logger.Error(err.Error())
+			} else {
+				err = a.storage.InsertRefreshToken(refreshParams)
+				if err != nil {
+					return "", "", nil, nil, err
+				}
 			}
 		}
 	} else if userAuth.OrgID == orgID {
 		user, err = a.createAccount(userAuth)
 		if err != nil {
 			return "", "", nil, nil, err
+		}
+
+		if refreshParams != nil {
+			err = a.storage.InsertRefreshToken(refreshParams)
+			if err != nil {
+				return "", "", nil, nil, err
+			}
 		}
 	} else {
 		return "", "", nil, nil, errors.ErrorData(logutils.StatusInvalid, "org_id", logutils.StringArgs(orgID))
@@ -126,41 +133,50 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 //		Refresh token (string): Refresh token that can be sent to refresh the access token once it expires
 //		Params (interface{}): authType-specific set of parameters passed back to client
 func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interface{}, error) {
-	credentials, err := a.storage.FindCredentialsByRefreshToken(refreshToken)
+	refresh, err := a.storage.FindRefreshToken(refreshToken)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
 	}
-	if credentials == nil || credentials.Refresh == nil {
-		return "", "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthRefresh, nil)
+
+	credentials, err := a.storage.FindCredentialsByID(refresh.CredsID)
+	if err != nil {
+		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
+	}
+	if credentials == nil {
+		return "", "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthCred, nil)
 	}
 
 	validate := validator.New()
-	err = validate.Struct(credentials.Refresh)
+	err = validate.Struct(refresh)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthRefreshParams, nil, err)
 	}
 
-	if !credentials.Refresh.Expires.After(time.Now().UTC()) {
+	if !refresh.Expires.After(time.Now().UTC()) {
+		err = a.storage.DeleteRefreshToken(refresh.CurrentToken)
+		if err != nil {
+			return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh expiration", nil, err)
+		}
 		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, "refresh expiration", nil)
 	}
 
-	if refreshToken == credentials.Refresh.PreviousToken {
-		err = a.storage.UpdateCredentials(credentials.OrgID, credentials.AppID, credentials.Type, credentials.UserID, nil)
+	if refreshToken == refresh.PreviousToken {
+		err = a.storage.DeleteRefreshToken(refresh.CurrentToken)
 		if err != nil {
 			return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh reuse", nil, err)
 		}
 		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, "refresh reuse", nil)
 	}
-	if refreshToken != credentials.Refresh.CurrentToken {
+	if refreshToken != refresh.CurrentToken {
 		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, model.TypeRefreshToken, nil)
 	}
 
-	auth, err := a.getAuthType(credentials.Type)
+	auth, err := a.getAuthType(credentials.AuthType)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	userAuth, err := auth.refresh(credentials.Refresh.Params, credentials.OrgID, credentials.AppID, l)
+	userAuth, err := auth.refresh(refresh.Params, refresh.OrgID, refresh.AppID, l)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
 	}
@@ -174,19 +190,15 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 		return "", "", nil, err
 	}
 
-	user, update, newMembership := a.needsUserUpdate(userAuth, user)
+	user, update, _ := a.needsUserUpdate(userAuth, user)
 	if update {
-		var newMembershipOrgData *map[string]interface{}
-		if newMembership {
-			newMembershipOrgData = &userAuth.OrgData
-		}
-		_, err = a.updateAccount(user, credentials.OrgID, newMembershipOrgData)
+		_, err = a.updateAccount(user, "", nil)
 		if err != nil {
 			return "", "", nil, err
 		}
 	}
 
-	claims := a.getStandardClaims(user.ID, userAuth.UserID, user.Account.Email, user.Account.Phone, "rokwire", credentials.OrgID, credentials.AppID, userAuth.Exp)
+	claims := a.getStandardClaims(user.ID, userAuth.UserID, user.Account.Email, user.Account.Phone, "rokwire", refresh.OrgID, refresh.AppID, userAuth.Exp)
 	token, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 	if err != nil {
 		return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -200,9 +212,11 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 			return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeRefreshToken, nil, err)
 		}
 
-		refresh := model.AuthRefresh{CurrentToken: newRefreshToken, PreviousToken: refreshToken, Expires: expireTime, Params: userAuth.RefreshParams}
+		now := time.Now().UTC()
+		updatedRefresh := model.AuthRefresh{CurrentToken: newRefreshToken, PreviousToken: refreshToken, Expires: expireTime,
+			Params: userAuth.RefreshParams, DateUpdated: &now}
 
-		err = a.storage.UpdateCredentials(credentials.OrgID, credentials.AppID, credentials.Type, credentials.UserID, &refresh)
+		err = a.storage.UpdateRefreshToken(refreshToken, &updatedRefresh)
 		if err != nil {
 			return "", "", nil, err
 		}

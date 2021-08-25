@@ -283,6 +283,7 @@ func (h AdminApisHandler) deregisterService(l *logs.Log, r *http.Request) logs.H
 }
 
 func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
+
 	params := mux.Vars(r)
 	ID := params["id"]
 	if len(ID) <= 0 {
@@ -331,6 +332,25 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.H
 	headers := map[string]string{}
 	headers["Content-Type"] = "text/plain"
 	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+}
+
+//getAppilcations gets applications list
+func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request) logs.HttpResponse {
+	applications, err := h.coreAPIs.Administration.AdmGetApplications()
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
+	}
+	var response []Def.Application
+	for _, application := range applications {
+		r := applicationToDef(&application)
+		response = append(response, *r)
+	}
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance
