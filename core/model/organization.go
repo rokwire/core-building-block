@@ -92,6 +92,12 @@ type Application struct {
 	//if true the service will support own users for this app otherwise the user will decide if to create own user or to use the ecosystem one(shared)
 	RequiresOwnUsers bool `bson:"requires_own_users"`
 
+	//one of: none, single, multi
+	//none - the application is not related with any organization
+	//single - the application is for single organization - UIUC application, Safer Illinois application etc
+	//multi - the application is for many organizations - Safer community application etc
+	OrgRelType string `bson:"org_rel_type"`
+
 	//TODO add identity providers groups mapping - group to group ..
 
 	Types []ApplicationType `bson:"types"`
@@ -104,8 +110,9 @@ type Application struct {
 
 //ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc
 type ApplicationType struct {
-	ID       string   `bson:"id"`
-	Name     string   `bson:"name"`     //safer community android, safer community ios, safer community web, uuic android etc
-	Versions []string `bson:"versions"` //1.1.0, 1.2.0 etc
+	ID         string   `bson:"id"`
+	Identifier string   `bson:"identifier"` //edu.illinois.rokwire etc
+	Name       string   `bson:"name"`       //safer community android, safer community ios, safer community web, uuic android etc
+	Versions   []string `bson:"versions"`   //1.1.0, 1.2.0 etc
 	//TODO add supported auth types from all auth types
 }
