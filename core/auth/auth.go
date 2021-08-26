@@ -408,6 +408,8 @@ func (a *Auth) setCachedAuthTypes(authProviders []model.AuthType) {
 	for _, authType := range authProviders {
 		err := validate.Struct(authType)
 		if err == nil {
+			//we will get it by id and code as well
+			a.cachedAuthTypes.Store(authType.ID, authType)
 			a.cachedAuthTypes.Store(authType.Code, authType)
 		} else {
 			a.logger.Errorf("failed to validate and cache auth type with code %s: %s", authType.Code, err.Error())
@@ -415,13 +417,13 @@ func (a *Auth) setCachedAuthTypes(authProviders []model.AuthType) {
 	}
 }
 
-func (a *Auth) getCachedAuthType(code string) (*model.AuthType, error) {
+func (a *Auth) getCachedAuthType(key string) (*model.AuthType, error) {
 	a.authTypesLock.RLock()
 	defer a.authTypesLock.RUnlock()
 
-	errArgs := &logutils.FieldArgs{"code": code}
+	errArgs := &logutils.FieldArgs{"code or id": key}
 
-	item, _ := a.cachedAuthTypes.Load(code)
+	item, _ := a.cachedAuthTypes.Load(key)
 	if item != nil {
 		authType, ok := item.(model.AuthType)
 		if !ok {
