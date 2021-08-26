@@ -541,22 +541,23 @@ func (sa *Adapter) DeleteGlobalGroup(id string) error {
 
 //FindOrganizationPermissions finds a set of organization user permissions
 func (sa *Adapter) FindOrganizationPermissions(ids []string, orgID string) ([]model.OrganizationPermission, error) {
-	permissionsFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
-	var permissionsResult []organizationPermission
-	err := sa.db.organizationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
-	if err != nil {
-		return nil, err
-	}
+	/*	permissionsFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+		var permissionsResult []organizationPermission
+		err := sa.db.organizationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
+		if err != nil {
+			return nil, err
+		}
 
-	//get the organization from the cached ones
-	organization, err := sa.getCachedOrganization(orgID)
-	if err != nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"org_id": orgID}, err)
-	}
+		//get the organization from the cached ones
+		organization, err := sa.getCachedOrganization(orgID)
+		if err != nil {
+			return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"org_id": orgID}, err)
+		}
 
-	result := organizationPermissionsFromStorage(permissionsResult, *organization)
+		result := organizationPermissionsFromStorage(permissionsResult, *organization)
 
-	return result, nil
+		return result, nil */
+	return nil, nil
 }
 
 //UpdateOrganizationPermission updates organziation permission
@@ -577,22 +578,23 @@ func (sa *Adapter) DeleteOrganizationPermission(id string) error {
 
 //FindOrganizationRoles finds a set of organization user roles
 func (sa *Adapter) FindOrganizationRoles(ids []string, orgID string) ([]model.OrganizationRole, error) {
-	rolesFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
-	var rolesResult []organizationRole
-	err := sa.db.organizationsRoles.Find(rolesFilter, &rolesResult, nil)
-	if err != nil {
-		return nil, err
-	}
+	/*	rolesFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+		var rolesResult []organizationRole
+		err := sa.db.organizationsRoles.Find(rolesFilter, &rolesResult, nil)
+		if err != nil {
+			return nil, err
+		}
 
-	//get the organization from the cached ones
-	organization, err := sa.getCachedOrganization(orgID)
-	if err != nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"org_id": orgID}, err)
-	}
+		//get the organization from the cached ones
+		organization, err := sa.getCachedOrganization(orgID)
+		if err != nil {
+			return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"org_id": orgID}, err)
+		}
 
-	result := organizationRolesFromStorage(rolesResult, *organization)
+		result := organizationRolesFromStorage(rolesResult, *organization)
 
-	return result, nil
+		return result, nil */
+	return nil, nil
 }
 
 //UpdateOrganizationRole updates organization role
@@ -613,22 +615,23 @@ func (sa *Adapter) DeleteOrganizationRole(id string) error {
 
 //FindOrganizationGroups finds a set of organization user groups
 func (sa *Adapter) FindOrganizationGroups(ids []string, orgID string) ([]model.OrganizationGroup, error) {
-	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
-	var groupsResult []organizationGroup
-	err := sa.db.organizationsGroups.Find(filter, &groupsResult, nil)
-	if err != nil {
-		return nil, err
-	}
+	/*	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+		var groupsResult []organizationGroup
+		err := sa.db.organizationsGroups.Find(filter, &groupsResult, nil)
+		if err != nil {
+			return nil, err
+		}
 
-	//get the organization from the cached ones
-	organization, err := sa.getCachedOrganization(orgID)
-	if err != nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"org_id": orgID}, err)
-	}
+		//get the organization from the cached ones
+		organization, err := sa.getCachedOrganization(orgID)
+		if err != nil {
+			return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"org_id": orgID}, err)
+		}
 
-	result := organizationGroupsFromStorage(groupsResult, *organization)
+		result := organizationGroupsFromStorage(groupsResult, *organization)
 
-	return result, nil
+		return result, nil */
+	return nil, nil
 }
 
 //UpdateOrganizationGroup updates organization group
