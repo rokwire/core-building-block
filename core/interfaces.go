@@ -73,6 +73,7 @@ type Storage interface {
 	LoadOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)
 
+	LoadApplications() ([]model.Application, error)
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
