@@ -12,7 +12,7 @@
             schema:
               type: array
               items:
-                $ref: "../../schemas/organization/Application.yaml"
+                $ref: "../../schemas/application/Application.yaml"
       400:
         description: Bad request
       401:
@@ -30,7 +30,7 @@
     content:
       application/json:
         schema:
-          $ref: "../../schemas/organization/Application.yaml"
+          $ref: "../../schemas/application/Application.yaml"
     required: true
   responses:
     200:

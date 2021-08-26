@@ -2,7 +2,6 @@ package core
 
 import (
 	"core-building-block/core/model"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,6 +14,7 @@ func (app *application) admGetTest() string {
 }
 
 func (app *application) admGetTestModel() string {
+	/* disable it as it is not up to date with the latest model changes
 	//global config
 	globalConfig := model.GlobalConfig{Setting: "setting_value"}
 
@@ -160,6 +160,8 @@ func (app *application) admGetTestModel() string {
 		danceRole1, dancePermission1, dancePermission2, dancePermission3, danceRole2, danceGroup1,
 		globalUser1, globalUser2, illiniUser1, illiniUser2, illiniUser3, illiniUsersRel, danceUser1, diUser)
 	return res
+	*/
+	return ""
 }
 
 func (app *application) admCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {

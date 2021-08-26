@@ -78,10 +78,8 @@ func organizationMembershipToDef(item *model.OrganizationMembership) *Def.Organi
 	if item == nil {
 		return nil
 	}
-	roles := organizationRoleListToDef(item.Roles)
-	groups := organizationGroupListToDef(item.Groups)
 	//TODO: handle permissions
-	return &Def.OrganizationMembership{Id: item.ID, UserId: &item.User.ID, OrgId: &item.Organization.ID, OrgUserData: &item.OrgUserData, Roles: &roles, Groups: &groups}
+	return &Def.OrganizationMembership{Id: item.ID, UserId: &item.User.ID, OrgId: &item.Organization.ID, OrgUserData: &item.OrgUserData}
 }
 
 func organizationMembershipListToDef(items []model.OrganizationMembership) []Def.OrganizationMembership {

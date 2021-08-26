@@ -8,9 +8,11 @@ GlobalRole:
 GlobalGroup:
   $ref: "./global/GlobalGroup.yaml"
 
-# organization
+# application
 Application:
-  $ref: "./organization/Application.yaml"
+  $ref: "./application/Application.yaml"
+
+# organization
 Organization:
   $ref: "./organization/Organization.yaml"
 OrganizationConfig:
