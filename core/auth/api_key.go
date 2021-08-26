@@ -35,7 +35,7 @@ type apiKeyResponseParams struct {
 
 func (a *apiKeyAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
 	var keyCreds apiKeyCreds
-	err := json.Unmarshal([]byte(keyCreds.APIKey), &keyCreds)
+	err := json.Unmarshal([]byte(creds), &keyCreds)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeAPIKeyCreds, nil, err)
 	}
@@ -48,7 +48,7 @@ func (a *apiKeyAuthImpl) check(creds string, orgID string, appID string, params 
 
 	apiKey, err := a.auth.getAPIKey(keyCreds.APIKey)
 	if err != nil || apiKey == nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAPIKey, nil, err)
+		return nil, errors.Newf("incorrect key for org_id=%v, app_id=%v", orgID, appID)
 	}
 
 	if apiKey.AppID != appID || apiKey.OrgID != orgID {

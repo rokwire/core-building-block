@@ -32,6 +32,17 @@ PubKey:
 ServiceScope:
   $ref: "./auth/ServiceScope.yaml"
 
+APIKey:
+  $ref: "./auth/APIKey.yaml"
+
+JWK:
+  $ref: "./auth/JWK.yaml"
+JWKS:
+  $ref: "./auth/JWKS.yaml"
+
+OIDCDiscovery:
+  $ref: "./auth/OIDCDiscovery.yaml"
+
 AuthLoginRequest:
   $ref: "./auth/AuthLoginRequest.yaml"
 AuthLoginResponse:
@@ -52,17 +63,17 @@ AuthLoginCredsAPIKey:
 
 AuthLoginParamsEmail:
   $ref: "./auth/AuthLoginParamsEmail.yaml"
-AuthLoginParamsPhone:
-  $ref: "./auth/AuthLoginParamsPhone.yaml"
 AuthLoginParamsOidc:
   $ref: "./auth/AuthLoginParamsOidc.yaml"
-AuthLoginParamsAPIKey:
-  $ref: "./auth/AuthLoginParamsAPIKey.yaml"
+AuthLoginParamsNone:
+  $ref: "./auth/AuthLoginParamsNone.yaml"
   
 AuthResponseParamsOidc:
   $ref: "./auth/AuthResponseParamsOidc.yaml"
 AuthResponseParamsAPIKey:
   $ref: "./auth/AuthResponseParamsAPIKey.yaml"
+AuthResponseParamsNone:
+  $ref: "./auth/AuthResponseParamsNone.yaml"
 
 AuthLoginUrlRequest:
   $ref: "./auth/AuthLoginUrlRequest.yaml"
@@ -73,14 +84,6 @@ AuthAuthorizeServiceRequest:
   $ref: "./auth/AuthAuthorizeServiceRequest.yaml"
 AuthAuthorizeServiceResponse:
   $ref: "./auth/AuthAuthorizeServiceResponse.yaml"
-
-JWK:
-  $ref: "./auth/JWK.yaml"
-JWKS:
-  $ref: "./auth/JWKS.yaml"
-
-OidcDiscovery:
-  $ref: "./auth/OIDCDiscovery.yaml"
 
 # user
 User:

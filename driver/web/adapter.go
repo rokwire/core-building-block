@@ -95,6 +95,10 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.updateServiceRegistration)).Methods("PUT")
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.deregisterService)).Methods("DELETE")
 
+	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.getAPIKey)).Methods("GET")
+	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.createAPIKey)).Methods("POST")
+	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.updateAPIKey)).Methods("PUT")
+	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.deleteAPIKey)).Methods("DELETE")
 	///
 
 	///enc ///

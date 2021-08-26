@@ -76,6 +76,18 @@ paths:
                       "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
                     }
                   }
+              api_key:
+                summary: API key login (Anonymous)
+                value: |
+                  {
+                    "auth_type": "api_key",
+                    "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
+                    "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                    "creds": {
+                      "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                      "anonymous_profile_id": "f53fad53-084c-4cc0-89a8-8e516803d5ab"
+                    }
+                  }
         required: true
       responses:
         '200':
@@ -635,6 +647,138 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /admin/api-keys:
+    get:
+      tags:
+        - Admin
+      summary: Get API key
+      description: |
+        Returns API key record
+      parameters:
+        - name: org_id
+          in: query
+          description: The org ID of the API key to return
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: app_id
+          in: query
+          description: The app ID of the API key to return
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKey'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      tags:
+        - Admin
+      summary: Create API key
+      description: |
+        Creates a new API key record
+
+        The "org_id" and "app_id" of the record must not match an existing registration  
+      requestBody:
+        description: API key record to be added
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIKey'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      tags:
+        - Admin
+      summary: Update API key
+      description: |
+        Update an existing API key record
+
+        The "org_id" and "app_id" of the record must match an existing registration  
+      requestBody:
+        description: API key record update to be applied
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIKey'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      tags:
+        - Admin
+      summary: Delete API key
+      description: |
+        Deletes an existing API key record
+      parameters:
+        - name: org_id
+          in: query
+          description: The org ID of the API key to delete
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: app_id
+          in: query
+          description: The app ID of the API key to delete
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /enc/test:
     get:
       tags:
@@ -763,7 +907,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OidcDiscovery'
+                $ref: '#/components/schemas/OIDCDiscovery'
 components:
   schemas:
     GlobalConfig:
@@ -998,6 +1142,76 @@ components:
         explanation:
           description: Explanation displayed to users for why this scope is requested/required
           type: string
+    APIKey:
+      required:
+        - org_id
+        - app_id
+        - key
+      type: object
+      description: API key record
+      properties:
+        org_id:
+          type: string
+        app_id:
+          type: string
+        key:
+          type: string
+    JWK:
+      required:
+        - kty
+        - use
+        - alg
+        - kid
+        - 'n'
+        - e
+      type: object
+      description: JSON Web Key (JWK)
+      properties:
+        kty:
+          type: string
+          description: The "kty" (key type) parameter identifies the cryptographic algorithm family used with the key
+          enum:
+            - RSA
+        use:
+          type: string
+          description: The "use" (public key use) parameter identifies the intended use of the public key
+          enum:
+            - sig
+        alg:
+          type: string
+          description: The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
+          enum:
+            - RS256
+        kid:
+          type: string
+          description: The "kid" (key ID) parameter is used to match a specific key
+        'n':
+          type: string
+          description: The modulus (2048 bit) of the key - Base64URL encoded.
+        e:
+          type: string
+          description: The exponent of the key - Base64URL encoded
+    JWKS:
+      required:
+        - keys
+      type: object
+      description: JSON Web Key Set (JWKS)
+      properties:
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/JWK'
+    OIDCDiscovery:
+      required:
+        - issuer
+        - jwks_uri
+      type: object
+      description: OpenID Connect Discovery Metadata
+      properties:
+        issuer:
+          type: string
+        jwks_uri:
+          type: string
     AuthLoginRequest:
       required:
         - auth_type
@@ -1026,9 +1240,8 @@ components:
           type: object
           anyOf:
             - $ref: '#/components/schemas/AuthLoginParamsEmail'
-            - $ref: '#/components/schemas/AuthLoginParamsPhone'
             - $ref: '#/components/schemas/AuthLoginParamsOidc'
-            - $ref: '#/components/schemas/AuthLoginParamsAPIKey'
+            - $ref: '#/components/schemas/AuthLoginParamsNone'
     AuthLoginResponse:
       type: object
       properties:
@@ -1037,10 +1250,11 @@ components:
         user:
           $ref: '#/components/schemas/User'
         params:
-          type: object
+          nullable: true
           anyOf:
             - $ref: '#/components/schemas/AuthResponseParamsOidc'
             - $ref: '#/components/schemas/AuthResponseParamsAPIKey'
+            - $ref: '#/components/schemas/AuthResponseParamsNone'
     AuthRefreshResponse:
       type: object
       properties:
@@ -1107,9 +1321,6 @@ components:
         new_user:
           type: boolean
           default: false
-    AuthLoginParamsPhone:
-      type: object
-      description: Auth login params for auth_type="phone" (None)
     AuthLoginParamsOidc:
       type: object
       description: Auth login params for auth_type="oidc"
@@ -1118,9 +1329,10 @@ components:
           type: string
         pkce_verifier:
           type: string
-    AuthLoginParamsAPIKey:
+    AuthLoginParamsNone:
       type: object
-      description: Auth login params for auth_type="api_key" (None)
+      description: Auth login request params for unlisted auth_types (None)
+      nullable: true
     AuthResponseParamsOidc:
       type: object
       properties:
@@ -1138,6 +1350,10 @@ components:
       properties:
         anonymous_profile_id:
           type: string
+    AuthResponseParamsNone:
+      type: object
+      description: Auth login response params for unlisted auth_types (None)
+      nullable: true
     AuthLoginUrlRequest:
       required:
         - auth_type
@@ -1194,62 +1410,6 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
-    JWK:
-      required:
-        - kty
-        - use
-        - alg
-        - kid
-        - 'n'
-        - e
-      type: object
-      description: JSON Web Key (JWK)
-      properties:
-        kty:
-          type: string
-          description: The "kty" (key type) parameter identifies the cryptographic algorithm family used with the key
-          enum:
-            - RSA
-        use:
-          type: string
-          description: The "use" (public key use) parameter identifies the intended use of the public key
-          enum:
-            - sig
-        alg:
-          type: string
-          description: The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
-          enum:
-            - RS256
-        kid:
-          type: string
-          description: The "kid" (key ID) parameter is used to match a specific key
-        'n':
-          type: string
-          description: The modulus (2048 bit) of the key - Base64URL encoded.
-        e:
-          type: string
-          description: The exponent of the key - Base64URL encoded
-    JWKS:
-      required:
-        - keys
-      type: object
-      description: JSON Web Key Set (JWKS)
-      properties:
-        keys:
-          type: array
-          items:
-            $ref: '#/components/schemas/JWK'
-    OidcDiscovery:
-      required:
-        - issuer
-        - jwks_uri
-      type: object
-      description: OpenID Connect Discovery Metadata
-      properties:
-        issuer:
-          type: string
-        jwks_uri:
-          type: string
     User:
       required:
         - id

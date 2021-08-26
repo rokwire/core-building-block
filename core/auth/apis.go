@@ -378,3 +378,23 @@ func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
 
 	return &model.JSONWebKeySet{Keys: []model.JSONWebKey{*jwk}}, nil
 }
+
+//GetAPIKey finds and returns the API key for the provided org and app
+func (a *Auth) GetAPIKey(orgID string, appID string) (*model.APIKey, error) {
+	return a.storage.FindAPIKey(orgID, appID)
+}
+
+//CreateAPIKey creates a new API key for the provided org and app
+func (a *Auth) CreateAPIKey(apiKey *model.APIKey) error {
+	return a.storage.InsertAPIKey(apiKey)
+}
+
+//UpdateAPIKey updates an existing API key
+func (a *Auth) UpdateAPIKey(apiKey *model.APIKey) error {
+	return a.storage.UpdateAPIKey(apiKey)
+}
+
+//DeleteAPIKey deletes an existing API key
+func (a *Auth) DeleteAPIKey(orgID string, appID string) error {
+	return a.storage.DeleteAPIKey(orgID, appID)
+}

@@ -49,6 +49,18 @@ post:
                   "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
                 }
               }
+          api_key:
+            summary: API key login (Anonymous)
+            value: |
+              {
+                "auth_type": "api_key",
+                "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
+                "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                "creds": {
+                  "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                  "anonymous_profile_id": "f53fad53-084c-4cc0-89a8-8e516803d5ab"
+                }
+              }
     required: true
   responses:
     200:

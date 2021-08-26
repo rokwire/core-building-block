@@ -68,6 +68,13 @@ const (
 	OrganizationTypeSmall OrganizationType = "small"
 )
 
+// API key record
+type APIKey struct {
+	AppId string `json:"app_id"`
+	Key   string `json:"key"`
+	OrgId string `json:"org_id"`
+}
+
 // Application defines model for Application.
 type Application struct {
 	Id       string    `json:"id"`
@@ -120,22 +127,19 @@ type AuthLoginCredsPhone struct {
 	Phone string  `json:"phone"`
 }
 
-// Auth login params for auth_type="api_key" (None)
-type AuthLoginParamsAPIKey map[string]interface{}
-
 // Auth login params for auth_type="email"
 type AuthLoginParamsEmail struct {
 	NewUser *bool `json:"new_user,omitempty"`
 }
+
+// Auth login request params for unlisted auth_types (None)
+type AuthLoginParamsNone map[string]interface{}
 
 // Auth login params for auth_type="oidc"
 type AuthLoginParamsOidc struct {
 	PkceVerifier *string `json:"pkce_verifier,omitempty"`
 	RedirectUri  *string `json:"redirect_uri,omitempty"`
 }
-
-// Auth login params for auth_type="phone" (None)
-type AuthLoginParamsPhone map[string]interface{}
 
 // AuthLoginRequest defines model for AuthLoginRequest.
 type AuthLoginRequest struct {
@@ -151,7 +155,7 @@ type AuthLoginRequestAuthType string
 
 // AuthLoginResponse defines model for AuthLoginResponse.
 type AuthLoginResponse struct {
-	Params *interface{}              `json:"params,omitempty"`
+	Params *interface{}              `json:"params"`
 	Token  *AuthResponseRokwireToken `json:"token,omitempty"`
 	User   *User                     `json:"user,omitempty"`
 }
@@ -185,6 +189,9 @@ type AuthRefreshResponse struct {
 type AuthResponseParamsAPIKey struct {
 	AnonymousProfileId *string `json:"anonymous_profile_id,omitempty"`
 }
+
+// Auth login response params for unlisted auth_types (None)
+type AuthResponseParamsNone map[string]interface{}
 
 // AuthResponseParamsOidc defines model for AuthResponseParamsOidc.
 type AuthResponseParamsOidc struct {
@@ -294,7 +301,7 @@ type JWKS struct {
 }
 
 // OpenID Connect Discovery Metadata
-type OidcDiscovery struct {
+type OIDCDiscovery struct {
 	Issuer  string `json:"issuer"`
 	JwksUri string `json:"jwks_uri"`
 }
@@ -416,6 +423,32 @@ type UserProfile struct {
 	PhotoUrl  *string `json:"photo_url,omitempty"`
 }
 
+// DeleteAdminApiKeysParams defines parameters for DeleteAdminApiKeys.
+type DeleteAdminApiKeysParams struct {
+
+	// The org ID of the API key to delete
+	OrgId string `json:"org_id"`
+
+	// The app ID of the API key to delete
+	AppId string `json:"app_id"`
+}
+
+// GetAdminApiKeysParams defines parameters for GetAdminApiKeys.
+type GetAdminApiKeysParams struct {
+
+	// The org ID of the API key to return
+	OrgId string `json:"org_id"`
+
+	// The app ID of the API key to return
+	AppId string `json:"app_id"`
+}
+
+// PostAdminApiKeysJSONBody defines parameters for PostAdminApiKeys.
+type PostAdminApiKeysJSONBody APIKey
+
+// PutAdminApiKeysJSONBody defines parameters for PutAdminApiKeys.
+type PutAdminApiKeysJSONBody APIKey
+
 // PostAdminApplicationsJSONBody defines parameters for PostAdminApplications.
 type PostAdminApplicationsJSONBody Application
 
@@ -480,6 +513,12 @@ type GetTpsServiceRegsParams struct {
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
+
+// PostAdminApiKeysJSONRequestBody defines body for PostAdminApiKeys for application/json ContentType.
+type PostAdminApiKeysJSONRequestBody PostAdminApiKeysJSONBody
+
+// PutAdminApiKeysJSONRequestBody defines body for PutAdminApiKeys for application/json ContentType.
+type PutAdminApiKeysJSONRequestBody PutAdminApiKeysJSONBody
 
 // PostAdminApplicationsJSONRequestBody defines body for PostAdminApplications for application/json ContentType.
 type PostAdminApplicationsJSONRequestBody PostAdminApplicationsJSONBody

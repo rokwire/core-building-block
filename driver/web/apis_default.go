@@ -24,7 +24,7 @@ func (h DefaultApisHandler) getVersion(l *logs.Log, r *http.Request) logs.HttpRe
 
 //getOpenIDConfiguration gives the OpenID Connect Discovery page
 func (h DefaultApisHandler) getOpenIDConfiguration(l *logs.Log, r *http.Request) logs.HttpResponse {
-	discovery := Def.OidcDiscovery{Issuer: h.coreAPIs.Auth.GetHost(), JwksUri: h.coreAPIs.Auth.GetHost() + "/tps/auth-keys"}
+	discovery := Def.OIDCDiscovery{Issuer: h.coreAPIs.Auth.GetHost(), JwksUri: h.coreAPIs.Auth.GetHost() + "/tps/auth-keys"}
 
 	data, err := json.Marshal(discovery)
 	if err != nil {

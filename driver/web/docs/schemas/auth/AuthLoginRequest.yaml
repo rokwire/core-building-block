@@ -25,6 +25,5 @@ properties:
     type: object
     anyOf:
       - $ref: "./AuthLoginParamsEmail.yaml"
-      - $ref: "./AuthLoginParamsPhone.yaml"
       - $ref: "./AuthLoginParamsOidc.yaml"
-      - $ref: "./AuthLoginParamsAPIKey.yaml"
+      - $ref: "./AuthLoginParamsNone.yaml"

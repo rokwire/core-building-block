@@ -687,6 +687,44 @@ func (sa *Adapter) FindAPIKeys(orgID string) ([]model.APIKey, error) {
 	return result, nil
 }
 
+//InsertAPIKey inserts an API key
+func (sa *Adapter) InsertAPIKey(apiKey *model.APIKey) error {
+	_, err := sa.db.apiKeys.InsertOne(apiKey)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAPIKey, &logutils.FieldArgs{"org_id": apiKey.OrgID, "app_id": apiKey.AppID}, err)
+	}
+	return nil
+}
+
+//UpdateAPIKey updates the API key in storage
+func (sa *Adapter) UpdateAPIKey(apiKey *model.APIKey) error {
+	filter := bson.M{"org_id": apiKey.OrgID, "app_id": apiKey.AppID}
+	err := sa.db.apiKeys.ReplaceOne(filter, apiKey, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAPIKey, &logutils.FieldArgs{"org_id": apiKey.OrgID, "app_id": apiKey.AppID}, err)
+	}
+
+	return nil
+}
+
+//DeleteAPIKey deletes the API key from storage
+func (sa *Adapter) DeleteAPIKey(orgID string, appID string) error {
+	filter := bson.M{"org_id": orgID, "app_id": appID}
+	result, err := sa.db.apiKeys.DeleteOne(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAPIKey, &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
+	}
+	if result == nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
+	}
+	deletedCount := result.DeletedCount
+	if deletedCount == 0 {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeAPIKey, &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
+	}
+
+	return nil
+}
+
 //LoadAuthConfigs finds all auth config documents in the DB
 func (sa *Adapter) LoadAuthConfigs() ([]model.AuthConfig, error) {
 	filter := bson.D{}
@@ -993,7 +1031,7 @@ func (sa *Adapter) UpdateServiceReg(reg *model.ServiceReg) error {
 	filter := bson.M{"registration.service_id": reg.Registration.ServiceID}
 	err := sa.db.serviceRegs.ReplaceOne(filter, reg, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceReg, &logutils.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceReg, &logutils.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
 	}
 
 	return nil
