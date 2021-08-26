@@ -16,6 +16,8 @@ import (
 const (
 	//TypeIdentityProvider identity provider type
 	TypeIdentityProvider logutils.MessageDataType = "identity provider"
+	//TypeIdentityProvider identity provider type
+	TypeIdentityProviderConfig logutils.MessageDataType = "identity provider config"
 	//TypeUserAuth user auth type
 	TypeUserAuth logutils.MessageDataType = "user auth"
 	//TypeAuthCred auth cred type
@@ -50,10 +52,10 @@ type IdentityProvider struct {
 	Configs []IdentityProviderConfig `bson:"configs"`
 }
 
-//IdentityProviderConfig represents identity provider config for an application
+//IdentityProviderConfig represents identity provider config for an application type
 type IdentityProviderConfig struct {
-	AppID  string                 `bson:"app_id"`
-	Config map[string]interface{} `bson:"config"`
+	AppTypeID string                 `bson:"app_type_id"`
+	Config    map[string]interface{} `bson:"config"`
 }
 
 //UserAuth represents user auth entity
