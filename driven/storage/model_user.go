@@ -28,10 +28,6 @@ type userMembership struct {
 	OrgID       string                 `bson:"org_id"`
 	OrgUserData map[string]interface{} `bson:"org_user_data"`
 
-	Permissions []organizationPermission `bson:"permissions"`
-	Roles       []organizationRole       `bson:"roles"`
-	Groups      []organizationGroup      `bson:"groups"`
-
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }

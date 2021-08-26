@@ -66,14 +66,11 @@ func userMembershipsFromStorage(item user, sa *Adapter) []model.OrganizationMemb
 func userMembershipFromStorage(item userMembership, organization model.Organization) model.OrganizationMembership {
 	id := item.ID
 	orgUserData := item.OrgUserData
-	permissions := organizationPermissionsFromStorage(item.Permissions, organization)
-	roles := organizationRolesFromStorage(item.Roles, organization)
-	groups := organizationGroupsFromStorage(item.Groups, organization)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
 	return model.OrganizationMembership{ID: id, Organization: organization, OrgUserData: orgUserData,
-		Permissions: permissions, Roles: roles, Groups: groups, DateCreated: dateCreated, DateUpdated: dateUpdated}
+		DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func userMembershipsToStorage(item *model.User) []userMembership {
@@ -89,14 +86,11 @@ func userMembershipToStorage(item model.OrganizationMembership) userMembership {
 	id := item.ID
 	orgID := item.Organization.ID
 	orgUserData := item.OrgUserData
-	permissions := organizationPermissionsToStorage(item.Permissions)
-	roles := organizationRolesToStorage(item.Roles)
-	groups := organizationGroupsToStorage(item.Groups)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
 	return userMembership{ID: id, OrgID: orgID, OrgUserData: orgUserData,
-		Permissions: permissions, Roles: roles, Groups: groups, DateCreated: dateCreated, DateUpdated: dateUpdated}
+		DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func userDevicesFromStorage(item user) []model.Device {

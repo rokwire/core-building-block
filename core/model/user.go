@@ -138,59 +138,6 @@ func (c GlobalRole) String() string {
 	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s]", c.ID, c.Name, c.Permissions)
 }
 
-//OrganizationGroup represents organization group entity. It is a collection of users
-type OrganizationGroup struct {
-	ID   string
-	Name string
-
-	Permissions []OrganizationPermission
-	Roles       []OrganizationRole
-
-	Organization Organization
-
-	OrganizationsMemberships []OrganizationMembership
-
-	DateCreated time.Time
-	DateUpdated *time.Time
-}
-
-func (cg OrganizationGroup) String() string {
-	return fmt.Sprintf("[ID:%s\nName:%s\nOrganization:%s]", cg.ID, cg.Name, cg.Organization)
-}
-
-//OrganizationPermission represents organization permission entity
-type OrganizationPermission struct {
-	ID   string
-	Name string
-
-	Organization Organization
-
-	DateCreated time.Time
-	DateUpdated *time.Time
-}
-
-func (c OrganizationPermission) String() string {
-	return fmt.Sprintf("[ID:%s\nName:%s\nOrganization:%s]", c.ID, c.Name, c.Organization)
-}
-
-//OrganizationRole represents organization role entity. It is a collection of permissions
-type OrganizationRole struct {
-	ID          string
-	Name        string
-	Description string
-
-	Permissions []OrganizationPermission
-
-	Organization Organization
-
-	DateCreated time.Time
-	DateUpdated *time.Time
-}
-
-func (c OrganizationRole) String() string {
-	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s\tOrganization:%s]", c.ID, c.Name, c.Permissions, c.Organization)
-}
-
 //Device represents user devices entity.
 type Device struct {
 	ID   string

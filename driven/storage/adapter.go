@@ -539,11 +539,11 @@ func (sa *Adapter) DeleteGlobalGroup(id string) error {
 	return errors.New(logutils.Unimplemented)
 }
 
-//FindOrganizationPermissions finds a set of organization user permissions
-func (sa *Adapter) FindOrganizationPermissions(ids []string, orgID string) ([]model.OrganizationPermission, error) {
-	/*	permissionsFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
-		var permissionsResult []organizationPermission
-		err := sa.db.organizationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
+//FindApplicationPermissions finds a set of application permissions
+func (sa *Adapter) FindApplicationPermissions(ids []string, appID string) ([]model.ApplicationPermission, error) {
+	/*	permissionsFilter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+		var permissionsResult []applicationPermission
+		err := sa.db.applicationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -560,8 +560,8 @@ func (sa *Adapter) FindOrganizationPermissions(ids []string, orgID string) ([]mo
 	return nil, nil
 }
 
-//UpdateOrganizationPermission updates organziation permission
-func (sa *Adapter) UpdateOrganizationPermission(item model.OrganizationPermission) error {
+//UpdateApplicationPermission updates application permission
+func (sa *Adapter) UpdateApplicationPermission(item model.ApplicationPermission) error {
 	//TODO
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
@@ -576,8 +576,8 @@ func (sa *Adapter) DeleteOrganizationPermission(id string) error {
 	return errors.New(logutils.Unimplemented)
 }
 
-//FindOrganizationRoles finds a set of organization user roles
-func (sa *Adapter) FindOrganizationRoles(ids []string, orgID string) ([]model.OrganizationRole, error) {
+//FindApplicationRoles finds a set of application roles
+func (sa *Adapter) FindApplicationRoles(ids []string, appID string) ([]model.ApplicationRole, error) {
 	/*	rolesFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 		var rolesResult []organizationRole
 		err := sa.db.organizationsRoles.Find(rolesFilter, &rolesResult, nil)
@@ -597,8 +597,8 @@ func (sa *Adapter) FindOrganizationRoles(ids []string, orgID string) ([]model.Or
 	return nil, nil
 }
 
-//UpdateOrganizationRole updates organization role
-func (sa *Adapter) UpdateOrganizationRole(item model.OrganizationRole) error {
+//UpdateApplicationRole updates application role
+func (sa *Adapter) UpdateApplicationRole(item model.ApplicationRole) error {
 	//TODO
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
@@ -613,8 +613,8 @@ func (sa *Adapter) DeleteOrganizationRole(id string) error {
 	return errors.New(logutils.Unimplemented)
 }
 
-//FindOrganizationGroups finds a set of organization user groups
-func (sa *Adapter) FindOrganizationGroups(ids []string, orgID string) ([]model.OrganizationGroup, error) {
+//FindApplicationGroups finds a set of application groups
+func (sa *Adapter) FindApplicationGroups(ids []string, orgID string) ([]model.ApplicationGroup, error) {
 	/*	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 		var groupsResult []organizationGroup
 		err := sa.db.organizationsGroups.Find(filter, &groupsResult, nil)
@@ -634,8 +634,8 @@ func (sa *Adapter) FindOrganizationGroups(ids []string, orgID string) ([]model.O
 	return nil, nil
 }
 
-//UpdateOrganizationGroup updates organization group
-func (sa *Adapter) UpdateOrganizationGroup(item model.OrganizationGroup) error {
+//UpdateApplicationGroup updates application group
+func (sa *Adapter) UpdateApplicationGroup(item model.ApplicationGroup) error {
 	//TODO
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.

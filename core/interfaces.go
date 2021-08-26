@@ -59,14 +59,14 @@ type Storage interface {
 	UpdateGlobalGroup(item model.GlobalGroup) error
 	DeleteGlobalGroup(id string) error
 
-	UpdateOrganizationPermission(item model.OrganizationPermission) error
-	DeleteOrganizationPermission(id string) error
+	UpdateApplicationPermission(item model.ApplicationPermission) error
+	DeleteApplicationPermission(id string) error
 
-	UpdateOrganizationRole(item model.OrganizationRole) error
-	DeleteOrganizationRole(id string) error
+	UpdateApplicationRole(item model.ApplicationRole) error
+	DeleteApplicationRole(id string) error
 
-	UpdateOrganizationGroup(item model.OrganizationGroup) error
-	DeleteOrganizationGroup(id string) error
+	UpdateApplicationGroup(item model.ApplicationGroup) error
+	DeleteApplicationGroup(id string) error
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
