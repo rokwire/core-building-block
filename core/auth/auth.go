@@ -59,6 +59,9 @@ type Auth struct {
 	minTokenExp int64  //Minimum access token expiration time in minutes
 	maxTokenExp int64  //Maximum access token expiration time in minutes
 
+	cachedAuthTypes *syncmap.Map //cache auth types
+	authTypesLock   *sync.RWMutex
+
 	cachedIdentityProviders *syncmap.Map //cache identityProviders
 	identityProvidersLock   *sync.RWMutex
 
@@ -91,13 +94,18 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	authTypes := map[string]authType{}
 
-	identityProviders := &syncmap.Map{}
+	cachedAuthTypes := &syncmap.Map{}
+	authTypesLock := &sync.RWMutex{}
+
+	cachedIdentityProviders := &syncmap.Map{}
 	identityProvidersLock := &sync.RWMutex{}
 
 	timerDone := make(chan bool)
 	auth := &Auth{storage: storage, logger: logger, authTypes: authTypes, authPrivKey: authPrivKey, AuthService: nil,
 		serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp,
-		cachedIdentityProviders: identityProviders, identityProvidersLock: identityProvidersLock, timerDone: timerDone}
+		cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
+		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
+		timerDone: timerDone}
 
 	err := auth.storeReg()
 	if err != nil {
@@ -124,9 +132,14 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initAPIKeyAuth(auth)
 	initSignatureAuth(auth)
 
+	err = auth.cacheAuthTypes()
+	if err != nil {
+		logger.Warnf("NewAuth() failed to cache auth types: %v", err)
+	}
+
 	err = auth.cacheIdentityProviders()
 	if err != nil {
-		logger.Warnf("NewAuth() failed to cache auth configs: %v", err)
+		logger.Warnf("NewAuth() failed to cache identity providers: %v", err)
 	}
 
 	return auth, nil
@@ -371,7 +384,55 @@ func (a *Auth) storeReg() error {
 	return nil
 }
 
-//cacheIdentityProviders cache the identity providers
+//cacheAuthTypes caches the auth types
+func (a *Auth) cacheAuthTypes() error {
+	a.logger.Info("cacheAuthTypes..")
+
+	authTypes, err := a.storage.LoadAuthTypes()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
+	}
+
+	a.setCachedAuthTypes(authTypes)
+
+	return nil
+}
+
+func (a *Auth) setCachedAuthTypes(authProviders []model.AuthType) {
+	a.authTypesLock.Lock()
+	defer a.authTypesLock.Unlock()
+
+	a.cachedAuthTypes = &syncmap.Map{}
+	validate := validator.New()
+
+	for _, authType := range authProviders {
+		err := validate.Struct(authType)
+		if err == nil {
+			a.cachedAuthTypes.Store(authType.Code, authType)
+		} else {
+			a.logger.Errorf("failed to validate and cache auth type with code %s: %s", authType.Code, err.Error())
+		}
+	}
+}
+
+func (a *Auth) getCachedAuthType(code string) (*model.AuthType, error) {
+	a.authTypesLock.RLock()
+	defer a.authTypesLock.RUnlock()
+
+	errArgs := &logutils.FieldArgs{"code": code}
+
+	item, _ := a.cachedAuthTypes.Load(code)
+	if item != nil {
+		authType, ok := item.(model.AuthType)
+		if !ok {
+			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeAuthType, errArgs)
+		}
+		return &authType, nil
+	}
+	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, errArgs)
+}
+
+//cacheIdentityProviders caches the identity providers
 func (a *Auth) cacheIdentityProviders() error {
 	a.logger.Info("cacheIdentityProviders..")
 
@@ -383,29 +444,6 @@ func (a *Auth) cacheIdentityProviders() error {
 	a.setCachedIdentityProviders(identityProviders)
 
 	return nil
-}
-
-func (a *Auth) getCachedIdentityProviderConfig(id string, appTypeID string) (*model.IdentityProviderConfig, error) {
-	a.identityProvidersLock.RLock()
-	defer a.identityProvidersLock.RUnlock()
-
-	errArgs := &logutils.FieldArgs{"id": id, "app_type_id": id}
-
-	item, _ := a.cachedIdentityProviders.Load(id)
-	if item != nil {
-		identityProvider, ok := item.(model.IdentityProvider)
-		if !ok {
-			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeIdentityProvider, errArgs)
-		}
-		//find the identity provider config
-		for _, idPrConfig := range identityProvider.Configs {
-			if idPrConfig.AppTypeID == appTypeID {
-				return &idPrConfig, nil
-			}
-		}
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderConfig, errArgs)
-	}
-	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, errArgs)
 }
 
 func (a *Auth) setCachedIdentityProviders(identityProviders []model.IdentityProvider) {
@@ -423,6 +461,29 @@ func (a *Auth) setCachedIdentityProviders(identityProviders []model.IdentityProv
 			a.logger.Errorf("failed to validate and cache identity provider with id %s: %s", idPr.ID, err.Error())
 		}
 	}
+}
+
+func (a *Auth) getCachedIdentityProviderConfig(id string, appTypeID string) (*model.IdentityProviderConfig, error) {
+	a.identityProvidersLock.RLock()
+	defer a.identityProvidersLock.RUnlock()
+
+	errArgs := &logutils.FieldArgs{"id": id, "app_type_id": appTypeID}
+
+	item, _ := a.cachedIdentityProviders.Load(id)
+	if item != nil {
+		identityProvider, ok := item.(model.IdentityProvider)
+		if !ok {
+			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeIdentityProvider, errArgs)
+		}
+		//find the identity provider config
+		for _, idPrConfig := range identityProvider.Configs {
+			if idPrConfig.AppTypeID == appTypeID {
+				return &idPrConfig, nil
+			}
+		}
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderConfig, errArgs)
+	}
+	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, errArgs)
 }
 
 func (a *Auth) checkRefreshTokenLimit(orgID string, appID string, credsID string) error {
@@ -514,7 +575,12 @@ type StorageListener struct {
 	storage.DefaultListenerImpl
 }
 
-//OnIdentityProvidersUpdated notifies that a identity provider has been updated
+//OnAuthTypesUpdated notifies that auth types have been has been updated
+func (al *StorageListener) OnAuthTypesUpdated() {
+	al.auth.cacheAuthTypes()
+}
+
+//OnIdentityProvidersUpdated notifies that identity providers have been updated
 func (al *StorageListener) OnIdentityProvidersUpdated() {
 	al.auth.cacheIdentityProviders()
 }

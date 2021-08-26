@@ -128,6 +128,21 @@ func (sa *Adapter) getCachedOrganizations() ([]model.Organization, error) {
 	return organizationList, err
 }
 
+//LoadAuthTypes loads all auth types
+func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
+	filter := bson.D{}
+	var result []model.AuthType
+	err := sa.db.authTypes.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
+	}
+	if len(result) == 0 {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAuthType, nil, err)
+	}
+
+	return result, nil
+}
+
 //FindUserByID finds an user by id
 func (sa *Adapter) FindUserByID(id string) (*model.User, error) {
 	return sa.findUser("_id", id)
@@ -1083,6 +1098,7 @@ func (sl *storageListener) OnApplicationsUpdated() {
 
 //Listener represents storage listener
 type Listener interface {
+	OnAuthTypesUpdated()
 	OnIdentityProvidersUpdated()
 	OnServiceRegsUpdated()
 	OnOrganizationsUpdated()
@@ -1091,6 +1107,9 @@ type Listener interface {
 
 //DefaultListenerImpl default listener implementation
 type DefaultListenerImpl struct{}
+
+//OnAuthTypesUpdated notifies auth types have been updated
+func (d *DefaultListenerImpl) OnAuthTypesUpdated() {}
 
 //OnIdentityProvidersUpdated notifies identity providers have been updated
 func (d *DefaultListenerImpl) OnIdentityProvidersUpdated() {}

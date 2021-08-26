@@ -103,6 +103,9 @@ type APIs interface {
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
+	//AuthTypes
+	LoadAuthTypes() ([]model.AuthType, error)
+
 	//Users
 	FindUserByAccountID(accountID string) (*model.User, error)
 	InsertUser(user *model.User, authCred *model.AuthCreds) (*model.User, error)

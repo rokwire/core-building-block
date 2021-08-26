@@ -197,6 +197,7 @@ func (m *database) start() error {
 	m.serviceAuthorizations = serviceAuthorizations
 	m.applications = applications
 
+	go m.authTypes.Watch(nil)
 	go m.identityProviders.Watch(nil)
 	go m.serviceRegs.Watch(nil)
 	go m.organizations.Watch(nil)
@@ -509,6 +510,12 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 	coll := nsMap["coll"]
 
 	switch coll {
+	case "auth_types":
+		m.logger.Info("auth_types collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnAuthTypesUpdated()
+		}
 	case "identity_providers":
 		m.logger.Info("identity_providers collection changed")
 
