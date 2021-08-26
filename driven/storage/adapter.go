@@ -598,23 +598,22 @@ func (sa *Adapter) DeleteGlobalGroup(id string) error {
 
 //FindApplicationPermissions finds a set of application permissions
 func (sa *Adapter) FindApplicationPermissions(ids []string, appID string) ([]model.ApplicationPermission, error) {
-	/*	permissionsFilter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
-		var permissionsResult []applicationPermission
-		err := sa.db.applicationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
-		if err != nil {
-			return nil, err
-		}
+	permissionsFilter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	var permissionsResult []applicationPermission
+	err := sa.db.applicationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
+	if err != nil {
+		return nil, err
+	}
 
-		//get the organization from the cached ones
-		organization, err := sa.getCachedOrganization(orgID)
-		if err != nil {
-			return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"org_id": orgID}, err)
-		}
+	//get the application from the cached ones
+	application, err := sa.getCachedApplication(appID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_id": application}, err)
+	}
 
-		result := organizationPermissionsFromStorage(permissionsResult, *organization)
+	result := applicationPermissionsFromStorage(permissionsResult, *application)
 
-		return result, nil */
-	return nil, nil
+	return result, nil
 }
 
 //UpdateApplicationPermission updates application permission
@@ -635,23 +634,22 @@ func (sa *Adapter) DeleteApplicationPermission(id string) error {
 
 //FindApplicationRoles finds a set of application roles
 func (sa *Adapter) FindApplicationRoles(ids []string, appID string) ([]model.ApplicationRole, error) {
-	/*	rolesFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
-		var rolesResult []organizationRole
-		err := sa.db.organizationsRoles.Find(rolesFilter, &rolesResult, nil)
-		if err != nil {
-			return nil, err
-		}
+	rolesFilter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	var rolesResult []applicationRole
+	err := sa.db.applicationsRoles.Find(rolesFilter, &rolesResult, nil)
+	if err != nil {
+		return nil, err
+	}
 
-		//get the organization from the cached ones
-		organization, err := sa.getCachedOrganization(orgID)
-		if err != nil {
-			return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"org_id": orgID}, err)
-		}
+	//get the application from the cached ones
+	application, err := sa.getCachedApplication(appID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_id": application}, err)
+	}
 
-		result := organizationRolesFromStorage(rolesResult, *organization)
+	result := applicationRolesFromStorage(rolesResult, *application)
 
-		return result, nil */
-	return nil, nil
+	return result, nil
 }
 
 //UpdateApplicationRole updates application role
@@ -671,24 +669,22 @@ func (sa *Adapter) DeleteApplicationRole(id string) error {
 }
 
 //FindApplicationGroups finds a set of application groups
-func (sa *Adapter) FindApplicationGroups(ids []string, orgID string) ([]model.ApplicationGroup, error) {
-	/*	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
-		var groupsResult []organizationGroup
-		err := sa.db.organizationsGroups.Find(filter, &groupsResult, nil)
-		if err != nil {
-			return nil, err
-		}
+func (sa *Adapter) FindApplicationGroups(ids []string, appID string) ([]model.ApplicationGroup, error) {
+	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	var groupsResult []applicationGroup
+	err := sa.db.applicationsGroups.Find(filter, &groupsResult, nil)
+	if err != nil {
+		return nil, err
+	}
 
-		//get the organization from the cached ones
-		organization, err := sa.getCachedOrganization(orgID)
-		if err != nil {
-			return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"org_id": orgID}, err)
-		}
+	application, err := sa.getCachedApplication(appID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_id": application}, err)
+	}
 
-		result := organizationGroupsFromStorage(groupsResult, *organization)
+	result := applicationGroupsFromStorage(groupsResult, *application)
 
-		return result, nil */
-	return nil, nil
+	return result, nil
 }
 
 //UpdateApplicationGroup updates application group
