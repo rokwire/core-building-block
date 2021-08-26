@@ -11,15 +11,4 @@ properties:
   org_user_data:
     type: object
     description: map[string]object for arbitrary organization user data
-  permissions:
-    type: array
-    items:
-      $ref: "../organization/OrganizationPermission.yaml"
-  roles:
-    type: array
-    items:
-      $ref: "../organization/OrganizationRole.yaml"
-  groups:
-    type: array
-    items:
-      $ref: "../organization/OrganizationGroup.yaml"
+

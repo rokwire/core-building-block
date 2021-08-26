@@ -568,8 +568,8 @@ func (sa *Adapter) UpdateApplicationPermission(item model.ApplicationPermission)
 	return errors.New(logutils.Unimplemented)
 }
 
-//DeleteOrganizationPermission deletes organization permission
-func (sa *Adapter) DeleteOrganizationPermission(id string) error {
+//DeleteApplicationPermission deletes application permission
+func (sa *Adapter) DeleteApplicationPermission(id string) error {
 	//TODO
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
@@ -605,8 +605,8 @@ func (sa *Adapter) UpdateApplicationRole(item model.ApplicationRole) error {
 	return errors.New(logutils.Unimplemented)
 }
 
-//DeleteOrganizationRole deletes organization role
-func (sa *Adapter) DeleteOrganizationRole(id string) error {
+//DeleteApplicationRole deletes application role
+func (sa *Adapter) DeleteApplicationRole(id string) error {
 	//TODO
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
@@ -642,8 +642,8 @@ func (sa *Adapter) UpdateApplicationGroup(item model.ApplicationGroup) error {
 	return errors.New(logutils.Unimplemented)
 }
 
-//DeleteOrganizationGroup deletes organziation group
-func (sa *Adapter) DeleteOrganizationGroup(id string) error {
+//DeleteApplicationGroup deletes application group
+func (sa *Adapter) DeleteApplicationGroup(id string) error {
 	//TODO
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.

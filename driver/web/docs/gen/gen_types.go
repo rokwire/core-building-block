@@ -306,42 +306,14 @@ type OrganizationConfig struct {
 	Id *string `json:"id,omitempty"`
 }
 
-// OrganizationGroup defines model for OrganizationGroup.
-type OrganizationGroup struct {
-	Id             string                    `json:"id"`
-	Name           string                    `json:"name"`
-	OrgId          string                    `json:"org_id"`
-	OrgMemberships *[]OrganizationMembership `json:"org_memberships,omitempty"`
-	Permissions    *[]OrganizationPermission `json:"permissions,omitempty"`
-	Roles          *[]OrganizationRole       `json:"roles,omitempty"`
-}
-
 // OrganizationMembership defines model for OrganizationMembership.
 type OrganizationMembership struct {
-	Groups *[]OrganizationGroup `json:"groups,omitempty"`
-	Id     string               `json:"id"`
-	OrgId  *string              `json:"org_id,omitempty"`
+	Id    string  `json:"id"`
+	OrgId *string `json:"org_id,omitempty"`
 
 	// map[string]object for arbitrary organization user data
-	OrgUserData *map[string]interface{}   `json:"org_user_data,omitempty"`
-	Permissions *[]OrganizationPermission `json:"permissions,omitempty"`
-	Roles       *[]OrganizationRole       `json:"roles,omitempty"`
-	UserId      *string                   `json:"user_id,omitempty"`
-}
-
-// OrganizationPermission defines model for OrganizationPermission.
-type OrganizationPermission struct {
-	Id    string `json:"id"`
-	Name  string `json:"name"`
-	OrgId string `json:"org_id"`
-}
-
-// OrganizationRole defines model for OrganizationRole.
-type OrganizationRole struct {
-	Id          string                    `json:"id"`
-	Name        string                    `json:"name"`
-	OrgId       string                    `json:"org_id"`
-	Permissions *[]OrganizationPermission `json:"permissions,omitempty"`
+	OrgUserData *map[string]interface{} `json:"org_user_data,omitempty"`
+	UserId      *string                 `json:"user_id,omitempty"`
 }
 
 // PubKey defines model for PubKey.

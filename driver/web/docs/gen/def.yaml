@@ -835,6 +835,57 @@ components:
           nullable: true
           items:
             type: string
+    ApplicationPermission:
+      required:
+        - id
+        - name
+        - app_id
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        app_id:
+          type: string
+    ApplicationRole:
+      required:
+        - id
+        - name
+        - app_id
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        app_id:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationPermission'
+    ApplicationGroup:
+      required:
+        - id
+        - name
+        - app_id
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        app_id:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationPermission'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationRole'
     Organization:
       required:
         - id
@@ -876,61 +927,6 @@ components:
           description: organization domains
           items:
             type: string
-    OrganizationPermission:
-      required:
-        - id
-        - name
-        - org_id
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        org_id:
-          type: string
-    OrganizationRole:
-      required:
-        - id
-        - name
-        - org_id
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        org_id:
-          type: string
-        permissions:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrganizationPermission'
-    OrganizationGroup:
-      required:
-        - id
-        - name
-        - org_id
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        org_id:
-          type: string
-        permissions:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrganizationPermission'
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrganizationRole'
-        org_memberships:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrganizationMembership'
     ServiceReg:
       required:
         - service_id
@@ -1299,18 +1295,6 @@ components:
         org_user_data:
           type: object
           description: 'map[string]object for arbitrary organization user data'
-        permissions:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrganizationPermission'
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrganizationRole'
-        groups:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrganizationGroup'
     Device:
       required:
         - id

@@ -11,18 +11,18 @@ GlobalGroup:
 # application
 Application:
   $ref: "./application/Application.yaml"
+ApplicationPermission:
+  $ref: "./application/ApplicationPermission.yaml"
+ApplicationRole:
+  $ref: "./application/ApplicationRole.yaml"
+ApplicationGroup:
+  $ref: "./application/ApplicationGroup.yaml"
 
 # organization
 Organization:
   $ref: "./organization/Organization.yaml"
 OrganizationConfig:
   $ref: "./organization/OrganizationConfig.yaml"
-OrganizationPermission:
-  $ref: "./organization/OrganizationPermission.yaml"
-OrganizationRole:
-  $ref: "./organization/OrganizationRole.yaml"
-OrganizationGroup:
-  $ref: "./organization/OrganizationGroup.yaml"
   
 # auth
 ServiceReg:

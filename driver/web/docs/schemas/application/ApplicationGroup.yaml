@@ -1,16 +1,20 @@
 required:
   - id
   - name
-  - org_id
+  - app_id
 type: object
 properties:
   id:
     type: string
   name:
     type: string
-  org_id:
+  app_id:
     type: string
   permissions:
     type: array
     items:
-      $ref: "./OrganizationPermission.yaml"
+      $ref: "./ApplicationPermission.yaml"
+  roles:
+    type: array
+    items:
+      $ref: "./ApplicationRole.yaml"
