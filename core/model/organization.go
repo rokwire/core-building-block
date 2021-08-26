@@ -114,5 +114,12 @@ type ApplicationType struct {
 	Identifier string   `bson:"identifier"` //edu.illinois.rokwire etc
 	Name       string   `bson:"name"`       //safer community android, safer community ios, safer community web, uuic android etc
 	Versions   []string `bson:"versions"`   //1.1.0, 1.2.0 etc
-	//TODO add supported auth types from all auth types + configs..
+
+	SupportedAuthTypes []ApplicationTypeAuthType `bson:"supported_auth_types"` //supported auth types for this application type
+}
+
+//ApplicationTypeAuthType represents supported auth type for application with configs/params
+type ApplicationTypeAuthType struct {
+	AuthTypeID string                 `bson:"auth_type_id"`
+	Params     map[string]interface{} `bson:"params"`
 }
