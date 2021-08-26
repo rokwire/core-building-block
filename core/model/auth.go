@@ -14,9 +14,11 @@ import (
 )
 
 const (
+	//TypeAuthType auth type type
+	TypeAuthType logutils.MessageDataType = "auth type"
 	//TypeIdentityProvider identity provider type
 	TypeIdentityProvider logutils.MessageDataType = "identity provider"
-	//TypeIdentityProvider identity provider type
+	//TypeIdentityProviderConfig identity provider config type
 	TypeIdentityProviderConfig logutils.MessageDataType = "identity provider config"
 	//TypeUserAuth user auth type
 	TypeUserAuth logutils.MessageDataType = "user auth"
@@ -41,6 +43,16 @@ const (
 	//TypePubKey pub key type
 	TypePubKey logutils.MessageDataType = "pub key"
 )
+
+//AuthType represents authentication type entity
+//	The system supports different authentication types - username, email, phone, identity providers ones etc
+type AuthType struct {
+	ID          string                 `bson:"_id"`
+	Code        string                 `bson:"code"` //username or email or phone or illinois_oidc etc
+	Description string                 `bson:"description"`
+	IsExternal  bool                   `bson:"is_external"` //says if the users source is external - identity providers
+	Params      map[string]interface{} `bson:"params"`
+}
 
 //IdentityProvider represents identity provider entity
 //	The system can integrate different identity providers - facebook, google, illinois etc

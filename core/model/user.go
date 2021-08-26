@@ -70,7 +70,7 @@ type UserAccount struct {
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 
-	//TODO
+	//TODO on for one app and off for other!
 	//has 2FA ???
 }
 
