@@ -6,11 +6,9 @@ import (
 )
 
 type organization struct {
-	ID               string   `bson:"_id"`
-	Name             string   `bson:"name"`
-	Type             string   `bson:"type"`
-	RequiresOwnLogin bool     `bson:"requires_own_login"`
-	LoginTypes       []string `bson:"login_types"`
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
+	Type string `bson:"type"`
 
 	Config model.OrganizationConfig `bson:"config"`
 

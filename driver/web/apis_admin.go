@@ -110,11 +110,9 @@ func (h AdminApisHandler) createOrganization(l *logs.Log, r *http.Request) logs.
 
 	name := requestData.Name
 	requestType := requestData.Type
-	requiresOwnLogin := requestData.RequiresOwnLogin
-	loginTypes := requestData.LoginTypes
 	organizationDomains := requestData.Config.Domains
 
-	_, err = h.coreAPIs.Administration.AdmCreateOrganization(name, string(requestType), *requiresOwnLogin, *loginTypes, *organizationDomains)
+	_, err = h.coreAPIs.Administration.AdmCreateOrganization(name, string(requestType), *organizationDomains)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 	}
@@ -142,11 +140,9 @@ func (h AdminApisHandler) updateOrganization(l *logs.Log, r *http.Request) logs.
 
 	name := requestData.Name
 	requestType := requestData.Type
-	requiresOwnLogin := requestData.RequiresOwnLogin
-	loginTypes := requestData.LoginTypes
 	organizationDomains := requestData.Config.Domains
 
-	err = h.coreAPIs.Administration.AdmUpdateOrganization(ID, name, string(requestType), *requiresOwnLogin, *loginTypes, *organizationDomains)
+	err = h.coreAPIs.Administration.AdmUpdateOrganization(ID, name, string(requestType), *organizationDomains)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 	}

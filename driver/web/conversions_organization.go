@@ -12,6 +12,5 @@ func organizationToDef(item *model.Organization) *Def.Organization {
 	}
 
 	orgConfig := Def.OrganizationConfig{Id: &item.Config.ID, Domains: &item.Config.Domains}
-	return &Def.Organization{Id: item.ID, Name: item.Name, LoginTypes: &item.LoginTypes,
-		RequiresOwnLogin: &item.RequiresOwnLogin, Config: &orgConfig, Type: Def.OrganizationType(item.Type)}
+	return &Def.Organization{Id: item.ID, Name: item.Name, Config: &orgConfig, Type: Def.OrganizationType(item.Type)}
 }

@@ -16,13 +16,9 @@ const (
 
 //Organization represents organization entity
 type Organization struct {
-	ID               string
-	Name             string
-	Type             string //micro small medium large - based on the users count
-	RequiresOwnLogin bool   //Illinois orgnization requires own login(oidc) but Champaign organization does not requires
-
-	//what login type/s are supported for the organization. It will be empty for Champaign and "OIDC" for university of Illinois
-	LoginTypes []string
+	ID   string
+	Name string
+	Type string //micro small medium large - based on the users count
 
 	Config OrganizationConfig
 

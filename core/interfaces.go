@@ -22,10 +22,10 @@ type Administration interface {
 	AdmGetGlobalConfig() (*model.GlobalConfig, error)
 	AdmUpdateGlobalConfig(setting string) error
 
-	AdmCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error)
+	AdmCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error)
 	AdmGetOrganizations() ([]model.Organization, error)
 	AdmGetOrganization(ID string) (*model.Organization, error)
-	AdmUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
+	AdmUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 
 	AdmCreateApplication(name string, versions []string) (*model.Application, error)
 	AdmGetApplication(ID string) (*model.Application, error)
@@ -69,7 +69,7 @@ type Storage interface {
 	DeleteApplicationGroup(id string) error
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
-	UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
+	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 	LoadOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)
 

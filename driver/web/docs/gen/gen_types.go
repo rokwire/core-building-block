@@ -285,12 +285,10 @@ type OidcDiscovery struct {
 
 // Organization defines model for Organization.
 type Organization struct {
-	Config           *OrganizationConfig `json:"config,omitempty"`
-	Id               string              `json:"id"`
-	LoginTypes       *[]string           `json:"login_types"`
-	Name             string              `json:"name"`
-	RequiresOwnLogin *bool               `json:"requires_own_login,omitempty"`
-	Type             OrganizationType    `json:"type"`
+	Config *OrganizationConfig `json:"config,omitempty"`
+	Id     string              `json:"id"`
+	Name   string              `json:"name"`
+	Type   OrganizationType    `json:"type"`
 }
 
 // OrganizationType defines model for Organization.Type.

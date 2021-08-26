@@ -844,7 +844,7 @@ func (sa *Adapter) InsertOrganization(organization model.Organization) (*model.O
 }
 
 //UpdateOrganization updates an organization
-func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
+func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error {
 
 	now := time.Now()
 	//TODO - use pointers and update only what not nil
@@ -853,8 +853,6 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "name", Value: name},
 			primitive.E{Key: "type", Value: requestType},
-			primitive.E{Key: "requires_own_login", Value: requiresOwnLogin},
-			primitive.E{Key: "login_types", Value: loginTypes},
 			primitive.E{Key: "config.domains", Value: organizationDomains},
 			primitive.E{Key: "config.date_updated", Value: now},
 			primitive.E{Key: "date_updated", Value: now},

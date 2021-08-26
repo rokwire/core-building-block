@@ -10,9 +10,8 @@ func organizationFromStorage(item *organization, applications []model.Applicatio
 		return model.Organization{}
 	}
 
-	return model.Organization{ID: item.ID, Name: item.Name, Type: item.Type, RequiresOwnLogin: item.RequiresOwnLogin,
-		LoginTypes: item.LoginTypes, Config: item.Config, Applications: applications,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return model.Organization{ID: item.ID, Name: item.Name, Type: item.Type,
+		Config: item.Config, Applications: applications, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func organizationsFromStorage(itemsList []organization, applications []model.Application) []model.Organization {
@@ -50,8 +49,8 @@ func organizationToStorage(item *model.Organization) *organization {
 		applicationsIDs[i] = application.ID
 	}
 
-	return &organization{ID: item.ID, Name: item.Name, Type: item.Type, RequiresOwnLogin: item.RequiresOwnLogin,
-		LoginTypes: item.LoginTypes, Config: item.Config, Applications: applicationsIDs, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return &organization{ID: item.ID, Name: item.Name, Type: item.Type, Config: item.Config,
+		Applications: applicationsIDs, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 //OrganizationMembership

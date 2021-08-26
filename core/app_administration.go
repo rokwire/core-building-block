@@ -205,15 +205,14 @@ func (app *application) admUpdateGlobalConfig(setting string) error {
 	return nil
 }
 
-func (app *application) admCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
+func (app *application) admCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {
 	now := time.Now()
 
 	orgConfigID, _ := uuid.NewUUID()
 	orgConfig := model.OrganizationConfig{ID: orgConfigID.String(), Domains: organizationDomains, DateCreated: now}
 
 	organizationID, _ := uuid.NewUUID()
-	organization := model.Organization{ID: organizationID.String(), Name: name, Type: requestType, RequiresOwnLogin: requiresOwnLogin, LoginTypes: loginTypes,
-		Config: orgConfig, DateCreated: now}
+	organization := model.Organization{ID: organizationID.String(), Name: name, Type: requestType, Config: orgConfig, DateCreated: now}
 
 	insertedOrg, err := app.storage.InsertOrganization(organization)
 	if err != nil {
@@ -240,8 +239,8 @@ func (app *application) admGetOrganizations() ([]model.Organization, error) {
 	return getOrganization, nil
 }
 
-func (app *application) admUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
-	err := app.storage.UpdateOrganization(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+func (app *application) admUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error {
+	err := app.storage.UpdateOrganization(ID, name, requestType, organizationDomains)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeOrganization, nil, err)
 	}

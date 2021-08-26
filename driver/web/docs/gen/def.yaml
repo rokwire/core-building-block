@@ -906,13 +906,6 @@ components:
             - medium
             - large
             - huge
-        requires_own_login:
-          type: boolean
-        login_types:
-          type: array
-          nullable: true
-          items:
-            type: string
         config:
           $ref: '#/components/schemas/OrganizationConfig'
     OrganizationConfig:
