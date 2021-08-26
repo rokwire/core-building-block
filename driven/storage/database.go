@@ -486,6 +486,12 @@ func (m *database) applyApplicationsChecks(applications *collectionWrapper) erro
 		return err
 	}
 
+	//add application type identifier index - unique
+	err = applications.AddIndex(bson.D{primitive.E{Key: "types.identifier", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("applications checks passed")
 	return nil
 }
