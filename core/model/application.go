@@ -79,7 +79,8 @@ type Application struct {
 	//multi - the application is for many organizations - Safer community application etc
 	OrgRelType string `bson:"org_rel_type"`
 
-	//TODO add identity providers groups mapping - group to group ..
+	//identity providers groups mapping - group to group mapping
+	IdentityProvidersGroups []ApplicationIdentityProviderGroups `bson:"identity_providers_groups"`
 
 	Types []ApplicationType `bson:"types"`
 
@@ -87,6 +88,18 @@ type Application struct {
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+//ApplicationIdentityProviderGroups maps an identity provider groups to application groups
+//	For example:
+//  	for the UIUC application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups access" is mapped to an application group called "groups access"
+//  	for the Safer Illinois application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health test verify" is mapped to an application group called "tests verifiers"
+type ApplicationIdentityProviderGroups struct {
+	IdentityProviderID string `bson:"identity_provider_id"`
+	Groups             []struct {
+		IdentityProviderGroup string `bson:"identity_provider_group"`
+		AppGroupID            string `bson:"app_group_id"`
+	} `bson:"groups"`
 }
 
 //ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc
