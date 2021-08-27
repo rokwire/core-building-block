@@ -17,8 +17,9 @@ const (
 type User struct {
 	ID string
 
-	Account UserAccount
-	Profile UserProfile
+	//one item if the user is used only for one application or many items if the user is shared between many applications
+	ApplicationsAccounts []ApplicationUserAccount
+	Profile              UserProfile
 
 	Permissions []GlobalPermission
 	Roles       []GlobalRole
@@ -48,38 +49,48 @@ func (u User) String() string {
 		}
 	}
 
-	return fmt.Sprintf("[ID:%s\n\tAccount:%s\n\tProfile:%s\n\tPermissions:%s\n\tRoles:%s\n\tGroups:%s\n\tOrganizationsMemberships:%s]",
-		u.ID, u.Account, u.Profile, u.Permissions, u.Roles, u.Groups, memberships.String())
+	return fmt.Sprintf("[ID:%s\n\tProfile:%s\n\tPermissions:%s\n\tRoles:%s\n\tGroups:%s\n\tOrganizationsMemberships:%s]",
+		u.ID, u.Profile, u.Permissions, u.Roles, u.Groups, memberships.String())
 }
 
-//UserAccount represents user account entity. The user account is the user himself or herself.
-//we should require the user to give unique phone or unique email(or both) when registering.
-//It is also a good practive internally the system to generate unique number and(or) unique username which are not changable.
-//At some moment the user could be needed to change his phone or email so we need to rely on the number or on the username which cannot be changed.
-type UserAccount struct {
+//ApplicationUserAccount represents UserAccount for an application
+//	The user account is the user himself or herself
+//	What the person provides to the system so that to use it
+type ApplicationUserAccount struct {
 	ID string `bson:"id"`
 
-	Email string `bson:"email"`
-	Phone string `bson:"phone"`
+	AppID string `bson:"app_id"`
 
-	Username string `bson:"username"`
+	//all available auth types for the application
+	AuthTypes []UserAuthType `bson:"auth_types"`
 
-	//for Champaign org - basically this will be one or many of  - email, phone, number, username
-	//for Illinois university org - this will be empty because this organization requires it own login
-	LoginTypes []string `bson:"login_types"`
-
-	AllowLogin bool `bson:"allow_login"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-
-	//TODO on for one app and off for other!
-	//has 2FA ???
+	Active2FA bool `bson:"active_2fa"`
 }
 
-func (ua UserAccount) String() string {
-	return fmt.Sprintf("[ID:%s\tEmail:%s\tPhone:%s\tUsername:%s]",
-		ua.ID, ua.Email, ua.Phone, ua.Username)
+//UserAuthType represents user auth type
+// The сystem supports [n] auth types - username, email, phone, illlinois_oidc etc
+// One application can support <= [n] auth types from the system ones(subset)
+type UserAuthType struct {
+	ID         string `bson:"id"`
+	AuthTypeID string `bson:"auth_type_id"`
+	Active     bool   `bson:"active"` //auth type can be activated/deactivated
+
+	//{
+	//	"username":"petaka"
+	//}
+	//or
+	//{
+	//	"email":"petyo@inabyte.com"
+	//}
+	//or
+	//{
+	//	"phone":"+359000000000"
+	//}
+	//or
+	//{
+	//	illinois_oidc stuff...
+	//}
+	Params map[string]interface{} `bson:"params"`
 }
 
 //UserProfile represents user profile entity. The user profile is an information about the user.
