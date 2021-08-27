@@ -12,14 +12,16 @@ const (
 const (
 	AuthLoginRequestAuthTypeEmail AuthLoginRequestAuthType = "email"
 
-	AuthLoginRequestAuthTypeOidc AuthLoginRequestAuthType = "oidc"
+	AuthLoginRequestAuthTypeIllinoisOidc AuthLoginRequestAuthType = "illinois_oidc"
 
 	AuthLoginRequestAuthTypePhone AuthLoginRequestAuthType = "phone"
+
+	AuthLoginRequestAuthTypeUsername AuthLoginRequestAuthType = "username"
 )
 
 // Defines values for AuthLoginUrlRequestAuthType.
 const (
-	AuthLoginUrlRequestAuthTypeOidc AuthLoginUrlRequestAuthType = "oidc"
+	AuthLoginUrlRequestAuthTypeIllinoisOidc AuthLoginUrlRequestAuthType = "illinois_oidc"
 )
 
 // Defines values for AuthResponseRokwireTokenTokenType.
@@ -131,7 +133,6 @@ type AuthLoginRequest struct {
 	AppId    string                   `json:"app_id"`
 	AuthType AuthLoginRequestAuthType `json:"auth_type"`
 	Creds    *interface{}             `json:"creds,omitempty"`
-	OrgId    string                   `json:"org_id"`
 	Params   *interface{}             `json:"params,omitempty"`
 }
 
@@ -149,7 +150,6 @@ type AuthLoginResponse struct {
 type AuthLoginUrlRequest struct {
 	AppId       string                      `json:"app_id"`
 	AuthType    AuthLoginUrlRequestAuthType `json:"auth_type"`
-	OrgId       string                      `json:"org_id"`
 	RedirectUri string                      `json:"redirect_uri"`
 }
 

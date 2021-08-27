@@ -44,8 +44,7 @@ paths:
                 value: |
                   {
                     "auth_type": "email",
-                    "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
-                    "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                    "app_id": "edu.illinois.rokwire.safercommunity",
                     "creds": {
                       "email": "test@test.com", 
                       "password": "test12345"
@@ -56,20 +55,18 @@ paths:
                 value: |
                   {
                     "auth_type": "phone",
-                    "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
-                    "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                    "app_id": "edu.illinois.rokwire",
                     "creds": {
                       "phone": "+12223334444", 
                       "code": "123456"
                     }
                   }
               oidc:
-                summary: OIDC login
+                summary: Illinois OIDC login
                 value: |
                   {
                     "auth_type": "oidc",
-                    "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
-                    "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                    "app_id": "edu.illinois.rokwire",
                     "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
                     "params": {
                       "redirect_uri": "https://redirect.example.com",
@@ -990,18 +987,16 @@ components:
     AuthLoginRequest:
       required:
         - auth_type
-        - org_id
         - app_id
       type: object
       properties:
         auth_type:
           type: string
           enum:
+            - username
             - email
             - phone
-            - oidc
-        org_id:
-          type: string
+            - illinois_oidc
         app_id:
           type: string
         creds:
@@ -1108,7 +1103,6 @@ components:
     AuthLoginUrlRequest:
       required:
         - auth_type
-        - org_id
         - app_id
         - redirect_uri
       type: object
@@ -1116,9 +1110,7 @@ components:
         auth_type:
           type: string
           enum:
-            - oidc
-        org_id:
-          type: string
+            - illinois_oidc
         app_id:
           type: string
         redirect_uri:

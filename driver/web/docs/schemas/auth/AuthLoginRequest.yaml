@@ -1,17 +1,15 @@
 required:
   - auth_type
-  - org_id
   - app_id
 type: object
 properties:
   auth_type:
     type: string
     enum:
+      - username
       - email
       - phone
-      - oidc
-  org_id:
-    type: string
+      - illinois_oidc
   app_id:
     type: string
   creds:

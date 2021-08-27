@@ -41,7 +41,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	accessToken, refreshToken, user, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.OrgId, requestData.AppId, requestParams, l)
+	accessToken, refreshToken, user, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppId, requestParams, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
@@ -91,7 +91,7 @@ func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request) logs.Htt
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "auth login url request", nil, err, http.StatusBadRequest, true)
 	}
 
-	loginURL, params, err := h.coreAPIs.Auth.GetLoginURL(string(requestData.AuthType), requestData.OrgId, requestData.AppId, requestData.RedirectUri, l)
+	loginURL, params, err := h.coreAPIs.Auth.GetLoginURL(string(requestData.AuthType), requestData.AppId, requestData.RedirectUri, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, "login url", nil, err, http.StatusInternalServerError, true)
 	}
