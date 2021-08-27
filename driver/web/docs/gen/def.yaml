@@ -444,6 +444,10 @@ paths:
       summary: Get service registrations
       description: |
         Returns service registration records
+
+        **Auth:** Requires auth token with `service_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: ids
           in: query
@@ -744,6 +748,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/OidcDiscovery'
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     GlobalConfig:
       required:
