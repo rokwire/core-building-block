@@ -233,11 +233,26 @@ func (m *database) applyIdentityProvidersChecks(identityProviders *collectionWra
 func (m *database) applyUsersChecks(users *collectionWrapper) error {
 	m.logger.Info("apply users checks.....")
 
-	//add account index
-	err := users.AddIndex(bson.D{primitive.E{Key: "account.id", Value: 1}}, false)
+	//add username auth type index
+	err := users.AddIndex(bson.D{primitive.E{Key: "applications_accounts.auth_types.params.username", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
+
+	//add email auth type index
+	err = users.AddIndex(bson.D{primitive.E{Key: "applications_accounts.auth_types.params.email", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add phone auth type index
+	err = users.AddIndex(bson.D{primitive.E{Key: "applications_accounts.auth_types.params.phone", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add oidc auth type index
+	//TODO
 
 	//add profile index
 	err = users.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
