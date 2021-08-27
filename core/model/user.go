@@ -95,6 +95,21 @@ func (up UserProfile) String() string {
 		up.ID, up.PhotoURL, up.FirstName, up.LastName)
 }
 
+//ApplicationUser represents application user entity
+type ApplicationUser struct {
+	ID string
+
+	User        User
+	Application Application
+
+	Permissions []ApplicationPermission
+	Roles       []ApplicationRole
+	Groups      []ApplicationGroup
+
+	DateCreated time.Time
+	DateUpdated *time.Time
+}
+
 //GlobalGroup represents global group entity. It is a collection of users
 type GlobalGroup struct {
 	ID   string `bson:"_id"`
