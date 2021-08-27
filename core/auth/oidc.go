@@ -270,10 +270,6 @@ func (a *oidcAuthImpl) getLoginURL(orgID string, appID string, redirectURI strin
 	return authURL + "?" + query.Encode(), responseParams, nil
 }
 
-func (a *oidcAuthImpl) isGlobal() bool {
-	return false
-}
-
 func (a *oidcAuthImpl) checkToken(idToken string, orgID string, appID string, oidcConfig *oidcAuthConfig, l *logs.Log) (string, error) {
 	var err error
 	if oidcConfig == nil {

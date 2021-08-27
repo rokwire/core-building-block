@@ -32,10 +32,6 @@ func (a *usernameAuthImpl) getLoginURL(orgID string, appID string, redirectURI s
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
-func (a *usernameAuthImpl) isGlobal() bool {
-	return true
-}
-
 //initUsernameAuth initializes and registers a new username auth instance
 func initUsernameAuth(auth *Auth) (*usernameAuthImpl, error) {
 	username := &usernameAuthImpl{auth: auth, authType: authTypeUsername}

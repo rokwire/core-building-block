@@ -32,10 +32,6 @@ func (a *phoneAuthImpl) getLoginURL(orgID string, appID string, redirectURI stri
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
-func (a *phoneAuthImpl) isGlobal() bool {
-	return true
-}
-
 //initPhoneAuth initializes and registers a new phone auth instance
 func initPhoneAuth(auth *Auth) (*phoneAuthImpl, error) {
 	phone := &phoneAuthImpl{auth: auth, authType: authTypePhone}

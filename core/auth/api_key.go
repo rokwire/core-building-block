@@ -31,10 +31,6 @@ func (a *apiKeyAuthImpl) getLoginURL(orgID string, appID string, redirectURI str
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
-func (a *apiKeyAuthImpl) isGlobal() bool {
-	return false
-}
-
 //initAPIKeyAuth initializes and registers a new API key auth instance
 func initAPIKeyAuth(auth *Auth) (*apiKeyAuthImpl, error) {
 	apiKey := &apiKeyAuthImpl{auth: auth, authType: authTypeAPIKey}

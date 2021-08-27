@@ -31,10 +31,6 @@ func (a *firebaseAuthImpl) getLoginURL(orgID string, appID string, redirectURI s
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
-func (a *firebaseAuthImpl) isGlobal() bool {
-	return true
-}
-
 //initFirebaseAuth initializes and registers a new Firebase auth instance
 func initFirebaseAuth(auth *Auth) (*firebaseAuthImpl, error) {
 	firebase := &firebaseAuthImpl{auth: auth, authType: authTypeFirebase}

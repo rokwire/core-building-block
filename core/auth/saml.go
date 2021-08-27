@@ -33,10 +33,6 @@ func (a *samlAuthImpl) getLoginURL(orgID string, appID string, redirectURI strin
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
-func (a *samlAuthImpl) isGlobal() bool {
-	return false
-}
-
 //initSamlAuth initializes and registers a new SAML auth instance
 func initSamlAuth(auth *Auth) (*samlAuthImpl, error) {
 	saml := &samlAuthImpl{auth: auth, authType: authTypeSaml}

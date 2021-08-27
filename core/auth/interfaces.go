@@ -17,8 +17,6 @@ type authType interface {
 	refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error)
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
-	//isGlobal returns whether an authType is orgID, appID independent
-	isGlobal() bool
 }
 
 //APIs is the interface which defines the APIs provided by the auth package

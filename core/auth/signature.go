@@ -31,10 +31,6 @@ func (a *signatureAuthImpl) getLoginURL(orgID string, appID string, redirectURI 
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
-func (a *signatureAuthImpl) isGlobal() bool {
-	return false
-}
-
 //initSignatureAuth initializes and registers a new signature auth instance
 func initSignatureAuth(auth *Auth) (*signatureAuthImpl, error) {
 	signature := &signatureAuthImpl{auth: auth, authType: authTypeSignature}

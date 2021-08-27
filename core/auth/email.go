@@ -32,10 +32,6 @@ func (a *emailAuthImpl) getLoginURL(orgID string, appID string, redirectURI stri
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
-func (a *emailAuthImpl) isGlobal() bool {
-	return true
-}
-
 //initEmailAuth initializes and registers a new email auth instance
 func initEmailAuth(auth *Auth) (*emailAuthImpl, error) {
 	email := &emailAuthImpl{auth: auth, authType: authTypeEmail}
