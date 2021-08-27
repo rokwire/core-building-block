@@ -25,6 +25,9 @@ type User struct {
 
 	Groups []GlobalGroup
 
+	//one item if the user is used only for one application or many items if the user is shared between many applications
+	ApplicationsUsers []ApplicationUser
+
 	OrganizationsMemberships []OrganizationMembership
 
 	Devices []Device

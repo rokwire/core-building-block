@@ -125,16 +125,8 @@ type ApplicationTypeAuthType struct {
 // For other applications:
 // - relatives are hosted in the same building etc.
 type ApplicationUserRelations struct {
-	ID   string
-	Type string //family, couple, relatives, brothers/sisters, external roommate when there is no provided place by the university for example
-
-	//TODO Add when applications users are done
-	//Manager OrganizationMembership
-	//Members []OrganizationMembership
-}
-
-func (cur ApplicationUserRelations) String() string {
-	return "TODO"
-	//return fmt.Sprintf("[ID:%s\n\tType:%s\n\tRelationManager:%s\n\tMembers:%s\n\t]",
-	//	cur.ID, cur.Type, cur.Manager, cur.Members)
+	ID      string
+	Type    string //family, couple, relatives, brothers/sisters, external roommate when there is no provided place by the university for example
+	Manager ApplicationUser
+	Members []ApplicationUser
 }
