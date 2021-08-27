@@ -39,6 +39,7 @@ type database struct {
 	applicationsGroups       *collectionWrapper
 	applicationsRoles        *collectionWrapper
 	applicationsPermissions  *collectionWrapper
+	applicationsUsers        *collectionWrapper
 
 	listeners []Listener
 }
@@ -174,6 +175,12 @@ func (m *database) start() error {
 		return err
 	}
 
+	applicationsUsers := &collectionWrapper{database: m, coll: db.Collection("applications_users")}
+	err = m.applyApplicationsUsersChecks(applicationsUsers)
+	if err != nil {
+		return err
+	}
+
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
@@ -196,6 +203,7 @@ func (m *database) start() error {
 	m.applicationsGroups = applicationsGroups
 	m.applicationsRoles = applicationsRoles
 	m.applicationsPermissions = applicationsPermissions
+	m.applicationsUsers = applicationsUsers
 
 	go m.authTypes.Watch(nil)
 	go m.identityProviders.Watch(nil)
@@ -494,6 +502,19 @@ func (m *database) applyApplicationsPermissionsChecks(applicationsPermissions *c
 	}
 
 	m.logger.Info("applications permissions checks passed")
+	return nil
+}
+
+func (m *database) applyApplicationsUsersChecks(applicationsUsers *collectionWrapper) error {
+	m.logger.Info("apply applications users checks.....")
+
+	//add user_id, app_id index - unique
+	err := applicationsUsers.AddIndex(bson.D{primitive.E{Key: "user_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("applications users checks passed")
 	return nil
 }
 

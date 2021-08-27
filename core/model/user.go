@@ -19,15 +19,15 @@ type User struct {
 
 	//one item if the user is used only for one application or many items if the user is shared between many applications
 	ApplicationsAccounts []ApplicationUserAccount
-	Profile              UserProfile
+	//one item if the user is used only for one application or many items if the user is shared between many applications
+	ApplicationsUsers []ApplicationUser
+
+	Profile UserProfile
 
 	Permissions []GlobalPermission
 	Roles       []GlobalRole
 
 	Groups []GlobalGroup
-
-	//one item if the user is used only for one application or many items if the user is shared between many applications
-	ApplicationsUsers []ApplicationUser
 
 	OrganizationsMemberships []OrganizationMembership
 
