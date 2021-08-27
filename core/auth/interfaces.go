@@ -27,11 +27,11 @@ type APIs interface {
 	//GetHost returns the host/issuer of the auth service
 	GetHost() string
 
-	//Login logs a user in using the specified credentials and authentication method
+	//Login logs a user in a specific application using the specified credentials and authentication method.
+	//The authentication method must be one of the supported for the application.
 	//	Input:
-	//		authType (string): Name of the authentication method for provided creds (eg. "email")
+	//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
-	//		orgID (string): ID of the organization that the user is logging in to
 	//		appID (string): ID of the app/client that the user is logging in from
 	//		params (string): JSON encoded params defined by specified auth type
 	//		l (*logs.Log): Log object pointer for request
@@ -40,7 +40,7 @@ type APIs interface {
 	//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//		User (User): User object for authenticated user
 	//		Params (interface{}): authType-specific set of parameters passed back to client
-	Login(authType string, creds string, orgID string, appID string, params string, l *logs.Log) (string, string, *model.User, interface{}, error)
+	Login(authType string, creds string, appID string, params string, l *logs.Log) (string, string, *model.User, interface{}, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
@@ -54,15 +54,14 @@ type APIs interface {
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:
-	//		authType (string): Name of the authentication method for provided creds (eg. "email")
-	//		orgID (string): ID of the organization that the user is logging in to
+	//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		appID (string): ID of the app/client that the user is logging in from
 	//		redirectURI (string): Registered redirect URI where client will receive response
 	//		l (*loglib.Log): Log object pointer for request
 	//	Returns:
 	//		Login URL (string): SSO provider login URL to be launched in a browser
 	//		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
-	GetLoginURL(authType string, orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
+	GetLoginURL(authType string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
