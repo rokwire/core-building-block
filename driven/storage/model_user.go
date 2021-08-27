@@ -8,7 +8,8 @@ import (
 type user struct {
 	ID string `bson:"_id"`
 
-	Account model.UserAccount `bson:"account"`
+	//TODO applications accounts
+	//Account model.UserAccount `bson:"account"`
 	Profile model.UserProfile `bson:"profile"`
 
 	Permissions              []model.GlobalPermission `bson:"permissions"`

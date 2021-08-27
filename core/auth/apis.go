@@ -11,7 +11,6 @@ import (
 	"github.com/rokmetro/logging-library/logutils"
 
 	"github.com/rokmetro/logging-library/logs"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 //Start starts the auth service
@@ -133,96 +132,100 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 //		Refresh token (string): Refresh token that can be sent to refresh the access token once it expires
 //		Params (interface{}): authType-specific set of parameters passed back to client
 func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interface{}, error) {
-	refresh, err := a.storage.FindRefreshToken(refreshToken)
-	if err != nil {
-		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
-	}
-
-	credentials, err := a.storage.FindCredentialsByID(refresh.CredsID)
-	if err != nil {
-		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
-	}
-	if credentials == nil {
-		return "", "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthCred, nil)
-	}
-
-	validate := validator.New()
-	err = validate.Struct(refresh)
-	if err != nil {
-		return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthRefreshParams, nil, err)
-	}
-
-	if !refresh.Expires.After(time.Now().UTC()) {
-		err = a.storage.DeleteRefreshToken(refresh.CurrentToken)
+	//TODO
+	return "", "", nil, nil
+	/*
+		refresh, err := a.storage.FindRefreshToken(refreshToken)
 		if err != nil {
-			return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh expiration", nil, err)
+			return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
 		}
-		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, "refresh expiration", nil)
-	}
 
-	if refreshToken == refresh.PreviousToken {
-		err = a.storage.DeleteRefreshToken(refresh.CurrentToken)
+		credentials, err := a.storage.FindCredentialsByID(refresh.CredsID)
 		if err != nil {
-			return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh reuse", nil, err)
+			return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
 		}
-		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, "refresh reuse", nil)
-	}
-	if refreshToken != refresh.CurrentToken {
-		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, model.TypeRefreshToken, nil)
-	}
+		if credentials == nil {
+			return "", "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthCred, nil)
+		}
 
-	auth, err := a.getAuthType(credentials.AuthType)
-	if err != nil {
-		return "", "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
-	}
+		validate := validator.New()
+		err = validate.Struct(refresh)
+		if err != nil {
+			return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthRefreshParams, nil, err)
+		}
 
-	userAuth, err := auth.refresh(refresh.Params, refresh.OrgID, refresh.AppID, l)
-	if err != nil {
-		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
-	}
+		if !refresh.Expires.After(time.Now().UTC()) {
+			err = a.storage.DeleteRefreshToken(refresh.CurrentToken)
+			if err != nil {
+				return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh expiration", nil, err)
+			}
+			return "", "", nil, errors.ErrorAction(logutils.ActionValidate, "refresh expiration", nil)
+		}
 
-	if userAuth == nil {
-		return "", "", nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeUserAuth, nil, err)
-	}
+		if refreshToken == refresh.PreviousToken {
+			err = a.storage.DeleteRefreshToken(refresh.CurrentToken)
+			if err != nil {
+				return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh reuse", nil, err)
+			}
+			return "", "", nil, errors.ErrorAction(logutils.ActionValidate, "refresh reuse", nil)
+		}
+		if refreshToken != refresh.CurrentToken {
+			return "", "", nil, errors.ErrorAction(logutils.ActionValidate, model.TypeRefreshToken, nil)
+		}
 
-	user, err := a.storage.FindUserByAccountID(credentials.AccountID)
-	if err != nil {
-		return "", "", nil, err
-	}
+		auth, err := a.getAuthType(credentials.AuthType)
+		if err != nil {
+			return "", "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+		}
 
-	user, update, _ := a.needsUserUpdate(userAuth, user)
-	if update {
-		_, err = a.updateAccount(user, "", nil)
+		userAuth, err := auth.refresh(refresh.Params, refresh.OrgID, refresh.AppID, l)
+		if err != nil {
+			return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
+		}
+
+		if userAuth == nil {
+			return "", "", nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeUserAuth, nil, err)
+		}
+
+		user, err := a.storage.FindUserByAccountID(credentials.AccountID)
 		if err != nil {
 			return "", "", nil, err
 		}
-	}
 
-	claims := a.getStandardClaims(user.ID, userAuth.UserID, user.Account.Email, user.Account.Phone, "rokwire", refresh.OrgID, refresh.AppID, userAuth.Exp)
-	token, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
-	if err != nil {
-		return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
-	}
-
-	newRefreshToken := ""
-	if userAuth.RefreshParams != nil {
-		var expireTime *time.Time
-		newRefreshToken, expireTime, err = a.buildRefreshToken()
-		if err != nil {
-			return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeRefreshToken, nil, err)
+		user, update, _ := a.needsUserUpdate(userAuth, user)
+		if update {
+			_, err = a.updateAccount(user, "", nil)
+			if err != nil {
+				return "", "", nil, err
+			}
 		}
 
-		now := time.Now().UTC()
-		updatedRefresh := model.AuthRefresh{CurrentToken: newRefreshToken, PreviousToken: refreshToken, Expires: expireTime,
-			Params: userAuth.RefreshParams, DateUpdated: &now}
-
-		err = a.storage.UpdateRefreshToken(refreshToken, &updatedRefresh)
+		claims := a.getStandardClaims(user.ID, userAuth.UserID, user.Account.Email, user.Account.Phone, "rokwire", refresh.OrgID, refresh.AppID, userAuth.Exp)
+		token, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 		if err != nil {
-			return "", "", nil, err
+			return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 		}
-	}
 
-	return token, newRefreshToken, userAuth.ResponseParams, nil
+		newRefreshToken := ""
+		if userAuth.RefreshParams != nil {
+			var expireTime *time.Time
+			newRefreshToken, expireTime, err = a.buildRefreshToken()
+			if err != nil {
+				return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeRefreshToken, nil, err)
+			}
+
+			now := time.Now().UTC()
+			updatedRefresh := model.AuthRefresh{CurrentToken: newRefreshToken, PreviousToken: refreshToken, Expires: expireTime,
+				Params: userAuth.RefreshParams, DateUpdated: &now}
+
+			err = a.storage.UpdateRefreshToken(refreshToken, &updatedRefresh)
+			if err != nil {
+				return "", "", nil, err
+			}
+		}
+
+		return token, newRefreshToken, userAuth.ResponseParams, nil
+	*/
 }
 
 //GetLoginURL returns a pre-formatted login url for SSO providers

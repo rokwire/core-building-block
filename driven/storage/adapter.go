@@ -224,64 +224,67 @@ func (sa *Adapter) findUser(key string, id string) (*model.User, error) {
 
 //InsertUser inserts a user
 func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCreds) (*model.User, error) {
-	if user == nil {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUser))
-	}
-
-	storageUser := userToStorage(user)
-	membership := storageUser.OrganizationsMemberships[0]
-	organizationMembership := organizationMembership{ID: membership.ID, UserID: user.ID, OrgID: membership.OrgID,
-		OrgUserData: membership.OrgUserData, DateCreated: storageUser.DateCreated}
-
-	// transaction
-	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
-		err := sessionContext.StartTransaction()
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
+	return nil, nil
+	/*
+		if user == nil {
+			return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUser))
 		}
 
-		_, err = sa.db.users.InsertOneWithContext(sessionContext, storageUser)
+		storageUser := userToStorage(user)
+		membership := storageUser.OrganizationsMemberships[0]
+		organizationMembership := organizationMembership{ID: membership.ID, UserID: user.ID, OrgID: membership.OrgID,
+			OrgUserData: membership.OrgUserData, DateCreated: storageUser.DateCreated}
+
+		// transaction
+		err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+			err := sessionContext.StartTransaction()
+			if err != nil {
+				sa.abortTransaction(sessionContext)
+				return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
+			}
+
+			_, err = sa.db.users.InsertOneWithContext(sessionContext, storageUser)
+			if err != nil {
+				sa.abortTransaction(sessionContext)
+				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeUser, nil, err)
+			}
+
+			authCred.AccountID = storageUser.Account.ID
+			authCred.DateCreated = time.Now().UTC()
+			err = sa.InsertCredentials(authCred, sessionContext)
+			if err != nil {
+				sa.abortTransaction(sessionContext)
+				return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAuthCred, &logutils.FieldArgs{"user_id": storageUser.Account.Username, "account_id": storageUser.Account.ID}, err)
+			}
+
+			err = sa.InsertMembership(&organizationMembership, sessionContext)
+			if err != nil {
+				sa.abortTransaction(sessionContext)
+				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganizationMembership, nil, err)
+			}
+
+			//TODO: only save if device info has changed or it is new device
+			err = sa.SaveDevice(&user.Devices[0], sessionContext)
+			if err != nil {
+				sa.abortTransaction(sessionContext)
+				return errors.WrapErrorAction(logutils.ActionSave, "device", nil, err)
+			}
+
+			//commit the transaction
+			err = sessionContext.CommitTransaction(sessionContext)
+			if err != nil {
+				sa.abortTransaction(sessionContext)
+				return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
+			}
+			return nil
+		})
 		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeUser, nil, err)
+			return nil, err
 		}
 
-		authCred.AccountID = storageUser.Account.ID
-		authCred.DateCreated = time.Now().UTC()
-		err = sa.InsertCredentials(authCred, sessionContext)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAuthCred, &logutils.FieldArgs{"user_id": storageUser.Account.Username, "account_id": storageUser.Account.ID}, err)
-		}
-
-		err = sa.InsertMembership(&organizationMembership, sessionContext)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganizationMembership, nil, err)
-		}
-
-		//TODO: only save if device info has changed or it is new device
-		err = sa.SaveDevice(&user.Devices[0], sessionContext)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionSave, "device", nil, err)
-		}
-
-		//commit the transaction
-		err = sessionContext.CommitTransaction(sessionContext)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	returnUser := userFromStorage(storageUser, sa)
-	return &returnUser, nil
+		returnUser := userFromStorage(storageUser, sa)
+		return &returnUser, nil
+	*/
 }
 
 //UpdateUser updates an existing user

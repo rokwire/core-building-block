@@ -5,14 +5,11 @@ import (
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"crypto/rsa"
-	"encoding/json"
 	"fmt"
-	"reflect"
 	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt"
-	"github.com/google/uuid"
 	"github.com/rokmetro/auth-library/authservice"
 	"github.com/rokmetro/auth-library/authutils"
 	"github.com/rokmetro/auth-library/tokenauth"
@@ -174,7 +171,8 @@ func (a *Auth) deleteAccount(id string) error {
 }
 
 func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.User, error) {
-	if userAuth == nil {
+	return nil, nil
+	/*if userAuth == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUserAuth))
 	}
 
@@ -223,55 +221,57 @@ func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.User, error) {
 	newDevice := model.Device{ID: deviceID.String(), Type: "other", Users: []model.User{newUser}, DateCreated: now}
 	newUser.Devices = []model.Device{newDevice}
 
-	return &newUser, nil
+	return &newUser, nil */
 }
 
 //needsUserUpdate determines if user should be updated by userAuth (assumes userAuth is most up-to-date)
 func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*model.User, bool, bool) {
-	update := false
+	return nil, false, false
+	/*	update := false
 
-	// account
-	if len(user.Account.Email) == 0 && len(userAuth.Email) > 0 {
-		user.Account.Email = userAuth.Email
-		update = true
-	}
-	if len(user.Account.Phone) == 0 && len(userAuth.Phone) > 0 {
-		user.Account.Phone = userAuth.Phone
-		update = true
-	}
+		// account
+		if len(user.Account.Email) == 0 && len(userAuth.Email) > 0 {
+			user.Account.Email = userAuth.Email
+			update = true
+		}
+		if len(user.Account.Phone) == 0 && len(userAuth.Phone) > 0 {
+			user.Account.Phone = userAuth.Phone
+			update = true
+		}
 
-	// profile
-	if user.Profile.FirstName != userAuth.FirstName {
-		user.Profile.FirstName = userAuth.FirstName
-		update = true
-	}
-	if user.Profile.LastName != userAuth.LastName {
-		user.Profile.LastName = userAuth.LastName
-		update = true
-	}
+		// profile
+		if user.Profile.FirstName != userAuth.FirstName {
+			user.Profile.FirstName = userAuth.FirstName
+			update = true
+		}
+		if user.Profile.LastName != userAuth.LastName {
+			user.Profile.LastName = userAuth.LastName
+			update = true
+		}
 
-	// org data
-	foundOrg := false
-	for _, m := range user.OrganizationsMemberships {
-		if m.Organization.ID == userAuth.OrgID {
-			foundOrg = true
+		// org data
+		foundOrg := false
+		for _, m := range user.OrganizationsMemberships {
+			if m.Organization.ID == userAuth.OrgID {
+				foundOrg = true
 
-			orgDataBytes, err := json.Marshal(m.OrgUserData)
-			if err != nil {
+				orgDataBytes, err := json.Marshal(m.OrgUserData)
+				if err != nil {
+					break
+				}
+				var orgData map[string]interface{}
+				json.Unmarshal(orgDataBytes, &orgData)
+
+				if !reflect.DeepEqual(userAuth.OrgData, orgData) {
+					m.OrgUserData = userAuth.OrgData
+					update = true
+				}
 				break
 			}
-			var orgData map[string]interface{}
-			json.Unmarshal(orgDataBytes, &orgData)
-
-			if !reflect.DeepEqual(userAuth.OrgData, orgData) {
-				m.OrgUserData = userAuth.OrgData
-				update = true
-			}
-			break
 		}
-	}
 
-	return user, update, !foundOrg
+		return user, update, !foundOrg
+	*/
 }
 
 func (a *Auth) registerAuthType(name string, auth authType) error {

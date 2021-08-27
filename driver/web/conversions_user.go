@@ -23,16 +23,18 @@ func userToDef(item *model.User) *Def.User {
 		return nil
 	}
 
-	account := userAccountToDef(&item.Account)
+	//TODO
+	//account := userAccountToDef(&item.Account)
 	profile := userProfileToDef(&item.Profile)
 	groups := globalGroupListToDef(item.Groups)
 	roles := globalRoleListToDef(item.Roles)
 	memberships := organizationMembershipListToDef(item.OrganizationsMemberships)
 	devices := deviceListToDef(item.Devices)
 	//TODO: handle permissions
-	return &Def.User{Id: item.ID, Account: account, Profile: profile, Groups: &groups, Roles: &roles, OrgMemberships: &memberships, Devices: &devices}
+	return &Def.User{Id: item.ID /*Account: account,*/, Profile: profile, Groups: &groups, Roles: &roles, OrgMemberships: &memberships, Devices: &devices}
 }
 
+/*
 //UserAccount
 func userAccountFromDef(item *Def.UserAccount) *model.UserAccount {
 	if item == nil {
@@ -40,14 +42,13 @@ func userAccountFromDef(item *Def.UserAccount) *model.UserAccount {
 	}
 	return &model.UserAccount{ID: item.Id, Email: defString(item.Email), Phone: defString(item.Phone), Username: defString(item.Username), LoginTypes: []string{}}
 }
-
 func userAccountToDef(item *model.UserAccount) *Def.UserAccount {
 	if item == nil {
 		return nil
 	}
 	return &Def.UserAccount{Id: item.ID, Email: &item.Email, Phone: &item.Phone, Username: &item.Username}
 }
-
+*/
 //UserProfile
 func userProfileFromDef(item *Def.UserProfile) *model.UserProfile {
 	if item == nil {
