@@ -90,6 +90,16 @@ type Application struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
+//FindApplicationType finds app type for identifier
+func (a Application) FindApplicationType(identifier string) *ApplicationType {
+	for _, appType := range a.Types {
+		if appType.Identifier == identifier {
+			return &appType
+		}
+	}
+	return nil
+}
+
 //ApplicationIdentityProviderGroups maps an identity provider groups to application groups
 //	For example:
 //  	for the UIUC application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups access" is mapped to an application group called "groups access"
@@ -111,6 +121,17 @@ type ApplicationType struct {
 
 	SupportedAuthTypes []ApplicationTypeAuthType `bson:"supported_auth_types"` //supported auth types for this application type
 }
+
+/*
+//FindApplicationType finds app type for identifier
+func (a ApplicationType) IsAuthTypeSupported(identifier string) *ApplicationType {
+	for _, appType := range a.Types {
+		if appType.Identifier == identifier {
+			return &appType
+		}
+	}
+	return nil
+} */
 
 //ApplicationTypeAuthType represents supported auth type for application with configs/params
 type ApplicationTypeAuthType struct {

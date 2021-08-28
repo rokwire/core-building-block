@@ -2,6 +2,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"log"
 	"strings"
 
 	"github.com/rokmetro/auth-library/authorization"
@@ -233,7 +234,6 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 //GetLoginURL returns a pre-formatted login url for SSO providers
 //	Input:
 //		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
-//		orgID (string): ID of the organization that the user is logging in to
 //		appID (string): ID of the app/client that the user is logging in from
 //		redirectURI (string): Registered redirect URI where client will receive response
 //		l (*loglib.Log): Log object pointer for request
@@ -241,11 +241,22 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 //		Login URL (string): SSO provider login URL to be launched in a browser
 //		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
 func (a *Auth) GetLoginURL(authType string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
-	/*	auth, err := a.getAuthType(authType)
-		if err != nil {
-			return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
-		}
+	//validate if the provided auth type is supported by the provided application
+	authTypeEntity, applicationEntity, err := a.validateAuthType(authType, appID)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
 
+	//get the auth type implementation for the auth type
+	auth, err := a.getAuthType(authType)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	log.Println(applicationEntity)
+	log.Println(authTypeEntity)
+	log.Println(auth)
+	/*
 		loginURL, params, err := auth.getLoginURL(orgID, appID, redirectURI, l)
 		if err != nil {
 			return "", nil, errors.WrapErrorAction(logutils.ActionGet, "login url", nil, err)

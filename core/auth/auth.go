@@ -284,6 +284,26 @@ func (a *Auth) registerAuthType(name string, auth authType) error {
 	return nil
 }
 
+func (a *Auth) validateAuthType(authType string, appID string) (*model.AuthType, *model.Application, error) {
+	//get the auth type entity
+	authTypeEntity, err := a.getCachedAuthType(authType)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, logutils.StringArgs(authType), err)
+	}
+
+	//check if the auth type is supported for the provided application
+	application, err := a.storage.FindApplicationByIdentifier(appID)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, logutils.StringArgs(appID), err)
+
+	}
+	if application == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplication, logutils.StringArgs(appID))
+	}
+
+	return authTypeEntity, application, nil
+}
+
 func (a *Auth) getAuthType(name string) (authType, error) {
 	if auth, ok := a.authTypes[name]; ok {
 		return auth, nil

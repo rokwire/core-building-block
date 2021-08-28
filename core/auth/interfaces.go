@@ -139,4 +139,7 @@ type Storage interface {
 	FindServiceAuthorization(userID string, orgID string) (*model.ServiceAuthorization, error)
 	SaveServiceAuthorization(authorization *model.ServiceAuthorization) error
 	DeleteServiceAuthorization(userID string, orgID string) error
+
+	//Applications
+	FindApplicationByIdentifier(identifier string) (*model.Application, error)
 }

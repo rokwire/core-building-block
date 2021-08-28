@@ -185,6 +185,41 @@ func (sa *Adapter) getCachedApplication(appID string) (*model.Application, error
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplication, errArgs)
 }
 
+func (sa *Adapter) getCachedApplicationByIdentifier(appTypeIdentifier string) (*model.Application, error) {
+	sa.applicationsLock.RLock()
+	defer sa.applicationsLock.RUnlock()
+
+	sa.cachedApplications.Range(func(key, value interface{}) bool {
+		/*	application, ok := value.(*model.Application)
+			if !ok {
+				return false //break the iteration
+			}
+
+				appTypes := application.Types
+				for _, appType := range appTypes {
+					if appType.Identifier == appTypeIdentifier {
+						return
+					}
+				} */
+
+		// this will continue iterating
+		return true
+	})
+	/*errArgs := &logutils.FieldArgs{"app_id": appID}
+
+	item, _ := sa.cachedApplications.Load(appID)
+	if item != nil {
+		application, ok := item.(model.Application)
+		if !ok {
+			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplication, errArgs)
+		}
+		return &application, nil
+	}
+	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplication, errArgs) */
+
+	return nil, nil
+}
+
 //LoadAuthTypes loads all auth types
 func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
 	filter := bson.D{}
@@ -956,6 +991,12 @@ func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
 
 	appRes := result[0]
 	return &appRes, nil
+}
+
+//FindApplicationByIdentifier finds an application by identifier
+func (sa *Adapter) FindApplicationByIdentifier(identifier string) (*model.Application, error) {
+	//TODO get from cached
+	return nil, nil
 }
 
 //FindApplications finds applications
