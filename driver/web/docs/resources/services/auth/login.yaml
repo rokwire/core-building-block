@@ -34,11 +34,11 @@ post:
                   "code": "123456"
                 }
               }
-          oidc:
+          illinois_oidc:
             summary: Illinois OIDC login
             value: |
               {
-                "auth_type": "oidc",
+                "auth_type": "illinois_oidc",
                 "app_id": "edu.illinois.rokwire",
                 "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
                 "params": {
