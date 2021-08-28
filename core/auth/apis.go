@@ -46,14 +46,62 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
+	accessToken := ""
+	refreshToken := ""
+	var user *model.User
+	var responseParams interface{}
+
 	//get the auth type implementation for the auth type
-	authImpl, err := a.getAuthTypeImpl(*authTypeEntity)
-	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	if authTypeEntity.IsExternal {
+		//external auth type
+		authImpl, err := a.getExternalAuthTypeImpl(*authTypeEntity)
+		if err != nil {
+			return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+		}
+
+		//TODO
+		log.Println(authImpl)
+
+	} else {
+		//auth type
+		authImpl, err := a.getAuthTypeImpl(*authTypeEntity)
+		if err != nil {
+			return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+		}
+
+		//1. check if the user exists
+		user, err := authImpl.userExist(*authTypeEntity, *appTypeEntity, creds, l)
+		if err != nil {
+			return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUser, nil, err)
+		}
+		if user == nil {
+			return "", "", nil, nil, errors.WrapErrorAction("exist", model.TypeUser, nil, err)
+		}
+
+		//2. it seems the user exist, now check the credentials
+		validCredentials, err := authImpl.checkCredentials(*user, *authTypeEntity, *appTypeEntity, creds, l)
+		if err != nil {
+			return "", "", nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
+		}
+		if !*validCredentials {
+			return "", "", nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
+		}
+
+		//the credentials are valid
 	}
 
-	log.Println(appTypeEntity)
-	log.Println(authImpl)
+	///prepare the response
+	//access token
+	claims := a.getStandardClaims(user.ID, "TODO", "TODO", "TODO", "rokwire", "TODO", appID, nil)
+	accessToken, err = a.buildAccessToken(claims, "", authorization.ScopeGlobal)
+	if err != nil {
+		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+	}
+
+	//refresh token
+	refreshToken = "TODO"
+
+	return accessToken, refreshToken, user, responseParams, nil
 
 	//check credentials
 	/*	userAuth, err := authImpl.check(creds, *authTypeEntity, *appTypeEntity, params, l)

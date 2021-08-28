@@ -148,7 +148,9 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 //findAccount retrieves a user's account information
 func (a *Auth) findAccount(userAuth *model.UserAuth) (*model.User, error) {
-	return a.storage.FindUserByAccountID(userAuth.AccountID)
+	//TODO
+	return nil, nil
+	//return a.storage.FindUserByAccountID(userAuth.AccountID)
 }
 
 //createAccount creates a new user account

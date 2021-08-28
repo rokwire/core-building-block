@@ -11,7 +11,10 @@ import (
 
 //authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
 type authType interface {
-	//TODO
+	//userExist checks if the user exists for the application type
+	userExist(authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*model.User, error)
+	//checkCredentials checks if the user credentials are valid for the application
+	checkCredentials(user model.User, authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*bool, error)
 }
 
 //externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
@@ -108,7 +111,7 @@ type Storage interface {
 	LoadAuthTypes() ([]model.AuthType, error)
 
 	//Users
-	FindUserByAccountID(accountID string) (*model.User, error)
+	//FindUser(appID string, authTypeID string, authTypeIdentifier string) (*model.User, error)
 	InsertUser(user *model.User, authCred *model.AuthCreds) (*model.User, error)
 	UpdateUser(user *model.User, orgID string, newOrgData *map[string]interface{}) (*model.User, error)
 	DeleteUser(id string) error

@@ -76,15 +76,15 @@ type UserAuthType struct {
 	Active     bool   `bson:"active"` //auth type can be activated/deactivated
 
 	//{
-	//	"username":"petaka"
+	//	"identifier":"petaka" //username
 	//}
 	//or
 	//{
-	//	"email":"petyo@inabyte.com"
+	//	"identifier":"petyo@inabyte.com" //email
 	//}
 	//or
 	//{
-	//	"phone":"+359000000000"
+	//	"identifier":"+359000000000" //phone
 	//}
 	//or
 	//{
