@@ -332,8 +332,8 @@ func (m *database) applyDevicesChecks(devices *collectionWrapper) error {
 func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
 	m.logger.Info("apply credentials checks.....")
 
-	// Add org_id, auth_type compound index
-	err := credentials.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "auth_type", Value: 1}}, false)
+	// Add user_auth_type_id index
+	err := credentials.AddIndex(bson.D{primitive.E{Key: "user_auth_type_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
