@@ -231,14 +231,24 @@ func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
 	return result, nil
 }
 
+//FindUser finds an user for app, auth type and auth type identifier
+func (sa *Adapter) FindUser(appID string, authTypeID string, authTypeIdentifier string) (*model.User, error) {
+	filter := bson.D{primitive.E{Key: "applications_accounts.app_id", Value: appID},
+		primitive.E{Key: "applications_accounts.auth_types.auth_type_id", Value: authTypeID},
+		primitive.E{Key: "applications_accounts.auth_types.params.identifier", Value: authTypeIdentifier}}
+	var user user
+	err := sa.db.users.FindOne(filter, &user, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUser, nil, err)
+	}
+
+	modelUser := userFromStorage(&user, sa)
+	return &modelUser, nil
+}
+
 //FindUserByID finds an user by id
 func (sa *Adapter) FindUserByID(id string) (*model.User, error) {
 	return sa.findUser("_id", id)
-}
-
-//FindUserByAccountID finds an user by account id
-func (sa *Adapter) FindUserByAccountID(accountID string) (*model.User, error) {
-	return sa.findUser("account.id", accountID)
 }
 
 func (sa *Adapter) findUser(key string, id string) (*model.User, error) {

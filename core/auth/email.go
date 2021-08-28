@@ -19,7 +19,15 @@ type emailAuthImpl struct {
 }
 
 func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*model.User, error) {
-	return nil, nil
+	appID := appType.Application.ID
+	authTypeID := authType.ID
+	authTypeIdentifier := "silyana@inabit.bg" //TODO get it from the creds string
+
+	user, err := a.auth.storage.FindUser(appID, authTypeID, authTypeIdentifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUser, nil, err) //TODO add args..
+	}
+	return user, nil
 }
 
 func (a *emailAuthImpl) checkCredentials(user model.User, authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*bool, error) {

@@ -111,7 +111,7 @@ type Storage interface {
 	LoadAuthTypes() ([]model.AuthType, error)
 
 	//Users
-	//FindUser(appID string, authTypeID string, authTypeIdentifier string) (*model.User, error)
+	FindUser(appID string, authTypeID string, authTypeIdentifier string) (*model.User, error)
 	InsertUser(user *model.User, authCred *model.AuthCreds) (*model.User, error)
 	UpdateUser(user *model.User, orgID string, newOrgData *map[string]interface{}) (*model.User, error)
 	DeleteUser(id string) error

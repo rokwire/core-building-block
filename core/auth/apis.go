@@ -79,6 +79,7 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 		}
 
 		//2. it seems the user exist, now check the credentials
+		//TODO pass only the user auth type object, not the whole one....
 		validCredentials, err := authImpl.checkCredentials(*user, *authTypeEntity, *appTypeEntity, creds, l)
 		if err != nil {
 			return "", "", nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
