@@ -2,7 +2,6 @@ package auth
 
 import (
 	"core-building-block/core/model"
-	"log"
 	"strings"
 
 	"github.com/rokmetro/auth-library/authorization"
@@ -253,17 +252,13 @@ func (a *Auth) GetLoginURL(authType string, appID string, redirectURI string, l 
 		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	log.Println(authImpl)
-	log.Println(authTypeEntity)
-	log.Println(appTypeEntity)
-	/*
-		loginURL, params, err := auth.getLoginURL(orgID, appID, redirectURI, l)
-		if err != nil {
-			return "", nil, errors.WrapErrorAction(logutils.ActionGet, "login url", nil, err)
-		}
+	//get login URL
+	loginURL, params, err := authImpl.getLoginURL(*authTypeEntity, *appTypeEntity, redirectURI, l)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "login url", nil, err)
+	}
 
-		return loginURL, params, nil */
-	return "", nil, nil
+	return loginURL, params, nil
 }
 
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or

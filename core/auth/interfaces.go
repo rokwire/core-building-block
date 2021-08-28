@@ -16,7 +16,7 @@ type authType interface {
 	//refresh refreshes the access token using provided refresh token
 	refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error)
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
-	getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
+	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 }
 
 //APIs is the interface which defines the APIs provided by the auth package

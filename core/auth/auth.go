@@ -6,6 +6,7 @@ import (
 	"core-building-block/utils"
 	"crypto/rsa"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -308,12 +309,18 @@ func (a *Auth) validateAuthType(authType string, appID string) (*model.AuthType,
 }
 
 func (a *Auth) getAuthTypeImpl(authType model.AuthType) (authType, error) {
-	/*if auth, ok := a.authTypes[name]; ok {
+	key := authType.Code
+
+	//illinois_oidc, other_oidc
+	if strings.HasSuffix(authType.Code, "_oidc") {
+		key = "oidc"
+	}
+
+	if auth, ok := a.authTypes[key]; ok {
 		return auth, nil
 	}
 
-	return nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(name)) */
-	return nil, nil
+	return nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(key))
 }
 
 func (a *Auth) buildAccessToken(claims TokenClaims, permissions string, scope string) (string, error) {

@@ -29,7 +29,7 @@ func (a *samlAuthImpl) refresh(params map[string]interface{}, orgID string, appI
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *samlAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *samlAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
