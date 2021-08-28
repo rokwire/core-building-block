@@ -22,7 +22,7 @@ func (a *phoneAuthImpl) userExist(authType model.AuthType, appType model.Applica
 	return nil, nil
 }
 
-func (a *phoneAuthImpl) checkCredentials(user model.User, authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*bool, error) {
+func (a *phoneAuthImpl) checkCredentials(userAuthType model.UserAuthType, creds string, l *logs.Log) (*bool, error) {
 	return nil, nil
 }
 

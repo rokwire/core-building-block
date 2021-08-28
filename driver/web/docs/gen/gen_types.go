@@ -141,7 +141,7 @@ type AuthLoginRequestAuthType string
 
 // AuthLoginResponse defines model for AuthLoginResponse.
 type AuthLoginResponse struct {
-	Params *interface{}              `json:"params,omitempty"`
+	Params *interface{}              `json:"params"`
 	Token  *AuthResponseRokwireToken `json:"token,omitempty"`
 	User   *User                     `json:"user,omitempty"`
 }

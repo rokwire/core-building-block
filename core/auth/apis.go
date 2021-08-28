@@ -70,7 +70,7 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 		}
 
 		//1. check if the user exists
-		user, err := authImpl.userExist(*authTypeEntity, *appTypeEntity, creds, l)
+		user, err = authImpl.userExist(*authTypeEntity, *appTypeEntity, creds, l)
 		if err != nil {
 			return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUser, nil, err)
 		}
@@ -83,9 +83,7 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 		if userAuthType == nil {
 			return "", "", nil, nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
 		}
-
-		//TODO pass only the user auth type object, not the whole one....
-		validCredentials, err := authImpl.checkCredentials(*user, *authTypeEntity, *appTypeEntity, creds, l)
+		validCredentials, err := authImpl.checkCredentials(*userAuthType, creds, l)
 		if err != nil {
 			return "", "", nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
 		}

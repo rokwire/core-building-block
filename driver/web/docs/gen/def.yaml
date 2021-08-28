@@ -1019,6 +1019,7 @@ components:
           $ref: '#/components/schemas/User'
         params:
           type: object
+          nullable: true
           anyOf:
             - $ref: '#/components/schemas/AuthResponseParamsOidc'
     AuthLoginCredsEmail:

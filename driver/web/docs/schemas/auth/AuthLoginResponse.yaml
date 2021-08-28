@@ -6,5 +6,6 @@ properties:
     $ref: "../../schemas/user/User.yaml"
   params:
     type: object
+    nullable: true
     anyOf:
       - $ref: "./AuthResponseParamsOidc.yaml"

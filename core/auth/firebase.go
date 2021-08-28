@@ -22,7 +22,7 @@ func (a *firebaseAuthImpl) userExist(authType model.AuthType, appType model.Appl
 	return nil, nil
 }
 
-func (a *firebaseAuthImpl) checkCredentials(user model.User, authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*bool, error) {
+func (a *firebaseAuthImpl) checkCredentials(userAuthType model.UserAuthType, creds string, l *logs.Log) (*bool, error) {
 	return nil, nil
 }
 

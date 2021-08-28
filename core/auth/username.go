@@ -22,7 +22,7 @@ func (a *usernameAuthImpl) userExist(authType model.AuthType, appType model.Appl
 	return nil, nil
 }
 
-func (a *usernameAuthImpl) checkCredentials(user model.User, authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*bool, error) {
+func (a *usernameAuthImpl) checkCredentials(userAuthType model.UserAuthType, creds string, l *logs.Log) (*bool, error) {
 	return nil, nil
 }
 

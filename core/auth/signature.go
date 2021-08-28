@@ -22,7 +22,7 @@ func (a *signatureAuthImpl) userExist(authType model.AuthType, appType model.App
 	return nil, nil
 }
 
-func (a *signatureAuthImpl) checkCredentials(user model.User, authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*bool, error) {
+func (a *signatureAuthImpl) checkCredentials(userAuthType model.UserAuthType, creds string, l *logs.Log) (*bool, error) {
 	return nil, nil
 }
 

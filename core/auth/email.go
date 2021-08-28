@@ -30,8 +30,11 @@ func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.Applica
 	return user, nil
 }
 
-func (a *emailAuthImpl) checkCredentials(user model.User, authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*bool, error) {
-	return nil, nil
+func (a *emailAuthImpl) checkCredentials(userAuthType model.UserAuthType, creds string, l *logs.Log) (*bool, error) {
+	//TODO - get the password from the creds and check it using user auth type id
+
+	result := true
+	return &result, nil
 }
 
 //initEmailAuth initializes and registers a new email auth instance
