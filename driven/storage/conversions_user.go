@@ -11,8 +11,7 @@ func userFromStorage(item *user, sa *Adapter) model.User {
 	}
 
 	id := item.ID
-	//TODO applications accounts
-	//account := item.Account
+	applicationsAccounts := item.ApplicationsAccounts
 	profile := item.Profile
 	permissions := item.Permissions
 	roles := item.Roles
@@ -22,7 +21,7 @@ func userFromStorage(item *user, sa *Adapter) model.User {
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
-	return model.User{ID: id /*Account: account,*/, Profile: profile,
+	return model.User{ID: id, ApplicationsAccounts: applicationsAccounts, Profile: profile,
 		Permissions: permissions, Roles: roles, Groups: groups,
 		OrganizationsMemberships: organizationsMemberships, Devices: devices,
 		DateCreated: dateCreated, DateUpdated: dateUpdated}
@@ -67,12 +66,10 @@ func userMembershipsFromStorage(item user, sa *Adapter) []model.OrganizationMemb
 
 func userMembershipFromStorage(item userMembership, organization model.Organization) model.OrganizationMembership {
 	id := item.ID
-	orgUserData := item.OrgUserData
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
-	return model.OrganizationMembership{ID: id, Organization: organization, OrgUserData: orgUserData,
-		DateCreated: dateCreated, DateUpdated: dateUpdated}
+	return model.OrganizationMembership{ID: id, Organization: organization, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func userMembershipsToStorage(item *model.User) []userMembership {
@@ -87,12 +84,10 @@ func userMembershipsToStorage(item *model.User) []userMembership {
 func userMembershipToStorage(item model.OrganizationMembership) userMembership {
 	id := item.ID
 	orgID := item.Organization.ID
-	orgUserData := item.OrgUserData
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
-	return userMembership{ID: id, OrgID: orgID, OrgUserData: orgUserData,
-		DateCreated: dateCreated, DateUpdated: dateUpdated}
+	return userMembership{ID: id, OrgID: orgID, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func userDevicesFromStorage(item user) []model.Device {

@@ -8,7 +8,4 @@ properties:
     type: string
   org_id:
     type: string
-  org_user_data:
-    type: object
-    description: map[string]object for arbitrary organization user data
 

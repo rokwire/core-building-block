@@ -72,7 +72,7 @@ func organizationMembershipFromDef(item *Def.OrganizationMembership) *model.Orga
 	user := model.User{ID: defString(item.UserId)}
 	org := model.Organization{ID: defString(item.OrgId)}
 	//TODO: handle permissions, roles, and groups
-	return &model.OrganizationMembership{ID: item.Id, User: user, Organization: org, OrgUserData: defMap(item.OrgUserData)}
+	return &model.OrganizationMembership{ID: item.Id, User: user, Organization: org}
 }
 
 func organizationMembershipToDef(item *model.OrganizationMembership) *Def.OrganizationMembership {
@@ -80,7 +80,7 @@ func organizationMembershipToDef(item *model.OrganizationMembership) *Def.Organi
 		return nil
 	}
 	//TODO: handle permissions
-	return &Def.OrganizationMembership{Id: item.ID, UserId: &item.User.ID, OrgId: &item.Organization.ID, OrgUserData: &item.OrgUserData}
+	return &Def.OrganizationMembership{Id: item.ID, UserId: &item.User.ID, OrgId: &item.Organization.ID}
 }
 
 func organizationMembershipListToDef(items []model.OrganizationMembership) []Def.OrganizationMembership {

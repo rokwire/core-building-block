@@ -37,6 +37,19 @@ type User struct {
 	DateUpdated *time.Time
 }
 
+func (u User) FindUserAuthType(appID string, authTypeID string) *UserAuthType {
+	for _, appUserAccount := range u.ApplicationsAccounts {
+		if appUserAccount.AppID == appID {
+			for _, userAuthType := range appUserAccount.AuthTypes {
+				if userAuthType.AuthTypeID == authTypeID {
+					return &userAuthType
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func (u User) String() string {
 
 	var memberships bytes.Buffer

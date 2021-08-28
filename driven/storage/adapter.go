@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/rokmetro/logging-library/errors"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
@@ -330,7 +329,8 @@ func (sa *Adapter) InsertUser(user *model.User, authCred *model.AuthCreds) (*mod
 
 //UpdateUser updates an existing user
 func (sa *Adapter) UpdateUser(updatedUser *model.User, orgID string, newOrgData *map[string]interface{}) (*model.User, error) {
-	if updatedUser == nil {
+	return nil, nil
+	/*if updatedUser == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUser))
 	}
 
@@ -402,6 +402,7 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, orgID string, newOrgData 
 
 	returnUser := userFromStorage(newUser, sa)
 	return &returnUser, nil
+	*/
 }
 
 //DeleteUser deletes a user

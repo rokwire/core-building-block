@@ -306,12 +306,9 @@ type OrganizationConfig struct {
 
 // OrganizationMembership defines model for OrganizationMembership.
 type OrganizationMembership struct {
-	Id    string  `json:"id"`
-	OrgId *string `json:"org_id,omitempty"`
-
-	// map[string]object for arbitrary organization user data
-	OrgUserData *map[string]interface{} `json:"org_user_data,omitempty"`
-	UserId      *string                 `json:"user_id,omitempty"`
+	Id     string  `json:"id"`
+	OrgId  *string `json:"org_id,omitempty"`
+	UserId *string `json:"user_id,omitempty"`
 }
 
 // PubKey defines model for PubKey.

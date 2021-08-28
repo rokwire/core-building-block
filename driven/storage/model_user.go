@@ -8,9 +8,8 @@ import (
 type user struct {
 	ID string `bson:"_id"`
 
-	//TODO applications accounts
-	//Account model.UserAccount `bson:"account"`
-	Profile model.UserProfile `bson:"profile"`
+	ApplicationsAccounts []model.ApplicationUserAccount `bson:"applications_accounts"`
+	Profile              model.UserProfile              `bson:"profile"`
 
 	Permissions              []model.GlobalPermission `bson:"permissions"`
 	Roles                    []model.GlobalRole       `bson:"roles"`
@@ -26,8 +25,7 @@ type user struct {
 type userMembership struct {
 	ID string `bson:"_id"`
 
-	OrgID       string                 `bson:"org_id"`
-	OrgUserData map[string]interface{} `bson:"org_user_data"`
+	OrgID string `bson:"org_id"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
