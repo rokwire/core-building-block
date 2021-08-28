@@ -31,7 +31,7 @@ func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.Applica
 }
 
 func (a *emailAuthImpl) checkCredentials(userAuthType model.UserAuthType, creds string, l *logs.Log) (*bool, error) {
-	//TODO - get the password from the creds and check it using user auth type id
+	//TODO - get the password from the creds and check it using user auth type id - from the credentials collection
 
 	result := true
 	return &result, nil

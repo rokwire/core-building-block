@@ -88,6 +88,16 @@ type UserAuth struct {
 	ResponseParams interface{}
 }
 
+//UserAuthTypeCredential represents user auth type credential for application
+type UserAuthTypeCredential struct {
+	ID             string `bson:"_id"`
+	UserAuthTypeID string `bson:"user_auth_type_id"`
+	Value          string `bson:"value"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
 //AuthCreds represents represents a set of credentials used by auth
 type AuthCreds struct {
 	ID        string                 `bson:"_id"`
