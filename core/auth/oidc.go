@@ -596,7 +596,7 @@ func generatePkceChallenge() (string, string, error) {
 func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
 	oidc := &oidcAuthImpl{auth: auth, authType: authTypeOidc}
 
-	err := auth.registerAuthType(oidc.authType, oidc)
+	err := auth.registerExternalAuthType(oidc.authType, oidc)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
 	}

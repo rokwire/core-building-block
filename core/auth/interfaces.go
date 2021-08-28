@@ -9,16 +9,18 @@ import (
 	"github.com/rokmetro/logging-library/logs"
 )
 
-//authType is the interface for authentication mechanisms
+//authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
 type authType interface {
-	//check checks the validity of provided credentials
-	check(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*model.UserAuth, error)
+	//TODO
+}
 
-	//refresh refreshes the access token using provided refresh token
-	//refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error)
-
+//externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
+//these are the different identity providers - illinois_oidc etc
+type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
+
+	//TODO refresh
 }
 
 //APIs is the interface which defines the APIs provided by the auth package

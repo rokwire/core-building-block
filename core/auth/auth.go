@@ -28,6 +28,7 @@ const (
 	rokwireKeyword string = "ROKWIRE"
 
 	typeAuthType          logutils.MessageDataType = "auth type"
+	typeExternalAuthType  logutils.MessageDataType = "external auth type"
 	typeAuth              logutils.MessageDataType = "auth"
 	typeAuthRefreshParams logutils.MessageDataType = "auth refresh params"
 
@@ -46,7 +47,8 @@ type Auth struct {
 
 	logger *logs.Logger
 
-	authTypes map[string]authType
+	authTypes         map[string]authType
+	externalAuthTypes map[string]externalAuthType
 
 	authPrivKey *rsa.PrivateKey
 
@@ -91,6 +93,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	}
 
 	authTypes := map[string]authType{}
+	externalAuthTypes := map[string]externalAuthType{}
 
 	cachedAuthTypes := &syncmap.Map{}
 	authTypesLock := &sync.RWMutex{}
@@ -99,9 +102,9 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	identityProvidersLock := &sync.RWMutex{}
 
 	timerDone := make(chan bool)
-	auth := &Auth{storage: storage, logger: logger, authTypes: authTypes, authPrivKey: authPrivKey, AuthService: nil,
-		serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp,
-		cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
+	auth := &Auth{storage: storage, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes,
+		authPrivKey: authPrivKey, AuthService: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
+		maxTokenExp: *maxTokenExp, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
 		timerDone: timerDone}
 
@@ -123,12 +126,12 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initUsernameAuth(auth)
 	initEmailAuth(auth)
 	initPhoneAuth(auth)
-	initOidcAuth(auth)
-	initSamlAuth(auth)
 	initFirebaseAuth(auth)
-
 	initAPIKeyAuth(auth)
 	initSignatureAuth(auth)
+
+	initOidcAuth(auth)
+	initSamlAuth(auth)
 
 	err = auth.cacheAuthTypes()
 	if err != nil {
@@ -285,6 +288,16 @@ func (a *Auth) registerAuthType(name string, auth authType) error {
 	return nil
 }
 
+func (a *Auth) registerExternalAuthType(name string, auth externalAuthType) error {
+	if _, ok := a.externalAuthTypes[name]; ok {
+		return errors.Newf("the requested external auth type name has already been registered: %s", name)
+	}
+
+	a.externalAuthTypes[name] = auth
+
+	return nil
+}
+
 func (a *Auth) validateAuthType(authType string, appID string) (*model.AuthType, *model.ApplicationType, error) {
 	//get the auth type entity
 	authTypeEntity, err := a.getCachedAuthType(authType)
@@ -309,6 +322,14 @@ func (a *Auth) validateAuthType(authType string, appID string) (*model.AuthType,
 }
 
 func (a *Auth) getAuthTypeImpl(authType model.AuthType) (authType, error) {
+	if auth, ok := a.authTypes[authType.Code]; ok {
+		return auth, nil
+	}
+
+	return nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(authType.Code))
+}
+
+func (a *Auth) getExternalAuthTypeImpl(authType model.AuthType) (externalAuthType, error) {
 	key := authType.Code
 
 	//illinois_oidc, other_oidc
@@ -316,11 +337,11 @@ func (a *Auth) getAuthTypeImpl(authType model.AuthType) (authType, error) {
 		key = "oidc"
 	}
 
-	if auth, ok := a.authTypes[key]; ok {
+	if auth, ok := a.externalAuthTypes[key]; ok {
 		return auth, nil
 	}
 
-	return nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(key))
+	return nil, errors.ErrorData(logutils.StatusInvalid, typeExternalAuthType, logutils.StringArgs(key))
 }
 
 func (a *Auth) buildAccessToken(claims TokenClaims, permissions string, scope string) (string, error) {

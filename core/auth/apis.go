@@ -52,13 +52,16 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	//check credentials
-	userAuth, err := authImpl.check(creds, *authTypeEntity, *appTypeEntity, params, l)
-	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "login creds", nil, err)
-	}
+	log.Println(appTypeEntity)
+	log.Println(authImpl)
 
-	log.Println(userAuth)
+	//check credentials
+	/*	userAuth, err := authImpl.check(creds, *authTypeEntity, *appTypeEntity, params, l)
+		if err != nil {
+			return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "login creds", nil, err)
+		}
+
+	log.Println(userAuth)*/
 
 	return "", "", nil, nil, nil
 	/*var user *model.User
@@ -268,7 +271,7 @@ func (a *Auth) GetLoginURL(authType string, appID string, redirectURI string, l 
 	}
 
 	//get the auth type implementation for the auth type
-	authImpl, err := a.getAuthTypeImpl(*authTypeEntity)
+	authImpl, err := a.getExternalAuthTypeImpl(*authTypeEntity)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}

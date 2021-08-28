@@ -18,17 +18,6 @@ type samlAuthImpl struct {
 	authType string
 }
 
-func (a *samlAuthImpl) check(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*model.UserAuth, error) {
-	//TODO: Implement
-	return nil, errors.New(logutils.Unimplemented)
-}
-
-//refresh must be implemented for SAML auth
-func (a *samlAuthImpl) refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
-	//TODO: Implement
-	return nil, errors.New(logutils.Unimplemented)
-}
-
 func (a *samlAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
@@ -37,7 +26,7 @@ func (a *samlAuthImpl) getLoginURL(authType model.AuthType, appType model.Applic
 func initSamlAuth(auth *Auth) (*samlAuthImpl, error) {
 	saml := &samlAuthImpl{auth: auth, authType: authTypeSaml}
 
-	err := auth.registerAuthType(saml.authType, saml)
+	err := auth.registerExternalAuthType(saml.authType, saml)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
 	}
