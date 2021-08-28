@@ -242,20 +242,20 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 //		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
 func (a *Auth) GetLoginURL(authType string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	//validate if the provided auth type is supported by the provided application
-	authTypeEntity, applicationEntity, err := a.validateAuthType(authType, appID)
+	authTypeEntity, appTypeEntity, err := a.validateAuthType(authType, appID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
 	//get the auth type implementation for the auth type
-	auth, err := a.getAuthType(authType)
+	authImpl, err := a.getAuthTypeImpl(*authTypeEntity)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	log.Println(applicationEntity)
+	log.Println(authImpl)
 	log.Println(authTypeEntity)
-	log.Println(auth)
+	log.Println(appTypeEntity)
 	/*
 		loginURL, params, err := auth.getLoginURL(orgID, appID, redirectURI, l)
 		if err != nil {

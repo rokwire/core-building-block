@@ -284,7 +284,7 @@ func (a *Auth) registerAuthType(name string, auth authType) error {
 	return nil
 }
 
-func (a *Auth) validateAuthType(authType string, appID string) (*model.AuthType, *model.Application, error) {
+func (a *Auth) validateAuthType(authType string, appID string) (*model.AuthType, *model.ApplicationType, error) {
 	//get the auth type entity
 	authTypeEntity, err := a.getCachedAuthType(authType)
 	if err != nil {
@@ -292,24 +292,28 @@ func (a *Auth) validateAuthType(authType string, appID string) (*model.AuthType,
 	}
 
 	//check if the auth type is supported for the provided application
-	application, err := a.storage.FindApplicationByIdentifier(appID)
+	applicationType, err := a.storage.FindApplicationTypeByIdentifier(appID)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, logutils.StringArgs(appID), err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appID), err)
 
 	}
-	if application == nil {
-		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplication, logutils.StringArgs(appID))
+	if applicationType == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appID))
+	}
+	if !applicationType.IsAuthTypeSupported(*authTypeEntity) {
+		return nil, nil, errors.ErrorAction(logutils.ActionValidate, "not supported auth type for application", nil)
 	}
 
-	return authTypeEntity, application, nil
+	return authTypeEntity, applicationType, nil
 }
 
-func (a *Auth) getAuthType(name string) (authType, error) {
-	if auth, ok := a.authTypes[name]; ok {
+func (a *Auth) getAuthTypeImpl(authType model.AuthType) (authType, error) {
+	/*if auth, ok := a.authTypes[name]; ok {
 		return auth, nil
 	}
 
-	return nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(name))
+	return nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(name)) */
+	return nil, nil
 }
 
 func (a *Auth) buildAccessToken(claims TokenClaims, permissions string, scope string) (string, error) {

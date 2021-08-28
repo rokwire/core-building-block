@@ -10,6 +10,8 @@ import (
 const (
 	//TypeApplication ...
 	TypeApplication logutils.MessageDataType = "application"
+	//TypeApplicationType ...
+	TypeApplicationType logutils.MessageDataType = "application type"
 	//TypeApplicationUserRelations ...
 	TypeApplicationUserRelations logutils.MessageDataType = "app user relations"
 )
@@ -120,18 +122,19 @@ type ApplicationType struct {
 	Versions   []string `bson:"versions"`   //1.1.0, 1.2.0 etc
 
 	SupportedAuthTypes []ApplicationTypeAuthType `bson:"supported_auth_types"` //supported auth types for this application type
+
+	Application Application `bson:"-"`
 }
 
-/*
-//FindApplicationType finds app type for identifier
-func (a ApplicationType) IsAuthTypeSupported(identifier string) *ApplicationType {
-	for _, appType := range a.Types {
-		if appType.Identifier == identifier {
-			return &appType
+//IsAuthTypeSupported checks if an auth type is supported for the app type
+func (a ApplicationType) IsAuthTypeSupported(authType AuthType) bool {
+	for _, appTypeAuthType := range a.SupportedAuthTypes {
+		if appTypeAuthType.AuthTypeID == authType.ID {
+			return true
 		}
 	}
-	return nil
-} */
+	return false
+}
 
 //ApplicationTypeAuthType represents supported auth type for application with configs/params
 type ApplicationTypeAuthType struct {
