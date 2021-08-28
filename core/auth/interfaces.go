@@ -12,9 +12,11 @@ import (
 //authType is the interface for authentication mechanisms
 type authType interface {
 	//check checks the validity of provided credentials
-	check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error)
+	check(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*model.UserAuth, error)
+
 	//refresh refreshes the access token using provided refresh token
-	refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error)
+	//refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error)
+
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 }

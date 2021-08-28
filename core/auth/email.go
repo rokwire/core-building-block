@@ -18,7 +18,7 @@ type emailAuthImpl struct {
 	authType string
 }
 
-func (a *emailAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
+func (a *emailAuthImpl) check(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*model.UserAuth, error) {
 	//TODO: Implement
 	return nil, errors.New("Unimplemented")
 }

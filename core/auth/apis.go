@@ -2,6 +2,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"log"
 	"strings"
 
 	"github.com/rokmetro/auth-library/authorization"
@@ -39,6 +40,26 @@ func (a *Auth) GetHost() string {
 //		User (User): User object for authenticated user
 //		Params (interface{}): authType-specific set of parameters passed back to client
 func (a *Auth) Login(authType string, creds string, appID string, params string, l *logs.Log) (string, string, *model.User, interface{}, error) {
+	//validate if the provided auth type is supported by the provided application
+	authTypeEntity, appTypeEntity, err := a.validateAuthType(authType, appID)
+	if err != nil {
+		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	//get the auth type implementation for the auth type
+	authImpl, err := a.getAuthTypeImpl(*authTypeEntity)
+	if err != nil {
+		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	//check credentials
+	userAuth, err := authImpl.check(creds, *authTypeEntity, *appTypeEntity, params, l)
+	if err != nil {
+		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "login creds", nil, err)
+	}
+
+	log.Println(userAuth)
+
 	return "", "", nil, nil, nil
 	/*var user *model.User
 	var err error

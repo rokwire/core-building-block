@@ -142,7 +142,7 @@ func oidcRefreshParamsFromMap(val map[string]interface{}) (*oidcRefreshParams, e
 	return &oidcRefreshParams{RefreshToken: refreshToken, RedirectURI: redirectURI}, nil
 }
 
-func (a *oidcAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
+func (a *oidcAuthImpl) check(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*model.UserAuth, error) {
 	return nil, nil
 	/*	var loginParams oidcLoginParams
 		err := json.Unmarshal([]byte(params), &loginParams)
