@@ -23,6 +23,10 @@ type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 
+	//TODO update UserAuth
+	//externalLogin logins in the external system and provide the logged in user
+	externalLogin(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*model.UserAuth, error)
+
 	//TODO refresh
 }
 

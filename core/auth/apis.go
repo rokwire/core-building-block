@@ -59,8 +59,14 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 			return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
 		}
 
+		//2. get the user from the external system
+		externalUser, err := authImpl.externalLogin(creds, *authTypeEntity, *appTypeEntity, params, l)
+		if err != nil {
+			return "", "", nil, nil, errors.WrapErrorAction("error getting external user", "external user", nil, err)
+		}
+
+		log.Println(externalUser)
 		//TODO
-		log.Println(authImpl)
 
 	} else {
 		//auth type
