@@ -29,20 +29,19 @@ type externalAuthType interface {
 	//TODO refresh
 }
 
-//TODO maybe update the fields
 //ExternalSystemUser represents external system user
 type ExternalSystemUser struct {
-	UserID         string //this is the identifier used in our system to map the user
-	Sub            string
-	FirstName      string
-	LastName       string
-	Email          string
-	Phone          string
-	Picture        []byte
-	Exp            *int64
-	RefreshParams  map[string]interface{}
-	OrgData        map[string]interface{}
-	ResponseParams interface{}
+	UserID string //this is the identifier used in our system to map the user
+
+	//these are common fields which should be popuated by the external system
+	FirstName  string
+	MiddleName string
+	LastName   string
+	Email      string
+	Groups     []string
+
+	//here are the system specific data for the user - uiucedu_uin etc
+	SystemSpecific map[string]interface{}
 }
 
 //APIs is the interface which defines the APIs provided by the auth package

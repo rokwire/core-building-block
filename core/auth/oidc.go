@@ -407,7 +407,6 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 		return nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcToken, nil, err)
 	}
 
-	externalUser := ExternalSystemUser{}
 	sub, err := a.checkToken(token.IDToken, authType, appType, oidcConfig, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcToken, nil, err)
@@ -427,57 +426,60 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "user info", nil, err)
 	}
-	externalUser.OrgData = userClaims
 
-	externalUser.Sub = userClaims["sub"].(string)
-	if externalUser.Sub != sub {
-		return nil, errors.Newf("mismatching user info sub %s and id token sub %s", externalUser.Sub, sub)
-	}
-	var ok bool
-	userID := readFromClaims("user_id", &oidcConfig.Claims, &userClaims)
-	if externalUser.UserID, ok = userID.(string); !ok {
-		l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionCast, logutils.TypeString, &logutils.FieldArgs{"user_id": userID})
-	}
-	firstName := readFromClaims("given_name", &oidcConfig.Claims, &userClaims)
-	if externalUser.FirstName, ok = firstName.(string); !ok {
-		l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionCast, logutils.TypeString, &logutils.FieldArgs{"given_name": firstName})
-	}
-	lastName := readFromClaims("family_name", &oidcConfig.Claims, &userClaims)
-	if externalUser.LastName, ok = lastName.(string); !ok {
-		l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionCast, logutils.TypeString, &logutils.FieldArgs{"family_name": lastName})
-	}
-	email := readFromClaims("email", &oidcConfig.Claims, &userClaims)
-	if externalUser.Email, ok = email.(string); !ok {
-		l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionCast, logutils.TypeString, &logutils.FieldArgs{"email": email})
-	}
-	phone := readFromClaims("phone", &oidcConfig.Claims, &userClaims)
-	if externalUser.Phone, ok = phone.(string); !ok {
-		l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionCast, logutils.TypeString, &logutils.FieldArgs{"phone": phone})
-	}
-	exp := readFromClaims("exp", &oidcConfig.Claims, &userClaims)
-	if expFloat, ok := exp.(float64); !ok {
-		l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionCast, "float64", &logutils.FieldArgs{"exp": exp})
-	} else {
-		expInt := int64(expFloat)
-		externalUser.Exp = &expInt
+	userClaimsSub := userClaims["sub"].(string)
+	if userClaimsSub != sub {
+		return nil, errors.Newf("mismatching user info sub %s and id token sub %s", userClaimsSub, sub)
 	}
 
-	var userPhoto []byte
-	if photoURL, ok := readFromClaims("picture", &oidcConfig.Claims, &userClaims).(string); ok {
-		userPhoto, err = a.loadOidcUserInfo(token, photoURL)
-		if err != nil {
-			l.WarnAction(logutils.ActionGet, "photo", err)
+	identityProviderID := authType.Params["identity_provider"].(string)
+	identityProviderSetting := appType.Application.FindIdentityProviderSetting(identityProviderID)
+
+	//user id
+	userID := userClaims[identityProviderSetting.UserIDField].(string)
+	//first name
+	firstName := userClaims[identityProviderSetting.FirstNameField].(string)
+	//middle name
+	middleName := userClaims[identityProviderSetting.MiddleNameField].(string)
+	//last name
+	lastName := userClaims[identityProviderSetting.LastNameField].(string)
+	//email
+	email := userClaims[identityProviderSetting.EmailField].(string)
+	//groups
+	groupsList := userClaims[identityProviderSetting.GroupsField].([]interface{})
+	groups := make([]string, len(groupsList))
+	for i, item := range groupsList {
+		groups[i] = item.(string)
+	}
+	//system specific
+	systemSpecific := map[string]interface{}{}
+	userSpecificFields := identityProviderSetting.UserSpecificFields
+	if len(userSpecificFields) > 0 {
+		for _, field := range userSpecificFields {
+			fieldValue := userClaims[field].(string)
+			systemSpecific[field] = fieldValue
 		}
 	}
-	externalUser.Picture = userPhoto
 
-	if token.RefreshToken != "" {
-		refreshParams := oidcRefreshParams{RefreshToken: token.RefreshToken, RedirectURI: redirectURI}
-		externalUser.RefreshParams = refreshParams.toMap()
-	}
+	/*
+		exp := readFromClaims("exp", &oidcConfig.Claims, &userClaims)
+		if expFloat, ok := exp.(float64); !ok {
+			l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionCast, "float64", &logutils.FieldArgs{"exp": exp})
+		} else {
+			expInt := int64(expFloat)
+			externalUser.Exp = &expInt
+		}
 
-	tokenResponseParams := oidcTokenResponseParams{IDToken: token.IDToken, AccessToken: token.AccessToken, TokenType: token.TokenType}
-	externalUser.ResponseParams = oidcResponseParams{OIDCToken: tokenResponseParams}
+		if token.RefreshToken != "" {
+			refreshParams := oidcRefreshParams{RefreshToken: token.RefreshToken, RedirectURI: redirectURI}
+			externalUser.RefreshParams = refreshParams.toMap()
+		}
+
+		tokenResponseParams := oidcTokenResponseParams{IDToken: token.IDToken, AccessToken: token.AccessToken, TokenType: token.TokenType}
+		externalUser.ResponseParams = oidcResponseParams{OIDCToken: tokenResponseParams}
+	*/
+	externalUser := ExternalSystemUser{UserID: userID, FirstName: firstName, MiddleName: middleName, LastName: lastName,
+		Email: email, Groups: groups, SystemSpecific: systemSpecific}
 
 	return &externalUser, nil
 }

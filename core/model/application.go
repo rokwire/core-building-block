@@ -81,8 +81,8 @@ type Application struct {
 	//multi - the application is for many organizations - Safer community application etc
 	OrgRelType string `bson:"org_rel_type"`
 
-	//identity providers groups mapping - group to group mapping
-	IdentityProvidersGroups []ApplicationIdentityProviderGroups `bson:"identity_providers_groups"`
+	//identity providers settings
+	IdentityProvidersSettings []ApplicationIdentityProviderSetting `bson:"identity_providers_settings"`
 
 	Types []ApplicationType `bson:"types"`
 
@@ -102,13 +102,39 @@ func (a Application) FindApplicationType(identifier string) *ApplicationType {
 	return nil
 }
 
-//ApplicationIdentityProviderGroups maps an identity provider groups to application groups
+//FindIdentityProviderSetting finds the identity provider setting for the application
+func (a Application) FindIdentityProviderSetting(identityProviderID string) *ApplicationIdentityProviderSetting {
+	for _, idPrSetting := range a.IdentityProvidersSettings {
+		if idPrSetting.IdentityProviderID == identityProviderID {
+			return &idPrSetting
+		}
+	}
+	return nil
+}
+
+//ApplicationIdentityProviderSetting represents identity provider setting for an application
+//  User specific fields
+//  For example:
+//		UIUC Application has uiucedu_uin specific field for Illinois identity provider
+//
+//  Groups mapping: maps an identity provider groups to application groups
 //	For example:
 //  	for the UIUC application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups access" is mapped to an application group called "groups access"
 //  	for the Safer Illinois application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health test verify" is mapped to an application group called "tests verifiers"
-type ApplicationIdentityProviderGroups struct {
+type ApplicationIdentityProviderSetting struct {
 	IdentityProviderID string `bson:"identity_provider_id"`
-	Groups             []struct {
+
+	UserIDField string `bson:"user_id_field"`
+
+	FirstNameField  string `bson:"first_name_field"`
+	MiddleNameField string `bson:"middle_name_field"`
+	LastNameField   string `bson:"last_name_field"`
+	EmailField      string `bson:"email_field"`
+	GroupsField     string `bson:"groups_field"`
+
+	UserSpecificFields []string `bson:"user_specific_fields"`
+
+	Groups []struct {
 		IdentityProviderGroup string `bson:"identity_provider_group"`
 		AppGroupID            string `bson:"app_group_id"`
 	} `bson:"groups"`
