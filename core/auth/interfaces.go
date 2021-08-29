@@ -23,11 +23,26 @@ type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 
-	//TODO update UserAuth
-	//externalLogin logins in the external system and provide the logged in user
-	externalLogin(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*model.UserAuth, error)
+	//externalLogin logins in the external system and provides the logged in user
+	externalLogin(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*ExternalSystemUser, error)
 
 	//TODO refresh
+}
+
+//TODO maybe update the fields
+//ExternalSystemUser represents external system user
+type ExternalSystemUser struct {
+	UserID         string //this is the identifier used in our system to map the user
+	Sub            string
+	FirstName      string
+	LastName       string
+	Email          string
+	Phone          string
+	Picture        []byte
+	Exp            *int64
+	RefreshParams  map[string]interface{}
+	OrgData        map[string]interface{}
+	ResponseParams interface{}
 }
 
 //APIs is the interface which defines the APIs provided by the auth package

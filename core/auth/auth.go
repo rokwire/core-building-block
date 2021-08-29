@@ -39,7 +39,6 @@ const (
 )
 
 //TODO biometrics handling
-//TODO Register - for regular and externals(OIDC happens automatically)..
 
 //Auth represents the auth functionality unit
 type Auth struct {
