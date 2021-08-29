@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -145,7 +144,7 @@ func oidcRefreshParamsFromMap(val map[string]interface{}) (*oidcRefreshParams, e
 	return &oidcRefreshParams{RefreshToken: refreshToken, RedirectURI: redirectURI}, nil
 }
 
-func (a *oidcAuthImpl) externalLogin(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*ExternalSystemUser, error) {
+func (a *oidcAuthImpl) externalLogin(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*model.ExternalSystemUser, error) {
 	var loginParams oidcLoginParams
 	err := json.Unmarshal([]byte(params), &loginParams)
 	if err != nil {
@@ -167,102 +166,23 @@ func (a *oidcAuthImpl) externalLogin(creds string, authType model.AuthType, appT
 		return nil, errors.WrapErrorAction(logutils.ActionParse, "oidc login creds", nil, err)
 	}
 
-	userAuth, err := a.newToken(parsedCreds.Query().Get("code"), authType, appType, &loginParams, oidcConfig, l)
+	externalUser, err := a.newToken(parsedCreds.Query().Get("code"), authType, appType, &loginParams, oidcConfig, l)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Println(userAuth)
-	//log.Println(parsedCreds)
-
-	return nil, nil
-	/*
-		userAuthCreds := oidcCreds{Sub: userAuth.Sub, IDPHost: oidcConfig.Host, IDPClientID: oidcConfig.ClientID}
-		credentials, err := a.auth.storage.FindCredentials(orgID, authTypeOidc, userAuthCreds.toMap())
-		userAuth.Creds = credentials
-		if err != nil {
-			errFields := logutils.FieldArgs{"org_id": orgID, "app_id": appID, "type": authTypeOidc, "user_id": userAuth.UserID}
-			l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionFind, model.TypeAuthCred, &errFields)
-
-			credsID, err := uuid.NewUUID()
-			if err != nil {
-				return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("auth creds id"), err)
-			}
-			authCred := model.AuthCreds{
-				ID:       credsID.String(),
-				AuthType: a.authType,
-				OrgID:    orgID,
-				Creds:    userAuthCreds.toMap(),
-			}
-			userAuth.Creds = &authCred
-			return userAuth, nil
-		}
-
-		ok, err := a.validateUser(userAuth, credentials.Creds)
-		if err != nil || !ok {
-			return userAuth, nil
-		}
-
-		userAuth.AccountID = credentials.AccountID
-		return userAuth, nil */
+	return externalUser, nil
 }
 
-func (a *oidcAuthImpl) check(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*model.UserAuth, error) {
-	return nil, nil
-	/*	var loginParams oidcLoginParams
-		err := json.Unmarshal([]byte(params), &loginParams)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOidcLoginParams, nil, err)
-		}
-		validate := validator.New()
-		err = validate.Struct(loginParams)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcLoginParams, nil, err)
-		}
+func (a *oidcAuthImpl) userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, l *logs.Log) (*model.User, error) {
+	appID := appType.Application.ID
+	authTypeID := authType.ID
 
-		oidcConfig, err := a.getOidcAuthConfig(orgID, appID)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
-		}
-
-		parsedCreds, err := url.Parse(strings.ReplaceAll(creds, `"`, ""))
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionParse, "oidc login creds", nil, err)
-		}
-		userAuth, err := a.newToken(parsedCreds.Query().Get("code"), orgID, appID, &loginParams, oidcConfig, l)
-		if err != nil {
-			return nil, err
-		}
-
-		userAuthCreds := oidcCreds{Sub: userAuth.Sub, IDPHost: oidcConfig.Host, IDPClientID: oidcConfig.ClientID}
-		credentials, err := a.auth.storage.FindCredentials(orgID, authTypeOidc, userAuthCreds.toMap())
-		userAuth.Creds = credentials
-		if err != nil {
-			errFields := logutils.FieldArgs{"org_id": orgID, "app_id": appID, "type": authTypeOidc, "user_id": userAuth.UserID}
-			l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionFind, model.TypeAuthCred, &errFields)
-
-			credsID, err := uuid.NewUUID()
-			if err != nil {
-				return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("auth creds id"), err)
-			}
-			authCred := model.AuthCreds{
-				ID:       credsID.String(),
-				AuthType: a.authType,
-				OrgID:    orgID,
-				Creds:    userAuthCreds.toMap(),
-			}
-			userAuth.Creds = &authCred
-			return userAuth, nil
-		}
-
-		ok, err := a.validateUser(userAuth, credentials.Creds)
-		if err != nil || !ok {
-			return userAuth, nil
-		}
-
-		userAuth.AccountID = credentials.AccountID
-		return userAuth, nil
-	*/
+	user, err := a.auth.storage.FindUser(appID, authTypeID, externalUserIdentifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUser, nil, err) //TODO add args..
+	}
+	return user, nil
 }
 
 //refresh must be implemented for OIDC auth
@@ -371,7 +291,7 @@ func (a *oidcAuthImpl) checkToken(idToken string, authType model.AuthType, appTy
 	return sub, nil
 }
 
-func (a *oidcAuthImpl) newToken(code string, authType model.AuthType, appType model.ApplicationType, params *oidcLoginParams, oidcConfig *oidcAuthConfig, l *logs.Log) (*ExternalSystemUser, error) {
+func (a *oidcAuthImpl) newToken(code string, authType model.AuthType, appType model.ApplicationType, params *oidcLoginParams, oidcConfig *oidcAuthConfig, l *logs.Log) (*model.ExternalSystemUser, error) {
 	bodyData := map[string]string{
 		"code":         code,
 		"grant_type":   "authorization_code",
@@ -401,7 +321,7 @@ func (a *oidcAuthImpl) refreshToken(orgID string, appID string, params *oidcRefr
 	return nil, nil
 }
 
-func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcConfig *oidcAuthConfig, authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (*ExternalSystemUser, error) {
+func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcConfig *oidcAuthConfig, authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (*model.ExternalSystemUser, error) {
 	token, err := a.loadOidcTokenWithParams(bodyData, oidcConfig)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcToken, nil, err)
@@ -435,8 +355,8 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	identityProviderID := authType.Params["identity_provider"].(string)
 	identityProviderSetting := appType.Application.FindIdentityProviderSetting(identityProviderID)
 
-	//user id
-	userID := userClaims[identityProviderSetting.UserIDField].(string)
+	//identifier
+	identifier := userClaims[identityProviderSetting.UserIdentifierField].(string)
 	//first name
 	firstName := userClaims[identityProviderSetting.FirstNameField].(string)
 	//middle name
@@ -478,7 +398,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 		tokenResponseParams := oidcTokenResponseParams{IDToken: token.IDToken, AccessToken: token.AccessToken, TokenType: token.TokenType}
 		externalUser.ResponseParams = oidcResponseParams{OIDCToken: tokenResponseParams}
 	*/
-	externalUser := ExternalSystemUser{UserID: userID, FirstName: firstName, MiddleName: middleName, LastName: lastName,
+	externalUser := model.ExternalSystemUser{Identifier: identifier, FirstName: firstName, MiddleName: middleName, LastName: lastName,
 		Email: email, Groups: groups, SystemSpecific: systemSpecific}
 
 	return &externalUser, nil

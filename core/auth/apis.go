@@ -2,7 +2,6 @@ package auth
 
 import (
 	"core-building-block/core/model"
-	"log"
 	"strings"
 
 	"github.com/rokmetro/auth-library/authorization"
@@ -59,14 +58,23 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 			return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
 		}
 
-		//2. get the user from the external system
+		//1. get the user from the external system
 		externalUser, err := authImpl.externalLogin(creds, *authTypeEntity, *appTypeEntity, params, l)
 		if err != nil {
 			return "", "", nil, nil, errors.WrapErrorAction("error getting external user", "external user", nil, err)
 		}
 
-		log.Println(externalUser)
-		//TODO
+		//2. check if the user exists
+		user, err = authImpl.userExist(externalUser.Identifier, *authTypeEntity, *appTypeEntity, l)
+		if err != nil {
+			return "", "", nil, nil, errors.WrapErrorAction("error checking if external user exists", "external user", nil, err)
+		}
+		if user != nil {
+			//user exists, check if need to update it
+		} else {
+			//user does not exist, we need to register it
+			//TODO register
+		}
 
 	} else {
 		//auth type

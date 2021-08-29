@@ -196,3 +196,18 @@ type Device struct {
 	DateCreated time.Time
 	DateUpdated *time.Time
 }
+
+//ExternalSystemUser represents external system user
+type ExternalSystemUser struct {
+	Identifier string `bson:"identifier"` //this is the identifier used in our system to map the user
+
+	//these are common fields which should be popuated by the external system
+	FirstName  string   `bson:"first_name"`
+	MiddleName string   `bson:"middle_name"`
+	LastName   string   `bson:"last_name"`
+	Email      string   `bson:"email"`
+	Groups     []string `bson:"groups"`
+
+	//here are the system specific data for the user - uiucedu_uin etc
+	SystemSpecific map[string]interface{} `bson:"system_specific"`
+}

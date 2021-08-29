@@ -124,7 +124,7 @@ func (a Application) FindIdentityProviderSetting(identityProviderID string) *App
 type ApplicationIdentityProviderSetting struct {
 	IdentityProviderID string `bson:"identity_provider_id"`
 
-	UserIDField string `bson:"user_id_field"`
+	UserIdentifierField string `bson:"user_identifier_field"`
 
 	FirstNameField  string `bson:"first_name_field"`
 	MiddleNameField string `bson:"middle_name_field"`

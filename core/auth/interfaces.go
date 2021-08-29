@@ -24,24 +24,12 @@ type externalAuthType interface {
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//externalLogin logins in the external system and provides the logged in user
-	externalLogin(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*ExternalSystemUser, error)
+	externalLogin(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*model.ExternalSystemUser, error)
+
+	//userExist checks if the user exists
+	userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, l *logs.Log) (*model.User, error)
 
 	//TODO refresh
-}
-
-//ExternalSystemUser represents external system user
-type ExternalSystemUser struct {
-	UserID string //this is the identifier used in our system to map the user
-
-	//these are common fields which should be popuated by the external system
-	FirstName  string
-	MiddleName string
-	LastName   string
-	Email      string
-	Groups     []string
-
-	//here are the system specific data for the user - uiucedu_uin etc
-	SystemSpecific map[string]interface{}
 }
 
 //APIs is the interface which defines the APIs provided by the auth package
