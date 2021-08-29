@@ -198,15 +198,15 @@ type Device struct {
 
 //ExternalSystemUser represents external system user
 type ExternalSystemUser struct {
-	Identifier string `bson:"identifier"` //this is the identifier used in our system to map the user
+	Identifier string `json:"identifier" bson:"identifier"` //this is the identifier used in our system to map the user
 
 	//these are common fields which should be popuated by the external system
-	FirstName  string   `bson:"first_name"`
-	MiddleName string   `bson:"middle_name"`
-	LastName   string   `bson:"last_name"`
-	Email      string   `bson:"email"`
-	Groups     []string `bson:"groups"`
+	FirstName  string   `json:"first_name" bson:"first_name"`
+	MiddleName string   `json:"middle_name" bson:"middle_name"`
+	LastName   string   `json:"last_name" bson:"last_name"`
+	Email      string   `json:"email" bson:"email"`
+	Groups     []string `json:"groups" bson:"groups"`
 
 	//here are the system specific data for the user - uiucedu_uin etc
-	SystemSpecific map[string]interface{} `bson:"system_specific"`
+	SystemSpecific map[string]interface{} `json:"system_specific" bson:"system_specific"`
 }

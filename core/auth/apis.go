@@ -2,6 +2,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"encoding/json"
 	"log"
 	"strings"
 	"time"
@@ -78,10 +79,22 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 			if userAuthType == nil {
 				return "", "", nil, nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
 			}
-			currentData := userAuthType.Params["user"]
+			///convert map to json string
+			currentDataMap := userAuthType.Params["user"]
+			currentDataJson, err := json.Marshal(currentDataMap)
+			if err != nil {
+				return "", "", nil, nil, errors.ErrorAction("error converting map to json", "", nil)
+			}
+			///convert json to type
+			var currentData *model.ExternalSystemUser
+			err = json.Unmarshal(currentDataJson, &currentData)
+			if err != nil {
+				return "", "", nil, nil, errors.ErrorAction("error converting json to type", "", nil)
+			}
+
 			newData := externalUser
 
-			//TODO check if needs to be updated
+			//TODO check if needs to be updated - equals method
 
 			log.Println(currentData)
 			log.Println(newData)
