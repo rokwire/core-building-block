@@ -34,8 +34,7 @@ func userToStorage(item *model.User) *user {
 	}
 
 	id := item.ID
-	//TODO applications accounts
-	//account := item.Account
+	applicationsAccounts := item.ApplicationsAccounts
 	profile := item.Profile
 	permissions := item.Permissions
 	roles := item.Roles
@@ -45,7 +44,7 @@ func userToStorage(item *model.User) *user {
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
-	return &user{ID: id /*Account: account,*/, Profile: profile, Permissions: permissions, Roles: roles, Groups: groups,
+	return &user{ID: id, ApplicationsAccounts: applicationsAccounts, Profile: profile, Permissions: permissions, Roles: roles, Groups: groups,
 		OrganizationsMemberships: organizationsMemberships, Devices: devices,
 		DateCreated: dateCreated, DateUpdated: dateUpdated}
 }

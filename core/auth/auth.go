@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"github.com/rokmetro/auth-library/authservice"
 	"github.com/rokmetro/auth-library/authutils"
 	"github.com/rokmetro/auth-library/tokenauth"
@@ -145,6 +146,46 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	return auth, nil
 }
 
+//registerUser register user for application
+//TODO document the params
+//credential can be null because the users who comes from external systems does not store credentials in the system
+func (a *Auth) registerUser(userAuthType model.UserAuthType,
+	appType model.ApplicationType,
+	credential *string,
+	profile model.UserProfile,
+	permissions []model.GlobalPermission,
+	roles []model.GlobalPermission,
+	groups []model.GlobalPermission,
+	membershipsOrg []model.Organization) (*model.User, error) {
+	//TODO - do this in one transaction - here, not in the storage
+
+	//TODO
+	//1. create user
+
+	userID, _ := uuid.NewUUID()
+
+	appUserAccountID, _ := uuid.NewUUID()
+	authTypes := []model.UserAuthType{userAuthType}
+	appUserAccount := model.ApplicationUserAccount{ID: appUserAccountID.String(), AppID: appType.Application.ID,
+		AuthTypes: authTypes, Active2FA: false}
+	appsUserAccounts := []model.ApplicationUserAccount{appUserAccount}
+
+	user := model.User{ID: userID.String(), ApplicationsAccounts: appsUserAccounts}
+
+	_, err := a.storage.InsertUser(user)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeUser, nil, err)
+	}
+
+	//Or no..
+	//2. create application user
+
+	//3. create organizations memberhips
+
+	///TODO return user
+	return nil, nil
+}
+
 //findAccount retrieves a user's account information
 func (a *Auth) findAccount(userAuth *model.UserAuth) (*model.User, error) {
 	//TODO
@@ -154,15 +195,16 @@ func (a *Auth) findAccount(userAuth *model.UserAuth) (*model.User, error) {
 
 //createAccount creates a new user account
 func (a *Auth) createAccount(userAuth *model.UserAuth) (*model.User, error) {
-	if userAuth == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeUserAuth, nil)
-	}
+	/*	if userAuth == nil {
+			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeUserAuth, nil)
+		}
 
-	newUser, err := a.setupUser(userAuth)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeUser, nil, err)
-	}
-	return a.storage.InsertUser(newUser, userAuth.Creds)
+		newUser, err := a.setupUser(userAuth)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeUser, nil, err)
+		}
+		return a.storage.InsertUser(newUser, userAuth.Creds) */
+	return nil, nil
 }
 
 //updateAccount updates a user's account information

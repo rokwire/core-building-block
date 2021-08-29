@@ -2,8 +2,11 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"log"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/auth-library/authutils"
 	"github.com/rokmetro/logging-library/errors"
@@ -70,10 +73,48 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 			return "", "", nil, nil, errors.WrapErrorAction("error checking if external user exists", "external user", nil, err)
 		}
 		if user != nil {
-			//user exists, check if need to update it
+			//user exists,just check if need to update it
+			userAuthType := user.FindUserAuthType(appTypeEntity.Application.ID, authTypeEntity.ID)
+			if userAuthType == nil {
+				return "", "", nil, nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
+			}
+			currentData := userAuthType.Params["user"]
+			newData := externalUser
+
+			//TODO check if needs to be updated
+
+			log.Println(currentData)
+			log.Println(newData)
 		} else {
 			//user does not exist, we need to register it
-			//TODO register
+
+			userAuthTypeID, _ := uuid.NewUUID()
+			params := map[string]interface{}{}
+			params["identifier"] = externalUser.Identifier
+			params["user"] = externalUser
+			userAuthType := model.UserAuthType{ID: userAuthTypeID.String(), AuthTypeID: authTypeEntity.ID, Active: true, Params: params}
+
+			appType := *appTypeEntity
+
+			profileID, _ := uuid.NewUUID()
+			profile := model.UserProfile{ID: profileID.String(), DateCreated: time.Now()}
+
+			membershipsOrgs := []model.Organization{}
+			if appType.Application.OrgRelType == "single" {
+				//none - there is no org memberships
+				//multi - we will apply additional logic when an user becomes a memebr to an organization - pending, approve etc..
+				//single - we can attach it
+
+				//TODO
+				//organization := appType.Application.Organizations[0]
+
+				//membershipsOrgs = append(membershipsOrgs, organization)
+			}
+
+			user, err = a.registerUser(userAuthType, appType, nil, profile, nil, nil, nil, membershipsOrgs)
+			if err != nil {
+				return "", "", nil, nil, errors.WrapErrorAction("error register user", "user", nil, err)
+			}
 		}
 
 	} else {

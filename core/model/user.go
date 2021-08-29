@@ -100,9 +100,8 @@ type UserAuthType struct {
 	//	"identifier":"+359000000000" //phone
 	//}
 	//or
-	//{
-	//	illinois_oidc stuff...
-	//}
+	//
+	//TODO
 	Params map[string]interface{} `bson:"params"`
 }
 
