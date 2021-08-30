@@ -101,7 +101,21 @@ type UserAuthType struct {
 	//}
 	//or
 	//
-	//TODO
+	//illinois_oidc
+	//{
+	//	"identifier": "pss",
+	//	"user": {
+	//		"identifier": "pss",
+	//		"first_name": "Petyo",
+	//		"middle_name": "Stoimenov",
+	//		"last_name": "Stoyanov",
+	//		"email": "pss@illinois.edu",
+	//		"groups": ["urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health media", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire admin configs", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire app config manager", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire shield", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire public health", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire events manager", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups admin", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire debug", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire transportation manager", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health provider", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health test verify", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups access", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire talent chooser manager", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire admin app"],
+	//		"system_specific": {
+	//			"uiucedu_uin": "678028578"
+	//		}
+	//	}
+	//}
 	Params map[string]interface{} `bson:"params"`
 }
 
