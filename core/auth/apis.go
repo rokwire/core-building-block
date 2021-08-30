@@ -2,6 +2,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/utils"
 	"encoding/json"
 	"log"
 	"strings"
@@ -74,16 +75,16 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 			return "", "", nil, nil, errors.WrapErrorAction("error checking if external user exists", "external user", nil, err)
 		}
 		if user != nil {
-			//user exists,just check if need to update it
+			//user exists, just check if need to update it
 			userAuthType := user.FindUserAuthType(appTypeEntity.Application.ID, authTypeEntity.ID)
 			if userAuthType == nil {
 				return "", "", nil, nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
 			}
 			///convert map to json string
 			currentDataMap := userAuthType.Params["user"]
-			currentDataJson, err := json.Marshal(currentDataMap)
+			currentDataJson, err := utils.ConvertToJSON(currentDataMap)
 			if err != nil {
-				return "", "", nil, nil, errors.ErrorAction("error converting map to json", "", nil)
+				return "", "", nil, nil, errors.WrapErrorAction("error converting map to json", "", nil, err)
 			}
 			///convert json to type
 			var currentData *model.ExternalSystemUser

@@ -3,6 +3,9 @@ package utils
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
+
+	"github.com/rokmetro/logging-library/errors"
 )
 
 // GenerateRandomBytes returns securely generated random bytes
@@ -20,4 +23,13 @@ func GenerateRandomBytes(n int) ([]byte, error) {
 func GenerateRandomString(s int) (string, error) {
 	b, err := GenerateRandomBytes(s)
 	return base64.URLEncoding.EncodeToString(b), err
+}
+
+// ConvertToJSON converts to json
+func ConvertToJSON(data interface{}) ([]byte, error) {
+	dataJson, err := json.Marshal(data)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error converting map to json", "", nil, err)
+	}
+	return dataJson, nil
 }
