@@ -114,9 +114,9 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 
 			membershipsOrgs := []model.Organization{}
 			if appType.Application.OrgRelType == "single" {
-				//none - there is no org memberships
-				//multi - we will apply additional logic when an user becomes a memebr to an organization - pending, approve etc..
-				//single - we can attach it
+				//none - there is no org memberships - example Main Admin platform application/no organization/
+				//multi - we will apply additional logic when an user becomes a member to an organization - pending, approve etc.. - example Safer Community/many organizations/
+				//single - we can attach it - example UIUC application/one organization/
 
 				//TODO
 				//organization := appType.Application.Organizations[0]
