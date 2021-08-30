@@ -24,9 +24,6 @@ func globalGroupToDef(item *model.GlobalGroup) *Def.GlobalGroup {
 }
 
 func globalGroupListToDef(items []model.GlobalGroup) []Def.GlobalGroup {
-	if items == nil {
-		return nil
-	}
 	out := make([]Def.GlobalGroup, len(items))
 	for i, item := range items {
 		defItem := globalGroupToDef(&item)
@@ -57,9 +54,6 @@ func globalRoleToDef(item *model.GlobalRole) *Def.GlobalRole {
 }
 
 func globalRoleListToDef(items []model.GlobalRole) []Def.GlobalRole {
-	if items == nil {
-		return nil
-	}
 	out := make([]Def.GlobalRole, len(items))
 	for i, item := range items {
 		defItem := globalRoleToDef(&item)

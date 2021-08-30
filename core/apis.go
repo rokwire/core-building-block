@@ -14,7 +14,7 @@ type APIs struct {
 	Encryption     Encryption     //expose to the drivers adapters
 	BBs            BBs            //expose to the drivers adapters
 
-	Auth *auth.Auth //expose to the drivers auth
+	Auth auth.APIs //expose to the drivers auth
 
 	app *application
 }
@@ -22,9 +22,7 @@ type APIs struct {
 //Start starts the core part of the application
 func (c *APIs) Start() {
 	c.app.start()
-
-	storageListener := auth.StorageListener{Auth: c.Auth}
-	c.app.storage.RegisterStorageListener(&storageListener)
+	c.Auth.Start()
 }
 
 //AddListener adds application listener
@@ -38,7 +36,7 @@ func (c *APIs) GetVersion() string {
 }
 
 //NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, auth *auth.Auth) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
 	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners}
@@ -115,12 +113,20 @@ func (s *administrationImpl) AdmGetOrganization(ID string) (*model.Organization,
 	return s.app.admGetOrganization(ID)
 }
 
+func (s *administrationImpl) AdmCreateApplication(name string, versions []string) (*model.Application, error) {
+	return s.app.admCreateApplication(name, versions)
+}
+
 func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, error) {
 	return s.app.admGetApplication(ID)
 }
 
 func (s *administrationImpl) AdmUpdateGlobalPermission(ID string, name string) error {
 	return s.app.admUpdateGlobalPermission(ID, name)
+}
+
+func (s *administrationImpl) AdmGetApplications() ([]model.Application, error) {
+	return s.app.admGetApplications()
 }
 
 ///

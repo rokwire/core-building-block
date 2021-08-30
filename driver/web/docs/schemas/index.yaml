@@ -1,6 +1,8 @@
 # global
 GlobalConfig:
   $ref: "./global/GlobalConfig.yaml"
+GlobalPermission:
+  $ref: "./global/GlobalPermission.yaml"
 GlobalRole:
   $ref: "./global/GlobalRole.yaml"
 GlobalGroup:
@@ -15,6 +17,8 @@ Organization:
   $ref: "./organization/Organization.yaml"
 OrganizationConfig:
   $ref: "./organization/OrganizationConfig.yaml"
+OrganizationPermission:
+  $ref: "./organization/OrganizationPermission.yaml"
 OrganizationRole:
   $ref: "./organization/OrganizationRole.yaml"
 OrganizationGroup:
@@ -49,6 +53,11 @@ AuthLoginParamsOidc:
 AuthRefreshResponse:
   $ref: "./auth/AuthRefreshResponse.yaml"
 
+AuthResponseRokwireToken:
+  $ref: "./auth/AuthResponseRokwireToken.yaml"
+AuthResponseParamsOidc:
+  $ref: "./auth/AuthResponseParamsOidc.yaml"
+
 AuthLoginUrlRequest:
   $ref: "./auth/AuthLoginUrlRequest.yaml"
 AuthLoginUrlResponse:
@@ -58,6 +67,14 @@ AuthAuthorizeServiceRequest:
   $ref: "./auth/AuthAuthorizeServiceRequest.yaml"
 AuthAuthorizeServiceResponse:
   $ref: "./auth/AuthAuthorizeServiceResponse.yaml"
+
+JWK:
+  $ref: "./auth/JWK.yaml"
+JWKS:
+  $ref: "./auth/JWKS.yaml"
+
+OidcDiscovery:
+  $ref: "./auth/OIDCDiscovery.yaml"
 
 # user
 User:

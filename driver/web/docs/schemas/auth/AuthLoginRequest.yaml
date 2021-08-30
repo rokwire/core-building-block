@@ -15,7 +15,6 @@ properties:
   app_id:
     type: string
   creds:
-    type: object
     anyOf:
       - $ref: "./AuthLoginCredsEmail.yaml"
       - $ref: "./AuthLoginCredsPhone.yaml"

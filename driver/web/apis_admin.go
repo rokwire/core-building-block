@@ -283,6 +283,7 @@ func (h AdminApisHandler) deregisterService(l *logs.Log, r *http.Request) logs.H
 }
 
 func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
+
 	params := mux.Vars(r)
 	ID := params["id"]
 	if len(ID) <= 0 {
@@ -330,6 +331,54 @@ func (h AdminApisHandler) updateGlobalPermission(l *logs.Log, r *http.Request) l
 	}
 
 	return l.HttpResponseSuccess()
+}
+
+//createApplication creates an application
+func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		l.Errorf("Error on marshal create application - %s\n", err.Error())
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+	}
+
+	var requestData Def.Application
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		l.Errorf("Error on unmarshal the create application - %s\n", err.Error())
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
+	}
+
+	name := requestData.Name
+	versions := requestData.Versions
+
+	_, err = h.coreAPIs.Administration.AdmCreateApplication(name, *versions)
+	if err != nil {
+		l.Errorf(err.Error())
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
+	}
+
+	headers := map[string]string{}
+	headers["Content-Type"] = "text/plain"
+	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+}
+
+//getAppilcations gets applications list
+func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request) logs.HttpResponse {
+	applications, err := h.coreAPIs.Administration.AdmGetApplications()
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
+	}
+	var response []Def.Application
+	for _, application := range applications {
+		r := applicationToDef(&application)
+		response = append(response, *r)
+	}
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance
