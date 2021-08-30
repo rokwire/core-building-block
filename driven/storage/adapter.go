@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"core-building-block/core/model"
+	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -660,30 +661,58 @@ func (sa *Adapter) UpdateGlobalPermission(ID string, name string) error {
 			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
 		}
 
-		updateGlobalPermissionsFilter := bson.D{primitive.E{Key: "name", Value: name}}
-		_, err = sa.db.globalPermissions.DeleteManyWithContext(sessionContext, updateGlobalPermissionsFilter, nil)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeGlobalPermission, nil, err)
+		////////////
+		updatGlobalPermissionFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
+		updateGlobalPermission := bson.D{
+			primitive.E{Key: "$set", Value: bson.D{
+				primitive.E{Key: "name", Value: name},
+			}},
 		}
 
-		//add the new one
-		_, err = sa.db.globalPermissions.InsertOneWithContext(sessionContext, name)
+		_, err = sa.db.globalPermissions.UpdateOneWithContext(sessionContext, updatGlobalPermissionFilter, updateGlobalPermission, nil)
 		if err != nil {
 			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalPermission, nil, err)
+			return err
 		}
+		///////////////////////
+		updatGlobalPermissionInGlobalGroupsFilter := bson.D{primitive.E{Key: "permissions._id", Value: ID}}
+		updateGlobalPermissionInGlobalGroups := bson.D{
+			primitive.E{Key: "$set", Value: bson.D{
+				primitive.E{Key: "permissions.name", Value: name},
+			}},
+		}
+
+		_, err = sa.db.globalGroups.UpdateOneWithContext(sessionContext, updatGlobalPermissionInGlobalGroupsFilter, updateGlobalPermissionInGlobalGroups, nil)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return err
+		}
+		///////////////////////
+		updatGlobalPermissioninGlobalRolesFilter := bson.D{primitive.E{Key: "permissions._id", Value: ID}}
+		updateGlobalPermissionInGlobalRoles := bson.D{
+			primitive.E{Key: "$set", Value: bson.D{
+				primitive.E{Key: "name", Value: name},
+			}},
+		}
+
+		_, err = sa.db.globalRoles.UpdateOneWithContext(sessionContext, updatGlobalPermissioninGlobalRolesFilter, updateGlobalPermissionInGlobalRoles, nil)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return err
+		}
+		///////////////////////
 
 		err = sessionContext.CommitTransaction(sessionContext)
 		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
+			log.Printf("error on commiting a transaction - %s", err)
+			return err
 		}
 		return nil
 	})
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
