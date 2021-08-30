@@ -653,8 +653,8 @@ func (sa *Adapter) GetApplication(ID string) (*model.Application, error) {
 
 // ============================== Anonymous Profile ==============================
 
-//CreateAnonymousProfile inserts an object in the anonymous profile coll
-func (sa *Adapter) CreateAnonymousProfile(profile *model.AnonymousProfile) (*model.AnonymousProfile, error) {
+//InsertAnonymousProfile inserts an object in the anonymous profile coll
+func (sa *Adapter) InsertAnonymousProfile(profile *model.AnonymousProfile) (*model.AnonymousProfile, error) {
 	now := time.Now()
 	profile.CreationDate = now
 	profile.LastModifiedDate = now
@@ -701,8 +701,8 @@ func (sa *Adapter) UpdateAnonymousProfile(id string, favorites *[]string, intere
 	return nil
 }
 
-//GetAnonymousProfile gets anonymous profile
-func (sa *Adapter) GetAnonymousProfile(id string) (*model.AnonymousProfile, error) {
+//FindAnonymousProfile gets anonymous profile
+func (sa *Adapter) FindAnonymousProfile(id string) (*model.AnonymousProfile, error) {
 	filter := bson.M{"_id": id}
 	var profile *model.AnonymousProfile
 	err := sa.db.anonymousProfile.FindOne(filter, &profile, nil)

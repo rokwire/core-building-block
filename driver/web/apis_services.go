@@ -185,7 +185,7 @@ func (h ServicesApisHandler) createAnonymousProfile(l *logs.Log, r *http.Request
 	}
 	_, err = h.coreAPIs.Services.CreateAnonymousProfile(l, &profile)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
 	}
 	return l.HttpResponseSuccess()
 }
@@ -212,7 +212,7 @@ func (h ServicesApisHandler) updateAnonymousProfile(l *logs.Log, r *http.Request
 	}
 	err = h.coreAPIs.Services.UpdateAnonymousProfile(l, profile.ID, &profile.Favorites, &profile.Interests, &profile.NegativeInterestTags, &profile.PositiveInterestTags, &profile.PrivacySettings, &profile.Over13)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
 	}
 	return l.HttpResponseSuccess()
 }
@@ -226,7 +226,7 @@ func (h ServicesApisHandler) getAnonymousProfile(l *logs.Log, r *http.Request) l
 
 	profile, err := h.coreAPIs.Services.GetAnonymousProfile(l, ID)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
 	}
 
 	data, err := json.Marshal(profile)

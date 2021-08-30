@@ -68,10 +68,10 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations)).Methods("GET")
-	servicesSubRouter.HandleFunc("/profiles", we.wrapFunc(we.servicesApisHandler.createAnonymousProfile)).Methods("POST")
-	servicesSubRouter.HandleFunc("/profiles/{id}", we.wrapFunc(we.servicesApisHandler.updateAnonymousProfile)).Methods("PUT")
-	servicesSubRouter.HandleFunc("/profiles/{id}", we.wrapFunc(we.servicesApisHandler.getAnonymousProfile)).Methods("GET")
-	servicesSubRouter.HandleFunc("/profiles/{id}", we.wrapFunc(we.servicesApisHandler.deleteAnonymousProfile)).Methods("DELETE")
+	servicesSubRouter.HandleFunc("/anonymous-profiles", we.wrapFunc(we.servicesApisHandler.createAnonymousProfile)).Methods("POST")
+	servicesSubRouter.HandleFunc("/anonymous-profiles/{id}", we.wrapFunc(we.servicesApisHandler.updateAnonymousProfile)).Methods("PUT")
+	servicesSubRouter.HandleFunc("/anonymous-profiles/{id}", we.wrapFunc(we.servicesApisHandler.getAnonymousProfile)).Methods("GET")
+	servicesSubRouter.HandleFunc("/anonymous-profiles/{id}", we.wrapFunc(we.servicesApisHandler.deleteAnonymousProfile)).Methods("DELETE")
 
 	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest)).Methods("GET")
 	///

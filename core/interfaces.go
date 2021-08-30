@@ -56,8 +56,8 @@ type Storage interface {
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
 	GetOrganizations() ([]model.Organization, error)
-	CreateAnonymousProfile(profile *model.AnonymousProfile) (*model.AnonymousProfile, error)
-	GetAnonymousProfile(id string) (*model.AnonymousProfile, error)
+	InsertAnonymousProfile(profile *model.AnonymousProfile) (*model.AnonymousProfile, error)
+	FindAnonymousProfile(id string) (*model.AnonymousProfile, error)
 	UpdateAnonymousProfile(id string, favorites *[]string, interests *[]string,
 		negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error
 	DeleteAnonymousProfile(id string) error

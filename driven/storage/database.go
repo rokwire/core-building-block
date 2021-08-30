@@ -113,12 +113,6 @@ func (m *database) start() error {
 		return err
 	}
 
-	anonymousProfile := &collectionWrapper{database: m, coll: db.Collection("anonymous_profile")}
-	err = m.applyAnonymousProfileChecks(anonymousProfile)
-	if err != nil {
-		return err
-	}
-
 	serviceRegs := &collectionWrapper{database: m, coll: db.Collection("service_regs")}
 	err = m.applyServiceRegsChecks(serviceRegs)
 	if err != nil {
@@ -504,19 +498,6 @@ func (m *database) applyOrganizationsPermissionsChecks(organizationsPermissions 
 	}
 
 	m.logger.Info("organizations permissions checks passed")
-	return nil
-}
-
-func (m *database) applyAnonymousProfileChecks(organizations *collectionWrapper) error {
-	m.logger.Info("apply anonymous profile checks.....")
-
-	//add name index - unique
-	err := organizations.AddIndex(bson.D{primitive.E{Key: "id", Value: 1}}, true)
-	if err != nil {
-		return err
-	}
-
-	m.logger.Info("anonymous profile checks passed")
 	return nil
 }
 
