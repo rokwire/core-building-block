@@ -2,6 +2,7 @@ package model
 
 import (
 	"bytes"
+	"core-building-block/utils"
 	"fmt"
 	"time"
 
@@ -223,4 +224,30 @@ type ExternalSystemUser struct {
 
 	//here are the system specific data for the user - uiucedu_uin etc
 	SystemSpecific map[string]interface{} `json:"system_specific" bson:"system_specific"`
+}
+
+//Equals checks if two external system users are equals
+func (esu ExternalSystemUser) Equals(other ExternalSystemUser) bool {
+	if esu.Identifier != other.Identifier {
+		return false
+	}
+	if esu.FirstName != other.FirstName {
+		return false
+	}
+	if esu.MiddleName != other.MiddleName {
+		return false
+	}
+	if esu.LastName != other.LastName {
+		return false
+	}
+	if esu.Email != other.Email {
+		return false
+	}
+	if !utils.DeepEqual(esu.Groups, other.Groups) {
+		return false
+	}
+	if !utils.DeepEqual(esu.SystemSpecific, other.SystemSpecific) {
+		return false
+	}
+	return true
 }

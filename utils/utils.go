@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"reflect"
 
 	"github.com/rokmetro/logging-library/errors"
 )
@@ -32,4 +33,9 @@ func ConvertToJSON(data interface{}) ([]byte, error) {
 		return nil, errors.WrapErrorAction("error converting map to json", "", nil, err)
 	}
 	return dataJson, nil
+}
+
+//DeepEqual checks whether a and b are ``deeply equal,''
+func DeepEqual(a, b interface{}) bool {
+	return reflect.DeepEqual(a, b)
 }
