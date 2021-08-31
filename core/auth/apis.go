@@ -45,14 +45,12 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
-	accessToken := ""
-	refreshToken := ""
 	var user *model.User
-	var responseParams interface{}
+	var userAuthType *model.UserAuthType
 
 	//get the auth type implementation for the auth type
 	if authTypeEntity.IsExternal {
-		user, err = a.applyExternalAuthType(*authTypeEntity, creds, *appTypeEntity, params, l)
+		user, userAuthType, err = a.applyExternalAuthType(*authTypeEntity, creds, *appTypeEntity, params, l)
 		if err != nil {
 			return "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 		}
@@ -60,7 +58,7 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 		//TODO groups mapping
 
 	} else {
-		user, err = a.applyAuthType(*authTypeEntity, creds, *appTypeEntity, params, l)
+		user, userAuthType, err = a.applyAuthType(*authTypeEntity, creds, *appTypeEntity, params, l)
 		if err != nil {
 			return "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
@@ -68,111 +66,16 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 		//the credentials are valid
 	}
 
-	///prepare the response
-	//access token
-	claims := a.getStandardClaims(user.ID, "TODO", "TODO", "TODO", "rokwire", "TODO", appID, nil)
-	accessToken, err = a.buildAccessToken(claims, "", authorization.ScopeGlobal)
+	//now we are ready to apply login for the user
+	//TODO - get authTypeParam from the auth type.. pass nil for now
+	authTypeParam := "TODO"
+
+	accessToken, refreshToken, err := a.applyLogin(*user, *userAuthType, authTypeParam, l)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+		return "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}
 
-	//refresh token
-	refreshToken = "TODO"
-
-	return accessToken, refreshToken, user, responseParams, nil
-
-	//check credentials
-	/*	userAuth, err := authImpl.check(creds, *authTypeEntity, *appTypeEntity, params, l)
-		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "login creds", nil, err)
-		}
-
-	log.Println(userAuth)*/
-
-	return "", "", nil, nil, nil
-	/*var user *model.User
-	var err error
-	auth, err := a.getAuthType(authType)
-	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
-	}
-
-	userAuth, err := auth.check(creds, orgID, appID, params, l)
-	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "login creds", nil, err)
-	}
-
-	if userAuth == nil || userAuth.Creds == nil {
-		return "", "", nil, nil, errors.WrapErrorData(logutils.StatusInvalid, "user auth creds", nil, err)
-	}
-
-	//RefreshParams == nil indicates that a refresh token should not be generated
-	refreshToken := ""
-	var refreshParams *model.AuthRefresh
-	if userAuth.RefreshParams != nil {
-		var expireTime *time.Time
-		refreshToken, expireTime, err = a.buildRefreshToken()
-		if err != nil {
-			return "", "", nil, nil, err
-		}
-
-		refreshParams = &model.AuthRefresh{CurrentToken: refreshToken, Expires: expireTime, AppID: appID, OrgID: orgID,
-			CredsID: userAuth.Creds.ID, Params: userAuth.RefreshParams, DateCreated: time.Now().UTC()}
-	}
-
-	if len(userAuth.AccountID) > 0 {
-		user, err = a.findAccount(userAuth)
-		if err != nil {
-			return "", "", nil, nil, err
-		}
-		user, update, newMembership := a.needsUserUpdate(userAuth, user)
-		if update {
-			var newMembershipOrgData *map[string]interface{}
-			if newMembership {
-				newMembershipOrgData = &userAuth.OrgData
-			}
-			_, err = a.updateAccount(user, orgID, newMembershipOrgData)
-			if err != nil {
-				return "", "", nil, nil, err
-			}
-		}
-
-		if refreshParams != nil {
-			err = a.checkRefreshTokenLimit(orgID, appID, userAuth.Creds.ID)
-			if err != nil {
-				a.logger.Error(err.Error())
-			} else {
-				err = a.storage.InsertRefreshToken(refreshParams)
-				if err != nil {
-					return "", "", nil, nil, err
-				}
-			}
-		}
-	} else if userAuth.OrgID == orgID {
-		user, err = a.createAccount(userAuth)
-		if err != nil {
-			return "", "", nil, nil, err
-		}
-
-		if refreshParams != nil {
-			err = a.storage.InsertRefreshToken(refreshParams)
-			if err != nil {
-				return "", "", nil, nil, err
-			}
-		}
-	} else {
-		return "", "", nil, nil, errors.ErrorData(logutils.StatusInvalid, "org_id", logutils.StringArgs(orgID))
-	}
-
-	claims := a.getStandardClaims(user.ID, userAuth.UserID, userAuth.Email, userAuth.Phone, "rokwire", orgID, appID, userAuth.Exp)
-	token, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
-	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
-	}
-
-	return token, refreshToken, user, userAuth.ResponseParams, nil
-
-	*/
+	return *accessToken, *refreshToken, user, authTypeParam, nil
 }
 
 //Refresh refreshes an access token using a refresh token
