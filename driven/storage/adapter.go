@@ -425,27 +425,77 @@ func (sa *Adapter) UpdateUser(updatedUser *model.User, orgID string, newOrgData 
 //DeleteUser deletes a user
 func (sa *Adapter) DeleteUser(id string) error {
 	//TODO - we have to decide what we do on delete user operation - removing all user relations, (or) mark the user disabled etc
-	filter := bson.M{"_id": id}
-	_, err := sa.db.users.DeleteOne(filter, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeUser, nil, err)
-	}
-
-	return nil
+	return errors.New(logutils.Unimplemented)
 }
 
 //UpdateUserAuthType updates user auth type
 func (sa *Adapter) UpdateUserAuthType(item model.UserAuthType) error {
+	// transaction
+	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+		err := sessionContext.StartTransaction()
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
+		}
 
-	//1. first find the user record
+		//1. set time updated to the item
+		now := time.Now()
+		item.DateUpdated = &now
 
-	//2. find the user auth type
+		//2. first find the user record
+		findFilter := bson.M{"applications_accounts.auth_types.id": item.ID}
+		var users []user
+		err = sa.db.users.FindWithContext(sessionContext, findFilter, &users, nil)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeUserAuth, &logutils.FieldArgs{"user auth type id": item.ID}, err)
+		}
+		if len(users) == 0 {
+			sa.abortTransaction(sessionContext)
+			return errors.ErrorAction(logutils.ActionFind, "for some reasons user is nil for user auth type", &logutils.FieldArgs{"user auth type id": item.ID})
+		}
+		user := users[0]
 
-	//3. update the user auth type
+		//3. update the user auth type in the user record
+		appsAccounts := user.ApplicationsAccounts
+		newAppsAccounts := make([]model.ApplicationUserAccount, len(appsAccounts))
+		for i, appAccount := range appsAccounts {
+			authTypes := appAccount.AuthTypes
+			newAuthTypes := make([]model.UserAuthType, len(authTypes))
+			for j, uAuthType := range authTypes {
+				if uAuthType.ID == item.ID {
+					newAuthTypes[j] = item
+				} else {
+					newAuthTypes[j] = uAuthType
+				}
+			}
 
-	//4. set the updated user auth type to the user
+			appAccount.AuthTypes = newAuthTypes
 
-	//5. update the user record
+			newAppsAccounts[i] = appAccount
+		}
+		user.ApplicationsAccounts = newAppsAccounts
+
+		//4. update the user record
+		replaceFilter := bson.M{"_id": user.ID}
+		err = sa.db.users.ReplaceOneWithContext(sessionContext, replaceFilter, user, nil)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionReplace, model.TypeUser, nil, err)
+		}
+
+		//commit the transaction
+		err = sessionContext.CommitTransaction(sessionContext)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
