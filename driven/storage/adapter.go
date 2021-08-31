@@ -434,6 +434,21 @@ func (sa *Adapter) DeleteUser(id string) error {
 	return nil
 }
 
+//UpdateUserAuthType updates user auth type
+func (sa *Adapter) UpdateUserAuthType(item model.UserAuthType) error {
+
+	//1. first find the user record
+
+	//2. find the user auth type
+
+	//3. update the user auth type
+
+	//4. set the updated user auth type to the user
+
+	//5. update the user record
+	return nil
+}
+
 //FindCredentialsByID finds a set of credentials by ID
 func (sa *Adapter) FindCredentialsByID(ID string) (*model.AuthCreds, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}

@@ -122,6 +122,9 @@ type Storage interface {
 	UpdateUser(user *model.User, orgID string, newOrgData *map[string]interface{}) (*model.User, error)
 	DeleteUser(id string) error
 
+	//UserAuthTypes
+	UpdateUserAuthType(item model.UserAuthType) error
+
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)
 

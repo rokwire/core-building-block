@@ -4,7 +4,6 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
 	"encoding/json"
-	"log"
 	"strings"
 	"time"
 
@@ -76,29 +75,35 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 		}
 		if user != nil {
 			//user exists, just check if need to update it
+
+			//get the current external user
 			userAuthType := user.FindUserAuthType(appTypeEntity.Application.ID, authTypeEntity.ID)
 			if userAuthType == nil {
 				return "", "", nil, nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
 			}
-			///convert map to json string
 			currentDataMap := userAuthType.Params["user"]
 			currentDataJson, err := utils.ConvertToJSON(currentDataMap)
 			if err != nil {
 				return "", "", nil, nil, errors.WrapErrorAction("error converting map to json", "", nil, err)
 			}
-			///convert json to type
 			var currentData *model.ExternalSystemUser
 			err = json.Unmarshal(currentDataJson, &currentData)
 			if err != nil {
 				return "", "", nil, nil, errors.ErrorAction("error converting json to type", "", nil)
 			}
 
-			newData := externalUser
+			newData := *externalUser
 
-			//TODO check if needs to be updated - equals method
+			//check if external system user needs to be updated
+			if !currentData.Equals(newData) {
+				//there is changes so we need to update it
+				userAuthType.Params["user"] = newData
+				err = a.storage.UpdateUserAuthType(*userAuthType)
+				if err != nil {
+					return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
+				}
+			}
 
-			log.Println(currentData)
-			log.Println(newData)
 		} else {
 			//user does not exist, we need to register it
 
@@ -130,6 +135,8 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 				return "", "", nil, nil, errors.WrapErrorAction("error register user", "user", nil, err)
 			}
 		}
+
+		//TODO groups mapping
 
 	} else {
 		//auth type

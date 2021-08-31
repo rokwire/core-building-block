@@ -118,6 +118,9 @@ type UserAuthType struct {
 	//	}
 	//}
 	Params map[string]interface{} `bson:"params"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 //UserProfile represents user profile entity. The user profile is an information about the user.
