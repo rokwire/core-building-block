@@ -2,12 +2,8 @@ package auth
 
 import (
 	"core-building-block/core/model"
-	"core-building-block/utils"
-	"encoding/json"
 	"strings"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/auth-library/authutils"
 	"github.com/rokmetro/logging-library/errors"
@@ -56,112 +52,17 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 
 	//get the auth type implementation for the auth type
 	if authTypeEntity.IsExternal {
-		//external auth type
-		authImpl, err := a.getExternalAuthTypeImpl(*authTypeEntity)
+		user, err = a.applyExternalAuthType(*authTypeEntity, creds, *appTypeEntity, params, l)
 		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
-		}
-
-		//1. get the user from the external system
-		externalUser, err := authImpl.externalLogin(creds, *authTypeEntity, *appTypeEntity, params, l)
-		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("error getting external user", "external user", nil, err)
-		}
-
-		//2. check if the user exists
-		user, err = authImpl.userExist(externalUser.Identifier, *authTypeEntity, *appTypeEntity, l)
-		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("error checking if external user exists", "external user", nil, err)
-		}
-		if user != nil {
-			//user exists, just check if need to update it
-
-			//get the current external user
-			userAuthType := user.FindUserAuthType(appTypeEntity.Application.ID, authTypeEntity.ID)
-			if userAuthType == nil {
-				return "", "", nil, nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
-			}
-			currentDataMap := userAuthType.Params["user"]
-			currentDataJson, err := utils.ConvertToJSON(currentDataMap)
-			if err != nil {
-				return "", "", nil, nil, errors.WrapErrorAction("error converting map to json", "", nil, err)
-			}
-			var currentData *model.ExternalSystemUser
-			err = json.Unmarshal(currentDataJson, &currentData)
-			if err != nil {
-				return "", "", nil, nil, errors.ErrorAction("error converting json to type", "", nil)
-			}
-
-			newData := *externalUser
-
-			//check if external system user needs to be updated
-			if !currentData.Equals(newData) {
-				//there is changes so we need to update it
-				userAuthType.Params["user"] = newData
-				err = a.storage.UpdateUserAuthType(*userAuthType)
-				if err != nil {
-					return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
-				}
-			}
-
-		} else {
-			//user does not exist, we need to register it
-
-			//app
-			app := appTypeEntity.Application
-
-			//user auth type
-			userAuthTypeID, _ := uuid.NewUUID()
-			params := map[string]interface{}{}
-			params["identifier"] = externalUser.Identifier
-			params["user"] = externalUser
-			userAuthType := model.UserAuthType{ID: userAuthTypeID.String(), AuthTypeID: authTypeEntity.ID, Active: true, Params: params}
-
-			//credential
-			var credential *string //null as the user authenticates outside the system
-
-			//profile
-			profileID, _ := uuid.NewUUID()
-			profile := model.UserProfile{ID: profileID.String(), DateCreated: time.Now()}
-
-			//useSharedUser
-			useSharedUser := false // for now this is disable
-
-			user, err = a.registerUser(app, userAuthType, credential, profile, useSharedUser, l)
-			if err != nil {
-				return "", "", nil, nil, errors.WrapErrorAction("error register user", model.TypeUser, nil, err)
-			}
+			return "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 		}
 
 		//TODO groups mapping
 
 	} else {
-		//auth type
-		authImpl, err := a.getAuthTypeImpl(*authTypeEntity)
+		user, err = a.applyAuthType(*authTypeEntity, creds, *appTypeEntity, params, l)
 		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
-		}
-
-		//1. check if the user exists
-		user, err = authImpl.userExist(*authTypeEntity, *appTypeEntity, creds, l)
-		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUser, nil, err)
-		}
-		if user == nil {
-			return "", "", nil, nil, errors.WrapErrorAction("exist", model.TypeUser, nil, err)
-		}
-
-		//2. it seems the user exist, now check the credentials
-		userAuthType := user.FindUserAuthType(appTypeEntity.Application.ID, authTypeEntity.ID)
-		if userAuthType == nil {
-			return "", "", nil, nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
-		}
-		validCredentials, err := authImpl.checkCredentials(*userAuthType, creds, l)
-		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
-		}
-		if !*validCredentials {
-			return "", "", nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
+			return "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
 
 		//the credentials are valid
