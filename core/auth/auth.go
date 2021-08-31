@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
-	"github.com/google/uuid"
 	"github.com/rokmetro/auth-library/authservice"
 	"github.com/rokmetro/auth-library/authutils"
 	"github.com/rokmetro/auth-library/tokenauth"
@@ -144,42 +143,47 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	return auth, nil
 }
 
-//registerUser register user for application
-//TODO document the params
-//credential can be null because the users who comes from external systems does not store credentials in the system
-func (a *Auth) registerUser(userAuthType model.UserAuthType,
-	appType model.ApplicationType,
+//registerUser registers user for application
+//	Input:
+//		app (Application): The application which the user is registering in
+//		userAuthType (UserAuthType): In which way the user will be logging in the application
+//		credential (string): The credential which will be used for the choosen authentication type. It can be null as the external auth types authenticate the user outside the system and we do not store credentials for them.
+//		profile (UserProfile): Information for the user
+//		useSharedUser (bool): It says if the system to look if the user has account in another application in the system and to use it instead of creating a new user
+//		l (*logs.Log): Log object pointer for request
+//	Returns:
+//		Registered user (User): Registered User object
+func (a *Auth) registerUser(app model.Application,
+	userAuthType model.UserAuthType,
 	credential *string,
 	profile model.UserProfile,
-	permissions []model.GlobalPermission,
-	roles []model.GlobalPermission,
-	groups []model.GlobalPermission,
-	membershipsOrg []model.Organization) (*model.User, error) {
+	useSharedUser bool,
+	l *logs.Log) (*model.User, error) {
 	//TODO - do this in one transaction - here, not in the storage
 
-	//TODO
-	//1. create user
+	/*	//TODO
+		//1. create user
 
-	userID, _ := uuid.NewUUID()
+		userID, _ := uuid.NewUUID()
 
-	appUserAccountID, _ := uuid.NewUUID()
-	authTypes := []model.UserAuthType{userAuthType}
-	appUserAccount := model.ApplicationUserAccount{ID: appUserAccountID.String(), AppID: appType.Application.ID,
-		AuthTypes: authTypes, Active2FA: false}
-	appsUserAccounts := []model.ApplicationUserAccount{appUserAccount}
+		appUserAccountID, _ := uuid.NewUUID()
+		authTypes := []model.UserAuthType{userAuthType}
+		appUserAccount := model.ApplicationUserAccount{ID: appUserAccountID.String(), AppID: appType.Application.ID,
+			AuthTypes: authTypes, Active2FA: false}
+		appsUserAccounts := []model.ApplicationUserAccount{appUserAccount}
 
-	user := model.User{ID: userID.String(), ApplicationsAccounts: appsUserAccounts}
+		user := model.User{ID: userID.String(), ApplicationsAccounts: appsUserAccounts}
 
-	_, err := a.storage.InsertUser(user)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeUser, nil, err)
-	}
+		_, err := a.storage.InsertUser(user)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeUser, nil, err)
+		}
 
-	//Or no..
-	//2. create application user
+		//Or no..
+		//2. create application user
 
-	//3. create organizations memberhips
-
+		//3. create organizations memberhips
+	*/
 	///TODO return user
 	return nil, nil
 }
