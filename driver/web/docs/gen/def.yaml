@@ -249,34 +249,6 @@ paths:
               schema:
                 type: string
                 example: Echooo
-  /admin/global-roles:
-    post:
-      tags:
-        - Admin
-      summary: Create global role
-      description: |
-        Creates global role
-      requestBody:
-        description: creates one global role
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GlobalRole'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
   /admin/global-config:
     get:
       tags:
@@ -334,6 +306,55 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/GlobalConfig'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/global-roles:
+    get:
+      tags:
+        - Admin
+      summary: Get global role
+      description: |
+        Gets gobal role
+      responses:
+        '200':
+          '400':
+            description: Bad request
+          '401':
+            description: Unauthorized
+          '500':
+            description: Internal error
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GlobalRole'
+    post:
+      tags:
+        - Admin
+      summary: Create global role
+      description: |
+        Creates global role
+      requestBody:
+        description: creates one global role
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GlobalRole'
         required: true
       responses:
         '200':
