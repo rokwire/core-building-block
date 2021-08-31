@@ -39,8 +39,6 @@ paths:
     $ref: "./resources/services/test.yaml"
 
   #admin
-  /admin/global-roles:
-    $ref: "./resources/admin/global-roles.yaml"
   /admin/global-config:
     $ref: "./resources/admin/global-config.yaml"
   /admin/organizations/{id}:
@@ -51,7 +49,7 @@ paths:
     $ref: "./resources/admin/service-regs.yaml"
   /admin/applications/{id}:
     $ref: "./resources/admin/applicationsId.yaml"
-  /admin/application:
+  /admin/applications:
     $ref: "./resources/admin/applications.yaml"
 
   #enc

@@ -33,14 +33,17 @@ const (
 	typeAuth              logutils.MessageDataType = "auth"
 	typeAuthRefreshParams logutils.MessageDataType = "auth refresh params"
 
-	refreshTokenLength int   = 256
-	refreshTokenExpiry int   = 7 * 24 * 60
-	accessTokenExpiry  int64 = 30
+	refreshTokenLength       int = 256
+	refreshTokenExpiry       int = 7 * 24 * 60
+	refreshTokenDeletePeriod int = 2
+	refreshTokenLimit        int = 3
 )
 
 //Auth represents the auth functionality unit
 type Auth struct {
 	storage Storage
+
+	logger *logs.Logger
 
 	authTypes map[string]authType
 
@@ -53,8 +56,12 @@ type Auth struct {
 	minTokenExp int64  //Minimum access token expiration time in minutes
 	maxTokenExp int64  //Maximum access token expiration time in minutes
 
-	authConfigs     *syncmap.Map //cache authConfigs / orgID_appID -> authConfig
+	authConfigs     *syncmap.Map //cache authConfigs
 	authConfigsLock *sync.RWMutex
+
+	//delete refresh tokens timer
+	deleteRefreshTimer *time.Timer
+	timerDone          chan bool
 }
 
 //TokenClaims is a temporary claims model to provide backwards compatibility
@@ -83,9 +90,11 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	authConfigs := &syncmap.Map{}
 	authConfigsLock := &sync.RWMutex{}
-	auth := &Auth{storage: storage, authTypes: authTypes, authPrivKey: authPrivKey, AuthService: nil,
+
+	timerDone := make(chan bool)
+	auth := &Auth{storage: storage, logger: logger, authTypes: authTypes, authPrivKey: authPrivKey, AuthService: nil,
 		serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp,
-		authConfigs: authConfigs, authConfigsLock: authConfigsLock}
+		authConfigs: authConfigs, authConfigsLock: authConfigsLock, timerDone: timerDone}
 
 	err := auth.storeReg()
 	if err != nil {
@@ -374,33 +383,77 @@ func (a *Auth) getAuthConfig(orgID string, appID string, authType string) (*mode
 	a.authConfigsLock.RLock()
 	defer a.authConfigsLock.RUnlock()
 
-	var authConfig *model.AuthConfig //to return
-
 	errArgs := &logutils.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": authType}
 
 	item, _ := a.authConfigs.Load(fmt.Sprintf("%s_%s_%s", orgID, appID, authType))
 	if item != nil {
-		authConfigFromCache, ok := item.(model.AuthConfig)
+		authConfig, ok := item.(*model.AuthConfig)
 		if !ok {
 			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeAuthConfig, errArgs)
 		}
-		authConfig = &authConfigFromCache
 		return authConfig, nil
 	}
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthConfig, errArgs)
 }
 
-func (a *Auth) setAuthConfigs(authConfigs *[]model.AuthConfig) {
+func (a *Auth) setAuthConfigs(authConfigs []model.AuthConfig) {
 	a.authConfigs = &syncmap.Map{}
 	validate := validator.New()
 
 	a.authConfigsLock.Lock()
 	defer a.authConfigsLock.Unlock()
-	for _, authConfig := range *authConfigs {
+	for _, authConfig := range authConfigs {
 		err := validate.Struct(authConfig)
 		if err == nil {
-			a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, authConfig.AppID, authConfig.Type), authConfig)
+			for _, appID := range authConfig.AppIDs {
+				a.authConfigs.Store(fmt.Sprintf("%s_%s_%s", authConfig.OrgID, appID, authConfig.AuthType), &authConfig)
+			}
 		}
+	}
+}
+
+func (a *Auth) checkRefreshTokenLimit(orgID string, appID string, credsID string) error {
+	tokens, err := a.storage.LoadRefreshTokens(orgID, appID, credsID)
+	if err != nil {
+		return errors.WrapErrorAction("limit checking", model.TypeAuthRefresh, nil, err)
+	}
+	if len(tokens) >= refreshTokenLimit {
+		err = a.storage.DeleteRefreshToken(tokens[0].CurrentToken)
+		if err != nil {
+			return errors.WrapErrorAction("limit checking", model.TypeAuthRefresh, nil, err)
+		}
+	}
+	return nil
+}
+
+func (a *Auth) setupDeleteRefreshTimer() {
+	//cancel if active
+	if a.deleteRefreshTimer != nil {
+		a.timerDone <- true
+		a.deleteRefreshTimer.Stop()
+	}
+
+	a.deleteExpiredRefreshTokens()
+}
+
+func (a *Auth) deleteExpiredRefreshTokens() {
+	now := time.Now().UTC()
+	err := a.storage.DeleteExpiredRefreshTokens(&now)
+	if err != nil {
+		a.logger.Error(err.Error())
+	}
+
+	duration := time.Hour * time.Duration(refreshTokenDeletePeriod)
+	a.deleteRefreshTimer = time.NewTimer(duration)
+	select {
+	case <-a.deleteRefreshTimer.C:
+		// timer expired
+		a.deleteRefreshTimer = nil
+
+		a.deleteExpiredRefreshTokens()
+	case <-a.timerDone:
+		// timer aborted
+		a.deleteRefreshTimer = nil
 	}
 }
 

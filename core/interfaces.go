@@ -29,6 +29,7 @@ type Administration interface {
 
 	AdmCreateApplication(name string, versions []string) (*model.Application, error)
 	AdmGetApplication(ID string) (*model.Application, error)
+	AdmGetApplications() ([]model.Application, error)
 
 	AdmCreateGlobalRole(name string, permissions []string) (*model.GlobalRole, error)
 }
@@ -78,6 +79,7 @@ type Storage interface {
 
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
+	FindApplications() ([]model.Application, error)
 }
 
 //StorageListener listenes for change data storage events
