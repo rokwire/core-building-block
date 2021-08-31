@@ -168,6 +168,29 @@ func (_m *Storage) FindApplications() ([]model.Application, error) {
 	return r0, r1
 }
 
+// FindGlobalPermissions provides a mock function with given fields: ids
+func (_m *Storage) FindGlobalPermissions(ids []string) ([]model.GlobalPermission, error) {
+	ret := _m.Called(ids)
+
+	var r0 []model.GlobalPermission
+	if rf, ok := ret.Get(0).(func([]string) []model.GlobalPermission); ok {
+		r0 = rf(ids)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.GlobalPermission)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func([]string) error); ok {
+		r1 = rf(ids)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindOrganization provides a mock function with given fields: id
 func (_m *Storage) FindOrganization(id string) (*model.Organization, error) {
 	ret := _m.Called(id)
@@ -230,6 +253,29 @@ func (_m *Storage) InsertApplication(application model.Application) (*model.Appl
 	var r1 error
 	if rf, ok := ret.Get(1).(func(model.Application) error); ok {
 		r1 = rf(application)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// InsertGlobalRole provides a mock function with given fields: globalRole
+func (_m *Storage) InsertGlobalRole(globalRole model.GlobalRole) (*model.GlobalRole, error) {
+	ret := _m.Called(globalRole)
+
+	var r0 *model.GlobalRole
+	if rf, ok := ret.Get(0).(func(model.GlobalRole) *model.GlobalRole); ok {
+		r0 = rf(globalRole)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.GlobalRole)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(model.GlobalRole) error); ok {
+		r1 = rf(globalRole)
 	} else {
 		r1 = ret.Error(1)
 	}
