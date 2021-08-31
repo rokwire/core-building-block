@@ -5,7 +5,9 @@ import (
 	"core-building-block/utils"
 	"encoding/json"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/auth-library/authutils"
 	"github.com/rokmetro/logging-library/errors"
@@ -105,33 +107,30 @@ func (a *Auth) Login(authType string, creds string, appID string, params string,
 		} else {
 			//user does not exist, we need to register it
 
-			/*	userAuthTypeID, _ := uuid.NewUUID()
-					params := map[string]interface{}{}
-					params["identifier"] = externalUser.Identifier
-					params["user"] = externalUser
-					userAuthType := model.UserAuthType{ID: userAuthTypeID.String(), AuthTypeID: authTypeEntity.ID, Active: true, Params: params}
+			//app
+			app := appTypeEntity.Application
 
-					appType := *appTypeEntity
+			//user auth type
+			userAuthTypeID, _ := uuid.NewUUID()
+			params := map[string]interface{}{}
+			params["identifier"] = externalUser.Identifier
+			params["user"] = externalUser
+			userAuthType := model.UserAuthType{ID: userAuthTypeID.String(), AuthTypeID: authTypeEntity.ID, Active: true, Params: params}
 
-					profileID, _ := uuid.NewUUID()
-					profile := model.UserProfile{ID: profileID.String(), DateCreated: time.Now()}
+			//credential
+			var credential *string //null as the user authenticates outside the system
 
-					membershipsOrgs := []model.Organization{}
-					if appType.Application.OrgRelType == "single" {
-						//none - there is no org memberships - example Main Admin platform application/no organization/
-						//multi - we will apply additional logic when an user becomes a member to an organization - pending, approve etc.. - example Safer Community/many organizations/
-						//single - we can attach it - example UIUC application/one organization/
+			//profile
+			profileID, _ := uuid.NewUUID()
+			profile := model.UserProfile{ID: profileID.String(), DateCreated: time.Now()}
 
-						//TODO
-						//organization := appType.Application.Organizations[0]
+			//useSharedUser
+			useSharedUser := false // for now this is disable
 
-						//membershipsOrgs = append(membershipsOrgs, organization)
-					}
-				/*
-						user, err = a.registerUser(userAuthType, appType, nil, profile, nil, nil, nil, membershipsOrgs)
-						if err != nil {
-							return "", "", nil, nil, errors.WrapErrorAction("error register user", "user", nil, err)
-						} */
+			user, err = a.registerUser(app, userAuthType, credential, profile, useSharedUser, l)
+			if err != nil {
+				return "", "", nil, nil, errors.WrapErrorAction("error register user", model.TypeUser, nil, err)
+			}
 		}
 
 		//TODO groups mapping
