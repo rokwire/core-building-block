@@ -334,33 +334,6 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.H
 	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
 }
 
-//createGlobalRole creates global group
-func (h AdminApisHandler) createGlobalRole(l *logs.Log, r *http.Request) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		l.Errorf("Error on marshal create global role - %s\n", err.Error())
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeGlobalRole, nil, err, http.StatusInternalServerError, false)
-	}
-
-	var requestData Def.GlobalRole
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		l.Errorf("Error on unmarshal the create global role - %s\n", err.Error())
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeGlobalRole, nil, err, http.StatusBadRequest, true)
-	}
-
-	name := requestData.Name
-	permissions := requestData.Permissions
-
-	_, err = h.coreAPIs.Administration.AdmCreateGlobalRole(name, *permissions)
-	if err != nil {
-		l.Errorf(err.Error())
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeGlobalRole, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeGlobalRole, nil, err, http.StatusInternalServerError, false)
-}
-
 //getAppilcations gets applications list
 func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request) logs.HttpResponse {
 	applications, err := h.coreAPIs.Administration.AdmGetApplications()
@@ -378,6 +351,34 @@ func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request) logs.Htt
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
 	}
 	return l.HttpResponseSuccessJSON(data)
+}
+
+//createGlobalRole creates global role
+func (h AdminApisHandler) createGlobalRole(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		l.Errorf("Error on marshal create global role - %s\n", err.Error())
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeGlobalRole, nil, err, http.StatusInternalServerError, false)
+	}
+
+	var requestData Def.GlobalRole
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		l.Errorf("Error on unmarshal the create global role - %s\n", err.Error())
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeGlobalRole, nil, err, http.StatusBadRequest, true)
+	}
+
+	name := requestData.Name
+
+	_, err = h.coreAPIs.Administration.AdmCreateGlobalRole(name)
+	if err != nil {
+		l.Errorf(err.Error())
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeGlobalRole, nil, err, http.StatusInternalServerError, true)
+	}
+
+	headers := map[string]string{}
+	headers["Content-Type"] = "text/plain"
+	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeGlobalRole, nil, err, http.StatusInternalServerError, false)
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance

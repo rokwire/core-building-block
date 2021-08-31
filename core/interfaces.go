@@ -31,7 +31,7 @@ type Administration interface {
 	AdmGetApplication(ID string) (*model.Application, error)
 	AdmGetApplications() ([]model.Application, error)
 
-	AdmCreateGlobalRole(name string, permissions []string) (*model.GlobalRole, error)
+	AdmCreateGlobalRole(name string) (*model.GlobalRole, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -54,7 +54,7 @@ type Storage interface {
 
 	UpdateGlobalPermission(item model.GlobalPermission) error
 	DeleteGlobalPermission(id string) error
-	FindGlobalPermissions(ids []string) (*model.GlobalPermission, error)
+	FindGlobalPermissions(ids []string) ([]model.GlobalPermission, error)
 
 	InsertGlobalRole(globalRole model.GlobalRole) (*model.GlobalRole, error)
 	UpdateGlobalRole(item model.GlobalRole) error
