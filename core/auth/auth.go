@@ -39,8 +39,6 @@ const (
 	refreshTokenLimit        int = 3
 )
 
-//TODO biometrics handling
-
 //Auth represents the auth functionality unit
 type Auth struct {
 	storage Storage
