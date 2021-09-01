@@ -41,11 +41,11 @@ func defTimestamp(pointer *string) time.Time {
 	return t
 }
 
-func defBool(pointer *string) bool {
+func defBool(pointer *bool) bool {
 	if pointer == nil {
 		return false
 	}
-	return *pointer == "true"
+	return *pointer
 }
 
 func interfaceToJSON(item interface{}) (string, error) {

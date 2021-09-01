@@ -10,7 +10,7 @@ servers:
     description: Test server
   - url: 'https://api-dev.rokwire.illinois.edu/core'
     description: Development server
-  - url: 'http://localhost'
+  - url: 'http://localhost/core'
     description: Local server
 tags:
   - name: Services
@@ -249,7 +249,7 @@ paths:
               schema:
                 type: string
                 example: Echooo
-  /services/profiles:
+  /services/anonymous-profiles:
     post:
       summary: Create profile
       description: |
@@ -275,7 +275,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  '/services/profiles/{id}':
+  '/services/anonymous-profiles/{id}':
     get:
       tags:
         - Services
@@ -1323,7 +1323,7 @@ components:
           items:
             type: string
         over_13:
-          type: string
+          type: boolean
         positive_interest_tags:
           type: array
           items:

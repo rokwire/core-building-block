@@ -20,11 +20,11 @@ func anonymousProfileToDef(item *model.AnonymousProfile) *Def.AnonymousProfile {
 
 	creationDate := item.CreationDate.String()
 	lastModifiedDate := item.LastModifiedDate.String()
-	var over13 string
+	var over13 bool
 	if item.Over13 {
-		over13 = "true"
+		over13 = true
 	} else {
-		over13 = "false"
+		over13 = false
 	}
 
 	//TODO: handle permissions

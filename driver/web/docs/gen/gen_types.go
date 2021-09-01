@@ -59,7 +59,7 @@ type AnonymousProfile struct {
 	Interests            *[]string `json:"interests,omitempty"`
 	LastModifiedDate     *string   `json:"last_modified_date,omitempty"`
 	NegativeInterestTags *[]string `json:"negative_interest_tags,omitempty"`
-	Over13               *string   `json:"over_13,omitempty"`
+	Over13               *bool     `json:"over_13,omitempty"`
 	PositiveInterestTags *[]string `json:"positive_interest_tags,omitempty"`
 	PrivacySettings      *string   `json:"privacy_settings,omitempty"`
 }

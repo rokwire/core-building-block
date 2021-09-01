@@ -4,7 +4,6 @@ info:
   description: Core Building Block API Documentation
   version: 1.0.0
 servers:
-<<<<<<< HEAD
   - url: https://api.rokwire.illinois.edu/core
     description: Production server
   - url: https://api-test.rokwire.illinois.edu/core
@@ -13,16 +12,6 @@ servers:
     description: Development server
   - url: http://localhost/core
     description: Local server
-=======
-- url: https://api.rokwire.illinois.edu/core
-  description: Production server
-- url: https://api-test.rokwire.illinois.edu/core
-  description: Test server
-- url: https://api-dev.rokwire.illinois.edu/core
-  description: Development server
-- url: http://localhost
-  description: Local server
->>>>>>> develop
 tags:
   - name: Services
     description: End users applications APIs.
@@ -48,9 +37,9 @@ paths:
     $ref: "./resources/services/auth/service-regs.yaml"
   /services/test:
     $ref: "./resources/services/test.yaml"
-  /services/profiles:
+  /services/anonymous-profiles:
     $ref: "./resources/services/profiles/anonymous-profile.yaml"
-  /services/profiles/{id}:
+  /services/anonymous-profiles/{id}:
     $ref: "./resources/services/profiles/anonymous-profileId.yaml"
 
   #admin
