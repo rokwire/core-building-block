@@ -8,10 +8,6 @@ properties:
     $ref: "./UserAccount.yaml"
   profile:
     $ref: "./UserProfile.yaml"
-  org_memberships:
-    type: array
-    items:
-      $ref: "./OrganizationMembership.yaml"
   devices:
     type: array
     items:

@@ -1,7 +1,6 @@
 package model
 
 import (
-	"bytes"
 	"core-building-block/utils"
 	"fmt"
 	"time"
@@ -25,8 +24,6 @@ type User struct {
 
 	Profile UserProfile
 
-	OrganizationsMemberships []OrganizationMembership
-
 	Devices []Device
 
 	DateCreated time.Time
@@ -47,19 +44,7 @@ func (u User) FindUserAuthType(appID string, authTypeID string) *UserAuthType {
 }
 
 func (u User) String() string {
-
-	var memberships bytes.Buffer
-	memberships.WriteString("")
-
-	if len(u.OrganizationsMemberships) >= 0 {
-		for _, c := range u.OrganizationsMemberships {
-			memberships.WriteString(c.Organization.Name)
-			memberships.WriteString("\t")
-		}
-	}
-
-	return fmt.Sprintf("[ID:%s\n\tProfile:%s\n\tOrganizationsMemberships:%s]",
-		u.ID, u.Profile, memberships.String())
+	return fmt.Sprintf("[ID:%s\n\tProfile:%s]", u.ID, u.Profile)
 }
 
 //ApplicationUserAccount represents UserAccount for an application

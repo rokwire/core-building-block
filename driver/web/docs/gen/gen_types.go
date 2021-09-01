@@ -282,13 +282,6 @@ type OrganizationConfig struct {
 	Id *string `json:"id,omitempty"`
 }
 
-// OrganizationMembership defines model for OrganizationMembership.
-type OrganizationMembership struct {
-	Id     string  `json:"id"`
-	OrgId  *string `json:"org_id,omitempty"`
-	UserId *string `json:"user_id,omitempty"`
-}
-
 // PubKey defines model for PubKey.
 type PubKey struct {
 	Alg    string `json:"alg"`
@@ -319,11 +312,10 @@ type ServiceScope struct {
 
 // User defines model for User.
 type User struct {
-	Account        *UserAccount              `json:"account,omitempty"`
-	Devices        *[]Device                 `json:"devices,omitempty"`
-	Id             string                    `json:"id"`
-	OrgMemberships *[]OrganizationMembership `json:"org_memberships,omitempty"`
-	Profile        *UserProfile              `json:"profile,omitempty"`
+	Account *UserAccount `json:"account,omitempty"`
+	Devices *[]Device    `json:"devices,omitempty"`
+	Id      string       `json:"id"`
+	Profile *UserProfile `json:"profile,omitempty"`
 }
 
 // UserAccount defines model for UserAccount.

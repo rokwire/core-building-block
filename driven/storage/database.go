@@ -21,22 +21,21 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
-	authTypes                *collectionWrapper
-	identityProviders        *collectionWrapper
-	users                    *collectionWrapper
-	devices                  *collectionWrapper
-	credentials              *collectionWrapper
-	refreshTokens            *collectionWrapper
-	globalConfig             *collectionWrapper
-	organizations            *collectionWrapper
-	organizationsMemberships *collectionWrapper
-	serviceRegs              *collectionWrapper
-	serviceAuthorizations    *collectionWrapper
-	applications             *collectionWrapper
-	applicationsGroups       *collectionWrapper
-	applicationsRoles        *collectionWrapper
-	applicationsPermissions  *collectionWrapper
-	applicationsUsers        *collectionWrapper
+	authTypes               *collectionWrapper
+	identityProviders       *collectionWrapper
+	users                   *collectionWrapper
+	devices                 *collectionWrapper
+	credentials             *collectionWrapper
+	refreshTokens           *collectionWrapper
+	globalConfig            *collectionWrapper
+	organizations           *collectionWrapper
+	serviceRegs             *collectionWrapper
+	serviceAuthorizations   *collectionWrapper
+	applications            *collectionWrapper
+	applicationsGroups      *collectionWrapper
+	applicationsRoles       *collectionWrapper
+	applicationsPermissions *collectionWrapper
+	applicationsUsers       *collectionWrapper
 
 	listeners []Listener
 }
@@ -112,12 +111,6 @@ func (m *database) start() error {
 		return err
 	}
 
-	organizationsMemberships := &collectionWrapper{database: m, coll: db.Collection("organizations_memberships")}
-	err = m.applyOrganizationsMembershipsChecks(organizationsMemberships)
-	if err != nil {
-		return err
-	}
-
 	serviceRegs := &collectionWrapper{database: m, coll: db.Collection("service_regs")}
 	err = m.applyServiceRegsChecks(serviceRegs)
 	if err != nil {
@@ -172,7 +165,6 @@ func (m *database) start() error {
 	m.refreshTokens = refreshTokens
 	m.globalConfig = globalConfig
 	m.organizations = organizations
-	m.organizationsMemberships = organizationsMemberships
 	m.serviceRegs = serviceRegs
 	m.serviceAuthorizations = serviceAuthorizations
 	m.applications = applications
@@ -231,25 +223,6 @@ func (m *database) applyUsersChecks(users *collectionWrapper) error {
 	}
 
 	m.logger.Info("users check passed")
-	return nil
-}
-
-func (m *database) applyOrganizationsMembershipsChecks(organizationsMemberships *collectionWrapper) error {
-	m.logger.Info("apply organizations memberships checks.....")
-
-	//add user id index
-	err := organizationsMemberships.AddIndex(bson.D{primitive.E{Key: "user_id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add organization id index
-	err = organizationsMemberships.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	m.logger.Info("organizations memberships check passed")
 	return nil
 }
 

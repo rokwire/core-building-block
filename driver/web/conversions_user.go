@@ -26,10 +26,9 @@ func userToDef(item *model.User) *Def.User {
 	//TODO
 	//account := userAccountToDef(&item.Account)
 	profile := userProfileToDef(&item.Profile)
-	memberships := organizationMembershipListToDef(item.OrganizationsMemberships)
 	devices := deviceListToDef(item.Devices)
 	//TODO: handle permissions
-	return &Def.User{Id: item.ID /*Account: account,*/, Profile: profile, OrgMemberships: &memberships, Devices: &devices}
+	return &Def.User{Id: item.ID /*Account: account,*/, Profile: profile, Devices: &devices}
 }
 
 /*
@@ -60,38 +59,6 @@ func userProfileToDef(item *model.UserProfile) *Def.UserProfile {
 		return nil
 	}
 	return &Def.UserProfile{Id: item.ID, FirstName: &item.FirstName, LastName: &item.LastName, PhotoUrl: &item.PhotoURL}
-}
-
-//OrganizationMembership
-func organizationMembershipFromDef(item *Def.OrganizationMembership) *model.OrganizationMembership {
-	if item == nil {
-		return nil
-	}
-	user := model.User{ID: defString(item.UserId)}
-	org := model.Organization{ID: defString(item.OrgId)}
-	//TODO: handle permissions, roles, and groups
-	return &model.OrganizationMembership{ID: item.Id, User: user, Organization: org}
-}
-
-func organizationMembershipToDef(item *model.OrganizationMembership) *Def.OrganizationMembership {
-	if item == nil {
-		return nil
-	}
-	//TODO: handle permissions
-	return &Def.OrganizationMembership{Id: item.ID, UserId: &item.User.ID, OrgId: &item.Organization.ID}
-}
-
-func organizationMembershipListToDef(items []model.OrganizationMembership) []Def.OrganizationMembership {
-	out := make([]Def.OrganizationMembership, len(items))
-	for i, item := range items {
-		defItem := organizationMembershipToDef(&item)
-		if defItem != nil {
-			out[i] = *defItem
-		} else {
-			out[i] = Def.OrganizationMembership{}
-		}
-	}
-	return out
 }
 
 //Device

@@ -13,14 +13,12 @@ func userFromStorage(item *user, sa *Adapter) model.User {
 	id := item.ID
 	applicationsAccounts := item.ApplicationsAccounts
 	profile := item.Profile
-	organizationsMemberships := userMembershipsFromStorage(*item, sa)
 	devices := userDevicesFromStorage(*item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
 	return model.User{ID: id, ApplicationsAccounts: applicationsAccounts, Profile: profile,
-		OrganizationsMemberships: organizationsMemberships, Devices: devices,
-		DateCreated: dateCreated, DateUpdated: dateUpdated}
+		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 
 }
 
@@ -32,54 +30,12 @@ func userToStorage(item *model.User) *user {
 	id := item.ID
 	applicationsAccounts := item.ApplicationsAccounts
 	profile := item.Profile
-	organizationsMemberships := userMembershipsToStorage(item)
 	devices := userDevicesToStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
 	return &user{ID: id, ApplicationsAccounts: applicationsAccounts, Profile: profile,
-		OrganizationsMemberships: organizationsMemberships, Devices: devices,
-		DateCreated: dateCreated, DateUpdated: dateUpdated}
-}
-
-func userMembershipsFromStorage(item user, sa *Adapter) []model.OrganizationMembership {
-	memberships := make([]model.OrganizationMembership, len(item.OrganizationsMemberships))
-
-	for i, membership := range item.OrganizationsMemberships {
-		organization, err := sa.getCachedOrganization(membership.OrgID)
-		if err != nil {
-			sa.logger.Errorf("error getting organization - %s", err)
-		} else {
-			memberships[i] = userMembershipFromStorage(membership, *organization)
-		}
-	}
-	return memberships
-}
-
-func userMembershipFromStorage(item userMembership, organization model.Organization) model.OrganizationMembership {
-	id := item.ID
-	dateCreated := item.DateCreated
-	dateUpdated := item.DateUpdated
-
-	return model.OrganizationMembership{ID: id, Organization: organization, DateCreated: dateCreated, DateUpdated: dateUpdated}
-}
-
-func userMembershipsToStorage(item *model.User) []userMembership {
-	memberships := make([]userMembership, len(item.OrganizationsMemberships))
-
-	for i, membership := range item.OrganizationsMemberships {
-		memberships[i] = userMembershipToStorage(membership)
-	}
-	return memberships
-}
-
-func userMembershipToStorage(item model.OrganizationMembership) userMembership {
-	id := item.ID
-	orgID := item.Organization.ID
-	dateCreated := item.DateCreated
-	dateUpdated := item.DateUpdated
-
-	return userMembership{ID: id, OrgID: orgID, DateCreated: dateCreated, DateUpdated: dateUpdated}
+		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func userDevicesFromStorage(item user) []model.Device {

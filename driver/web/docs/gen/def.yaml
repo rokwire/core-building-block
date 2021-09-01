@@ -1175,10 +1175,6 @@ components:
           $ref: '#/components/schemas/UserAccount'
         profile:
           $ref: '#/components/schemas/UserProfile'
-        org_memberships:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrganizationMembership'
         devices:
           type: array
           items:
@@ -1208,17 +1204,6 @@ components:
         last_name:
           type: string
         photo_url:
-          type: string
-    OrganizationMembership:
-      required:
-        - id
-      type: object
-      properties:
-        id:
-          type: string
-        user_id:
-          type: string
-        org_id:
           type: string
     Device:
       required:

@@ -747,25 +747,6 @@ func (sa *Adapter) DeleteApplicationGroup(id string) error {
 	return errors.New(logutils.Unimplemented)
 }
 
-//InsertMembership inserts an organization membership
-func (sa *Adapter) InsertMembership(orgMembership *organizationMembership, context mongo.SessionContext) error {
-	if orgMembership == nil {
-		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeOrganizationMembership))
-	}
-
-	var err error
-	if context == nil {
-		_, err = sa.db.organizationsMemberships.InsertOne(orgMembership)
-	} else {
-		_, err = sa.db.organizationsMemberships.InsertOneWithContext(context, orgMembership)
-	}
-
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganizationMembership, nil, err)
-	}
-	return nil
-}
-
 //LoadIdentityProviders finds all identity providers documents in the DB
 func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 	filter := bson.D{}
