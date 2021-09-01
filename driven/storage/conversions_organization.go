@@ -144,7 +144,7 @@ func organizationGroupFromStorage(item *organizationGroup, organization model.Or
 	permissions := organizationPermissionsFromStorage(item.Permissions, organization)
 	roles := organizationRolesFromStorage(item.Roles, organization)
 	return model.OrganizationGroup{ID: item.ID, Name: item.Name, Permissions: permissions, Roles: roles,
-		Organization: organization, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Organization: organization, DateUpdated: item.DateUpdated}
 }
 
 func organizationGroupsFromStorage(items []organizationGroup, organization model.Organization) []model.OrganizationGroup {
@@ -163,7 +163,7 @@ func organizationGroupToStorage(item model.OrganizationGroup) organizationGroup 
 	permissions := organizationPermissionsToStorage(item.Permissions)
 	roles := organizationRolesToStorage(item.Roles)
 	return organizationGroup{ID: item.ID, Name: item.Name, OrgID: item.Organization.ID,
-		Permissions: permissions, Roles: roles, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Permissions: permissions, Roles: roles, DateUpdated: item.DateUpdated}
 }
 
 func organizationGroupsToStorage(items []model.OrganizationGroup) []organizationGroup {

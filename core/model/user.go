@@ -150,7 +150,6 @@ type OrganizationGroup struct {
 
 	OrganizationsMemberships []OrganizationMembership
 
-	DateCreated time.Time
 	DateUpdated *time.Time
 }
 
