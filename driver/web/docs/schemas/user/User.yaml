@@ -8,18 +8,6 @@ properties:
     $ref: "./UserAccount.yaml"
   profile:
     $ref: "./UserProfile.yaml"
-  permissions:
-    type: array
-    items:
-      $ref: "../global/GlobalPermission.yaml"
-  roles:
-    type: array
-    items:
-      $ref: "../global/GlobalRole.yaml"
-  groups:
-    type: array
-    items:
-      $ref: "../global/GlobalGroup.yaml"
   org_memberships:
     type: array
     items:

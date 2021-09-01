@@ -1,12 +1,6 @@
 # global
 GlobalConfig:
   $ref: "./global/GlobalConfig.yaml"
-GlobalPermission:
-  $ref: "./global/GlobalPermission.yaml"
-GlobalRole:
-  $ref: "./global/GlobalRole.yaml"
-GlobalGroup:
-  $ref: "./global/GlobalGroup.yaml"
 
 # application
 Application:

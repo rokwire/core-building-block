@@ -13,16 +13,12 @@ func userFromStorage(item *user, sa *Adapter) model.User {
 	id := item.ID
 	applicationsAccounts := item.ApplicationsAccounts
 	profile := item.Profile
-	permissions := item.Permissions
-	roles := item.Roles
-	groups := item.Groups
 	organizationsMemberships := userMembershipsFromStorage(*item, sa)
 	devices := userDevicesFromStorage(*item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
 	return model.User{ID: id, ApplicationsAccounts: applicationsAccounts, Profile: profile,
-		Permissions: permissions, Roles: roles, Groups: groups,
 		OrganizationsMemberships: organizationsMemberships, Devices: devices,
 		DateCreated: dateCreated, DateUpdated: dateUpdated}
 
@@ -36,15 +32,12 @@ func userToStorage(item *model.User) *user {
 	id := item.ID
 	applicationsAccounts := item.ApplicationsAccounts
 	profile := item.Profile
-	permissions := item.Permissions
-	roles := item.Roles
-	groups := item.Groups
 	organizationsMemberships := userMembershipsToStorage(item)
 	devices := userDevicesToStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
-	return &user{ID: id, ApplicationsAccounts: applicationsAccounts, Profile: profile, Permissions: permissions, Roles: roles, Groups: groups,
+	return &user{ID: id, ApplicationsAccounts: applicationsAccounts, Profile: profile,
 		OrganizationsMemberships: organizationsMemberships, Devices: devices,
 		DateCreated: dateCreated, DateUpdated: dateUpdated}
 }

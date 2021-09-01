@@ -770,52 +770,6 @@ components:
       properties:
         setting:
           type: string
-    GlobalPermission:
-      required:
-        - id
-        - name
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-    GlobalRole:
-      required:
-        - id
-        - name
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        permissions:
-          type: array
-          items:
-            $ref: '#/components/schemas/GlobalPermission'
-    GlobalGroup:
-      required:
-        - id
-        - name
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        permissions:
-          type: array
-          items:
-            $ref: '#/components/schemas/GlobalPermission'
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/GlobalRole'
-        users:
-          type: array
-          items:
-            $ref: '#/components/schemas/User'
     Application:
       required:
         - id
@@ -1221,18 +1175,6 @@ components:
           $ref: '#/components/schemas/UserAccount'
         profile:
           $ref: '#/components/schemas/UserProfile'
-        permissions:
-          type: array
-          items:
-            $ref: '#/components/schemas/GlobalPermission'
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/GlobalRole'
-        groups:
-          type: array
-          items:
-            $ref: '#/components/schemas/GlobalGroup'
         org_memberships:
           type: array
           items:

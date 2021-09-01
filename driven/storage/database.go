@@ -28,9 +28,6 @@ type database struct {
 	credentials              *collectionWrapper
 	refreshTokens            *collectionWrapper
 	globalConfig             *collectionWrapper
-	globalGroups             *collectionWrapper
-	globalRoles              *collectionWrapper
-	globalPermissions        *collectionWrapper
 	organizations            *collectionWrapper
 	organizationsMemberships *collectionWrapper
 	serviceRegs              *collectionWrapper
@@ -109,24 +106,6 @@ func (m *database) start() error {
 		return err
 	}
 
-	globalGroups := &collectionWrapper{database: m, coll: db.Collection("global_groups")}
-	err = m.applyGlobalGroupsChecks(globalGroups)
-	if err != nil {
-		return err
-	}
-
-	globalRoles := &collectionWrapper{database: m, coll: db.Collection("global_roles")}
-	err = m.applyGlobalRolesChecks(globalRoles)
-	if err != nil {
-		return err
-	}
-
-	globalPermissions := &collectionWrapper{database: m, coll: db.Collection("global_permissions")}
-	err = m.applyGlobalPermissionsChecks(globalPermissions)
-	if err != nil {
-		return err
-	}
-
 	organizations := &collectionWrapper{database: m, coll: db.Collection("organizations")}
 	err = m.applyOrganizationsChecks(organizations)
 	if err != nil {
@@ -192,9 +171,6 @@ func (m *database) start() error {
 	m.credentials = credentials
 	m.refreshTokens = refreshTokens
 	m.globalConfig = globalConfig
-	m.globalGroups = globalGroups
-	m.globalRoles = globalRoles
-	m.globalPermissions = globalPermissions
 	m.organizations = organizations
 	m.organizationsMemberships = organizationsMemberships
 	m.serviceRegs = serviceRegs
@@ -255,51 +231,6 @@ func (m *database) applyUsersChecks(users *collectionWrapper) error {
 	}
 
 	m.logger.Info("users check passed")
-	return nil
-}
-
-func (m *database) applyGlobalGroupsChecks(groups *collectionWrapper) error {
-	m.logger.Info("apply global groups checks.....")
-
-	//add permissions index
-	err := groups.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add roles index
-	err = groups.AddIndex(bson.D{primitive.E{Key: "roles._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	//add roles permissions index
-	err = groups.AddIndex(bson.D{primitive.E{Key: "roles.permissions._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	m.logger.Info("global groups check passed")
-	return nil
-}
-
-func (m *database) applyGlobalRolesChecks(roles *collectionWrapper) error {
-	m.logger.Info("apply global roles checks.....")
-
-	//add permissions index
-	err := roles.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	m.logger.Info("global roles check passed")
-	return nil
-}
-
-func (m *database) applyGlobalPermissionsChecks(permissions *collectionWrapper) error {
-	m.logger.Info("apply global permissions checks.....")
-
-	m.logger.Info("global permissions check passed")
 	return nil
 }
 

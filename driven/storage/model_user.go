@@ -11,10 +11,7 @@ type user struct {
 	ApplicationsAccounts []model.ApplicationUserAccount `bson:"applications_accounts"`
 	Profile              model.UserProfile              `bson:"profile"`
 
-	Permissions              []model.GlobalPermission `bson:"permissions"`
-	Roles                    []model.GlobalRole       `bson:"roles"`
-	Groups                   []model.GlobalGroup      `bson:"groups"`
-	OrganizationsMemberships []userMembership         `bson:"organizations_memberships"`
+	OrganizationsMemberships []userMembership `bson:"organizations_memberships"`
 
 	Devices []userDevice `bson:"devices"`
 

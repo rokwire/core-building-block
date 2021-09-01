@@ -26,12 +26,10 @@ func userToDef(item *model.User) *Def.User {
 	//TODO
 	//account := userAccountToDef(&item.Account)
 	profile := userProfileToDef(&item.Profile)
-	groups := globalGroupListToDef(item.Groups)
-	roles := globalRoleListToDef(item.Roles)
 	memberships := organizationMembershipListToDef(item.OrganizationsMemberships)
 	devices := deviceListToDef(item.Devices)
 	//TODO: handle permissions
-	return &Def.User{Id: item.ID /*Account: account,*/, Profile: profile, Groups: &groups, Roles: &roles, OrgMemberships: &memberships, Devices: &devices}
+	return &Def.User{Id: item.ID /*Account: account,*/, Profile: profile, OrgMemberships: &memberships, Devices: &devices}
 }
 
 /*

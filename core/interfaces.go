@@ -50,15 +50,6 @@ type Storage interface {
 	GetGlobalConfig() (*model.GlobalConfig, error)
 	SaveGlobalConfig(setting *model.GlobalConfig) error
 
-	UpdateGlobalPermission(item model.GlobalPermission) error
-	DeleteGlobalPermission(id string) error
-
-	UpdateGlobalRole(item model.GlobalRole) error
-	DeleteGlobalRole(id string) error
-
-	UpdateGlobalGroup(item model.GlobalGroup) error
-	DeleteGlobalGroup(id string) error
-
 	UpdateApplicationPermission(item model.ApplicationPermission) error
 	DeleteApplicationPermission(id string) error
 

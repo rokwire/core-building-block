@@ -25,11 +25,6 @@ type User struct {
 
 	Profile UserProfile
 
-	Permissions []GlobalPermission
-	Roles       []GlobalRole
-
-	Groups []GlobalGroup
-
 	OrganizationsMemberships []OrganizationMembership
 
 	Devices []Device
@@ -63,8 +58,8 @@ func (u User) String() string {
 		}
 	}
 
-	return fmt.Sprintf("[ID:%s\n\tProfile:%s\n\tPermissions:%s\n\tRoles:%s\n\tGroups:%s\n\tOrganizationsMemberships:%s]",
-		u.ID, u.Profile, u.Permissions, u.Roles, u.Groups, memberships.String())
+	return fmt.Sprintf("[ID:%s\n\tProfile:%s\n\tOrganizationsMemberships:%s]",
+		u.ID, u.Profile, memberships.String())
 }
 
 //ApplicationUserAccount represents UserAccount for an application
@@ -152,49 +147,6 @@ type ApplicationUser struct {
 
 	DateCreated time.Time
 	DateUpdated *time.Time
-}
-
-//GlobalGroup represents global group entity. It is a collection of users
-type GlobalGroup struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
-
-	Permissions []GlobalPermission `bson:"permissions"`
-	Roles       []GlobalRole       `bson:"roles"`
-
-	Users []User `bson:"-"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-//GlobalPermission represents global permission entity
-type GlobalPermission struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-func (c GlobalPermission) String() string {
-	return fmt.Sprintf("[ID:%s\tName:%s]", c.ID, c.Name)
-}
-
-//GlobalRole represents global role entity. It is a collection of permissions
-type GlobalRole struct {
-	ID          string `bson:"_id"`
-	Name        string `bson:"name"`
-	Description string `bson:"description"`
-
-	Permissions []GlobalPermission `bson:"permissions"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-func (c GlobalRole) String() string {
-	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s]", c.ID, c.Name, c.Permissions)
 }
 
 //Device represents user devices entity.
