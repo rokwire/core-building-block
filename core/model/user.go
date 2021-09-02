@@ -83,16 +83,28 @@ func (ua UserAccount) String() string {
 
 //UserProfile represents user profile entity. The user profile is an information about the user.
 type UserProfile struct {
-	ID        string `bson:"id"`
-	PhotoURL  string `bson:"photo_url"`
-	FirstName string `bson:"first_name"`
-	LastName  string `bson:"last_name"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
+	ID               string               `bson:"id"`
+	PhotoURL         string               `bson:"photo_url"`
+	FirstName        string               `bson:"first_name"`
+	LastName         string               `bson:"last_name"`
+	AnonymousProfile UserAnonymousProfile `bson:"anonymous_profile"`
+	DateCreated      time.Time            `bson:"date_created"`
+	DateUpdated      *time.Time           `bson:"date_updated"`
 }
 
 type AnonymousProfile struct {
+	ID                   string    `json:"id" bson:"_id"`
+	Interests            []string  `json:"interests" bson:"interests"`
+	Favorites            []string  `json:"favorites" bson:"favorites"`
+	Over13               bool      `json:"over_13" bson:"over_13"`
+	PositiveInterestTags []string  `json:"positive_interest_tags" bson:"positive_interest_tags"`
+	NegativeInterestTags []string  `json:"negative_interest_tags" bson:"negative_interest_tags"`
+	CreationDate         time.Time `json:"creation_date" bson:"creation_date"`
+	LastModifiedDate     time.Time `json:"last_modified_date" bson:"last_modified_date"`
+	PrivacySettings      string    `json:"privacy_settings" bson:"privacy_settings"`
+}
+
+type UserAnonymousProfile struct {
 	ID                   string    `json:"id" bson:"_id"`
 	Interests            []string  `json:"interests" bson:"interests"`
 	Favorites            []string  `json:"favorites" bson:"favorites"`
