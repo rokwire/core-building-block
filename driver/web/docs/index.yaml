@@ -4,7 +4,6 @@ info:
   description: Core Building Block API Documentation
   version: 1.0.0
 servers:
-<<<<<<< HEAD
   - url: https://api.rokwire.illinois.edu/core
     description: Production server
   - url: https://api-test.rokwire.illinois.edu/core
@@ -32,29 +31,6 @@ paths:
     $ref: "./resources/auth/verify.yaml"
   /services/auth/service-regs:
     $ref: "./resources/auth/service-regs.yaml"
-=======
-- url: https://api.rokwire.illinois.edu/core
-  description: Production server
-- url: https://api-test.rokwire.illinois.edu/core
-  description: Test server
-- url: https://api-dev.rokwire.illinois.edu/core
-  description: Development server
-- url: http://localhost
-  description: Local server
-tags:
-- name: Services
-  description: End users applications APIs.
-- name: Admin
-  description: Administration applications APIs.
-- name: Enc
-  description: APIs consumed by the Encryption building block.
-- name: BBs
-  description: APIs consumed by the platform building blocks.
-- name: Third-Party Services
-  description: APIs consumed by third-party services.
-paths:
-  #services
->>>>>>> develop
   /services/auth/login:
     $ref: "./resources/services/auth/login.yaml"
   /services/auth/refresh:

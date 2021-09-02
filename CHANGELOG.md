@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
+
+- Add Email authentication and verification [#23] (https://github.com/rokwire/core-building-block/issues/23)
 - Storage improvements [#144](https://github.com/rokwire/core-building-block/issues/144)
 - Expose admin API which creates application [#82](https://github.com/rokwire/core-building-block/issues/82)
 - Suppress logs from the AWS load balancer health checks [#141](https://github.com/rokwire/core-building-block/issues/141)

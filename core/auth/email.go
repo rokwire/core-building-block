@@ -21,7 +21,6 @@ type emailAuthImpl struct {
 
 const (
 	typeTime      logutils.MessageDataType = "time.Time"
-	typeCreds     logutils.MessageDataType = "creds"
 	authTypeEmail string                   = "email"
 )
 
@@ -87,35 +86,41 @@ func (a *emailAuthImpl) check(creds string, orgID string, appID string, params s
 
 func (a *emailAuthImpl) handleSignup(requestCreds *emailCreds, storageCreds *emailCreds) (*emailCreds, error) {
 	if storageCreds != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, typeCreds, nil, errors.New("email already in use"))
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, errors.New("email already in use"))
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(requestCreds.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCompute, typeCreds, nil, errors.New("failed to generate hash from password"))
+		return nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate hash from password"))
 	}
 	newCreds := emailCreds{}
 	newCreds.Email = requestCreds.Email
-	newCreds.VerificationCode = utils.RandSeq(8)
+	code, err := utils.GenerateRandomString(64)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate random string for verify code"))
+
+	}
+	newCreds.VerificationCode = code
 	newCreds.Password = string(hashedPassword)
 	newCreds.VerificationExpiry = time.Now().Add(time.Hour * 24)
 	if err = a.sendVerificationCode(newCreds.Email, newCreds.VerificationCode); err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, typeCreds, nil, errors.New("failed to send verification email for user"))
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, errors.New("failed to send verification email for user"))
 	}
 	return &newCreds, nil
 }
 
 func (a *emailAuthImpl) handleSignin(requestCreds *emailCreds, storageCreds *emailCreds) error {
 	if storageCreds == nil {
-		return errors.WrapErrorAction(logutils.ActionValidate, typeCreds, nil, errors.New("no credentials found in storage"))
+		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, nil, errors.New("no credentials found in storage"))
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(storageCreds.Password), []byte(requestCreds.Password)); err != nil {
-		return errors.WrapErrorAction(logutils.ActionValidate, typeCreds, nil, err)
+		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, nil, err)
 	}
 	return nil
 }
 
 func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode string) error {
-	return a.auth.SendEmail(email, "Verify your email", "Your verification code is "+verificationCode, "")
+	verificationLink := a.auth.host + fmt.Sprintf("/auth/verify/%v/%v/%v", "emailAuthImpl", email, verificationCode)
+	return a.auth.sendEmail(email, "Verify your email", "Please click the link below to verify your email:\n"+verificationLink, "")
 }
 
 //TODO: To be used in password reset flow
@@ -126,25 +131,22 @@ func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode stri
 func (a *emailAuthImpl) verify(id string, verification string, l *logs.Log) error {
 	authCreds, err := a.auth.storage.FindCredentials("", "", authTypeEmail, id)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, typeCreds, nil, errors.New("no credentials found in storage"))
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, errors.New("no credentials found in storage"))
 	}
 
 	credBytes, err := json.Marshal(authCreds.Creds)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionMarshal, typeCreds, nil, err)
+		return errors.WrapErrorAction(logutils.ActionMarshal, model.TypeAuthCred, nil, err)
 	}
 
 	var creds *emailCreds
 	err = json.Unmarshal(credBytes, &creds)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUnmarshal, typeCreds, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeAuthCred, nil, err)
 	}
-	valid, err := a.compareVerifyCode(creds.VerificationCode, verification, creds.VerificationExpiry, l)
+	err = a.compareVerifyCode(creds.VerificationCode, verification, creds.VerificationExpiry, l)
 	if err != nil {
-		return err
-	}
-	if !valid {
-		return errors.WrapErrorAction(logutils.ActionValidate, typeCreds, &logutils.FieldArgs{"verification_code": verification}, errors.New("invalid verification code"))
+		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, &logutils.FieldArgs{"verification_code": verification}, errors.New("invalid verification code"))
 	}
 	//Update verification data
 	creds.IsVerified = true
@@ -157,16 +159,15 @@ func (a *emailAuthImpl) verify(id string, verification string, l *logs.Log) erro
 	return nil
 }
 
-//Update these guys
-func (a *emailAuthImpl) compareVerifyCode(credCode string, requestCode string, expiryTime time.Time, l *logs.Log) (bool, error) {
+func (a *emailAuthImpl) compareVerifyCode(credCode string, requestCode string, expiryTime time.Time, l *logs.Log) error {
 	if expiryTime.Before(time.Now()) {
-		return false, errors.WrapErrorAction(logutils.ActionValidate, typeTime, nil, errors.New("verification code has expired"))
+		return errors.WrapErrorAction(logutils.ActionValidate, typeTime, nil, errors.New("verification code has expired"))
 	}
 
 	if credCode != requestCode {
-		return false, nil
+		return errors.WrapErrorAction(logutils.ActionValidate, typeTime, nil, errors.New("Invalid verification code"))
 	}
-	return true, nil
+	return nil
 
 }
 

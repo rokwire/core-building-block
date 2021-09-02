@@ -171,13 +171,13 @@ func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResp
 //Handler for verify endpoint
 func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request) logs.HttpResponse {
 	params := mux.Vars(r)
-	authType, email, code := params["auth-type"], params["id"], params["code"]
-	if authType == "" || email == "" || code == "" {
+	authType, id, code := params["auth-type"], params["id"], params["code"]
+	if authType == "" || id == "" || code == "" {
 		return l.HttpResponseError(string(logutils.StatusMissing), nil, http.StatusBadRequest, false)
 
 	}
 
-	if err := h.coreAPIs.Auth.Verify(authType, email, code, l); err != nil {
+	if err := h.coreAPIs.Auth.Verify(authType, id, code, l); err != nil {
 		return l.HttpResponseError("", err, http.StatusInternalServerError, false)
 
 	}

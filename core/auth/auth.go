@@ -38,6 +38,7 @@ const (
 
 //Interface for authentication mechanisms
 type authType interface {
+	//checks the verification code generated on email signup
 	verify(id string, verification string, l *logs.Log) error
 	//check checks the validity of provided credentials
 	check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error)
@@ -256,8 +257,8 @@ func (a *Auth) Verify(authType string, id string, verification string, l *logs.L
 	return nil
 }
 
-//SendEmail is used to send verification and password reset emails using Smtp connection
-func (a *Auth) SendEmail(toEmail string, subject string, body string, attachmentFilename string) error {
+//sendEmail is used to send verification and password reset emails using Smtp connection
+func (a *Auth) sendEmail(toEmail string, subject string, body string, attachmentFilename string) error {
 	if a.emailDialer == nil {
 		return errors.New("email Dialer is nil")
 	}
