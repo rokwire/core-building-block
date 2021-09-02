@@ -75,12 +75,6 @@ type Application struct {
 	//if true the service will support own users for this app otherwise the user will decide if to create own user or to use the ecosystem one(shared)
 	RequiresOwnUsers bool `bson:"requires_own_users"`
 
-	//one of: none, single, multi
-	//none - the application is not related with any organization
-	//single - the application is for single organization - UIUC application, Safer Illinois application etc
-	//multi - the application is for many organizations - Safer community application etc
-	OrgRelType string `bson:"org_rel_type"`
-
 	//identity providers settings
 	IdentityProvidersSettings []ApplicationIdentityProviderSetting `bson:"identity_providers_settings"`
 
@@ -168,15 +162,19 @@ type ApplicationTypeAuthType struct {
 	Params     map[string]interface{} `bson:"params"`
 }
 
-//ApplicationUserRelations represents external relations between the application users
+//TODO
+//ApplicationUserRelations represents external relations between the application users in an organization
 // For example in Safer Illinois application:
 // - families takes discount for covid tests.
 // - couples gets discount for the taxes.
 // For other applications:
 // - relatives are hosted in the same building etc.
 type ApplicationUserRelations struct {
-	ID      string
-	Type    string //family, couple, relatives, brothers/sisters, external roommate when there is no provided place by the university for example
+	ID   string
+	Type string //family, couple, relatives, brothers/sisters, external roommate when there is no provided place by the university for example
+
+	Organization Organization
+
 	Manager ApplicationUser
 	Members []ApplicationUser
 }
