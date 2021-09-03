@@ -352,8 +352,10 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 		return nil, errors.Newf("mismatching user info sub %s and id token sub %s", userClaimsSub, sub)
 	}
 
-	identityProviderID := authType.Params["identity_provider"].(string)
-	identityProviderSetting := appType.Application.FindIdentityProviderSetting(identityProviderID)
+	//TODO
+	//identityProviderID := authType.Params["identity_provider"].(string)
+	var identityProviderSetting model.AppOrgIdentityProviderSetting
+	//identityProviderSetting := appType.Application.FindIdentityProviderSetting(identityProviderID)
 
 	//identifier
 	identifier := userClaims[identityProviderSetting.UserIdentifierField].(string)

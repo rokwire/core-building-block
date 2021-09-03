@@ -69,23 +69,20 @@ func (cg ApplicationGroup) String() string {
 
 //Application represents users application entity - safer community, uuic, etc
 type Application struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"` //safer community, uuic, etc
+	ID   string
+	Name string //safer community, uuic, etc
 
-	MultiTenant string `bson:"multi-tenant"` //safer community is multi-tenant
+	MultiTenant string //safer community is multi-tenant
 
-	//if true the service will support own users for this app otherwise the user will decide if to create own user or to use the ecosystem one(shared)
-	RequiresOwnUsers bool `bson:"requires_own_users"`
+	//if true the service will always require the user to create profile for the application, otherwise he/she could use  his/her already created profile from another platform application
+	RequiresOwnUsers bool
 
-	//identity providers settings
-	IdentityProvidersSettings []ApplicationIdentityProviderSetting `bson:"identity_providers_settings"`
+	Types []ApplicationType
 
-	Types []ApplicationType `bson:"types"`
+	Organizations []ApplicationOrganization
 
-	Organizations []Organization `bson:"-"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 //FindApplicationType finds app type for identifier
@@ -98,6 +95,8 @@ func (a Application) FindApplicationType(identifier string) *ApplicationType {
 	return nil
 }
 
+/*
+TODO
 //FindIdentityProviderSetting finds the identity provider setting for the application
 func (a Application) FindIdentityProviderSetting(identityProviderID string) *ApplicationIdentityProviderSetting {
 	for _, idPrSetting := range a.IdentityProvidersSettings {
@@ -106,9 +105,20 @@ func (a Application) FindIdentityProviderSetting(identityProviderID string) *App
 		}
 	}
 	return nil
+} */
+
+//ApplicationOrganization represents application organization entity
+type ApplicationOrganization struct {
+	Application  Application
+	Organization Organization
+
+	IdentityProviderSetting AppOrgIdentityProviderSetting
+
+	SupportedAuthTypes []AppTypeOrgAuthType //supported auth types for this organization in this application
+
 }
 
-//ApplicationIdentityProviderSetting represents identity provider setting for an application
+//AppOrgIdentityProviderSetting represents identity provider setting for an organization in an application
 //  User specific fields
 //  For example:
 //		UIUC Application has uiucedu_uin specific field for Illinois identity provider
@@ -117,7 +127,7 @@ func (a Application) FindIdentityProviderSetting(identityProviderID string) *App
 //	For example:
 //  	for the UIUC application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups access" is mapped to an application group called "groups access"
 //  	for the Safer Illinois application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health test verify" is mapped to an application group called "tests verifiers"
-type ApplicationIdentityProviderSetting struct {
+type AppOrgIdentityProviderSetting struct {
 	IdentityProviderID string `bson:"identity_provider_id"`
 
 	UserIdentifierField string `bson:"user_identifier_field"`
@@ -143,25 +153,29 @@ type ApplicationType struct {
 	Name       string   `bson:"name"`       //safer community android, safer community ios, safer community web, uuic android etc
 	Versions   []string `bson:"versions"`   //1.1.0, 1.2.0 etc
 
-	SupportedAuthTypes []ApplicationTypeAuthType `bson:"supported_auth_types"` //supported auth types for this application type
-
 	Application Application `bson:"-"`
 }
 
 //IsAuthTypeSupported checks if an auth type is supported for the app type
 func (a ApplicationType) IsAuthTypeSupported(authType AuthType) bool {
-	for _, appTypeAuthType := range a.SupportedAuthTypes {
-		if appTypeAuthType.AuthTypeID == authType.ID {
-			return true
+	/*	for _, appTypeAuthType := range a.SupportedAuthTypes {
+			if appTypeAuthType.AuthTypeID == authType.ID {
+				return true
+			}
 		}
-	}
+		return false */
+	//TODO
 	return false
 }
 
-//ApplicationTypeAuthType represents supported auth type for application with configs/params
-type ApplicationTypeAuthType struct {
-	AuthTypeID string                 `bson:"auth_type_id"`
-	Params     map[string]interface{} `bson:"params"`
+//AppTypeOrgAuthType represents supported auth type for an organization in an application with configs/params
+type AppTypeOrgAuthType struct {
+	AppTypeID string `bson:"app_type_id"`
+
+	SupportedAuthTypes []struct {
+		AuthTypeID string                 `bson:"auth_type_id"`
+		Params     map[string]interface{} `bson:"params"`
+	} `bson:"supported_auth_types"`
 }
 
 //TODO

@@ -20,7 +20,7 @@ type Organization struct {
 
 	Config OrganizationConfig
 
-	Applications []Application
+	Applications []ApplicationOrganization
 
 	DateCreated time.Time
 	DateUpdated *time.Time
