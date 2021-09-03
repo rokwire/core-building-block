@@ -62,6 +62,12 @@ func main() {
 	smtpPassword := envLoader.GetAndLogEnvVar("HEALTH_SMTP_PASSWORD", false, true)
 	smtpFrom := envLoader.GetAndLogEnvVar("HEALTH_EMAIL_FROM", false, false)
 
+	smtpPortNum, err := strconv.Atoi(smtpPort)
+	if err != nil {
+		// handle error
+		logger.Fatal("Invalid SMTP port")
+	}
+
 	var authPrivKeyPem []byte
 	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
 	if authPrivKeyPemString != "" {
@@ -96,7 +102,7 @@ func main() {
 		logger.Infof("Error parsing max token exp, applying defaults: %v", err)
 	}
 
-	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, smtpHost, smtpPort, smtpUser, smtpPassword, smtpFrom, logger)
+	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}

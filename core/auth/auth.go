@@ -6,7 +6,6 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -81,7 +80,7 @@ type TokenClaims struct {
 }
 
 //NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, smtpHost string, smtpPort string, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
+func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -90,11 +89,6 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	if maxTokenExp == nil {
 		var maxTokenExpVal int64 = 60
 		maxTokenExp = &maxTokenExpVal
-	}
-	smtpPortNum, err := strconv.Atoi(smtpPort)
-	if err != nil {
-		// handle error
-		logger.Fatal("Invalid SMTP port")
 	}
 	//maybe set up from config collection for diff types of auth
 	emailDialer := gomail.NewDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
