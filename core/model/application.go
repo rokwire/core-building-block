@@ -168,14 +168,15 @@ func (a ApplicationType) IsAuthTypeSupported(authType AuthType) bool {
 	return false
 }
 
-//AppTypeOrgAuthType represents supported auth type for an organization in an application with configs/params
-type AppTypeOrgAuthType struct {
-	AppTypeID string `bson:"app_type_id"`
+//AppTypeOrgAuthTypesSupport represents supported auth types for an organization in an application type with configs/params
+type AppTypeOrgAuthTypesSupport struct {
+	AppType      ApplicationType
+	Organization Organization
 
 	SupportedAuthTypes []struct {
-		AuthTypeID string                 `bson:"auth_type_id"`
-		Params     map[string]interface{} `bson:"params"`
-	} `bson:"supported_auth_types"`
+		AuthType AuthType
+		Params   map[string]interface{}
+	}
 }
 
 //TODO
