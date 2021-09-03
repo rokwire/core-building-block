@@ -72,6 +72,8 @@ type Application struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"` //safer community, uuic, etc
 
+	MultiTenant string `bson:"multi-tenant"` //safer community is multi-tenant
+
 	//if true the service will support own users for this app otherwise the user will decide if to create own user or to use the ecosystem one(shared)
 	RequiresOwnUsers bool `bson:"requires_own_users"`
 
