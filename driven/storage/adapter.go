@@ -1226,6 +1226,11 @@ func (sl *storageListener) OnApplicationsUpdated() {
 	sl.adapter.cacheOrganizations()
 }
 
+func (sl *storageListener) OnApplicationsOrganizationsUpdated() {
+	sl.adapter.cacheApplications()
+	sl.adapter.cacheOrganizations()
+}
+
 //Listener represents storage listener
 type Listener interface {
 	OnAuthTypesUpdated()
@@ -1233,6 +1238,7 @@ type Listener interface {
 	OnServiceRegsUpdated()
 	OnOrganizationsUpdated()
 	OnApplicationsUpdated()
+	OnApplicationsOrganizationsUpdated()
 }
 
 //DefaultListenerImpl default listener implementation
@@ -1252,3 +1258,6 @@ func (d *DefaultListenerImpl) OnOrganizationsUpdated() {}
 
 //OnApplicationsUpdated notifies applications have been updated
 func (d *DefaultListenerImpl) OnApplicationsUpdated() {}
+
+//OnApplicationsOrganizationsUpdated notifies applications organizations have been updated
+func (d *DefaultListenerImpl) OnApplicationsOrganizationsUpdated() {}

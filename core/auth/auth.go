@@ -888,6 +888,11 @@ func (al *StorageListener) OnIdentityProvidersUpdated() {
 	al.auth.cacheIdentityProviders()
 }
 
+//OnApplicationsOrganizationsUpdated notifies that applications organizations have been updated
+func (al *StorageListener) OnApplicationsOrganizationsUpdated() {
+	al.auth.cacheApplicationsOrganizations()
+}
+
 //OnServiceRegsUpdated notifies that a service registration has been updated
 func (al *StorageListener) OnServiceRegsUpdated() {
 	al.auth.AuthService.LoadServices()
