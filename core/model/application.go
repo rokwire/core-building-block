@@ -10,7 +10,9 @@ import (
 const (
 	//TypeApplication ...
 	TypeApplication logutils.MessageDataType = "application"
-	//TypeApplication ...
+	//TypeOrganization ...
+	TypeOrganization logutils.MessageDataType = "organization"
+	//TypeApplicationOrganization ...
 	TypeApplicationOrganization logutils.MessageDataType = "application organization"
 	//TypeApplicationType ...
 	TypeApplicationType logutils.MessageDataType = "application type"
@@ -95,6 +97,24 @@ func (a Application) FindApplicationType(identifier string) *ApplicationType {
 		}
 	}
 	return nil
+}
+
+//Organization represents organization entity
+type Organization struct {
+	ID   string
+	Name string
+	Type string //micro small medium large - based on the users count
+
+	Config OrganizationConfig
+
+	Applications []ApplicationOrganization
+
+	DateCreated time.Time
+	DateUpdated *time.Time
+}
+
+func (c Organization) String() string {
+	return fmt.Sprintf("[ID:%s\tName:%s\tType:%s\tConfig:%s]", c.ID, c.Name, c.Type, c.Config)
 }
 
 //ApplicationOrganization represents application organization entity

@@ -80,3 +80,13 @@ func applicationToDef(item *model.Application) *Def.Application {
 	//TODO
 	return &Def.Application{Id: item.ID, Name: item.Name, Versions: nil}
 }
+
+//Organization
+func organizationToDef(item *model.Organization) *Def.Organization {
+	if item == nil {
+		return nil
+	}
+
+	orgConfig := Def.OrganizationConfig{Id: &item.Config.ID, Domains: &item.Config.Domains}
+	return &Def.Organization{Id: item.ID, Name: item.Name, Config: &orgConfig, Type: Def.OrganizationType(item.Type)}
+}

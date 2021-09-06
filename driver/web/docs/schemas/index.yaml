@@ -11,12 +11,10 @@ ApplicationRole:
   $ref: "./application/ApplicationRole.yaml"
 ApplicationGroup:
   $ref: "./application/ApplicationGroup.yaml"
-
-# organization
 Organization:
-  $ref: "./organization/Organization.yaml"
+  $ref: "./application/Organization.yaml"
 OrganizationConfig:
-  $ref: "./organization/OrganizationConfig.yaml"
+  $ref: "./application/OrganizationConfig.yaml"
   
 # auth
 ServiceReg:
