@@ -23,7 +23,7 @@ type database struct {
 
 	authTypes                 *collectionWrapper
 	identityProviders         *collectionWrapper
-	users                     *collectionWrapper
+	accounts                  *collectionWrapper
 	devices                   *collectionWrapper
 	credentials               *collectionWrapper
 	refreshTokens             *collectionWrapper
@@ -36,7 +36,6 @@ type database struct {
 	applicationsGroups        *collectionWrapper
 	applicationsRoles         *collectionWrapper
 	applicationsPermissions   *collectionWrapper
-	applicationsUsers         *collectionWrapper
 
 	listeners []Listener
 }
@@ -76,8 +75,8 @@ func (m *database) start() error {
 		return err
 	}
 
-	users := &collectionWrapper{database: m, coll: db.Collection("users")}
-	err = m.applyUsersChecks(users)
+	accounts := &collectionWrapper{database: m, coll: db.Collection("accounts")}
+	err = m.applyAccountsChecks(accounts)
 	if err != nil {
 		return err
 	}
@@ -154,19 +153,13 @@ func (m *database) start() error {
 		return err
 	}
 
-	applicationsUsers := &collectionWrapper{database: m, coll: db.Collection("applications_users")}
-	err = m.applyApplicationsUsersChecks(applicationsUsers)
-	if err != nil {
-		return err
-	}
-
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
 
 	m.authTypes = authTypes
 	m.identityProviders = identityProviders
-	m.users = users
+	m.accounts = accounts
 	m.devices = devices
 	m.credentials = credentials
 	m.refreshTokens = refreshTokens
@@ -179,7 +172,6 @@ func (m *database) start() error {
 	m.applicationsGroups = applicationsGroups
 	m.applicationsRoles = applicationsRoles
 	m.applicationsPermissions = applicationsPermissions
-	m.applicationsUsers = applicationsUsers
 
 	go m.authTypes.Watch(nil)
 	go m.identityProviders.Watch(nil)
@@ -207,31 +199,32 @@ func (m *database) applyIdentityProvidersChecks(identityProviders *collectionWra
 	return nil
 }
 
-func (m *database) applyUsersChecks(users *collectionWrapper) error {
-	m.logger.Info("apply users checks.....")
+func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
+	m.logger.Info("apply accounts checks.....")
+	//TODO
+	/*
+		//add user auth type index
+		err := users.AddIndex(bson.D{primitive.E{Key: "applications_accounts.auth_types.id", Value: 1}}, false)
+		if err != nil {
+			return err
+		}
 
-	//add user auth type index
-	err := users.AddIndex(bson.D{primitive.E{Key: "applications_accounts.auth_types.id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
+		//add compound unique index - application + auth type + auth type identifier
+		err = users.AddIndex(bson.D{primitive.E{Key: "applications_accounts.app_id", Value: 1},
+			primitive.E{Key: "applications_accounts.auth_types.auth_type_id", Value: 1},
+			primitive.E{Key: "applications_accounts.auth_types.params.identifier", Value: 1}},
+			true)
+		if err != nil {
+			return err
+		}
 
-	//add compound unique index - application + auth type + auth type identifier
-	err = users.AddIndex(bson.D{primitive.E{Key: "applications_accounts.app_id", Value: 1},
-		primitive.E{Key: "applications_accounts.auth_types.auth_type_id", Value: 1},
-		primitive.E{Key: "applications_accounts.auth_types.params.identifier", Value: 1}},
-		true)
-	if err != nil {
-		return err
-	}
+		//add profile index
+		err = users.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
+		if err != nil {
+			return err
+		} */
 
-	//add profile index
-	err = users.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	m.logger.Info("users check passed")
+	m.logger.Info("accounts check passed")
 	return nil
 }
 
@@ -441,19 +434,6 @@ func (m *database) applyApplicationsPermissionsChecks(applicationsPermissions *c
 	}
 
 	m.logger.Info("applications permissions checks passed")
-	return nil
-}
-
-func (m *database) applyApplicationsUsersChecks(applicationsUsers *collectionWrapper) error {
-	m.logger.Info("apply applications users checks.....")
-
-	//add user_id, app_id index - unique
-	err := applicationsUsers.AddIndex(bson.D{primitive.E{Key: "user_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}}, true)
-	if err != nil {
-		return err
-	}
-
-	m.logger.Info("applications users checks passed")
 	return nil
 }
 

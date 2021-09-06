@@ -232,21 +232,22 @@ func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
 
 //FindUser finds an user for app, auth type and auth type identifier
 func (sa *Adapter) FindUser(appID string, authTypeID string, authTypeIdentifier string) (*model.Account, error) {
-	filter := bson.D{primitive.E{Key: "applications_accounts.app_id", Value: appID},
-		primitive.E{Key: "applications_accounts.auth_types.auth_type_id", Value: authTypeID},
-		primitive.E{Key: "applications_accounts.auth_types.params.identifier", Value: authTypeIdentifier}}
-	var users []user
-	err := sa.db.users.Find(filter, &users, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-	if len(users) == 0 {
-		//not found
-		return nil, nil
-	}
-	user := users[0]
-	modelUser := userFromStorage(&user, sa)
-	return &modelUser, nil
+	/*	filter := bson.D{primitive.E{Key: "applications_accounts.app_id", Value: appID},
+			primitive.E{Key: "applications_accounts.auth_types.auth_type_id", Value: authTypeID},
+			primitive.E{Key: "applications_accounts.auth_types.params.identifier", Value: authTypeIdentifier}}
+		var users []user
+		err := sa.db.users.Find(filter, &users, nil)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		if len(users) == 0 {
+			//not found
+			return nil, nil
+		}
+		user := users[0]
+		modelUser := userFromStorage(&user, sa)
+		return &modelUser, nil */
+	return nil, nil
 }
 
 //FindUserByID finds an user by id
@@ -255,7 +256,7 @@ func (sa *Adapter) FindUserByID(id string) (*model.Account, error) {
 }
 
 func (sa *Adapter) findUser(key string, id string) (*model.Account, error) {
-	filter := bson.M{key: id}
+	/*filter := bson.M{key: id}
 	var users []user
 	err := sa.db.users.Find(filter, &users, nil)
 	if err != nil {
@@ -269,19 +270,22 @@ func (sa *Adapter) findUser(key string, id string) (*model.Account, error) {
 	user := users[0]
 
 	modelUser := userFromStorage(&user, sa)
-	return &modelUser, nil
+	return &modelUser, nil */
+
+	return nil, nil
 }
 
 //InsertUser inserts a user
 func (sa *Adapter) InsertUser(user model.Account) (*model.Account, error) {
-	storageUser := userToStorage(&user)
+	/*storageUser := userToStorage(&user)
 
 	_, err := sa.db.users.InsertOne(storageUser)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
 	}
 
-	return &user, nil
+	return &user, nil */
+	return nil, nil
 	/*
 		if user == nil {
 			return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUser))
