@@ -127,39 +127,25 @@ func applicationGroupsToStorage(items []model.ApplicationGroup) []applicationGro
 }
 
 //Organization
-func organizationFromStorage(item *organization, applications []model.Application) model.Organization {
+func organizationFromStorage(item *organization) model.Organization {
 	if item == nil {
 		return model.Organization{}
 	}
 
-	//TODO
 	return model.Organization{ID: item.ID, Name: item.Name, Type: item.Type,
-		Config: item.Config /* Applications: applications,*/, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Config: item.Config, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-func organizationsFromStorage(itemsList []organization, applications []model.Application) []model.Organization {
-	return nil
-	/*if len(itemsList) == 0 {
+func organizationsFromStorage(itemsList []organization) []model.Organization {
+	if len(itemsList) == 0 {
 		return make([]model.Organization, 0)
 	}
 
 	var items []model.Organization
 	for _, org := range itemsList {
-		//prepare the organization applications
-		var orgApplications []model.Application
-		if len(org.Applications) > 0 {
-			for _, appID := range org.Applications {
-				for _, app := range applications {
-					if appID == app.ID {
-						orgApplications = append(orgApplications, app)
-					}
-				}
-			}
-		}
-
-		items = append(items, organizationFromStorage(&org, orgApplications))
+		items = append(items, organizationFromStorage(&org))
 	}
-	return items*/
+	return items
 }
 
 func organizationToStorage(item *model.Organization) *organization {
@@ -167,15 +153,6 @@ func organizationToStorage(item *model.Organization) *organization {
 		return nil
 	}
 
-	//TODO
-	/*
-			//prepare applications
-			applicationsIDs := make([]string, len(item.Applications))
-			for i, application := range item.Applications {
-				applicationsIDs[i] = application.ID
-			}
-
-		return &organization{ID: item.ID, Name: item.Name, Type: item.Type, Config: item.Config,
-			Applications: nil, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated} */
-	return nil
+	return &organization{ID: item.ID, Name: item.Name, Type: item.Type, Config: item.Config,
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

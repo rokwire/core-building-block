@@ -899,7 +899,7 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 
 //LoadOrganizations gets the organizations
 func (sa *Adapter) LoadOrganizations() ([]model.Organization, error) {
-	//no transactions for get operations..
+	//1. check the cached organizations
 	cachedOrgs, err := sa.getCachedOrganizations()
 	if err != nil {
 		sa.logger.Warn(err.Error())
@@ -907,7 +907,9 @@ func (sa *Adapter) LoadOrganizations() ([]model.Organization, error) {
 		return cachedOrgs, nil
 	}
 
-	//1. find the organizations
+	//no transactions for get operations..
+
+	//2. find the organizations
 	orgsFilter := bson.D{}
 	var orgsResult []organization
 	err = sa.db.organizations.Find(orgsFilter, &orgsResult, nil)
@@ -918,27 +920,10 @@ func (sa *Adapter) LoadOrganizations() ([]model.Organization, error) {
 		//no data
 		return make([]model.Organization, 0), nil
 	}
-	/*
-		//2. find the applications for the organization
-		var applicationsIDs []string
-		for _, org := range orgsResult {
-			if len(org.Applications) > 0 {
-				applicationsIDs = append(applicationsIDs, org.Applications...)
-			}
-		}
-		var applicationsResult []model.Application
-		if len(applicationsIDs) > 0 {
-			orgsAppsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": applicationsIDs}}}
-			err := sa.db.applications.Find(orgsAppsFilter, &applicationsResult, nil)
-			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-			}
-		}
 
-		//3. prepare the response
-		organizations := organizationsFromStorage(orgsResult, applicationsResult)
-		return organizations, nil */
-	return nil, nil
+	//3. prepare the response
+	organizations := organizationsFromStorage(orgsResult)
+	return organizations, nil
 }
 
 //LoadApplications loads all applications
