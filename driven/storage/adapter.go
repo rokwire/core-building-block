@@ -843,18 +843,20 @@ func (sa *Adapter) FindOrganization(id string) (*model.Organization, error) {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"id": id}, err)
 	}
 
+	//TODO
 	//2. find the organization applications
-	var applications []model.Application
-	if len(org.Applications) > 0 {
-		appsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": org.Applications}}}
-		err := sa.db.applications.Find(appsFilter, &applications, nil)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-		}
-	}
+	/*	var applications []model.Application
+			if len(org.Applications) > 0 {
+				appsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": org.Applications}}}
+				err := sa.db.applications.Find(appsFilter, &applications, nil)
+				if err != nil {
+					return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+				}
+			}
 
-	organization := organizationFromStorage(&org, applications)
-	return &organization, nil
+		organization := organizationFromStorage(&org, applications)
+		return &organization, nil */
+	return nil, nil
 }
 
 //InsertOrganization inserts an organization
@@ -916,26 +918,27 @@ func (sa *Adapter) LoadOrganizations() ([]model.Organization, error) {
 		//no data
 		return make([]model.Organization, 0), nil
 	}
-
-	//2. find the applications for the organization
-	var applicationsIDs []string
-	for _, org := range orgsResult {
-		if len(org.Applications) > 0 {
-			applicationsIDs = append(applicationsIDs, org.Applications...)
+	/*
+		//2. find the applications for the organization
+		var applicationsIDs []string
+		for _, org := range orgsResult {
+			if len(org.Applications) > 0 {
+				applicationsIDs = append(applicationsIDs, org.Applications...)
+			}
 		}
-	}
-	var applicationsResult []model.Application
-	if len(applicationsIDs) > 0 {
-		orgsAppsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": applicationsIDs}}}
-		err := sa.db.applications.Find(orgsAppsFilter, &applicationsResult, nil)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		var applicationsResult []model.Application
+		if len(applicationsIDs) > 0 {
+			orgsAppsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": applicationsIDs}}}
+			err := sa.db.applications.Find(orgsAppsFilter, &applicationsResult, nil)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+			}
 		}
-	}
 
-	//3. prepare the response
-	organizations := organizationsFromStorage(orgsResult, applicationsResult)
-	return organizations, nil
+		//3. prepare the response
+		organizations := organizationsFromStorage(orgsResult, applicationsResult)
+		return organizations, nil */
+	return nil, nil
 }
 
 //LoadApplications loads all applications

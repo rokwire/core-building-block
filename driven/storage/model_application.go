@@ -5,6 +5,50 @@ import (
 	"time"
 )
 
+type application struct {
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
+
+	MultiTenant      bool `bson:"multi_tenant"`
+	RequiresOwnUsers bool `bson:"requires_own_users"`
+
+	Types []applicationType `bson:"types"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type applicationType struct {
+	ID         string   `bson:"id"`
+	Identifier string   `bson:"identifier"`
+	Name       string   `bson:"name"`
+	Versions   []string `bson:"versions"`
+}
+
+type organization struct {
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
+	Type string `bson:"type"`
+
+	Config model.OrganizationConfig `bson:"config"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type applicationOrganization struct {
+	ID string `bson:"_id"`
+
+	AppID string `bson:"app_id"`
+	OrgID string `bson:"org_id"`
+
+	IdentityProvidersSettings []model.IdentityProviderSetting `bson:"identity_providers_settings"`
+
+	SupportedAuthTypes []model.AuthTypesSupport `bson:"supported_auth_types"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
 type applicationGroup struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
@@ -36,19 +80,6 @@ type applicationPermission struct {
 	Name string `bson:"name"`
 
 	AppID string `bson:"app_id"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type organization struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
-	Type string `bson:"type"`
-
-	Config model.OrganizationConfig `bson:"config"`
-
-	Applications []string `bson:"applications"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

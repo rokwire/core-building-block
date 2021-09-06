@@ -138,7 +138,8 @@ func organizationFromStorage(item *organization, applications []model.Applicatio
 }
 
 func organizationsFromStorage(itemsList []organization, applications []model.Application) []model.Organization {
-	if len(itemsList) == 0 {
+	return nil
+	/*if len(itemsList) == 0 {
 		return make([]model.Organization, 0)
 	}
 
@@ -158,7 +159,7 @@ func organizationsFromStorage(itemsList []organization, applications []model.App
 
 		items = append(items, organizationFromStorage(&org, orgApplications))
 	}
-	return items
+	return items*/
 }
 
 func organizationToStorage(item *model.Organization) *organization {
@@ -168,12 +169,13 @@ func organizationToStorage(item *model.Organization) *organization {
 
 	//TODO
 	/*
-		//prepare applications
-		applicationsIDs := make([]string, len(item.Applications))
-		for i, application := range item.Applications {
-			applicationsIDs[i] = application.ID
-		} */
+			//prepare applications
+			applicationsIDs := make([]string, len(item.Applications))
+			for i, application := range item.Applications {
+				applicationsIDs[i] = application.ID
+			}
 
-	return &organization{ID: item.ID, Name: item.Name, Type: item.Type, Config: item.Config,
-		Applications: nil, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		return &organization{ID: item.ID, Name: item.Name, Type: item.Type, Config: item.Config,
+			Applications: nil, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated} */
+	return nil
 }

@@ -119,6 +119,8 @@ func (c Organization) String() string {
 
 //ApplicationOrganization represents application organization entity
 type ApplicationOrganization struct {
+	ID string
+
 	Application  Application
 	Organization Organization
 
@@ -133,7 +135,7 @@ type ApplicationOrganization struct {
 //FindIdentityProviderSetting finds the identity provider setting for the application
 func (a ApplicationOrganization) FindIdentityProviderSetting(identityProviderID string) *IdentityProviderSetting {
 	for _, idPrSetting := range a.IdentityProvidersSettings {
-		if idPrSetting.IdentityProvider.ID == identityProviderID {
+		if idPrSetting.IdentityProviderID == identityProviderID {
 			return &idPrSetting
 		}
 	}
@@ -156,43 +158,42 @@ func (ao ApplicationOrganization) IsAuthTypeSupported(authType AuthType) bool {
 //  	for the UIUC application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups access" is mapped to an application group called "groups access"
 //  	for the Safer Illinois application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health test verify" is mapped to an application group called "tests verifiers"
 type IdentityProviderSetting struct {
-	IdentityProvider IdentityProvider
+	IdentityProviderID string `bson:"identity_provider_id"`
 
-	UserIdentifierField string
+	UserIdentifierField string `bson:"user_identifier_field"`
 
-	FirstNameField  string
-	MiddleNameField string
-	LastNameField   string
-	EmailField      string
-	GroupsField     string
+	FirstNameField  string `bson:"first_name_field"`
+	MiddleNameField string `bson:"middle_name_field"`
+	LastNameField   string `bson:"last_name_field"`
+	EmailField      string `bson:"email_field"`
+	GroupsField     string `bson:"groups_field"`
 
-	UserSpecificFields []string
+	UserSpecificFields []string `bson:"user_specific_fields"`
 
 	Groups []struct {
-		IdentityProviderGroup string
-		AppGroupID            string
-	}
+		IdentityProviderGroup string `bson:"identity_provider_group"`
+		AppGroupID            string `bson:"app_group_id"`
+	} `bson:"groups"`
 }
 
 //ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc
 type ApplicationType struct {
-	ID         string   `bson:"id"`
-	Identifier string   `bson:"identifier"` //edu.illinois.rokwire etc
-	Name       string   `bson:"name"`       //safer community android, safer community ios, safer community web, uuic android etc
-	Versions   []string `bson:"versions"`   //1.1.0, 1.2.0 etc
+	ID         string
+	Identifier string   //edu.illinois.rokwire etc
+	Name       string   //safer community android, safer community ios, safer community web, uuic android etc
+	Versions   []string //1.1.0, 1.2.0 etc
 
-	Application Application `bson:"-"`
+	Application Application
 }
 
 //AuthTypesSupport represents supported auth types for an organization in an application type with configs/params
 type AuthTypesSupport struct {
-	AppType      ApplicationType
-	Organization Organization
+	AppTypeID string `bson:"app_type_id"`
 
 	SupportedAuthTypes []struct {
-		AuthType AuthType
-		Params   map[string]interface{}
-	}
+		AuthTypeID string                 `bson:"auth_type_id"`
+		Params     map[string]interface{} `bson:"params"`
+	} `bson:"supported_auth_types"`
 }
 
 //TODO - Accounts
