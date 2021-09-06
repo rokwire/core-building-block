@@ -929,7 +929,7 @@ func (sa *Adapter) LoadOrganizations() ([]model.Organization, error) {
 //LoadApplications loads all applications
 func (sa *Adapter) LoadApplications() ([]model.Application, error) {
 	filter := bson.D{}
-	var result []model.Application
+	var result []application
 	err := sa.db.applications.Find(filter, &result, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
@@ -938,7 +938,8 @@ func (sa *Adapter) LoadApplications() ([]model.Application, error) {
 		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, nil, err)
 	}
 
-	return result, nil
+	applications := applicationsFromStorage(result)
+	return applications, nil
 }
 
 //InsertApplication inserts an application

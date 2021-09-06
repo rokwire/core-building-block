@@ -2,6 +2,50 @@ package storage
 
 import "core-building-block/core/model"
 
+//Application
+func applicationFromStorage(item *application) model.Application {
+	if item == nil {
+		return model.Application{}
+	}
+
+	types := applicationTypesFromStorage(item.Types)
+	return model.Application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, RequiresOwnUsers: item.RequiresOwnUsers,
+		Types: types, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func applicationsFromStorage(itemsList []application) []model.Application {
+	if len(itemsList) == 0 {
+		return make([]model.Application, 0)
+	}
+
+	var items []model.Application
+	for _, app := range itemsList {
+		items = append(items, applicationFromStorage(&app))
+	}
+	return items
+}
+
+//ApplicationType
+func applicationTypeFromStorage(item *applicationType) model.ApplicationType {
+	if item == nil {
+		return model.ApplicationType{}
+	}
+
+	return model.ApplicationType{ID: item.ID, Identifier: item.Identifier, Name: item.Name, Versions: item.Versions}
+}
+
+func applicationTypesFromStorage(itemsList []applicationType) []model.ApplicationType {
+	if len(itemsList) == 0 {
+		return make([]model.ApplicationType, 0)
+	}
+
+	var items []model.ApplicationType
+	for _, appType := range itemsList {
+		items = append(items, applicationTypeFromStorage(&appType))
+	}
+	return items
+}
+
 //ApplicationPermission
 func applicationPermissionFromStorage(item *applicationPermission, application model.Application) model.ApplicationPermission {
 	if item == nil {

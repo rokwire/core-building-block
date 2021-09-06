@@ -76,7 +76,7 @@ type Application struct {
 	ID   string
 	Name string //safer community, uuic, etc
 
-	MultiTenant string //safer community is multi-tenant
+	MultiTenant bool //safer community is multi-tenant
 
 	//if true the service will always require the user to create profile for the application, otherwise he/she could use his/her already created profile from another platform application
 	RequiresOwnUsers bool
