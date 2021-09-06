@@ -2,27 +2,34 @@ package model
 
 import (
 	"core-building-block/utils"
-	"fmt"
 	"time"
 
 	"github.com/rokmetro/logging-library/logutils"
 )
 
 const (
-	//TypeUser user type
-	TypeUser logutils.MessageDataType = "user"
+	//TypeAccount account type
+	TypeAccount logutils.MessageDataType = "account"
 )
 
-//User represents user entity
-type User struct {
-	ID string
+//Account represents account entity
+//	The account is the user himself or herself.
+//	This is what the person provides to the system so that to use it.
+//
+//	Every account is for an organization within an application
+type Account struct {
+	ID string //this is ID for the account
 
-	//one item if the user is used only for one application or many items if the user is shared between many applications
-	ApplicationsAccounts []ApplicationUserAccount
-	//one item if the user is used only for one application or many items if the user is shared between many applications
-	ApplicationsUsers []ApplicationUser
+	Application  Application
+	Organization Organization
 
-	Profile UserProfile
+	Permissions []ApplicationPermission
+	Roles       []ApplicationRole
+	Groups      []ApplicationGroup
+
+	AuthTypes []AccountAuthType
+
+	Profile Profile //one account has one profile, one profile can be shared between many accounts
 
 	Devices []Device
 
@@ -30,105 +37,47 @@ type User struct {
 	DateUpdated *time.Time
 }
 
-func (u User) FindUserAuthType(appID string, authTypeID string) *UserAuthType {
-	for _, appUserAccount := range u.ApplicationsAccounts {
-		if appUserAccount.AppID == appID {
-			for _, userAuthType := range appUserAccount.AuthTypes {
-				if userAuthType.AuthTypeID == authTypeID {
-					return &userAuthType
-				}
-			}
-		}
-	}
-	return nil
-}
-
-func (u User) String() string {
-	return fmt.Sprintf("[ID:%s\n\tProfile:%s]", u.ID, u.Profile)
-}
-
-//ApplicationUserAccount represents UserAccount for an application
-//	The user account is the user himself or herself
-//	What the person provides to the system so that to use it
-type ApplicationUserAccount struct {
-	ID string `bson:"id"`
-
-	AppID string `bson:"app_id"`
-
-	//all available auth types for the application
-	AuthTypes []UserAuthType `bson:"auth_types"`
-
-	Active2FA bool `bson:"active_2fa"`
-}
-
-//UserAuthType represents user auth type
-// The сystem supports [n] auth types - username, email, phone, illlinois_oidc etc
-// One application can support <= [n] auth types from the system ones(subset)
-type UserAuthType struct {
-	ID         string `bson:"id"`
-	AuthTypeID string `bson:"auth_type_id"`
-	Active     bool   `bson:"active"` //auth type can be activated/deactivated
-
-	//{
-	//	"identifier":"petaka" //username
-	//}
-	//or
-	//{
-	//	"identifier":"petyo@inabyte.com" //email
-	//}
-	//or
-	//{
-	//	"identifier":"+359000000000" //phone
-	//}
-	//or
-	//
-	//illinois_oidc
-	//{
-	//	"identifier": "pss",
-	//	"user": {
-	//		"identifier": "pss",
-	//		"first_name": "Petyo",
-	//		"middle_name": "Stoimenov",
-	//		"last_name": "Stoyanov",
-	//		"email": "pss@illinois.edu",
-	//		"groups": ["urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health media", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire admin configs", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire app config manager", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire shield", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire public health", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire events manager", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups admin", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire debug", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire transportation manager", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health provider", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health test verify", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups access", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire talent chooser manager", "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire admin app"],
-	//		"system_specific": {
-	//			"uiucedu_uin": "678028578"
-	//		}
-	//	}
-	//}
-	Params map[string]interface{} `bson:"params"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-//UserProfile represents user profile entity. The user profile is an information about the user.
-type UserProfile struct {
-	ID        string `bson:"id"`
-	PhotoURL  string `bson:"photo_url"`
-	FirstName string `bson:"first_name"`
-	LastName  string `bson:"last_name"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-func (up UserProfile) String() string {
-	return fmt.Sprintf("[ID:%s\tPhotoURL:%s\tFirstName:%s\tLastName:%s]",
-		up.ID, up.PhotoURL, up.FirstName, up.LastName)
-}
-
-//ApplicationUser represents application user entity
-type ApplicationUser struct {
+//AccountAuthType represents account auth type
+type AccountAuthType struct {
 	ID string
 
-	User        User
-	Application Application
+	AuthType AuthType //one of the supported auth type
+	Account  Account
 
-	Permissions []ApplicationPermission
-	Roles       []ApplicationRole
-	Groups      []ApplicationGroup
+	Identifier string
+
+	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
+
+	Active    bool
+	Active2FA bool
+
+	DateCreated time.Time
+	DateUpdated *time.Time
+}
+
+type Credential struct {
+	ID string
+
+	AccountsAuthTypes []AccountAuthType //one credential can be used for more than one account auth type
+
+	Value interface{} //credential value
+
+	DateCreated time.Time
+	DateUpdated *time.Time
+}
+
+//Profile represents profile entity
+//	The profile is an information about the user.
+//  What the person shares with the system/other users/
+//	The person should be able to use the system even all profile fields are empty/it is just an information for the user/
+type Profile struct {
+	ID string
+
+	PhotoURL  string
+	FirstName string
+	LastName  string
+
+	Accounts []Account //the users can share profiles between their applications accounts for some applications
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -145,7 +94,7 @@ type Device struct {
 	///
 
 	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
-	Users []User
+	Accounts []Account
 
 	DateCreated time.Time
 	DateUpdated *time.Time
