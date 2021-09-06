@@ -354,7 +354,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 
 	//TODO
 	//identityProviderID := authType.Params["identity_provider"].(string)
-	var identityProviderSetting model.AppOrgIdentityProviderSetting
+	var identityProviderSetting model.IdentityProviderSetting
 	//identityProviderSetting := appType.Application.FindIdentityProviderSetting(identityProviderID)
 
 	//identifier

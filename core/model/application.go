@@ -76,7 +76,7 @@ type Application struct {
 
 	MultiTenant string //safer community is multi-tenant
 
-	//if true the service will always require the user to create profile for the application, otherwise he/she could use  his/her already created profile from another platform application
+	//if true the service will always require the user to create profile for the application, otherwise he/she could use his/her already created profile from another platform application
 	RequiresOwnUsers bool
 
 	Types []ApplicationType
@@ -97,30 +97,36 @@ func (a Application) FindApplicationType(identifier string) *ApplicationType {
 	return nil
 }
 
-/*
-TODO
-//FindIdentityProviderSetting finds the identity provider setting for the application
-func (a Application) FindIdentityProviderSetting(identityProviderID string) *ApplicationIdentityProviderSetting {
-	for _, idPrSetting := range a.IdentityProvidersSettings {
-		if idPrSetting.IdentityProviderID == identityProviderID {
-			return &idPrSetting
-		}
-	}
-	return nil
-} */
-
 //ApplicationOrganization represents application organization entity
 type ApplicationOrganization struct {
 	Application  Application
 	Organization Organization
 
-	IdentityProvidersSettings []AppOrgIdentityProviderSetting
+	IdentityProvidersSettings []IdentityProviderSetting
 
-	SupportedAuthTypes []AppTypeOrgAuthTypesSupport //supported auth types for this organization in this application
+	SupportedAuthTypes []AuthTypesSupport //supported auth types for this organization in this application
 
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
-//AppOrgIdentityProviderSetting represents identity provider setting for an organization in an application
+//FindIdentityProviderSetting finds the identity provider setting for the application
+func (a ApplicationOrganization) FindIdentityProviderSetting(identityProviderID string) *IdentityProviderSetting {
+	for _, idPrSetting := range a.IdentityProvidersSettings {
+		if idPrSetting.IdentityProvider.ID == identityProviderID {
+			return &idPrSetting
+		}
+	}
+	return nil
+}
+
+//IsAuthTypeSupported checks if an auth type is supported
+func (ao ApplicationOrganization) IsAuthTypeSupported(authType AuthType) bool {
+	//TODO
+	return false
+}
+
+//IdentityProviderSetting represents identity provider setting for an organization in an application
 //  User specific fields
 //  For example:
 //		UIUC Application has uiucedu_uin specific field for Illinois identity provider
@@ -129,7 +135,7 @@ type ApplicationOrganization struct {
 //	For example:
 //  	for the UIUC application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups access" is mapped to an application group called "groups access"
 //  	for the Safer Illinois application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health test verify" is mapped to an application group called "tests verifiers"
-type AppOrgIdentityProviderSetting struct {
+type IdentityProviderSetting struct {
 	IdentityProvider IdentityProvider
 
 	UserIdentifierField string
@@ -158,20 +164,8 @@ type ApplicationType struct {
 	Application Application `bson:"-"`
 }
 
-//IsAuthTypeSupported checks if an auth type is supported for the app type
-func (a ApplicationType) IsAuthTypeSupported(authType AuthType) bool {
-	/*	for _, appTypeAuthType := range a.SupportedAuthTypes {
-			if appTypeAuthType.AuthTypeID == authType.ID {
-				return true
-			}
-		}
-		return false */
-	//TODO
-	return false
-}
-
-//AppTypeOrgAuthTypesSupport represents supported auth types for an organization in an application type with configs/params
-type AppTypeOrgAuthTypesSupport struct {
+//AuthTypesSupport represents supported auth types for an organization in an application type with configs/params
+type AuthTypesSupport struct {
 	AppType      ApplicationType
 	Organization Organization
 
@@ -181,7 +175,7 @@ type AppTypeOrgAuthTypesSupport struct {
 	}
 }
 
-//TODO
+//TODO - Accounts
 //ApplicationUserRelations represents external relations between the application users in an organization
 // For example in Safer Illinois application:
 // - families takes discount for covid tests.

@@ -499,9 +499,10 @@ func (a *Auth) validateAuthType(authType string, appID string) (*model.AuthType,
 	if applicationType == nil {
 		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appID))
 	}
-	if !applicationType.IsAuthTypeSupported(*authTypeEntity) {
+	//TODO
+	/*if !applicationType.IsAuthTypeSupported(*authTypeEntity) {
 		return nil, nil, errors.ErrorAction(logutils.ActionValidate, "not supported auth type for application", nil)
-	}
+	} */
 
 	return authTypeEntity, applicationType, nil
 }
