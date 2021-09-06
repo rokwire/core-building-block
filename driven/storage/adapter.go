@@ -998,6 +998,36 @@ func (sa *Adapter) FindApplicationTypeByIdentifier(identifier string) (*model.Ap
 	return appType, nil
 }
 
+//LoadApplicationsOrganizations loads all applications organizations
+func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error) {
+	filter := bson.D{}
+	var list []applicationOrganization
+	err := sa.db.applicationsOrganizations.Find(filter, &list, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
+	if len(list) == 0 {
+		//no data
+		return nil, nil
+	}
+
+	result := make([]model.ApplicationOrganization, len(list))
+	for i, item := range list {
+		//we have organizations and applications cached
+		application, err := sa.getCachedApplication(item.AppID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		}
+		organization, err := sa.getCachedOrganization(item.OrgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
+		}
+
+		result[i] = applicationOrganizationFromStorage(item, *application, *organization)
+	}
+	return result, nil
+}
+
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records

@@ -200,3 +200,10 @@ func organizationToStorage(item *model.Organization) *organization {
 	return &organization{ID: item.ID, Name: item.Name, Type: item.Type, Config: item.Config,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
+
+//ApplicationOrganization
+func applicationOrganizationFromStorage(item applicationOrganization, application model.Application, organization model.Organization) model.ApplicationOrganization {
+	return model.ApplicationOrganization{ID: item.ID, Application: application, Organization: organization,
+		IdentityProvidersSettings: item.IdentityProvidersSettings, SupportedAuthTypes: item.SupportedAuthTypes,
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}

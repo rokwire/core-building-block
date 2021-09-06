@@ -158,4 +158,7 @@ type Storage interface {
 
 	//ApplicationTypes
 	FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error)
+
+	//ApplicationsOrganizations
+	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
 }
