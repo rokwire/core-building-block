@@ -195,20 +195,3 @@ type AuthTypesSupport struct {
 		Params     map[string]interface{} `bson:"params"`
 	} `bson:"supported_auth_types"`
 }
-
-//TODO - Accounts
-//ApplicationUserRelations represents external relations between the application users in an organization
-// For example in Safer Illinois application:
-// - families takes discount for covid tests.
-// - couples gets discount for the taxes.
-// For other applications:
-// - relatives are hosted in the same building etc.
-type ApplicationUserRelations struct {
-	ID   string
-	Type string //family, couple, relatives, brothers/sisters, external roommate when there is no provided place by the university for example
-
-	Organization Organization
-
-	Manager ApplicationUser
-	Members []ApplicationUser
-}

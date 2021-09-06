@@ -5,37 +5,39 @@ import (
 )
 
 //User
-func userFromStorage(item *user, sa *Adapter) model.User {
-	if item == nil {
-		return model.User{}
-	}
+func userFromStorage(item *user, sa *Adapter) model.Account {
+	/*	if item == nil {
+			return model.User{}
+		}
 
-	id := item.ID
-	applicationsAccounts := item.ApplicationsAccounts
-	profile := item.Profile
-	devices := userDevicesFromStorage(*item)
-	dateCreated := item.DateCreated
-	dateUpdated := item.DateUpdated
+		id := item.ID
+		applicationsAccounts := item.ApplicationsAccounts
+		profile := item.Profile
+		devices := userDevicesFromStorage(*item)
+		dateCreated := item.DateCreated
+		dateUpdated := item.DateUpdated
 
-	return model.User{ID: id, ApplicationsAccounts: applicationsAccounts, Profile: profile,
-		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+		return model.User{ID: id, ApplicationsAccounts: applicationsAccounts, Profile: profile,
+			Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated} */
+	return model.Account{}
 
 }
 
-func userToStorage(item *model.User) *user {
-	if item == nil {
-		return nil
-	}
+func userToStorage(item *model.Account) *user {
+	/*	if item == nil {
+			return nil
+		}
 
-	id := item.ID
-	applicationsAccounts := item.ApplicationsAccounts
-	profile := item.Profile
-	devices := userDevicesToStorage(item)
-	dateCreated := item.DateCreated
-	dateUpdated := item.DateUpdated
+		id := item.ID
+		applicationsAccounts := item.ApplicationsAccounts
+		profile := item.Profile
+		devices := userDevicesToStorage(item)
+		dateCreated := item.DateCreated
+		dateUpdated := item.DateUpdated
 
-	return &user{ID: id, ApplicationsAccounts: applicationsAccounts, Profile: profile,
-		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+		return &user{ID: id, ApplicationsAccounts: applicationsAccounts, Profile: profile,
+			Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated} */
+	return nil
 }
 
 func userDevicesFromStorage(item user) []model.Device {
@@ -52,7 +54,7 @@ func userDeviceFromStorage(item userDevice) model.Device {
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-func userDevicesToStorage(item *model.User) []userDevice {
+func userDevicesToStorage(item *model.Account) []userDevice {
 	devices := make([]userDevice, len(item.Devices))
 
 	for i, device := range item.Devices {
@@ -73,8 +75,8 @@ func deviceToStorage(item *model.Device) *device {
 		return nil
 	}
 
-	users := make([]string, len(item.Users))
-	for i, user := range item.Users {
+	users := make([]string, len(item.Accounts))
+	for i, user := range item.Accounts {
 		users[i] = user.ID
 	}
 

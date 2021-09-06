@@ -55,6 +55,7 @@ type AccountAuthType struct {
 	DateUpdated *time.Time
 }
 
+//Credential represents a credential for account auth type/s
 type Credential struct {
 	ID string
 
@@ -67,7 +68,7 @@ type Credential struct {
 }
 
 //Profile represents profile entity
-//	The profile is an information about the user.
+//	The profile is an information about the user
 //  What the person shares with the system/other users/
 //	The person should be able to use the system even all profile fields are empty/it is just an information for the user/
 type Profile struct {
@@ -139,4 +140,18 @@ func (esu ExternalSystemUser) Equals(other ExternalSystemUser) bool {
 		return false
 	}
 	return true
+}
+
+//AccountRelations represents external relations between the application accounts in an organization
+// For example in Safer Illinois application:
+// - families takes discount for covid tests.
+// - couples gets discount for the taxes.
+// For other applications:
+// - relatives are hosted in the same building etc.
+type AccountRelations struct {
+	ID   string
+	Type string //family, couple, relatives, brothers/sisters, external roommate when there is no provided place by the university for example
+
+	Manager Account
+	Members []Account
 }

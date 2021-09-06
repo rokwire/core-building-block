@@ -18,19 +18,19 @@ type emailAuthImpl struct {
 	authType string
 }
 
-func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*model.User, error) {
+func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*model.Account, error) {
 	appID := appType.Application.ID
 	authTypeID := authType.ID
 	authTypeIdentifier := "silyana@inabit.bg" //TODO get it from the creds string
 
 	user, err := a.auth.storage.FindUser(appID, authTypeID, authTypeIdentifier)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUser, nil, err) //TODO add args..
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 	return user, nil
 }
 
-func (a *emailAuthImpl) checkCredentials(userAuthType model.UserAuthType, creds string, l *logs.Log) (*bool, error) {
+func (a *emailAuthImpl) checkCredentials(userAuthType model.AccountAuthType, creds string, l *logs.Log) (*bool, error) {
 	//TODO - get the password from the creds and check it using user auth type id - from the credentials collection
 
 	result := true

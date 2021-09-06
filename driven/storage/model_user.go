@@ -1,15 +1,15 @@
 package storage
 
 import (
-	"core-building-block/core/model"
 	"time"
 )
 
 type user struct {
 	ID string `bson:"_id"`
 
-	ApplicationsAccounts []model.ApplicationUserAccount `bson:"applications_accounts"`
-	Profile              model.UserProfile              `bson:"profile"`
+	//TODO
+	//ApplicationsAccounts []model.ApplicationUserAccount `bson:"applications_accounts"`
+	//Profile              model.UserProfile              `bson:"profile"`
 
 	OrganizationsMemberships []userMembership `bson:"organizations_memberships"`
 

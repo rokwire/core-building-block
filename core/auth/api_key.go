@@ -18,11 +18,11 @@ type apiKeyAuthImpl struct {
 	authType string
 }
 
-func (a *apiKeyAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*model.User, error) {
+func (a *apiKeyAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*model.Account, error) {
 	return nil, nil
 }
 
-func (a *apiKeyAuthImpl) checkCredentials(userAuthType model.UserAuthType, creds string, l *logs.Log) (*bool, error) {
+func (a *apiKeyAuthImpl) checkCredentials(userAuthType model.AccountAuthType, creds string, l *logs.Log) (*bool, error) {
 	return nil, nil
 }
 

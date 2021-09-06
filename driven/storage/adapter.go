@@ -231,14 +231,14 @@ func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
 }
 
 //FindUser finds an user for app, auth type and auth type identifier
-func (sa *Adapter) FindUser(appID string, authTypeID string, authTypeIdentifier string) (*model.User, error) {
+func (sa *Adapter) FindUser(appID string, authTypeID string, authTypeIdentifier string) (*model.Account, error) {
 	filter := bson.D{primitive.E{Key: "applications_accounts.app_id", Value: appID},
 		primitive.E{Key: "applications_accounts.auth_types.auth_type_id", Value: authTypeID},
 		primitive.E{Key: "applications_accounts.auth_types.params.identifier", Value: authTypeIdentifier}}
 	var users []user
 	err := sa.db.users.Find(filter, &users, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUser, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if len(users) == 0 {
 		//not found
@@ -250,16 +250,16 @@ func (sa *Adapter) FindUser(appID string, authTypeID string, authTypeIdentifier 
 }
 
 //FindUserByID finds an user by id
-func (sa *Adapter) FindUserByID(id string) (*model.User, error) {
+func (sa *Adapter) FindUserByID(id string) (*model.Account, error) {
 	return sa.findUser("_id", id)
 }
 
-func (sa *Adapter) findUser(key string, id string) (*model.User, error) {
+func (sa *Adapter) findUser(key string, id string) (*model.Account, error) {
 	filter := bson.M{key: id}
 	var users []user
 	err := sa.db.users.Find(filter, &users, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUser, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if len(users) == 0 {
 		//not found
@@ -273,12 +273,12 @@ func (sa *Adapter) findUser(key string, id string) (*model.User, error) {
 }
 
 //InsertUser inserts a user
-func (sa *Adapter) InsertUser(user model.User) (*model.User, error) {
+func (sa *Adapter) InsertUser(user model.Account) (*model.Account, error) {
 	storageUser := userToStorage(&user)
 
 	_, err := sa.db.users.InsertOne(storageUser)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeUser, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
 	}
 
 	return &user, nil
@@ -345,7 +345,7 @@ func (sa *Adapter) InsertUser(user model.User) (*model.User, error) {
 }
 
 //UpdateUser updates an existing user
-func (sa *Adapter) UpdateUser(updatedUser *model.User, orgID string, newOrgData *map[string]interface{}) (*model.User, error) {
+func (sa *Adapter) UpdateUser(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error) {
 	return nil, nil
 	/*if updatedUser == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUser))
@@ -428,75 +428,77 @@ func (sa *Adapter) DeleteUser(id string) error {
 	return errors.New(logutils.Unimplemented)
 }
 
+//TODO
 //UpdateUserAuthType updates user auth type
-func (sa *Adapter) UpdateUserAuthType(item model.UserAuthType) error {
-	// transaction
-	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
-		err := sessionContext.StartTransaction()
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
-		}
-
-		//1. set time updated to the item
-		now := time.Now()
-		item.DateUpdated = &now
-
-		//2. first find the user record
-		findFilter := bson.M{"applications_accounts.auth_types.id": item.ID}
-		var users []user
-		err = sa.db.users.FindWithContext(sessionContext, findFilter, &users, nil)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeUserAuth, &logutils.FieldArgs{"user auth type id": item.ID}, err)
-		}
-		if len(users) == 0 {
-			sa.abortTransaction(sessionContext)
-			return errors.ErrorAction(logutils.ActionFind, "for some reasons user is nil for user auth type", &logutils.FieldArgs{"user auth type id": item.ID})
-		}
-		user := users[0]
-
-		//3. update the user auth type in the user record
-		appsAccounts := user.ApplicationsAccounts
-		newAppsAccounts := make([]model.ApplicationUserAccount, len(appsAccounts))
-		for i, appAccount := range appsAccounts {
-			authTypes := appAccount.AuthTypes
-			newAuthTypes := make([]model.UserAuthType, len(authTypes))
-			for j, uAuthType := range authTypes {
-				if uAuthType.ID == item.ID {
-					newAuthTypes[j] = item
-				} else {
-					newAuthTypes[j] = uAuthType
-				}
+func (sa *Adapter) UpdateUserAuthType(item model.AccountAuthType) error {
+	return nil
+	/*	// transaction
+		err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+			err := sessionContext.StartTransaction()
+			if err != nil {
+				sa.abortTransaction(sessionContext)
+				return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
 			}
 
-			appAccount.AuthTypes = newAuthTypes
+			//1. set time updated to the item
+			now := time.Now()
+			item.DateUpdated = &now
 
-			newAppsAccounts[i] = appAccount
-		}
-		user.ApplicationsAccounts = newAppsAccounts
+			//2. first find the user record
+			findFilter := bson.M{"applications_accounts.auth_types.id": item.ID}
+			var users []user
+			err = sa.db.users.FindWithContext(sessionContext, findFilter, &users, nil)
+			if err != nil {
+				sa.abortTransaction(sessionContext)
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeUserAuth, &logutils.FieldArgs{"user auth type id": item.ID}, err)
+			}
+			if len(users) == 0 {
+				sa.abortTransaction(sessionContext)
+				return errors.ErrorAction(logutils.ActionFind, "for some reasons user is nil for user auth type", &logutils.FieldArgs{"user auth type id": item.ID})
+			}
+			user := users[0]
 
-		//4. update the user record
-		replaceFilter := bson.M{"_id": user.ID}
-		err = sa.db.users.ReplaceOneWithContext(sessionContext, replaceFilter, user, nil)
+			//3. update the user auth type in the user record
+			appsAccounts := user.ApplicationsAccounts
+			newAppsAccounts := make([]model.ApplicationUserAccount, len(appsAccounts))
+			for i, appAccount := range appsAccounts {
+				authTypes := appAccount.AuthTypes
+				newAuthTypes := make([]model.UserAuthType, len(authTypes))
+				for j, uAuthType := range authTypes {
+					if uAuthType.ID == item.ID {
+						newAuthTypes[j] = item
+					} else {
+						newAuthTypes[j] = uAuthType
+					}
+				}
+
+				appAccount.AuthTypes = newAuthTypes
+
+				newAppsAccounts[i] = appAccount
+			}
+			user.ApplicationsAccounts = newAppsAccounts
+
+			//4. update the user record
+			replaceFilter := bson.M{"_id": user.ID}
+			err = sa.db.users.ReplaceOneWithContext(sessionContext, replaceFilter, user, nil)
+			if err != nil {
+				sa.abortTransaction(sessionContext)
+				return errors.WrapErrorAction(logutils.ActionReplace, model.TypeUser, nil, err)
+			}
+
+			//commit the transaction
+			err = sessionContext.CommitTransaction(sessionContext)
+			if err != nil {
+				sa.abortTransaction(sessionContext)
+				return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
+			}
+			return nil
+		})
 		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionReplace, model.TypeUser, nil, err)
+			return err
 		}
 
-		//commit the transaction
-		err = sessionContext.CommitTransaction(sessionContext)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+		return nil */
 }
 
 //FindCredentialsByID finds a set of credentials by ID

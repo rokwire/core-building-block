@@ -174,13 +174,13 @@ func (a *oidcAuthImpl) externalLogin(creds string, authType model.AuthType, appT
 	return externalUser, nil
 }
 
-func (a *oidcAuthImpl) userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, l *logs.Log) (*model.User, error) {
+func (a *oidcAuthImpl) userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, l *logs.Log) (*model.Account, error) {
 	appID := appType.Application.ID
 	authTypeID := authType.ID
 
 	user, err := a.auth.storage.FindUser(appID, authTypeID, externalUserIdentifier)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUser, nil, err) //TODO add args..
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 	return user, nil
 }

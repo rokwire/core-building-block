@@ -5,14 +5,12 @@ import (
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"crypto/rsa"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt"
-	"github.com/google/uuid"
 	"github.com/rokmetro/auth-library/authservice"
 	"github.com/rokmetro/auth-library/authutils"
 	"github.com/rokmetro/auth-library/tokenauth"
@@ -157,91 +155,94 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	return auth, nil
 }
 
-func (a *Auth) applyExternalAuthType(authType model.AuthType, creds string, appType model.ApplicationType, params string, l *logs.Log) (*model.User, *model.UserAuthType, error) {
-	var user *model.User
-	var userAuthType *model.UserAuthType
+func (a *Auth) applyExternalAuthType(authType model.AuthType, creds string, appType model.ApplicationType, params string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
 
-	//external auth type
-	authImpl, err := a.getExternalAuthTypeImpl(authType)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
-	}
+	return nil, nil, nil
+	/*	var user *model.User
+		var userAuthType *model.UserAuthType
 
-	//1. get the user from the external system
-	externalUser, err := authImpl.externalLogin(creds, authType, appType, params, l)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction("error getting external user", "external user", nil, err)
-	}
-
-	//2. check if the user exists
-	user, err = authImpl.userExist(externalUser.Identifier, authType, appType, l)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction("error checking if external user exists", "external user", nil, err)
-	}
-	if user != nil {
-		//user exists, just check if need to update it
-
-		//get the current external user
-		userAuthType = user.FindUserAuthType(appType.Application.ID, authType.ID)
-		if userAuthType == nil {
-			return nil, nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
-		}
-		currentDataMap := userAuthType.Params["user"]
-		currentDataJson, err := utils.ConvertToJSON(currentDataMap)
+		//external auth type
+		authImpl, err := a.getExternalAuthTypeImpl(authType)
 		if err != nil {
-			return nil, nil, errors.WrapErrorAction("error converting map to json", "", nil, err)
+			return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
 		}
-		var currentData *model.ExternalSystemUser
-		err = json.Unmarshal(currentDataJson, &currentData)
+
+		//1. get the user from the external system
+		externalUser, err := authImpl.externalLogin(creds, authType, appType, params, l)
 		if err != nil {
-			return nil, nil, errors.ErrorAction("error converting json to type", "", nil)
+			return nil, nil, errors.WrapErrorAction("error getting external user", "external user", nil, err)
 		}
 
-		newData := *externalUser
+		//2. check if the user exists
+		user, err = authImpl.userExist(externalUser.Identifier, authType, appType, l)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction("error checking if external user exists", "external user", nil, err)
+		}
+		if user != nil {
+			//user exists, just check if need to update it
 
-		//check if external system user needs to be updated
-		if !currentData.Equals(newData) {
-			//there is changes so we need to update it
-			userAuthType.Params["user"] = newData
-			err = a.storage.UpdateUserAuthType(*userAuthType)
+			//get the current external user
+			userAuthType = user.FindUserAuthType(appType.Application.ID, authType.ID)
+			if userAuthType == nil {
+				return nil, nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
+			}
+			currentDataMap := userAuthType.Params["user"]
+			currentDataJson, err := utils.ConvertToJSON(currentDataMap)
 			if err != nil {
-				return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
+				return nil, nil, errors.WrapErrorAction("error converting map to json", "", nil, err)
+			}
+			var currentData *model.ExternalSystemUser
+			err = json.Unmarshal(currentDataJson, &currentData)
+			if err != nil {
+				return nil, nil, errors.ErrorAction("error converting json to type", "", nil)
+			}
+
+			newData := *externalUser
+
+			//check if external system user needs to be updated
+			if !currentData.Equals(newData) {
+				//there is changes so we need to update it
+				userAuthType.Params["user"] = newData
+				err = a.storage.UpdateUserAuthType(*userAuthType)
+				if err != nil {
+					return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
+				}
+			}
+
+		} else {
+			//user does not exist, we need to register it
+
+			//app
+			app := appType.Application
+
+			//user auth type
+			userAuthTypeID, _ := uuid.NewUUID()
+			params := map[string]interface{}{}
+			params["identifier"] = externalUser.Identifier
+			params["user"] = externalUser
+			userAuthType = &model.UserAuthType{ID: userAuthTypeID.String(), AuthTypeID: authType.ID, Active: true, Params: params}
+
+			//credential
+			var credential *string //null as the user authenticates outside the system
+
+			//profile
+			profileID, _ := uuid.NewUUID()
+			profile := model.UserProfile{ID: profileID.String(), DateCreated: time.Now()}
+
+			//useSharedUser
+			useSharedUser := false // for now this is disable
+
+			user, err = a.registerUser(app, *userAuthType, credential, profile, useSharedUser, l)
+			if err != nil {
+				return nil, nil, errors.WrapErrorAction("error register user", model.TypeUser, nil, err)
 			}
 		}
-
-	} else {
-		//user does not exist, we need to register it
-
-		//app
-		app := appType.Application
-
-		//user auth type
-		userAuthTypeID, _ := uuid.NewUUID()
-		params := map[string]interface{}{}
-		params["identifier"] = externalUser.Identifier
-		params["user"] = externalUser
-		userAuthType = &model.UserAuthType{ID: userAuthTypeID.String(), AuthTypeID: authType.ID, Active: true, Params: params}
-
-		//credential
-		var credential *string //null as the user authenticates outside the system
-
-		//profile
-		profileID, _ := uuid.NewUUID()
-		profile := model.UserProfile{ID: profileID.String(), DateCreated: time.Now()}
-
-		//useSharedUser
-		useSharedUser := false // for now this is disable
-
-		user, err = a.registerUser(app, *userAuthType, credential, profile, useSharedUser, l)
-		if err != nil {
-			return nil, nil, errors.WrapErrorAction("error register user", model.TypeUser, nil, err)
-		}
-	}
-	return user, userAuthType, nil
+		return user, userAuthType, nil */
 }
 
-func (a *Auth) applyAuthType(authType model.AuthType, creds string, appType model.ApplicationType, params string, l *logs.Log) (*model.User, *model.UserAuthType, error) {
-	var user *model.User
+func (a *Auth) applyAuthType(authType model.AuthType, creds string, appType model.ApplicationType, params string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
+	return nil, nil, nil
+	/*var user *model.User
 	var userAuthType *model.UserAuthType
 
 	//auth type
@@ -272,10 +273,10 @@ func (a *Auth) applyAuthType(authType model.AuthType, creds string, appType mode
 		return nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
 	}
 
-	return user, userAuthType, nil
+	return user, userAuthType, nil */
 }
 
-func (a *Auth) applyLogin(user model.User, userAuthType model.UserAuthType, params interface{}, l *logs.Log) (*string, *string, error) {
+func (a *Auth) applyLogin(user model.Account, userAuthType model.AccountAuthType, params interface{}, l *logs.Log) (*string, *string, error) {
 	//TODO add login session which keeps the tokens, the auth type params(illinois tokens), eventually the device etc
 	//TODO think if to return the whole login session object..
 	/*
@@ -305,50 +306,50 @@ func (a *Auth) applyLogin(user model.User, userAuthType model.UserAuthType, para
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		Registered user (User): Registered User object
-func (a *Auth) registerUser(app model.Application,
-	userAuthType model.UserAuthType,
-	credential *string,
-	profile model.UserProfile,
-	useSharedUser bool,
-	l *logs.Log) (*model.User, error) {
-	//TODO - do this in one transaction - here, not in the storage
+/*func (a *Auth) registerUser(app model.Application,
+userAuthType model.UserAuthType,
+credential *string,
+profile model.UserProfile,
+useSharedUser bool,
+l *logs.Log) (*model.User, error) {
+//TODO - do this in one transaction - here, not in the storage
 
-	/*	//TODO
-		//1. create user
+/*	//TODO
+	//1. create user
 
-		userID, _ := uuid.NewUUID()
+	userID, _ := uuid.NewUUID()
 
-		appUserAccountID, _ := uuid.NewUUID()
-		authTypes := []model.UserAuthType{userAuthType}
-		appUserAccount := model.ApplicationUserAccount{ID: appUserAccountID.String(), AppID: appType.Application.ID,
-			AuthTypes: authTypes, Active2FA: false}
-		appsUserAccounts := []model.ApplicationUserAccount{appUserAccount}
+	appUserAccountID, _ := uuid.NewUUID()
+	authTypes := []model.UserAuthType{userAuthType}
+	appUserAccount := model.ApplicationUserAccount{ID: appUserAccountID.String(), AppID: appType.Application.ID,
+		AuthTypes: authTypes, Active2FA: false}
+	appsUserAccounts := []model.ApplicationUserAccount{appUserAccount}
 
-		user := model.User{ID: userID.String(), ApplicationsAccounts: appsUserAccounts}
+	user := model.User{ID: userID.String(), ApplicationsAccounts: appsUserAccounts}
 
-		_, err := a.storage.InsertUser(user)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeUser, nil, err)
-		}
+	_, err := a.storage.InsertUser(user)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeUser, nil, err)
+	}
 
-		//Or no..
-		//2. create application user
+	//Or no..
+	//2. create application user
 
-		//3. create organizations memberhips
-	*/
-	///TODO return user
+	//3. create organizations memberhips
+*/
+/*	///TODO return user
 	return nil, nil
-}
+} */
 
 //findAccount retrieves a user's account information
-func (a *Auth) findAccount(userAuth *model.UserAuth) (*model.User, error) {
+func (a *Auth) findAccount(userAuth *model.UserAuth) (*model.Account, error) {
 	//TODO
 	return nil, nil
 	//return a.storage.FindUserByAccountID(userAuth.AccountID)
 }
 
 //createAccount creates a new user account
-func (a *Auth) createAccount(userAuth *model.UserAuth) (*model.User, error) {
+func (a *Auth) createAccount(userAuth *model.UserAuth) (*model.Account, error) {
 	/*	if userAuth == nil {
 			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeUserAuth, nil)
 		}
@@ -362,7 +363,7 @@ func (a *Auth) createAccount(userAuth *model.UserAuth) (*model.User, error) {
 }
 
 //updateAccount updates a user's account information
-func (a *Auth) updateAccount(user *model.User, orgID string, newOrgData *map[string]interface{}) (*model.User, error) {
+func (a *Auth) updateAccount(user *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error) {
 	return a.storage.UpdateUser(user, orgID, newOrgData)
 }
 
@@ -371,7 +372,7 @@ func (a *Auth) deleteAccount(id string) error {
 	return a.storage.DeleteUser(id)
 }
 
-func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.User, error) {
+func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.Account, error) {
 	return nil, nil
 	/*if userAuth == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUserAuth))
@@ -426,7 +427,7 @@ func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.User, error) {
 }
 
 //needsUserUpdate determines if user should be updated by userAuth (assumes userAuth is most up-to-date)
-func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.User) (*model.User, bool, bool) {
+func (a *Auth) needsUserUpdate(userAuth *model.UserAuth, user *model.Account) (*model.Account, bool, bool) {
 	return nil, false, false
 	/*	update := false
 

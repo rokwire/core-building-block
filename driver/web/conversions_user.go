@@ -6,19 +6,19 @@ import (
 )
 
 //User
-func userFromDef(item *Def.User) model.User {
+func userFromDef(item *Def.User) model.Account {
 	if item == nil {
-		return model.User{}
+		return model.Account{}
 	}
 
 	// account := userAccountFromDef(item.Account)
 	// profile := userProfileFromDef(item.Profile)
 	//TODO: add permissions
-	return model.User{ID: item.Id}
+	return model.Account{ID: item.Id}
 
 }
 
-func userToDef(item *model.User) *Def.User {
+func userToDef(item *model.Account) *Def.User {
 	if item == nil {
 		return nil
 	}
@@ -47,14 +47,14 @@ func userAccountToDef(item *model.UserAccount) *Def.UserAccount {
 }
 */
 //UserProfile
-func userProfileFromDef(item *Def.UserProfile) *model.UserProfile {
+func userProfileFromDef(item *Def.UserProfile) *model.Profile {
 	if item == nil {
 		return nil
 	}
-	return &model.UserProfile{ID: item.Id, FirstName: defString(item.FirstName), LastName: defString(item.LastName), PhotoURL: defString(item.PhotoUrl)}
+	return &model.Profile{ID: item.Id, FirstName: defString(item.FirstName), LastName: defString(item.LastName), PhotoURL: defString(item.PhotoUrl)}
 }
 
-func userProfileToDef(item *model.UserProfile) *Def.UserProfile {
+func userProfileToDef(item *model.Profile) *Def.UserProfile {
 	if item == nil {
 		return nil
 	}
@@ -74,8 +74,8 @@ func deviceToDef(item *model.Device) *Def.Device {
 		return nil
 	}
 
-	users := make([]string, len(item.Users))
-	for i, user := range item.Users {
+	users := make([]string, len(item.Accounts))
+	for i, user := range item.Accounts {
 		users[i] = user.ID
 	}
 

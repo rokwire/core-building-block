@@ -12,9 +12,9 @@ import (
 //authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
 type authType interface {
 	//userExist checks if the user exists for the application type
-	userExist(authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*model.User, error)
+	userExist(authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*model.Account, error)
 	//checkCredentials checks if the user credentials are valid for the application
-	checkCredentials(userAuthType model.UserAuthType, creds string, l *logs.Log) (*bool, error)
+	checkCredentials(userAuthType model.AccountAuthType, creds string, l *logs.Log) (*bool, error)
 }
 
 //externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
@@ -27,7 +27,7 @@ type externalAuthType interface {
 	externalLogin(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*model.ExternalSystemUser, error)
 
 	//userExist checks if the user exists
-	userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, l *logs.Log) (*model.User, error)
+	userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, l *logs.Log) (*model.Account, error)
 
 	//TODO refresh
 }
@@ -53,7 +53,7 @@ type APIs interface {
 	//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//		User (User): User object for authenticated user
 	//		Params (interface{}): authType-specific set of parameters passed back to client
-	Login(authType string, creds string, appID string, params string, l *logs.Log) (string, string, *model.User, interface{}, error)
+	Login(authType string, creds string, appID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
@@ -117,13 +117,14 @@ type Storage interface {
 	LoadAuthTypes() ([]model.AuthType, error)
 
 	//Users
-	FindUser(appID string, authTypeID string, authTypeIdentifier string) (*model.User, error)
-	InsertUser(user model.User) (*model.User, error)
-	UpdateUser(user *model.User, orgID string, newOrgData *map[string]interface{}) (*model.User, error)
+	FindUser(appID string, authTypeID string, authTypeIdentifier string) (*model.Account, error)
+	InsertUser(user model.Account) (*model.Account, error)
+	UpdateUser(user *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
 	DeleteUser(id string) error
 
+	//TODO
 	//UserAuthTypes
-	UpdateUserAuthType(item model.UserAuthType) error
+	UpdateUserAuthType(item model.AccountAuthType) error
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)
