@@ -21,21 +21,22 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
-	authTypes               *collectionWrapper
-	identityProviders       *collectionWrapper
-	users                   *collectionWrapper
-	devices                 *collectionWrapper
-	credentials             *collectionWrapper
-	refreshTokens           *collectionWrapper
-	globalConfig            *collectionWrapper
-	organizations           *collectionWrapper
-	serviceRegs             *collectionWrapper
-	serviceAuthorizations   *collectionWrapper
-	applications            *collectionWrapper
-	applicationsGroups      *collectionWrapper
-	applicationsRoles       *collectionWrapper
-	applicationsPermissions *collectionWrapper
-	applicationsUsers       *collectionWrapper
+	authTypes                 *collectionWrapper
+	identityProviders         *collectionWrapper
+	users                     *collectionWrapper
+	devices                   *collectionWrapper
+	credentials               *collectionWrapper
+	refreshTokens             *collectionWrapper
+	globalConfig              *collectionWrapper
+	serviceRegs               *collectionWrapper
+	serviceAuthorizations     *collectionWrapper
+	organizations             *collectionWrapper
+	applications              *collectionWrapper
+	applicationsOrganizations *collectionWrapper
+	applicationsGroups        *collectionWrapper
+	applicationsRoles         *collectionWrapper
+	applicationsPermissions   *collectionWrapper
+	applicationsUsers         *collectionWrapper
 
 	listeners []Listener
 }
@@ -105,12 +106,6 @@ func (m *database) start() error {
 		return err
 	}
 
-	organizations := &collectionWrapper{database: m, coll: db.Collection("organizations")}
-	err = m.applyOrganizationsChecks(organizations)
-	if err != nil {
-		return err
-	}
-
 	serviceRegs := &collectionWrapper{database: m, coll: db.Collection("service_regs")}
 	err = m.applyServiceRegsChecks(serviceRegs)
 	if err != nil {
@@ -123,8 +118,20 @@ func (m *database) start() error {
 		return err
 	}
 
+	organizations := &collectionWrapper{database: m, coll: db.Collection("organizations")}
+	err = m.applyOrganizationsChecks(organizations)
+	if err != nil {
+		return err
+	}
+
 	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
 	err = m.applyApplicationsChecks(applications)
+	if err != nil {
+		return err
+	}
+
+	applicationsOrganziations := &collectionWrapper{database: m, coll: db.Collection("applications_organizations")}
+	err = m.applyApplicationsOrganizationsChecks(applicationsOrganziations)
 	if err != nil {
 		return err
 	}
@@ -164,10 +171,11 @@ func (m *database) start() error {
 	m.credentials = credentials
 	m.refreshTokens = refreshTokens
 	m.globalConfig = globalConfig
-	m.organizations = organizations
 	m.serviceRegs = serviceRegs
 	m.serviceAuthorizations = serviceAuthorizations
+	m.organizations = organizations
 	m.applications = applications
+	m.applicationsOrganizations = applicationsOrganziations
 	m.applicationsGroups = applicationsGroups
 	m.applicationsRoles = applicationsRoles
 	m.applicationsPermissions = applicationsPermissions
@@ -285,25 +293,6 @@ func (m *database) applyGlobalConfigChecks(configs *collectionWrapper) error {
 	return nil
 }
 
-func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) error {
-	m.logger.Info("apply organizations checks.....")
-
-	//add name index - unique
-	err := organizations.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}}, true)
-	if err != nil {
-		return err
-	}
-
-	//add applications index
-	err = organizations.AddIndex(bson.D{primitive.E{Key: "applications", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	m.logger.Info("organizations checks passed")
-	return nil
-}
-
 func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error {
 	m.logger.Info("apply service regs checks.....")
 
@@ -330,6 +319,27 @@ func (m *database) applyServiceAuthorizationsChecks(serviceAuthorizations *colle
 	return nil
 }
 
+func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) error {
+	m.logger.Info("apply organizations checks.....")
+
+	//add name index - unique
+	err := organizations.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	//TODO
+
+	//add applications index
+	err = organizations.AddIndex(bson.D{primitive.E{Key: "applications", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("organizations checks passed")
+	return nil
+}
+
 func (m *database) applyApplicationsChecks(applications *collectionWrapper) error {
 	m.logger.Info("apply applications checks.....")
 
@@ -352,6 +362,21 @@ func (m *database) applyApplicationsChecks(applications *collectionWrapper) erro
 	}
 
 	m.logger.Info("applications checks passed")
+	return nil
+}
+
+func (m *database) applyApplicationsOrganizationsChecks(applicationsOrganizations *collectionWrapper) error {
+	m.logger.Info("apply applications organizations checks.....")
+
+	//add compound unique index - application + auth type + auth type identifier
+	err := applicationsOrganizations.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1},
+		primitive.E{Key: "org_id", Value: 1}},
+		true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("applications organizations checks passed")
 	return nil
 }
 
