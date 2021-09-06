@@ -64,6 +64,9 @@ type Auth struct {
 	cachedIdentityProviders *syncmap.Map //cache identityProviders
 	identityProvidersLock   *sync.RWMutex
 
+	cachedApplicationsOrganizations *syncmap.Map //cache applications organizations
+	applicationsOrganizationsLock   *sync.RWMutex
+
 	//delete refresh tokens timer
 	deleteRefreshTimer *time.Timer
 	timerDone          chan bool
@@ -100,11 +103,15 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	cachedIdentityProviders := &syncmap.Map{}
 	identityProvidersLock := &sync.RWMutex{}
 
+	cachedApplicationsOrganizations := &syncmap.Map{}
+	applicationsOrganizationsLock := &sync.RWMutex{}
+
 	timerDone := make(chan bool)
 	auth := &Auth{storage: storage, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes,
 		authPrivKey: authPrivKey, AuthService: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
 		maxTokenExp: *maxTokenExp, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
+		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock,
 		timerDone: timerDone}
 
 	err := auth.storeReg()
@@ -140,6 +147,11 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	err = auth.cacheIdentityProviders()
 	if err != nil {
 		logger.Warnf("NewAuth() failed to cache identity providers: %v", err)
+	}
+
+	err = auth.cacheApplicationsOrganizations()
+	if err != nil {
+		logger.Warnf("NewAuth() failed to cache applications organizations: %v", err)
 	}
 
 	return auth, nil
@@ -724,6 +736,57 @@ func (a *Auth) getCachedIdentityProviderConfig(id string, appTypeID string) (*mo
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderConfig, errArgs)
 	}
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, errArgs)
+}
+
+//cacheApplicationsOrganizations caches the applications organizations
+func (a *Auth) cacheApplicationsOrganizations() error {
+	a.logger.Info("cacheApplicationsOrganizations..")
+
+	applicationsOrganizations, err := a.storage.LoadApplicationsOrganizations()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
+
+	a.setCachedApplicationsOrganizations(applicationsOrganizations)
+
+	return nil
+}
+
+func (a *Auth) setCachedApplicationsOrganizations(applicationsOrganization []model.ApplicationOrganization) {
+	a.applicationsOrganizationsLock.Lock()
+	defer a.applicationsOrganizationsLock.Unlock()
+
+	a.cachedApplicationsOrganizations = &syncmap.Map{}
+	validate := validator.New()
+
+	for _, appOrg := range applicationsOrganization {
+		err := validate.Struct(appOrg)
+		if err == nil {
+			key := fmt.Sprintf("%s_%s", appOrg.Application.ID, appOrg.Organization.ID)
+			a.cachedApplicationsOrganizations.Store(key, appOrg)
+		} else {
+			a.logger.Errorf("failed to validate and cache applications organizations with ids %s: %s",
+				appOrg.Application.ID, appOrg.Organization.ID, err.Error())
+		}
+	}
+}
+
+func (a *Auth) getCachedApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
+	a.applicationsOrganizationsLock.RLock()
+	defer a.applicationsOrganizationsLock.RUnlock()
+
+	key := fmt.Sprintf("%s_%s", appID, orgID)
+	errArgs := &logutils.FieldArgs{"key": key}
+
+	item, _ := a.cachedApplicationsOrganizations.Load(key)
+	if item != nil {
+		appOrg, ok := item.(model.ApplicationOrganization)
+		if !ok {
+			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplicationOrganization, errArgs)
+		}
+		return &appOrg, nil
+	}
+	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, errArgs)
 }
 
 func (a *Auth) checkRefreshTokenLimit(orgID string, appID string, credsID string) error {
