@@ -21,7 +21,7 @@ type authType interface {
 //these are the different identity providers - illinois_oidc etc
 type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
-	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
+	getLoginURL(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//externalLogin logins in the external system and provides the authenticated user
 	externalLogin(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*model.ExternalSystemUser, error)

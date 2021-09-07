@@ -2,7 +2,6 @@ package auth
 
 import (
 	"core-building-block/core/model"
-	"log"
 	"strings"
 
 	"github.com/rokmetro/auth-library/authorization"
@@ -203,31 +202,19 @@ func (a *Auth) GetLoginURL(authenticationType string, appID string, orgID string
 		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
-	log.Println(authType)
-	log.Println(appType)
-	log.Println(appOrg)
+	//get the auth type implementation for the auth type
+	authImpl, err := a.getExternalAuthTypeImpl(*authType)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
 
-	return "", nil, nil
-	/*
-		//validate if the provided auth type is supported by the provided application
-		authTypeEntity, appTypeEntity, err := a.validateAuthType(authType, appID)
-		if err != nil {
-			return "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
-		}
+	//get login URL
+	loginURL, params, err := authImpl.getLoginURL(*authType, *appType, *appOrg, redirectURI, l)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "login url", nil, err)
+	}
 
-		//get the auth type implementation for the auth type
-		authImpl, err := a.getExternalAuthTypeImpl(*authTypeEntity)
-		if err != nil {
-			return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
-		}
-
-		//get login URL
-		loginURL, params, err := authImpl.getLoginURL(*authTypeEntity, *appTypeEntity, redirectURI, l)
-		if err != nil {
-			return "", nil, errors.WrapErrorAction(logutils.ActionGet, "login url", nil, err)
-		}
-
-		return loginURL, params, nil */
+	return loginURL, params, nil
 }
 
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or

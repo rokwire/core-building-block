@@ -206,7 +206,7 @@ func (a *oidcAuthImpl) refresh(params map[string]interface{}, orgID string, appI
 	return userAuth, nil */
 }
 
-func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	oidcConfig, err := a.getOidcAuthConfig(authType, appType)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
