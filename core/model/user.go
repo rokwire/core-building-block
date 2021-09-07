@@ -45,6 +45,7 @@ type AccountAuthType struct {
 	Account  Account
 
 	Identifier string
+	Params     interface{}
 
 	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
 
