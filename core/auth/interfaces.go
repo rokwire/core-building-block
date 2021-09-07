@@ -23,7 +23,7 @@ type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 
-	//externalLogin logins in the external system and provides the logged in user
+	//externalLogin logins in the external system and provides the authenticated user
 	externalLogin(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*model.ExternalSystemUser, error)
 
 	//userExist checks if the user exists
@@ -69,12 +69,13 @@ type APIs interface {
 	//	Input:
 	//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		appID (string): ID of the app/client that the user is logging in from
+	//		orgID (string): ID of the organization that the user is logging in from
 	//		redirectURI (string): Registered redirect URI where client will receive response
 	//		l (*loglib.Log): Log object pointer for request
 	//	Returns:
 	//		Login URL (string): SSO provider login URL to be launched in a browser
 	//		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
-	GetLoginURL(authType string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
+	GetLoginURL(authType string, appID string, orgID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and

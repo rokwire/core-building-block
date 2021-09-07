@@ -150,6 +150,7 @@ type AuthLoginResponse struct {
 type AuthLoginUrlRequest struct {
 	AppId       string                      `json:"app_id"`
 	AuthType    AuthLoginUrlRequestAuthType `json:"auth_type"`
+	OrgId       string                      `json:"org_id"`
 	RedirectUri string                      `json:"redirect_uri"`
 }
 

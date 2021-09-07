@@ -189,12 +189,14 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 //	Input:
 //		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		appID (string): ID of the app/client that the user is logging in from
+//		orgID (string): ID of the organization that the user is logging in from
 //		redirectURI (string): Registered redirect URI where client will receive response
 //		l (*loglib.Log): Log object pointer for request
 //	Returns:
 //		Login URL (string): SSO provider login URL to be launched in a browser
 //		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
-func (a *Auth) GetLoginURL(authType string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *Auth) GetLoginURL(authType string, appID string, orgID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+	//TODO org id
 	//validate if the provided auth type is supported by the provided application
 	authTypeEntity, appTypeEntity, err := a.validateAuthType(authType, appID)
 	if err != nil {
