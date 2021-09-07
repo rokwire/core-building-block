@@ -116,11 +116,11 @@ type Storage interface {
 	//AuthTypes
 	LoadAuthTypes() ([]model.AuthType, error)
 
-	//Users
-	FindUser(appID string, authTypeID string, authTypeIdentifier string) (*model.Account, error)
-	InsertUser(user model.Account) (*model.Account, error)
-	UpdateUser(user *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
-	DeleteUser(id string) error
+	//Accounts
+	FindAccount(appID string, authTypeID string, authTypeIdentifier string) (*model.Account, error)
+	InsertAccount(account model.Account) (*model.Account, error)
+	UpdateAccount(account *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
+	DeleteAccount(id string) error
 
 	//TODO
 	//UserAuthTypes

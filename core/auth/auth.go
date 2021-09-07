@@ -364,12 +364,12 @@ func (a *Auth) createAccount(userAuth *model.UserAuth) (*model.Account, error) {
 
 //updateAccount updates a user's account information
 func (a *Auth) updateAccount(user *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error) {
-	return a.storage.UpdateUser(user, orgID, newOrgData)
+	return a.storage.UpdateAccount(user, orgID, newOrgData)
 }
 
 //deleteAccount deletes a user account
 func (a *Auth) deleteAccount(id string) error {
-	return a.storage.DeleteUser(id)
+	return a.storage.DeleteAccount(id)
 }
 
 func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.Account, error) {

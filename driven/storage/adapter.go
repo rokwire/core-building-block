@@ -230,8 +230,8 @@ func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
 	return result, nil
 }
 
-//FindUser finds an user for app, auth type and auth type identifier
-func (sa *Adapter) FindUser(appID string, authTypeID string, authTypeIdentifier string) (*model.Account, error) {
+//FindAccount finds an account for app, auth type and auth type identifier
+func (sa *Adapter) FindAccount(appID string, authTypeID string, authTypeIdentifier string) (*model.Account, error) {
 	/*	filter := bson.D{primitive.E{Key: "applications_accounts.app_id", Value: appID},
 			primitive.E{Key: "applications_accounts.auth_types.auth_type_id", Value: authTypeID},
 			primitive.E{Key: "applications_accounts.auth_types.params.identifier", Value: authTypeIdentifier}}
@@ -250,12 +250,12 @@ func (sa *Adapter) FindUser(appID string, authTypeID string, authTypeIdentifier 
 	return nil, nil
 }
 
-//FindUserByID finds an user by id
-func (sa *Adapter) FindUserByID(id string) (*model.Account, error) {
-	return sa.findUser("_id", id)
+//FindAccountByID finds an account by id
+func (sa *Adapter) FindAccountByID(id string) (*model.Account, error) {
+	return sa.findAccount("_id", id)
 }
 
-func (sa *Adapter) findUser(key string, id string) (*model.Account, error) {
+func (sa *Adapter) findAccount(key string, id string) (*model.Account, error) {
 	/*filter := bson.M{key: id}
 	var users []user
 	err := sa.db.users.Find(filter, &users, nil)
@@ -275,8 +275,8 @@ func (sa *Adapter) findUser(key string, id string) (*model.Account, error) {
 	return nil, nil
 }
 
-//InsertUser inserts a user
-func (sa *Adapter) InsertUser(user model.Account) (*model.Account, error) {
+//InsertAccount inserts an account
+func (sa *Adapter) InsertAccount(account model.Account) (*model.Account, error) {
 	/*storageUser := userToStorage(&user)
 
 	_, err := sa.db.users.InsertOne(storageUser)
@@ -348,8 +348,8 @@ func (sa *Adapter) InsertUser(user model.Account) (*model.Account, error) {
 	*/
 }
 
-//UpdateUser updates an existing user
-func (sa *Adapter) UpdateUser(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error) {
+//UpdateAccount updates an existing account
+func (sa *Adapter) UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error) {
 	return nil, nil
 	/*if updatedUser == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUser))
@@ -426,8 +426,8 @@ func (sa *Adapter) UpdateUser(updatedUser *model.Account, orgID string, newOrgDa
 	*/
 }
 
-//DeleteUser deletes a user
-func (sa *Adapter) DeleteUser(id string) error {
+//DeleteAccount deletes an account
+func (sa *Adapter) DeleteAccount(id string) error {
 	//TODO - we have to decide what we do on delete user operation - removing all user relations, (or) mark the user disabled etc
 	return errors.New(logutils.Unimplemented)
 }

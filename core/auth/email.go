@@ -23,7 +23,7 @@ func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.Applica
 	authTypeID := authType.ID
 	authTypeIdentifier := "silyana@inabit.bg" //TODO get it from the creds string
 
-	user, err := a.auth.storage.FindUser(appID, authTypeID, authTypeIdentifier)
+	user, err := a.auth.storage.FindAccount(appID, authTypeID, authTypeIdentifier)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}

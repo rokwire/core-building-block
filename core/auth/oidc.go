@@ -178,7 +178,7 @@ func (a *oidcAuthImpl) userExist(externalUserIdentifier string, authType model.A
 	appID := appType.Application.ID
 	authTypeID := authType.ID
 
-	user, err := a.auth.storage.FindUser(appID, authTypeID, externalUserIdentifier)
+	user, err := a.auth.storage.FindAccount(appID, authTypeID, externalUserIdentifier)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
