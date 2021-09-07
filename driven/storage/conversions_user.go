@@ -4,26 +4,23 @@ import (
 	"core-building-block/core/model"
 )
 
-//User
-func userFromStorage(item *user, sa *Adapter) model.Account {
-	/*	if item == nil {
-			return model.User{}
-		}
-
-		id := item.ID
-		applicationsAccounts := item.ApplicationsAccounts
-		profile := item.Profile
-		devices := userDevicesFromStorage(*item)
-		dateCreated := item.DateCreated
-		dateUpdated := item.DateUpdated
-
-		return model.User{ID: id, ApplicationsAccounts: applicationsAccounts, Profile: profile,
-			Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated} */
-	return model.Account{}
-
+//Account
+func accountFromStorage(item account, sa *Adapter, application model.Application, organziation model.Organization) model.Account {
+	id := item.ID
+	permissions := applicationPermissionsFromStorage(item.Permissions, application)
+	roles := applicationRolesFromStorage(item.Roles, application)
+	groups := applicationGroupsFromStorage(item.Groups, application)
+	authTypes := accountAuthTypesFromStorage(item.AuthTypes)
+	profile := profileFromStorage(item.Profile)
+	devices := accountDevicesFromStorage(item)
+	dateCreated := item.DateCreated
+	dateUpdated := item.DateUpdated
+	return model.Account{ID: id, Application: application, Organization: organziation,
+		Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes, Profile: profile,
+		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
-func userToStorage(item *model.Account) *user {
+func accountToStorage(item *model.Account) *account {
 	/*	if item == nil {
 			return nil
 		}
@@ -40,46 +37,75 @@ func userToStorage(item *model.Account) *user {
 	return nil
 }
 
-func userDevicesFromStorage(item user) []model.Device {
+func accountDevicesFromStorage(item account) []model.Device {
 	devices := make([]model.Device, len(item.Devices))
 
 	for i, device := range item.Devices {
-		devices[i] = userDeviceFromStorage(device)
+		devices[i] = accountDeviceFromStorage(device)
 	}
 	return devices
 }
 
-func userDeviceFromStorage(item userDevice) model.Device {
+func accountDeviceFromStorage(item userDevice) model.Device {
 	return model.Device{ID: item.ID, Type: item.Type, OS: item.OS, MacAddress: item.MacAddress,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-func userDevicesToStorage(item *model.Account) []userDevice {
+func accountDevicesToStorage(item *model.Account) []userDevice {
 	devices := make([]userDevice, len(item.Devices))
 
 	for i, device := range item.Devices {
-		devices[i] = userDeviceToStorage(device)
+		devices[i] = accountDeviceToStorage(device)
 	}
 	return devices
 }
 
-func userDeviceToStorage(item model.Device) userDevice {
+func accountDeviceToStorage(item model.Device) userDevice {
 	return userDevice{ID: item.ID, Type: item.Type, OS: item.OS, MacAddress: item.MacAddress,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-//Device
+//AccountAuthType
+func accountAuthTypeFromStorage(item accountAuthType) model.AccountAuthType {
+	id := item.ID
+	authType := model.AuthType{ID: item.AuthTypeID}
+	identifier := item.Identifier
+	params := item.Params
+	active := item.Active
+	active2FA := item.Active2FA
+	return model.AccountAuthType{ID: id, AuthType: authType, Identifier: identifier, Params: params,
+		Active: active, Active2FA: active2FA, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
 
+func accountAuthTypesFromStorage(items []accountAuthType) []model.AccountAuthType {
+	if len(items) == 0 {
+		return make([]model.AccountAuthType, 0)
+	}
+
+	res := make([]model.AccountAuthType, len(items))
+	for i, aat := range items {
+		res[i] = accountAuthTypeFromStorage(aat)
+	}
+	return res
+}
+
+//Profile
+func profileFromStorage(item profile) model.Profile {
+	return model.Profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+//Device
 func deviceToStorage(item *model.Device) *device {
 	if item == nil {
 		return nil
 	}
 
-	users := make([]string, len(item.Accounts))
-	for i, user := range item.Accounts {
-		users[i] = user.ID
+	accounts := make([]string, len(item.Accounts))
+	for i, account := range item.Accounts {
+		accounts[i] = account.ID
 	}
 
 	return &device{ID: item.ID, Type: item.Type, OS: item.OS, MacAddress: item.MacAddress,
-		Users: users, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Accounts: accounts, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
