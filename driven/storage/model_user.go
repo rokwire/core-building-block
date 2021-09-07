@@ -33,8 +33,8 @@ type accountAuthType struct {
 	Active       bool        `bson:"active"`
 	Active2FA    bool        `bson:"active_2fa"`
 
-	DateCreated time.Time
-	DateUpdated *time.Time
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 type profile struct {

@@ -21,20 +21,20 @@ func accountFromStorage(item account, sa *Adapter, application model.Application
 }
 
 func accountToStorage(item *model.Account) *account {
-	/*	if item == nil {
-			return nil
-		}
+	id := item.ID
+	appID := item.Application.ID
+	orgID := item.Organization.ID
+	permissions := applicationPermissionsToStorage(item.Permissions)
+	roles := applicationRolesToStorage(item.Roles)
+	groups := applicationGroupsToStorage(item.Groups)
+	authTypes := accountAuthTypesToStorage(item.AuthTypes)
+	profile := profileToStorage(item.Profile)
+	devices := accountDevicesToStorage(item)
+	dateCreated := item.DateCreated
+	dateUpdated := item.DateUpdated
 
-		id := item.ID
-		applicationsAccounts := item.ApplicationsAccounts
-		profile := item.Profile
-		devices := userDevicesToStorage(item)
-		dateCreated := item.DateCreated
-		dateUpdated := item.DateUpdated
-
-		return &user{ID: id, ApplicationsAccounts: applicationsAccounts, Profile: profile,
-			Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated} */
-	return nil
+	return &account{ID: id, AppID: appID, OrgID: orgID, Permissions: permissions, Roles: roles, Groups: groups,
+		AuthTypes: authTypes, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountDevicesFromStorage(item account) []model.Device {
@@ -89,9 +89,31 @@ func accountAuthTypesFromStorage(items []accountAuthType) []model.AccountAuthTyp
 	return res
 }
 
+func accountAuthTypeToStorage(item model.AccountAuthType) accountAuthType {
+	return accountAuthType{ID: item.ID, AuthTypeID: item.AuthType.ID, Identifier: item.Identifier,
+		Params: item.Params, Active: item.Active, Active2FA: item.Active2FA, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func accountAuthTypesToStorage(items []model.AccountAuthType) []accountAuthType {
+	if len(items) == 0 {
+		return make([]accountAuthType, 0)
+	}
+
+	res := make([]accountAuthType, len(items))
+	for i, aat := range items {
+		res[i] = accountAuthTypeToStorage(aat)
+	}
+	return res
+}
+
 //Profile
 func profileFromStorage(item profile) model.Profile {
 	return model.Profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func profileToStorage(item model.Profile) profile {
+	return profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
