@@ -4,16 +4,45 @@ import (
 	"time"
 )
 
-type user struct {
+type account struct {
 	ID string `bson:"_id"`
 
-	//TODO
-	//ApplicationsAccounts []model.ApplicationUserAccount `bson:"applications_accounts"`
-	//Profile              model.UserProfile              `bson:"profile"`
+	AppID string `bson:"app_id"`
+	OrgID string `bson:"org_id"`
 
-	OrganizationsMemberships []userMembership `bson:"organizations_memberships"`
+	Permissions []applicationPermission `bson:"permissions"`
+	Roles       []applicationRole       `bson:"roles"`
+	Groups      []applicationGroup      `bson:"groups"`
+
+	AuthTypes []accountAuthType `bson:"auth_types"`
+
+	Profile profile `bson:"profile"`
 
 	Devices []userDevice `bson:"devices"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type accountAuthType struct {
+	ID           string      `bson:"id"`
+	AuthTypeID   string      `bson:"auth_type_id"`
+	Identifier   string      `bson:"identifier"`
+	Params       interface{} `bson:"params"`
+	CredentialID *string     `bson:"credential_id"`
+	Active       bool        `bson:"active"`
+	Active2FA    bool        `bson:"active_2fa"`
+
+	DateCreated time.Time
+	DateUpdated *time.Time
+}
+
+type profile struct {
+	ID string `bson:"id"`
+
+	PhotoURL  string `bson:"photo_url"`
+	FirstName string `bson:"first_name"`
+	LastName  string `bson:"last_name"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -46,7 +75,7 @@ type device struct {
 	OS         string `bson:"os"`
 	MacAddress string `bson:"mac_address"`
 
-	Users []string `bson:"users"`
+	Accounts []string `bson:"accounts"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
