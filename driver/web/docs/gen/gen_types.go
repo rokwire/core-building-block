@@ -133,6 +133,7 @@ type AuthLoginRequest struct {
 	AppId    string                   `json:"app_id"`
 	AuthType AuthLoginRequestAuthType `json:"auth_type"`
 	Creds    *interface{}             `json:"creds,omitempty"`
+	OrgId    string                   `json:"org_id"`
 	Params   *interface{}             `json:"params,omitempty"`
 }
 

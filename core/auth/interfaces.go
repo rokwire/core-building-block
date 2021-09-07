@@ -46,14 +46,15 @@ type APIs interface {
 	//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 	//		appID (string): ID of the app/client that the user is logging in from
+	//		orgID (string): ID of the organization that the user is logging in
 	//		params (string): JSON encoded params defined by specified auth type
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 	//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
-	//		User (User): User object for authenticated user
+	//		Account (Account): Account object for authenticated user
 	//		Params (interface{}): authType-specific set of parameters passed back to client
-	Login(authType string, creds string, appID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error)
+	Login(authType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
@@ -69,7 +70,7 @@ type APIs interface {
 	//	Input:
 	//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		appID (string): ID of the app/client that the user is logging in from
-	//		orgID (string): ID of the organization that the user is logging in from
+	//		orgID (string): ID of the organization that the user is logging in
 	//		redirectURI (string): Registered redirect URI where client will receive response
 	//		l (*loglib.Log): Log object pointer for request
 	//	Returns:

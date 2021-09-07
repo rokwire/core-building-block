@@ -1,6 +1,7 @@
 required:
   - auth_type
   - app_id
+  - org_id
 type: object
 properties:
   auth_type:
@@ -11,6 +12,8 @@ properties:
       - phone
       - illinois_oidc
   app_id:
+    type: string
+  org_id:
     type: string
   creds:
     anyOf:
