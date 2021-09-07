@@ -202,10 +202,8 @@ func (m *database) applyIdentityProvidersChecks(identityProviders *collectionWra
 func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 	m.logger.Info("apply accounts checks.....")
 
-	//add compound unique index - application + organization
-	err := accounts.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1},
-		primitive.E{Key: "org_id", Value: 1}},
-		true)
+	//add compound unique index - id + app + org
+	err := accounts.AddIndex(bson.D{primitive.E{Key: "_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
