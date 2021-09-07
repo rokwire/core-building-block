@@ -208,28 +208,23 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 		return err
 	}
 
-	//TODO
-	/*
-		//add user auth type index
-		err := users.AddIndex(bson.D{primitive.E{Key: "applications_accounts.auth_types.id", Value: 1}}, false)
-		if err != nil {
-			return err
-		}
+	//add compound unique index - id + auth type id + identifier
+	err = accounts.AddIndex(bson.D{primitive.E{Key: "_id", Value: 1}, primitive.E{Key: "auth_type_id", Value: 1}, primitive.E{Key: "identifier", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
 
-		//add compound unique index - application + auth type + auth type identifier
-		err = users.AddIndex(bson.D{primitive.E{Key: "applications_accounts.app_id", Value: 1},
-			primitive.E{Key: "applications_accounts.auth_types.auth_type_id", Value: 1},
-			primitive.E{Key: "applications_accounts.auth_types.params.identifier", Value: 1}},
-			true)
-		if err != nil {
-			return err
-		}
+	//add profile index
+	err = accounts.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
 
-		//add profile index
-		err = users.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
-		if err != nil {
-			return err
-		} */
+	//add auth types index
+	err = accounts.AddIndex(bson.D{primitive.E{Key: "auth_types.id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
 
 	m.logger.Info("accounts check passed")
 	return nil
