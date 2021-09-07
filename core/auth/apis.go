@@ -2,6 +2,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"log"
 	"strings"
 
 	"github.com/rokmetro/auth-library/authorization"
@@ -187,7 +188,7 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 
 //GetLoginURL returns a pre-formatted login url for SSO providers
 //	Input:
-//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		appID (string): ID of the app/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in from
 //		redirectURI (string): Registered redirect URI where client will receive response
@@ -195,27 +196,38 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 //	Returns:
 //		Login URL (string): SSO provider login URL to be launched in a browser
 //		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
-func (a *Auth) GetLoginURL(authType string, appID string, orgID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
-	//TODO org id
-	//validate if the provided auth type is supported by the provided application
-	authTypeEntity, appTypeEntity, err := a.validateAuthType(authType, appID)
+func (a *Auth) GetLoginURL(authenticationType string, appID string, orgID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+	//validate if the provided auth type is supported by the provided application and organization
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appID, orgID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
-	//get the auth type implementation for the auth type
-	authImpl, err := a.getExternalAuthTypeImpl(*authTypeEntity)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
-	}
+	log.Println(authType)
+	log.Println(appType)
+	log.Println(appOrg)
 
-	//get login URL
-	loginURL, params, err := authImpl.getLoginURL(*authTypeEntity, *appTypeEntity, redirectURI, l)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "login url", nil, err)
-	}
+	return "", nil, nil
+	/*
+		//validate if the provided auth type is supported by the provided application
+		authTypeEntity, appTypeEntity, err := a.validateAuthType(authType, appID)
+		if err != nil {
+			return "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+		}
 
-	return loginURL, params, nil
+		//get the auth type implementation for the auth type
+		authImpl, err := a.getExternalAuthTypeImpl(*authTypeEntity)
+		if err != nil {
+			return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+		}
+
+		//get login URL
+		loginURL, params, err := authImpl.getLoginURL(*authTypeEntity, *appTypeEntity, redirectURI, l)
+		if err != nil {
+			return "", nil, errors.WrapErrorAction(logutils.ActionGet, "login url", nil, err)
+		}
+
+		return loginURL, params, nil */
 }
 
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or

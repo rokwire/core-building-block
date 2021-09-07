@@ -496,28 +496,36 @@ func (a *Auth) registerExternalAuthType(name string, auth externalAuthType) erro
 	return nil
 }
 
-func (a *Auth) validateAuthType(authType string, appID string) (*model.AuthType, *model.ApplicationType, error) {
-	//get the auth type entity
-	authTypeEntity, err := a.getCachedAuthType(authType)
+func (a *Auth) validateAuthType(authenticationType string, appID string, orgID string) (*model.AuthType, *model.ApplicationType, *model.ApplicationOrganization, error) {
+	//get the auth type
+	authType, err := a.getCachedAuthType(authenticationType)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, logutils.StringArgs(authType), err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, logutils.StringArgs(authenticationType), err)
 	}
 
-	//check if the auth type is supported for the provided application
+	//get the app type
 	applicationType, err := a.storage.FindApplicationTypeByIdentifier(appID)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appID), err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appID), err)
 
 	}
 	if applicationType == nil {
-		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appID))
+		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appID))
 	}
-	//TODO
-	/*if !applicationType.IsAuthTypeSupported(*authTypeEntity) {
-		return nil, nil, errors.ErrorAction(logutils.ActionValidate, "not supported auth type for application", nil)
-	} */
 
-	return authTypeEntity, applicationType, nil
+	//get the app org
+	applicationID := applicationType.Application.ID
+	appOrg, err := a.getCachedApplicationOrganization(applicationID, orgID)
+	if err != nil {
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, logutils.StringArgs(orgID), err)
+	}
+
+	//check if the auth type is supported for this application and organization
+	if !appOrg.IsAuthTypeSupported(*applicationType, *authType) {
+		return nil, nil, nil, errors.ErrorAction(logutils.ActionValidate, "not supported auth type for application and organization", nil)
+	}
+
+	return authType, applicationType, appOrg, nil
 }
 
 func (a *Auth) getAuthTypeImpl(authType model.AuthType) (authType, error) {

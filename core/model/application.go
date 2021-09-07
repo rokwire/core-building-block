@@ -142,9 +142,17 @@ func (a ApplicationOrganization) FindIdentityProviderSetting(identityProviderID 
 	return nil
 }
 
-//IsAuthTypeSupported checks if an auth type is supported
-func (ao ApplicationOrganization) IsAuthTypeSupported(authType AuthType) bool {
-	//TODO
+//IsAuthTypeSupported checks if an auth type is supported for application type
+func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, authType AuthType) bool {
+	for _, sat := range ao.SupportedAuthTypes {
+		if sat.AppTypeID == appType.ID {
+			for _, at := range sat.SupportedAuthTypes {
+				if at.AuthTypeID == authType.ID {
+					return true
+				}
+			}
+		}
+	}
 	return false
 }
 
