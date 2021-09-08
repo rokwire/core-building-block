@@ -40,6 +40,8 @@ func (a *Auth) GetHost() string {
 //		Account (Account): Account object for authenticated user
 //		Params (interface{}): authType-specific set of parameters passed back to client
 func (a *Auth) Login(authenticationType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error) {
+	//TODO - analyse what should go in one transaction
+
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appID, orgID)
 	if err != nil {
