@@ -230,24 +230,37 @@ func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
 	return result, nil
 }
 
-//FindAccount finds an account for app, auth type and auth type identifier
-func (sa *Adapter) FindAccount(appID string, authTypeID string, authTypeIdentifier string) (*model.Account, error) {
-	/*	filter := bson.D{primitive.E{Key: "applications_accounts.app_id", Value: appID},
-			primitive.E{Key: "applications_accounts.auth_types.auth_type_id", Value: authTypeID},
-			primitive.E{Key: "applications_accounts.auth_types.params.identifier", Value: authTypeIdentifier}}
-		var users []user
-		err := sa.db.users.Find(filter, &users, nil)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-		}
-		if len(users) == 0 {
-			//not found
-			return nil, nil
-		}
-		user := users[0]
-		modelUser := userFromStorage(&user, sa)
-		return &modelUser, nil */
-	return nil, nil
+//FindAccount finds an account for app, org, auth type and account auth type identifier
+func (sa *Adapter) FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error) {
+	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
+		primitive.E{Key: "org_id", Value: orgID},
+		primitive.E{Key: "auth_types.auth_type_id", Value: authTypeID},
+		primitive.E{Key: "auth_types.identifier", Value: accountAuthTypeIdentifier}}
+	var accounts []account
+	err := sa.db.accounts.Find(filter, &accounts, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if len(accounts) == 0 {
+		//not found
+		return nil, nil
+	}
+	account := accounts[0]
+
+	//application - from cache
+	application, err := sa.getCachedApplication(account.AppID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+	}
+
+	//organization - from cache
+	organization, err := sa.getCachedOrganization(account.OrgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
+	}
+
+	modelAccount := accountFromStorage(account, sa, *application, *organization)
+	return &modelAccount, nil
 }
 
 //FindAccountByID finds an account by id

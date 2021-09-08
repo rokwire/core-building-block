@@ -18,8 +18,8 @@ type phoneAuthImpl struct {
 	authType string
 }
 
-func (a *phoneAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*model.Account, error) {
-	return nil, nil
+func (a *phoneAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
+	return nil, nil, nil
 }
 
 func (a *phoneAuthImpl) checkCredentials(userAuthType model.AccountAuthType, creds string, l *logs.Log) (*bool, error) {

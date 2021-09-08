@@ -8,8 +8,10 @@ import (
 )
 
 const (
-	//TypeAccount account type
+	//TypeAccount account
 	TypeAccount logutils.MessageDataType = "account"
+	//TypeAccountAuthType account auth type
+	TypeAccountAuthType logutils.MessageDataType = "account auth type"
 )
 
 //Account represents account entity
@@ -35,6 +37,16 @@ type Account struct {
 
 	DateCreated time.Time
 	DateUpdated *time.Time
+}
+
+//Equals checks if two external system users are equals
+func (a Account) FindAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
+	for _, aat := range a.AuthTypes {
+		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {
+			return &aat
+		}
+	}
+	return nil
 }
 
 //AccountAuthType represents account auth type

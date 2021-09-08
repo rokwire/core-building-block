@@ -241,9 +241,8 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, creds string, appT
 }
 
 func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
-	return nil, nil, nil
-	/*var user *model.User
-	var userAuthType *model.UserAuthType
+	var account *model.Account
+	var accountAuthType *model.AccountAuthType
 
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(authType)
@@ -251,21 +250,17 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	//1. check if the user exists
-	user, err = authImpl.userExist(authType, appType, creds, l)
+	//1. check if the account exists
+	account, accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUser, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
-	if user == nil {
-		return nil, nil, errors.WrapErrorAction("exist", model.TypeUser, nil, err)
+	if account == nil || accountAuthType == nil {
+		return nil, nil, errors.WrapErrorAction("exist", model.TypeAccount, nil, err)
 	}
 
 	//2. it seems the user exist, now check the credentials
-	userAuthType = user.FindUserAuthType(appType.Application.ID, authType.ID)
-	if userAuthType == nil {
-		return nil, nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
-	}
-	validCredentials, err := authImpl.checkCredentials(*userAuthType, creds, l)
+	validCredentials, err := authImpl.checkCredentials(*accountAuthType, creds, l)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
 	}
@@ -273,7 +268,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		return nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
 	}
 
-	return user, userAuthType, nil */
+	return account, accountAuthType, nil
 }
 
 func (a *Auth) applyLogin(user model.Account, userAuthType model.AccountAuthType, params interface{}, l *logs.Log) (*string, *string, error) {

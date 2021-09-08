@@ -5,7 +5,7 @@ import (
 )
 
 //Account
-func accountFromStorage(item account, sa *Adapter, application model.Application, organziation model.Organization) model.Account {
+func accountFromStorage(item account, sa *Adapter, application model.Application, organization model.Organization) model.Account {
 	id := item.ID
 	permissions := applicationPermissionsFromStorage(item.Permissions, application)
 	roles := applicationRolesFromStorage(item.Roles, application)
@@ -15,7 +15,7 @@ func accountFromStorage(item account, sa *Adapter, application model.Application
 	devices := accountDevicesFromStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
-	return model.Account{ID: id, Application: application, Organization: organziation,
+	return model.Account{ID: id, Application: application, Organization: organization,
 		Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes, Profile: profile,
 		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
@@ -71,9 +71,13 @@ func accountAuthTypeFromStorage(item accountAuthType) model.AccountAuthType {
 	authType := model.AuthType{ID: item.AuthTypeID}
 	identifier := item.Identifier
 	params := item.Params
+	var credential *model.Credential
+	if item.CredentialID != nil {
+		credential = &model.Credential{ID: *item.CredentialID}
+	}
 	active := item.Active
 	active2FA := item.Active2FA
-	return model.AccountAuthType{ID: id, AuthType: authType, Identifier: identifier, Params: params,
+	return model.AccountAuthType{ID: id, AuthType: authType, Identifier: identifier, Params: params, Credential: credential,
 		Active: active, Active2FA: active2FA, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 

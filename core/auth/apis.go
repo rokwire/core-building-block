@@ -77,49 +77,6 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 	}
 
 	return *accessToken, *refreshToken, account, authTypeParam, nil
-
-	/*log.Println(authType)
-	log.Println(appType)
-	log.Println(appOrg)
-
-	return "", "", nil, nil, nil*/
-	//validate if the provided auth type is supported by the provided application
-	/*	authTypeEntity, appTypeEntity, err := a.validateAuthType(authType, appID)
-		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
-		}
-
-		var user *model.User
-		var userAuthType *model.UserAuthType
-
-		//get the auth type implementation for the auth type
-		if authTypeEntity.IsExternal {
-			user, userAuthType, err = a.applyExternalAuthType(*authTypeEntity, creds, *appTypeEntity, params, l)
-			if err != nil {
-				return "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
-			}
-
-			//TODO groups mapping
-
-		} else {
-			user, userAuthType, err = a.applyAuthType(*authTypeEntity, creds, *appTypeEntity, params, l)
-			if err != nil {
-				return "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
-			}
-
-			//the credentials are valid
-		}
-
-		//now we are ready to apply login for the user
-		//TODO - get authTypeParam from the auth type.. pass nil for now
-		authTypeParam := "TODO"
-
-		accessToken, refreshToken, err := a.applyLogin(*user, *userAuthType, authTypeParam, l)
-		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
-		}
-
-		return *accessToken, *refreshToken, user, authTypeParam, nil */
 }
 
 //Refresh refreshes an access token using a refresh token

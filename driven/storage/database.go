@@ -208,12 +208,6 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 		return err
 	}
 
-	//add compound unique index - id + auth type id + identifier
-	err = accounts.AddIndex(bson.D{primitive.E{Key: "_id", Value: 1}, primitive.E{Key: "auth_type_id", Value: 1}, primitive.E{Key: "identifier", Value: 1}}, true)
-	if err != nil {
-		return err
-	}
-
 	//add profile index
 	err = accounts.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
 	if err != nil {

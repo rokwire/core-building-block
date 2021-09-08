@@ -18,19 +18,26 @@ type emailAuthImpl struct {
 	authType string
 }
 
-func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*model.Account, error) {
-	appID := appType.Application.ID
+func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
+	appID := appOrg.Application.ID
+	orgID := appOrg.Organization.ID
 	authTypeID := authType.ID
-	authTypeIdentifier := "silyana@inabit.bg" //TODO get it from the creds string
+	accountAuthTypeIdentifier := "silyana.y@inabyte.com" //TODO get it from the creds string
 
-	user, err := a.auth.storage.FindAccount(appID, authTypeID, authTypeIdentifier)
+	account, err := a.auth.storage.FindAccount(appID, orgID, authTypeID, accountAuthTypeIdentifier)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
-	return user, nil
+
+	accountAuthType := account.FindAccountAuthType(authTypeID, accountAuthTypeIdentifier)
+	if accountAuthType == nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err) //TODO add args..
+	}
+
+	return account, accountAuthType, nil
 }
 
-func (a *emailAuthImpl) checkCredentials(userAuthType model.AccountAuthType, creds string, l *logs.Log) (*bool, error) {
+func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (*bool, error) {
 	//TODO - get the password from the creds and check it using user auth type id - from the credentials collection
 
 	result := true

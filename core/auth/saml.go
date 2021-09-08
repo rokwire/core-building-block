@@ -22,7 +22,7 @@ func (a *samlAuthImpl) externalLogin(creds string, authType model.AuthType, appT
 	return nil, nil
 }
 
-func (a *samlAuthImpl) userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, l *logs.Log) (*model.Account, error) {
+func (a *samlAuthImpl) userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error) {
 	return nil, nil
 }
 

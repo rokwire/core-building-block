@@ -174,15 +174,17 @@ func (a *oidcAuthImpl) externalLogin(creds string, authType model.AuthType, appT
 	return externalUser, nil
 }
 
-func (a *oidcAuthImpl) userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, l *logs.Log) (*model.Account, error) {
-	appID := appType.Application.ID
-	authTypeID := authType.ID
+func (a *oidcAuthImpl) userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error) {
+	/*	appID := appType.Application.ID
+		authTypeID := authType.ID
 
-	user, err := a.auth.storage.FindAccount(appID, authTypeID, externalUserIdentifier)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
-	}
-	return user, nil
+		user, err := a.auth.storage.FindAccount(appID, authTypeID, externalUserIdentifier)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
+		}
+		return user, nil */
+	//TODO
+	return nil, nil
 }
 
 //refresh must be implemented for OIDC auth

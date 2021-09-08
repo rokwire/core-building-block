@@ -11,10 +11,10 @@ import (
 
 //authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
 type authType interface {
-	//userExist checks if the user exists for the application type
-	userExist(authType model.AuthType, appType model.ApplicationType, creds string, l *logs.Log) (*model.Account, error)
-	//checkCredentials checks if the user credentials are valid for the application
-	checkCredentials(userAuthType model.AccountAuthType, creds string, l *logs.Log) (*bool, error)
+	//userExist checks if the user exists for application and organizations
+	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error)
+	//checkCredentials checks if the account credentials are valid for the account auth type
+	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (*bool, error)
 }
 
 //externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
@@ -27,7 +27,7 @@ type externalAuthType interface {
 	externalLogin(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*model.ExternalSystemUser, error)
 
 	//userExist checks if the user exists
-	userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, l *logs.Log) (*model.Account, error)
+	userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error)
 
 	//TODO refresh
 }
@@ -119,7 +119,7 @@ type Storage interface {
 	LoadAuthTypes() ([]model.AuthType, error)
 
 	//Accounts
-	FindAccount(appID string, authTypeID string, authTypeIdentifier string) (*model.Account, error)
+	FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
 	InsertAccount(account model.Account) (*model.Account, error)
 	UpdateAccount(account *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
 	DeleteAccount(id string) error
