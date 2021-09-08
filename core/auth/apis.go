@@ -37,12 +37,53 @@ func (a *Auth) GetHost() string {
 //	Returns:
 //		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
-//		User (User): User object for authenticated user
+//		Account (Account): Account object for authenticated user
 //		Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Login(authType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error) {
-	//validate if the provided auth type is supported by the provided application
+func (a *Auth) Login(authenticationType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error) {
+	//validate if the provided auth type is supported by the provided application and organization
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appID, orgID)
+	if err != nil {
+		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
 
-	return "", "", nil, nil, nil
+	var account *model.Account
+	var accountAuthType *model.AccountAuthType
+
+	//get the auth type implementation for the auth type
+	if authType.IsExternal {
+		/*	user, userAuthType, err = a.applyExternalAuthType(*authTypeEntity, creds, *appTypeEntity, params, l)
+			if err != nil {
+				return "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
+			}
+
+			//TODO groups mapping */
+
+	} else {
+		account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
+		if err != nil {
+			return "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
+		}
+
+		//the credentials are valid
+	}
+
+	//now we are ready to apply login for the user
+	//TODO - get authTypeParam from the auth type.. pass nil for now
+	authTypeParam := "TODO"
+
+	accessToken, refreshToken, err := a.applyLogin(*account, *accountAuthType, authTypeParam, l)
+	if err != nil {
+		return "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+	}
+
+	return *accessToken, *refreshToken, account, authTypeParam, nil
+
+	/*log.Println(authType)
+	log.Println(appType)
+	log.Println(appOrg)
+
+	return "", "", nil, nil, nil*/
+	//validate if the provided auth type is supported by the provided application
 	/*	authTypeEntity, appTypeEntity, err := a.validateAuthType(authType, appID)
 		if err != nil {
 			return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)

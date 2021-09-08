@@ -240,7 +240,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, creds string, appT
 		return user, userAuthType, nil */
 }
 
-func (a *Auth) applyAuthType(authType model.AuthType, creds string, appType model.ApplicationType, params string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
+func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
 	return nil, nil, nil
 	/*var user *model.User
 	var userAuthType *model.UserAuthType
