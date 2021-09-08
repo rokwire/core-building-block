@@ -6,6 +6,7 @@ import (
 	"core-building-block/utils"
 	"crypto/rsa"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 	"time"
@@ -155,9 +156,36 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	return auth, nil
 }
 
-func (a *Auth) applyExternalAuthType(authType model.AuthType, creds string, appType model.ApplicationType, params string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
+func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
+	var account *model.Account
+	var accountAuthType *model.AccountAuthType
 
-	return nil, nil, nil
+	//external auth type
+	authImpl, err := a.getExternalAuthTypeImpl(authType)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+	}
+
+	//1. get the user from the external system
+	externalUser, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction("error getting external user", "external user", nil, err)
+	}
+
+	//2. check if the user exists
+	account, err = authImpl.userExist(externalUser.Identifier, authType, appType, appOrg, l)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction("error checking if external user exists", "external user", nil, err)
+	}
+	if account != nil {
+		//user exists, just check if need to update it
+		log.Println("user exist")
+	} else {
+		//user does not exist, we need to register it
+		log.Println("user does not exist")
+	}
+
+	return account, accountAuthType, nil
 	/*	var user *model.User
 		var userAuthType *model.UserAuthType
 

@@ -18,7 +18,7 @@ type samlAuthImpl struct {
 	authType string
 }
 
-func (a *samlAuthImpl) externalLogin(creds string, authType model.AuthType, appType model.ApplicationType, params string, l *logs.Log) (*model.ExternalSystemUser, error) {
+func (a *samlAuthImpl) externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, error) {
 	return nil, nil
 }
 

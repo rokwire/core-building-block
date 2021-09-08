@@ -51,13 +51,12 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 
 	//get the auth type implementation for the auth type
 	if authType.IsExternal {
-		/*	user, userAuthType, err = a.applyExternalAuthType(*authTypeEntity, creds, *appTypeEntity, params, l)
-			if err != nil {
-				return "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
-			}
+		account, accountAuthType, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, l)
+		if err != nil {
+			return "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
+		}
 
-			//TODO groups mapping */
-
+		//TODO groups mapping
 	} else {
 		account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
