@@ -48,15 +48,21 @@ func (auth *Auth) Start() error {
 }
 
 //NewAuth creates new auth handler
-func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.AuthService, logger *logs.Logger) *Auth {
-	servicesAuth := newServicesAuth(coreAPIs, authService, serviceID, logger)
-	adminAuth := newAdminAuth(coreAPIs, authService, logger)
+func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.AuthService, logger *logs.Logger) (*Auth, error) {
+	servicesAuth, err := newServicesAuth(coreAPIs, authService, serviceID, logger)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "auth handler", nil, err)
+	}
+	adminAuth, err := newAdminAuth(coreAPIs, authService, logger)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "auth handler", nil, err)
+	}
 	encAuth := newEncAuth(coreAPIs, logger)
 	bbsAuth := newBBsAuth(coreAPIs, logger)
 
 	auth := Auth{servicesAuth: servicesAuth, adminAuth: adminAuth, encAuth: encAuth, bbsAuth: bbsAuth, logger: logger}
 
-	return &auth
+	return &auth, nil
 }
 
 //ServicesAuth entity
@@ -84,17 +90,17 @@ func (auth *ServicesAuth) check(req *http.Request) (int, error) {
 	return http.StatusOK, nil
 }
 
-func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, serviceID string, logger *logs.Logger) *ServicesAuth {
+func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, serviceID string, logger *logs.Logger) (*ServicesAuth, error) {
 	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/scope_authorization_policy_services_auth.csv", serviceID)
 
 	servicesTokenAuth, err := tokenauth.NewTokenAuth(true, authService, nil, servicesScopeAuth)
 
 	if err != nil {
-		// log.Fatalf("Error intitializing token auth for servicesAuth: %v", err)
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for servicesAuth", nil, err)
 	}
 
 	auth := ServicesAuth{coreAPIs: coreAPIs, tokenAuth: servicesTokenAuth, logger: logger}
-	return &auth
+	return &auth, nil
 }
 
 //AdminAuth entity
@@ -121,16 +127,17 @@ func (auth *AdminAuth) check(req *http.Request) (int, error) {
 	return http.StatusOK, nil
 }
 
-func newAdminAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) *AdminAuth {
+func newAdminAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) (*AdminAuth, error) {
 	adminPermissionAuth := authorization.NewCasbinAuthorization("driver/web/permission_authorization_policy_admin_auth.csv")
 	adminTokenAuth, err := tokenauth.NewTokenAuth(true, authService, adminPermissionAuth, nil)
 
 	if err != nil {
-		errors.Newf("Error intitializing token auth for adminAuth: %v", err)
+		// errors.Newf("Error intitializing token auth for adminAuth: %v", err)
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for adminAuth", nil, err)
 	}
 
 	auth := AdminAuth{coreAPIs: coreAPIs, tokenAuth: adminTokenAuth, logger: logger}
-	return &auth
+	return &auth, nil
 }
 
 //EncAuth entity
