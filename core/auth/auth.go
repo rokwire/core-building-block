@@ -158,26 +158,28 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	return auth, nil
 }
 
-func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
+func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.Account, *model.AccountAuthType, interface{}, error) {
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
+	var extParams interface{}
 
 	//external auth type
 	authImpl, err := a.getExternalAuthTypeImpl(authType)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
 	}
 
 	//1. get the user from the external system
-	externalUser, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
+	var externalUser *model.ExternalSystemUser
+	externalUser, extParams, err = authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction("error getting external user", "external user", nil, err)
+		return nil, nil, nil, errors.WrapErrorAction("error getting external user", "external user", nil, err)
 	}
 
 	//2. check if the user exists
 	account, err = authImpl.userExist(externalUser.Identifier, authType, appType, appOrg, l)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction("error checking if external user exists", "external user", nil, err)
+		return nil, nil, nil, errors.WrapErrorAction("error checking if external user exists", "external user", nil, err)
 	}
 	if account != nil {
 		//user exists, just check if need to update it
@@ -185,17 +187,17 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		//get the current external user
 		accountAuthType = account.FindAccountAuthType(authType.ID, externalUser.Identifier)
 		if accountAuthType == nil {
-			return nil, nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
+			return nil, nil, nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
 		}
 		currentDataMap := accountAuthType.Params["user"]
 		currentDataJson, err := utils.ConvertToJSON(currentDataMap)
 		if err != nil {
-			return nil, nil, errors.WrapErrorAction("error converting map to json", "", nil, err)
+			return nil, nil, nil, errors.WrapErrorAction("error converting map to json", "", nil, err)
 		}
 		var currentData *model.ExternalSystemUser
 		err = json.Unmarshal(currentDataJson, &currentData)
 		if err != nil {
-			return nil, nil, errors.ErrorAction("error converting json to type", "", nil)
+			return nil, nil, nil, errors.ErrorAction("error converting json to type", "", nil)
 		}
 
 		newData := *externalUser
@@ -206,7 +208,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 			accountAuthType.Params["user"] = newData
 			err = a.storage.UpdateAccountAuthType(*accountAuthType)
 			if err != nil {
-				return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
+				return nil, nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
 			}
 		}
 	} else {
@@ -238,11 +240,11 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 
 		account, err = a.registerUser(appOrg, *accountAuthType, useSharedProfile, profile, l)
 		if err != nil {
-			return nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
 	}
 
-	return account, accountAuthType, nil
+	return account, accountAuthType, extParams, nil
 }
 
 func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
