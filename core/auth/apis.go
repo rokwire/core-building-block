@@ -70,9 +70,10 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 
 	//now we are ready to apply login for the user
 	//TODO - get authTypeParam from the auth type.. pass nil for now
-	authTypeParam := "TODO"
+	//authTypeParam := "TODO"
+	var authTypeParam interface{}
 
-	accessToken, refreshToken, err := a.applyLogin(*account, *accountAuthType, authTypeParam, l)
+	accessToken, refreshToken, err := a.applyLogin(*account, *accountAuthType, *appType, authTypeParam, l)
 	if err != nil {
 		return "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}

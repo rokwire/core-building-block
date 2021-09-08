@@ -13,6 +13,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
+	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/auth-library/authservice"
 	"github.com/rokmetro/auth-library/authutils"
 	"github.com/rokmetro/auth-library/tokenauth"
@@ -275,24 +276,26 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	return account, accountAuthType, nil
 }
 
-func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAuthType, params interface{}, l *logs.Log) (*string, *string, error) {
+func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAuthType, appType model.ApplicationType, params interface{}, l *logs.Log) (*string, *string, error) {
 	//TODO add login session which keeps the tokens, the auth type params(illinois tokens), eventually the device etc
 	//TODO think if to return the whole login session object..
-	/*
 
-		///prepare the response
-		//access token
-		claims := a.getStandardClaims(user.ID, "TODO", "TODO", "TODO", "rokwire", "TODO", appID, nil)
-		accessToken, err = a.buildAccessToken(claims, "", authorization.ScopeGlobal)
-		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
-		}
+	//access token
+	orgID := account.Organization.ID
+	appTypeIdentifier := appType.Identifier
+	claims := a.getStandardClaims(account.ID, account.ID, "", "", "rokwire", orgID, appTypeIdentifier, nil)
+	accessToken, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+	}
 
-		//refresh token
-		refreshToken = "TODO"
-	*/
+	//refresh token
+	refreshToken, _, err := a.buildRefreshToken()
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+	}
 
-	return nil, nil, nil
+	return &accessToken, &refreshToken, nil
 }
 
 //registerUser registers account for an organization in an application
