@@ -25,13 +25,13 @@ type account struct {
 }
 
 type accountAuthType struct {
-	ID           string      `bson:"id"`
-	AuthTypeID   string      `bson:"auth_type_id"`
-	Identifier   string      `bson:"identifier"`
-	Params       interface{} `bson:"params"`
-	CredentialID *string     `bson:"credential_id"`
-	Active       bool        `bson:"active"`
-	Active2FA    bool        `bson:"active_2fa"`
+	ID           string                 `bson:"id"`
+	AuthTypeID   string                 `bson:"auth_type_id"`
+	Identifier   string                 `bson:"identifier"`
+	Params       map[string]interface{} `bson:"params"`
+	CredentialID *string                `bson:"credential_id"`
+	Active       bool                   `bson:"active"`
+	Active2FA    bool                   `bson:"active_2fa"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

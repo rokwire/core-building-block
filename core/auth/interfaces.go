@@ -124,9 +124,8 @@ type Storage interface {
 	UpdateAccount(account *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
 	DeleteAccount(id string) error
 
-	//TODO
-	//UserAuthTypes
-	UpdateUserAuthType(item model.AccountAuthType) error
+	//AccountAuthTypes
+	UpdateAccountAuthType(item model.AccountAuthType) error
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)

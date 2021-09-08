@@ -5,6 +5,7 @@ import (
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"crypto/rsa"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -179,7 +180,34 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	}
 	if account != nil {
 		//user exists, just check if need to update it
-		log.Println("user exist")
+
+		//get the current external user
+		accountAuthType = account.FindAccountAuthType(authType.ID, externalUser.Identifier)
+		if accountAuthType == nil {
+			return nil, nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
+		}
+		currentDataMap := accountAuthType.Params["user"]
+		currentDataJson, err := utils.ConvertToJSON(currentDataMap)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction("error converting map to json", "", nil, err)
+		}
+		var currentData *model.ExternalSystemUser
+		err = json.Unmarshal(currentDataJson, &currentData)
+		if err != nil {
+			return nil, nil, errors.ErrorAction("error converting json to type", "", nil)
+		}
+
+		newData := *externalUser
+
+		//check if external system user needs to be updated
+		if !currentData.Equals(newData) {
+			//there is changes so we need to update it
+			accountAuthType.Params["user"] = newData
+			err = a.storage.UpdateAccountAuthType(*accountAuthType)
+			if err != nil {
+				return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
+			}
+		}
 	} else {
 		//user does not exist, we need to register it
 		log.Println("user does not exist")
