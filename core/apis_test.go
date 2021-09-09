@@ -114,6 +114,39 @@ func TestAdmGetGlobalConfig(t *testing.T) {
 	}
 }
 
+type updateGlobalConfigForTesting struct {
+	setting string
+}
+
+func TestAdmUpdateGlobalConfig(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("GetGlobalConfig").Return(nil, nil)
+	storage.On("SaveGlobalConfig", "setting").Return(&model.GlobalConfig{}, nil)
+
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	gc := app.Administration.AdmUpdateGlobalConfig("setting")
+	if gc == nil {
+		t.Error("gc is nil")
+		return
+	}
+	assert.Equal(t, nil, "setting", "setting is different")
+
+	//second case - error
+	storage2 := genmocks.Storage{}
+	storage2.On("GetGlobalConfig").Return(nil, nil)
+	storage2.On("SaveGlobalConfig", "setting").Return(nil, errors.New("error occured"))
+
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage2, nil)
+
+	err := app.Administration.AdmUpdateGlobalConfig("setting")
+	if err == nil {
+		t.Error("we are expecting error")
+		return
+	}
+	assert.Equal(t, err.Error(), "core-building-block/core.(*application).admCreateGlobalConfig() error inserting global config: error occured", "error is different: "+err.Error())
+}
+
 func TestAdmGetOrganization(t *testing.T) {
 	storage := genmocks.Storage{}
 	storage.On("FindOrganization", "_id").Return(&model.Organization{ID: "_id"}, nil)
