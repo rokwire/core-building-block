@@ -25,7 +25,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.AuthLoginRequest
+	var requestData Def.ReqAuthLoginRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login request"), nil, err, http.StatusBadRequest, true)
@@ -46,9 +46,9 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
 
-	tokenType := Def.AuthResponseRokwireTokenTokenTypeBearer
-	rokwireToken := Def.AuthResponseRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
-	responseData := &Def.AuthLoginResponse{Token: &rokwireToken, User: userToDef(user), Params: &params}
+	tokenType := Def.ResAuthResponseRokwireTokenTokenTypeBearer
+	rokwireToken := Def.ResAuthResponseRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
+	responseData := &Def.ResAuthLoginResponse{Token: &rokwireToken, User: userToDef(user), Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
@@ -68,9 +68,9 @@ func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request) logs.Http
 		return l.HttpResponseError("Error refreshing token", err, http.StatusInternalServerError, true)
 	}
 
-	tokenType := Def.AuthResponseRokwireTokenTokenTypeBearer
-	rokwireToken := Def.AuthResponseRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
-	responseData := &Def.AuthRefreshResponse{Token: &rokwireToken, Params: &params}
+	tokenType := Def.ResAuthResponseRokwireTokenTokenTypeBearer
+	rokwireToken := Def.ResAuthResponseRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
+	responseData := &Def.ResAuthRefreshResponse{Token: &rokwireToken, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth refresh response"), nil, err, http.StatusInternalServerError, false)
@@ -85,7 +85,7 @@ func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request) logs.Htt
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.AuthLoginUrlRequest
+	var requestData Def.ReqAuthLoginUrlRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "auth login url request", nil, err, http.StatusBadRequest, true)
@@ -96,7 +96,7 @@ func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request) logs.Htt
 		return l.HttpResponseErrorAction(logutils.ActionGet, "login url", nil, err, http.StatusInternalServerError, true)
 	}
 
-	responseData := &Def.AuthLoginUrlResponse{LoginUrl: loginURL, Params: &params}
+	responseData := &Def.ResAuthLoginUrlResponse{LoginUrl: loginURL, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "auth login url response", nil, err, http.StatusInternalServerError, false)
@@ -111,7 +111,7 @@ func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request) 
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.AuthAuthorizeServiceRequest
+	var requestData Def.ReqAuthAuthorizeServiceRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "auth authorize service request", nil, err, http.StatusBadRequest, true)
@@ -130,9 +130,9 @@ func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request) 
 
 	scopesResp := scopeListToDef(tokenScopes)
 	regResp := serviceRegToDef(reg)
-	tokenType := Def.AuthAuthorizeServiceResponseTokenTypeBearer
+	tokenType := Def.ResAuthAuthorizeServiceResponseTokenTypeBearer
 
-	responseData := &Def.AuthAuthorizeServiceResponse{AccessToken: &token, TokenType: &tokenType, ApprovedScopes: &scopesResp, ServiceReg: regResp}
+	responseData := &Def.ResAuthAuthorizeServiceResponse{AccessToken: &token, TokenType: &tokenType, ApprovedScopes: &scopesResp, ServiceReg: regResp}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "auth login url response", nil, err, http.StatusInternalServerError, false)
