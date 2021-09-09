@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
 )
@@ -19,7 +20,7 @@ type ServicesApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -57,7 +58,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	requestData, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -79,7 +80,7 @@ func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request) logs.Http
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -105,7 +106,7 @@ func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request) logs.Htt
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -141,7 +142,7 @@ func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request) 
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-func (h ServicesApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h ServicesApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	serviceIDsParam := r.URL.Query().Get("ids")
 	if serviceIDsParam == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("ids"), nil, http.StatusBadRequest, false)
@@ -164,7 +165,7 @@ func (h ServicesApisHandler) getServiceRegistrations(l *logs.Log, r *http.Reques
 }
 
 //getCommonTest TODO get test
-func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	res := h.coreAPIs.Services.SerGetCommonTest(l)
 
 	return l.HttpResponseSuccessMessage(res)

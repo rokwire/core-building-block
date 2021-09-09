@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/rokmetro/auth-library/authservice"
+	"github.com/rokmetro/auth-library/tokenauth"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -42,7 +43,7 @@ type Adapter struct {
 	coreAPIs *core.APIs
 }
 
-type handlerFunc = func(*logs.Log, *http.Request) logs.HttpResponse
+type handlerFunc = func(*logs.Log, *http.Request, *tokenauth.Claims) logs.HttpResponse
 
 //Start starts the module
 func (we Adapter) Start() {
@@ -145,16 +146,18 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization Authorization) htt
 			return
 		}
 
+		//2. process it
+		var response logs.HttpResponse
 		if authorization != nil {
-			responseStatus, err := authorization.check(req)
+			responseStatus, claims, err := authorization.check(req)
 			if err != nil {
 				logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeRequest, nil, err, responseStatus, true)
 				return
 			}
+			response = handler(logObj, req, claims)
+		} else {
+			response = handler(logObj, req, nil)
 		}
-
-		//2. process it
-		response := handler(logObj, req)
 
 		//3. validate the response
 		if we.env != "production" {

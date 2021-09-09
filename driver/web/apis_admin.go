@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
 )
@@ -20,21 +21,21 @@ type AdminApisHandler struct {
 }
 
 //getTest TODO get test
-func (h AdminApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	res := h.coreAPIs.Administration.AdmGetTest()
 
 	return l.HttpResponseSuccessMessage(res)
 }
 
 //getTestModel gives a test model instance
-func (h AdminApisHandler) getTestModel(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) getTestModel(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	res := h.coreAPIs.Administration.AdmGetTestModel()
 
 	return l.HttpResponseSuccessMessage(res)
 }
 
 //createGlobalConfig creates a global config
-func (h AdminApisHandler) createGlobalConfig(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) createGlobalConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -55,7 +56,7 @@ func (h AdminApisHandler) createGlobalConfig(l *logs.Log, r *http.Request) logs.
 }
 
 //getGlobalConfig gets config
-func (h AdminApisHandler) getGlobalConfig(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) getGlobalConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	config, err := h.coreAPIs.Administration.AdmGetGlobalConfig()
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
@@ -74,7 +75,7 @@ func (h AdminApisHandler) getGlobalConfig(l *logs.Log, r *http.Request) logs.Htt
 }
 
 //updateGlobalConfig updates global config
-func (h AdminApisHandler) updateGlobalConfig(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) updateGlobalConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -97,7 +98,7 @@ func (h AdminApisHandler) updateGlobalConfig(l *logs.Log, r *http.Request) logs.
 }
 
 //createOrganization creates organization
-func (h AdminApisHandler) createOrganization(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) createOrganization(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -123,7 +124,7 @@ func (h AdminApisHandler) createOrganization(l *logs.Log, r *http.Request) logs.
 }
 
 //updateOrganization updates organization
-func (h AdminApisHandler) updateOrganization(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) updateOrganization(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	ID := params["id"]
 	if len(ID) <= 0 {
@@ -155,7 +156,7 @@ func (h AdminApisHandler) updateOrganization(l *logs.Log, r *http.Request) logs.
 }
 
 //getOrganization gets organization
-func (h AdminApisHandler) getOrganization(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) getOrganization(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	ID := params["id"]
 	if len(ID) <= 0 {
@@ -178,7 +179,7 @@ func (h AdminApisHandler) getOrganization(l *logs.Log, r *http.Request) logs.Htt
 }
 
 //getOrganizations gets organizations
-func (h AdminApisHandler) getOrganizations(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) getOrganizations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	organizations, err := h.coreAPIs.Administration.AdmGetOrganizations()
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
@@ -196,7 +197,7 @@ func (h AdminApisHandler) getOrganizations(l *logs.Log, r *http.Request) logs.Ht
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h AdminApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	serviceIDsParam := r.URL.Query().Get("ids")
 	if serviceIDsParam == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("ids"), nil, http.StatusBadRequest, false)
@@ -218,7 +219,7 @@ func (h AdminApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request) 
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h AdminApisHandler) registerService(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) registerService(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -243,7 +244,7 @@ func (h AdminApisHandler) registerService(l *logs.Log, r *http.Request) logs.Htt
 	return l.HttpResponseSuccess()
 }
 
-func (h AdminApisHandler) updateServiceRegistration(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) updateServiceRegistration(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -268,7 +269,7 @@ func (h AdminApisHandler) updateServiceRegistration(l *logs.Log, r *http.Request
 	return l.HttpResponseSuccess()
 }
 
-func (h AdminApisHandler) deregisterService(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) deregisterService(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	serviceID := r.URL.Query().Get("id")
 	if serviceID == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
@@ -282,7 +283,7 @@ func (h AdminApisHandler) deregisterService(l *logs.Log, r *http.Request) logs.H
 	return l.HttpResponseSuccess()
 }
 
-func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	ID := params["id"]
 	if len(ID) <= 0 {
@@ -305,7 +306,7 @@ func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.Http
 }
 
 //createApplication creates an application
-func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		l.Errorf("Error on marshal create application - %s\n", err.Error())

@@ -32,7 +32,7 @@ type Auth struct {
 
 // Authorization is an interface for auth types
 type Authorization interface {
-	check(req *http.Request) (int, error)
+	check(req *http.Request) (int, *tokenauth.Claims, error)
 }
 
 //Start starts the auth module
@@ -76,18 +76,18 @@ func (auth *ServicesAuth) start() {
 	auth.logger.Info("ServicesAuth -> start")
 }
 
-func (auth *ServicesAuth) check(req *http.Request) (int, error) {
+func (auth *ServicesAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
 	claims, err := auth.tokenAuth.CheckRequestTokens(req)
 	if err != nil {
-		return http.StatusUnauthorized, errors.WrapErrorAction(typeCheckServicesAuthRequestToken, logutils.TypeToken, nil, err)
+		return http.StatusUnauthorized, nil, errors.WrapErrorAction(typeCheckServicesAuthRequestToken, logutils.TypeToken, nil, err)
 	}
 
 	err = auth.tokenAuth.AuthorizeRequestScope(claims, req)
 	if err != nil {
-		return http.StatusForbidden, errors.WrapErrorAction(typeCheckServicesScope, logutils.TypeRequest, nil, err)
+		return http.StatusForbidden, nil, errors.WrapErrorAction(typeCheckServicesScope, logutils.TypeRequest, nil, err)
 	}
 
-	return http.StatusOK, nil
+	return http.StatusOK, claims, nil
 }
 
 func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, serviceID string, logger *logs.Logger) (*ServicesAuth, error) {
@@ -114,17 +114,17 @@ func (auth *AdminAuth) start() {
 	auth.logger.Info("AdminAuth -> start")
 }
 
-func (auth *AdminAuth) check(req *http.Request) (int, error) {
+func (auth *AdminAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
 	claims, err := auth.tokenAuth.CheckRequestTokens(req)
 	if err != nil {
-		return http.StatusUnauthorized, errors.WrapErrorAction(typeCheckAdminAuthRequestToken, logutils.TypeToken, nil, err)
+		return http.StatusUnauthorized, nil, errors.WrapErrorAction(typeCheckAdminAuthRequestToken, logutils.TypeToken, nil, err)
 	}
 	err = auth.tokenAuth.AuthorizeRequestPermissions(claims, req)
 	if err != nil {
-		return http.StatusForbidden, errors.WrapErrorAction(typeCheckAdminPermission, logutils.TypeRequest, nil, err)
+		return http.StatusForbidden, nil, errors.WrapErrorAction(typeCheckAdminPermission, logutils.TypeRequest, nil, err)
 	}
 
-	return http.StatusOK, nil
+	return http.StatusOK, claims, nil
 }
 
 func newAdminAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) (*AdminAuth, error) {

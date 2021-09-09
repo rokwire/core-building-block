@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
 )
@@ -17,13 +18,13 @@ type BBsApisHandler struct {
 }
 
 //getTest TODO get test
-func (h BBsApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h BBsApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	res := h.coreAPIs.BBs.BBsGetTest()
 
 	return l.HttpResponseSuccessMessage(res)
 }
 
-func (h BBsApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h BBsApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	serviceIDsParam := r.URL.Query().Get("ids")
 	if serviceIDsParam == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("ids"), nil, http.StatusBadRequest, false)
