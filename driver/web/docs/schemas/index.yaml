@@ -37,6 +37,8 @@ OidcDiscovery:
   $ref: "./auth/OIDCDiscovery.yaml"
 
 # user
+Account:
+  $ref: "./user/Account.yaml"
 User:
   $ref: "./user/User.yaml"
 UserAccount:

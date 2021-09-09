@@ -818,32 +818,32 @@ components:
       properties:
         id:
           type: string
+        TODO:
+          type: string
     ApplicationPermission:
       required:
         - id
         - name
-        - app_id
       type: object
       properties:
         id:
           type: string
         name:
           type: string
-        app_id:
-          type: string
+        application:
+          $ref: '#/components/schemas/Application'
     ApplicationRole:
       required:
         - id
         - name
-        - app_id
       type: object
       properties:
         id:
           type: string
         name:
           type: string
-        app_id:
-          type: string
+        application:
+          $ref: '#/components/schemas/Application'
         permissions:
           type: array
           items:
@@ -852,15 +852,14 @@ components:
       required:
         - id
         - name
-        - app_id
       type: object
       properties:
         id:
           type: string
         name:
           type: string
-        app_id:
-          type: string
+        application:
+          $ref: '#/components/schemas/Application'
         permissions:
           type: array
           items:
@@ -1026,6 +1025,10 @@ components:
           type: string
         jwks_uri:
           type: string
+    Account:
+      properties:
+        id:
+          type: string
     User:
       required:
         - id
@@ -1087,10 +1090,10 @@ components:
           type: string
         mac_address:
           type: string
-        user_ids:
+        accounts:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/Account'
     _req_AuthLoginRequest:
       required:
         - auth_type

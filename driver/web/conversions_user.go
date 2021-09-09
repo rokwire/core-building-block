@@ -73,13 +73,13 @@ func deviceToDef(item *model.Device) *Def.Device {
 	if item == nil {
 		return nil
 	}
+	/*
+		users := make([]string, len(item.Ac))
+		for i, user := range item.Users {
+			users[i] = user.ID
+		} */
 
-	users := make([]string, len(item.Accounts))
-	for i, user := range item.Accounts {
-		users[i] = user.ID
-	}
-
-	return &Def.Device{Id: item.ID, Type: Def.DeviceType(item.Type), UserIds: users, Os: &item.OS, MacAddress: &item.MacAddress}
+	return &Def.Device{Id: item.ID, Type: Def.DeviceType(item.Type), Os: &item.OS, MacAddress: &item.MacAddress}
 }
 
 func deviceListToDef(items []model.Device) []Def.Device {

@@ -1,5 +1,3 @@
 properties:
   id:
     type: string
-  TODO:
-    type: string

@@ -68,6 +68,11 @@ const (
 	ResAuthResponseRokwireTokenTokenTypeBearer ResAuthResponseRokwireTokenTokenType = "Bearer"
 )
 
+// Account defines model for Account.
+type Account struct {
+	Id *string `json:"id,omitempty"`
+}
+
 // Application defines model for Application.
 type Application struct {
 	Id               string                     `json:"id"`
@@ -80,7 +85,8 @@ type Application struct {
 
 // ApplicationOrganization defines model for ApplicationOrganization.
 type ApplicationOrganization struct {
-	Id *string `json:"id,omitempty"`
+	TODO *string `json:"TODO,omitempty"`
+	Id   *string `json:"id,omitempty"`
 }
 
 // ApplicationType defines model for ApplicationType.
@@ -101,11 +107,11 @@ type AuthServiceReg struct {
 
 // Device defines model for Device.
 type Device struct {
+	Accounts   *[]Account `json:"accounts,omitempty"`
 	Id         string     `json:"id"`
 	MacAddress *string    `json:"mac_address,omitempty"`
 	Os         *string    `json:"os,omitempty"`
 	Type       DeviceType `json:"type"`
-	UserIds    []string   `json:"user_ids"`
 }
 
 // DeviceType defines model for Device.Type.
