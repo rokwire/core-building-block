@@ -1,0 +1,17 @@
+required:
+  - id
+  - name
+type: object
+properties:
+  id:
+    type: string
+  identifier:
+    type: string
+  name:
+    type: string
+  versions:
+    type: array
+    items:
+      type: string
+  application:
+    $ref: "./Application.yaml"

@@ -5,6 +5,8 @@ GlobalConfig:
 # application
 Application:
   $ref: "./application/Application.yaml"
+ApplicationType:
+  $ref: "./application/ApplicationType.yaml"
 ApplicationPermission:
   $ref: "./application/ApplicationPermission.yaml"
 ApplicationRole:
