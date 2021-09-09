@@ -21,6 +21,10 @@ OrganizationConfig:
   $ref: "./application/OrganizationConfig.yaml"
   
 # auth
+AuthType:
+  $ref: "./auth/AuthType.yaml"
+Credential:
+  $ref: "./auth/Credential.yaml"
 ServiceReg:
   $ref: "./auth/ServiceReg.yaml"
 AuthServiceReg:

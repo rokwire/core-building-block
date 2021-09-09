@@ -2,3 +2,17 @@ type: object
 properties:
   id:
     type: string
+  auth_type:
+     $ref: "../auth/AuthType.yaml"
+  account:
+     $ref: "./Account.yaml"
+  identifier:
+    type: string
+  #params:  
+  #  type: string #TODO
+  credential:
+     $ref: "../auth/Credential.yaml"
+  active:
+    type: boolean
+  active_2fa:
+    type: boolean

@@ -83,7 +83,13 @@ type Account struct {
 
 // AccountAuthType defines model for AccountAuthType.
 type AccountAuthType struct {
-	Id *string `json:"id,omitempty"`
+	Account    *Account    `json:"account,omitempty"`
+	Active     *bool       `json:"active,omitempty"`
+	Active2fa  *bool       `json:"active_2fa,omitempty"`
+	AuthType   *AuthType   `json:"auth_type,omitempty"`
+	Credential *Credential `json:"credential,omitempty"`
+	Id         *string     `json:"id,omitempty"`
+	Identifier *string     `json:"identifier,omitempty"`
 }
 
 // Application defines model for Application.
@@ -140,6 +146,16 @@ type AuthServiceReg struct {
 	Host      string  `json:"host"`
 	PubKey    *PubKey `json:"pub_key,omitempty"`
 	ServiceId string  `json:"service_id"`
+}
+
+// AuthType defines model for AuthType.
+type AuthType struct {
+	Id *string `json:"id,omitempty"`
+}
+
+// Credential defines model for Credential.
+type Credential struct {
+	Id *string `json:"id,omitempty"`
 }
 
 // Device defines model for Device.

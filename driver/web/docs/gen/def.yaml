@@ -903,6 +903,16 @@ components:
           description: organization domains
           items:
             type: string
+    AuthType:
+      type: object
+      properties:
+        id:
+          type: string
+    Credential:
+      type: object
+      properties:
+        id:
+          type: string
     ServiceReg:
       required:
         - service_id
@@ -1077,6 +1087,18 @@ components:
       properties:
         id:
           type: string
+        auth_type:
+          $ref: '#/components/schemas/AuthType'
+        account:
+          $ref: '#/components/schemas/Account'
+        identifier:
+          type: string
+        credential:
+          $ref: '#/components/schemas/Credential'
+        active:
+          type: boolean
+        active_2fa:
+          type: boolean
     Device:
       required:
         - id
