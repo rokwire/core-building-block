@@ -784,15 +784,22 @@ components:
           type: string
         name:
           type: string
-        versions:
+        multi_tenant:
+          type: boolean
+        requires_own_users:
+          type: boolean
+        types:
           type: array
-          nullable: true
           items:
-            type: string
+            $ref: '#/components/schemas/ApplicationType'
+        organizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationOrganization'
     ApplicationType:
       required:
         - id
-        - name
+        - identifier
       type: object
       properties:
         id:
@@ -807,6 +814,10 @@ components:
             type: string
         application:
           $ref: '#/components/schemas/Application'
+    ApplicationOrganization:
+      properties:
+        id:
+          type: string
     ApplicationPermission:
       required:
         - id

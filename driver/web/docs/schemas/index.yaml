@@ -7,6 +7,8 @@ Application:
   $ref: "./application/Application.yaml"
 ApplicationType:
   $ref: "./application/ApplicationType.yaml"
+ApplicationOrganization:
+  $ref: "./application/ApplicationOrganization.yaml"
 ApplicationPermission:
   $ref: "./application/ApplicationPermission.yaml"
 ApplicationRole:

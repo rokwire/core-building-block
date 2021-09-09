@@ -78,7 +78,7 @@ func applicationToDef(item *model.Application) *Def.Application {
 		return nil
 	}
 	//TODO
-	return &Def.Application{Id: item.ID, Name: item.Name, Versions: nil}
+	return &Def.Application{Id: item.ID, Name: item.Name}
 }
 
 //Organization

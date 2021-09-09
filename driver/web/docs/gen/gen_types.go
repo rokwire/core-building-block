@@ -70,9 +70,26 @@ const (
 
 // Application defines model for Application.
 type Application struct {
-	Id       string    `json:"id"`
-	Name     string    `json:"name"`
-	Versions *[]string `json:"versions"`
+	Id               string                     `json:"id"`
+	MultiTenant      *bool                      `json:"multi_tenant,omitempty"`
+	Name             string                     `json:"name"`
+	Organizations    *[]ApplicationOrganization `json:"organizations,omitempty"`
+	RequiresOwnUsers *bool                      `json:"requires_own_users,omitempty"`
+	Types            *[]ApplicationType         `json:"types,omitempty"`
+}
+
+// ApplicationOrganization defines model for ApplicationOrganization.
+type ApplicationOrganization struct {
+	Id *string `json:"id,omitempty"`
+}
+
+// ApplicationType defines model for ApplicationType.
+type ApplicationType struct {
+	Application *Application `json:"application,omitempty"`
+	Id          string       `json:"id"`
+	Identifier  string       `json:"identifier"`
+	Name        *string      `json:"name,omitempty"`
+	Versions    *[]string    `json:"versions,omitempty"`
 }
 
 // Service registration record used for auth

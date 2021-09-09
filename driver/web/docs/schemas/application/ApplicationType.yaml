@@ -1,6 +1,6 @@
 required:
   - id
-  - name
+  - identifier
 type: object
 properties:
   id:

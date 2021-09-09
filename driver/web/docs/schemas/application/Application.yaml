@@ -8,8 +8,15 @@ properties:
     type: string
   name:
     type: string
-  versions:
+  multi_tenant:
+    type: boolean
+  requires_own_users:
+    type: boolean
+  types:
     type: array
-    nullable: true
     items:
-      type: string
+      $ref: "./ApplicationType.yaml"
+  organizations:
+    type: array
+    items:
+      $ref: "./ApplicationOrganization.yaml"
