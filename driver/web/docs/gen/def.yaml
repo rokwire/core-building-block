@@ -908,11 +908,26 @@ components:
       properties:
         id:
           type: string
+        code:
+          type: string
+        description:
+          type: string
+        is_external:
+          type: boolean
+        params:
+          type: object
+          additionalProperties: true
     Credential:
       type: object
       properties:
         id:
           type: string
+        accounts_auth_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountAuthType'
+        value:
+          type: object
     ServiceReg:
       required:
         - service_id
@@ -1093,6 +1108,9 @@ components:
           $ref: '#/components/schemas/Account'
         identifier:
           type: string
+        params:
+          type: object
+          additionalProperties: true
         credential:
           $ref: '#/components/schemas/Credential'
         active:

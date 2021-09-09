@@ -8,8 +8,9 @@ properties:
      $ref: "./Account.yaml"
   identifier:
     type: string
-  #params:  
-  #  type: string #TODO
+  params:  
+    type: object
+    additionalProperties: true
   credential:
      $ref: "../auth/Credential.yaml"
   active:
