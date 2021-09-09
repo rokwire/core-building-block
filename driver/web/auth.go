@@ -132,7 +132,6 @@ func newAdminAuth(coreAPIs *core.APIs, authService *authservice.AuthService, log
 	adminTokenAuth, err := tokenauth.NewTokenAuth(true, authService, adminPermissionAuth, nil)
 
 	if err != nil {
-		// errors.Newf("Error intitializing token auth for adminAuth: %v", err)
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for adminAuth", nil, err)
 	}
 
