@@ -475,9 +475,9 @@ func (sa *Adapter) CreateGlobalConfig(setting string) (*model.GlobalConfig, erro
 	return &globalConfig, nil
 }
 
-//GetFirebaseAdminCreds finds the Firebase cred document from DB by clientID
-func (sa *Adapter) GetFirebaseAdminCreds(clientID string) (*model.FirebaseAdminCreds, error) {
-	filter := bson.D{primitive.E{Key: "clientID", Value: clientID}}
+//FindFirebaseAdminCreds finds the Firebase cred document from DB by clientID
+func (sa *Adapter) FindFirebaseAdminCreds(orgID string) (*model.FirebaseAdminCreds, error) {
+	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}}
 	var result []*model.FirebaseAdminCreds
 	err := sa.db.firebaseAdminCreds.Find(filter, &result, nil)
 	if err != nil {
@@ -486,7 +486,7 @@ func (sa *Adapter) GetFirebaseAdminCreds(clientID string) (*model.FirebaseAdminC
 	if result == nil || len(result) == 0 {
 		//not found
 		// log.Info("no Firebase creds found for the given clientID")
-		return nil, nil
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeFirebaseAdminCred, nil, errors.New("no firebase admin creds found for org_id"))
 	}
 	return result[0], nil
 }

@@ -65,7 +65,6 @@ func (m *database) start() error {
 
 	//apply checks
 	db := client.Database(m.mongoDBName)
-	keysDB := client.Database(m.keysMongoDBName)
 
 	users := &collectionWrapper{database: m, coll: db.Collection("users")}
 	err = m.applyUsersChecks(users)
@@ -91,7 +90,7 @@ func (m *database) start() error {
 		return err
 	}
 
-	firebaseAdminCreds := &collectionWrapper{database: m, coll: keysDB.Collection("firebase_admin_creds")}
+	firebaseAdminCreds := &collectionWrapper{database: m, coll: db.Collection("firebase_admin_creds")}
 	err = m.applyFirebaseCredsChecks(firebaseAdminCreds)
 	if err != nil {
 		return err
@@ -429,7 +428,7 @@ func (m *database) applyGlobalConfigChecks(configs *collectionWrapper) error {
 
 func (m *database) applyFirebaseCredsChecks(firebaseCreds *collectionWrapper) error {
 	// Add client_id index
-	err := firebaseCreds.AddIndex(bson.D{primitive.E{Key: "clientID", Value: 1}}, false)
+	err := firebaseCreds.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}

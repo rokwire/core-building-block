@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -31,16 +30,7 @@ const (
 )
 
 func (a *firebaseAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
-	paramsMap := make(map[string]interface{})
-	err := json.Unmarshal([]byte(params), &paramsMap)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.TypeString, &logutils.FieldArgs{"params": params}, err)
-	}
-	clientID, ok := paramsMap["clientID"].(string)
-	if !ok {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
-	}
-	err = a.setFirebaseAdminCreds(clientID)
+	err := a.setFirebaseAdminCreds(orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionSave, logutils.TypeString, nil, err)
 	}
@@ -85,9 +75,9 @@ func (a *firebaseAuthImpl) check(creds string, orgID string, appID string, param
 	return claims, nil
 }
 
-//Create a firebase admin with given email and password
-func (a *firebaseAuthImpl) createAdmin(email string, password string) (string, error) {
-	firebaseAuth, err := a.getFirebaseAuthClient("admin")
+//Create a firebase user with given email and password
+func (a *firebaseAuthImpl) createEmailUser(email string, password string, orgID string) (string, error) {
+	firebaseAuth, err := a.getFirebaseAuthClient(orgID)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionGet, typeCred, nil, err)
 	}
@@ -105,9 +95,9 @@ func (a *firebaseAuthImpl) createAdmin(email string, password string) (string, e
 	return userRecord.UID, nil
 }
 
-//Get a firebase admin by a given email
-func (a *firebaseAuthImpl) getAdmin(email string) (string, error) {
-	firebaseAuth, err := a.getFirebaseAuthClient("admin")
+//Get a firebase user by a given email
+func (a *firebaseAuthImpl) getEmailUser(email string, orgID string) (string, error) {
+	firebaseAuth, err := a.getFirebaseAuthClient(orgID)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionGet, typeCred, nil, err)
 	}
@@ -119,8 +109,8 @@ func (a *firebaseAuthImpl) getAdmin(email string) (string, error) {
 	return userRecord.UID, nil
 }
 
-func (a *firebaseAuthImpl) setFirebaseAdminCreds(clientID string) error {
-	creds, err := a.auth.storage.GetFirebaseAdminCreds(clientID)
+func (a *firebaseAuthImpl) setFirebaseAdminCreds(orgID string) error {
+	creds, err := a.auth.storage.FindFirebaseAdminCreds(orgID)
 	if err != nil {
 		return err
 	}
@@ -133,8 +123,8 @@ func (a *firebaseAuthImpl) setFirebaseAdminCreds(clientID string) error {
 	return nil
 }
 
-func (a *firebaseAuthImpl) getFirebaseAuthClient(clientID string) (*auth.Client, error) {
-	err := a.setFirebaseAdminCreds(clientID)
+func (a *firebaseAuthImpl) getFirebaseAuthClient(orgID string) (*auth.Client, error) {
+	err := a.setFirebaseAdminCreds(orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionSave, logutils.TypeString, nil, err)
 	}

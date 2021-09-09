@@ -617,7 +617,7 @@ type Storage interface {
 	InsertUser(user *model.User, authCred *model.AuthCred) (*model.User, error)
 	UpdateUser(user *model.User, newOrgData *map[string]interface{}) (*model.User, error)
 	DeleteUser(id string) error
-	GetFirebaseAdminCreds(clientID string) (*model.FirebaseAdminCreds, error)
+	FindFirebaseAdminCreds(clientID string) (*model.FirebaseAdminCreds, error)
 
 	FindCredentials(orgID string, appID string, authType string, userID string) (*model.AuthCred, error)
 
