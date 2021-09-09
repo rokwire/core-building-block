@@ -176,7 +176,7 @@ func (h ServicesApisHandler) createAnonymousProfile(l *logs.Log, r *http.Request
 
 	var requestData Def.AnonymousProfile
 	err = json.Unmarshal(data, &requestData)
-	if err != nil || requestData.Id == "" {
+	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAnonymousProfile, nil, err, http.StatusBadRequest, true)
 	}
 	profile := anonymousProfileFromDef(&requestData)
@@ -191,11 +191,6 @@ func (h ServicesApisHandler) createAnonymousProfile(l *logs.Log, r *http.Request
 }
 
 func (h ServicesApisHandler) updateAnonymousProfile(l *logs.Log, r *http.Request) logs.HttpResponse {
-	params := mux.Vars(r)
-	ID := params["id"]
-	if len(ID) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
-	}
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)

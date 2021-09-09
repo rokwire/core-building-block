@@ -69,7 +69,7 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations)).Methods("GET")
 	servicesSubRouter.HandleFunc("/anonymous-profiles", we.wrapFunc(we.servicesApisHandler.createAnonymousProfile)).Methods("POST")
-	servicesSubRouter.HandleFunc("/anonymous-profiles/{id}", we.wrapFunc(we.servicesApisHandler.updateAnonymousProfile)).Methods("PUT")
+	servicesSubRouter.HandleFunc("/anonymous-profiles", we.wrapFunc(we.servicesApisHandler.updateAnonymousProfile)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/anonymous-profiles/{id}", we.wrapFunc(we.servicesApisHandler.getAnonymousProfile)).Methods("GET")
 	servicesSubRouter.HandleFunc("/anonymous-profiles/{id}", we.wrapFunc(we.servicesApisHandler.deleteAnonymousProfile)).Methods("DELETE")
 

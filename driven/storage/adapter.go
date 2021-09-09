@@ -690,14 +690,13 @@ func (sa *Adapter) UpdateAnonymousProfile(id string, favorites *[]string, intere
 		updates["over13"] = *over13
 	}
 
-	// The "ReturnDocument" option must be set to after to get the updated document
-	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
-	var item *model.AnonymousProfile
-	err := sa.db.anonymousProfile.FindOneAndUpdate(filter, updates, item, opts)
+	result, err := sa.db.anonymousProfile.UpdateOne(filter, updates, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeOrganization, &logutils.FieldArgs{"id": id}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAnonymousProfile, &logutils.FieldArgs{"id": id}, err)
 	}
-
+	if result.MatchedCount == 0 {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeAnonymousProfile, &logutils.FieldArgs{"id": id}, err)
+	}
 	return nil
 }
 
