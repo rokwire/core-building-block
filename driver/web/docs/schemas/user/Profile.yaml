@@ -1,12 +1,14 @@
-required:
-  - id
 type: object
 properties:
   id:
+    type: string
+  photo_url:
     type: string
   first_name:
     type: string
   last_name:
     type: string
-  photo_url:
-    type: string
+  accounts:
+    type: array
+    items:
+      $ref: "./Account.yaml"

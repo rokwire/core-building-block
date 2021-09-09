@@ -6,7 +6,7 @@ import (
 )
 
 //User
-func userFromDef(item *Def.User) model.Account {
+func userFromDef(item *Def.Account) model.Account {
 	if item == nil {
 		return model.Account{}
 	}
@@ -14,12 +14,12 @@ func userFromDef(item *Def.User) model.Account {
 	// account := userAccountFromDef(item.Account)
 	// profile := userProfileFromDef(item.Profile)
 	//TODO: add permissions
-	return model.Account{ID: item.Id}
+	return model.Account{ID: *item.Id}
 
 }
 
-func userToDef(item *model.Account) *Def.User {
-	if item == nil {
+func userToDef(item *model.Account) *Def.Account {
+	/*if item == nil {
 		return nil
 	}
 
@@ -28,7 +28,8 @@ func userToDef(item *model.Account) *Def.User {
 	profile := userProfileToDef(&item.Profile)
 	devices := deviceListToDef(item.Devices)
 	//TODO: handle permissions
-	return &Def.User{Id: item.ID /*Account: account,*/, Profile: profile, Devices: &devices}
+	return &Def.User{Id: item.ID /*Account: account,*/ /*, Profile: profile, Devices: &devices} */
+	return nil
 }
 
 /*
@@ -47,18 +48,20 @@ func userAccountToDef(item *model.UserAccount) *Def.UserAccount {
 }
 */
 //UserProfile
-func userProfileFromDef(item *Def.UserProfile) *model.Profile {
-	if item == nil {
+func userProfileFromDef(item *Def.Profile) *model.Profile {
+	/*if item == nil {
 		return nil
 	}
-	return &model.Profile{ID: item.Id, FirstName: defString(item.FirstName), LastName: defString(item.LastName), PhotoURL: defString(item.PhotoUrl)}
+	return &model.Profile{ID: item.Id, FirstName: defString(item.FirstName), LastName: defString(item.LastName), PhotoURL: defString(item.PhotoUrl)} */
+	return nil
 }
 
-func userProfileToDef(item *model.Profile) *Def.UserProfile {
-	if item == nil {
+func userProfileToDef(item *model.Profile) *Def.Profile {
+	/*if item == nil {
 		return nil
 	}
-	return &Def.UserProfile{Id: item.ID, FirstName: &item.FirstName, LastName: &item.LastName, PhotoUrl: &item.PhotoURL}
+	return &Def.UserProfile{Id: item.ID, FirstName: &item.FirstName, LastName: &item.LastName, PhotoUrl: &item.PhotoURL} */
+	return nil
 }
 
 //Device

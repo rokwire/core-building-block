@@ -39,12 +39,10 @@ OidcDiscovery:
 # user
 Account:
   $ref: "./user/Account.yaml"
-User:
-  $ref: "./user/User.yaml"
-UserAccount:
-  $ref: "./user/UserAccount.yaml"
-UserProfile:
-  $ref: "./user/UserProfile.yaml"
+Profile:
+  $ref: "./user/Profile.yaml"
+AccountAuthType:
+  $ref: "./user/AccountAuthType.yaml"
 Device:
   $ref: "./user/Device.yaml"
 

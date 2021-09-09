@@ -7,6 +7,7 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 
@@ -48,7 +49,9 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 
 	tokenType := Def.ResAuthResponseRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResAuthResponseRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
-	responseData := &Def.ResAuthLoginResponse{Token: &rokwireToken, User: userToDef(user), Params: &params}
+	//TODO
+	log.Println(user)
+	responseData := &Def.ResAuthLoginResponse{Token: &rokwireToken /* User: userToDef(user), */, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)

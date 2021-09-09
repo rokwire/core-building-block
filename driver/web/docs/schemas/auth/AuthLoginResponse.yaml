@@ -2,8 +2,8 @@ type: object
 properties:
   token:
     $ref: "./AuthResponseRokwireToken.yaml"
-  user:
-    $ref: "../../schemas/user/User.yaml"
+  #user: TODO
+   # $ref: "../../schemas/user/User.yaml"
   params:
     type: object
     nullable: true

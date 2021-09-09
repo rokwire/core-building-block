@@ -815,6 +815,7 @@ components:
         application:
           $ref: '#/components/schemas/Application'
     ApplicationOrganization:
+      type: object
       properties:
         id:
           type: string
@@ -1026,49 +1027,55 @@ components:
         jwks_uri:
           type: string
     Account:
-      properties:
-        id:
-          type: string
-    User:
-      required:
-        - id
       type: object
       properties:
         id:
           type: string
-        account:
-          $ref: '#/components/schemas/UserAccount'
+        application:
+          $ref: '#/components/schemas/Application'
+        organization:
+          $ref: '#/components/schemas/Organization'
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationPermission'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationRole'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationGroup'
+        auth_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountAuthType'
         profile:
-          $ref: '#/components/schemas/UserProfile'
+          $ref: '#/components/schemas/Profile'
         devices:
           type: array
           items:
             $ref: '#/components/schemas/Device'
-    UserAccount:
-      required:
-        - id
+    Profile:
       type: object
       properties:
         id:
           type: string
-        email:
-          type: string
-        phone:
-          type: string
-        username:
-          type: string
-    UserProfile:
-      required:
-        - id
-      type: object
-      properties:
-        id:
+        photo_url:
           type: string
         first_name:
           type: string
         last_name:
           type: string
-        photo_url:
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+    AccountAuthType:
+      type: object
+      properties:
+        id:
           type: string
     Device:
       required:
@@ -1202,8 +1209,6 @@ components:
       properties:
         token:
           $ref: '#/components/schemas/_res_AuthResponseRokwireToken'
-        user:
-          $ref: '#/components/schemas/User'
         params:
           type: object
           nullable: true

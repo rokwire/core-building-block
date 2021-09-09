@@ -70,6 +70,19 @@ const (
 
 // Account defines model for Account.
 type Account struct {
+	Application  *Application             `json:"application,omitempty"`
+	AuthTypes    *[]AccountAuthType       `json:"auth_types,omitempty"`
+	Devices      *[]Device                `json:"devices,omitempty"`
+	Groups       *[]ApplicationGroup      `json:"groups,omitempty"`
+	Id           *string                  `json:"id,omitempty"`
+	Organization *Organization            `json:"organization,omitempty"`
+	Permissions  *[]ApplicationPermission `json:"permissions,omitempty"`
+	Profile      *Profile                 `json:"profile,omitempty"`
+	Roles        *[]ApplicationRole       `json:"roles,omitempty"`
+}
+
+// AccountAuthType defines model for AccountAuthType.
+type AccountAuthType struct {
 	Id *string `json:"id,omitempty"`
 }
 
@@ -83,10 +96,34 @@ type Application struct {
 	Types            *[]ApplicationType         `json:"types,omitempty"`
 }
 
+// ApplicationGroup defines model for ApplicationGroup.
+type ApplicationGroup struct {
+	Application *Application             `json:"application,omitempty"`
+	Id          string                   `json:"id"`
+	Name        string                   `json:"name"`
+	Permissions *[]ApplicationPermission `json:"permissions,omitempty"`
+	Roles       *[]ApplicationRole       `json:"roles,omitempty"`
+}
+
 // ApplicationOrganization defines model for ApplicationOrganization.
 type ApplicationOrganization struct {
 	TODO *string `json:"TODO,omitempty"`
 	Id   *string `json:"id,omitempty"`
+}
+
+// ApplicationPermission defines model for ApplicationPermission.
+type ApplicationPermission struct {
+	Application *Application `json:"application,omitempty"`
+	Id          string       `json:"id"`
+	Name        string       `json:"name"`
+}
+
+// ApplicationRole defines model for ApplicationRole.
+type ApplicationRole struct {
+	Application *Application             `json:"application,omitempty"`
+	Id          string                   `json:"id"`
+	Name        string                   `json:"name"`
+	Permissions *[]ApplicationPermission `json:"permissions,omitempty"`
 }
 
 // ApplicationType defines model for ApplicationType.
@@ -185,6 +222,15 @@ type OrganizationConfig struct {
 	Id *string `json:"id,omitempty"`
 }
 
+// Profile defines model for Profile.
+type Profile struct {
+	Accounts  *[]Account `json:"accounts,omitempty"`
+	FirstName *string    `json:"first_name,omitempty"`
+	Id        *string    `json:"id,omitempty"`
+	LastName  *string    `json:"last_name,omitempty"`
+	PhotoUrl  *string    `json:"photo_url,omitempty"`
+}
+
 // PubKey defines model for PubKey.
 type PubKey struct {
 	Alg    string `json:"alg"`
@@ -211,30 +257,6 @@ type ServiceScope struct {
 	Explanation *string `json:"explanation,omitempty"`
 	Required    bool    `json:"required"`
 	Scope       string  `json:"scope"`
-}
-
-// User defines model for User.
-type User struct {
-	Account *UserAccount `json:"account,omitempty"`
-	Devices *[]Device    `json:"devices,omitempty"`
-	Id      string       `json:"id"`
-	Profile *UserProfile `json:"profile,omitempty"`
-}
-
-// UserAccount defines model for UserAccount.
-type UserAccount struct {
-	Email    *string `json:"email,omitempty"`
-	Id       string  `json:"id"`
-	Phone    *string `json:"phone,omitempty"`
-	Username *string `json:"username,omitempty"`
-}
-
-// UserProfile defines model for UserProfile.
-type UserProfile struct {
-	FirstName *string `json:"first_name,omitempty"`
-	Id        string  `json:"id"`
-	LastName  *string `json:"last_name,omitempty"`
-	PhotoUrl  *string `json:"photo_url,omitempty"`
 }
 
 // ReqAuthAuthorizeServiceRequest defines model for _req_AuthAuthorizeServiceRequest.
@@ -317,7 +339,6 @@ type ResAuthAuthorizeServiceResponseTokenType string
 type ResAuthLoginResponse struct {
 	Params *interface{}                 `json:"params"`
 	Token  *ResAuthResponseRokwireToken `json:"token,omitempty"`
-	User   *User                        `json:"user,omitempty"`
 }
 
 // ResAuthLoginUrlResponse defines model for _res_AuthLoginUrlResponse.
