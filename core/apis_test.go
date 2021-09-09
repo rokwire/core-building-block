@@ -159,6 +159,29 @@ func TestGetOrganizations(t *testing.T) {
 		return
 	}
 }
+func TestAdmUpdateOrganization(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("AdmUpdateOrganization", "_id", "name", "type").Return(&model.Organization{ID: "_id", Name: "name", Type: "type"}, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	updateOrganization := app.Administration.AdmUpdateOrganization("_id", "name", "type", true, nil, nil)
+
+	if updateOrganization == nil {
+		t.Errorf("Error on updating the organization")
+	}
+	// second case error
+	storage2 := genmocks.Storage{}
+	storage2.On("AdmUpdateOrganization").Return(&model.Organization{ID: "_id", Name: "name", Type: "type"}, nil)
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	err := app.Administration.AdmUpdateOrganization("_id", "name", "type", true, nil, nil)
+
+	if err == nil {
+		t.Error("We are expecting error")
+		return
+	}
+
+}
 
 func TestAdmGetApplication(t *testing.T) {
 	storage := genmocks.Storage{}
@@ -220,31 +243,42 @@ func TestEncGetTest(t *testing.T) {
 	assert.Equal(t, got, want, "result is different")
 }
 
+type applicationForTesting struct {
+	ID       string   `bson:"_id"`
+	Name     string   `bson:"name"`
+	Versions []string `bson:"versions"`
+}
+
 func TestAdmCreateApplication(t *testing.T) {
-	/*storage := genmocks.Storage{}
-	storage.On("InsertApplication", "name", "versions").Return(&model.Application{Name: "name"}, nil)
+
+	versions := make([]string, 3)
+	versions[0] = "V.1.1"
+	versions[1] = "V.1.2"
+	versions[2] = "V.1.3"
+	storage := genmocks.Storage{}
+	storage.On("InsertApplication", "_id", "name", versions).Return(&applicationForTesting{ID: "_id", Name: "name", Versions: versions}, nil)
 
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
-	ca, _ := app.Administration.AdmCreateApplication("name", nil)
+	ca, _ := app.Administration.AdmCreateApplication("name", versions)
 	if ca == nil {
-		t.Error("gc is nil")
+		t.Error("ca is nil")
 		return
 	}
-	assert.Equal(t, ca.Name, "name", "name is different")
+	assert.Equal(t, ca.Name, ca.Versions)
 
 	//second case - error
 	storage2 := genmocks.Storage{}
-	storage2.On("InsertApplication", "name").Return(nil, errors.New("error occured"))
+	storage2.On("InsertApplication", "_id", "name", versions).Return(nil, errors.New("error occured"))
 
 	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage2, nil)
 
-	_, err := app.Administration.AdmCreateApplication("name", nil)
+	_, err := app.Administration.AdmCreateApplication("name", versions)
 	if err == nil {
 		t.Error("we are expecting error")
 		return
 	}
-	assert.Equal(t, err.Error(), "core-building-block/core.(*application).admCreateApplication() error inserting application: error occured", "error is different: "+err.Error())*/
+	assert.Equal(t, err.Error(), "core-building-block/core.(*application).admCreateApplication() error inserting application: error occured", "error is different: "+err.Error())
 }
 
 ///
