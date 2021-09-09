@@ -42,6 +42,7 @@ UserProfile:
 Device:
   $ref: "./user/Device.yaml"
 
+##### requests and responses - they are at bottom
 ### requests
 _req_AuthLoginRequest:
   $ref: "./auth/AuthLoginRequest.yaml"
