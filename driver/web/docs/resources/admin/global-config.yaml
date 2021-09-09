@@ -4,6 +4,8 @@ get:
   summary: Get global config
   description: |
     Gives the system global config
+  security:
+    - bearerAuth: []
   responses:
       200:
         description: Success
@@ -23,6 +25,8 @@ post:
   summary: Create global config
   description: |
     Creates the system global config
+  security:
+    - bearerAuth: []
   requestBody:
     content:
       application/json:
@@ -49,6 +53,8 @@ put:
   summary: Update global config
   description: |
     Updates the system global config
+  security:
+    - bearerAuth: []
   requestBody:
     content:
       application/json:

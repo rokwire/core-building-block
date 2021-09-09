@@ -4,6 +4,8 @@ get:
   summary: Get service registrations
   description: |
     Returns service registration records
+  security:
+    - bearerAuth: []
   parameters:
     - name: ids
       in: query

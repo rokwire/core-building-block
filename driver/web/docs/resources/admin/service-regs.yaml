@@ -40,6 +40,8 @@ post:
     Creates a new service registration
 
     The "service_id" of the registration must not match an existing registration  
+  security:
+    - bearerAuth: []
   requestBody:
     description: service registration record to be added
     content:
@@ -69,6 +71,8 @@ put:
     Update an existing service registration
 
     The "service_id" of the registration must match an existing registration
+  security:
+    - bearerAuth: []
   requestBody:
     description: Service registration record update to be applied
     content:
@@ -96,6 +100,8 @@ delete:
   summary: Deregister service
   description: |
     Deletes an existing service registration record
+  security:
+    - bearerAuth: []
   parameters:
     - name: id
       in: query

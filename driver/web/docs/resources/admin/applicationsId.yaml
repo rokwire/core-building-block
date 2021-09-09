@@ -4,6 +4,8 @@ get:
   summary: Get application
   description: |
     Gets application
+  security:
+    - bearerAuth: []
   parameters:
   - name: id
     in: path

@@ -31,6 +31,8 @@ paths:
       summary: Login
       description: |
         Login using credentials to retrieve access token, refresh token, and user data
+      security:
+        - bearerAuth: []
       requestBody:
         description: |
           User credential details and parameters
@@ -97,6 +99,8 @@ paths:
       summary: Refresh
       description: |
         Refresh access token using a refresh token
+      security:
+        - bearerAuth: []
       requestBody:
         description: |
           Refresh token
@@ -125,6 +129,8 @@ paths:
       summary: Get SSO login url
       description: |
         Retrieve a pre-formatted SSO login URL
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -151,6 +157,8 @@ paths:
       summary: Authorize service
       description: |
         Authorize a third-party service and get a scoped access token that can be used to access its APIs
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -212,6 +220,8 @@ paths:
       summary: Get service registrations
       description: |
         Returns service registration records
+      security:
+        - bearerAuth: []
       parameters:
         - name: ids
           in: query
@@ -256,6 +266,8 @@ paths:
       summary: Get global config
       description: |
         Gives the system global config
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Success
@@ -275,6 +287,8 @@ paths:
       summary: Create global config
       description: |
         Creates the system global config
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -301,6 +315,8 @@ paths:
       summary: Update global config
       description: |
         Updates the system global config
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -328,6 +344,8 @@ paths:
       summary: Update organization
       description: |
         Updates organization
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -364,6 +382,8 @@ paths:
       summary: Get organization
       description: |
         Gets organization
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -395,6 +415,8 @@ paths:
       summary: Get organizations
       description: |
         Gets organizations
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Successful operation
@@ -416,6 +438,8 @@ paths:
       summary: Create organization
       description: |
         Creates organization
+      security:
+        - bearerAuth: []
       requestBody:
         description: creates one organization
         content:
@@ -480,6 +504,8 @@ paths:
         Creates a new service registration
 
         The "service_id" of the registration must not match an existing registration  
+      security:
+        - bearerAuth: []
       requestBody:
         description: service registration record to be added
         content:
@@ -509,6 +535,8 @@ paths:
         Update an existing service registration
 
         The "service_id" of the registration must match an existing registration
+      security:
+        - bearerAuth: []
       requestBody:
         description: Service registration record update to be applied
         content:
@@ -536,6 +564,8 @@ paths:
       summary: Deregister service
       description: |
         Deletes an existing service registration record
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: query
@@ -566,6 +596,8 @@ paths:
       summary: Get application
       description: |
         Gets application
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -597,6 +629,8 @@ paths:
       summary: Create application
       description: |
         Creates application
+      security:
+        - bearerAuth: []
       requestBody:
         description: creates one application
         content:

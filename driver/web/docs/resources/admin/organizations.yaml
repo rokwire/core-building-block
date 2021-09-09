@@ -4,6 +4,8 @@
   summary: Get organizations
   description: |
     Gets organizations
+  security:
+    - bearerAuth: []
   responses:
       200:
         description: Successful operation
@@ -25,6 +27,8 @@
   summary: Create organization
   description: |
     Creates organization
+  security:
+    - bearerAuth: []
   requestBody:
     description: creates one organization
     content:

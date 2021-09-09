@@ -4,6 +4,8 @@ put:
   summary: Update organization
   description: |
     Updates organization
+  security:
+    - bearerAuth: []
   parameters:
   - name: id
     in: path
@@ -40,6 +42,8 @@ get:
   summary: Get organization
   description: |
     Gets organization
+  security:
+    - bearerAuth: []
   parameters:
   - name: id
     in: path

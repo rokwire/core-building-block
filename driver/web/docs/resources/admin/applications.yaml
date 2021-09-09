@@ -4,6 +4,8 @@
   summary: Create application
   description: |
     Creates application
+  security:
+    - bearerAuth: []
   requestBody:
     description: creates one application
     content:
