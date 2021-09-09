@@ -87,7 +87,7 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 //		Refresh token (string): Refresh token that can be sent to refresh the access token once it expires
 //		Params (interface{}): authType-specific set of parameters passed back to client
 func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interface{}, error) {
-	//TODO
+	//TODO - work with the logins sessions
 	return "", "", nil, nil
 	/*
 		refresh, err := a.storage.FindRefreshToken(refreshToken)
