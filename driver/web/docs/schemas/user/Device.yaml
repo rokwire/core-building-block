@@ -1,7 +1,6 @@
 required:
   - id
   - type
-  - user_ids
 type: object
 properties:
   id:

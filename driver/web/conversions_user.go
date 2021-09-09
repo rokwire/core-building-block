@@ -7,14 +7,15 @@ import (
 
 //User
 func userFromDef(item *Def.Account) model.Account {
-	if item == nil {
-		return model.Account{}
-	}
+	/*	if item == nil {
+			return model.Account{}
+		}
 
-	// account := userAccountFromDef(item.Account)
-	// profile := userProfileFromDef(item.Profile)
-	//TODO: add permissions
-	return model.Account{ID: *item.Id}
+		// account := userAccountFromDef(item.Account)
+		// profile := userProfileFromDef(item.Profile)
+		//TODO: add permissions
+		return model.Account{ID: *item.Id} */
+	return model.Account{}
 
 }
 

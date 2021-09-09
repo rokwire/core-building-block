@@ -1052,6 +1052,8 @@ components:
         jwks_uri:
           type: string
     Account:
+      required:
+        - id
       type: object
       properties:
         id:
@@ -1121,7 +1123,6 @@ components:
       required:
         - id
         - type
-        - user_ids
       type: object
       properties:
         id:
@@ -1249,6 +1250,8 @@ components:
       properties:
         token:
           $ref: '#/components/schemas/_res_AuthResponseRokwireToken'
+        account:
+          $ref: '#/components/schemas/_res_AuthResponseAccount'
         params:
           type: object
           nullable: true
@@ -1315,3 +1318,91 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
+    _res_AuthResponseAccount:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        profile:
+          $ref: '#/components/schemas/_res_AuthResponseProfile'
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/_res_AuthResponsePermission'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/_res_AuthResponseRole'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/_res_AuthResponseGroup'
+        auth_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/_res_AuthResponseAccountAuthType'
+    _res_AuthResponseProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        photo_url:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+    _res_AuthResponsePermission:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    _res_AuthResponseRole:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/_res_AuthResponsePermission'
+    _res_AuthResponseGroup:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/_res_AuthResponsePermission'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/_res_AuthResponseRole'
+    _res_AuthResponseAccountAuthType:
+      type: object
+      properties:
+        id:
+          type: string
+        identifier:
+          type: string
+        params:
+          type: object
+          nullable: true

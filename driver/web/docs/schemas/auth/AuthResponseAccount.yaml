@@ -1,0 +1,26 @@
+required:
+  - id
+type: object
+properties:
+  id:
+    type: string
+  profile:
+    $ref: "./AuthResponseProfile.yaml"
+  permissions:
+    type: array
+    items:
+      $ref: "./AuthResponsePermission.yaml"
+  roles:
+    type: array
+    items:
+      $ref: "./AuthResponseRole.yaml"
+  groups:
+    type: array
+    items:
+      $ref: "./AuthResponseGroup.yaml"
+  auth_types:
+    type: array
+    items:
+      $ref: "./AuthResponseAccountAuthType.yaml"
+
+

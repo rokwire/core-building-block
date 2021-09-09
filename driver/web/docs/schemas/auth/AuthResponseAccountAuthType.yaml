@@ -1,0 +1,9 @@
+type: object
+properties:
+  id:
+    type: string
+  identifier:
+    type: string
+  params:
+    type: object
+    nullable: true

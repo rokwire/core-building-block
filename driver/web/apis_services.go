@@ -7,7 +7,6 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 
@@ -42,16 +41,41 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	accessToken, refreshToken, user, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppId, requestData.OrgId, requestParams, l)
+	accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppId, requestData.OrgId, requestParams, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
 
 	tokenType := Def.ResAuthResponseRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResAuthResponseRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
-	//TODO
-	log.Println(user)
-	responseData := &Def.ResAuthLoginResponse{Token: &rokwireToken /* User: userToDef(user), */, Params: &params}
+
+	///account
+	//profile
+	profile := Def.ResAuthResponseProfile{Id: &account.Profile.ID, FirstName: &account.Profile.FirstName, LastName: &account.Profile.LastName, PhotoUrl: &account.Profile.PhotoURL}
+	//TODO permissions, roles and groups..
+	//permissions
+	permissions := make([]Def.ResAuthResponsePermission, len(account.Permissions))
+	for i, c := range account.Permissions {
+		permissions[i] = Def.ResAuthResponsePermission{Id: c.ID, Name: c.Name}
+	}
+	//roles
+	roles := make([]Def.ResAuthResponseRole, len(account.Roles))
+	for i, c := range account.Roles {
+		roles[i] = Def.ResAuthResponseRole{Id: c.ID, Name: c.Name}
+	}
+	//groups
+	groups := make([]Def.ResAuthResponseGroup, len(account.Groups))
+	for i, c := range account.Groups {
+		groups[i] = Def.ResAuthResponseGroup{Id: c.ID, Name: c.Name}
+	}
+	//account auth types
+	accountAuthTypes := make([]Def.ResAuthResponseAccountAuthType, len(account.AuthTypes))
+	for i, c := range account.AuthTypes {
+		accountAuthTypes[i] = Def.ResAuthResponseAccountAuthType{Id: &c.ID, Identifier: &c.Identifier, Params: &c.Params}
+	}
+	accountData := Def.ResAuthResponseAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &accountAuthTypes, Profile: &profile}
+
+	responseData := &Def.ResAuthLoginResponse{Token: &rokwireToken, Account: &accountData, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
