@@ -1087,6 +1087,15 @@ components:
     Profile:
       type: object
       properties:
+        fields:
+          $ref: '#/components/schemas/ProfileFields'
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+    ProfileFields:
+      type: object
+      properties:
         id:
           type: string
         photo_url:
@@ -1095,10 +1104,6 @@ components:
           type: string
         last_name:
           type: string
-        accounts:
-          type: array
-          items:
-            $ref: '#/components/schemas/Account'
     AccountAuthType:
       type: object
       properties:
@@ -1326,7 +1331,7 @@ components:
         id:
           type: string
         profile:
-          $ref: '#/components/schemas/_res_AuthResponseProfile'
+          $ref: '#/components/schemas/ProfileFields'
         permissions:
           type: array
           items:

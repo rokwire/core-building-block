@@ -48,21 +48,14 @@ func userAccountToDef(item *model.UserAccount) *Def.UserAccount {
 	return &Def.UserAccount{Id: item.ID, Email: &item.Email, Phone: &item.Phone, Username: &item.Username}
 }
 */
-//UserProfile
-func userProfileFromDef(item *Def.Profile) *model.Profile {
-	/*if item == nil {
-		return nil
-	}
-	return &model.Profile{ID: item.Id, FirstName: defString(item.FirstName), LastName: defString(item.LastName), PhotoURL: defString(item.PhotoUrl)} */
-	return nil
+
+//Profile
+func profileFromDef(item *Def.ProfileFields) *model.Profile {
+	return &model.Profile{ID: *item.Id, FirstName: defString(item.FirstName), LastName: defString(item.LastName), PhotoURL: defString(item.PhotoUrl)}
 }
 
-func userProfileToDef(item *model.Profile) *Def.Profile {
-	/*if item == nil {
-		return nil
-	}
-	return &Def.UserProfile{Id: item.ID, FirstName: &item.FirstName, LastName: &item.LastName, PhotoUrl: &item.PhotoURL} */
-	return nil
+func profileToDef(item *model.Profile) *Def.ProfileFields {
+	return &Def.ProfileFields{Id: &item.ID, FirstName: &item.FirstName, LastName: &item.LastName, PhotoUrl: &item.PhotoURL}
 }
 
 //Device

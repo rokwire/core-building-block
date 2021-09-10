@@ -51,7 +51,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 
 	///account
 	//profile
-	profile := Def.ResAuthResponseProfile{Id: &account.Profile.ID, FirstName: &account.Profile.FirstName, LastName: &account.Profile.LastName, PhotoUrl: &account.Profile.PhotoURL}
+	profile := profileToDef(&account.Profile)
 	//TODO permissions, roles and groups..
 	//permissions
 	permissions := make([]Def.ResAuthResponsePermission, len(account.Permissions))
@@ -73,7 +73,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 	for i, c := range account.AuthTypes {
 		accountAuthTypes[i] = Def.ResAuthResponseAccountAuthType{Id: &c.ID, Identifier: &c.Identifier, Params: &c.Params}
 	}
-	accountData := Def.ResAuthResponseAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &accountAuthTypes, Profile: &profile}
+	accountData := Def.ResAuthResponseAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &accountAuthTypes, Profile: profile}
 
 	responseData := &Def.ResAuthLoginResponse{Token: &rokwireToken, Account: &accountData, Params: &params}
 	respData, err := json.Marshal(responseData)

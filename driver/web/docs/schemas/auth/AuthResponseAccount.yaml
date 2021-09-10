@@ -5,7 +5,7 @@ properties:
   id:
     type: string
   profile:
-    $ref: "./AuthResponseProfile.yaml"
+    $ref: "../user/ProfileFields.yaml"
   permissions:
     type: array
     items:

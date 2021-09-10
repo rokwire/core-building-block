@@ -1,13 +1,7 @@
 type: object
 properties:
-  id:
-    type: string
-  photo_url:
-    type: string
-  first_name:
-    type: string
-  last_name:
-    type: string
+  fields:
+    $ref: "./ProfileFields.yaml"
   accounts:
     type: array
     items:

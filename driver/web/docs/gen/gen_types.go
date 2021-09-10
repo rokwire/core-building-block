@@ -264,11 +264,16 @@ type OrganizationConfig struct {
 
 // Profile defines model for Profile.
 type Profile struct {
-	Accounts  *[]Account `json:"accounts,omitempty"`
-	FirstName *string    `json:"first_name,omitempty"`
-	Id        *string    `json:"id,omitempty"`
-	LastName  *string    `json:"last_name,omitempty"`
-	PhotoUrl  *string    `json:"photo_url,omitempty"`
+	Accounts *[]Account     `json:"accounts,omitempty"`
+	Fields   *ProfileFields `json:"fields,omitempty"`
+}
+
+// ProfileFields defines model for ProfileFields.
+type ProfileFields struct {
+	FirstName *string `json:"first_name,omitempty"`
+	Id        *string `json:"id,omitempty"`
+	LastName  *string `json:"last_name,omitempty"`
+	PhotoUrl  *string `json:"photo_url,omitempty"`
 }
 
 // PubKey defines model for PubKey.
@@ -402,7 +407,7 @@ type ResAuthResponseAccount struct {
 	Groups      *[]ResAuthResponseGroup           `json:"groups,omitempty"`
 	Id          string                            `json:"id"`
 	Permissions *[]ResAuthResponsePermission      `json:"permissions,omitempty"`
-	Profile     *ResAuthResponseProfile           `json:"profile,omitempty"`
+	Profile     *ProfileFields                    `json:"profile,omitempty"`
 	Roles       *[]ResAuthResponseRole            `json:"roles,omitempty"`
 }
 
@@ -434,14 +439,6 @@ type ResAuthResponseParamsOidc struct {
 type ResAuthResponsePermission struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
-}
-
-// ResAuthResponseProfile defines model for _res_AuthResponseProfile.
-type ResAuthResponseProfile struct {
-	FirstName *string `json:"first_name,omitempty"`
-	Id        *string `json:"id,omitempty"`
-	LastName  *string `json:"last_name,omitempty"`
-	PhotoUrl  *string `json:"photo_url,omitempty"`
 }
 
 // ResAuthResponseRokwireToken defines model for _res_AuthResponseRokwireToken.
