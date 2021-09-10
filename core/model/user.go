@@ -39,7 +39,7 @@ type Account struct {
 	DateUpdated *time.Time
 }
 
-//Equals checks if two external system users are equals
+//FindAccountAuthType finds account auth type
 func (a Account) FindAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
 	for _, aat := range a.AuthTypes {
 		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {

@@ -28,11 +28,11 @@ func GenerateRandomString(s int) (string, error) {
 
 // ConvertToJSON converts to json
 func ConvertToJSON(data interface{}) ([]byte, error) {
-	dataJson, err := json.Marshal(data)
+	dataJSON, err := json.Marshal(data)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error converting map to json", "", nil, err)
 	}
-	return dataJson, nil
+	return dataJSON, nil
 }
 
 //DeepEqual checks whether a and b are ``deeply equal,''

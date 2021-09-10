@@ -133,8 +133,8 @@ type ApplicationOrganization struct {
 }
 
 //FindIdentityProviderSetting finds the identity provider setting for the application
-func (a ApplicationOrganization) FindIdentityProviderSetting(identityProviderID string) *IdentityProviderSetting {
-	for _, idPrSetting := range a.IdentityProvidersSettings {
+func (ao ApplicationOrganization) FindIdentityProviderSetting(identityProviderID string) *IdentityProviderSetting {
+	for _, idPrSetting := range ao.IdentityProvidersSettings {
 		if idPrSetting.IdentityProviderID == identityProviderID {
 			return &idPrSetting
 		}

@@ -190,12 +190,12 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 			return nil, nil, nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
 		}
 		currentDataMap := accountAuthType.Params["user"]
-		currentDataJson, err := utils.ConvertToJSON(currentDataMap)
+		currentDataJSON, err := utils.ConvertToJSON(currentDataMap)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("error converting map to json", "", nil, err)
 		}
 		var currentData *model.ExternalSystemUser
-		err = json.Unmarshal(currentDataJson, &currentData)
+		err = json.Unmarshal(currentDataJSON, &currentData)
 		if err != nil {
 			return nil, nil, nil, errors.ErrorAction("error converting json to type", "", nil)
 		}
