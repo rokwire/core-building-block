@@ -4,6 +4,8 @@
   summary: Get organizations
   description: |
     Gets organizations
+
+    **Auth:** Requires auth token with `org_admin` permission
   security:
     - bearerAuth: []
   responses:

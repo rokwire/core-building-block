@@ -4,6 +4,8 @@ get:
   summary: Get global config
   description: |
     Gives the system global config
+
+    **Auth:** Requires auth token with `config_admin` permission
   security:
     - bearerAuth: []
   responses:

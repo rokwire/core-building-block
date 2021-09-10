@@ -266,6 +266,8 @@ paths:
       summary: Get global config
       description: |
         Gives the system global config
+
+        **Auth:** Requires auth token with `config_admin` permission
       security:
         - bearerAuth: []
       responses:
@@ -344,6 +346,8 @@ paths:
       summary: Update organization
       description: |
         Updates organization
+
+         **Auth:** Requires auth token with `org_admin` permission
       security:
         - bearerAuth: []
       parameters:
@@ -415,6 +419,8 @@ paths:
       summary: Get organizations
       description: |
         Gets organizations
+
+        **Auth:** Requires auth token with `org_admin` permission
       security:
         - bearerAuth: []
       responses:
@@ -596,6 +602,8 @@ paths:
       summary: Get application
       description: |
         Gets application
+
+        **Auth:** Requires auth token with `app_admin` permission
       security:
         - bearerAuth: []
       parameters:
@@ -629,6 +637,8 @@ paths:
       summary: Create application
       description: |
         Creates application
+
+        **Auth:** Requires auth token with `app_admin` permission
       security:
         - bearerAuth: []
       requestBody:

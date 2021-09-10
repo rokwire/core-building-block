@@ -4,6 +4,8 @@ put:
   summary: Update organization
   description: |
     Updates organization
+
+     **Auth:** Requires auth token with `org_admin` permission
   security:
     - bearerAuth: []
   parameters:

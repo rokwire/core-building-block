@@ -4,6 +4,8 @@
   summary: Create application
   description: |
     Creates application
+
+    **Auth:** Requires auth token with `app_admin` permission
   security:
     - bearerAuth: []
   requestBody:
