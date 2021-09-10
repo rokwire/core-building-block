@@ -760,7 +760,7 @@ func (a *Auth) setCachedApplicationsOrganizations(applicationsOrganization []mod
 			key := fmt.Sprintf("%s_%s", appOrg.Application.ID, appOrg.Organization.ID)
 			a.cachedApplicationsOrganizations.Store(key, appOrg)
 		} else {
-			a.logger.Errorf("failed to validate and cache applications organizations with ids %s: %s",
+			a.logger.Errorf("failed to validate and cache applications organizations with ids %s-%s: %s",
 				appOrg.Application.ID, appOrg.Organization.ID, err.Error())
 		}
 	}
