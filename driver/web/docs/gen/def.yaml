@@ -822,18 +822,13 @@ components:
         TODO:
           type: string
     ApplicationPermission:
-      required:
-        - id
-        - name
       type: object
       properties:
-        id:
-          type: string
-        name:
-          type: string
+        fields:
+          $ref: '#/components/schemas/ApplicationPermissionFields'
         application:
           $ref: '#/components/schemas/Application'
-    ApplicationRole:
+    ApplicationPermissionFields:
       required:
         - id
         - name
@@ -843,13 +838,18 @@ components:
           type: string
         name:
           type: string
+    ApplicationRole:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/ApplicationRoleFields'
         application:
           $ref: '#/components/schemas/Application'
         permissions:
           type: array
           items:
             $ref: '#/components/schemas/ApplicationPermission'
-    ApplicationGroup:
+    ApplicationRoleFields:
       required:
         - id
         - name
@@ -859,6 +859,11 @@ components:
           type: string
         name:
           type: string
+    ApplicationGroup:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/ApplicationGroupFields'
         application:
           $ref: '#/components/schemas/Application'
         permissions:
@@ -869,6 +874,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ApplicationRole'
+    ApplicationGroupFields:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
     Organization:
       required:
         - id
@@ -1335,72 +1350,19 @@ components:
         permissions:
           type: array
           items:
-            $ref: '#/components/schemas/_res_AuthResponsePermission'
+            $ref: '#/components/schemas/ApplicationPermissionFields'
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/_res_AuthResponseRole'
+            $ref: '#/components/schemas/ApplicationRoleFields'
         groups:
           type: array
           items:
-            $ref: '#/components/schemas/_res_AuthResponseGroup'
+            $ref: '#/components/schemas/ApplicationGroupFields'
         auth_types:
           type: array
           items:
             $ref: '#/components/schemas/_res_AuthResponseAccountAuthType'
-    _res_AuthResponseProfile:
-      type: object
-      properties:
-        id:
-          type: string
-        photo_url:
-          type: string
-        first_name:
-          type: string
-        last_name:
-          type: string
-    _res_AuthResponsePermission:
-      required:
-        - id
-        - name
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-    _res_AuthResponseRole:
-      required:
-        - id
-        - name
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        permissions:
-          type: array
-          items:
-            $ref: '#/components/schemas/_res_AuthResponsePermission'
-    _res_AuthResponseGroup:
-      required:
-        - id
-        - name
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        permissions:
-          type: array
-          items:
-            $ref: '#/components/schemas/_res_AuthResponsePermission'
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/_res_AuthResponseRole'
     _res_AuthResponseAccountAuthType:
       type: object
       properties:

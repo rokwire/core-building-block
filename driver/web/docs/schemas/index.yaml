@@ -11,10 +11,16 @@ ApplicationOrganization:
   $ref: "./application/ApplicationOrganization.yaml"
 ApplicationPermission:
   $ref: "./application/ApplicationPermission.yaml"
+ApplicationPermissionFields:
+  $ref: "./application/ApplicationPermissionFields.yaml"
 ApplicationRole:
   $ref: "./application/ApplicationRole.yaml"
+ApplicationRoleFields:
+  $ref: "./application/ApplicationRoleFields.yaml"
 ApplicationGroup:
   $ref: "./application/ApplicationGroup.yaml"
+ApplicationGroupFields:
+  $ref: "./application/ApplicationGroupFields.yaml"
 Organization:
   $ref: "./application/Organization.yaml"
 OrganizationConfig:
@@ -88,11 +94,5 @@ _res_AuthAuthorizeServiceResponse:
   $ref: "./auth/AuthAuthorizeServiceResponse.yaml"
 _res_AuthResponseAccount:
   $ref: "./auth/AuthResponseAccount.yaml"
-_res_AuthResponsePermission:
-  $ref: "./auth/AuthResponsePermission.yaml"
-_res_AuthResponseRole:
-  $ref: "./auth/AuthResponseRole.yaml"
-_res_AuthResponseGroup:
-  $ref: "./auth/AuthResponseGroup.yaml"
 _res_AuthResponseAccountAuthType:
   $ref: "./auth/AuthResponseAccountAuthType.yaml"

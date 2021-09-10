@@ -118,10 +118,15 @@ type Application struct {
 // ApplicationGroup defines model for ApplicationGroup.
 type ApplicationGroup struct {
 	Application *Application             `json:"application,omitempty"`
-	Id          string                   `json:"id"`
-	Name        string                   `json:"name"`
+	Fields      *ApplicationGroupFields  `json:"fields,omitempty"`
 	Permissions *[]ApplicationPermission `json:"permissions,omitempty"`
 	Roles       *[]ApplicationRole       `json:"roles,omitempty"`
+}
+
+// ApplicationGroupFields defines model for ApplicationGroupFields.
+type ApplicationGroupFields struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
 
 // ApplicationOrganization defines model for ApplicationOrganization.
@@ -132,17 +137,27 @@ type ApplicationOrganization struct {
 
 // ApplicationPermission defines model for ApplicationPermission.
 type ApplicationPermission struct {
-	Application *Application `json:"application,omitempty"`
-	Id          string       `json:"id"`
-	Name        string       `json:"name"`
+	Application *Application                 `json:"application,omitempty"`
+	Fields      *ApplicationPermissionFields `json:"fields,omitempty"`
+}
+
+// ApplicationPermissionFields defines model for ApplicationPermissionFields.
+type ApplicationPermissionFields struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
 
 // ApplicationRole defines model for ApplicationRole.
 type ApplicationRole struct {
 	Application *Application             `json:"application,omitempty"`
-	Id          string                   `json:"id"`
-	Name        string                   `json:"name"`
+	Fields      *ApplicationRoleFields   `json:"fields,omitempty"`
 	Permissions *[]ApplicationPermission `json:"permissions,omitempty"`
+}
+
+// ApplicationRoleFields defines model for ApplicationRoleFields.
+type ApplicationRoleFields struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
 
 // ApplicationType defines model for ApplicationType.
@@ -404,11 +419,11 @@ type ResAuthRefreshResponse struct {
 // ResAuthResponseAccount defines model for _res_AuthResponseAccount.
 type ResAuthResponseAccount struct {
 	AuthTypes   *[]ResAuthResponseAccountAuthType `json:"auth_types,omitempty"`
-	Groups      *[]ResAuthResponseGroup           `json:"groups,omitempty"`
+	Groups      *[]ApplicationGroupFields         `json:"groups,omitempty"`
 	Id          string                            `json:"id"`
-	Permissions *[]ResAuthResponsePermission      `json:"permissions,omitempty"`
+	Permissions *[]ApplicationPermissionFields    `json:"permissions,omitempty"`
 	Profile     *ProfileFields                    `json:"profile,omitempty"`
-	Roles       *[]ResAuthResponseRole            `json:"roles,omitempty"`
+	Roles       *[]ApplicationRoleFields          `json:"roles,omitempty"`
 }
 
 // ResAuthResponseAccountAuthType defines model for _res_AuthResponseAccountAuthType.
@@ -418,14 +433,6 @@ type ResAuthResponseAccountAuthType struct {
 	Params     *map[string]interface{} `json:"params"`
 }
 
-// ResAuthResponseGroup defines model for _res_AuthResponseGroup.
-type ResAuthResponseGroup struct {
-	Id          string                       `json:"id"`
-	Name        string                       `json:"name"`
-	Permissions *[]ResAuthResponsePermission `json:"permissions,omitempty"`
-	Roles       *[]ResAuthResponseRole       `json:"roles,omitempty"`
-}
-
 // ResAuthResponseParamsOidc defines model for _res_AuthResponseParamsOidc.
 type ResAuthResponseParamsOidc struct {
 	OidcToken *struct {
@@ -433,12 +440,6 @@ type ResAuthResponseParamsOidc struct {
 		IdToken     *string `json:"id_token,omitempty"`
 		TokenType   *string `json:"token_type,omitempty"`
 	} `json:"oidc_token,omitempty"`
-}
-
-// ResAuthResponsePermission defines model for _res_AuthResponsePermission.
-type ResAuthResponsePermission struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
 }
 
 // ResAuthResponseRokwireToken defines model for _res_AuthResponseRokwireToken.
@@ -456,13 +457,6 @@ type ResAuthResponseRokwireToken struct {
 
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResAuthResponseRokwireTokenTokenType string
-
-// ResAuthResponseRole defines model for _res_AuthResponseRole.
-type ResAuthResponseRole struct {
-	Id          string                       `json:"id"`
-	Name        string                       `json:"name"`
-	Permissions *[]ResAuthResponsePermission `json:"permissions,omitempty"`
-}
 
 // PostAdminApplicationsJSONBody defines parameters for PostAdminApplications.
 type PostAdminApplicationsJSONBody Application

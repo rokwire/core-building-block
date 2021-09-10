@@ -1,11 +1,6 @@
-required:
-  - id
-  - name
 type: object
 properties:
-  id:
-    type: string
-  name:
-    type: string
+  fields:
+     $ref: "./ApplicationPermissionFields.yaml"
   application:
     $ref: "./Application.yaml"

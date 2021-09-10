@@ -9,15 +9,15 @@ properties:
   permissions:
     type: array
     items:
-      $ref: "./AuthResponsePermission.yaml"
+      $ref: "../application/ApplicationPermissionFields.yaml"
   roles:
     type: array
     items:
-      $ref: "./AuthResponseRole.yaml"
+      $ref: "../application/ApplicationRoleFields.yaml"
   groups:
     type: array
     items:
-      $ref: "./AuthResponseGroup.yaml"
+      $ref: "../application/ApplicationGroupFields.yaml"
   auth_types:
     type: array
     items:

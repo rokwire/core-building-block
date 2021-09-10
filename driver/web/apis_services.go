@@ -49,25 +49,15 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 	tokenType := Def.ResAuthResponseRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResAuthResponseRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
-	///account
+	///prepare response
 	//profile
 	profile := profileToDef(&account.Profile)
-	//TODO permissions, roles and groups..
 	//permissions
-	permissions := make([]Def.ResAuthResponsePermission, len(account.Permissions))
-	for i, c := range account.Permissions {
-		permissions[i] = Def.ResAuthResponsePermission{Id: c.ID, Name: c.Name}
-	}
+	permissions := applicationPermissionsToDef(account.Permissions)
 	//roles
-	roles := make([]Def.ResAuthResponseRole, len(account.Roles))
-	for i, c := range account.Roles {
-		roles[i] = Def.ResAuthResponseRole{Id: c.ID, Name: c.Name}
-	}
+	roles := applicationRolesToDef(account.Roles)
 	//groups
-	groups := make([]Def.ResAuthResponseGroup, len(account.Groups))
-	for i, c := range account.Groups {
-		groups[i] = Def.ResAuthResponseGroup{Id: c.ID, Name: c.Name}
-	}
+	groups := applicationGroupsToDef(account.Groups)
 	//account auth types
 	accountAuthTypes := make([]Def.ResAuthResponseAccountAuthType, len(account.AuthTypes))
 	for i, c := range account.AuthTypes {
