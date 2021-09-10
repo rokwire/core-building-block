@@ -2,8 +2,7 @@ package auth
 
 import (
 	"context"
-	"io/ioutil"
-	"os"
+	"encoding/json"
 	"strings"
 
 	"core-building-block/core/model"
@@ -30,12 +29,12 @@ const (
 )
 
 func (a *firebaseAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
-	err := a.setFirebaseAdminCreds(orgID)
+	config, err := a.getFirebaseAdminCreds(orgID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionSave, logutils.TypeString, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionGet, logutils.TypeString, nil, err)
 	}
 
-	firebaseApp, err := firebase.NewApp(context.Background(), nil)
+	firebaseApp, err := firebase.NewApp(context.Background(), config)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInitialize, typeCred, nil, err)
 	}
@@ -55,23 +54,22 @@ func (a *firebaseAuthImpl) check(creds string, orgID string, appID string, param
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, typeCred, nil, err)
 	}
-	token.Claims["uid"] = token.Claims["user_id"]
-
+	claims := &model.UserAuth{UserID: token.Claims["user_id"].(string)}
 	if user.UserInfo.PhoneNumber != "" {
-		token.Claims["phone"] = user.UserInfo.PhoneNumber
+		claims.Phone = user.UserInfo.PhoneNumber
 	}
 	if user.UserInfo.Email != "" {
-		token.Claims["email"] = user.UserInfo.Email
+		claims.Email = user.UserInfo.Email
 	}
 	if user.UserInfo.DisplayName != "" {
 		displayName := strings.Split(user.UserInfo.DisplayName, " ")
 		if len(displayName) > 1 {
-			token.Claims["first_name"] = displayName[0]
-			token.Claims["last_name"] = displayName[1]
+			claims.FirstName = displayName[0]
+			claims.LastName = displayName[1]
 		}
 	}
 	var expiry int64 = 0
-	claims := &model.UserAuth{UserID: token.Claims["uid"].(string), FirstName: token.Claims["first_name"].(string), LastName: token.Claims["last_name"].(string), Phone: token.Claims["phone"].(string), Email: token.Claims["email"].(string), Exp: &expiry}
+	claims.Exp = &expiry
 	return claims, nil
 }
 
@@ -109,27 +107,31 @@ func (a *firebaseAuthImpl) getEmailUser(email string, orgID string) (string, err
 	return userRecord.UID, nil
 }
 
-func (a *firebaseAuthImpl) setFirebaseAdminCreds(orgID string) error {
+func (a *firebaseAuthImpl) getFirebaseAdminCreds(orgID string) (*firebase.Config, error) {
+	config := &firebase.Config{}
 	creds, err := a.auth.storage.FindFirebaseAdminCreds(orgID)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "./service-account-file.json")
-	err = ioutil.WriteFile("./service-account-file.json", []byte(creds.FirebaseCreds), 0644)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, typeCred, nil, err)
+	if err := json.Unmarshal([]byte(creds.FirebaseCreds), config); err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeCred, nil, err)
+	}
+	// os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "./service-account-file.json")
+	// err = ioutil.WriteFile("./service-account-file.json", []byte(creds.FirebaseCreds), 0644)
+	// if err != nil {
+	// 	return errors.WrapErrorAction(logutils.ActionUpdate, typeCred, nil, err)
 
-	}
-	return nil
+	// }
+	return config, nil
 }
 
 func (a *firebaseAuthImpl) getFirebaseAuthClient(orgID string) (*auth.Client, error) {
-	err := a.setFirebaseAdminCreds(orgID)
+	config, err := a.getFirebaseAdminCreds(orgID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionSave, logutils.TypeString, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionGet, logutils.TypeString, nil, err)
 	}
 
-	firebaseApp, err := firebase.NewApp(context.Background(), nil)
+	firebaseApp, err := firebase.NewApp(context.Background(), config)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInitialize, typeCred, nil, err)
 	}
