@@ -55,6 +55,8 @@ ProfileFields:
   $ref: "./user/ProfileFields.yaml"
 AccountAuthType:
   $ref: "./user/AccountAuthType.yaml"
+AccountAuthTypeFields:
+  $ref: "./user/AccountAuthTypeFields.yaml"
 Device:
   $ref: "./user/Device.yaml"
 
@@ -94,5 +96,3 @@ _res_AuthAuthorizeServiceResponse:
   $ref: "./auth/AuthAuthorizeServiceResponse.yaml"
 _res_AuthResponseAccount:
   $ref: "./auth/AuthResponseAccount.yaml"
-_res_AuthResponseAccountAuthType:
-  $ref: "./auth/AuthResponseAccountAuthType.yaml"

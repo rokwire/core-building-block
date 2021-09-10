@@ -1,0 +1,14 @@
+type: object
+properties:
+  id:
+    type: string
+  identifier:
+    type: string
+  params:  
+    type: object
+    additionalProperties: true
+    nullable: true
+  active:
+    type: boolean
+  active_2fa:
+    type: boolean

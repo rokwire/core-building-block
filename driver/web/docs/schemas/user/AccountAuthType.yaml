@@ -1,19 +1,10 @@
 type: object
 properties:
-  id:
-    type: string
+  fields:
+    $ref: "./AccountAuthTypeFields.yaml"
   auth_type:
      $ref: "../auth/AuthType.yaml"
   account:
      $ref: "./Account.yaml"
-  identifier:
-    type: string
-  params:  
-    type: object
-    additionalProperties: true
   credential:
      $ref: "../auth/Credential.yaml"
-  active:
-    type: boolean
-  active_2fa:
-    type: boolean

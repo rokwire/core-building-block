@@ -33,21 +33,20 @@ func userToDef(item *model.Account) *Def.Account {
 	return nil
 }
 
-/*
-//UserAccount
-func userAccountFromDef(item *Def.UserAccount) *model.UserAccount {
-	if item == nil {
-		return nil
-	}
-	return &model.UserAccount{ID: item.Id, Email: defString(item.Email), Phone: defString(item.Phone), Username: defString(item.Username), LoginTypes: []string{}}
+//AccountAuthType
+func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthTypeFields {
+	params := &Def.AccountAuthTypeFields_Params{}
+	params.AdditionalProperties = item.Params
+	return Def.AccountAuthTypeFields{Id: &item.ID, Identifier: &item.Identifier, Active: &item.Active, Active2fa: &item.Active2FA, Params: params}
 }
-func userAccountToDef(item *model.UserAccount) *Def.UserAccount {
-	if item == nil {
-		return nil
+
+func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeFields {
+	result := make([]Def.AccountAuthTypeFields, len(items))
+	for i, item := range items {
+		result[i] = accountAuthTypeToDef(item)
 	}
-	return &Def.UserAccount{Id: item.ID, Email: &item.Email, Phone: &item.Phone, Username: &item.Username}
+	return result
 }
-*/
 
 //Profile
 func profileFromDef(item *Def.ProfileFields) *model.Profile {

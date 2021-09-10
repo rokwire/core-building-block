@@ -21,6 +21,6 @@ properties:
   auth_types:
     type: array
     items:
-      $ref: "./AuthResponseAccountAuthType.yaml"
+      $ref: "../user/AccountAuthTypeFields.yaml"
 
 

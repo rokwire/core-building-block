@@ -1122,19 +1122,25 @@ components:
     AccountAuthType:
       type: object
       properties:
-        id:
-          type: string
+        fields:
+          $ref: '#/components/schemas/AccountAuthTypeFields'
         auth_type:
           $ref: '#/components/schemas/AuthType'
         account:
           $ref: '#/components/schemas/Account'
+        credential:
+          $ref: '#/components/schemas/Credential'
+    AccountAuthTypeFields:
+      type: object
+      properties:
+        id:
+          type: string
         identifier:
           type: string
         params:
           type: object
           additionalProperties: true
-        credential:
-          $ref: '#/components/schemas/Credential'
+          nullable: true
         active:
           type: boolean
         active_2fa:
@@ -1362,14 +1368,4 @@ components:
         auth_types:
           type: array
           items:
-            $ref: '#/components/schemas/_res_AuthResponseAccountAuthType'
-    _res_AuthResponseAccountAuthType:
-      type: object
-      properties:
-        id:
-          type: string
-        identifier:
-          type: string
-        params:
-          type: object
-          nullable: true
+            $ref: '#/components/schemas/AccountAuthTypeFields'

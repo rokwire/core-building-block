@@ -90,18 +90,23 @@ type Account struct {
 
 // AccountAuthType defines model for AccountAuthType.
 type AccountAuthType struct {
-	Account    *Account                `json:"account,omitempty"`
-	Active     *bool                   `json:"active,omitempty"`
-	Active2fa  *bool                   `json:"active_2fa,omitempty"`
-	AuthType   *AuthType               `json:"auth_type,omitempty"`
-	Credential *Credential             `json:"credential,omitempty"`
-	Id         *string                 `json:"id,omitempty"`
-	Identifier *string                 `json:"identifier,omitempty"`
-	Params     *AccountAuthType_Params `json:"params,omitempty"`
+	Account    *Account               `json:"account,omitempty"`
+	AuthType   *AuthType              `json:"auth_type,omitempty"`
+	Credential *Credential            `json:"credential,omitempty"`
+	Fields     *AccountAuthTypeFields `json:"fields,omitempty"`
 }
 
-// AccountAuthType_Params defines model for AccountAuthType.Params.
-type AccountAuthType_Params struct {
+// AccountAuthTypeFields defines model for AccountAuthTypeFields.
+type AccountAuthTypeFields struct {
+	Active     *bool                         `json:"active,omitempty"`
+	Active2fa  *bool                         `json:"active_2fa,omitempty"`
+	Id         *string                       `json:"id,omitempty"`
+	Identifier *string                       `json:"identifier,omitempty"`
+	Params     *AccountAuthTypeFields_Params `json:"params"`
+}
+
+// AccountAuthTypeFields_Params defines model for AccountAuthTypeFields.Params.
+type AccountAuthTypeFields_Params struct {
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
@@ -418,19 +423,12 @@ type ResAuthRefreshResponse struct {
 
 // ResAuthResponseAccount defines model for _res_AuthResponseAccount.
 type ResAuthResponseAccount struct {
-	AuthTypes   *[]ResAuthResponseAccountAuthType `json:"auth_types,omitempty"`
-	Groups      *[]ApplicationGroupFields         `json:"groups,omitempty"`
-	Id          string                            `json:"id"`
-	Permissions *[]ApplicationPermissionFields    `json:"permissions,omitempty"`
-	Profile     *ProfileFields                    `json:"profile,omitempty"`
-	Roles       *[]ApplicationRoleFields          `json:"roles,omitempty"`
-}
-
-// ResAuthResponseAccountAuthType defines model for _res_AuthResponseAccountAuthType.
-type ResAuthResponseAccountAuthType struct {
-	Id         *string                 `json:"id,omitempty"`
-	Identifier *string                 `json:"identifier,omitempty"`
-	Params     *map[string]interface{} `json:"params"`
+	AuthTypes   *[]AccountAuthTypeFields       `json:"auth_types,omitempty"`
+	Groups      *[]ApplicationGroupFields      `json:"groups,omitempty"`
+	Id          string                         `json:"id"`
+	Permissions *[]ApplicationPermissionFields `json:"permissions,omitempty"`
+	Profile     *ProfileFields                 `json:"profile,omitempty"`
+	Roles       *[]ApplicationRoleFields       `json:"roles,omitempty"`
 }
 
 // ResAuthResponseParamsOidc defines model for _res_AuthResponseParamsOidc.
@@ -553,25 +551,25 @@ type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 // PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
 type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
 
-// Getter for additional properties for AccountAuthType_Params. Returns the specified
+// Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found
-func (a AccountAuthType_Params) Get(fieldName string) (value interface{}, found bool) {
+func (a AccountAuthTypeFields_Params) Get(fieldName string) (value interface{}, found bool) {
 	if a.AdditionalProperties != nil {
 		value, found = a.AdditionalProperties[fieldName]
 	}
 	return
 }
 
-// Setter for additional properties for AccountAuthType_Params
-func (a *AccountAuthType_Params) Set(fieldName string, value interface{}) {
+// Setter for additional properties for AccountAuthTypeFields_Params
+func (a *AccountAuthTypeFields_Params) Set(fieldName string, value interface{}) {
 	if a.AdditionalProperties == nil {
 		a.AdditionalProperties = make(map[string]interface{})
 	}
 	a.AdditionalProperties[fieldName] = value
 }
 
-// Override default JSON handling for AccountAuthType_Params to handle AdditionalProperties
-func (a *AccountAuthType_Params) UnmarshalJSON(b []byte) error {
+// Override default JSON handling for AccountAuthTypeFields_Params to handle AdditionalProperties
+func (a *AccountAuthTypeFields_Params) UnmarshalJSON(b []byte) error {
 	object := make(map[string]json.RawMessage)
 	err := json.Unmarshal(b, &object)
 	if err != nil {
@@ -592,8 +590,8 @@ func (a *AccountAuthType_Params) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// Override default JSON handling for AccountAuthType_Params to handle AdditionalProperties
-func (a AccountAuthType_Params) MarshalJSON() ([]byte, error) {
+// Override default JSON handling for AccountAuthTypeFields_Params to handle AdditionalProperties
+func (a AccountAuthTypeFields_Params) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 
