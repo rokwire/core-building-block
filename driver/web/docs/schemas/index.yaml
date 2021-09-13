@@ -27,8 +27,12 @@ ApplicationGroupFields:
   $ref: "./application/ApplicationGroupFields.yaml"
 Organization:
   $ref: "./application/Organization.yaml"
+OrganizationFields:
+  $ref: "./application/OrganizationFields.yaml"
 OrganizationConfig:
   $ref: "./application/OrganizationConfig.yaml"
+OrganizationConfigFields:
+  $ref: "./application/OrganizationConfigFields.yaml"
   
 # auth
 AuthType:

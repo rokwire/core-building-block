@@ -895,6 +895,13 @@ components:
         name:
           type: string
     Organization:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/OrganizationFields'
+        config:
+          $ref: '#/components/schemas/OrganizationConfig'
+    OrganizationFields:
       required:
         - id
         - name
@@ -914,9 +921,12 @@ components:
             - medium
             - large
             - huge
-        config:
-          $ref: '#/components/schemas/OrganizationConfig'
     OrganizationConfig:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    OrganizationConfigFields:
       type: object
       properties:
         id:

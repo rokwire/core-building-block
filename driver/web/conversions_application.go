@@ -54,11 +54,10 @@ func applicationGroupsToDef(items []model.ApplicationGroup) []Def.ApplicationGro
 }
 
 //Organization
-func organizationToDef(item *model.Organization) *Def.Organization {
+func organizationToDef(item *model.Organization) *Def.OrganizationFields {
 	if item == nil {
 		return nil
 	}
 
-	orgConfig := Def.OrganizationConfig{Id: &item.Config.ID, Domains: &item.Config.Domains}
-	return &Def.Organization{Id: item.ID, Name: item.Name, Config: &orgConfig, Type: Def.OrganizationType(item.Type)}
+	return &Def.OrganizationFields{Id: item.ID, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
 }

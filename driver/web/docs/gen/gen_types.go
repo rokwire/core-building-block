@@ -36,17 +36,17 @@ const (
 	JWKUseSig JWKUse = "sig"
 )
 
-// Defines values for OrganizationType.
+// Defines values for OrganizationFieldsType.
 const (
-	OrganizationTypeHuge OrganizationType = "huge"
+	OrganizationFieldsTypeHuge OrganizationFieldsType = "huge"
 
-	OrganizationTypeLarge OrganizationType = "large"
+	OrganizationFieldsTypeLarge OrganizationFieldsType = "large"
 
-	OrganizationTypeMedium OrganizationType = "medium"
+	OrganizationFieldsTypeMedium OrganizationFieldsType = "medium"
 
-	OrganizationTypeMicro OrganizationType = "micro"
+	OrganizationFieldsTypeMicro OrganizationFieldsType = "micro"
 
-	OrganizationTypeSmall OrganizationType = "small"
+	OrganizationFieldsTypeSmall OrganizationFieldsType = "small"
 )
 
 // Defines values for ReqAuthLoginRequestAuthType.
@@ -294,16 +294,16 @@ type OidcDiscovery struct {
 // Organization defines model for Organization.
 type Organization struct {
 	Config *OrganizationConfig `json:"config,omitempty"`
-	Id     string              `json:"id"`
-	Name   string              `json:"name"`
-	Type   OrganizationType    `json:"type"`
+	Fields *OrganizationFields `json:"fields,omitempty"`
 }
-
-// OrganizationType defines model for Organization.Type.
-type OrganizationType string
 
 // OrganizationConfig defines model for OrganizationConfig.
 type OrganizationConfig struct {
+	Fields *OrganizationConfigFields `json:"fields,omitempty"`
+}
+
+// OrganizationConfigFields defines model for OrganizationConfigFields.
+type OrganizationConfigFields struct {
 
 	// organization domains
 	Domains *[]string `json:"domains,omitempty"`
@@ -311,6 +311,16 @@ type OrganizationConfig struct {
 	// organization config id
 	Id *string `json:"id,omitempty"`
 }
+
+// OrganizationFields defines model for OrganizationFields.
+type OrganizationFields struct {
+	Id   string                 `json:"id"`
+	Name string                 `json:"name"`
+	Type OrganizationFieldsType `json:"type"`
+}
+
+// OrganizationFieldsType defines model for OrganizationFields.Type.
+type OrganizationFieldsType string
 
 // Profile defines model for Profile.
 type Profile struct {
