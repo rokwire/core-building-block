@@ -59,6 +59,8 @@ AccountAuthTypeFields:
   $ref: "./user/AccountAuthTypeFields.yaml"
 Device:
   $ref: "./user/Device.yaml"
+DeviceFields:
+  $ref: "./user/DeviceFields.yaml"
 
 ##### requests and responses - they are at bottom //TODO split files in requests and resposnes folders
 ### requests

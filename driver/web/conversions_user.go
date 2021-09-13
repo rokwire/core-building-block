@@ -58,34 +58,29 @@ func profileToDef(item *model.Profile) *Def.ProfileFields {
 }
 
 //Device
-func deviceFromDef(item *Def.Device) *model.Device {
+func deviceFromDef(item *Def.DeviceFields) *model.Device {
 	if item == nil {
 		return nil
 	}
 	return &model.Device{ID: item.Id, Type: string(item.Type), OS: defString(item.Os), MacAddress: defString(item.MacAddress)}
 }
 
-func deviceToDef(item *model.Device) *Def.Device {
+func deviceToDef(item *model.Device) *Def.DeviceFields {
 	if item == nil {
 		return nil
 	}
-	/*
-		users := make([]string, len(item.Ac))
-		for i, user := range item.Users {
-			users[i] = user.ID
-		} */
 
-	return &Def.Device{Id: item.ID, Type: Def.DeviceType(item.Type), Os: &item.OS, MacAddress: &item.MacAddress}
+	return &Def.DeviceFields{Id: item.ID, Type: Def.DeviceFieldsType(item.Type), Os: &item.OS, MacAddress: &item.MacAddress}
 }
 
-func deviceListToDef(items []model.Device) []Def.Device {
-	out := make([]Def.Device, len(items))
+func deviceListToDef(items []model.Device) []Def.DeviceFields {
+	out := make([]Def.DeviceFields, len(items))
 	for i, item := range items {
 		defItem := deviceToDef(&item)
 		if defItem != nil {
 			out[i] = *defItem
 		} else {
-			out[i] = Def.Device{}
+			out[i] = Def.DeviceFields{}
 		}
 	}
 	return out

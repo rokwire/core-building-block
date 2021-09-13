@@ -1146,6 +1146,15 @@ components:
         active_2fa:
           type: boolean
     Device:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/DeviceFields'
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+    DeviceFields:
       required:
         - id
         - type
@@ -1164,10 +1173,6 @@ components:
           type: string
         mac_address:
           type: string
-        accounts:
-          type: array
-          items:
-            $ref: '#/components/schemas/Account'
     _req_AuthLoginRequest:
       required:
         - auth_type

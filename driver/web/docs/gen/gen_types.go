@@ -10,15 +10,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Defines values for DeviceType.
+// Defines values for DeviceFieldsType.
 const (
-	DeviceTypeDesktop DeviceType = "desktop"
+	DeviceFieldsTypeDesktop DeviceFieldsType = "desktop"
 
-	DeviceTypeMobile DeviceType = "mobile"
+	DeviceFieldsTypeMobile DeviceFieldsType = "mobile"
 
-	DeviceTypeOther DeviceType = "other"
+	DeviceFieldsTypeOther DeviceFieldsType = "other"
 
-	DeviceTypeWeb DeviceType = "web"
+	DeviceFieldsTypeWeb DeviceFieldsType = "web"
 )
 
 // Defines values for JWKAlg.
@@ -204,15 +204,20 @@ type Credential struct {
 
 // Device defines model for Device.
 type Device struct {
-	Accounts   *[]Account `json:"accounts,omitempty"`
-	Id         string     `json:"id"`
-	MacAddress *string    `json:"mac_address,omitempty"`
-	Os         *string    `json:"os,omitempty"`
-	Type       DeviceType `json:"type"`
+	Accounts *[]Account    `json:"accounts,omitempty"`
+	Fields   *DeviceFields `json:"fields,omitempty"`
 }
 
-// DeviceType defines model for Device.Type.
-type DeviceType string
+// DeviceFields defines model for DeviceFields.
+type DeviceFields struct {
+	Id         string           `json:"id"`
+	MacAddress *string          `json:"mac_address,omitempty"`
+	Os         *string          `json:"os,omitempty"`
+	Type       DeviceFieldsType `json:"type"`
+}
+
+// DeviceFieldsType defines model for DeviceFields.Type.
+type DeviceFieldsType string
 
 // GlobalConfig defines model for GlobalConfig.
 type GlobalConfig struct {
