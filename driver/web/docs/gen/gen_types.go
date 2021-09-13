@@ -49,9 +49,9 @@ const (
 	OrganizationFieldsTypeSmall OrganizationFieldsType = "small"
 )
 
-// Defines values for ReqAuthLoginUrlRequestAuthType.
+// Defines values for ReqLoginUrlRequestAuthType.
 const (
-	ReqAuthLoginUrlRequestAuthTypeIllinoisOidc ReqAuthLoginUrlRequestAuthType = "illinois_oidc"
+	ReqLoginUrlRequestAuthTypeIllinoisOidc ReqLoginUrlRequestAuthType = "illinois_oidc"
 )
 
 // Defines values for ReqLoginRequestAuthType.
@@ -65,9 +65,9 @@ const (
 	ReqLoginRequestAuthTypeUsername ReqLoginRequestAuthType = "username"
 )
 
-// Defines values for ResAuthAuthorizeServiceResponseTokenType.
+// Defines values for ResAuthorizeServiceResponseTokenType.
 const (
-	ResAuthAuthorizeServiceResponseTokenTypeBearer ResAuthAuthorizeServiceResponseTokenType = "Bearer"
+	ResAuthorizeServiceResponseTokenTypeBearer ResAuthorizeServiceResponseTokenType = "Bearer"
 )
 
 // Defines values for ResSharedRokwireTokenTokenType.
@@ -364,24 +364,24 @@ type ServiceScope struct {
 	Scope       string  `json:"scope"`
 }
 
-// ReqAuthAuthorizeServiceRequest defines model for _req_AuthAuthorizeServiceRequest.
-type ReqAuthAuthorizeServiceRequest struct {
+// ReqAuthorizeServiceRequest defines model for _req_authorize-service_Request.
+type ReqAuthorizeServiceRequest struct {
 
 	// Scopes to be granted to this service in this and future tokens. Replaces existing scopes if present.
 	ApprovedScopes *[]string `json:"approved_scopes,omitempty"`
 	ServiceId      string    `json:"service_id"`
 }
 
-// ReqAuthLoginUrlRequest defines model for _req_AuthLoginUrlRequest.
-type ReqAuthLoginUrlRequest struct {
-	AppId       string                         `json:"app_id"`
-	AuthType    ReqAuthLoginUrlRequestAuthType `json:"auth_type"`
-	OrgId       string                         `json:"org_id"`
-	RedirectUri string                         `json:"redirect_uri"`
+// ReqLoginUrlRequest defines model for _req_login-url_Request.
+type ReqLoginUrlRequest struct {
+	AppId       string                     `json:"app_id"`
+	AuthType    ReqLoginUrlRequestAuthType `json:"auth_type"`
+	OrgId       string                     `json:"org_id"`
+	RedirectUri string                     `json:"redirect_uri"`
 }
 
-// ReqAuthLoginUrlRequestAuthType defines model for ReqAuthLoginUrlRequest.AuthType.
-type ReqAuthLoginUrlRequestAuthType string
+// ReqLoginUrlRequestAuthType defines model for ReqLoginUrlRequest.AuthType.
+type ReqLoginUrlRequestAuthType string
 
 // Auth login creds for auth_type="email"
 type ReqLoginCredsEmail struct {
@@ -425,8 +425,8 @@ type ReqLoginRequest struct {
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
 type ReqLoginRequestAuthType string
 
-// ResAuthAuthorizeServiceResponse defines model for _res_AuthAuthorizeServiceResponse.
-type ResAuthAuthorizeServiceResponse struct {
+// ResAuthorizeServiceResponse defines model for _res_authorize-service_Response.
+type ResAuthorizeServiceResponse struct {
 	AccessToken    *string   `json:"access_token,omitempty"`
 	ApprovedScopes *[]string `json:"approved_scopes,omitempty"`
 
@@ -434,24 +434,18 @@ type ResAuthAuthorizeServiceResponse struct {
 	ServiceReg *ServiceReg `json:"service_reg,omitempty"`
 
 	// The type of the provided tokens to be specified when they are sent in the "Authorization" header
-	TokenType *ResAuthAuthorizeServiceResponseTokenType `json:"token_type,omitempty"`
+	TokenType *ResAuthorizeServiceResponseTokenType `json:"token_type,omitempty"`
 }
 
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
-type ResAuthAuthorizeServiceResponseTokenType string
+type ResAuthorizeServiceResponseTokenType string
 
-// ResAuthLoginUrlResponse defines model for _res_AuthLoginUrlResponse.
-type ResAuthLoginUrlResponse struct {
+// ResLoginUrlResponse defines model for _res_login-url_Response.
+type ResLoginUrlResponse struct {
 	LoginUrl string `json:"login_url"`
 
 	// Params to be submitted with 'login' request (if necessary)
 	Params *map[string]interface{} `json:"params,omitempty"`
-}
-
-// ResAuthRefreshResponse defines model for _res_AuthRefreshResponse.
-type ResAuthRefreshResponse struct {
-	Params *interface{}           `json:"params,omitempty"`
-	Token  *ResSharedRokwireToken `json:"token,omitempty"`
 }
 
 // ResLoginAccount defines model for _res_login_Account.
@@ -469,6 +463,12 @@ type ResLoginResponse struct {
 	Account *ResLoginAccount       `json:"account,omitempty"`
 	Params  *interface{}           `json:"params"`
 	Token   *ResSharedRokwireToken `json:"token,omitempty"`
+}
+
+// ResRefreshResponse defines model for _res_refresh_Response.
+type ResRefreshResponse struct {
+	Params *interface{}           `json:"params,omitempty"`
+	Token  *ResSharedRokwireToken `json:"token,omitempty"`
 }
 
 // ResSharedParamsOidc defines model for _res_shared_ParamsOidc.
@@ -539,13 +539,13 @@ type GetBbsServiceRegsParams struct {
 }
 
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
-type PostServicesAuthAuthorizeServiceJSONBody ReqAuthAuthorizeServiceRequest
+type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
 // PostServicesAuthLoginJSONBody defines parameters for PostServicesAuthLogin.
 type PostServicesAuthLoginJSONBody ReqLoginRequest
 
 // PostServicesAuthLoginUrlJSONBody defines parameters for PostServicesAuthLoginUrl.
-type PostServicesAuthLoginUrlJSONBody ReqAuthLoginUrlRequest
+type PostServicesAuthLoginUrlJSONBody ReqLoginUrlRequest
 
 // GetServicesAuthServiceRegsParams defines parameters for GetServicesAuthServiceRegs.
 type GetServicesAuthServiceRegsParams struct {

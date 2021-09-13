@@ -104,16 +104,18 @@ _res_login_Response:
 _res_login_Account:
   $ref: "./apis/services/login/response/Account.yaml"
 
-### requests
-_req_AuthLoginUrlRequest:
-  $ref: "./auth/AuthLoginUrlRequest.yaml"
-_req_AuthAuthorizeServiceRequest:
-  $ref: "./auth/AuthAuthorizeServiceRequest.yaml"
+### login-url API
+_req_login-url_Request:
+  $ref: "./apis/services/login-url/request/Request.yaml"
+_res_login-url_Response:
+  $ref: "./apis/services/login-url/response/Response.yaml"
 
-### responses
-_res_AuthRefreshResponse:
-  $ref: "./auth/AuthRefreshResponse.yaml"
-_res_AuthLoginUrlResponse:
-  $ref: "./auth/AuthLoginUrlResponse.yaml"
-_res_AuthAuthorizeServiceResponse:
-  $ref: "./auth/AuthAuthorizeServiceResponse.yaml"
+### refresh API
+_res_refresh_Response:
+  $ref: "./apis/services/refresh/response/Response.yaml"
+
+### authorize-service API
+_req_authorize-service_Request:
+  $ref: "./apis/services/authorize-service/request/Request.yaml"
+_res_authorize-service_Response:
+  $ref: "./apis/services/authorize-service/response/Response.yaml"

@@ -111,7 +111,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_AuthRefreshResponse'
+                $ref: '#/components/schemas/_res_refresh_Response'
         '400':
           description: Bad request
         '401':
@@ -129,7 +129,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_AuthLoginUrlRequest'
+              $ref: '#/components/schemas/_req_login-url_Request'
         required: true
       responses:
         '200':
@@ -137,7 +137,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_AuthLoginUrlResponse'
+                $ref: '#/components/schemas/_res_login-url_Response'
         '400':
           description: Bad request
         '401':
@@ -155,14 +155,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_AuthAuthorizeServiceRequest'
+              $ref: '#/components/schemas/_req_authorize-service_Request'
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_AuthAuthorizeServiceResponse'
+                $ref: '#/components/schemas/_res_authorize-service_Response'
               examples:
                 authorized:
                   summary: Service authorized
@@ -1344,7 +1344,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
-    _req_AuthLoginUrlRequest:
+    _req_login-url_Request:
       required:
         - auth_type
         - app_id
@@ -1362,7 +1362,26 @@ components:
           type: string
         redirect_uri:
           type: string
-    _req_AuthAuthorizeServiceRequest:
+    _res_login-url_Response:
+      required:
+        - login_url
+      type: object
+      properties:
+        login_url:
+          type: string
+        params:
+          type: object
+          description: Params to be submitted with 'login' request (if necessary)
+    _res_refresh_Response:
+      type: object
+      properties:
+        token:
+          $ref: '#/components/schemas/_res_shared_RokwireToken'
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/_res_shared_ParamsOidc'
+    _req_authorize-service_Request:
       required:
         - service_id
       type: object
@@ -1374,26 +1393,7 @@ components:
           type: array
           items:
             type: string
-    _res_AuthRefreshResponse:
-      type: object
-      properties:
-        token:
-          $ref: '#/components/schemas/_res_shared_RokwireToken'
-        params:
-          type: object
-          anyOf:
-            - $ref: '#/components/schemas/_res_shared_ParamsOidc'
-    _res_AuthLoginUrlResponse:
-      required:
-        - login_url
-      type: object
-      properties:
-        login_url:
-          type: string
-        params:
-          type: object
-          description: Params to be submitted with 'login' request (if necessary)
-    _res_AuthAuthorizeServiceResponse:
+    _res_authorize-service_Response:
       type: object
       properties:
         access_token:
