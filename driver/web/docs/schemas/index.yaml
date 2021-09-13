@@ -76,7 +76,20 @@ Device:
 DeviceFields:
   $ref: "./user/DeviceFields.yaml"
 
-##### requests and responses - they are at bottom //TODO split files in requests and resposnes folders
+##### APIs requests and responses - they are at bottom 
+
+#### shared requests and responses
+_res_shared_RokwireToken:
+  $ref: "../schemas/apis/shared/responses/RokwireToken.yaml"
+_res_shared_ParamsOidc:
+  $ref: "../schemas/apis/shared/responses/ParamsOidc.yaml"
+
+### login
+_res_login_Response:
+  $ref: "./apis/services/login/response/Response.yaml"
+_res_login_Account:
+  $ref: "./apis/services/login/response/Account.yaml"
+
 ### requests
 _req_AuthLoginRequest:
   $ref: "./auth/AuthLoginRequest.yaml"
@@ -98,17 +111,9 @@ _req_AuthAuthorizeServiceRequest:
   $ref: "./auth/AuthAuthorizeServiceRequest.yaml"
 
 ### responses
-_res_AuthLoginResponse:
-  $ref: "./auth/AuthLoginResponse.yaml"
 _res_AuthRefreshResponse:
   $ref: "./auth/AuthRefreshResponse.yaml"
-_res_AuthResponseRokwireToken:
-  $ref: "./auth/AuthResponseRokwireToken.yaml"
-_res_AuthResponseParamsOidc:
-  $ref: "./auth/AuthResponseParamsOidc.yaml"
 _res_AuthLoginUrlResponse:
   $ref: "./auth/AuthLoginUrlResponse.yaml"
 _res_AuthAuthorizeServiceResponse:
   $ref: "./auth/AuthAuthorizeServiceResponse.yaml"
-_res_AuthResponseAccount:
-  $ref: "./auth/AuthResponseAccount.yaml"

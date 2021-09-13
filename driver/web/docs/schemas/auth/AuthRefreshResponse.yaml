@@ -1,8 +1,8 @@
 type: object
 properties:
   token:
-    $ref: "./AuthResponseRokwireToken.yaml"
+    $ref: "../apis/shared/responses/RokwireToken.yaml"
   params:
     type: object
     anyOf:
-      - $ref: "./AuthResponseParamsOidc.yaml"
+      - $ref: "../apis/shared/responses/ParamsOidc.yaml"

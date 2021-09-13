@@ -46,8 +46,8 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
 
-	tokenType := Def.ResAuthResponseRokwireTokenTokenTypeBearer
-	rokwireToken := Def.ResAuthResponseRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
+	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
+	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
 	///prepare response
 	//profile
@@ -60,9 +60,9 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 	groups := applicationGroupsToDef(account.Groups)
 	//account auth types
 	accountAuthTypes := accountAuthTypesToDef(account.AuthTypes)
-	accountData := Def.ResAuthResponseAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &accountAuthTypes, Profile: profile}
+	accountData := Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &accountAuthTypes, Profile: profile}
 
-	responseData := &Def.ResAuthLoginResponse{Token: &rokwireToken, Account: &accountData, Params: &params}
+	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: &accountData, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
@@ -82,8 +82,8 @@ func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request) logs.Http
 		return l.HttpResponseError("Error refreshing token", err, http.StatusInternalServerError, true)
 	}
 
-	tokenType := Def.ResAuthResponseRokwireTokenTokenTypeBearer
-	rokwireToken := Def.ResAuthResponseRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
+	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
+	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 	responseData := &Def.ResAuthRefreshResponse{Token: &rokwireToken, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {

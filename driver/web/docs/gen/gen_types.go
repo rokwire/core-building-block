@@ -70,9 +70,9 @@ const (
 	ResAuthAuthorizeServiceResponseTokenTypeBearer ResAuthAuthorizeServiceResponseTokenType = "Bearer"
 )
 
-// Defines values for ResAuthResponseRokwireTokenTokenType.
+// Defines values for ResSharedRokwireTokenTokenType.
 const (
-	ResAuthResponseRokwireTokenTokenTypeBearer ResAuthResponseRokwireTokenTokenType = "Bearer"
+	ResSharedRokwireTokenTokenTypeBearer ResSharedRokwireTokenTokenType = "Bearer"
 )
 
 // Account defines model for Account.
@@ -440,13 +440,6 @@ type ResAuthAuthorizeServiceResponse struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResAuthAuthorizeServiceResponseTokenType string
 
-// ResAuthLoginResponse defines model for _res_AuthLoginResponse.
-type ResAuthLoginResponse struct {
-	Account *ResAuthResponseAccount      `json:"account,omitempty"`
-	Params  *interface{}                 `json:"params"`
-	Token   *ResAuthResponseRokwireToken `json:"token,omitempty"`
-}
-
 // ResAuthLoginUrlResponse defines model for _res_AuthLoginUrlResponse.
 type ResAuthLoginUrlResponse struct {
 	LoginUrl string `json:"login_url"`
@@ -457,12 +450,12 @@ type ResAuthLoginUrlResponse struct {
 
 // ResAuthRefreshResponse defines model for _res_AuthRefreshResponse.
 type ResAuthRefreshResponse struct {
-	Params *interface{}                 `json:"params,omitempty"`
-	Token  *ResAuthResponseRokwireToken `json:"token,omitempty"`
+	Params *interface{}           `json:"params,omitempty"`
+	Token  *ResSharedRokwireToken `json:"token,omitempty"`
 }
 
-// ResAuthResponseAccount defines model for _res_AuthResponseAccount.
-type ResAuthResponseAccount struct {
+// ResLoginAccount defines model for _res_login_Account.
+type ResLoginAccount struct {
 	AuthTypes   *[]AccountAuthTypeFields       `json:"auth_types,omitempty"`
 	Groups      *[]ApplicationGroupFields      `json:"groups,omitempty"`
 	Id          string                         `json:"id"`
@@ -471,8 +464,15 @@ type ResAuthResponseAccount struct {
 	Roles       *[]ApplicationRoleFields       `json:"roles,omitempty"`
 }
 
-// ResAuthResponseParamsOidc defines model for _res_AuthResponseParamsOidc.
-type ResAuthResponseParamsOidc struct {
+// ResLoginResponse defines model for _res_login_Response.
+type ResLoginResponse struct {
+	Account *ResLoginAccount       `json:"account,omitempty"`
+	Params  *interface{}           `json:"params"`
+	Token   *ResSharedRokwireToken `json:"token,omitempty"`
+}
+
+// ResSharedParamsOidc defines model for _res_shared_ParamsOidc.
+type ResSharedParamsOidc struct {
 	OidcToken *struct {
 		AccessToken *string `json:"access_token,omitempty"`
 		IdToken     *string `json:"id_token,omitempty"`
@@ -480,8 +480,8 @@ type ResAuthResponseParamsOidc struct {
 	} `json:"oidc_token,omitempty"`
 }
 
-// ResAuthResponseRokwireToken defines model for _res_AuthResponseRokwireToken.
-type ResAuthResponseRokwireToken struct {
+// ResSharedRokwireToken defines model for _res_shared_RokwireToken.
+type ResSharedRokwireToken struct {
 
 	// The user's access token to be provided to authorize access to ROKWIRE APIs
 	AccessToken *string `json:"access_token,omitempty"`
@@ -490,11 +490,11 @@ type ResAuthResponseRokwireToken struct {
 	RefreshToken *string `json:"refresh_token,omitempty"`
 
 	// The type of the provided tokens to be specified when they are sent in the "Authorization" header
-	TokenType *ResAuthResponseRokwireTokenTokenType `json:"token_type,omitempty"`
+	TokenType *ResSharedRokwireTokenTokenType `json:"token_type,omitempty"`
 }
 
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
-type ResAuthResponseRokwireTokenTokenType string
+type ResSharedRokwireTokenTokenType string
 
 // PostAdminApplicationsJSONBody defines parameters for PostAdminApplications.
 type PostAdminApplicationsJSONBody Application
