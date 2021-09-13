@@ -17,12 +17,12 @@ properties:
     type: string
   creds:
     anyOf:
-      - $ref: "./AuthLoginCredsEmail.yaml"
-      - $ref: "./AuthLoginCredsPhone.yaml"
-      - $ref: "./AuthLoginCredsOidc.yaml"
+      - $ref: "./CredsEmail.yaml"
+      - $ref: "./CredsPhone.yaml"
+      - $ref: "./CredsOidc.yaml"
   params:
     type: object
     anyOf:
-      - $ref: "./AuthLoginParamsEmail.yaml"
-      - $ref: "./AuthLoginParamsPhone.yaml"
-      - $ref: "./AuthLoginParamsOidc.yaml"
+      - $ref: "./ParamsEmail.yaml"
+      - $ref: "./ParamsPhone.yaml"
+      - $ref: "./ParamsOidc.yaml"

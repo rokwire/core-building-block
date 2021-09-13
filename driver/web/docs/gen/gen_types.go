@@ -49,20 +49,20 @@ const (
 	OrganizationFieldsTypeSmall OrganizationFieldsType = "small"
 )
 
-// Defines values for ReqAuthLoginRequestAuthType.
-const (
-	ReqAuthLoginRequestAuthTypeEmail ReqAuthLoginRequestAuthType = "email"
-
-	ReqAuthLoginRequestAuthTypeIllinoisOidc ReqAuthLoginRequestAuthType = "illinois_oidc"
-
-	ReqAuthLoginRequestAuthTypePhone ReqAuthLoginRequestAuthType = "phone"
-
-	ReqAuthLoginRequestAuthTypeUsername ReqAuthLoginRequestAuthType = "username"
-)
-
 // Defines values for ReqAuthLoginUrlRequestAuthType.
 const (
 	ReqAuthLoginUrlRequestAuthTypeIllinoisOidc ReqAuthLoginUrlRequestAuthType = "illinois_oidc"
+)
+
+// Defines values for ReqLoginRequestAuthType.
+const (
+	ReqLoginRequestAuthTypeEmail ReqLoginRequestAuthType = "email"
+
+	ReqLoginRequestAuthTypeIllinoisOidc ReqLoginRequestAuthType = "illinois_oidc"
+
+	ReqLoginRequestAuthTypePhone ReqLoginRequestAuthType = "phone"
+
+	ReqLoginRequestAuthTypeUsername ReqLoginRequestAuthType = "username"
 )
 
 // Defines values for ResAuthAuthorizeServiceResponseTokenType.
@@ -372,48 +372,6 @@ type ReqAuthAuthorizeServiceRequest struct {
 	ServiceId      string    `json:"service_id"`
 }
 
-// Auth login creds for auth_type="email"
-type ReqAuthLoginCredsEmail struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-// Auth login creds for auth_type="oidc"
-//   - full redirect URI received from OIDC provider
-type ReqAuthLoginCredsOidc string
-
-// Auth login creds for auth_type="phone"
-type ReqAuthLoginCredsPhone struct {
-	Code  *string `json:"code,omitempty"`
-	Phone string  `json:"phone"`
-}
-
-// Auth login params for auth_type="email"
-type ReqAuthLoginParamsEmail struct {
-	NewUser *bool `json:"new_user,omitempty"`
-}
-
-// Auth login params for auth_type="oidc"
-type ReqAuthLoginParamsOidc struct {
-	PkceVerifier *string `json:"pkce_verifier,omitempty"`
-	RedirectUri  *string `json:"redirect_uri,omitempty"`
-}
-
-// Auth login params for auth_type="phone" (None)
-type ReqAuthLoginParamsPhone map[string]interface{}
-
-// ReqAuthLoginRequest defines model for _req_AuthLoginRequest.
-type ReqAuthLoginRequest struct {
-	AppId    string                      `json:"app_id"`
-	AuthType ReqAuthLoginRequestAuthType `json:"auth_type"`
-	Creds    *interface{}                `json:"creds,omitempty"`
-	OrgId    string                      `json:"org_id"`
-	Params   *interface{}                `json:"params,omitempty"`
-}
-
-// ReqAuthLoginRequestAuthType defines model for ReqAuthLoginRequest.AuthType.
-type ReqAuthLoginRequestAuthType string
-
 // ReqAuthLoginUrlRequest defines model for _req_AuthLoginUrlRequest.
 type ReqAuthLoginUrlRequest struct {
 	AppId       string                         `json:"app_id"`
@@ -424,6 +382,48 @@ type ReqAuthLoginUrlRequest struct {
 
 // ReqAuthLoginUrlRequestAuthType defines model for ReqAuthLoginUrlRequest.AuthType.
 type ReqAuthLoginUrlRequestAuthType string
+
+// Auth login creds for auth_type="email"
+type ReqLoginCredsEmail struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// Auth login creds for auth_type="oidc"
+//   - full redirect URI received from OIDC provider
+type ReqLoginCredsOidc string
+
+// Auth login creds for auth_type="phone"
+type ReqLoginCredsPhone struct {
+	Code  *string `json:"code,omitempty"`
+	Phone string  `json:"phone"`
+}
+
+// Auth login params for auth_type="email"
+type ReqLoginParamsEmail struct {
+	NewUser *bool `json:"new_user,omitempty"`
+}
+
+// Auth login params for auth_type="oidc"
+type ReqLoginParamsOidc struct {
+	PkceVerifier *string `json:"pkce_verifier,omitempty"`
+	RedirectUri  *string `json:"redirect_uri,omitempty"`
+}
+
+// Auth login params for auth_type="phone" (None)
+type ReqLoginParamsPhone map[string]interface{}
+
+// ReqLoginRequest defines model for _req_login_Request.
+type ReqLoginRequest struct {
+	AppId    string                  `json:"app_id"`
+	AuthType ReqLoginRequestAuthType `json:"auth_type"`
+	Creds    *interface{}            `json:"creds,omitempty"`
+	OrgId    string                  `json:"org_id"`
+	Params   *interface{}            `json:"params,omitempty"`
+}
+
+// ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
+type ReqLoginRequestAuthType string
 
 // ResAuthAuthorizeServiceResponse defines model for _res_AuthAuthorizeServiceResponse.
 type ResAuthAuthorizeServiceResponse struct {
@@ -542,7 +542,7 @@ type GetBbsServiceRegsParams struct {
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthAuthorizeServiceRequest
 
 // PostServicesAuthLoginJSONBody defines parameters for PostServicesAuthLogin.
-type PostServicesAuthLoginJSONBody ReqAuthLoginRequest
+type PostServicesAuthLoginJSONBody ReqLoginRequest
 
 // PostServicesAuthLoginUrlJSONBody defines parameters for PostServicesAuthLoginUrl.
 type PostServicesAuthLoginUrlJSONBody ReqAuthLoginUrlRequest

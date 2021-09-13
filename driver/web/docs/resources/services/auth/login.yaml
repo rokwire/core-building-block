@@ -10,7 +10,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/auth/AuthLoginRequest.yaml"
+          $ref: "../../../schemas/apis/services/login/request/Request.yaml"
         examples:
           email:
             summary: Email login

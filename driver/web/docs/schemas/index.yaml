@@ -84,27 +84,27 @@ _res_shared_RokwireToken:
 _res_shared_ParamsOidc:
   $ref: "../schemas/apis/shared/responses/ParamsOidc.yaml"
 
-### login
+### login API
+_req_login_Request:
+  $ref: "./apis/services/login/request/Request.yaml"
+_req_login_CredsEmail:
+  $ref: "./apis/services/login/request/CredsEmail.yaml"
+_req_login_CredsPhone:
+  $ref: "./apis/services/login/request/CredsPhone.yaml"
+_req_login_CredsOidc:
+  $ref: "./apis/services/login/request/CredsOidc.yaml"
+_req_login_ParamsEmail:
+  $ref: "./apis/services/login/request/ParamsEmail.yaml"
+_req_login_ParamsPhone:
+   $ref: "./apis/services/login/request/ParamsPhone.yaml"
+_req_login_ParamsOidc:
+  $ref: "./apis/services/login/request/ParamsOidc.yaml"
 _res_login_Response:
   $ref: "./apis/services/login/response/Response.yaml"
 _res_login_Account:
   $ref: "./apis/services/login/response/Account.yaml"
 
 ### requests
-_req_AuthLoginRequest:
-  $ref: "./auth/AuthLoginRequest.yaml"
-_req_AuthLoginCredsEmail:
-  $ref: "./auth/AuthLoginCredsEmail.yaml"
-_req_AuthLoginCredsPhone:
-  $ref: "./auth/AuthLoginCredsPhone.yaml"
-_req_AuthLoginCredsOidc:
-  $ref: "./auth/AuthLoginCredsOidc.yaml"
-_req_AuthLoginParamsEmail:
-  $ref: "./auth/AuthLoginParamsEmail.yaml"
-_req_AuthLoginParamsPhone:
-  $ref: "./auth/AuthLoginParamsPhone.yaml"
-_req_AuthLoginParamsOidc:
-  $ref: "./auth/AuthLoginParamsOidc.yaml"
 _req_AuthLoginUrlRequest:
   $ref: "./auth/AuthLoginUrlRequest.yaml"
 _req_AuthAuthorizeServiceRequest:

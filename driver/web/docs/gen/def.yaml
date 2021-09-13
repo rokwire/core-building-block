@@ -37,7 +37,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_AuthLoginRequest'
+              $ref: '#/components/schemas/_req_login_Request'
             examples:
               email:
                 summary: Email login
@@ -1234,6 +1234,79 @@ components:
               type: string
             token_type:
               type: string
+    _req_login_Request:
+      required:
+        - auth_type
+        - app_id
+        - org_id
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - username
+            - email
+            - phone
+            - illinois_oidc
+        app_id:
+          type: string
+        org_id:
+          type: string
+        creds:
+          anyOf:
+            - $ref: '#/components/schemas/_req_login_CredsEmail'
+            - $ref: '#/components/schemas/_req_login_CredsPhone'
+            - $ref: '#/components/schemas/_req_login_CredsOidc'
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/_req_login_ParamsEmail'
+            - $ref: '#/components/schemas/_req_login_ParamsPhone'
+            - $ref: '#/components/schemas/_req_login_ParamsOidc'
+    _req_login_CredsEmail:
+      required:
+        - email
+        - password
+      type: object
+      description: Auth login creds for auth_type="email"
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    _req_login_CredsPhone:
+      type: object
+      description: Auth login creds for auth_type="phone"
+      required:
+        - phone
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+    _req_login_CredsOidc:
+      type: string
+      description: |
+        Auth login creds for auth_type="oidc"
+          - full redirect URI received from OIDC provider
+    _req_login_ParamsEmail:
+      type: object
+      description: Auth login params for auth_type="email"
+      properties:
+        new_user:
+          type: boolean
+          default: false
+    _req_login_ParamsPhone:
+      type: object
+      description: Auth login params for auth_type="phone" (None)
+    _req_login_ParamsOidc:
+      type: object
+      description: Auth login params for auth_type="oidc"
+      properties:
+        redirect_uri:
+          type: string
+        pkce_verifier:
+          type: string
     _res_login_Response:
       type: object
       properties:
@@ -1271,79 +1344,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
-    _req_AuthLoginRequest:
-      required:
-        - auth_type
-        - app_id
-        - org_id
-      type: object
-      properties:
-        auth_type:
-          type: string
-          enum:
-            - username
-            - email
-            - phone
-            - illinois_oidc
-        app_id:
-          type: string
-        org_id:
-          type: string
-        creds:
-          anyOf:
-            - $ref: '#/components/schemas/_req_AuthLoginCredsEmail'
-            - $ref: '#/components/schemas/_req_AuthLoginCredsPhone'
-            - $ref: '#/components/schemas/_req_AuthLoginCredsOidc'
-        params:
-          type: object
-          anyOf:
-            - $ref: '#/components/schemas/_req_AuthLoginParamsEmail'
-            - $ref: '#/components/schemas/_req_AuthLoginParamsPhone'
-            - $ref: '#/components/schemas/_req_AuthLoginParamsOidc'
-    _req_AuthLoginCredsEmail:
-      required:
-        - email
-        - password
-      type: object
-      description: Auth login creds for auth_type="email"
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-    _req_AuthLoginCredsPhone:
-      type: object
-      description: Auth login creds for auth_type="phone"
-      required:
-        - phone
-      properties:
-        phone:
-          type: string
-        code:
-          type: string
-    _req_AuthLoginCredsOidc:
-      type: string
-      description: |
-        Auth login creds for auth_type="oidc"
-          - full redirect URI received from OIDC provider
-    _req_AuthLoginParamsEmail:
-      type: object
-      description: Auth login params for auth_type="email"
-      properties:
-        new_user:
-          type: boolean
-          default: false
-    _req_AuthLoginParamsPhone:
-      type: object
-      description: Auth login params for auth_type="phone" (None)
-    _req_AuthLoginParamsOidc:
-      type: object
-      description: Auth login params for auth_type="oidc"
-      properties:
-        redirect_uri:
-          type: string
-        pkce_verifier:
-          type: string
     _req_AuthLoginUrlRequest:
       required:
         - auth_type
