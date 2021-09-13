@@ -217,9 +217,14 @@ type AuthTypeFields_Params struct {
 
 // Credential defines model for Credential.
 type Credential struct {
-	AccountsAuthTypes *[]AccountAuthType      `json:"accounts_auth_types,omitempty"`
-	Id                *string                 `json:"id,omitempty"`
-	Value             *map[string]interface{} `json:"value,omitempty"`
+	AccountsAuthTypes *[]AccountAuthType `json:"accounts_auth_types,omitempty"`
+	Fields            *CredentialFields  `json:"fields,omitempty"`
+}
+
+// CredentialFields defines model for CredentialFields.
+type CredentialFields struct {
+	Id    *string                 `json:"id,omitempty"`
+	Value *map[string]interface{} `json:"value,omitempty"`
 }
 
 // Device defines model for Device.

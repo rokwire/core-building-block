@@ -37,6 +37,8 @@ AuthTypeFields:
   $ref: "./auth/AuthTypeFields.yaml"
 Credential:
   $ref: "./auth/Credential.yaml"
+CredentialFields:
+  $ref: "./auth/CredentialFields.yaml"
 ServiceReg:
   $ref: "./auth/ServiceReg.yaml"
 AuthServiceReg:

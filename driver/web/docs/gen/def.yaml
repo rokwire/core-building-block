@@ -950,12 +950,17 @@ components:
     Credential:
       type: object
       properties:
-        id:
-          type: string
+        fields:
+          $ref: '#/components/schemas/CredentialFields'
         accounts_auth_types:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthType'
+    CredentialFields:
+      type: object
+      properties:
+        id:
+          type: string
         value:
           type: object
     ServiceReg:
