@@ -931,6 +931,11 @@ components:
     AuthType:
       type: object
       properties:
+        fields:
+          $ref: '#/components/schemas/AuthTypeFields'
+    AuthTypeFields:
+      type: object
+      properties:
         id:
           type: string
         code:
@@ -1077,12 +1082,10 @@ components:
         jwks_uri:
           type: string
     Account:
-      required:
-        - id
       type: object
       properties:
-        id:
-          type: string
+        fields:
+          $ref: '#/components/schemas/AccountFields'
         application:
           $ref: '#/components/schemas/Application'
         organization:
@@ -1109,6 +1112,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Device'
+    AccountFields:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
     Profile:
       type: object
       properties:

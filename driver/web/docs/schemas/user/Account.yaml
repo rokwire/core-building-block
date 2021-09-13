@@ -1,9 +1,7 @@
-required:
-  - id
 type: object
 properties:
-  id:
-    type: string
+  fields:
+    $ref: "./AccountFields.yaml"
   application:
     $ref: "../application/Application.yaml"
   organization:

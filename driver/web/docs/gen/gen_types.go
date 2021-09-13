@@ -80,8 +80,8 @@ type Account struct {
 	Application  *Application             `json:"application,omitempty"`
 	AuthTypes    *[]AccountAuthType       `json:"auth_types,omitempty"`
 	Devices      *[]Device                `json:"devices,omitempty"`
+	Fields       *AccountFields           `json:"fields,omitempty"`
 	Groups       *[]ApplicationGroup      `json:"groups,omitempty"`
-	Id           string                   `json:"id"`
 	Organization *Organization            `json:"organization,omitempty"`
 	Permissions  *[]ApplicationPermission `json:"permissions,omitempty"`
 	Profile      *Profile                 `json:"profile,omitempty"`
@@ -108,6 +108,11 @@ type AccountAuthTypeFields struct {
 // AccountAuthTypeFields_Params defines model for AccountAuthTypeFields.Params.
 type AccountAuthTypeFields_Params struct {
 	AdditionalProperties map[string]interface{} `json:"-"`
+}
+
+// AccountFields defines model for AccountFields.
+type AccountFields struct {
+	Id string `json:"id"`
 }
 
 // Application defines model for Application.
@@ -193,15 +198,20 @@ type AuthServiceReg struct {
 
 // AuthType defines model for AuthType.
 type AuthType struct {
-	Code        *string          `json:"code,omitempty"`
-	Description *string          `json:"description,omitempty"`
-	Id          *string          `json:"id,omitempty"`
-	IsExternal  *bool            `json:"is_external,omitempty"`
-	Params      *AuthType_Params `json:"params,omitempty"`
+	Fields *AuthTypeFields `json:"fields,omitempty"`
 }
 
-// AuthType_Params defines model for AuthType.Params.
-type AuthType_Params struct {
+// AuthTypeFields defines model for AuthTypeFields.
+type AuthTypeFields struct {
+	Code        *string                `json:"code,omitempty"`
+	Description *string                `json:"description,omitempty"`
+	Id          *string                `json:"id,omitempty"`
+	IsExternal  *bool                  `json:"is_external,omitempty"`
+	Params      *AuthTypeFields_Params `json:"params,omitempty"`
+}
+
+// AuthTypeFields_Params defines model for AuthTypeFields.Params.
+type AuthTypeFields_Params struct {
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
@@ -619,25 +629,25 @@ func (a AccountAuthTypeFields_Params) MarshalJSON() ([]byte, error) {
 	return json.Marshal(object)
 }
 
-// Getter for additional properties for AuthType_Params. Returns the specified
+// Getter for additional properties for AuthTypeFields_Params. Returns the specified
 // element and whether it was found
-func (a AuthType_Params) Get(fieldName string) (value interface{}, found bool) {
+func (a AuthTypeFields_Params) Get(fieldName string) (value interface{}, found bool) {
 	if a.AdditionalProperties != nil {
 		value, found = a.AdditionalProperties[fieldName]
 	}
 	return
 }
 
-// Setter for additional properties for AuthType_Params
-func (a *AuthType_Params) Set(fieldName string, value interface{}) {
+// Setter for additional properties for AuthTypeFields_Params
+func (a *AuthTypeFields_Params) Set(fieldName string, value interface{}) {
 	if a.AdditionalProperties == nil {
 		a.AdditionalProperties = make(map[string]interface{})
 	}
 	a.AdditionalProperties[fieldName] = value
 }
 
-// Override default JSON handling for AuthType_Params to handle AdditionalProperties
-func (a *AuthType_Params) UnmarshalJSON(b []byte) error {
+// Override default JSON handling for AuthTypeFields_Params to handle AdditionalProperties
+func (a *AuthTypeFields_Params) UnmarshalJSON(b []byte) error {
 	object := make(map[string]json.RawMessage)
 	err := json.Unmarshal(b, &object)
 	if err != nil {
@@ -658,8 +668,8 @@ func (a *AuthType_Params) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// Override default JSON handling for AuthType_Params to handle AdditionalProperties
-func (a AuthType_Params) MarshalJSON() ([]byte, error) {
+// Override default JSON handling for AuthTypeFields_Params to handle AdditionalProperties
+func (a AuthTypeFields_Params) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 

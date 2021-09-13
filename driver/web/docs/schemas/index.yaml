@@ -33,6 +33,8 @@ OrganizationConfig:
 # auth
 AuthType:
   $ref: "./auth/AuthType.yaml"
+AuthTypeFields:
+  $ref: "./auth/AuthTypeFields.yaml"
 Credential:
   $ref: "./auth/Credential.yaml"
 ServiceReg:
@@ -53,6 +55,8 @@ OidcDiscovery:
 # user
 Account:
   $ref: "./user/Account.yaml"
+AccountFields:
+  $ref: "./user/AccountFields.yaml"
 Profile:
   $ref: "./user/Profile.yaml"
 ProfileFields:
