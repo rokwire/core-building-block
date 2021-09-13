@@ -6,12 +6,12 @@ import (
 )
 
 //Application
-func applicationToDef(item *model.Application) *Def.Application {
+func applicationToDef(item *model.Application) *Def.ApplicationFields {
 	if item == nil {
 		return nil
 	}
-	//TODO
-	return &Def.Application{Id: item.ID, Name: item.Name}
+
+	return &Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant, RequiresOwnUsers: &item.RequiresOwnUsers}
 }
 
 //ApplicationPermission

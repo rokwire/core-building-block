@@ -1,17 +1,6 @@
-required:
-  - id
-  - identifier
 type: object
 properties:
-  id:
-    type: string
-  identifier:
-    type: string
-  name:
-    type: string
-  versions:
-    type: array
-    items:
-      type: string
+  fields:
+   $ref: "./ApplicationTypeFields.yaml"
   application:
     $ref: "./Application.yaml"

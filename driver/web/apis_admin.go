@@ -316,11 +316,11 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.H
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
 	}
 
-	name := requestData.Name
 	//TODO
+	//name := requestData.Name
 	//versions := requestData.Versions
 
-	_, err = h.coreAPIs.Administration.AdmCreateApplication(name, nil)
+	_, err = h.coreAPIs.Administration.AdmCreateApplication("TODO", nil)
 	if err != nil {
 		l.Errorf(err.Error())
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
@@ -333,7 +333,9 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.H
 
 //getAppilcations gets applications list
 func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request) logs.HttpResponse {
-	applications, err := h.coreAPIs.Administration.AdmGetApplications()
+	//TODO
+	return l.HttpResponseSuccess()
+	/*applications, err := h.coreAPIs.Administration.AdmGetApplications()
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}
@@ -347,7 +349,7 @@ func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request) logs.Htt
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
 	}
-	return l.HttpResponseSuccessJSON(data)
+	return l.HttpResponseSuccessJSON(data) */
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance

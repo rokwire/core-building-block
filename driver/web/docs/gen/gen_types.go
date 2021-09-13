@@ -112,12 +112,17 @@ type AccountAuthTypeFields_Params struct {
 
 // Application defines model for Application.
 type Application struct {
-	Id               string                     `json:"id"`
-	MultiTenant      *bool                      `json:"multi_tenant,omitempty"`
-	Name             string                     `json:"name"`
-	Organizations    *[]ApplicationOrganization `json:"organizations,omitempty"`
-	RequiresOwnUsers *bool                      `json:"requires_own_users,omitempty"`
-	Types            *[]ApplicationType         `json:"types,omitempty"`
+	Fields        *ApplicationFields         `json:"fields,omitempty"`
+	Organizations *[]ApplicationOrganization `json:"organizations,omitempty"`
+	Types         *[]ApplicationType         `json:"types,omitempty"`
+}
+
+// ApplicationFields defines model for ApplicationFields.
+type ApplicationFields struct {
+	Id               string `json:"id"`
+	MultiTenant      *bool  `json:"multi_tenant,omitempty"`
+	Name             string `json:"name"`
+	RequiresOwnUsers *bool  `json:"requires_own_users,omitempty"`
 }
 
 // ApplicationGroup defines model for ApplicationGroup.
@@ -167,11 +172,16 @@ type ApplicationRoleFields struct {
 
 // ApplicationType defines model for ApplicationType.
 type ApplicationType struct {
-	Application *Application `json:"application,omitempty"`
-	Id          string       `json:"id"`
-	Identifier  string       `json:"identifier"`
-	Name        *string      `json:"name,omitempty"`
-	Versions    *[]string    `json:"versions,omitempty"`
+	Application *Application           `json:"application,omitempty"`
+	Fields      *ApplicationTypeFields `json:"fields,omitempty"`
+}
+
+// ApplicationTypeFields defines model for ApplicationTypeFields.
+type ApplicationTypeFields struct {
+	Id         string    `json:"id"`
+	Identifier string    `json:"identifier"`
+	Name       *string   `json:"name,omitempty"`
+	Versions   *[]string `json:"versions,omitempty"`
 }
 
 // Service registration record used for auth

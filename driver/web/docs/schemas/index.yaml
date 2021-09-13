@@ -5,8 +5,12 @@ GlobalConfig:
 # application
 Application:
   $ref: "./application/Application.yaml"
+ApplicationFields:
+  $ref: "./application/ApplicationFields.yaml"
 ApplicationType:
   $ref: "./application/ApplicationType.yaml"
+ApplicationTypeFields:
+  $ref: "./application/ApplicationTypeFields.yaml"
 ApplicationOrganization:
   $ref: "./application/ApplicationOrganization.yaml"
 ApplicationPermission:

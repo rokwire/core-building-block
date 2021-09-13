@@ -1,17 +1,7 @@
-required:
-  - id
-  - name
 type: object
 properties:
-  id:
-    readOnly: true
-    type: string
-  name:
-    type: string
-  multi_tenant:
-    type: boolean
-  requires_own_users:
-    type: boolean
+  fields:
+    $ref: "./ApplicationFields.yaml"
   types:
     type: array
     items:

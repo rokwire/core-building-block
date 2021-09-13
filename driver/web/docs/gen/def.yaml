@@ -774,6 +774,19 @@ components:
         setting:
           type: string
     Application:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/ApplicationFields'
+        types:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationType'
+        organizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationOrganization'
+    ApplicationFields:
       required:
         - id
         - name
@@ -788,15 +801,14 @@ components:
           type: boolean
         requires_own_users:
           type: boolean
-        types:
-          type: array
-          items:
-            $ref: '#/components/schemas/ApplicationType'
-        organizations:
-          type: array
-          items:
-            $ref: '#/components/schemas/ApplicationOrganization'
     ApplicationType:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/ApplicationTypeFields'
+        application:
+          $ref: '#/components/schemas/Application'
+    ApplicationTypeFields:
       required:
         - id
         - identifier
@@ -812,8 +824,6 @@ components:
           type: array
           items:
             type: string
-        application:
-          $ref: '#/components/schemas/Application'
     ApplicationOrganization:
       type: object
       properties:
