@@ -28,6 +28,7 @@ func (a *Auth) GetHost() string {
 //Login logs a user in a specific application using the specified credentials and authentication method.
 //The authentication method must be one of the supported for the application.
 //	Input:
+//		IP (string): Client's IP address
 //		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 //		appID (string): ID of the app/client that the user is logging in from
@@ -39,7 +40,7 @@ func (a *Auth) GetHost() string {
 //		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //		Account (Account): Account object for authenticated user
 //		Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Login(authenticationType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error) {
+func (a *Auth) Login(IP string, authenticationType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
