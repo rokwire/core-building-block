@@ -52,10 +52,10 @@ type LoginSession struct {
 	AccountAuthType AccountAuthType
 	Device          Device
 
+	IP           string
 	AccessToken  string
 	RefreshToken string
-
-	Params interface{}
+	Params       interface{}
 
 	DateCreated time.Time
 }

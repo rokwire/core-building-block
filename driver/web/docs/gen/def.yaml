@@ -952,6 +952,8 @@ components:
       properties:
         id:
           type: string
+        IP:
+          type: string
         access_token:
           type: string
         refresh_token:
