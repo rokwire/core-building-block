@@ -103,6 +103,8 @@ _req_login_ParamsPhone:
    $ref: "./apis/services/login/request/ParamsPhone.yaml"
 _req_login_ParamsOidc:
   $ref: "./apis/services/login/request/ParamsOidc.yaml"
+_req_login_Device:
+  $ref: "./apis/services/login/request/Device.yaml"
 _res_login_Response:
   $ref: "./apis/services/login/response/Response.yaml"
 _res_login_Account:

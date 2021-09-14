@@ -22,6 +22,11 @@ post:
                 "creds": {
                   "email": "test@test.com", 
                   "password": "test12345"
+                },
+                "device": {
+                  "type": "mobile",
+                  "mac_address": "1234",
+                  "os": "Android"
                 }
               }
           phone:
@@ -34,6 +39,11 @@ post:
                 "creds": {
                   "phone": "+12223334444", 
                   "code": "123456"
+                },
+                "device": {
+                  "type": "mobile",
+                  "mac_address": "1234",
+                  "os": "Android"
                 }
               }
           illinois_oidc:
@@ -47,6 +57,11 @@ post:
                 "params": {
                   "redirect_uri": "https://redirect.example.com",
                   "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                },
+                "device": {
+                  "type": "mobile",
+                  "mac_address": "1234",
+                  "os": "Android"
                 }
               }
     required: true

@@ -2,6 +2,7 @@ required:
   - auth_type
   - app_id
   - org_id
+  - device
 type: object
 properties:
   auth_type:
@@ -26,3 +27,5 @@ properties:
       - $ref: "./ParamsEmail.yaml"
       - $ref: "./ParamsPhone.yaml"
       - $ref: "./ParamsOidc.yaml"
+  device:
+    $ref: "./Device.yaml"

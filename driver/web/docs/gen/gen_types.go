@@ -54,6 +54,17 @@ const (
 	ReqLoginUrlRequestAuthTypeIllinoisOidc ReqLoginUrlRequestAuthType = "illinois_oidc"
 )
 
+// Defines values for ReqLoginDeviceType.
+const (
+	ReqLoginDeviceTypeDesktop ReqLoginDeviceType = "desktop"
+
+	ReqLoginDeviceTypeMobile ReqLoginDeviceType = "mobile"
+
+	ReqLoginDeviceTypeOther ReqLoginDeviceType = "other"
+
+	ReqLoginDeviceTypeWeb ReqLoginDeviceType = "web"
+)
+
 // Defines values for ReqLoginRequestAuthType.
 const (
 	ReqLoginRequestAuthTypeEmail ReqLoginRequestAuthType = "email"
@@ -399,6 +410,16 @@ type ReqLoginCredsPhone struct {
 	Phone string  `json:"phone"`
 }
 
+// Client device
+type ReqLoginDevice struct {
+	MacAddress *string            `json:"mac_address,omitempty"`
+	Os         *string            `json:"os,omitempty"`
+	Type       ReqLoginDeviceType `json:"type"`
+}
+
+// ReqLoginDeviceType defines model for ReqLoginDevice.Type.
+type ReqLoginDeviceType string
+
 // Auth login params for auth_type="email"
 type ReqLoginParamsEmail struct {
 	NewUser *bool `json:"new_user,omitempty"`
@@ -418,8 +439,11 @@ type ReqLoginRequest struct {
 	AppId    string                  `json:"app_id"`
 	AuthType ReqLoginRequestAuthType `json:"auth_type"`
 	Creds    *interface{}            `json:"creds,omitempty"`
-	OrgId    string                  `json:"org_id"`
-	Params   *interface{}            `json:"params,omitempty"`
+
+	// Client device
+	Device ReqLoginDevice `json:"device"`
+	OrgId  string         `json:"org_id"`
+	Params *interface{}   `json:"params,omitempty"`
 }
 
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.

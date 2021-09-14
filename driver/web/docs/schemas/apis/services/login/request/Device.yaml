@@ -1,0 +1,16 @@
+required:
+  - type
+type: object
+description: Client device
+properties:
+  type:
+    type: string
+    enum:
+      - mobile
+      - web
+      - desktop
+      - other
+  os:
+    type: string
+  mac_address:
+    type: string

@@ -49,6 +49,11 @@ paths:
                     "creds": {
                       "email": "test@test.com", 
                       "password": "test12345"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "mac_address": "1234",
+                      "os": "Android"
                     }
                   }
               phone:
@@ -61,6 +66,11 @@ paths:
                     "creds": {
                       "phone": "+12223334444", 
                       "code": "123456"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "mac_address": "1234",
+                      "os": "Android"
                     }
                   }
               illinois_oidc:
@@ -74,6 +84,11 @@ paths:
                     "params": {
                       "redirect_uri": "https://redirect.example.com",
                       "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "mac_address": "1234",
+                      "os": "Android"
                     }
                   }
         required: true
@@ -1264,6 +1279,7 @@ components:
         - auth_type
         - app_id
         - org_id
+        - device
       type: object
       properties:
         auth_type:
@@ -1288,6 +1304,8 @@ components:
             - $ref: '#/components/schemas/_req_login_ParamsEmail'
             - $ref: '#/components/schemas/_req_login_ParamsPhone'
             - $ref: '#/components/schemas/_req_login_ParamsOidc'
+        device:
+          $ref: '#/components/schemas/_req_login_Device'
     _req_login_CredsEmail:
       required:
         - email
@@ -1331,6 +1349,23 @@ components:
         redirect_uri:
           type: string
         pkce_verifier:
+          type: string
+    _req_login_Device:
+      required:
+        - type
+      type: object
+      description: Client device
+      properties:
+        type:
+          type: string
+          enum:
+            - mobile
+            - web
+            - desktop
+            - other
+        os:
+          type: string
+        mac_address:
           type: string
     _res_login_Response:
       type: object
