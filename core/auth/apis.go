@@ -39,17 +39,18 @@ func (a *Auth) GetHost() string {
 //		params (string): JSON encoded params defined by specified auth type
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
-//		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
-//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
-//		Account (Account): Account object for authenticated user
-//		Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceMacAddress *string, authenticationType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error) {
+//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
+//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
+//			Params (interface{}): authType-specific set of parameters passed back to client
+func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceMacAddress *string, authenticationType string, creds string, appID string, orgID string, params string, l *logs.Log) (*model.LoginSession, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appID, orgID)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
 	var account *model.Account
@@ -60,26 +61,26 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceMacAd
 	if authType.IsExternal {
 		account, accountAuthType, extParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
+			return nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 		}
 
 		//TODO groups mapping
 	} else {
 		account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
+			return nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
 
 		//the credentials are valid
 	}
 
 	//now we are ready to apply login for the user
-	accessToken, refreshToken, err := a.applyLogin(*account, *accountAuthType, *appType, extParams, l)
+	loginSession, err := a.applyLogin(*account, *accountAuthType, *appType, IP, deviceType, deviceOS, deviceMacAddress, extParams, l)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+		return nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}
 
-	return *accessToken, *refreshToken, account, extParams, nil
+	return loginSession, nil
 }
 
 //Refresh refreshes an access token using a refresh token

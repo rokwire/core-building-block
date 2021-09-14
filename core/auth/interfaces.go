@@ -54,11 +54,12 @@ type APIs interface {
 	//		params (string): JSON encoded params defined by specified auth type
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
-	//		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
-	//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
-	//		Account (Account): Account object for authenticated user
-	//		Params (interface{}): authType-specific set of parameters passed back to client
-	Login(IP string, deviceType string, deviceOS *string, deviceMacAddress *string, authType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error)
+	//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
+	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
+	//			Params (interface{}): authType-specific set of parameters passed back to client
+	Login(IP string, deviceType string, deviceOS *string, deviceMacAddress *string, authType string, creds string, appID string, orgID string, params string, l *logs.Log) (*model.LoginSession, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:

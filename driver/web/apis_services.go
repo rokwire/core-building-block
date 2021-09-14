@@ -47,11 +47,16 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 
 	device := requestData.Device
 
-	accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(ip, string(device.Type), device.Os, device.MacAddress,
+	loginSession, err := h.coreAPIs.Auth.Login(ip, string(device.Type), device.Os, device.MacAddress,
 		string(requestData.AuthType), requestCreds, requestData.AppId, requestData.OrgId, requestParams, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
+
+	accessToken := loginSession.AccessToken
+	refreshToken := loginSession.RefreshToken
+	account := loginSession.AccountAuthType.Account
+	params := loginSession.Params
 
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}

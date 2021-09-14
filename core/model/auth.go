@@ -55,7 +55,7 @@ type LoginSession struct {
 	IP           string
 	AccessToken  string
 	RefreshToken string
-	Params       interface{}
+	Params       interface{} //authType-specific set of parameters passed back to client
 
 	DateCreated time.Time
 }
