@@ -1,0 +1,8 @@
+type: object
+properties:
+  fields:
+    $ref: "./LoginSessionFields.yaml"
+  account_auth_type:
+    $ref: "../user/AccountAuthType.yaml"
+  device:
+    $ref: "../user/Device.yaml"

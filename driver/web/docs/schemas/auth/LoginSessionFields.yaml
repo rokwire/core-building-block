@@ -1,0 +1,13 @@
+type: object
+properties:
+  id:
+    type: string
+  access_token:
+    type: string
+  refresh_token:
+    type: string
+  params:
+    type: object
+    additionalProperties: true
+  date_created:
+    type: string

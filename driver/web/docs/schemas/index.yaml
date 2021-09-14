@@ -35,6 +35,10 @@ OrganizationConfigFields:
   $ref: "./application/OrganizationConfigFields.yaml"
   
 # auth
+LoginSession:
+  $ref: "./auth/LoginSession.yaml"
+LoginSessionFields:
+  $ref: "./auth/LoginSessionFields.yaml"
 AuthType:
   $ref: "./auth/AuthType.yaml"
 AuthTypeFields:

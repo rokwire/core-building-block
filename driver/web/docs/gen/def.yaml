@@ -938,6 +938,29 @@ components:
           description: organization domains
           items:
             type: string
+    LoginSession:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/LoginSessionFields'
+        account_auth_type:
+          $ref: '#/components/schemas/AccountAuthType'
+        device:
+          $ref: '#/components/schemas/Device'
+    LoginSessionFields:
+      type: object
+      properties:
+        id:
+          type: string
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        params:
+          type: object
+          additionalProperties: true
+        date_created:
+          type: string
     AuthType:
       type: object
       properties:
