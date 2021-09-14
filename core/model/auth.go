@@ -14,6 +14,8 @@ import (
 )
 
 const (
+	//TypeLoginSession auth type type
+	TypeLoginSession logutils.MessageDataType = "login session"
 	//TypeAuthType auth type type
 	TypeAuthType logutils.MessageDataType = "auth type"
 	//TypeIdentityProvider identity provider type
@@ -43,6 +45,20 @@ const (
 	//TypePubKey pub key type
 	TypePubKey logutils.MessageDataType = "pub key"
 )
+
+//LoginSession represents login session entity
+type LoginSession struct {
+	ID              string
+	AccountAuthType AccountAuthType
+	Device          Device
+
+	AccessToken  string
+	RefreshToken string
+
+	Params interface{}
+
+	DateCreated time.Time
+}
 
 //AuthType represents authentication type entity
 //	The system supports different authentication types - username, email, phone, identity providers ones etc
