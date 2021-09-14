@@ -16,6 +16,7 @@ type Services interface {
 	UpdateAnonymousProfile(l *logs.Log, id string, favorites *[]string, interests *[]string,
 		negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error
 	DeleteAnonymousProfile(l *logs.Log, id string) error
+	UpdateUserAnonymousProfile(l *logs.Log, profile *model.UserAnonymousProfile) error
 }
 
 //Administration exposes administration APIs for the driver adapters
@@ -61,6 +62,8 @@ type Storage interface {
 	UpdateAnonymousProfile(id string, favorites *[]string, interests *[]string,
 		negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error
 	DeleteAnonymousProfile(id string) error
+	FindUserByID(id string) (*model.User, error)
+	UpdateUser(user *model.User, newOrgData *map[string]interface{}) (*model.User, error)
 	FindOrganization(id string) (*model.Organization, error)
 
 	GetApplication(ID string) (*model.Application, error)

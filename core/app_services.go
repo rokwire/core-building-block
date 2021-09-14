@@ -17,11 +17,11 @@ func (app *application) serGetCommonTest(l *logs.Log) string {
 }
 
 func (app *application) createAnonymousProfile(l *logs.Log, profile *model.AnonymousProfile) (*model.AnonymousProfile, error) {
-	organization, err := app.storage.InsertAnonymousProfile(profile)
+	profile, err := app.storage.InsertAnonymousProfile(profile)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAnonymousProfile, nil, err)
 	}
-	return organization, nil
+	return profile, nil
 }
 
 func (app *application) updateAnonymousProfile(l *logs.Log, id string, favorites *[]string, interests *[]string,
@@ -45,6 +45,19 @@ func (app *application) deleteAnonymousProfile(l *logs.Log, id string) error {
 	err := app.storage.DeleteAnonymousProfile(id)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAnonymousProfile, nil, err)
+	}
+	return nil
+}
+
+func (app *application) updateUserAnonymousProfile(l *logs.Log, profile *model.UserAnonymousProfile) error {
+	user, err := app.storage.FindUserByID(profile.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeUser, nil, err)
+	}
+	user.Profile.UserAnonymousProfile = profile
+	_, err = app.storage.UpdateUser(user, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUser, nil, err)
 	}
 	return nil
 }

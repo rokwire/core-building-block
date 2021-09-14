@@ -83,13 +83,13 @@ func (ua UserAccount) String() string {
 
 //UserProfile represents user profile entity. The user profile is an information about the user.
 type UserProfile struct {
-	ID               string               `bson:"id"`
-	PhotoURL         string               `bson:"photo_url"`
-	FirstName        string               `bson:"first_name"`
-	LastName         string               `bson:"last_name"`
-	AnonymousProfile UserAnonymousProfile `bson:"anonymous_profile"`
-	DateCreated      time.Time            `bson:"date_created"`
-	DateUpdated      *time.Time           `bson:"date_updated"`
+	ID                   string                `bson:"id"`
+	PhotoURL             string                `bson:"photo_url"`
+	FirstName            string                `bson:"first_name"`
+	LastName             string                `bson:"last_name"`
+	UserAnonymousProfile *UserAnonymousProfile `bson:"user_anonymous_profile"`
+	DateCreated          time.Time             `bson:"date_created"`
+	DateUpdated          *time.Time            `bson:"date_updated"`
 }
 
 type AnonymousProfile struct {
