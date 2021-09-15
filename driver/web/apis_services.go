@@ -185,7 +185,7 @@ func (h ServicesApisHandler) createAnonymousProfile(l *logs.Log, r *http.Request
 	}
 	//Update the anonymous profile embedded in user collection
 	userAnonymousProfile := model.UserAnonymousProfile{ID: profile.ID, Interests: profile.Interests, Favorites: profile.Favorites, Over13: profile.Over13, PositiveInterestTags: profile.PositiveInterestTags, NegativeInterestTags: profile.NegativeInterestTags, CreationDate: profile.CreationDate, LastModifiedDate: profile.LastModifiedDate, PrivacySettings: profile.PrivacySettings}
-	err = h.coreAPIs.Services.UpdateUserAnonymousProfile(l, &userAnonymousProfile)
+	err = h.coreAPIs.Services.UpdateUserAnonymousProfile(l, profile.ID, &userAnonymousProfile)
 	if err != nil {
 		l.LogError("Failed to update anonymous profile in users coll", err)
 	}
@@ -213,7 +213,7 @@ func (h ServicesApisHandler) updateAnonymousProfile(l *logs.Log, r *http.Request
 	}
 	//Update the anonymous profile embedded in user collection
 	userAnonymousProfile := model.UserAnonymousProfile{ID: profile.ID, Interests: profile.Interests, Favorites: profile.Favorites, Over13: profile.Over13, PositiveInterestTags: profile.PositiveInterestTags, NegativeInterestTags: profile.NegativeInterestTags, CreationDate: profile.CreationDate, LastModifiedDate: profile.LastModifiedDate, PrivacySettings: profile.PrivacySettings}
-	err = h.coreAPIs.Services.UpdateUserAnonymousProfile(l, &userAnonymousProfile)
+	err = h.coreAPIs.Services.UpdateUserAnonymousProfile(l, profile.ID, &userAnonymousProfile)
 	if err != nil {
 		l.LogError("Failed to update anonymous profile in users coll", err)
 	}
@@ -249,8 +249,13 @@ func (h ServicesApisHandler) deleteAnonymousProfile(l *logs.Log, r *http.Request
 	if len(ID) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
+	userAnonymousProfile := model.UserAnonymousProfile{}
+	err := h.coreAPIs.Services.UpdateUserAnonymousProfile(l, ID, &userAnonymousProfile)
+	if err != nil {
+		l.LogError("Failed to update anonymous profile in users coll", err)
+	}
 
-	err := h.coreAPIs.Services.DeleteAnonymousProfile(l, ID)
+	err = h.coreAPIs.Services.DeleteAnonymousProfile(l, ID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
 	}
