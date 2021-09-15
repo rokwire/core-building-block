@@ -17,7 +17,6 @@ type Services interface {
 		negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error
 	DeleteAnonymousProfile(l *logs.Log, id string) error
 	UpdateUserAnonymousProfile(l *logs.Log, id string, profile *model.UserAnonymousProfile) error
-	DeleteUserAnonymousProfile(l *logs.Log, id string) error
 }
 
 //Administration exposes administration APIs for the driver adapters

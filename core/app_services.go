@@ -49,8 +49,8 @@ func (app *application) deleteAnonymousProfile(l *logs.Log, id string) error {
 	return nil
 }
 
-func (app *application) updateUserAnonymousProfile(l *logs.Log, profile *model.UserAnonymousProfile) error {
-	user, err := app.storage.FindUserByID(profile.ID)
+func (app *application) updateUserAnonymousProfile(l *logs.Log, id string, profile *model.UserAnonymousProfile) error {
+	user, err := app.storage.FindUserByID(id)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeUser, nil, err)
 	}

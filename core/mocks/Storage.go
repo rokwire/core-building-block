@@ -98,6 +98,29 @@ func (_m *Storage) FindOrganization(id string) (*model.Organization, error) {
 	return r0, r1
 }
 
+// FindUserByID provides a mock function with given fields: id
+func (_m *Storage) FindUserByID(id string) (*model.User, error) {
+	ret := _m.Called(id)
+
+	var r0 *model.User
+	if rf, ok := ret.Get(0).(func(string) *model.User); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetApplication provides a mock function with given fields: ID
 func (_m *Storage) GetApplication(ID string) (*model.Application, error) {
 	ret := _m.Called(ID)
@@ -258,4 +281,27 @@ func (_m *Storage) UpdateOrganization(ID string, name string, requestType string
 	}
 
 	return r0
+}
+
+// UpdateUser provides a mock function with given fields: user, newOrgData
+func (_m *Storage) UpdateUser(user *model.User, newOrgData *map[string]interface{}) (*model.User, error) {
+	ret := _m.Called(user, newOrgData)
+
+	var r0 *model.User
+	if rf, ok := ret.Get(0).(func(*model.User, *map[string]interface{}) *model.User); ok {
+		r0 = rf(user, newOrgData)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.User)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*model.User, *map[string]interface{}) error); ok {
+		r1 = rf(user, newOrgData)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
