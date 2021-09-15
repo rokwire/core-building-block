@@ -26,7 +26,7 @@ type database struct {
 	accounts                  *collectionWrapper
 	devices                   *collectionWrapper
 	credentials               *collectionWrapper
-	refreshTokens             *collectionWrapper
+	loginsSessions            *collectionWrapper
 	globalConfig              *collectionWrapper
 	serviceRegs               *collectionWrapper
 	serviceAuthorizations     *collectionWrapper
@@ -93,8 +93,8 @@ func (m *database) start() error {
 		return err
 	}
 
-	refreshTokens := &collectionWrapper{database: m, coll: db.Collection("refresh_tokens")}
-	err = m.applyRefreshTokenChecks(refreshTokens)
+	loginsSessions := &collectionWrapper{database: m, coll: db.Collection("logins_sessions")}
+	err = m.applyLoginsSessionsChecks(loginsSessions)
 	if err != nil {
 		return err
 	}
@@ -162,7 +162,7 @@ func (m *database) start() error {
 	m.accounts = accounts
 	m.devices = devices
 	m.credentials = credentials
-	m.refreshTokens = refreshTokens
+	m.loginsSessions = loginsSessions
 	m.globalConfig = globalConfig
 	m.serviceRegs = serviceRegs
 	m.serviceAuthorizations = serviceAuthorizations
@@ -250,29 +250,30 @@ func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
 	return nil
 }
 
-func (m *database) applyRefreshTokenChecks(refreshTokens *collectionWrapper) error {
-	m.logger.Info("apply refresh tokens checks.....")
+func (m *database) applyLoginsSessionsChecks(refreshTokens *collectionWrapper) error {
+	m.logger.Info("apply logins sessions checks.....")
+	//TODO
+	/*
+		err := refreshTokens.AddIndex(bson.D{primitive.E{Key: "current_token", Value: 1}}, false)
+		if err != nil {
+			return err
+		}
 
-	err := refreshTokens.AddIndex(bson.D{primitive.E{Key: "current_token", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
+		err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "previous_token", Value: 1}}, false)
+		if err != nil {
+			return err
+		}
 
-	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "previous_token", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
+		err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "exp", Value: 1}}, false)
+		if err != nil {
+			return err
+		}
 
-	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "exp", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "creds_id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-	m.logger.Info("refresh tokens check passed")
+		err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "creds_id", Value: 1}}, false)
+		if err != nil {
+			return err
+		} */
+	m.logger.Info("logins sessions check passed")
 	return nil
 }
 
