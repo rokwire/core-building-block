@@ -21,27 +21,9 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
-<<<<<<< HEAD
-	users                    *collectionWrapper
-	anonymousProfile         *collectionWrapper
-	devices                  *collectionWrapper
-	credentials              *collectionWrapper
-	globalConfig             *collectionWrapper
-	globalGroups             *collectionWrapper
-	globalRoles              *collectionWrapper
-	globalPermissions        *collectionWrapper
-	organizations            *collectionWrapper
-	organizationsGroups      *collectionWrapper
-	organizationsRoles       *collectionWrapper
-	organizationsPermissions *collectionWrapper
-	organizationsMemberships *collectionWrapper
-	authConfigs              *collectionWrapper
-	serviceRegs              *collectionWrapper
-	serviceAuthorizations    *collectionWrapper
-	applications             *collectionWrapper
-=======
 	authTypes                 *collectionWrapper
 	identityProviders         *collectionWrapper
+	anonymousProfile          *collectionWrapper
 	accounts                  *collectionWrapper
 	devices                   *collectionWrapper
 	credentials               *collectionWrapper
@@ -55,7 +37,6 @@ type database struct {
 	applicationsGroups        *collectionWrapper
 	applicationsRoles         *collectionWrapper
 	applicationsPermissions   *collectionWrapper
->>>>>>> develop
 
 	listeners []Listener
 }
@@ -127,14 +108,6 @@ func (m *database) start() error {
 
 	serviceRegs := &collectionWrapper{database: m, coll: db.Collection("service_regs")}
 	err = m.applyServiceRegsChecks(serviceRegs)
-<<<<<<< HEAD
-	if err != nil {
-		return err
-	}
-	organizationsGroups := &collectionWrapper{database: m, coll: db.Collection("organizations_groups")}
-	err = m.applyOrganizationsGroupsChecks(organizationsGroups)
-=======
->>>>>>> develop
 	if err != nil {
 		return err
 	}
@@ -163,10 +136,6 @@ func (m *database) start() error {
 		return err
 	}
 
-<<<<<<< HEAD
-	serviceAuthorizations := &collectionWrapper{database: m, coll: db.Collection("service_authorizations")}
-	err = m.applyServiceAuthorizationsChecks(serviceAuthorizations)
-=======
 	applicationsGroups := &collectionWrapper{database: m, coll: db.Collection("applications_groups")}
 	err = m.applyApplicationsGroupsChecks(applicationsGroups)
 	if err != nil {
@@ -175,7 +144,6 @@ func (m *database) start() error {
 
 	applicationsRoles := &collectionWrapper{database: m, coll: db.Collection("applications_roles")}
 	err = m.applyApplicationsRolesChecks(applicationsRoles)
->>>>>>> develop
 	if err != nil {
 		return err
 	}
