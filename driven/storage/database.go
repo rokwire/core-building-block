@@ -93,26 +93,26 @@ func (m *database) start() error {
 		return err
 	}
 
-	loginsSessions := &collectionWrapper{database: m, coll: db.Collection("logins_sessions")}
-	err = m.applyLoginsSessionsChecks(loginsSessions)
-	if err != nil {
-		return err
-	}
-
-	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
-	err = m.applyGlobalConfigChecks(globalConfig)
-	if err != nil {
-		return err
-	}
-
 	serviceRegs := &collectionWrapper{database: m, coll: db.Collection("service_regs")}
 	err = m.applyServiceRegsChecks(serviceRegs)
 	if err != nil {
 		return err
 	}
 
+	loginsSessions := &collectionWrapper{database: m, coll: db.Collection("logins_sessions")}
+	err = m.applyLoginsSessionsChecks(loginsSessions)
+	if err != nil {
+		return err
+	}
+
 	serviceAuthorizations := &collectionWrapper{database: m, coll: db.Collection("service_authorizations")}
 	err = m.applyServiceAuthorizationsChecks(serviceAuthorizations)
+	if err != nil {
+		return err
+	}
+
+	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
+	err = m.applyGlobalConfigChecks(globalConfig)
 	if err != nil {
 		return err
 	}
