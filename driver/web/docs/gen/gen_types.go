@@ -322,6 +322,21 @@ type OrganizationFields struct {
 // OrganizationFieldsType defines model for OrganizationFields.Type.
 type OrganizationFieldsType string
 
+// Pii defines model for Pii.
+type Pii struct {
+	Address     *string `json:"address,omitempty"`
+	Country     *string `json:"country,omitempty"`
+	DateOfBirth *string `json:"date_of_birth,omitempty"`
+	FirstName   *string `json:"first_name,omitempty"`
+	HomeCounty  *string `json:"home_county,omitempty"`
+	LastName    *string `json:"last_name,omitempty"`
+	MiddleName  *string `json:"middle_name,omitempty"`
+	PhotoUrl    *string `json:"photo_url,omitempty"`
+	State       *string `json:"state,omitempty"`
+	WorkCounty  *string `json:"work_county,omitempty"`
+	ZipCode     *string `json:"zip_code,omitempty"`
+}
+
 // Profile defines model for Profile.
 type Profile struct {
 	Accounts *[]Account     `json:"accounts,omitempty"`
@@ -330,10 +345,8 @@ type Profile struct {
 
 // ProfileFields defines model for ProfileFields.
 type ProfileFields struct {
-	FirstName *string `json:"first_name,omitempty"`
-	Id        *string `json:"id,omitempty"`
-	LastName  *string `json:"last_name,omitempty"`
-	PhotoUrl  *string `json:"photo_url,omitempty"`
+	Id  *string `json:"id,omitempty"`
+	Pii *Pii    `json:"pii,omitempty"`
 }
 
 // PubKey defines model for PubKey.
@@ -555,7 +568,7 @@ type GetServicesAuthServiceRegsParams struct {
 }
 
 // PutServicesProfilesPiiJSONBody defines parameters for PutServicesProfilesPii.
-type PutServicesProfilesPiiJSONBody UserPII
+type PutServicesProfilesPiiJSONBody Pii
 
 // GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
 type GetTpsServiceRegsParams struct {
@@ -593,6 +606,9 @@ type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 
 // PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
 type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
+
+// PutServicesProfilesPiiJSONRequestBody defines body for PutServicesProfilesPii for application/json ContentType.
+type PutServicesProfilesPiiJSONRequestBody PutServicesProfilesPiiJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found

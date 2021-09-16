@@ -2,7 +2,6 @@ package model
 
 import (
 	"core-building-block/utils"
-	"fmt"
 	"time"
 
 	"github.com/rokmetro/logging-library/logutils"
@@ -13,6 +12,8 @@ const (
 	TypeAccount logutils.MessageDataType = "account"
 	//TypeAccountAuthType account auth type
 	TypeAccountAuthType logutils.MessageDataType = "account auth type"
+	//TypePii Pii
+	TypePii logutils.MessageDataType = "pii"
 )
 
 //Account represents account entity
@@ -88,9 +89,7 @@ type Credential struct {
 type Profile struct {
 	ID string
 
-	PhotoURL  string
-	FirstName string
-	LastName  string
+	PII Pii
 
 	Accounts []Account //the users can share profiles between their applications accounts for some applications
 
@@ -98,25 +97,19 @@ type Profile struct {
 	DateUpdated *time.Time
 }
 
-//UserPII represents user PII entity. The user PII is personal information about the user.
-type UserPII struct {
-	PhotoURL    string `bson:"photo_url"`
-	FirstName   string `bson:"first_name"`
-	LastName    string `bson:"last_name"`
-	Address     string `bson:"address"`
-	Country     string `bson:"country"`
-	DateOfBirth string `bson:"date_of_birth"`
-	HomeCounty  string `bson:"home_county"`
-	MiddleName  string `bson:"middle_name"`
-	State       string `bson:"state"`
-	WorkCounty  string `bson:"work_county"`
-	ZipCode     string `bson:"zip_code"`
-}
-
-func (up UserPII) String() string {
-	return fmt.Sprintf("[PhotoURL:%s\tFirstName:%s\tLastName:%s\tAddress:%s\tCountry:%s\tDateOfBirth:%s\tHomeCounty:%s\tMiddleName:%s\tState:%s\tWorkCounty:%s\tZipCode:%s]",
-		up.PhotoURL, up.FirstName, up.LastName, up.Address, up.Country, up.DateOfBirth, up.HomeCounty,
-		up.MiddleName, up.State, up.WorkCounty, up.ZipCode)
+//Pii represents PII entity. The PII is personal information about the user.
+type Pii struct {
+	PhotoURL    string
+	FirstName   string
+	LastName    string
+	Address     string
+	Country     string
+	DateOfBirth string
+	HomeCounty  string
+	MiddleName  string
+	State       string
+	WorkCounty  string
+	ZipCode     string
 }
 
 //Device represents user devices entity.

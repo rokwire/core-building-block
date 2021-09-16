@@ -10,7 +10,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/user/UserPII.yaml"
+            $ref: "../../../schemas/user/Pii.yaml"
     400:
       description: Bad request
     401:
@@ -28,7 +28,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/user/UserPII.yaml"
+          $ref: "../../../schemas/user/Pii.yaml"
     required: true
   responses:
     200:

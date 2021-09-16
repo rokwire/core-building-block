@@ -116,13 +116,23 @@ func accountAuthTypesToStorage(items []model.AccountAuthType) []accountAuthType 
 
 //Profile
 func profileFromStorage(item profile) model.Profile {
-	return model.Profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return model.Profile{ID: item.ID, PII: piiFromStorage(item.PII), DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func profileToStorage(item model.Profile) profile {
-	return profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return profile{ID: item.ID, PII: piiToStorage(item.PII), DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func piiFromStorage(item pii) model.Pii {
+	return model.Pii{PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName, Address: item.Address,
+		Country: item.Country, DateOfBirth: item.DateOfBirth, HomeCounty: item.HomeCounty, MiddleName: item.MiddleName,
+		State: item.State, WorkCounty: item.WorkCounty, ZipCode: item.ZipCode}
+}
+
+func piiToStorage(item model.Pii) pii {
+	return pii{PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName, Address: item.Address,
+		Country: item.Country, DateOfBirth: item.DateOfBirth, HomeCounty: item.HomeCounty, MiddleName: item.MiddleName,
+		State: item.State, WorkCounty: item.WorkCounty, ZipCode: item.ZipCode}
 }
 
 //Device

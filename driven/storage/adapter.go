@@ -714,26 +714,26 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 }
 
 //FindPII finds PII from user profile
-func (sa *Adapter) FindPII(ID string) (*model.UserPII, error) {
-	user, err := sa.FindUserByID(ID)
+func (sa *Adapter) FindPII(ID string) (*model.Pii, error) {
+	account, err := sa.FindAccountByID(ID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeUserPII, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePii, nil, err)
 	}
 
-	if user == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeUser, logutils.StringArgs(ID))
+	if account == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, logutils.StringArgs(ID))
 	}
 
-	return user.Profile.PII, nil
+	return &account.Profile.PII, nil
 }
 
 //UpdatePII updates user profile PII
-func (sa *Adapter) UpdatePII(pii *model.UserPII, ID string) error {
+func (sa *Adapter) UpdatePII(pii *model.Pii, ID string) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 
 	now := time.Now().UTC()
 	if pii == nil {
-		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUserPII))
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypePii))
 	}
 	profileUpdate := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
@@ -742,12 +742,12 @@ func (sa *Adapter) UpdatePII(pii *model.UserPII, ID string) error {
 		}},
 	}
 
-	res, err := sa.db.users.UpdateOne(filter, profileUpdate, nil)
+	res, err := sa.db.accounts.UpdateOne(filter, profileUpdate, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserProfile, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypePii, nil, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeUserProfile, logutils.StringArgs("unexpected modified count"))
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypePii, logutils.StringArgs("unexpected modified count"))
 	}
 
 	return nil
@@ -765,12 +765,12 @@ func (sa *Adapter) DeletePII(ID string) error {
 		}},
 	}
 
-	res, err := sa.db.users.UpdateOne(filter, profileUpdate, nil)
+	res, err := sa.db.accounts.UpdateOne(filter, profileUpdate, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserProfile, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypePii, nil, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeUserProfile, logutils.StringArgs("unexpected modified count"))
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypePii, logutils.StringArgs("unexpected modified count"))
 	}
 
 	return nil

@@ -182,14 +182,14 @@ func (h ServicesApisHandler) getPII(l *logs.Log, r *http.Request) logs.HttpRespo
 
 	pii, err := h.coreAPIs.Services.SerGetPII("")
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeUserPII, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypePii, nil, err, http.StatusInternalServerError, true)
 	}
 
-	piiResp := userPIIToDef(pii)
+	piiResp := piiToDef(pii)
 
 	data, err := json.Marshal(piiResp)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeUserPII, nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypePii, nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HttpResponseSuccessJSON(data)
@@ -203,17 +203,17 @@ func (h ServicesApisHandler) updatePII(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.UserPII
+	var requestData Def.Pii
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "profiles update PII request", nil, err, http.StatusBadRequest, true)
 	}
 
-	pii := userPIIFromDef(&requestData)
+	pii := piiFromDef(&requestData)
 
 	err = h.coreAPIs.Services.SerUpdatePII(pii, "")
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeUserProfile, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypePii, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()
@@ -224,7 +224,7 @@ func (h ServicesApisHandler) deletePII(l *logs.Log, r *http.Request) logs.HttpRe
 
 	err := h.coreAPIs.Services.SerDeletePII("")
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeUserProfile, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypePii, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()

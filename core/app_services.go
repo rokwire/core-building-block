@@ -6,11 +6,11 @@ import (
 	"github.com/rokmetro/logging-library/logs"
 )
 
-func (app *application) serGetPII(ID string) (*model.UserPII, error) {
+func (app *application) serGetPII(ID string) (*model.Pii, error) {
 	return app.storage.FindPII(ID)
 }
 
-func (app *application) serUpdatePII(pii *model.UserPII, ID string) error {
+func (app *application) serUpdatePII(pii *model.Pii, ID string) error {
 	return app.storage.UpdatePII(pii, ID)
 }
 

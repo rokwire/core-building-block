@@ -67,6 +67,8 @@ Profile:
   $ref: "./user/Profile.yaml"
 ProfileFields:
   $ref: "./user/ProfileFields.yaml"
+Pii:
+  $ref: "./user/Pii.yaml"
 AccountAuthType:
   $ref: "./user/AccountAuthType.yaml"
 AccountAuthTypeFields:

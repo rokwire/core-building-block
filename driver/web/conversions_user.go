@@ -50,11 +50,23 @@ func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeF
 
 //Profile
 func profileFromDef(item *Def.ProfileFields) *model.Profile {
-	return &model.Profile{ID: *item.Id, FirstName: defString(item.FirstName), LastName: defString(item.LastName), PhotoURL: defString(item.PhotoUrl)}
+	return &model.Profile{ID: *item.Id, PII: *piiFromDef(item.Pii)}
 }
 
 func profileToDef(item *model.Profile) *Def.ProfileFields {
-	return &Def.ProfileFields{Id: &item.ID, FirstName: &item.FirstName, LastName: &item.LastName, PhotoUrl: &item.PhotoURL}
+	return &Def.ProfileFields{Id: &item.ID, Pii: piiToDef(&item.PII)}
+}
+
+func piiFromDef(item *Def.Pii) *model.Pii {
+	return &model.Pii{PhotoURL: *item.PhotoUrl, FirstName: *item.FirstName, LastName: *item.LastName, Address: *item.Address,
+		Country: *item.Country, DateOfBirth: *item.DateOfBirth, HomeCounty: *item.HomeCounty, MiddleName: *item.MiddleName,
+		State: *item.State, WorkCounty: *item.WorkCounty, ZipCode: *item.ZipCode}
+}
+
+func piiToDef(item *model.Pii) *Def.Pii {
+	return &Def.Pii{PhotoUrl: &item.PhotoURL, FirstName: &item.FirstName, LastName: &item.LastName, Address: &item.Address,
+		Country: &item.Country, DateOfBirth: &item.DateOfBirth, HomeCounty: &item.HomeCounty, MiddleName: &item.MiddleName,
+		State: &item.State, WorkCounty: &item.WorkCounty, ZipCode: &item.ZipCode}
 }
 
 //Device

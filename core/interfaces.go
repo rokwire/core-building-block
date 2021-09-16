@@ -9,8 +9,8 @@ import (
 
 //Services exposes APIs for the driver adapters
 type Services interface {
-	SerGetPII(ID string) (*model.UserPII, error)
-	SerUpdatePII(pii *model.UserPII, ID string) error
+	SerGetPII(ID string) (*model.Pii, error)
+	SerUpdatePII(pii *model.Pii, ID string) error
 	SerDeletePII(ID string) error
 
 	SerGetAuthTest(l *logs.Log) string
@@ -50,8 +50,8 @@ type BBs interface {
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
-	FindPII(ID string) (*model.UserPII, error)
-	UpdatePII(pii *model.UserPII, ID string) error
+	FindPII(ID string) (*model.Pii, error)
+	UpdatePII(pii *model.Pii, ID string) error
 	DeletePII(ID string) error
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
