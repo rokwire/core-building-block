@@ -1,8 +1,7 @@
 package model
 
 import (
-	"bytes"
-	"fmt"
+	"core-building-block/utils"
 	"time"
 
 	"github.com/rokmetro/logging-library/logutils"
@@ -11,23 +10,30 @@ import (
 const (
 	//TypeOrganization ...
 	TypeAnonymousProfile logutils.MessageDataType = "anonymous profile"
-	//TypeUser user type
-	TypeUser logutils.MessageDataType = "user"
+	//TypeAccount account
+	TypeAccount logutils.MessageDataType = "account"
+	//TypeAccountAuthType account auth type
+	TypeAccountAuthType logutils.MessageDataType = "account auth type"
 )
 
-//User represents user entity
-type User struct {
-	ID string
+//Account represents account entity
+//	The account is the user himself or herself.
+//	This is what the person provides to the system so that to use it.
+//
+//	Every account is for an organization within an application
+type Account struct {
+	ID string //this is ID for the account
 
-	Account UserAccount
-	Profile UserProfile
+	Application  Application
+	Organization Organization
 
-	Permissions []GlobalPermission
-	Roles       []GlobalRole
+	Permissions []ApplicationPermission
+	Roles       []ApplicationRole
+	Groups      []ApplicationGroup
 
-	Groups []GlobalGroup
+	AuthTypes []AccountAuthType
 
-	OrganizationsMemberships []OrganizationMembership
+	Profile Profile //one account has one profile, one profile can be shared between many accounts
 
 	Devices []Device
 
@@ -35,61 +41,14 @@ type User struct {
 	DateUpdated *time.Time
 }
 
-func (u User) String() string {
-
-	var memberships bytes.Buffer
-	memberships.WriteString("")
-
-	if len(u.OrganizationsMemberships) >= 0 {
-		for _, c := range u.OrganizationsMemberships {
-			memberships.WriteString(c.Organization.Name)
-			memberships.WriteString("\t")
+//FindAccountAuthType finds account auth type
+func (a Account) FindAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
+	for _, aat := range a.AuthTypes {
+		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {
+			return &aat
 		}
 	}
-
-	return fmt.Sprintf("[ID:%s\n\tAccount:%s\n\tProfile:%s\n\tPermissions:%s\n\tRoles:%s\n\tGroups:%s\n\tOrganizationsMemberships:%s]",
-		u.ID, u.Account, u.Profile, u.Permissions, u.Roles, u.Groups, memberships.String())
-}
-
-//UserAccount represents user account entity. The user account is the user himself or herself.
-//we should require the user to give unique phone or unique email(or both) when registering.
-//It is also a good practive internally the system to generate unique number and(or) unique username which are not changable.
-//At some moment the user could be needed to change his phone or email so we need to rely on the number or on the username which cannot be changed.
-type UserAccount struct {
-	ID string `bson:"id"`
-
-	Email string `bson:"email"`
-	Phone string `bson:"phone"`
-
-	Username string `bson:"username"`
-
-	//for Champaign org - basically this will be one or many of  - email, phone, number, username
-	//for Illinois university org - this will be empty because this organization requires it own login
-	LoginTypes []string `bson:"login_types"`
-
-	AllowLogin bool `bson:"allow_login"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-
-	//TODO
-	//has 2FA ???
-}
-
-func (ua UserAccount) String() string {
-	return fmt.Sprintf("[ID:%s\tEmail:%s\tPhone:%s\tUsername:%s]",
-		ua.ID, ua.Email, ua.Phone, ua.Username)
-}
-
-//UserProfile represents user profile entity. The user profile is an information about the user.
-type UserProfile struct {
-	ID                   string                `bson:"id"`
-	PhotoURL             string                `bson:"photo_url"`
-	FirstName            string                `bson:"first_name"`
-	LastName             string                `bson:"last_name"`
-	UserAnonymousProfile *UserAnonymousProfile `bson:"user_anonymous_profile"`
-	DateCreated          time.Time             `bson:"date_created"`
-	DateUpdated          *time.Time            `bson:"date_updated"`
+	return nil
 }
 
 type AnonymousProfile struct {
@@ -116,105 +75,53 @@ type UserAnonymousProfile struct {
 	PrivacySettings      string    `json:"privacy_settings" bson:"privacy_settings"`
 }
 
-func (up UserProfile) String() string {
-	return fmt.Sprintf("[ID:%s\tPhotoURL:%s\tFirstName:%s\tLastName:%s]",
-		up.ID, up.PhotoURL, up.FirstName, up.LastName)
-}
+//AccountAuthType represents account auth type
+type AccountAuthType struct {
+	ID string
 
-//GlobalGroup represents global group entity. It is a collection of users
-type GlobalGroup struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	AuthType AuthType //one of the supported auth type
+	Account  Account
 
-	Permissions []GlobalPermission `bson:"permissions"`
-	Roles       []GlobalRole       `bson:"roles"`
+	Identifier string
+	Params     map[string]interface{}
 
-	Users []User `bson:"-"`
+	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
 
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-//GlobalPermission represents global permission entity
-type GlobalPermission struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-func (c GlobalPermission) String() string {
-	return fmt.Sprintf("[ID:%s\tName:%s]", c.ID, c.Name)
-}
-
-//GlobalRole represents global role entity. It is a collection of permissions
-type GlobalRole struct {
-	ID          string `bson:"_id"`
-	Name        string `bson:"name"`
-	Description string `bson:"description"`
-
-	Permissions []GlobalPermission `bson:"permissions"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-func (c GlobalRole) String() string {
-	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s]", c.ID, c.Name, c.Permissions)
-}
-
-//OrganizationGroup represents organization group entity. It is a collection of users
-type OrganizationGroup struct {
-	ID   string
-	Name string
-
-	Permissions []OrganizationPermission
-	Roles       []OrganizationRole
-
-	Organization Organization
-
-	OrganizationsMemberships []OrganizationMembership
+	Active    bool
+	Active2FA bool
 
 	DateCreated time.Time
 	DateUpdated *time.Time
 }
 
-func (cg OrganizationGroup) String() string {
-	return fmt.Sprintf("[ID:%s\nName:%s\nOrganization:%s]", cg.ID, cg.Name, cg.Organization)
-}
+//Credential represents a credential for account auth type/s
+type Credential struct {
+	ID string
 
-//OrganizationPermission represents organization permission entity
-type OrganizationPermission struct {
-	ID   string
-	Name string
+	AccountsAuthTypes []AccountAuthType //one credential can be used for more than one account auth type
 
-	Organization Organization
+	Value interface{} //credential value
 
 	DateCreated time.Time
 	DateUpdated *time.Time
 }
 
-func (c OrganizationPermission) String() string {
-	return fmt.Sprintf("[ID:%s\nName:%s\nOrganization:%s]", c.ID, c.Name, c.Organization)
-}
+//Profile represents profile entity
+//	The profile is an information about the user
+//  What the person shares with the system/other users/
+//	The person should be able to use the system even all profile fields are empty/it is just an information for the user/
+type Profile struct {
+	ID string
 
-//OrganizationRole represents organization role entity. It is a collection of permissions
-type OrganizationRole struct {
-	ID          string
-	Name        string
-	Description string
+	PhotoURL             string
+	FirstName            string
+	LastName             string
+	UserAnonymousProfile *UserAnonymousProfile `bson:"user_anonymous_profile"`
 
-	Permissions []OrganizationPermission
-
-	Organization Organization
+	Accounts []Account //the users can share profiles between their applications accounts for some applications
 
 	DateCreated time.Time
 	DateUpdated *time.Time
-}
-
-func (c OrganizationRole) String() string {
-	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s\tOrganization:%s]", c.ID, c.Name, c.Permissions, c.Organization)
 }
 
 //Device represents user devices entity.
@@ -228,8 +135,63 @@ type Device struct {
 	///
 
 	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
-	Users []User
+	Accounts []Account
 
 	DateCreated time.Time
 	DateUpdated *time.Time
+}
+
+//ExternalSystemUser represents external system user
+type ExternalSystemUser struct {
+	Identifier string `json:"identifier" bson:"identifier"` //this is the identifier used in our system to map the user
+
+	//these are common fields which should be popuated by the external system
+	FirstName  string   `json:"first_name" bson:"first_name"`
+	MiddleName string   `json:"middle_name" bson:"middle_name"`
+	LastName   string   `json:"last_name" bson:"last_name"`
+	Email      string   `json:"email" bson:"email"`
+	Groups     []string `json:"groups" bson:"groups"`
+
+	//here are the system specific data for the user - uiucedu_uin etc
+	SystemSpecific map[string]interface{} `json:"system_specific" bson:"system_specific"`
+}
+
+//Equals checks if two external system users are equals
+func (esu ExternalSystemUser) Equals(other ExternalSystemUser) bool {
+	if esu.Identifier != other.Identifier {
+		return false
+	}
+	if esu.FirstName != other.FirstName {
+		return false
+	}
+	if esu.MiddleName != other.MiddleName {
+		return false
+	}
+	if esu.LastName != other.LastName {
+		return false
+	}
+	if esu.Email != other.Email {
+		return false
+	}
+	if !utils.DeepEqual(esu.Groups, other.Groups) {
+		return false
+	}
+	if !utils.DeepEqual(esu.SystemSpecific, other.SystemSpecific) {
+		return false
+	}
+	return true
+}
+
+//AccountRelations represents external relations between the application accounts in an organization
+// For example in Safer Illinois application:
+// - families takes discount for covid tests.
+// - couples gets discount for the taxes.
+// For other applications:
+// - relatives are hosted in the same building etc.
+type AccountRelations struct {
+	ID   string
+	Type string //family, couple, relatives, brothers/sisters, external roommate when there is no provided place by the university for example
+
+	Manager Account
+	Members []Account
 }

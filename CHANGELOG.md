@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
+- Handle refresh tokens across multiple devices/apps/orgs [#149](https://github.com/rokwire/core-building-block/issues/149)
+- Expose admin API which gets applications list [#104](https://github.com/rokwire/core-building-block/issues/104)
+- Restructure auth package to provide APIs interface [#161](https://github.com/rokwire/core-building-block/issues/161)
+- Set up refresh tokens [#95](https://github.com/rokwire/core-building-block/issues/95)
+- Set up OIDC compliant token validation endpoints [#51](https://github.com/rokwire/core-building-block/issues/51)
+- Storage improvements [#144](https://github.com/rokwire/core-building-block/issues/144)
+- Expose admin API which creates application [#82](https://github.com/rokwire/core-building-block/issues/82)
 - Suppress logs from the AWS load balancer health checks [#141](https://github.com/rokwire/core-building-block/issues/141)
 - Set up accounts [#18](https://github.com/rokwire/core-building-block/issues/18)
 - Optional OIDC URL overrides [#139](https://github.com/rokwire/core-building-block/issues/139)
@@ -42,5 +49,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set up logging [#6](https://github.com/rokwire/core-building-block/issues/6)
 
 ### Fixed
+- Fix auth credentials search for multiple apps [#153](https://github.com/rokwire/core-building-block/issues/153)
+- Fix GlobalPermission and OrganizationPermission in the doc APIs model [#151](https://github.com/rokwire/core-building-block/issues/151)
+- OIDC auth bug fixes [#143](https://github.com/rokwire/core-building-block/issues/143)
 - Fix APIs requests validation [#89](https://github.com/rokwire/core-building-block/issues/89)
 - Fixing the Log and the Changelog for issues #35 and #36 [#54](https://github.com/rokwire/core-building-block/issues/54)
+
+### Changed
+- Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
+- Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)

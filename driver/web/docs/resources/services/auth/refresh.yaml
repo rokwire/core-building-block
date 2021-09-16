@@ -18,7 +18,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/auth/AuthRefreshResponse.yaml"
+            $ref: "../../../schemas/apis/services/refresh/response/Response.yaml"
     400:
       description: Bad request
     401:
