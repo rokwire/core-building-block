@@ -504,7 +504,7 @@ func (sa *Adapter) FindRefreshToken(token string) (*model.AuthRefresh, error) {
 	filter := bson.M{"$or": conditions}
 
 	var refresh model.AuthRefresh
-	err := sa.db.refreshTokens.FindOne(filter, &refresh, nil)
+	err := sa.db.loginsSessions.FindOne(filter, &refresh, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
 	}
@@ -518,7 +518,7 @@ func (sa *Adapter) LoadRefreshTokens(orgID string, appID string, credsID string)
 	opts := options.Find().SetSort(bson.D{primitive.E{Key: "exp", Value: 1}})
 
 	var refresh []model.AuthRefresh
-	err := sa.db.refreshTokens.Find(filter, &refresh, opts)
+	err := sa.db.loginsSessions.Find(filter, &refresh, opts)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
 	}
@@ -532,7 +532,7 @@ func (sa *Adapter) InsertRefreshToken(refresh *model.AuthRefresh) error {
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthRefresh, nil)
 	}
 
-	_, err := sa.db.refreshTokens.InsertOne(refresh)
+	_, err := sa.db.loginsSessions.InsertOne(refresh)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthRefresh, nil, err)
 	}
@@ -553,7 +553,7 @@ func (sa *Adapter) UpdateRefreshToken(token string, refresh *model.AuthRefresh) 
 		}},
 	}
 
-	res, err := sa.db.refreshTokens.UpdateOne(filter, update, nil)
+	res, err := sa.db.loginsSessions.UpdateOne(filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
 	}
@@ -568,7 +568,7 @@ func (sa *Adapter) UpdateRefreshToken(token string, refresh *model.AuthRefresh) 
 func (sa *Adapter) DeleteRefreshToken(token string) error {
 	filter := bson.D{primitive.E{Key: "current_token", Value: token}}
 
-	res, err := sa.db.refreshTokens.DeleteOne(filter, nil)
+	res, err := sa.db.loginsSessions.DeleteOne(filter, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAuthRefresh, nil, err)
 	}
@@ -583,7 +583,7 @@ func (sa *Adapter) DeleteRefreshToken(token string) error {
 func (sa *Adapter) DeleteExpiredRefreshTokens(now *time.Time) error {
 	filter := bson.M{"exp": bson.M{"$lte": now}}
 
-	_, err := sa.db.refreshTokens.DeleteMany(filter, nil)
+	_, err := sa.db.loginsSessions.DeleteMany(filter, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAuthRefresh, &logutils.FieldArgs{"exp": now}, err)
 	}
