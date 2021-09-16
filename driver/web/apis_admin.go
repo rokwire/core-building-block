@@ -98,7 +98,9 @@ func (h AdminApisHandler) updateGlobalConfig(l *logs.Log, r *http.Request) logs.
 
 //createOrganization creates organization
 func (h AdminApisHandler) createOrganization(l *logs.Log, r *http.Request) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
+	//TODO
+	return l.HttpResponseSuccess()
+	/*data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -110,48 +112,47 @@ func (h AdminApisHandler) createOrganization(l *logs.Log, r *http.Request) logs.
 
 	name := requestData.Name
 	requestType := requestData.Type
-	requiresOwnLogin := requestData.RequiresOwnLogin
-	loginTypes := requestData.LoginTypes
 	organizationDomains := requestData.Config.Domains
 
-	_, err = h.coreAPIs.Administration.AdmCreateOrganization(name, string(requestType), *requiresOwnLogin, *loginTypes, *organizationDomains)
+	_, err = h.coreAPIs.Administration.AdmCreateOrganization(name, string(requestType), *organizationDomains)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 	}
 
-	return l.HttpResponseSuccess()
+	return l.HttpResponseSuccess() */
 }
 
 //updateOrganization updates organization
 func (h AdminApisHandler) updateOrganization(l *logs.Log, r *http.Request) logs.HttpResponse {
-	params := mux.Vars(r)
-	ID := params["id"]
-	if len(ID) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
-	}
-
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-	var requestData Def.Organization
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
-	}
-
-	name := requestData.Name
-	requestType := requestData.Type
-	requiresOwnLogin := requestData.RequiresOwnLogin
-	loginTypes := requestData.LoginTypes
-	organizationDomains := requestData.Config.Domains
-
-	err = h.coreAPIs.Administration.AdmUpdateOrganization(ID, name, string(requestType), *requiresOwnLogin, *loginTypes, *organizationDomains)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
-	}
-
+	//TODO
 	return l.HttpResponseSuccess()
+	/*
+		params := mux.Vars(r)
+		ID := params["id"]
+		if len(ID) <= 0 {
+			return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+		}
+
+		data, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+		}
+		var requestData Def.Organization
+		err = json.Unmarshal(data, &requestData)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
+		}
+
+		name := requestData.Name
+		requestType := requestData.Type
+		organizationDomains := requestData.Config.Domains
+
+		err = h.coreAPIs.Administration.AdmUpdateOrganization(ID, name, string(requestType), *organizationDomains)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
+		}
+
+		return l.HttpResponseSuccess() */
 }
 
 //getOrganization gets organization
@@ -179,7 +180,10 @@ func (h AdminApisHandler) getOrganization(l *logs.Log, r *http.Request) logs.Htt
 
 //getOrganizations gets organizations
 func (h AdminApisHandler) getOrganizations(l *logs.Log, r *http.Request) logs.HttpResponse {
-	organizations, err := h.coreAPIs.Administration.AdmGetOrganizations()
+	//TODO
+	return l.HttpResponseSuccess()
+
+	/*organizations, err := h.coreAPIs.Administration.AdmGetOrganizations()
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 	}
@@ -193,7 +197,7 @@ func (h AdminApisHandler) getOrganizations(l *logs.Log, r *http.Request) logs.Ht
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeOrganization, nil, err, http.StatusInternalServerError, false)
 	}
-	return l.HttpResponseSuccessJSON(data)
+	return l.HttpResponseSuccessJSON(data) */
 }
 
 func (h AdminApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request) logs.HttpResponse {
@@ -320,10 +324,11 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.H
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
 	}
 
-	name := requestData.Name
-	versions := requestData.Versions
+	//TODO
+	//name := requestData.Name
+	//versions := requestData.Versions
 
-	_, err = h.coreAPIs.Administration.AdmCreateApplication(name, *versions)
+	_, err = h.coreAPIs.Administration.AdmCreateApplication("TODO", nil)
 	if err != nil {
 		l.Errorf(err.Error())
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
@@ -336,7 +341,9 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.H
 
 //getAppilcations gets applications list
 func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request) logs.HttpResponse {
-	applications, err := h.coreAPIs.Administration.AdmGetApplications()
+	//TODO
+	return l.HttpResponseSuccess()
+	/*applications, err := h.coreAPIs.Administration.AdmGetApplications()
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}
@@ -350,7 +357,7 @@ func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request) logs.Htt
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
 	}
-	return l.HttpResponseSuccessJSON(data)
+	return l.HttpResponseSuccessJSON(data) */
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance

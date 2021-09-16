@@ -1,0 +1,30 @@
+type: object
+properties:
+  fields:
+    $ref: "./AccountFields.yaml"
+  application:
+    $ref: "../application/Application.yaml"
+  organization:
+    $ref: "../application/Organization.yaml"
+  permissions:
+    type: array
+    items:
+      $ref: "../application/ApplicationPermission.yaml"
+  roles:
+    type: array
+    items:
+      $ref: "../application/ApplicationRole.yaml"
+  groups:
+    type: array
+    items:
+      $ref: "../application/ApplicationGroup.yaml"
+  auth_types:
+    type: array
+    items:
+      $ref: "./AccountAuthType.yaml"
+  profile:
+    $ref: "./Profile.yaml"
+  devices:
+    type: array
+    items:
+      $ref: "./Device.yaml"

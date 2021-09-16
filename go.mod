@@ -14,6 +14,7 @@ require (
 	github.com/rokmetro/logging-library v0.2.2
 	github.com/stretchr/testify v1.6.1
 	github.com/swaggo/http-swagger v1.0.0
+	github.com/pkg/errors v0.9.1
 	go.mongodb.org/mongo-driver v1.7.1
 	golang.org/x/oauth2 v0.0.0-20210615190721-d04028783cf1 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c

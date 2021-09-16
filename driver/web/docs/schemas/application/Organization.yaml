@@ -1,0 +1,6 @@
+type: object
+properties:
+  fields:
+     $ref: "./OrganizationFields.yaml"
+  config:
+    $ref: "./OrganizationConfig.yaml"
