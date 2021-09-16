@@ -14,10 +14,14 @@ import (
 )
 
 const (
+	//TypeAuthType auth type type
+	TypeAuthType logutils.MessageDataType = "auth type"
+	//TypeIdentityProvider identity provider type
+	TypeIdentityProvider logutils.MessageDataType = "identity provider"
+	//TypeIdentityProviderConfig identity provider config type
+	TypeIdentityProviderConfig logutils.MessageDataType = "identity provider config"
 	//TypeUserAuth user auth type
 	TypeUserAuth logutils.MessageDataType = "user auth"
-	//TypeAuthConfig auth config type
-	TypeAuthConfig logutils.MessageDataType = "auth config"
 	//TypeAuthCred auth cred type
 	TypeAuthCred logutils.MessageDataType = "auth cred"
 	//TypeAuthRefresh auth refresh type
@@ -40,6 +44,32 @@ const (
 	TypePubKey logutils.MessageDataType = "pub key"
 )
 
+//AuthType represents authentication type entity
+//	The system supports different authentication types - username, email, phone, identity providers ones etc
+type AuthType struct {
+	ID          string                 `bson:"_id"`
+	Code        string                 `bson:"code"` //username or email or phone or illinois_oidc etc
+	Description string                 `bson:"description"`
+	IsExternal  bool                   `bson:"is_external"` //says if the users source is external - identity providers
+	Params      map[string]interface{} `bson:"params"`
+}
+
+//IdentityProvider represents identity provider entity
+//	The system can integrate different identity providers - facebook, google, illinois etc
+type IdentityProvider struct {
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
+	Type string `bson:"type"`
+
+	Configs []IdentityProviderConfig `bson:"configs"`
+}
+
+//IdentityProviderConfig represents identity provider config for an application type
+type IdentityProviderConfig struct {
+	AppTypeID string                 `bson:"app_type_id"`
+	Config    map[string]interface{} `bson:"config"`
+}
+
 //UserAuth represents user auth entity
 type UserAuth struct {
 	UserID         string
@@ -56,14 +86,6 @@ type UserAuth struct {
 	RefreshParams  map[string]interface{}
 	OrgData        map[string]interface{}
 	ResponseParams interface{}
-}
-
-//AuthConfig represents auth config entity
-type AuthConfig struct {
-	OrgID    string                 `json:"org_id" bson:"org_id" validate:"required"`
-	AppIDs   []string               `json:"app_ids" bson:"app_ids" validate:"required"`
-	AuthType string                 `json:"auth_type" bson:"auth_type" validate:"required"`
-	Config   map[string]interface{} `json:"config" bson:"config" validate:"required"`
 }
 
 //AuthCreds represents represents a set of credentials used by auth

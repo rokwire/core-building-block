@@ -109,12 +109,12 @@ func (s *administrationImpl) AdmUpdateGlobalConfig(setting string) error {
 	return s.app.admUpdateGlobalConfig(setting)
 }
 
-func (s *administrationImpl) AdmCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
-	return s.app.admCreateOrganization(name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+func (s *administrationImpl) AdmCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {
+	return s.app.admCreateOrganization(name, requestType, organizationDomains)
 }
 
-func (s *administrationImpl) AdmUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
-	return s.app.admUpdateOrganization(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+func (s *administrationImpl) AdmUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error {
+	return s.app.admUpdateOrganization(ID, name, requestType, organizationDomains)
 }
 
 func (s *administrationImpl) AdmGetOrganizations() ([]model.Organization, error) {

@@ -8,14 +8,14 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/auth/AuthAuthorizeServiceRequest.yaml"
+          $ref: "../../../schemas/apis/services/authorize-service/request/Request.yaml"
   responses:
     200:
       description: Success
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/auth/AuthAuthorizeServiceResponse.yaml"
+             $ref: "../../../schemas/apis/services/authorize-service/response/Response.yaml"
           examples:
             authorized:
               summary: Service authorized

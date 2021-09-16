@@ -1,8 +1,0 @@
-required:
-  - id
-type: object
-properties:
-  id:
-    type: string
-  pii:
-    $ref: "./UserPII.yaml"
