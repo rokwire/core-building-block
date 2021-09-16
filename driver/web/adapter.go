@@ -52,18 +52,19 @@ func (we Adapter) Start() {
 	we.auth.Start()
 
 	router := mux.NewRouter().StrictSlash(true)
+	subRouter := router.PathPrefix("/core").Subrouter()
 
 	// handle apis
-	router.PathPrefix("/doc/ui").Handler(we.serveDocUI())
-	router.HandleFunc("/doc", we.serveDoc)
+	subRouter.PathPrefix("/doc/ui").Handler(we.serveDocUI())
+	subRouter.HandleFunc("/doc", we.serveDoc)
 
 	///default ///
-	router.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion)).Methods("GET")
-	router.HandleFunc("/.well-known/openid-configuration", we.wrapFunc(we.defaultApisHandler.getOpenIDConfiguration)).Methods("GET")
+	subRouter.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion)).Methods("GET")
+	subRouter.HandleFunc("/.well-known/openid-configuration", we.wrapFunc(we.defaultApisHandler.getOpenIDConfiguration)).Methods("GET")
 	///
 
 	///services ///
-	servicesSubRouter := router.PathPrefix("/services").Subrouter()
+	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
 	servicesSubRouter.HandleFunc("/auth/login", we.wrapFunc(we.servicesApisHandler.authLogin)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh)).Methods("POST")
@@ -73,7 +74,7 @@ func (we Adapter) Start() {
 	///
 
 	///admin ///
-	adminSubrouter := router.PathPrefix("/admin").Subrouter()
+	adminSubrouter := subRouter.PathPrefix("/admin").Subrouter()
 	adminSubrouter.HandleFunc("/test", we.wrapFunc(we.adminApisHandler.getTest)).Methods("GET")
 	adminSubrouter.HandleFunc("/test-model", we.wrapFunc(we.adminApisHandler.getTestModel)).Methods("GET")
 
@@ -98,18 +99,18 @@ func (we Adapter) Start() {
 	///
 
 	///enc ///
-	encSubrouter := router.PathPrefix("/enc").Subrouter()
+	encSubrouter := subRouter.PathPrefix("/enc").Subrouter()
 	encSubrouter.HandleFunc("/test", we.wrapFunc(we.encApisHandler.getTest)).Methods("GET")
 	///
 
 	///bbs ///
-	bbsSubrouter := router.PathPrefix("/bbs").Subrouter()
+	bbsSubrouter := subRouter.PathPrefix("/bbs").Subrouter()
 	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.getTest)).Methods("GET")
 	bbsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.bbsApisHandler.getServiceRegistrations)).Methods("GET")
 	///
 
 	///third-party services ///
-	tpsSubrouter := router.PathPrefix("/tps").Subrouter()
+	tpsSubrouter := subRouter.PathPrefix("/tps").Subrouter()
 	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations)).Methods("GET")
 	tpsSubrouter.HandleFunc("/auth-keys", we.wrapFunc(we.tpsApisHandler.getAuthKeys)).Methods("GET")
 	///
@@ -231,7 +232,7 @@ func NewWebAdapter(env string, port string, coreAPIs *core.APIs, host string, lo
 	}
 
 	//Ignore servers. Validating reqeusts against the documented servers can cause issues when routing traffic through proxies/load-balancers.
-	doc.Servers = nil
+	// doc.Servers = nil
 
 	openAPIRouter, err := gorillamux.NewRouter(doc)
 	if err != nil {

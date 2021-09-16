@@ -885,9 +885,9 @@ func (sa *Adapter) LoadApplications() ([]model.Application, error) {
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 	}
-	if len(result) == 0 {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, nil, err)
-	}
+	// if len(result) == 0 {
+	// 	return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, nil, err)
+	// }
 
 	applications := applicationsFromStorage(result)
 	return applications, nil

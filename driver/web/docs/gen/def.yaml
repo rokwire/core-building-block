@@ -10,8 +10,19 @@ servers:
     description: Test server
   - url: 'https://api-dev.rokwire.illinois.edu/core'
     description: Development server
-  - url: 'http://localhost'
+  - url: 'http://localhost/core'
     description: Local server
+  - url: '{protocol}://{host}/core'
+    description: Any host
+    variables:
+      protocol:
+        enum:
+          - http
+          - https
+        default: https
+      host:
+        description: Server host
+        default: api-dev.rokwire.illinois.edu
 tags:
   - name: Services
     description: End users applications APIs.
