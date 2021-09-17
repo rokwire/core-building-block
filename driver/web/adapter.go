@@ -117,7 +117,7 @@ func (we Adapter) Start() {
 
 	err := http.ListenAndServe(":"+we.port, router)
 	if err != nil {
-		we.logger.Fatal(err.Error())
+		we.logger.Fatalf("error on listen and server - %s", err.Error())
 	}
 }
 
@@ -224,11 +224,11 @@ func NewWebAdapter(env string, port string, coreAPIs *core.APIs, host string, lo
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
 	if err != nil {
-		logger.Fatal(err.Error())
+		logger.Fatalf("error on openapi3 load from file - %s", err.Error())
 	}
 	err = doc.Validate(loader.Context)
 	if err != nil {
-		logger.Fatal(err.Error())
+		logger.Fatalf("error on openapi3 validate - %s", err.Error())
 	}
 
 	//Ignore servers. Validating reqeusts against the documented servers can cause issues when routing traffic through proxies/load-balancers.
@@ -243,7 +243,7 @@ func NewWebAdapter(env string, port string, coreAPIs *core.APIs, host string, lo
 
 	openAPIRouter, err := gorillamux.NewRouter(doc)
 	if err != nil {
-		logger.Fatal(err.Error())
+		logger.Fatalf("error on openapi3 gorillamux router - %s", err.Error())
 	}
 
 	auth := NewAuth(coreAPIs, logger)
