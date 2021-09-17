@@ -885,6 +885,8 @@ func (sa *Adapter) LoadApplications() ([]model.Application, error) {
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 	}
+
+	//This causes a crash on launch if no applications are created in the database
 	// if len(result) == 0 {
 	// 	return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, nil, err)
 	// }
