@@ -1,22 +1,48 @@
 package storage
 
 import (
-	"core-building-block/core/model"
 	"time"
 )
 
-type user struct {
+type account struct {
 	ID string `bson:"_id"`
 
-	Account model.UserAccount `bson:"account"`
-	Profile model.UserProfile `bson:"profile"`
+	AppID string `bson:"app_id"`
+	OrgID string `bson:"org_id"`
 
-	Permissions              []model.GlobalPermission `bson:"permissions"`
-	Roles                    []model.GlobalRole       `bson:"roles"`
-	Groups                   []model.GlobalGroup      `bson:"groups"`
-	OrganizationsMemberships []userMembership         `bson:"organizations_memberships"`
+	Permissions []applicationPermission `bson:"permissions"`
+	Roles       []applicationRole       `bson:"roles"`
+	Groups      []applicationGroup      `bson:"groups"`
+
+	AuthTypes []accountAuthType `bson:"auth_types"`
+
+	Profile profile `bson:"profile"`
 
 	Devices []userDevice `bson:"devices"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type accountAuthType struct {
+	ID           string                 `bson:"id"`
+	AuthTypeID   string                 `bson:"auth_type_id"`
+	Identifier   string                 `bson:"identifier"`
+	Params       map[string]interface{} `bson:"params"`
+	CredentialID *string                `bson:"credential_id"`
+	Active       bool                   `bson:"active"`
+	Active2FA    bool                   `bson:"active_2fa"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type profile struct {
+	ID string `bson:"id"`
+
+	PhotoURL  string `bson:"photo_url"`
+	FirstName string `bson:"first_name"`
+	LastName  string `bson:"last_name"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -25,12 +51,7 @@ type user struct {
 type userMembership struct {
 	ID string `bson:"_id"`
 
-	OrgID       string                 `bson:"org_id"`
-	OrgUserData map[string]interface{} `bson:"org_user_data"`
-
-	Permissions []organizationPermission `bson:"permissions"`
-	Roles       []organizationRole       `bson:"roles"`
-	Groups      []organizationGroup      `bson:"groups"`
+	OrgID string `bson:"org_id"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -54,7 +75,7 @@ type device struct {
 	OS         string `bson:"os"`
 	MacAddress string `bson:"mac_address"`
 
-	Users []string `bson:"users"`
+	Accounts []string `bson:"accounts"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

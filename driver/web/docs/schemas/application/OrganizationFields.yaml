@@ -1,0 +1,19 @@
+required:
+  - id
+  - name
+  - type
+type: object
+properties:
+  id:
+    readOnly: true
+    type: string
+  name:
+    type: string
+  type:
+    type: string
+    enum:
+      - micro
+      - small
+      - medium
+      - large
+      - huge
