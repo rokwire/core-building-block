@@ -49,7 +49,7 @@ paths:
     $ref: "./resources/admin/service-regs.yaml"
   /admin/applications/{id}:
     $ref: "./resources/admin/applicationsId.yaml"
-  /admin/application:
+  /admin/applications:
     $ref: "./resources/admin/applications.yaml"
 
   #enc
@@ -74,10 +74,5 @@ paths:
   /.well-known/openid-configuration:
     $ref: "./resources/default/openid-configuration.yaml"
 components:
-  securitySchemes:
-      bearerAuth:            # arbitrary name for the security scheme
-        type: http
-        scheme: bearer
-        bearerFormat: JWT
   schemas:
     $ref: "./schemas/index.yaml"

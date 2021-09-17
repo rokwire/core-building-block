@@ -586,7 +586,7 @@ paths:
           description: Not Found
         '500':
           description: Internal error
-  /admin/application:
+  /admin/applications:
     get:
       tags:
         - Admin
@@ -765,11 +765,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/OidcDiscovery'
 components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
   schemas:
     GlobalConfig:
       required:
