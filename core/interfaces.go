@@ -11,11 +11,6 @@ import (
 type Services interface {
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
-	CreateAnonymousProfile(l *logs.Log, profile *model.AnonymousProfile) (*model.AnonymousProfile, error)
-	GetAnonymousProfile(l *logs.Log, id string) (*model.AnonymousProfile, error)
-	UpdateAnonymousProfile(l *logs.Log, id string, favorites *[]string, interests *[]string,
-		negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error
-	DeleteAnonymousProfile(l *logs.Log, id string) error
 	UpdateUserAnonymousProfile(l *logs.Log, id string, profile *model.AnonymousProfile) error
 }
 
@@ -66,12 +61,6 @@ type Storage interface {
 	DeleteApplicationGroup(id string) error
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
-	InsertAnonymousProfile(profile *model.AnonymousProfile) (*model.AnonymousProfile, error)
-	FindAnonymousProfile(id string) (*model.AnonymousProfile, error)
-	//Add a search for user anonymous profile as well
-	UpdateAnonymousProfile(id string, favorites *[]string, interests *[]string,
-		negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error
-	DeleteAnonymousProfile(id string) error
 	FindAccountByID(id string) (*model.Account, error)
 	UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error

@@ -7,18 +7,18 @@ import (
 type account struct {
 	ID string `bson:"_id"`
 
-	AppID string `bson:"app_id"`
-	OrgID string `bson:"org_id"`
+	AppID string `bson:"app_id,omitempty"`
+	OrgID string `bson:"org_id,omitempty"`
 
-	Permissions []applicationPermission `bson:"permissions"`
-	Roles       []applicationRole       `bson:"roles"`
-	Groups      []applicationGroup      `bson:"groups"`
+	Permissions []applicationPermission `bson:"permissions,omitempty"`
+	Roles       []applicationRole       `bson:"roles,omitempty"`
+	Groups      []applicationGroup      `bson:"groups,omitempty"`
 
-	AuthTypes []accountAuthType `bson:"auth_types"`
+	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
 
-	Profile profile `bson:"profile"`
-
-	Devices []userDevice `bson:"devices"`
+	Profile   profile      `bson:"profile"`
+	Anonymous bool         `bson:"anonymous"`
+	Devices   []userDevice `bson:"devices,omitempty"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -40,12 +40,24 @@ type accountAuthType struct {
 type profile struct {
 	ID string `bson:"id"`
 
-	PhotoURL  string `bson:"photo_url"`
-	FirstName string `bson:"first_name"`
-	LastName  string `bson:"last_name"`
+	PhotoURL         string           `bson:"photo_url"`
+	FirstName        string           `bson:"first_name"`
+	LastName         string           `bson:"last_name"`
+	AnonymousProfile anonymousProfile `bson:"anonymous_profile"`
+	DateCreated      time.Time        `bson:"date_created"`
+	DateUpdated      *time.Time       `bson:"date_updated"`
+}
 
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
+type anonymousProfile struct {
+	ID                   string    `bson:"id"`
+	Interests            []string  `bson:"interests"`
+	Favorites            []string  `bson:"favorites"`
+	Over13               bool      `bson:"over_13"`
+	PositiveInterestTags []string  `bson:"positive_interest_tags"`
+	NegativeInterestTags []string  `bson:"negative_interest_tags"`
+	CreationDate         time.Time `bson:"creation_date"`
+	LastModifiedDate     time.Time `bson:"last_modified_date"`
+	PrivacySettings      string    `bson:"privacy_settings"`
 }
 
 type userMembership struct {

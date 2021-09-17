@@ -23,7 +23,6 @@ type database struct {
 
 	authTypes                 *collectionWrapper
 	identityProviders         *collectionWrapper
-	anonymousProfile          *collectionWrapper
 	accounts                  *collectionWrapper
 	devices                   *collectionWrapper
 	credentials               *collectionWrapper

@@ -69,23 +69,6 @@ func (s *servicesImpl) SerGetCommonTest(l *logs.Log) string {
 	return s.app.serGetCommonTest(l)
 }
 
-func (s *servicesImpl) CreateAnonymousProfile(l *logs.Log, profile *model.AnonymousProfile) (*model.AnonymousProfile, error) {
-	return s.app.createAnonymousProfile(l, profile)
-}
-
-func (s *servicesImpl) UpdateAnonymousProfile(l *logs.Log, id string, favorites *[]string, interests *[]string,
-	negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error {
-	return s.app.updateAnonymousProfile(l, id, favorites, interests, negativeInterestTags, positiveInterestTags, privacySettings, over13)
-}
-
-func (s *servicesImpl) DeleteAnonymousProfile(l *logs.Log, id string) error {
-	return s.app.deleteAnonymousProfile(l, id)
-}
-
-func (s *servicesImpl) GetAnonymousProfile(l *logs.Log, id string) (*model.AnonymousProfile, error) {
-	return s.app.getAnonymousProfile(l, id)
-}
-
 func (s *servicesImpl) UpdateUserAnonymousProfile(l *logs.Log, id string, profile *model.AnonymousProfile) error {
 	return s.app.updateUserAnonymousProfile(l, id, profile)
 }
