@@ -1312,6 +1312,8 @@ components:
           type: string
         last_name:
           type: string
+        anonymous_profile:
+          $ref: '#/components/schemas/AnonymousProfile'
     AccountAuthType:
       type: object
       properties:
@@ -1347,6 +1349,38 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Account'
+    AnonymousProfile:
+      required:
+        - id
+      type: object
+      description: Anonymous data of user profile
+      properties:
+        id:
+          type: string
+        interests:
+          type: array
+          items:
+            type: string
+        favorites:
+          type: array
+          items:
+            type: string
+        over_13:
+          type: boolean
+        positive_interest_tags:
+          type: array
+          items:
+            type: string
+        negative_interest_tags:
+          type: array
+          items:
+            type: string
+        creation_date:
+          type: string
+        last_modified_date:
+          type: string
+        privacy_settings:
+          type: string
     DeviceFields:
       required:
         - id

@@ -11,6 +11,7 @@ import (
 type Services interface {
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
+	UpdateUserAnonymousProfile(l *logs.Log, id string, profile *model.AnonymousProfile) error
 }
 
 //Administration exposes administration APIs for the driver adapters
@@ -60,6 +61,8 @@ type Storage interface {
 	DeleteApplicationGroup(id string) error
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
+	FindAccountByID(id string) (*model.Account, error)
+	UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 	LoadOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)

@@ -8,6 +8,8 @@ import (
 )
 
 const (
+	//TypeOrganization ...
+	TypeAnonymousProfile logutils.MessageDataType = "anonymous profile"
 	//TypeAccount account
 	TypeAccount logutils.MessageDataType = "account"
 	//TypeAccountAuthType account auth type
@@ -30,8 +32,8 @@ type Account struct {
 	Groups      []ApplicationGroup
 
 	AuthTypes []AccountAuthType
-
-	Profile Profile //one account has one profile, one profile can be shared between many accounts
+	Anonymous bool
+	Profile   Profile //one account has one profile, one profile can be shared between many accounts
 
 	Devices []Device
 
@@ -47,6 +49,18 @@ func (a Account) FindAccountAuthType(authTypeID string, identifier string) *Acco
 		}
 	}
 	return nil
+}
+
+type AnonymousProfile struct {
+	ID                   string
+	Interests            []string
+	Favorites            []string
+	Over13               bool
+	PositiveInterestTags []string
+	NegativeInterestTags []string
+	CreationDate         time.Time
+	LastModifiedDate     time.Time
+	PrivacySettings      string
 }
 
 //AccountAuthType represents account auth type
@@ -87,9 +101,10 @@ type Credential struct {
 type Profile struct {
 	ID string
 
-	PhotoURL  string
-	FirstName string
-	LastName  string
+	PhotoURL         string
+	FirstName        string
+	LastName         string
+	AnonymousProfile AnonymousProfile
 
 	Accounts []Account //the users can share profiles between their applications accounts for some applications
 

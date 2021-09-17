@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Set up anonymous tokens [#26](https://github.com/rokwire/core-building-block/issues/26)
+- Anonymous profile(non-pii) endpoints [#135](https://github.com/rokwire/core-building-block/issues/135)
 - Handle refresh tokens across multiple devices/apps/orgs [#149](https://github.com/rokwire/core-building-block/issues/149)
 - Expose admin API which gets applications list [#104](https://github.com/rokwire/core-building-block/issues/104)
 - Restructure auth package to provide APIs interface [#161](https://github.com/rokwire/core-building-block/issues/161)
