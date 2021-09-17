@@ -4,14 +4,14 @@ info:
   description: Core Building Block API Documentation
   version: 1.0.0
 servers:
-  - url: https://api.rokwire.illinois.edu/core
-    description: Production server
-  - url: https://api-test.rokwire.illinois.edu/core
-    description: Test server
-  - url: https://api-dev.rokwire.illinois.edu/core
-    description: Development server
-  - url: http://localhost
-    description: Local server
+- url: https://api.rokwire.illinois.edu/core
+  description: Production server
+- url: https://api-test.rokwire.illinois.edu/core
+  description: Test server
+- url: https://api-dev.rokwire.illinois.edu/core
+  description: Development server
+- url: http://localhost/core
+  description: Local server
 tags:
   - name: Services
     description: End users applications APIs.
