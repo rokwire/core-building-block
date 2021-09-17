@@ -232,7 +232,14 @@ func NewWebAdapter(env string, port string, coreAPIs *core.APIs, host string, lo
 	}
 
 	//Ignore servers. Validating reqeusts against the documented servers can cause issues when routing traffic through proxies/load-balancers.
-	// doc.Servers = nil
+	doc.Servers = nil
+
+	//To correctly route traffic to base path, we must add to all paths since servers are ignored
+	paths := make(openapi3.Paths, len(doc.Paths))
+	for path, obj := range doc.Paths {
+		paths["/core"+path] = obj
+	}
+	doc.Paths = paths
 
 	openAPIRouter, err := gorillamux.NewRouter(doc)
 	if err != nil {

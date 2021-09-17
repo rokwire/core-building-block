@@ -10,19 +10,8 @@ servers:
     description: Test server
   - url: 'https://api-dev.rokwire.illinois.edu/core'
     description: Development server
-  - url: 'http://localhost/core'
+  - url: 'http://localhost'
     description: Local server
-  - url: '{protocol}://{host}/core'
-    description: Any host
-    variables:
-      protocol:
-        enum:
-          - http
-          - https
-        default: https
-      host:
-        description: Server host
-        default: api-dev.rokwire.illinois.edu
 tags:
   - name: Services
     description: End users applications APIs.
@@ -597,7 +586,7 @@ paths:
           description: Not Found
         '500':
           description: Internal error
-  /admin/applications:
+  /admin/application:
     get:
       tags:
         - Admin
@@ -776,6 +765,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/OidcDiscovery'
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     GlobalConfig:
       required:

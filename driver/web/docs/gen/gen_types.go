@@ -496,8 +496,8 @@ type ResSharedRokwireToken struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResSharedRokwireTokenTokenType string
 
-// PostAdminApplicationsJSONBody defines parameters for PostAdminApplications.
-type PostAdminApplicationsJSONBody Application
+// PostAdminApplicationJSONBody defines parameters for PostAdminApplication.
+type PostAdminApplicationJSONBody Application
 
 // PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
 type PostAdminGlobalConfigJSONBody GlobalConfig
@@ -561,8 +561,8 @@ type GetTpsServiceRegsParams struct {
 	Ids string `json:"ids"`
 }
 
-// PostAdminApplicationsJSONRequestBody defines body for PostAdminApplications for application/json ContentType.
-type PostAdminApplicationsJSONRequestBody PostAdminApplicationsJSONBody
+// PostAdminApplicationJSONRequestBody defines body for PostAdminApplication for application/json ContentType.
+type PostAdminApplicationJSONRequestBody PostAdminApplicationJSONBody
 
 // PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
 type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody

@@ -10,19 +10,8 @@ servers:
   description: Test server
 - url: https://api-dev.rokwire.illinois.edu/core
   description: Development server
-- url: http://localhost/core
+- url: http://localhost
   description: Local server
-- url: '{protocol}://{host}/core'
-  description: Any server
-  variables:
-    protocol:
-      enum:
-        - http
-        - https
-      default: https
-    host:
-      description: Server host
-      default: 'api-dev.rokwire.illinois.edu'
 tags:
 - name: Services
   description: End users applications APIs.
@@ -60,7 +49,7 @@ paths:
     $ref: "./resources/admin/service-regs.yaml"
   /admin/applications/{id}:
     $ref: "./resources/admin/applicationsId.yaml"
-  /admin/applications:
+  /admin/application:
     $ref: "./resources/admin/applications.yaml"
 
   #enc
@@ -85,5 +74,10 @@ paths:
   /.well-known/openid-configuration:
     $ref: "./resources/default/openid-configuration.yaml"
 components:
+  securitySchemes:
+      bearerAuth:            # arbitrary name for the security scheme
+        type: http
+        scheme: bearer
+        bearerFormat: JWT
   schemas:
     $ref: "./schemas/index.yaml"
