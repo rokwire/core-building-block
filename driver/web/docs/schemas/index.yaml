@@ -119,3 +119,9 @@ _req_authorize-service_Request:
   $ref: "./apis/services/authorize-service/request/Request.yaml"
 _res_authorize-service_Response:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
+
+### organization API
+_req_create_Organization_Request:
+ $ref: "./apis/admin/create-organization/request/Request.yaml"
+_res_create_Organization_Response:
+ $ref: "./apis/admin/create-organization/response/Response.yaml"
