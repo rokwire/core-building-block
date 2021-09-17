@@ -59,7 +59,6 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 			return "", "", nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
 		}
 
-		//TODO handle anonymous profile
 	} else if authType.IsExternal {
 		account, accountAuthType, extParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
