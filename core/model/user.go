@@ -116,7 +116,7 @@ type Profile struct {
 	PhotoURL             string
 	FirstName            string
 	LastName             string
-	UserAnonymousProfile *UserAnonymousProfile `bson:"user_anonymous_profile"`
+	UserAnonymousProfile *UserAnonymousProfile
 
 	Accounts []Account //the users can share profiles between their applications accounts for some applications
 

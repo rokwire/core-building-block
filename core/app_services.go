@@ -50,14 +50,14 @@ func (app *application) deleteAnonymousProfile(l *logs.Log, id string) error {
 }
 
 func (app *application) updateUserAnonymousProfile(l *logs.Log, id string, profile *model.UserAnonymousProfile) error {
-	user, err := app.storage.FindUserByID(id)
+	acc, err := app.storage.FindAccountByID(id)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeUser, nil, err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
-	user.Profile.UserAnonymousProfile = profile
-	_, err = app.storage.UpdateUser(user, nil)
+	acc.Profile.UserAnonymousProfile = profile
+	_, err = app.storage.UpdateAccount(acc, "", nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUser, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
 	return nil
 }

@@ -68,11 +68,12 @@ type Storage interface {
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	InsertAnonymousProfile(profile *model.AnonymousProfile) (*model.AnonymousProfile, error)
 	FindAnonymousProfile(id string) (*model.AnonymousProfile, error)
+	//Add a search for user anonymous profile as well
 	UpdateAnonymousProfile(id string, favorites *[]string, interests *[]string,
 		negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error
 	DeleteAnonymousProfile(id string) error
-	FindUserByID(id string) (*model.User, error)
-	UpdateUser(user *model.User, newOrgData *map[string]interface{}) (*model.User, error)
+	FindAccountByID(id string) (*model.Account, error)
+	UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 	LoadOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)

@@ -52,29 +52,6 @@ func (_m *Storage) DeleteAnonymousProfile(id string) error {
 	return r0
 }
 
-// FindAnonymousProfile provides a mock function with given fields: id
-func (_m *Storage) FindAnonymousProfile(id string) (*model.AnonymousProfile, error) {
-	ret := _m.Called(id)
-
-	var r0 *model.AnonymousProfile
-	if rf, ok := ret.Get(0).(func(string) *model.AnonymousProfile); ok {
-		r0 = rf(id)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.AnonymousProfile)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(id)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // DeleteApplicationGroup provides a mock function with given fields: id
 func (_m *Storage) DeleteApplicationGroup(id string) error {
 	ret := _m.Called(id)
@@ -103,16 +80,30 @@ func (_m *Storage) DeleteApplicationPermission(id string) error {
 	return r0
 }
 
-// FindUserByID provides a mock function with given fields: id
-func (_m *Storage) FindUserByID(id string) (*model.User, error) {
+// DeleteApplicationRole provides a mock function with given fields: id
+func (_m *Storage) DeleteApplicationRole(id string) error {
 	ret := _m.Called(id)
 
-	var r0 *model.User
-	if rf, ok := ret.Get(0).(func(string) *model.User); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// FindAccountByID provides a mock function with given fields: id
+func (_m *Storage) FindAccountByID(id string) (*model.Account, error) {
+	ret := _m.Called(id)
+
+	var r0 *model.Account
+	if rf, ok := ret.Get(0).(func(string) *model.Account); ok {
 		r0 = rf(id)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.User)
+			r0 = ret.Get(0).(*model.Account)
 		}
 	}
 
@@ -126,18 +117,27 @@ func (_m *Storage) FindUserByID(id string) (*model.User, error) {
 	return r0, r1
 }
 
-// DeleteApplicationRole provides a mock function with given fields: id
-func (_m *Storage) DeleteApplicationRole(id string) error {
+// FindAnonymousProfile provides a mock function with given fields: id
+func (_m *Storage) FindAnonymousProfile(id string) (*model.AnonymousProfile, error) {
 	ret := _m.Called(id)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(string) error); ok {
+	var r0 *model.AnonymousProfile
+	if rf, ok := ret.Get(0).(func(string) *model.AnonymousProfile); ok {
 		r0 = rf(id)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.AnonymousProfile)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // FindApplication provides a mock function with given fields: ID
@@ -232,29 +232,6 @@ func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	return r0, r1
 }
 
-// InsertApplication provides a mock function with given fields: application
-func (_m *Storage) InsertApplication(application model.Application) (*model.Application, error) {
-	ret := _m.Called(application)
-
-	var r0 *model.Application
-	if rf, ok := ret.Get(0).(func(model.Application) *model.Application); ok {
-		r0 = rf(application)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.Application)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(model.Application) error); ok {
-		r1 = rf(application)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // InsertAnonymousProfile provides a mock function with given fields: profile
 func (_m *Storage) InsertAnonymousProfile(profile *model.AnonymousProfile) (*model.AnonymousProfile, error) {
 	ret := _m.Called(profile)
@@ -271,6 +248,29 @@ func (_m *Storage) InsertAnonymousProfile(profile *model.AnonymousProfile) (*mod
 	var r1 error
 	if rf, ok := ret.Get(1).(func(*model.AnonymousProfile) error); ok {
 		r1 = rf(profile)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// InsertApplication provides a mock function with given fields: application
+func (_m *Storage) InsertApplication(application model.Application) (*model.Application, error) {
+	ret := _m.Called(application)
+
+	var r0 *model.Application
+	if rf, ok := ret.Get(0).(func(model.Application) *model.Application); ok {
+		r0 = rf(application)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Application)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(model.Application) error); ok {
+		r1 = rf(application)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -366,6 +366,29 @@ func (_m *Storage) SaveGlobalConfig(setting *model.GlobalConfig) error {
 	return r0
 }
 
+// UpdateAccount provides a mock function with given fields: updatedUser, orgID, newOrgData
+func (_m *Storage) UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error) {
+	ret := _m.Called(updatedUser, orgID, newOrgData)
+
+	var r0 *model.Account
+	if rf, ok := ret.Get(0).(func(*model.Account, string, *map[string]interface{}) *model.Account); ok {
+		r0 = rf(updatedUser, orgID, newOrgData)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Account)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*model.Account, string, *map[string]interface{}) error); ok {
+		r1 = rf(updatedUser, orgID, newOrgData)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UpdateAnonymousProfile provides a mock function with given fields: id, favorites, interests, negativeInterestTags, positiveInterestTags, privacySettings, over13
 func (_m *Storage) UpdateAnonymousProfile(id string, favorites *[]string, interests *[]string, negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error {
 	ret := _m.Called(id, favorites, interests, negativeInterestTags, positiveInterestTags, privacySettings, over13)
@@ -434,27 +457,4 @@ func (_m *Storage) UpdateOrganization(ID string, name string, requestType string
 	}
 
 	return r0
-}
-
-// UpdateUser provides a mock function with given fields: user, newOrgData
-func (_m *Storage) UpdateUser(user *model.User, newOrgData *map[string]interface{}) (*model.User, error) {
-	ret := _m.Called(user, newOrgData)
-
-	var r0 *model.User
-	if rf, ok := ret.Get(0).(func(*model.User, *map[string]interface{}) *model.User); ok {
-		r0 = rf(user, newOrgData)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.User)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(*model.User, *map[string]interface{}) error); ok {
-		r1 = rf(user, newOrgData)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
 }
