@@ -4,7 +4,6 @@ import (
 	"core-building-block/core/model"
 	"encoding/json"
 
-	"github.com/google/uuid"
 	"github.com/rokmetro/logging-library/errors"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
@@ -33,58 +32,36 @@ type apiKeyResponseParams struct {
 	AnonymousProfileID string `json:"anonymous_profile_id"`
 }
 
-func (a *apiKeyAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
+func (a *apiKeyAuthImpl) checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, error) {
 	var keyCreds apiKeyCreds
 	err := json.Unmarshal([]byte(creds), &keyCreds)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeAPIKeyCreds, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, typeAPIKeyCreds, nil, err)
 	}
 
 	validate := validator.New()
 	err = validate.Struct(keyCreds)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeAPIKeyCreds, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionValidate, typeAPIKeyCreds, nil, err)
 	}
 
-	apiKey, err := a.auth.getAPIKey(keyCreds.APIKey)
+	apiKey, err := a.auth.getCachedAPIKey(keyCreds.APIKey)
 	if err != nil || apiKey == nil {
-		return nil, errors.Newf("incorrect key for org_id=%v, app_id=%v", orgID, appID)
+		return "", errors.Newf("incorrect key for org_id=%v, app_id=%v", appOrg.Organization.ID, appOrg.Application.ID)
 	}
 
-	if apiKey.AppID != appID || apiKey.OrgID != orgID {
-		return nil, errors.Newf("incorrect key for org_id=%v, app_id=%v", orgID, appID)
+	if apiKey.AppID != appOrg.Application.ID || apiKey.OrgID != appOrg.Organization.ID {
+		return "", errors.Newf("incorrect key for org_id=%v, app_id=%v", appOrg.Organization.ID, appOrg.Application.ID)
 	}
 
-	userAuth := model.UserAuth{Sub: keyCreds.AnonymousProfileID, Anonymous: true}
-	if keyCreds.AnonymousProfileID == "" {
-		id, err := uuid.NewUUID()
-		if err != nil {
-			return nil, errors.WrapErrorAction("generating", "uuid", logutils.StringArgs("anonymous profile id"), err)
-		}
-		userAuth.Sub = id.String()
-		userAuth.ResponseParams = &apiKeyResponseParams{AnonymousProfileID: userAuth.Sub}
-	}
-
-	return &userAuth, nil
-}
-
-func (a *apiKeyAuthImpl) refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
-	return nil, errors.Newf("refresh operation invalid for auth_type=%s", a.authType)
-}
-
-func (a *apiKeyAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
-	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
-}
-
-func (a *apiKeyAuthImpl) isGlobal() bool {
-	return false
+	return keyCreds.AnonymousProfileID, nil
 }
 
 //initAPIKeyAuth initializes and registers a new API key auth instance
 func initAPIKeyAuth(auth *Auth) (*apiKeyAuthImpl, error) {
 	apiKey := &apiKeyAuthImpl{auth: auth, authType: AuthTypeAPIKey}
 
-	err := auth.registerAuthType(apiKey.authType, apiKey)
+	err := auth.registerAnonymousAuthType(apiKey.authType, apiKey)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
 	}

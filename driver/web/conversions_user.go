@@ -6,126 +6,81 @@ import (
 )
 
 //User
-func userFromDef(item *Def.User) model.User {
-	if item == nil {
-		return model.User{}
-	}
+func userFromDef(item *Def.Account) model.Account {
+	/*	if item == nil {
+			return model.Account{}
+		}
 
-	// account := userAccountFromDef(item.Account)
-	// profile := userProfileFromDef(item.Profile)
-	//TODO: add permissions
-	return model.User{ID: item.Id}
+		// account := userAccountFromDef(item.Account)
+		// profile := userProfileFromDef(item.Profile)
+		//TODO: add permissions
+		return model.Account{ID: *item.Id} */
+	return model.Account{}
 
 }
 
-func userToDef(item *model.User) *Def.User {
-	if item == nil {
+func userToDef(item *model.Account) *Def.Account {
+	/*if item == nil {
 		return nil
 	}
 
-	account := userAccountToDef(&item.Account)
+	//TODO
+	//account := userAccountToDef(&item.Account)
 	profile := userProfileToDef(&item.Profile)
-	groups := globalGroupListToDef(item.Groups)
-	roles := globalRoleListToDef(item.Roles)
-	memberships := organizationMembershipListToDef(item.OrganizationsMemberships)
 	devices := deviceListToDef(item.Devices)
 	//TODO: handle permissions
-	return &Def.User{Id: item.ID, Account: account, Profile: profile, Groups: &groups, Roles: &roles, OrgMemberships: &memberships, Devices: &devices}
+	return &Def.User{Id: item.ID /*Account: account,*/ /*, Profile: profile, Devices: &devices} */
+	return nil
 }
 
-//UserAccount
-func userAccountFromDef(item *Def.UserAccount) *model.UserAccount {
-	if item == nil {
-		return nil
-	}
-	return &model.UserAccount{ID: item.Id, Email: defString(item.Email), Phone: defString(item.Phone), Username: defString(item.Username), LoginTypes: []string{}}
+//AccountAuthType
+func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthTypeFields {
+	params := &Def.AccountAuthTypeFields_Params{}
+	params.AdditionalProperties = item.Params
+	return Def.AccountAuthTypeFields{Id: &item.ID, Identifier: &item.Identifier, Active: &item.Active, Active2fa: &item.Active2FA, Params: params}
 }
 
-func userAccountToDef(item *model.UserAccount) *Def.UserAccount {
-	if item == nil {
-		return nil
-	}
-	return &Def.UserAccount{Id: item.ID, Email: &item.Email, Phone: &item.Phone, Username: &item.Username}
-}
-
-//UserProfile
-func userProfileFromDef(item *Def.UserProfile) *model.UserProfile {
-	if item == nil {
-		return nil
-	}
-	return &model.UserProfile{ID: item.Id, FirstName: defString(item.FirstName), LastName: defString(item.LastName), PhotoURL: defString(item.PhotoUrl)}
-}
-
-func userProfileToDef(item *model.UserProfile) *Def.UserProfile {
-	if item == nil {
-		return nil
-	}
-	return &Def.UserProfile{Id: item.ID, FirstName: &item.FirstName, LastName: &item.LastName, PhotoUrl: &item.PhotoURL}
-}
-
-//OrganizationMembership
-func organizationMembershipFromDef(item *Def.OrganizationMembership) *model.OrganizationMembership {
-	if item == nil {
-		return nil
-	}
-	user := model.User{ID: defString(item.UserId)}
-	org := model.Organization{ID: defString(item.OrgId)}
-	//TODO: handle permissions, roles, and groups
-	return &model.OrganizationMembership{ID: item.Id, User: user, Organization: org, OrgUserData: defMap(item.OrgUserData)}
-}
-
-func organizationMembershipToDef(item *model.OrganizationMembership) *Def.OrganizationMembership {
-	if item == nil {
-		return nil
-	}
-	roles := organizationRoleListToDef(item.Roles)
-	groups := organizationGroupListToDef(item.Groups)
-	//TODO: handle permissions
-	return &Def.OrganizationMembership{Id: item.ID, UserId: &item.User.ID, OrgId: &item.Organization.ID, OrgUserData: &item.OrgUserData, Roles: &roles, Groups: &groups}
-}
-
-func organizationMembershipListToDef(items []model.OrganizationMembership) []Def.OrganizationMembership {
-	out := make([]Def.OrganizationMembership, len(items))
+func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeFields {
+	result := make([]Def.AccountAuthTypeFields, len(items))
 	for i, item := range items {
-		defItem := organizationMembershipToDef(&item)
-		if defItem != nil {
-			out[i] = *defItem
-		} else {
-			out[i] = Def.OrganizationMembership{}
-		}
+		result[i] = accountAuthTypeToDef(item)
 	}
-	return out
+	return result
+}
+
+//Profile
+func profileFromDef(item *Def.ProfileFields) *model.Profile {
+	return &model.Profile{ID: *item.Id, FirstName: defString(item.FirstName), LastName: defString(item.LastName), PhotoURL: defString(item.PhotoUrl)}
+}
+
+func profileToDef(item *model.Profile) *Def.ProfileFields {
+	return &Def.ProfileFields{Id: &item.ID, FirstName: &item.FirstName, LastName: &item.LastName, PhotoUrl: &item.PhotoURL}
 }
 
 //Device
-func deviceFromDef(item *Def.Device) *model.Device {
+func deviceFromDef(item *Def.DeviceFields) *model.Device {
 	if item == nil {
 		return nil
 	}
 	return &model.Device{ID: item.Id, Type: string(item.Type), OS: defString(item.Os), MacAddress: defString(item.MacAddress)}
 }
 
-func deviceToDef(item *model.Device) *Def.Device {
+func deviceToDef(item *model.Device) *Def.DeviceFields {
 	if item == nil {
 		return nil
 	}
 
-	users := make([]string, len(item.Users))
-	for i, user := range item.Users {
-		users[i] = user.ID
-	}
-
-	return &Def.Device{Id: item.ID, Type: Def.DeviceType(item.Type), UserIds: users, Os: &item.OS, MacAddress: &item.MacAddress}
+	return &Def.DeviceFields{Id: item.ID, Type: Def.DeviceFieldsType(item.Type), Os: &item.OS, MacAddress: &item.MacAddress}
 }
 
-func deviceListToDef(items []model.Device) []Def.Device {
-	out := make([]Def.Device, len(items))
+func deviceListToDef(items []model.Device) []Def.DeviceFields {
+	out := make([]Def.DeviceFields, len(items))
 	for i, item := range items {
 		defItem := deviceToDef(&item)
 		if defItem != nil {
 			out[i] = *defItem
 		} else {
-			out[i] = Def.Device{}
+			out[i] = Def.DeviceFields{}
 		}
 	}
 	return out

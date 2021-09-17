@@ -19,21 +19,12 @@ type firebaseAuthImpl struct {
 	authType string
 }
 
-func (a *firebaseAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
-	//TODO: Implement
-	return nil, errors.New(logutils.Unimplemented)
+func (a *firebaseAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
+	return nil, nil, nil
 }
 
-func (a *firebaseAuthImpl) refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
-	return nil, errors.Newf("refresh operation invalid for auth_type=%s", a.authType)
-}
-
-func (a *firebaseAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
-	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
-}
-
-func (a *firebaseAuthImpl) isGlobal() bool {
-	return true
+func (a *firebaseAuthImpl) checkCredentials(userAuthType model.AccountAuthType, creds string, l *logs.Log) (*bool, error) {
+	return nil, nil
 }
 
 //initFirebaseAuth initializes and registers a new Firebase auth instance

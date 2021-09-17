@@ -1,4 +1,0 @@
-type: object
-properties:
-  anonymous_profile_id:
-    type: string

@@ -9,16 +9,34 @@ import (
 	"github.com/rokmetro/logging-library/logs"
 )
 
-//authType is the interface for authentication mechanisms
+//authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
 type authType interface {
-	//check checks the validity of provided credentials
-	check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error)
-	//refresh refreshes the access token using provided refresh token
-	refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error)
+	//userExist checks if the user exists for application and organizations
+	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error)
+	//checkCredentials checks if the account credentials are valid for the account auth type
+	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (*bool, error)
+}
+
+//externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
+//these are the different identity providers - illinois_oidc etc
+type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
-	getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
-	//isGlobal returns whether an authType is orgID, appID independent
-	isGlobal() bool
+	getLoginURL(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
+
+	//externalLogin logins in the external system and provides the authenticated user
+	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, interface{}, error)
+
+	//userExist checks if the user exists
+	userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error)
+
+	//TODO refresh
+}
+
+//anonymousAuthType is the interface for authentication for auth types which are anonymous
+type anonymousAuthType interface {
+	//checkCredentials checks the credentials for the provided app and organization
+	//	Returns anonymous profile identifier
+	checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, error)
 }
 
 //APIs is the interface which defines the APIs provided by the auth package
@@ -29,20 +47,21 @@ type APIs interface {
 	//GetHost returns the host/issuer of the auth service
 	GetHost() string
 
-	//Login logs a user in using the specified credentials and authentication method
+	//Login logs a user in a specific application using the specified credentials and authentication method.
+	//The authentication method must be one of the supported for the application.
 	//	Input:
-	//		authType (string): Name of the authentication method for provided creds (eg. "email")
+	//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
-	//		orgID (string): ID of the organization that the user is logging in to
 	//		appID (string): ID of the app/client that the user is logging in from
+	//		orgID (string): ID of the organization that the user is logging in
 	//		params (string): JSON encoded params defined by specified auth type
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 	//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
-	//		User (User): User object for authenticated user
+	//		Account (Account): Account object for authenticated user
 	//		Params (interface{}): authType-specific set of parameters passed back to client
-	Login(authType string, creds string, orgID string, appID string, params string, l *logs.Log) (string, string, *model.User, interface{}, error)
+	Login(authType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
@@ -56,15 +75,15 @@ type APIs interface {
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:
-	//		authType (string): Name of the authentication method for provided creds (eg. "email")
-	//		orgID (string): ID of the organization that the user is logging in to
+	//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		appID (string): ID of the app/client that the user is logging in from
+	//		orgID (string): ID of the organization that the user is logging in
 	//		redirectURI (string): Registered redirect URI where client will receive response
 	//		l (*loglib.Log): Log object pointer for request
 	//	Returns:
 	//		Login URL (string): SSO provider login URL to be launched in a browser
 	//		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
-	GetLoginURL(authType string, orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
+	GetLoginURL(authType string, appID string, orgID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
@@ -115,11 +134,17 @@ type APIs interface {
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
-	//Users
-	FindUserByAccountID(accountID string) (*model.User, error)
-	InsertUser(user *model.User, authCred *model.AuthCreds) (*model.User, error)
-	UpdateUser(user *model.User, orgID string, newOrgData *map[string]interface{}) (*model.User, error)
-	DeleteUser(id string) error
+	//AuthTypes
+	LoadAuthTypes() ([]model.AuthType, error)
+
+	//Accounts
+	FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
+	InsertAccount(account model.Account) (*model.Account, error)
+	UpdateAccount(account *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
+	DeleteAccount(id string) error
+
+	//AccountAuthTypes
+	UpdateAccountAuthType(item model.AccountAuthType) error
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)
@@ -144,9 +169,8 @@ type Storage interface {
 	SaveServiceReg(reg *model.ServiceReg) error
 	DeleteServiceReg(serviceID string) error
 
-	//AuthConfigs
-	FindAuthConfig(orgID string, appID string, authType string) (*model.AuthConfig, error)
-	LoadAuthConfigs() ([]model.AuthConfig, error)
+	//IdentityProviders
+	LoadIdentityProviders() ([]model.IdentityProvider, error)
 
 	//ServiceAuthorizations
 	FindServiceAuthorization(userID string, orgID string) (*model.ServiceAuthorization, error)
@@ -160,4 +184,10 @@ type Storage interface {
 	InsertAPIKey(apiKey *model.APIKey) error
 	UpdateAPIKey(apiKey *model.APIKey) error
 	DeleteAPIKey(orgID string, appID string) error
+
+	//ApplicationTypes
+	FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error)
+
+	//ApplicationsOrganizations
+	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
 }

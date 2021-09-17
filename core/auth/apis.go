@@ -3,7 +3,6 @@ package auth
 import (
 	"core-building-block/core/model"
 	"strings"
-	"time"
 
 	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/auth-library/authutils"
@@ -11,7 +10,6 @@ import (
 	"github.com/rokmetro/logging-library/logutils"
 
 	"github.com/rokmetro/logging-library/logs"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 //Start starts the auth service
@@ -27,112 +25,64 @@ func (a *Auth) GetHost() string {
 	return a.host
 }
 
-//Login logs a user in using the specified credentials and authentication method
+//Login logs a user in a specific application using the specified credentials and authentication method.
+//The authentication method must be one of the supported for the application.
 //	Input:
-//		authType (string): Name of the authentication method for provided creds (eg. "email")
+//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
-//		orgID (string): ID of the organization that the user is logging in to
 //		appID (string): ID of the app/client that the user is logging in from
+//		orgID (string): ID of the organization that the user is logging in
 //		params (string): JSON encoded params defined by specified auth type
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
-//		User (User): User object for authenticated user
+//		Account (Account): Account object for authenticated user
 //		Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Login(authType string, creds string, orgID string, appID string, params string, l *logs.Log) (string, string, *model.User, interface{}, error) {
-	var user *model.User
-	var err error
-	var sub string
-	auth, err := a.getAuthType(authType)
+func (a *Auth) Login(authenticationType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error) {
+	//TODO - analyse what should go in one transaction
+
+	//validate if the provided auth type is supported by the provided application and organization
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appID, orgID)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
-	userAuth, err := auth.check(creds, orgID, appID, params, l)
-	if err != nil || userAuth == nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "login creds", nil, err)
-	}
+	var account *model.Account
+	var accountAuthType *model.AccountAuthType
+	var extParams interface{}
 
-	refreshToken := ""
-	if userAuth.Anonymous {
-		sub = userAuth.Sub
+	//get the auth type implementation for the auth type
+	if authType.IsAnonymous {
+		account, accountAuthType, err = a.applyAnonymousAuthType(*authType, *appType, *appOrg, creds, params, l)
+		if err != nil {
+			return "", "", nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
+		}
+
+		//TODO handle anonymous profile
+	} else if authType.IsExternal {
+		account, accountAuthType, extParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, l)
+		if err != nil {
+			return "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
+		}
+
+		//TODO groups mapping
 	} else {
-		if userAuth.Creds == nil {
-			return "", "", nil, nil, errors.WrapErrorData(logutils.StatusInvalid, "user auth creds", nil, err)
+		account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
+		if err != nil {
+			return "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
 
-		//RefreshParams == nil indicates that a refresh token should not be generated
-		var refreshParams *model.AuthRefresh
-		if userAuth.RefreshParams != nil {
-			var expireTime *time.Time
-			refreshToken, expireTime, err = a.buildRefreshToken()
-			if err != nil {
-				return "", "", nil, nil, err
-			}
-
-			refreshParams = &model.AuthRefresh{CurrentToken: refreshToken, Expires: expireTime, AppID: appID, OrgID: orgID,
-				CredsID: userAuth.Creds.ID, Params: userAuth.RefreshParams, DateCreated: time.Now().UTC()}
-		}
-
-		if len(userAuth.AccountID) > 0 {
-			user, err = a.findAccount(userAuth)
-			if err != nil {
-				return "", "", nil, nil, err
-			}
-			user, update, newMembership := a.needsUserUpdate(userAuth, user)
-			if update {
-				var newMembershipOrgData *map[string]interface{}
-				if newMembership {
-					newMembershipOrgData = &userAuth.OrgData
-				}
-				_, err = a.updateAccount(user, orgID, newMembershipOrgData)
-				if err != nil {
-					return "", "", nil, nil, err
-				}
-			}
-
-			if refreshParams != nil {
-				err = a.checkRefreshTokenLimit(orgID, appID, userAuth.Creds.ID)
-				if err != nil {
-					a.logger.Error(err.Error())
-				} else {
-					err = a.storage.InsertRefreshToken(refreshParams)
-					if err != nil {
-						return "", "", nil, nil, err
-					}
-				}
-			}
-		} else if userAuth.OrgID == orgID {
-			user, err = a.createAccount(userAuth)
-			if err != nil {
-				return "", "", nil, nil, err
-			}
-
-			if refreshParams != nil {
-				err = a.storage.InsertRefreshToken(refreshParams)
-				if err != nil {
-					return "", "", nil, nil, err
-				}
-			}
-		} else {
-			return "", "", nil, nil, errors.ErrorData(logutils.StatusInvalid, "org id", logutils.StringArgs(orgID))
-		}
-
-		if user == nil {
-			return "", "", nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeUser, nil)
-		}
-
-		sub = user.ID
+		//the credentials are valid
 	}
 
-	claims := a.getStandardClaims(sub, userAuth.UserID, userAuth.Email, userAuth.Phone, "rokwire", orgID, appID, userAuth.Exp)
-	token, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
+	//now we are ready to apply login for the user
+	accessToken, refreshToken, err := a.applyLogin(*account, *accountAuthType, *appType, extParams, l)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+		return "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}
 
-	return token, refreshToken, user, userAuth.ResponseParams, nil
+	return *accessToken, *refreshToken, account, extParams, nil
 }
 
 //Refresh refreshes an access token using a refresh token
@@ -144,115 +94,127 @@ func (a *Auth) Login(authType string, creds string, orgID string, appID string, 
 //		Refresh token (string): Refresh token that can be sent to refresh the access token once it expires
 //		Params (interface{}): authType-specific set of parameters passed back to client
 func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interface{}, error) {
-	refresh, err := a.storage.FindRefreshToken(refreshToken)
-	if err != nil {
-		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
-	}
-
-	credentials, err := a.storage.FindCredentialsByID(refresh.CredsID)
-	if err != nil {
-		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
-	}
-	if credentials == nil {
-		return "", "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthCred, nil)
-	}
-
-	validate := validator.New()
-	err = validate.Struct(refresh)
-	if err != nil {
-		return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthRefreshParams, nil, err)
-	}
-
-	if !refresh.Expires.After(time.Now().UTC()) {
-		err = a.storage.DeleteRefreshToken(refresh.CurrentToken)
+	//TODO - work with the logins sessions
+	return "", "", nil, nil
+	/*
+		refresh, err := a.storage.FindRefreshToken(refreshToken)
 		if err != nil {
-			return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh expiration", nil, err)
+			return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
 		}
-		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, "refresh expiration", nil)
-	}
 
-	if refreshToken == refresh.PreviousToken {
-		err = a.storage.DeleteRefreshToken(refresh.CurrentToken)
+		credentials, err := a.storage.FindCredentialsByID(refresh.CredsID)
 		if err != nil {
-			return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh reuse", nil, err)
+			return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
 		}
-		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, "refresh reuse", nil)
-	}
-	if refreshToken != refresh.CurrentToken {
-		return "", "", nil, errors.ErrorAction(logutils.ActionValidate, model.TypeRefreshToken, nil)
-	}
+		if credentials == nil {
+			return "", "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthCred, nil)
+		}
 
-	auth, err := a.getAuthType(credentials.AuthType)
-	if err != nil {
-		return "", "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
-	}
+		validate := validator.New()
+		err = validate.Struct(refresh)
+		if err != nil {
+			return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthRefreshParams, nil, err)
+		}
 
-	userAuth, err := auth.refresh(refresh.Params, refresh.OrgID, refresh.AppID, l)
-	if err != nil {
-		return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
-	}
+		if !refresh.Expires.After(time.Now().UTC()) {
+			err = a.storage.DeleteRefreshToken(refresh.CurrentToken)
+			if err != nil {
+				return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh expiration", nil, err)
+			}
+			return "", "", nil, errors.ErrorAction(logutils.ActionValidate, "refresh expiration", nil)
+		}
 
-	if userAuth == nil {
-		return "", "", nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeUserAuth, nil, err)
-	}
+		if refreshToken == refresh.PreviousToken {
+			err = a.storage.DeleteRefreshToken(refresh.CurrentToken)
+			if err != nil {
+				return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh reuse", nil, err)
+			}
+			return "", "", nil, errors.ErrorAction(logutils.ActionValidate, "refresh reuse", nil)
+		}
+		if refreshToken != refresh.CurrentToken {
+			return "", "", nil, errors.ErrorAction(logutils.ActionValidate, model.TypeRefreshToken, nil)
+		}
 
-	user, err := a.storage.FindUserByAccountID(credentials.AccountID)
-	if err != nil {
-		return "", "", nil, err
-	}
+		auth, err := a.getAuthType(credentials.AuthType)
+		if err != nil {
+			return "", "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+		}
 
-	user, update, _ := a.needsUserUpdate(userAuth, user)
-	if update {
-		_, err = a.updateAccount(user, "", nil)
+		userAuth, err := auth.refresh(refresh.Params, refresh.OrgID, refresh.AppID, l)
+		if err != nil {
+			return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
+		}
+
+		if userAuth == nil {
+			return "", "", nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeUserAuth, nil, err)
+		}
+
+		user, err := a.storage.FindUserByAccountID(credentials.AccountID)
 		if err != nil {
 			return "", "", nil, err
 		}
-	}
 
-	claims := a.getStandardClaims(user.ID, userAuth.UserID, user.Account.Email, user.Account.Phone, "rokwire", refresh.OrgID, refresh.AppID, userAuth.Exp)
-	token, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
-	if err != nil {
-		return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
-	}
-
-	newRefreshToken := ""
-	if userAuth.RefreshParams != nil {
-		var expireTime *time.Time
-		newRefreshToken, expireTime, err = a.buildRefreshToken()
-		if err != nil {
-			return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeRefreshToken, nil, err)
+		user, update, _ := a.needsUserUpdate(userAuth, user)
+		if update {
+			_, err = a.updateAccount(user, "", nil)
+			if err != nil {
+				return "", "", nil, err
+			}
 		}
 
-		now := time.Now().UTC()
-		updatedRefresh := model.AuthRefresh{CurrentToken: newRefreshToken, PreviousToken: refreshToken, Expires: expireTime,
-			Params: userAuth.RefreshParams, DateUpdated: &now}
-
-		err = a.storage.UpdateRefreshToken(refreshToken, &updatedRefresh)
+		claims := a.getStandardClaims(user.ID, userAuth.UserID, user.Account.Email, user.Account.Phone, "rokwire", refresh.OrgID, refresh.AppID, userAuth.Exp)
+		token, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 		if err != nil {
-			return "", "", nil, err
+			return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 		}
-	}
 
-	return token, newRefreshToken, userAuth.ResponseParams, nil
+		newRefreshToken := ""
+		if userAuth.RefreshParams != nil {
+			var expireTime *time.Time
+			newRefreshToken, expireTime, err = a.buildRefreshToken()
+			if err != nil {
+				return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeRefreshToken, nil, err)
+			}
+
+			now := time.Now().UTC()
+			updatedRefresh := model.AuthRefresh{CurrentToken: newRefreshToken, PreviousToken: refreshToken, Expires: expireTime,
+				Params: userAuth.RefreshParams, DateUpdated: &now}
+
+			err = a.storage.UpdateRefreshToken(refreshToken, &updatedRefresh)
+			if err != nil {
+				return "", "", nil, err
+			}
+		}
+
+		return token, newRefreshToken, userAuth.ResponseParams, nil
+	*/
 }
 
 //GetLoginURL returns a pre-formatted login url for SSO providers
 //	Input:
-//		authType (string): Name of the authentication method for provided creds (eg. "email")
-//		orgID (string): ID of the organization that the user is logging in to
+//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		appID (string): ID of the app/client that the user is logging in from
+//		orgID (string): ID of the organization that the user is logging in
 //		redirectURI (string): Registered redirect URI where client will receive response
 //		l (*loglib.Log): Log object pointer for request
 //	Returns:
 //		Login URL (string): SSO provider login URL to be launched in a browser
 //		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
-func (a *Auth) GetLoginURL(authType string, orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
-	auth, err := a.getAuthType(authType)
+func (a *Auth) GetLoginURL(authenticationType string, appID string, orgID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+	//validate if the provided auth type is supported by the provided application and organization
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appID, orgID)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	//get the auth type implementation for the auth type
+	authImpl, err := a.getExternalAuthTypeImpl(*authType)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	loginURL, params, err := auth.getLoginURL(orgID, appID, redirectURI, l)
+	//get login URL
+	loginURL, params, err := authImpl.getLoginURL(*authType, *appType, *appOrg, redirectURI, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "login url", nil, err)
 	}
@@ -322,7 +284,7 @@ func (a *Auth) GetScopedAccessToken(claims TokenClaims, serviceID string, scopes
 	aud := strings.Join(services, ",")
 	scope := strings.Join(scopeStrings, " ")
 
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, nil)
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, nil, claims.Anonymous)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 

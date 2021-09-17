@@ -1,0 +1,30 @@
+required:
+  - auth_type
+  - app_id
+  - org_id
+type: object
+properties:
+  auth_type:
+    type: string
+    enum:
+      - username
+      - email
+      - phone
+      - illinois_oidc
+      - api_key
+  app_id:
+    type: string
+  org_id:
+    type: string
+  creds:
+    anyOf:
+      - $ref: "./CredsEmail.yaml"
+      - $ref: "./CredsPhone.yaml"
+      - $ref: "./CredsOIDC.yaml"
+      - $ref: "./CredsAPIKey.yaml"
+  params:
+    type: object
+    anyOf:
+      - $ref: "./ParamsEmail.yaml"
+      - $ref: "./ParamsOIDC.yaml"
+      - $ref: "./ParamsNone.yaml"

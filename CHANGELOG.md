@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set up logging [#6](https://github.com/rokwire/core-building-block/issues/6)
 
 ### Fixed
+- Fix base path validation issue [#174](https://github.com/rokwire/core-building-block/issues/174)
 - Fix auth credentials search for multiple apps [#153](https://github.com/rokwire/core-building-block/issues/153)
 - Fix GlobalPermission and OrganizationPermission in the doc APIs model [#151](https://github.com/rokwire/core-building-block/issues/151)
 - OIDC auth bug fixes [#143](https://github.com/rokwire/core-building-block/issues/143)
@@ -57,4 +58,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixing the Log and the Changelog for issues #35 and #36 [#54](https://github.com/rokwire/core-building-block/issues/54)
 
 ### Changed
+- Prepare the service to be deployed into Rokwire infrastructure [#176](https://github.com/rokwire/core-building-block/issues/176)
+- Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)

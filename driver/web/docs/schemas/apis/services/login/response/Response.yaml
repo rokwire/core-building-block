@@ -1,0 +1,12 @@
+type: object
+properties:
+  token:
+    $ref: "../../../shared/responses/RokwireToken.yaml"
+  account:
+    $ref: "./Account.yaml"
+  params:
+    type: object
+    nullable: true
+    anyOf:
+      - $ref: "../../../shared/responses/ParamsOIDC.yaml"
+      - $ref: "../../../shared/responses/ParamsNone.yaml"  

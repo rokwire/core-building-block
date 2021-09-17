@@ -19,30 +19,23 @@ type samlAuthImpl struct {
 	authType string
 }
 
-func (a *samlAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
-	//TODO: Implement
-	return nil, errors.New(logutils.Unimplemented)
+func (a *samlAuthImpl) externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, interface{}, error) {
+	return nil, nil, nil
 }
 
-//refresh must be implemented for SAML auth
-func (a *samlAuthImpl) refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
-	//TODO: Implement
-	return nil, errors.New(logutils.Unimplemented)
+func (a *samlAuthImpl) userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error) {
+	return nil, nil
 }
 
-func (a *samlAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *samlAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
-}
-
-func (a *samlAuthImpl) isGlobal() bool {
-	return false
 }
 
 //initSamlAuth initializes and registers a new SAML auth instance
 func initSamlAuth(auth *Auth) (*samlAuthImpl, error) {
 	saml := &samlAuthImpl{auth: auth, authType: AuthTypeSaml}
 
-	err := auth.registerAuthType(saml.authType, saml)
+	err := auth.registerExternalAuthType(saml.authType, saml)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
 	}
