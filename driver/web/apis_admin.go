@@ -340,7 +340,7 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request, claims
 }
 
 //getAppilcations gets applications list
-func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	//TODO
 	return l.HttpResponseSuccess()
 	/*applications, err := h.coreAPIs.Administration.AdmGetApplications()

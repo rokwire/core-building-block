@@ -8,6 +8,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
+	github.com/pkg/errors v0.9.1
 	github.com/pquerna/cachecontrol v0.1.0 // indirect
 	github.com/rokmetro/auth-library v0.1.16
 	github.com/rokmetro/logging-library v0.2.2

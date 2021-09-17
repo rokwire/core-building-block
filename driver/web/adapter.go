@@ -67,9 +67,9 @@ func (we Adapter) Start() {
 
 	///services ///
 	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
-	servicesSubRouter.HandleFunc("/auth/login", we.wrapFunc(we.servicesApisHandler.authLogin, we.auth.servicesAuth)).Methods("POST")
-	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL, we.auth.servicesAuth)).Methods("POST")
-	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh, we.auth.servicesAuth)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/login", we.wrapFunc(we.servicesApisHandler.authLogin, nil)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL, nil)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh, nil)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService, we.auth.servicesAuth)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations, we.auth.servicesAuth)).Methods("GET")
 	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest, we.auth.servicesAuth)).Methods("GET")
@@ -107,14 +107,14 @@ func (we Adapter) Start() {
 
 	///bbs ///
 	bbsSubrouter := subRouter.PathPrefix("/bbs").Subrouter()
-	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.getTest nil)).Methods("GET")
-	bbsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.bbsApisHandler.getServiceRegistrations nil)).Methods("GET")
+	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.getTest, nil)).Methods("GET")
+	bbsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.bbsApisHandler.getServiceRegistrations, nil)).Methods("GET")
 	///
 
 	///third-party services ///
 	tpsSubrouter := subRouter.PathPrefix("/tps").Subrouter()
-	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations nil)).Methods("GET")
-	tpsSubrouter.HandleFunc("/auth-keys", we.wrapFunc(we.tpsApisHandler.getAuthKeys nil)).Methods("GET")
+	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations, nil)).Methods("GET")
+	tpsSubrouter.HandleFunc("/auth-keys", we.wrapFunc(we.tpsApisHandler.getAuthKeys, nil)).Methods("GET")
 	///
 
 	err := http.ListenAndServe(":"+we.port, router)
