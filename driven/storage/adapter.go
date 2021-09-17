@@ -886,10 +886,10 @@ func (sa *Adapter) LoadApplications() ([]model.Application, error) {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 	}
 
-	//This causes a crash on launch if no applications are created in the database
-	// if len(result) == 0 {
-	// 	return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, nil, err)
-	// }
+	if len(result) == 0 {
+		//no data
+		return make([]model.Application, 0), nil
+	}
 
 	applications := applicationsFromStorage(result)
 	return applications, nil
