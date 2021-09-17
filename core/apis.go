@@ -86,7 +86,7 @@ func (s *servicesImpl) GetAnonymousProfile(l *logs.Log, id string) (*model.Anony
 	return s.app.getAnonymousProfile(l, id)
 }
 
-func (s *servicesImpl) UpdateUserAnonymousProfile(l *logs.Log, id string, profile *model.UserAnonymousProfile) error {
+func (s *servicesImpl) UpdateUserAnonymousProfile(l *logs.Log, id string, profile *model.AnonymousProfile) error {
 	return s.app.updateUserAnonymousProfile(l, id, profile)
 }
 

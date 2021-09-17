@@ -63,18 +63,6 @@ type AnonymousProfile struct {
 	PrivacySettings      string    `json:"privacy_settings" bson:"privacy_settings"`
 }
 
-type UserAnonymousProfile struct {
-	ID                   string    `json:"id" bson:"_id"`
-	Interests            []string  `json:"interests" bson:"interests"`
-	Favorites            []string  `json:"favorites" bson:"favorites"`
-	Over13               bool      `json:"over_13" bson:"over_13"`
-	PositiveInterestTags []string  `json:"positive_interest_tags" bson:"positive_interest_tags"`
-	NegativeInterestTags []string  `json:"negative_interest_tags" bson:"negative_interest_tags"`
-	CreationDate         time.Time `json:"creation_date" bson:"creation_date"`
-	LastModifiedDate     time.Time `json:"last_modified_date" bson:"last_modified_date"`
-	PrivacySettings      string    `json:"privacy_settings" bson:"privacy_settings"`
-}
-
 //AccountAuthType represents account auth type
 type AccountAuthType struct {
 	ID string
@@ -113,10 +101,10 @@ type Credential struct {
 type Profile struct {
 	ID string
 
-	PhotoURL             string
-	FirstName            string
-	LastName             string
-	UserAnonymousProfile *UserAnonymousProfile
+	PhotoURL         string
+	FirstName        string
+	LastName         string
+	AnonymousProfile *AnonymousProfile
 
 	Accounts []Account //the users can share profiles between their applications accounts for some applications
 

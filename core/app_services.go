@@ -49,12 +49,12 @@ func (app *application) deleteAnonymousProfile(l *logs.Log, id string) error {
 	return nil
 }
 
-func (app *application) updateUserAnonymousProfile(l *logs.Log, id string, profile *model.UserAnonymousProfile) error {
+func (app *application) updateUserAnonymousProfile(l *logs.Log, id string, profile *model.AnonymousProfile) error {
 	acc, err := app.storage.FindAccountByID(id)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
-	acc.Profile.UserAnonymousProfile = profile
+	acc.Profile.AnonymousProfile = profile
 	_, err = app.storage.UpdateAccount(acc, "", nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)

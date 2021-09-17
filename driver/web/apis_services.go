@@ -201,7 +201,7 @@ func (h ServicesApisHandler) createAnonymousProfile(l *logs.Log, r *http.Request
 		return l.HttpResponseErrorAction(logutils.ActionCast, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
 	}
 	//Update the anonymous profile embedded in accounts collection
-	userAnonymousProfile := model.UserAnonymousProfile{ID: profile.ID, Interests: profile.Interests, Favorites: profile.Favorites, Over13: profile.Over13, PositiveInterestTags: profile.PositiveInterestTags, NegativeInterestTags: profile.NegativeInterestTags, CreationDate: profile.CreationDate, LastModifiedDate: profile.LastModifiedDate, PrivacySettings: profile.PrivacySettings}
+	userAnonymousProfile := model.AnonymousProfile{ID: profile.ID, Interests: profile.Interests, Favorites: profile.Favorites, Over13: profile.Over13, PositiveInterestTags: profile.PositiveInterestTags, NegativeInterestTags: profile.NegativeInterestTags, CreationDate: profile.CreationDate, LastModifiedDate: profile.LastModifiedDate, PrivacySettings: profile.PrivacySettings}
 	err = h.coreAPIs.Services.UpdateUserAnonymousProfile(l, profile.ID, &userAnonymousProfile)
 	if err != nil {
 		l.LogError("Failed to update anonymous profile in accounts coll", err)
@@ -229,7 +229,7 @@ func (h ServicesApisHandler) updateAnonymousProfile(l *logs.Log, r *http.Request
 		return l.HttpResponseErrorAction(logutils.ActionCast, model.TypeAnonymousProfile, nil, err, http.StatusInternalServerError, true)
 	}
 	//Update the anonymous profile embedded in accounts collection
-	userAnonymousProfile := model.UserAnonymousProfile{ID: profile.ID, Interests: profile.Interests, Favorites: profile.Favorites, Over13: profile.Over13, PositiveInterestTags: profile.PositiveInterestTags, NegativeInterestTags: profile.NegativeInterestTags, CreationDate: profile.CreationDate, LastModifiedDate: profile.LastModifiedDate, PrivacySettings: profile.PrivacySettings}
+	userAnonymousProfile := model.AnonymousProfile{ID: profile.ID, Interests: profile.Interests, Favorites: profile.Favorites, Over13: profile.Over13, PositiveInterestTags: profile.PositiveInterestTags, NegativeInterestTags: profile.NegativeInterestTags, CreationDate: profile.CreationDate, LastModifiedDate: profile.LastModifiedDate, PrivacySettings: profile.PrivacySettings}
 	err = h.coreAPIs.Services.UpdateUserAnonymousProfile(l, profile.ID, &userAnonymousProfile)
 	if err != nil {
 		l.LogError("Failed to update anonymous profile in accounts coll", err)
@@ -266,7 +266,7 @@ func (h ServicesApisHandler) deleteAnonymousProfile(l *logs.Log, r *http.Request
 	if len(ID) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
-	userAnonymousProfile := model.UserAnonymousProfile{}
+	userAnonymousProfile := model.AnonymousProfile{}
 	err := h.coreAPIs.Services.UpdateUserAnonymousProfile(l, ID, &userAnonymousProfile)
 	if err != nil {
 		l.LogError("Failed to update anonymous profile in accounts coll", err)

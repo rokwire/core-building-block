@@ -4,13 +4,13 @@ info:
   description: Core Building Block API Documentation
   version: 1.0.0
 servers:
-  - url: "https://api.rokwire.illinois.edu/core"
+  - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
-  - url: "https://api-test.rokwire.illinois.edu/core"
+  - url: 'https://api-test.rokwire.illinois.edu/core'
     description: Test server
-  - url: "https://api-dev.rokwire.illinois.edu/core"
+  - url: 'https://api-dev.rokwire.illinois.edu/core'
     description: Development server
-  - url: "http://localhost/core"
+  - url: 'http://localhost'
     description: Local server
 tags:
   - name: Services
@@ -37,7 +37,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/_req_login_Request"
+              $ref: '#/components/schemas/_req_login_Request'
             examples:
               email:
                 summary: Email login
@@ -78,17 +78,17 @@ paths:
                   }
         required: true
       responses:
-        "200":
+        '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/_res_login_Response"
-        "400":
+                $ref: '#/components/schemas/_res_login_Response'
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
   /services/auth/refresh:
     post:
@@ -106,17 +106,17 @@ paths:
               type: string
         required: true
       responses:
-        "200":
+        '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/_res_refresh_Response"
-        "400":
+                $ref: '#/components/schemas/_res_refresh_Response'
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
   /services/auth/login-url:
     post:
@@ -129,20 +129,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/_req_login-url_Request"
+              $ref: '#/components/schemas/_req_login-url_Request'
         required: true
       responses:
-        "200":
+        '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/_res_login-url_Response"
-        "400":
+                $ref: '#/components/schemas/_res_login-url_Response'
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
   /services/auth/authorize-service:
     post:
@@ -155,14 +155,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/_req_authorize-service_Request"
+              $ref: '#/components/schemas/_req_authorize-service_Request'
       responses:
-        "200":
+        '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/_res_authorize-service_Response"
+                $ref: '#/components/schemas/_res_authorize-service_Response'
               examples:
                 authorized:
                   summary: Service authorized
@@ -199,11 +199,11 @@ paths:
                         "first_party": true
                       }
                     }
-        "400":
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
   /services/auth/service-regs:
     get:
@@ -222,19 +222,19 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ServiceReg"
-        "400":
+                  $ref: '#/components/schemas/ServiceReg'
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
   /services/test:
     get:
@@ -242,7 +242,7 @@ paths:
         - Services
       summary: Test API..
       responses:
-        "200":
+        '200':
           description: Success
           content:
             text/plain:
@@ -259,23 +259,23 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AnonymousProfile"
+              $ref: '#/components/schemas/AnonymousProfile'
         required: true
       responses:
-        "200":
+        '200':
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        "400":
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
-  "/services/anonymous-profiles/{id}":
+  '/services/anonymous-profiles/{id}':
     get:
       tags:
         - Services
@@ -292,19 +292,19 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AnonymousProfile"
-        "400":
+                $ref: '#/components/schemas/AnonymousProfile'
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "404":
+        '404':
           description: Not Found
-        "500":
+        '500':
           description: Internal error
     put:
       tags:
@@ -326,21 +326,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AnonymousProfile"
+              $ref: '#/components/schemas/AnonymousProfile'
         required: true
       responses:
-        "200":
+        '200':
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        "400":
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
     delete:
       tags:
@@ -358,15 +358,15 @@ paths:
           schema:
             type: string
       responses:
-        "202":
+        '202':
           description: Successfully deleted
-        "400":
+        '400':
           description: Invalid uuid supplied
-        "401":
+        '401':
           description: Unauthorized
-        "404":
+        '404':
           description: Profile not found
-        "500":
+        '500':
           description: Internal error
   /admin/global-config:
     get:
@@ -376,17 +376,17 @@ paths:
       description: |
         Gives the system global config
       responses:
-        "200":
+        '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GlobalConfig"
-        "400":
+                $ref: '#/components/schemas/GlobalConfig'
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
     post:
       tags:
@@ -398,21 +398,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/GlobalConfig"
+              $ref: '#/components/schemas/GlobalConfig'
         required: true
       responses:
-        "200":
+        '200':
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        "400":
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
     put:
       tags:
@@ -424,23 +424,23 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/GlobalConfig"
+              $ref: '#/components/schemas/GlobalConfig'
         required: true
       responses:
-        "200":
+        '200':
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        "400":
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
-  "/admin/organizations/{id}":
+  '/admin/organizations/{id}':
     put:
       tags:
         - Admin
@@ -461,21 +461,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Organization"
+              $ref: '#/components/schemas/Organization'
         required: true
       responses:
-        "200":
+        '200':
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        "400":
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
     get:
       tags:
@@ -493,19 +493,19 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Organization"
-        "400":
+                $ref: '#/components/schemas/Organization'
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "404":
+        '404':
           description: Not Found
-        "500":
+        '500':
           description: Internal error
   /admin/organizations:
     get:
@@ -515,19 +515,19 @@ paths:
       description: |
         Gets organizations
       responses:
-        "200":
+        '200':
           description: Successful operation
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Organization"
-        "400":
+                  $ref: '#/components/schemas/Organization'
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
     post:
       tags:
@@ -540,21 +540,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Organization"
+              $ref: '#/components/schemas/Organization'
         required: true
       responses:
-        "200":
+        '200':
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        "400":
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
   /admin/service-regs:
     get:
@@ -573,19 +573,19 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ServiceReg"
-        "400":
+                  $ref: '#/components/schemas/ServiceReg'
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
     post:
       tags:
@@ -594,27 +594,27 @@ paths:
       description: |
         Creates a new service registration
 
-        The "service_id" of the registration must not match an existing registration
+        The "service_id" of the registration must not match an existing registration  
       requestBody:
         description: service registration record to be added
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ServiceReg"
+              $ref: '#/components/schemas/ServiceReg'
         required: true
       responses:
-        "200":
+        '200':
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        "400":
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
     put:
       tags:
@@ -629,21 +629,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ServiceReg"
+              $ref: '#/components/schemas/ServiceReg'
         required: true
       responses:
-        "200":
+        '200':
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        "400":
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
     delete:
       tags:
@@ -661,20 +661,20 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        "400":
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
-  "/admin/applications/{id}":
+  '/admin/applications/{id}':
     get:
       tags:
         - Admin
@@ -691,19 +691,19 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Application"
-        "400":
+                $ref: '#/components/schemas/Application'
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "404":
+        '404':
           description: Not Found
-        "500":
+        '500':
           description: Internal error
   /admin/applications:
     get:
@@ -713,19 +713,19 @@ paths:
       description: |
         Gets applications
       responses:
-        "200":
+        '200':
           description: Successful operation
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Application"
-        "400":
+                  $ref: '#/components/schemas/Application'
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
     post:
       tags:
@@ -738,21 +738,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Application"
+              $ref: '#/components/schemas/Application'
         required: true
       responses:
-        "200":
+        '200':
           description: Success
           content:
             text/plain:
               schema:
                 type: string
                 example: Success
-        "400":
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
   /enc/test:
     get:
@@ -760,7 +760,7 @@ paths:
         - Enc
       summary: Test API..
       responses:
-        "200":
+        '200':
           description: Success
           content:
             text/plain:
@@ -773,7 +773,7 @@ paths:
         - BBs
       summary: Test API..
       responses:
-        "200":
+        '200':
           description: Success
           content:
             text/plain:
@@ -797,19 +797,19 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/AuthServiceReg"
-        "400":
+                  $ref: '#/components/schemas/AuthServiceReg'
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
   /tps/service-regs:
     get:
@@ -828,19 +828,19 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Success
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/AuthServiceReg"
-        "400":
+                  $ref: '#/components/schemas/AuthServiceReg'
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
   /tps/auth-keys:
     get:
@@ -850,23 +850,23 @@ paths:
       description: |
         Returns auth public key in JWKS format
       responses:
-        "200":
+        '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JWKS"
-        "400":
+                $ref: '#/components/schemas/JWKS'
+        '400':
           description: Bad request
-        "401":
+        '401':
           description: Unauthorized
-        "500":
+        '500':
           description: Internal error
   /version:
     get:
       summary: Get service version
       responses:
-        "200":
+        '200':
           description: Success
           content:
             text/plain:
@@ -877,12 +877,12 @@ paths:
     get:
       summary: OpenID Connect Discovery
       responses:
-        "200":
+        '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OidcDiscovery"
+                $ref: '#/components/schemas/OidcDiscovery'
 components:
   schemas:
     GlobalConfig:
@@ -896,15 +896,15 @@ components:
       type: object
       properties:
         fields:
-          $ref: "#/components/schemas/ApplicationFields"
+          $ref: '#/components/schemas/ApplicationFields'
         types:
           type: array
           items:
-            $ref: "#/components/schemas/ApplicationType"
+            $ref: '#/components/schemas/ApplicationType'
         organizations:
           type: array
           items:
-            $ref: "#/components/schemas/ApplicationOrganization"
+            $ref: '#/components/schemas/ApplicationOrganization'
     ApplicationFields:
       required:
         - id
@@ -924,9 +924,9 @@ components:
       type: object
       properties:
         fields:
-          $ref: "#/components/schemas/ApplicationTypeFields"
+          $ref: '#/components/schemas/ApplicationTypeFields'
         application:
-          $ref: "#/components/schemas/Application"
+          $ref: '#/components/schemas/Application'
     ApplicationTypeFields:
       required:
         - id
@@ -954,9 +954,9 @@ components:
       type: object
       properties:
         fields:
-          $ref: "#/components/schemas/ApplicationPermissionFields"
+          $ref: '#/components/schemas/ApplicationPermissionFields'
         application:
-          $ref: "#/components/schemas/Application"
+          $ref: '#/components/schemas/Application'
     ApplicationPermissionFields:
       required:
         - id
@@ -971,13 +971,13 @@ components:
       type: object
       properties:
         fields:
-          $ref: "#/components/schemas/ApplicationRoleFields"
+          $ref: '#/components/schemas/ApplicationRoleFields'
         application:
-          $ref: "#/components/schemas/Application"
+          $ref: '#/components/schemas/Application'
         permissions:
           type: array
           items:
-            $ref: "#/components/schemas/ApplicationPermission"
+            $ref: '#/components/schemas/ApplicationPermission'
     ApplicationRoleFields:
       required:
         - id
@@ -992,17 +992,17 @@ components:
       type: object
       properties:
         fields:
-          $ref: "#/components/schemas/ApplicationGroupFields"
+          $ref: '#/components/schemas/ApplicationGroupFields'
         application:
-          $ref: "#/components/schemas/Application"
+          $ref: '#/components/schemas/Application'
         permissions:
           type: array
           items:
-            $ref: "#/components/schemas/ApplicationPermission"
+            $ref: '#/components/schemas/ApplicationPermission'
         roles:
           type: array
           items:
-            $ref: "#/components/schemas/ApplicationRole"
+            $ref: '#/components/schemas/ApplicationRole'
     ApplicationGroupFields:
       required:
         - id
@@ -1017,9 +1017,9 @@ components:
       type: object
       properties:
         fields:
-          $ref: "#/components/schemas/OrganizationFields"
+          $ref: '#/components/schemas/OrganizationFields'
         config:
-          $ref: "#/components/schemas/OrganizationConfig"
+          $ref: '#/components/schemas/OrganizationConfig'
     OrganizationFields:
       required:
         - id
@@ -1044,7 +1044,7 @@ components:
       type: object
       properties:
         fields:
-          $ref: "#/components/schemas/OrganizationConfigFields"
+          $ref: '#/components/schemas/OrganizationConfigFields'
     OrganizationConfigFields:
       type: object
       properties:
@@ -1061,7 +1061,7 @@ components:
       type: object
       properties:
         fields:
-          $ref: "#/components/schemas/AuthTypeFields"
+          $ref: '#/components/schemas/AuthTypeFields'
     AuthTypeFields:
       type: object
       properties:
@@ -1080,11 +1080,11 @@ components:
       type: object
       properties:
         fields:
-          $ref: "#/components/schemas/CredentialFields"
+          $ref: '#/components/schemas/CredentialFields'
         accounts_auth_types:
           type: array
           items:
-            $ref: "#/components/schemas/AccountAuthType"
+            $ref: '#/components/schemas/AccountAuthType'
     CredentialFields:
       type: object
       properties:
@@ -1107,7 +1107,7 @@ components:
         host:
           type: string
         pub_key:
-          $ref: "#/components/schemas/PubKey"
+          $ref: '#/components/schemas/PubKey'
         name:
           type: string
         description:
@@ -1120,7 +1120,7 @@ components:
           type: array
           nullable: true
           items:
-            $ref: "#/components/schemas/ServiceScope"
+            $ref: '#/components/schemas/ServiceScope'
         first_party:
           type: boolean
     AuthServiceReg:
@@ -1135,7 +1135,7 @@ components:
         host:
           type: string
         pub_key:
-          $ref: "#/components/schemas/PubKey"
+          $ref: '#/components/schemas/PubKey'
     PubKey:
       required:
         - key_pem
@@ -1165,7 +1165,7 @@ components:
         - use
         - alg
         - kid
-        - "n"
+        - 'n'
         - e
       type: object
       description: JSON Web Key (JWK)
@@ -1188,7 +1188,7 @@ components:
         kid:
           type: string
           description: The "kid" (key ID) parameter is used to match a specific key
-        "n":
+        'n':
           type: string
           description: The modulus (2048 bit) of the key - Base64URL encoded.
         e:
@@ -1203,7 +1203,7 @@ components:
         keys:
           type: array
           items:
-            $ref: "#/components/schemas/JWK"
+            $ref: '#/components/schemas/JWK'
     OidcDiscovery:
       required:
         - issuer
@@ -1219,33 +1219,33 @@ components:
       type: object
       properties:
         fields:
-          $ref: "#/components/schemas/AccountFields"
+          $ref: '#/components/schemas/AccountFields'
         application:
-          $ref: "#/components/schemas/Application"
+          $ref: '#/components/schemas/Application'
         organization:
-          $ref: "#/components/schemas/Organization"
+          $ref: '#/components/schemas/Organization'
         permissions:
           type: array
           items:
-            $ref: "#/components/schemas/ApplicationPermission"
+            $ref: '#/components/schemas/ApplicationPermission'
         roles:
           type: array
           items:
-            $ref: "#/components/schemas/ApplicationRole"
+            $ref: '#/components/schemas/ApplicationRole'
         groups:
           type: array
           items:
-            $ref: "#/components/schemas/ApplicationGroup"
+            $ref: '#/components/schemas/ApplicationGroup'
         auth_types:
           type: array
           items:
-            $ref: "#/components/schemas/AccountAuthType"
+            $ref: '#/components/schemas/AccountAuthType'
         profile:
-          $ref: "#/components/schemas/Profile"
+          $ref: '#/components/schemas/Profile'
         devices:
           type: array
           items:
-            $ref: "#/components/schemas/Device"
+            $ref: '#/components/schemas/Device'
     AccountFields:
       required:
         - id
@@ -1257,11 +1257,11 @@ components:
       type: object
       properties:
         fields:
-          $ref: "#/components/schemas/ProfileFields"
+          $ref: '#/components/schemas/ProfileFields'
         accounts:
           type: array
           items:
-            $ref: "#/components/schemas/Account"
+            $ref: '#/components/schemas/Account'
     ProfileFields:
       type: object
       properties:
@@ -1273,49 +1273,19 @@ components:
           type: string
         last_name:
           type: string
-        user_anonymous_profile:
-          required:
-            - id
-          type: object
-          description: Anonymous data of user profile
-          properties:
-            id:
-              type: string
-            interests:
-              type: array
-              items:
-                type: string
-            favorites:
-              type: array
-              items:
-                type: string
-            over_13:
-              type: string
-            positive_interest_tags:
-              type: array
-              items:
-                type: string
-            negative_interest_tags:
-              type: array
-              items:
-                type: string
-            creation_date:
-              type: string
-            last_modified_date:
-              type: string
-            privacy_settings:
-              type: string
+        anonymous_profile:
+          $ref: '#/components/schemas/AnonymousProfile'
     AccountAuthType:
       type: object
       properties:
         fields:
-          $ref: "#/components/schemas/AccountAuthTypeFields"
+          $ref: '#/components/schemas/AccountAuthTypeFields'
         auth_type:
-          $ref: "#/components/schemas/AuthType"
+          $ref: '#/components/schemas/AuthType'
         account:
-          $ref: "#/components/schemas/Account"
+          $ref: '#/components/schemas/Account'
         credential:
-          $ref: "#/components/schemas/Credential"
+          $ref: '#/components/schemas/Credential'
     AccountAuthTypeFields:
       type: object
       properties:
@@ -1335,11 +1305,43 @@ components:
       type: object
       properties:
         fields:
-          $ref: "#/components/schemas/DeviceFields"
+          $ref: '#/components/schemas/DeviceFields'
         accounts:
           type: array
           items:
-            $ref: "#/components/schemas/Account"
+            $ref: '#/components/schemas/Account'
+    AnonymousProfile:
+      required:
+        - id
+      type: object
+      description: Anonymous data of user profile
+      properties:
+        id:
+          type: string
+        interests:
+          type: array
+          items:
+            type: string
+        favorites:
+          type: array
+          items:
+            type: string
+        over_13:
+          type: boolean
+        positive_interest_tags:
+          type: array
+          items:
+            type: string
+        negative_interest_tags:
+          type: array
+          items:
+            type: string
+        creation_date:
+          type: string
+        last_modified_date:
+          type: string
+        privacy_settings:
+          type: string
     DeviceFields:
       required:
         - id
@@ -1405,15 +1407,15 @@ components:
           type: string
         creds:
           anyOf:
-            - $ref: "#/components/schemas/_req_login_CredsEmail"
-            - $ref: "#/components/schemas/_req_login_CredsPhone"
-            - $ref: "#/components/schemas/_req_login_CredsOidc"
+            - $ref: '#/components/schemas/_req_login_CredsEmail'
+            - $ref: '#/components/schemas/_req_login_CredsPhone'
+            - $ref: '#/components/schemas/_req_login_CredsOidc'
         params:
           type: object
           anyOf:
-            - $ref: "#/components/schemas/_req_login_ParamsEmail"
-            - $ref: "#/components/schemas/_req_login_ParamsPhone"
-            - $ref: "#/components/schemas/_req_login_ParamsOidc"
+            - $ref: '#/components/schemas/_req_login_ParamsEmail'
+            - $ref: '#/components/schemas/_req_login_ParamsPhone'
+            - $ref: '#/components/schemas/_req_login_ParamsOidc'
     _req_login_CredsEmail:
       required:
         - email
@@ -1462,14 +1464,14 @@ components:
       type: object
       properties:
         token:
-          $ref: "#/components/schemas/_res_shared_RokwireToken"
+          $ref: '#/components/schemas/_res_shared_RokwireToken'
         account:
-          $ref: "#/components/schemas/_res_login_Account"
+          $ref: '#/components/schemas/_res_login_Account'
         params:
           type: object
           nullable: true
           anyOf:
-            - $ref: "#/components/schemas/_res_shared_ParamsOidc"
+            - $ref: '#/components/schemas/_res_shared_ParamsOidc'
     _res_login_Account:
       required:
         - id
@@ -1478,23 +1480,23 @@ components:
         id:
           type: string
         profile:
-          $ref: "#/components/schemas/ProfileFields"
+          $ref: '#/components/schemas/ProfileFields'
         permissions:
           type: array
           items:
-            $ref: "#/components/schemas/ApplicationPermissionFields"
+            $ref: '#/components/schemas/ApplicationPermissionFields'
         roles:
           type: array
           items:
-            $ref: "#/components/schemas/ApplicationRoleFields"
+            $ref: '#/components/schemas/ApplicationRoleFields'
         groups:
           type: array
           items:
-            $ref: "#/components/schemas/ApplicationGroupFields"
+            $ref: '#/components/schemas/ApplicationGroupFields'
         auth_types:
           type: array
           items:
-            $ref: "#/components/schemas/AccountAuthTypeFields"
+            $ref: '#/components/schemas/AccountAuthTypeFields'
     _req_login-url_Request:
       required:
         - auth_type
@@ -1527,11 +1529,11 @@ components:
       type: object
       properties:
         token:
-          $ref: "#/components/schemas/_res_shared_RokwireToken"
+          $ref: '#/components/schemas/_res_shared_RokwireToken'
         params:
           type: object
           anyOf:
-            - $ref: "#/components/schemas/_res_shared_ParamsOidc"
+            - $ref: '#/components/schemas/_res_shared_ParamsOidc'
     _req_authorize-service_Request:
       required:
         - service_id
@@ -1559,36 +1561,4 @@ components:
           items:
             type: string
         service_reg:
-          $ref: "#/components/schemas/ServiceReg"
-    AnonymousProfile:
-      required:
-        - id
-      type: object
-      description: Anonymous data of user profile
-      properties:
-        id:
-          type: string
-        interests:
-          type: array
-          items:
-            type: string
-        favorites:
-          type: array
-          items:
-            type: string
-        over_13:
-          type: boolean
-        positive_interest_tags:
-          type: array
-          items:
-            type: string
-        negative_interest_tags:
-          type: array
-          items:
-            type: string
-        creation_date:
-          type: string
-        last_modified_date:
-          type: string
-        privacy_settings:
-          type: string
+          $ref: '#/components/schemas/ServiceReg'

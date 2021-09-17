@@ -49,19 +49,6 @@ const (
 	OrganizationFieldsTypeSmall OrganizationFieldsType = "small"
 )
 
-// Anonymous data of user profile
-type AnonymousProfile struct {
-	CreationDate         *string   `json:"creation_date,omitempty"`
-	Favorites            *[]string `json:"favorites,omitempty"`
-	Id                   string    `json:"id"`
-	Interests            *[]string `json:"interests,omitempty"`
-	LastModifiedDate     *string   `json:"last_modified_date,omitempty"`
-	NegativeInterestTags *[]string `json:"negative_interest_tags,omitempty"`
-	Over13               *bool     `json:"over_13,omitempty"`
-	PositiveInterestTags *[]string `json:"positive_interest_tags,omitempty"`
-	PrivacySettings      *string   `json:"privacy_settings,omitempty"`
-}
-
 // Defines values for ReqLoginUrlRequestAuthType.
 const (
 	ReqLoginUrlRequestAuthTypeIllinoisOidc ReqLoginUrlRequestAuthType = "illinois_oidc"
@@ -126,6 +113,19 @@ type AccountAuthTypeFields_Params struct {
 // AccountFields defines model for AccountFields.
 type AccountFields struct {
 	Id string `json:"id"`
+}
+
+// Anonymous data of user profile
+type AnonymousProfile struct {
+	CreationDate         *string   `json:"creation_date,omitempty"`
+	Favorites            *[]string `json:"favorites,omitempty"`
+	Id                   string    `json:"id"`
+	Interests            *[]string `json:"interests,omitempty"`
+	LastModifiedDate     *string   `json:"last_modified_date,omitempty"`
+	NegativeInterestTags *[]string `json:"negative_interest_tags,omitempty"`
+	Over13               *bool     `json:"over_13,omitempty"`
+	PositiveInterestTags *[]string `json:"positive_interest_tags,omitempty"`
+	PrivacySettings      *string   `json:"privacy_settings,omitempty"`
 }
 
 // Application defines model for Application.
@@ -264,7 +264,6 @@ type GlobalConfig struct {
 
 // JSON Web Key (JWK)
 type JWK struct {
-
 	// The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
 	Alg JWKAlg `json:"alg"`
 
@@ -317,7 +316,6 @@ type OrganizationConfig struct {
 
 // OrganizationConfigFields defines model for OrganizationConfigFields.
 type OrganizationConfigFields struct {
-
 	// organization domains
 	Domains *[]string `json:"domains,omitempty"`
 
@@ -343,22 +341,12 @@ type Profile struct {
 
 // ProfileFields defines model for ProfileFields.
 type ProfileFields struct {
-	FirstName *string `json:"first_name,omitempty"`
-	Id        *string `json:"id,omitempty"`
-	LastName  *string `json:"last_name,omitempty"`
-	PhotoUrl  *string `json:"photo_url,omitempty"`
 	// Anonymous data of user profile
-	UserAnonymousProfile *struct {
-		CreationDate         *string   `json:"creation_date,omitempty"`
-		Favorites            *[]string `json:"favorites,omitempty"`
-		Id                   string    `json:"id"`
-		Interests            *[]string `json:"interests,omitempty"`
-		LastModifiedDate     *string   `json:"last_modified_date,omitempty"`
-		NegativeInterestTags *[]string `json:"negative_interest_tags,omitempty"`
-		Over13               *string   `json:"over_13,omitempty"`
-		PositiveInterestTags *[]string `json:"positive_interest_tags,omitempty"`
-		PrivacySettings      *string   `json:"privacy_settings,omitempty"`
-	} `json:"user_anonymous_profile,omitempty"`
+	AnonymousProfile *AnonymousProfile `json:"anonymous_profile,omitempty"`
+	FirstName        *string           `json:"first_name,omitempty"`
+	Id               *string           `json:"id,omitempty"`
+	LastName         *string           `json:"last_name,omitempty"`
+	PhotoUrl         *string           `json:"photo_url,omitempty"`
 }
 
 // PubKey defines model for PubKey.
@@ -390,7 +378,6 @@ type ServiceScope struct {
 
 // ReqAuthorizeServiceRequest defines model for _req_authorize-service_Request.
 type ReqAuthorizeServiceRequest struct {
-
 	// Scopes to be granted to this service in this and future tokens. Replaces existing scopes if present.
 	ApprovedScopes *[]string `json:"approved_scopes,omitempty"`
 	ServiceId      string    `json:"service_id"`
@@ -506,7 +493,6 @@ type ResSharedParamsOidc struct {
 
 // ResSharedRokwireToken defines model for _res_shared_RokwireToken.
 type ResSharedRokwireToken struct {
-
 	// The user's access token to be provided to authorize access to ROKWIRE APIs
 	AccessToken *string `json:"access_token,omitempty"`
 
@@ -559,6 +545,12 @@ type GetBbsServiceRegsParams struct {
 	Ids string `json:"ids"`
 }
 
+// PostServicesAnonymousProfilesJSONBody defines parameters for PostServicesAnonymousProfiles.
+type PostServicesAnonymousProfilesJSONBody AnonymousProfile
+
+// PutServicesAnonymousProfilesIdJSONBody defines parameters for PutServicesAnonymousProfilesId.
+type PutServicesAnonymousProfilesIdJSONBody AnonymousProfile
+
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
@@ -573,12 +565,6 @@ type GetServicesAuthServiceRegsParams struct {
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
-
-// PostServicesProfilesJSONBody defines parameters for PostServicesProfiles.
-type PostServicesProfilesJSONBody AnonymousProfile
-
-// PutServicesProfilesIdJSONBody defines parameters for PutServicesProfilesId.
-type PutServicesProfilesIdJSONBody AnonymousProfile
 
 // GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
 type GetTpsServiceRegsParams struct {
@@ -607,6 +593,12 @@ type PostAdminServiceRegsJSONRequestBody PostAdminServiceRegsJSONBody
 // PutAdminServiceRegsJSONRequestBody defines body for PutAdminServiceRegs for application/json ContentType.
 type PutAdminServiceRegsJSONRequestBody PutAdminServiceRegsJSONBody
 
+// PostServicesAnonymousProfilesJSONRequestBody defines body for PostServicesAnonymousProfiles for application/json ContentType.
+type PostServicesAnonymousProfilesJSONRequestBody PostServicesAnonymousProfilesJSONBody
+
+// PutServicesAnonymousProfilesIdJSONRequestBody defines body for PutServicesAnonymousProfilesId for application/json ContentType.
+type PutServicesAnonymousProfilesIdJSONRequestBody PutServicesAnonymousProfilesIdJSONBody
+
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody
 
@@ -615,12 +607,6 @@ type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 
 // PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
 type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
-
-// PostServicesProfilesJSONRequestBody defines body for PostServicesProfiles for application/json ContentType.
-type PostServicesProfilesJSONRequestBody PostServicesProfilesJSONBody
-
-// PutServicesProfilesIdJSONRequestBody defines body for PutServicesProfilesId for application/json ContentType.
-type PutServicesProfilesIdJSONRequestBody PutServicesProfilesIdJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found
