@@ -545,12 +545,6 @@ type GetBbsServiceRegsParams struct {
 	Ids string `json:"ids"`
 }
 
-// PostServicesAnonymousProfilesJSONBody defines parameters for PostServicesAnonymousProfiles.
-type PostServicesAnonymousProfilesJSONBody AnonymousProfile
-
-// PutServicesAnonymousProfilesIdJSONBody defines parameters for PutServicesAnonymousProfilesId.
-type PutServicesAnonymousProfilesIdJSONBody AnonymousProfile
-
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
@@ -592,12 +586,6 @@ type PostAdminServiceRegsJSONRequestBody PostAdminServiceRegsJSONBody
 
 // PutAdminServiceRegsJSONRequestBody defines body for PutAdminServiceRegs for application/json ContentType.
 type PutAdminServiceRegsJSONRequestBody PutAdminServiceRegsJSONBody
-
-// PostServicesAnonymousProfilesJSONRequestBody defines body for PostServicesAnonymousProfiles for application/json ContentType.
-type PostServicesAnonymousProfilesJSONRequestBody PostServicesAnonymousProfilesJSONBody
-
-// PutServicesAnonymousProfilesIdJSONRequestBody defines body for PutServicesAnonymousProfilesId for application/json ContentType.
-type PutServicesAnonymousProfilesIdJSONRequestBody PutServicesAnonymousProfilesIdJSONBody
 
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody

@@ -37,10 +37,6 @@ paths:
     $ref: "./resources/services/auth/service-regs.yaml"
   /services/test:
     $ref: "./resources/services/test.yaml"
-  /services/anonymous-profiles:
-    $ref: "./resources/services/profiles/anonymous-profile.yaml"
-  /services/anonymous-profiles/{id}:
-    $ref: "./resources/services/profiles/anonymous-profileId.yaml"
 
   #admin
   /admin/global-config:
