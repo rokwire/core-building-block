@@ -994,7 +994,7 @@ func (sa *Adapter) InsertAnonymousProfile(profile *model.AnonymousProfile) (*mod
 	return profile, nil
 }
 
-//UpdateOrganization updates an organization
+//UpdateAnonymousProfile updates an object in the anonymous profile collection
 func (sa *Adapter) UpdateAnonymousProfile(id string, favorites *[]string, interests *[]string,
 	negativeInterestTags *[]string, positiveInterestTags *[]string, privacySettings *string, over13 *bool) error {
 

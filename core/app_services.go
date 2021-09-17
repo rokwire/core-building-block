@@ -37,7 +37,7 @@ func (app *application) getAnonymousProfile(l *logs.Log, id string) (*model.Anon
 	profile, err := app.storage.FindAnonymousProfile(id)
 	if err != nil {
 		//Second query in accounts collection for anonymous profile
-		l.Infof("No profile found in anonymous profiles collection for id: %v, searching in accounts", id)
+		l.Infof("No profile found in anonymous profiles collection for id: %v, searching in accounts collection", id)
 		account, err := app.storage.FindAccountByID(id)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAnonymousProfile, nil, err)
