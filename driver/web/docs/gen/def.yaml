@@ -1489,3 +1489,32 @@ components:
             - huge
         config:
           $ref: '#/components/schemas/OrganizationConfigFields'
+    _req_get_Organization_Request:
+      required:
+        - id
+      properties:
+        id:
+          readOnly: true
+          type: string
+    _res_get_Organization_Response:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'

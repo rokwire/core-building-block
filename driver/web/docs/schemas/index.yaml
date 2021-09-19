@@ -129,3 +129,7 @@ _req_update_Organization_Request:
  $ref: "./apis/admin/update-organization/request/Request.yaml"
 _res_update_Organization_Response:
  $ref: "./apis/admin/update-organization/response/Response.yaml"
+_req_get_Organization_Request:
+ $ref: "./apis/admin/get-organization/request/Request.yaml"
+_res_get_Organization_Response:
+ $ref: "./apis/admin/get-organization/response/Response.yaml"
