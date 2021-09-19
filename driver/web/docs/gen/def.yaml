@@ -1518,3 +1518,31 @@ components:
             - huge
         config:
           $ref: '#/components/schemas/OrganizationConfigFields'
+    _req_create_Application_Request:
+      required:
+        - name
+      type: object
+      properties:
+        name:
+          type: string
+        multi_tenant:
+          type: boolean
+        requires_own_users:
+          type: boolean
+    _res_create_Application_Response:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        multi_tenant:
+          type: boolean
+        requires_own_users:
+          type: boolean
+        applicationType:
+          $ref: '#/components/schemas/ApplicationType'
