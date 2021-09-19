@@ -61,3 +61,11 @@ func organizationToDef(item *model.Organization) *Def.OrganizationFields {
 
 	return &Def.OrganizationFields{Id: item.ID, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
 }
+
+func organizationsToDef(items []model.Organization) []Def.OrganizationFields {
+	result := make([]Def.OrganizationFields, len(items))
+	for i, item := range items {
+		result[i] = *organizationToDef(&item)
+	}
+	return result
+}

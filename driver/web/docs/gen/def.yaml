@@ -1546,3 +1546,30 @@ components:
           type: boolean
         applicationType:
           $ref: '#/components/schemas/ApplicationType'
+    _req_get_Application_Request:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+    _res_get_Application_Response:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        multi_tenant:
+          type: boolean
+        requires_own_users:
+          type: boolean
+        organization:
+          $ref: '#/components/schemas/ApplicationOrganization'
+        applicationType:
+          $ref: '#/components/schemas/ApplicationType'
