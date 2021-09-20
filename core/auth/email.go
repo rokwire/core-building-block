@@ -18,22 +18,30 @@ type emailAuthImpl struct {
 	authType string
 }
 
-func (a *emailAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
-	//TODO: Implement
-	return nil, errors.New("Unimplemented")
+func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
+	appID := appOrg.Application.ID
+	orgID := appOrg.Organization.ID
+	authTypeID := authType.ID
+	accountAuthTypeIdentifier := "silyana.y@inabyte.com" //TODO get it from the creds string
+
+	account, err := a.auth.storage.FindAccount(appID, orgID, authTypeID, accountAuthTypeIdentifier)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
+	}
+
+	accountAuthType := account.FindAccountAuthType(authTypeID, accountAuthTypeIdentifier)
+	if accountAuthType == nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err) //TODO add args..
+	}
+
+	return account, accountAuthType, nil
 }
 
-//refresh is enabled for email auth, but no operation is needed
-func (a *emailAuthImpl) refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
-	return nil, nil
-}
+func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (*bool, error) {
+	//TODO - get the password from the creds and check it using user auth type id - from the credentials collection
 
-func (a *emailAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
-	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
-}
-
-func (a *emailAuthImpl) isGlobal() bool {
-	return true
+	result := true
+	return &result, nil
 }
 
 //initEmailAuth initializes and registers a new email auth instance

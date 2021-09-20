@@ -1,0 +1,10 @@
+type: object
+properties:
+  fields:
+    $ref: "./ApplicationRoleFields.yaml"
+  application:
+    $ref: "./Application.yaml"
+  permissions:
+    type: array
+    items:
+      $ref: "./ApplicationPermission.yaml"

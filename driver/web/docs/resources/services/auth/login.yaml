@@ -4,23 +4,21 @@ post:
   summary: Login
   description: |
     Login using credentials to retrieve access token, refresh token, and user data
-  security:
-    - bearerAuth: []
   requestBody:
     description: |
       User credential details and parameters
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/auth/AuthLoginRequest.yaml"
+          $ref: "../../../schemas/apis/services/login/request/Request.yaml"
         examples:
           email:
             summary: Email login
             value: |
               {
                 "auth_type": "email",
-                "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
-                "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                "app_id": "edu.illinois.rokwire.safercommunity",
+                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                 "creds": {
                   "email": "test@test.com", 
                   "password": "test12345"
@@ -31,20 +29,20 @@ post:
             value: |
               {
                 "auth_type": "phone",
-                "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
-                "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                "app_id": "edu.illinois.rokwire",
+                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                 "creds": {
                   "phone": "+12223334444", 
                   "code": "123456"
                 }
               }
-          oidc:
-            summary: OIDC login
+          illinois_oidc:
+            summary: Illinois OIDC login
             value: |
               {
-                "auth_type": "oidc",
-                "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
-                "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                "auth_type": "illinois_oidc",
+                "app_id": "edu.illinois.rokwire",
+                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                 "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
                 "params": {
                   "redirect_uri": "https://redirect.example.com",
@@ -58,7 +56,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/auth/AuthLoginResponse.yaml"
+            $ref: "../../../schemas/apis/services/login/response/Response.yaml"
     400:
       description: Bad request
     401:

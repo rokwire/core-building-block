@@ -2,7 +2,6 @@ package core
 
 import (
 	"core-building-block/core/model"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,6 +14,7 @@ func (app *application) admGetTest() string {
 }
 
 func (app *application) admGetTestModel() string {
+	/* disable it as it is not up to date with the latest model changes
 	//global config
 	globalConfig := model.GlobalConfig{Setting: "setting_value"}
 
@@ -160,6 +160,8 @@ func (app *application) admGetTestModel() string {
 		danceRole1, dancePermission1, dancePermission2, dancePermission3, danceRole2, danceGroup1,
 		globalUser1, globalUser2, illiniUser1, illiniUser2, illiniUser3, illiniUsersRel, danceUser1, diUser)
 	return res
+	*/
+	return ""
 }
 
 func (app *application) admCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
@@ -203,15 +205,14 @@ func (app *application) admUpdateGlobalConfig(setting string) error {
 	return nil
 }
 
-func (app *application) admCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
+func (app *application) admCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {
 	now := time.Now()
 
 	orgConfigID, _ := uuid.NewUUID()
 	orgConfig := model.OrganizationConfig{ID: orgConfigID.String(), Domains: organizationDomains, DateCreated: now}
 
 	organizationID, _ := uuid.NewUUID()
-	organization := model.Organization{ID: organizationID.String(), Name: name, Type: requestType, RequiresOwnLogin: requiresOwnLogin, LoginTypes: loginTypes,
-		Config: orgConfig, DateCreated: now}
+	organization := model.Organization{ID: organizationID.String(), Name: name, Type: requestType, Config: orgConfig, DateCreated: now}
 
 	insertedOrg, err := app.storage.InsertOrganization(organization)
 	if err != nil {
@@ -238,8 +239,8 @@ func (app *application) admGetOrganizations() ([]model.Organization, error) {
 	return getOrganization, nil
 }
 
-func (app *application) admUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
-	err := app.storage.UpdateOrganization(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+func (app *application) admUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error {
+	err := app.storage.UpdateOrganization(ID, name, requestType, organizationDomains)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeOrganization, nil, err)
 	}
@@ -258,7 +259,7 @@ func (app *application) admGetApplication(ID string) (*model.Application, error)
 }
 
 func (app *application) admCreateApplication(name string, versions []string) (*model.Application, error) {
-	id, _ := uuid.NewUUID()
+	/*id, _ := uuid.NewUUID()
 	now := time.Now()
 	application := model.Application{ID: id.String(), Name: name, Versions: versions, DateCreated: now}
 
@@ -266,5 +267,15 @@ func (app *application) admCreateApplication(name string, versions []string) (*m
 	if err != nil {
 		return nil, err
 	}
-	return inserted, nil
+	return inserted, nil */
+	return nil, nil
+}
+
+func (app *application) admGetApplications() ([]model.Application, error) {
+	getApplications, err := app.storage.FindApplications()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplication, nil, err)
+	}
+
+	return getApplications, nil
 }

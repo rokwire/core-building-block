@@ -44,8 +44,6 @@ github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdko
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/aws/aws-sdk-go v1.39.4 h1:nXBChUaG5cinrl3yg4/rUyssOOLH/ohk4S9K03kJirE=
 github.com/aws/aws-sdk-go v1.39.4/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=
-github.com/casbin/casbin v1.9.1 h1:ucjbS5zTrmSLtH4XogqOG920Poe6QatdXtz1FEbApeM=
-github.com/casbin/casbin v1.9.1/go.mod h1:z8uPsfBJGUsnkagrt3G8QvjgTKFMBJ32UP8HpZllfog=
 github.com/casbin/casbin/v2 v2.31.10 h1:2vlJ/CnrKt33x+Twm2TxjiRfQFBA4JsAAeJelCTefiM=
 github.com/casbin/casbin/v2 v2.31.10/go.mod h1:vByNa/Fchek0KZUgG5wEsl7iFsiviAYKRtgrQfcJqHg=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
@@ -224,8 +222,8 @@ github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:
 github.com/rogpeppe/go-internal v1.1.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.2.2/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
-github.com/rokmetro/auth-library v0.1.15 h1:ORrj37Oea0upvq1hF+B37Rh1HBBfIkAVBbTT55zx/a8=
-github.com/rokmetro/auth-library v0.1.15/go.mod h1:KQ9FMCvmZNldprLnLjXZtHwRntn7cD/8sO3JEL+pzG8=
+github.com/rokmetro/auth-library v0.1.16 h1:XAVIkHAeEZkYrnXdW+FV3loamScCN4p9q5MRORGJt30=
+github.com/rokmetro/auth-library v0.1.16/go.mod h1:KQ9FMCvmZNldprLnLjXZtHwRntn7cD/8sO3JEL+pzG8=
 github.com/rokmetro/logging-library v0.2.1/go.mod h1:ye/3piEthlXr//IiPE/IR3K2cRM1y1/VwTY6TlWDGpw=
 github.com/rokmetro/logging-library v0.2.2 h1:N5Qx+ojcAjMaE1eEOF+B1lQBMjZSKZfdWqCDzAWuyCU=
 github.com/rokmetro/logging-library v0.2.2/go.mod h1:ye/3piEthlXr//IiPE/IR3K2cRM1y1/VwTY6TlWDGpw=

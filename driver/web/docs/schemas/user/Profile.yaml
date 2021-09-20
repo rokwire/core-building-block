@@ -1,0 +1,8 @@
+type: object
+properties:
+  fields:
+    $ref: "./ProfileFields.yaml"
+  accounts:
+    type: array
+    items:
+      $ref: "./Account.yaml"

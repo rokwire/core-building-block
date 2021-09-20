@@ -10,7 +10,7 @@ servers:
     description: Test server
   - url: 'https://api-dev.rokwire.illinois.edu/core'
     description: Development server
-  - url: 'http://localhost'
+  - url: 'http://localhost/core'
     description: Local server
 tags:
   - name: Services
@@ -31,23 +31,21 @@ paths:
       summary: Login
       description: |
         Login using credentials to retrieve access token, refresh token, and user data
-      security:
-        - bearerAuth: []
       requestBody:
         description: |
           User credential details and parameters
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AuthLoginRequest'
+              $ref: '#/components/schemas/_req_login_Request'
             examples:
               email:
                 summary: Email login
                 value: |
                   {
                     "auth_type": "email",
-                    "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
-                    "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                    "app_id": "edu.illinois.rokwire.safercommunity",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "creds": {
                       "email": "test@test.com", 
                       "password": "test12345"
@@ -58,20 +56,20 @@ paths:
                 value: |
                   {
                     "auth_type": "phone",
-                    "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
-                    "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                    "app_id": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "creds": {
                       "phone": "+12223334444", 
                       "code": "123456"
                     }
                   }
-              oidc:
-                summary: OIDC login
+              illinois_oidc:
+                summary: Illinois OIDC login
                 value: |
                   {
-                    "auth_type": "oidc",
-                    "org_id": "4f466fcd-9e86-4fc4-8fd4-18e69e014552",
-                    "app_id": "647e990d-ebd6-413a-8e9f-31830402b496",
+                    "auth_type": "illinois_oidc",
+                    "app_id": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
                     "params": {
                       "redirect_uri": "https://redirect.example.com",
@@ -85,7 +83,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthLoginResponse'
+                $ref: '#/components/schemas/_res_login_Response'
         '400':
           description: Bad request
         '401':
@@ -99,8 +97,6 @@ paths:
       summary: Refresh
       description: |
         Refresh access token using a refresh token
-      security:
-        - bearerAuth: []
       requestBody:
         description: |
           Refresh token
@@ -115,7 +111,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthRefreshResponse'
+                $ref: '#/components/schemas/_res_refresh_Response'
         '400':
           description: Bad request
         '401':
@@ -129,13 +125,11 @@ paths:
       summary: Get SSO login url
       description: |
         Retrieve a pre-formatted SSO login URL
-      security:
-        - bearerAuth: []
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AuthLoginUrlRequest'
+              $ref: '#/components/schemas/_req_login-url_Request'
         required: true
       responses:
         '200':
@@ -143,7 +137,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthLoginUrlResponse'
+                $ref: '#/components/schemas/_res_login-url_Response'
         '400':
           description: Bad request
         '401':
@@ -163,14 +157,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AuthAuthorizeServiceRequest'
+              $ref: '#/components/schemas/_req_authorize-service_Request'
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthAuthorizeServiceResponse'
+                $ref: '#/components/schemas/_res_authorize-service_Response'
               examples:
                 authorized:
                   summary: Service authorized
@@ -630,7 +624,28 @@ paths:
           description: Not Found
         '500':
           description: Internal error
-  /admin/application:
+  /admin/applications:
+    get:
+      tags:
+        - Admin
+      summary: Get applications
+      description: |
+        Gets applications
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Application'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
     post:
       tags:
         - Admin
@@ -805,43 +820,20 @@ components:
       properties:
         setting:
           type: string
-    GlobalRole:
-      required:
-        - id
-        - name
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        permissions:
-          type: array
-          items:
-            type: string
-    GlobalGroup:
-      required:
-        - id
-        - name
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        permissions:
-          type: array
-          items:
-            type: string
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/GlobalRole'
-        users:
-          type: array
-          items:
-            $ref: '#/components/schemas/User'
     Application:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/ApplicationFields'
+        types:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationType'
+        organizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationOrganization'
+    ApplicationFields:
       required:
         - id
         - name
@@ -852,12 +844,111 @@ components:
           type: string
         name:
           type: string
+        multi_tenant:
+          type: boolean
+        requires_own_users:
+          type: boolean
+    ApplicationType:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/ApplicationTypeFields'
+        application:
+          $ref: '#/components/schemas/Application'
+    ApplicationTypeFields:
+      required:
+        - id
+        - identifier
+      type: object
+      properties:
+        id:
+          type: string
+        identifier:
+          type: string
+        name:
+          type: string
         versions:
           type: array
-          nullable: true
           items:
             type: string
+    ApplicationOrganization:
+      type: object
+      properties:
+        id:
+          type: string
+        TODO:
+          type: string
+    ApplicationPermission:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/ApplicationPermissionFields'
+        application:
+          $ref: '#/components/schemas/Application'
+    ApplicationPermissionFields:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    ApplicationRole:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/ApplicationRoleFields'
+        application:
+          $ref: '#/components/schemas/Application'
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationPermission'
+    ApplicationRoleFields:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    ApplicationGroup:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/ApplicationGroupFields'
+        application:
+          $ref: '#/components/schemas/Application'
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationPermission'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationRole'
+    ApplicationGroupFields:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
     Organization:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/OrganizationFields'
+        config:
+          $ref: '#/components/schemas/OrganizationConfig'
+    OrganizationFields:
       required:
         - id
         - name
@@ -877,16 +968,12 @@ components:
             - medium
             - large
             - huge
-        requires_own_login:
-          type: boolean
-        login_types:
-          type: array
-          nullable: true
-          items:
-            type: string
-        config:
-          $ref: '#/components/schemas/OrganizationConfig'
     OrganizationConfig:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    OrganizationConfigFields:
       type: object
       properties:
         id:
@@ -898,48 +985,41 @@ components:
           description: organization domains
           items:
             type: string
-    OrganizationRole:
-      required:
-        - id
-        - name
-        - org_id
+    AuthType:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/AuthTypeFields'
+    AuthTypeFields:
       type: object
       properties:
         id:
           type: string
-        name:
+        code:
           type: string
-        org_id:
+        description:
           type: string
-        permissions:
+        is_external:
+          type: boolean
+        params:
+          type: object
+          additionalProperties: true
+    Credential:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/CredentialFields'
+        accounts_auth_types:
           type: array
           items:
-            type: string
-    OrganizationGroup:
-      required:
-        - id
-        - name
-        - org_id
+            $ref: '#/components/schemas/AccountAuthType'
+    CredentialFields:
       type: object
       properties:
         id:
           type: string
-        name:
-          type: string
-        org_id:
-          type: string
-        permissions:
-          type: array
-          items:
-            type: string
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrganizationRole'
-        org_memberships:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrganizationMembership'
+        value:
+          type: object
     ServiceReg:
       required:
         - service_id
@@ -1007,180 +1087,6 @@ components:
         explanation:
           description: Explanation displayed to users for why this scope is requested/required
           type: string
-    AuthLoginRequest:
-      required:
-        - auth_type
-        - org_id
-        - app_id
-      type: object
-      properties:
-        auth_type:
-          type: string
-          enum:
-            - email
-            - phone
-            - oidc
-        org_id:
-          type: string
-        app_id:
-          type: string
-        creds:
-          anyOf:
-            - $ref: '#/components/schemas/AuthLoginCredsEmail'
-            - $ref: '#/components/schemas/AuthLoginCredsPhone'
-            - $ref: '#/components/schemas/AuthLoginCredsOidc'
-        params:
-          type: object
-          anyOf:
-            - $ref: '#/components/schemas/AuthLoginParamsEmail'
-            - $ref: '#/components/schemas/AuthLoginParamsPhone'
-            - $ref: '#/components/schemas/AuthLoginParamsOidc'
-    AuthLoginResponse:
-      type: object
-      properties:
-        token:
-          $ref: '#/components/schemas/AuthResponseRokwireToken'
-        user:
-          $ref: '#/components/schemas/User'
-        params:
-          type: object
-          anyOf:
-            - $ref: '#/components/schemas/AuthResponseParamsOidc'
-    AuthLoginCredsEmail:
-      required:
-        - email
-        - password
-      type: object
-      description: Auth login creds for auth_type="email"
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-    AuthLoginCredsPhone:
-      type: object
-      description: Auth login creds for auth_type="phone"
-      required:
-        - phone
-      properties:
-        phone:
-          type: string
-        code:
-          type: string
-    AuthLoginCredsOidc:
-      type: string
-      description: |
-        Auth login creds for auth_type="oidc"
-          - full redirect URI received from OIDC provider
-    AuthLoginParamsEmail:
-      type: object
-      description: Auth login params for auth_type="email"
-      properties:
-        new_user:
-          type: boolean
-          default: false
-    AuthLoginParamsPhone:
-      type: object
-      description: Auth login params for auth_type="phone" (None)
-    AuthLoginParamsOidc:
-      type: object
-      description: Auth login params for auth_type="oidc"
-      properties:
-        redirect_uri:
-          type: string
-        pkce_verifier:
-          type: string
-    AuthRefreshResponse:
-      type: object
-      properties:
-        token:
-          $ref: '#/components/schemas/AuthResponseRokwireToken'
-        params:
-          type: object
-          anyOf:
-            - $ref: '#/components/schemas/AuthResponseParamsOidc'
-    AuthResponseRokwireToken:
-      type: object
-      properties:
-        access_token:
-          description: The user's access token to be provided to authorize access to ROKWIRE APIs
-          type: string
-        refresh_token:
-          description: A refresh token that can be used to get a new access token once the one provided expires
-          type: string
-        token_type:
-          description: The type of the provided tokens to be specified when they are sent in the "Authorization" header
-          type: string
-          enum:
-            - Bearer
-    AuthResponseParamsOidc:
-      type: object
-      properties:
-        oidc_token:
-          type: object
-          properties:
-            id_token:
-              type: string
-            access_token:
-              type: string
-            token_type:
-              type: string
-    AuthLoginUrlRequest:
-      required:
-        - auth_type
-        - org_id
-        - app_id
-        - redirect_uri
-      type: object
-      properties:
-        auth_type:
-          type: string
-          enum:
-            - oidc
-        org_id:
-          type: string
-        app_id:
-          type: string
-        redirect_uri:
-          type: string
-    AuthLoginUrlResponse:
-      required:
-        - login_url
-      type: object
-      properties:
-        login_url:
-          type: string
-        params:
-          type: object
-          description: Params to be submitted with 'login' request (if necessary)
-    AuthAuthorizeServiceRequest:
-      required:
-        - service_id
-      type: object
-      properties:
-        service_id:
-          type: string
-        approved_scopes:
-          description: Scopes to be granted to this service in this and future tokens. Replaces existing scopes if present.
-          type: array
-          items:
-            type: string
-    AuthAuthorizeServiceResponse:
-      type: object
-      properties:
-        access_token:
-          type: string
-        token_type:
-          description: The type of the provided tokens to be specified when they are sent in the "Authorization" header
-          type: string
-          enum:
-            - Bearer
-        approved_scopes:
-          type: array
-          items:
-            type: string
-        service_reg:
-          $ref: '#/components/schemas/ServiceReg'
     JWK:
       required:
         - kty
@@ -1237,94 +1143,103 @@ components:
           type: string
         jwks_uri:
           type: string
-    User:
-      required:
-        - id
+    Account:
       type: object
       properties:
-        id:
-          type: string
-        account:
-          $ref: '#/components/schemas/UserAccount'
-        profile:
-          $ref: '#/components/schemas/UserProfile'
+        fields:
+          $ref: '#/components/schemas/AccountFields'
+        application:
+          $ref: '#/components/schemas/Application'
+        organization:
+          $ref: '#/components/schemas/Organization'
         permissions:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/ApplicationPermission'
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/GlobalRole'
+            $ref: '#/components/schemas/ApplicationRole'
         groups:
           type: array
           items:
-            $ref: '#/components/schemas/GlobalGroup'
-        org_memberships:
+            $ref: '#/components/schemas/ApplicationGroup'
+        auth_types:
           type: array
           items:
-            $ref: '#/components/schemas/OrganizationMembership'
+            $ref: '#/components/schemas/AccountAuthType'
+        profile:
+          $ref: '#/components/schemas/Profile'
         devices:
           type: array
           items:
             $ref: '#/components/schemas/Device'
-    UserAccount:
+    AccountFields:
       required:
         - id
       type: object
       properties:
         id:
           type: string
-        email:
-          type: string
-        phone:
-          type: string
-        username:
-          type: string
-    UserProfile:
-      required:
-        - id
+    Profile:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/ProfileFields'
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+    ProfileFields:
       type: object
       properties:
         id:
+          type: string
+        photo_url:
           type: string
         first_name:
           type: string
         last_name:
           type: string
-        photo_url:
-          type: string
-    OrganizationMembership:
-      required:
-        - id
+    AccountAuthType:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/AccountAuthTypeFields'
+        auth_type:
+          $ref: '#/components/schemas/AuthType'
+        account:
+          $ref: '#/components/schemas/Account'
+        credential:
+          $ref: '#/components/schemas/Credential'
+    AccountAuthTypeFields:
       type: object
       properties:
         id:
           type: string
-        user_id:
+        identifier:
           type: string
-        org_id:
-          type: string
-        org_user_data:
+        params:
           type: object
-          description: 'map[string]object for arbitrary organization user data'
-        permissions:
-          type: array
-          items:
-            type: string
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrganizationRole'
-        groups:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrganizationGroup'
+          additionalProperties: true
+          nullable: true
+        active:
+          type: boolean
+        active_2fa:
+          type: boolean
     Device:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/DeviceFields'
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+    DeviceFields:
       required:
         - id
         - type
-        - user_ids
       type: object
       properties:
         id:
@@ -1340,7 +1255,204 @@ components:
           type: string
         mac_address:
           type: string
-        user_ids:
+    _res_shared_RokwireToken:
+      type: object
+      properties:
+        access_token:
+          description: The user's access token to be provided to authorize access to ROKWIRE APIs
+          type: string
+        refresh_token:
+          description: A refresh token that can be used to get a new access token once the one provided expires
+          type: string
+        token_type:
+          description: The type of the provided tokens to be specified when they are sent in the "Authorization" header
+          type: string
+          enum:
+            - Bearer
+    _res_shared_ParamsOidc:
+      type: object
+      properties:
+        oidc_token:
+          type: object
+          properties:
+            id_token:
+              type: string
+            access_token:
+              type: string
+            token_type:
+              type: string
+    _req_login_Request:
+      required:
+        - auth_type
+        - app_id
+        - org_id
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - username
+            - email
+            - phone
+            - illinois_oidc
+        app_id:
+          type: string
+        org_id:
+          type: string
+        creds:
+          anyOf:
+            - $ref: '#/components/schemas/_req_login_CredsEmail'
+            - $ref: '#/components/schemas/_req_login_CredsPhone'
+            - $ref: '#/components/schemas/_req_login_CredsOidc'
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/_req_login_ParamsEmail'
+            - $ref: '#/components/schemas/_req_login_ParamsPhone'
+            - $ref: '#/components/schemas/_req_login_ParamsOidc'
+    _req_login_CredsEmail:
+      required:
+        - email
+        - password
+      type: object
+      description: Auth login creds for auth_type="email"
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    _req_login_CredsPhone:
+      type: object
+      description: Auth login creds for auth_type="phone"
+      required:
+        - phone
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+    _req_login_CredsOidc:
+      type: string
+      description: |
+        Auth login creds for auth_type="oidc"
+          - full redirect URI received from OIDC provider
+    _req_login_ParamsEmail:
+      type: object
+      description: Auth login params for auth_type="email"
+      properties:
+        new_user:
+          type: boolean
+          default: false
+    _req_login_ParamsPhone:
+      type: object
+      description: Auth login params for auth_type="phone" (None)
+    _req_login_ParamsOidc:
+      type: object
+      description: Auth login params for auth_type="oidc"
+      properties:
+        redirect_uri:
+          type: string
+        pkce_verifier:
+          type: string
+    _res_login_Response:
+      type: object
+      properties:
+        token:
+          $ref: '#/components/schemas/_res_shared_RokwireToken'
+        account:
+          $ref: '#/components/schemas/_res_login_Account'
+        params:
+          type: object
+          nullable: true
+          anyOf:
+            - $ref: '#/components/schemas/_res_shared_ParamsOidc'
+    _res_login_Account:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        profile:
+          $ref: '#/components/schemas/ProfileFields'
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationPermissionFields'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationRoleFields'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationGroupFields'
+        auth_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountAuthTypeFields'
+    _req_login-url_Request:
+      required:
+        - auth_type
+        - app_id
+        - org_id
+        - redirect_uri
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - illinois_oidc
+        app_id:
+          type: string
+        org_id:
+          type: string
+        redirect_uri:
+          type: string
+    _res_login-url_Response:
+      required:
+        - login_url
+      type: object
+      properties:
+        login_url:
+          type: string
+        params:
+          type: object
+          description: Params to be submitted with 'login' request (if necessary)
+    _res_refresh_Response:
+      type: object
+      properties:
+        token:
+          $ref: '#/components/schemas/_res_shared_RokwireToken'
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/_res_shared_ParamsOidc'
+    _req_authorize-service_Request:
+      required:
+        - service_id
+      type: object
+      properties:
+        service_id:
+          type: string
+        approved_scopes:
+          description: Scopes to be granted to this service in this and future tokens. Replaces existing scopes if present.
           type: array
           items:
             type: string
+    _res_authorize-service_Response:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          description: The type of the provided tokens to be specified when they are sent in the "Authorization" header
+          type: string
+          enum:
+            - Bearer
+        approved_scopes:
+          type: array
+          items:
+            type: string
+        service_reg:
+          $ref: '#/components/schemas/ServiceReg'
