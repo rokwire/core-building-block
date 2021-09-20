@@ -128,37 +128,40 @@ func (h AdminApisHandler) createOrganization(l *logs.Log, r *http.Request) logs.
 	return l.HttpResponseSuccess()
 }
 
+type updateOrganizationRequest struct {
+	Name    string
+	Type    string //micro small medium large - based on the users count
+	Domains []string
+}
+
 //updateOrganization updates organization
 func (h AdminApisHandler) updateOrganization(l *logs.Log, r *http.Request) logs.HttpResponse {
-	//TODO
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+	var requestData updateOrganizationRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
+	}
+
+	name := requestData.Name
+	requestType := requestData.Type
+	organizationDomains := requestData.Domains
+
+	err = h.coreAPIs.Administration.AdmUpdateOrganization(ID, name, string(requestType), organizationDomains)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+
 	return l.HttpResponseSuccess()
-	/*
-		params := mux.Vars(r)
-		ID := params["id"]
-		if len(ID) <= 0 {
-			return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
-		}
-
-		data, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-		}
-		var requestData Def.Organization
-		err = json.Unmarshal(data, &requestData)
-		if err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
-		}
-
-		name := requestData.Name
-		requestType := requestData.Type
-		organizationDomains := requestData.Config.Domains
-
-		err = h.coreAPIs.Administration.AdmUpdateOrganization(ID, name, string(requestType), *organizationDomains)
-		if err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
-		}
-
-		return l.HttpResponseSuccess() */
 }
 
 //getOrganization gets organization
