@@ -4,8 +4,6 @@ post:
   summary: Get SSO login url
   description: |
     Retrieve a pre-formatted SSO login URL
-  security:
-    - bearerAuth: []
   requestBody:
     content:
       application/json:

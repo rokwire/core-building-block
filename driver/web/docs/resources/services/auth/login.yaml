@@ -4,8 +4,6 @@ post:
   summary: Login
   description: |
     Login using credentials to retrieve access token, refresh token, and user data
-  security:
-    - bearerAuth: []
   requestBody:
     description: |
       User credential details and parameters
