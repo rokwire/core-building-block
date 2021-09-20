@@ -16,13 +16,8 @@ func (app *application) serGetCommonTest(l *logs.Log) string {
 	return "Services - Common - test"
 }
 
-func (app *application) updateUserAnonymousProfile(l *logs.Log, id string, profile *model.AnonymousProfile) error {
-	acc, err := app.storage.FindAccountByID(id)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-	acc.Profile.AnonymousProfile = *profile
-	_, err = app.storage.UpdateAccount(acc, "", nil)
+func (app *application) serUpdateAccountPreferences(id string, preferences map[string]interface{}) error {
+	err := app.storage.UpdateAccountPreferences(id, preferences)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}

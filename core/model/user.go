@@ -12,6 +12,8 @@ const (
 	TypeAnonymousProfile logutils.MessageDataType = "anonymous profile"
 	//TypeAccount account
 	TypeAccount logutils.MessageDataType = "account"
+	//TypeAccountPreferences account preferences
+	TypeAccountPreferences logutils.MessageDataType = "account preferences"
 	//TypeAccountAuthType account auth type
 	TypeAccountAuthType logutils.MessageDataType = "account auth type"
 )
@@ -32,10 +34,13 @@ type Account struct {
 	Groups      []ApplicationGroup
 
 	AuthTypes []AccountAuthType
-	Anonymous bool
-	Profile   Profile //one account has one profile, one profile can be shared between many accounts
+
+	Preferences map[string]interface{}
+	Profile     Profile //one account has one profile, one profile can be shared between many accounts
 
 	Devices []Device
+
+	Anonymous bool
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -49,18 +54,6 @@ func (a Account) FindAccountAuthType(authTypeID string, identifier string) *Acco
 		}
 	}
 	return nil
-}
-
-type AnonymousProfile struct {
-	ID                   string
-	Interests            []string
-	Favorites            []string
-	Over13               bool
-	PositiveInterestTags []string
-	NegativeInterestTags []string
-	CreationDate         time.Time
-	LastModifiedDate     time.Time
-	PrivacySettings      string
 }
 
 //AccountAuthType represents account auth type
@@ -101,10 +94,9 @@ type Credential struct {
 type Profile struct {
 	ID string
 
-	PhotoURL         string
-	FirstName        string
-	LastName         string
-	AnonymousProfile AnonymousProfile
+	PhotoURL  string
+	FirstName string
+	LastName  string
 
 	Accounts []Account //the users can share profiles between their applications accounts for some applications
 

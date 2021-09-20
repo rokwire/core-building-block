@@ -37,6 +37,8 @@ paths:
     $ref: "./resources/services/auth/service-regs.yaml"
   /services/test:
     $ref: "./resources/services/test.yaml"
+  /services/account-preferences:
+    $ref: "./resources/services/account-preferences.yaml"
 
   #admin
   /admin/global-config:

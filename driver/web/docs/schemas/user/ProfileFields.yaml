@@ -8,5 +8,3 @@ properties:
     type: string
   last_name:
     type: string
-  anonymous_profile:
-    $ref: "./AnonymousProfile.yaml"

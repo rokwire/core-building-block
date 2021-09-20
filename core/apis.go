@@ -69,8 +69,8 @@ func (s *servicesImpl) SerGetCommonTest(l *logs.Log) string {
 	return s.app.serGetCommonTest(l)
 }
 
-func (s *servicesImpl) UpdateUserAnonymousProfile(l *logs.Log, id string, profile *model.AnonymousProfile) error {
-	return s.app.updateUserAnonymousProfile(l, id, profile)
+func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error {
+	return s.app.serUpdateAccountPreferences(id, preferences)
 }
 
 ///

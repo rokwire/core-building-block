@@ -15,8 +15,8 @@ func accountFromStorage(item account, sa *Adapter, application model.Application
 	devices := accountDevicesFromStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
-	return model.Account{ID: id, Application: application, Organization: organization,
-		Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes, Profile: profile,
+	return model.Account{ID: id, Application: application, Organization: organization, Permissions: permissions,
+		Roles: roles, Groups: groups, AuthTypes: authTypes, Preferences: item.Preferences, Profile: profile,
 		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated, Anonymous: item.Anonymous}
 }
 
@@ -34,8 +34,8 @@ func accountToStorage(item *model.Account) *account {
 	dateUpdated := item.DateUpdated
 	anonymous := item.Anonymous
 
-	return &account{ID: id, AppID: appID, OrgID: orgID, Permissions: permissions, Roles: roles, Groups: groups,
-		AuthTypes: authTypes, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated, Anonymous: anonymous}
+	return &account{ID: id, AppID: appID, OrgID: orgID, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
+		Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated, Anonymous: anonymous}
 }
 
 func accountDevicesFromStorage(item account) []model.Device {
@@ -118,23 +118,12 @@ func accountAuthTypesToStorage(items []model.AccountAuthType) []accountAuthType 
 //Profile
 func profileFromStorage(item profile) model.Profile {
 	return model.Profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated, AnonymousProfile: anonymousProfileFromStorage(item.AnonymousProfile)}
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func profileToStorage(item model.Profile) profile {
 	return profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated, AnonymousProfile: anonymousProfileToStorage(item.AnonymousProfile)}
-}
-
-//Anonymous Profile
-func anonymousProfileFromStorage(item anonymousProfile) model.AnonymousProfile {
-	return model.AnonymousProfile{ID: item.ID, Interests: item.Interests, Favorites: item.Favorites, Over13: item.Over13, PositiveInterestTags: item.PositiveInterestTags,
-		NegativeInterestTags: item.NegativeInterestTags, CreationDate: item.CreationDate, LastModifiedDate: item.LastModifiedDate, PrivacySettings: item.PrivacySettings}
-}
-
-func anonymousProfileToStorage(item model.AnonymousProfile) anonymousProfile {
-	return anonymousProfile{ID: item.ID, Interests: item.Interests, Favorites: item.Favorites, Over13: item.Over13, PositiveInterestTags: item.PositiveInterestTags,
-		NegativeInterestTags: item.NegativeInterestTags, CreationDate: item.CreationDate, LastModifiedDate: item.LastModifiedDate, PrivacySettings: item.PrivacySettings}
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 //Device
