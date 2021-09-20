@@ -189,18 +189,11 @@ func (h AdminApisHandler) getOrganization(l *logs.Log, r *http.Request) logs.Htt
 
 //getOrganizations gets organizations
 func (h AdminApisHandler) getOrganizations(l *logs.Log, r *http.Request) logs.HttpResponse {
-	//TODO
-	//return l.HttpResponseSuccess()
-
 	organizations, err := h.coreAPIs.Administration.AdmGetOrganizations()
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 	}
-	//var response []Def.Organization
-	//for _, organization := range organizations {
-	//	r := organizationsToDef(&organization)
-	//	response = append(response, *r)
-	//}
+
 	response := organizationsToDef(organizations)
 
 	data, err := json.Marshal(response)
