@@ -1,24 +1,48 @@
 # global
 GlobalConfig:
   $ref: "./global/GlobalConfig.yaml"
-GlobalRole:
-  $ref: "./global/GlobalRole.yaml"
-GlobalGroup:
-  $ref: "./global/GlobalGroup.yaml"
 
-# organization
+# application
 Application:
-  $ref: "./organization/Application.yaml"
+  $ref: "./application/Application.yaml"
+ApplicationFields:
+  $ref: "./application/ApplicationFields.yaml"
+ApplicationType:
+  $ref: "./application/ApplicationType.yaml"
+ApplicationTypeFields:
+  $ref: "./application/ApplicationTypeFields.yaml"
+ApplicationOrganization:
+  $ref: "./application/ApplicationOrganization.yaml"
+ApplicationPermission:
+  $ref: "./application/ApplicationPermission.yaml"
+ApplicationPermissionFields:
+  $ref: "./application/ApplicationPermissionFields.yaml"
+ApplicationRole:
+  $ref: "./application/ApplicationRole.yaml"
+ApplicationRoleFields:
+  $ref: "./application/ApplicationRoleFields.yaml"
+ApplicationGroup:
+  $ref: "./application/ApplicationGroup.yaml"
+ApplicationGroupFields:
+  $ref: "./application/ApplicationGroupFields.yaml"
 Organization:
-  $ref: "./organization/Organization.yaml"
+  $ref: "./application/Organization.yaml"
+OrganizationFields:
+  $ref: "./application/OrganizationFields.yaml"
 OrganizationConfig:
-  $ref: "./organization/OrganizationConfig.yaml"
-OrganizationRole:
-  $ref: "./organization/OrganizationRole.yaml"
-OrganizationGroup:
-  $ref: "./organization/OrganizationGroup.yaml"
+  $ref: "./application/OrganizationConfig.yaml"
+OrganizationConfigFields:
+  $ref: "./application/OrganizationConfigFields.yaml"
   
 # auth
+AuthType:
+  $ref: "./auth/AuthType.yaml"
+AuthTypeFields:
+  $ref: "./auth/AuthTypeFields.yaml"
+Credential:
+  $ref: "./auth/Credential.yaml"
+CredentialFields:
+  $ref: "./auth/CredentialFields.yaml"
 ServiceReg:
   $ref: "./auth/ServiceReg.yaml"
 AuthServiceReg:
@@ -27,44 +51,71 @@ PubKey:
   $ref: "./auth/PubKey.yaml"
 ServiceScope:
   $ref: "./auth/ServiceScope.yaml"
-AuthLoginRequest:
-  $ref: "./auth/AuthLoginRequest.yaml"
-AuthLoginResponse:
-  $ref: "./auth/AuthLoginResponse.yaml"
-AuthLoginCredsEmail:
-  $ref: "./auth/AuthLoginCredsEmail.yaml"
-AuthLoginCredsPhone:
-  $ref: "./auth/AuthLoginCredsPhone.yaml"
-AuthLoginCredsOidc:
-  $ref: "./auth/AuthLoginCredsOidc.yaml"
-AuthLoginParamsEmail:
-  $ref: "./auth/AuthLoginParamsEmail.yaml"
-AuthLoginParamsPhone:
-  $ref: "./auth/AuthLoginParamsPhone.yaml"
-AuthLoginParamsOidc:
-  $ref: "./auth/AuthLoginParamsOidc.yaml"
-
-AuthRefreshResponse:
-  $ref: "./auth/AuthRefreshResponse.yaml"
-
-AuthLoginUrlRequest:
-  $ref: "./auth/AuthLoginUrlRequest.yaml"
-AuthLoginUrlResponse:
-  $ref: "./auth/AuthLoginUrlResponse.yaml"
-
-AuthAuthorizeServiceRequest:
-  $ref: "./auth/AuthAuthorizeServiceRequest.yaml"
-AuthAuthorizeServiceResponse:
-  $ref: "./auth/AuthAuthorizeServiceResponse.yaml"
+JWK:
+  $ref: "./auth/JWK.yaml"
+JWKS:
+  $ref: "./auth/JWKS.yaml"
+OidcDiscovery:
+  $ref: "./auth/OIDCDiscovery.yaml"
 
 # user
-User:
-  $ref: "./user/User.yaml"
-UserAccount:
-  $ref: "./user/UserAccount.yaml"
-UserProfile:
-  $ref: "./user/UserProfile.yaml"
-OrganizationMembership:
-  $ref: "./user/OrganizationMembership.yaml"
+Account:
+  $ref: "./user/Account.yaml"
+AccountFields:
+  $ref: "./user/AccountFields.yaml"
+Profile:
+  $ref: "./user/Profile.yaml"
+ProfileFields:
+  $ref: "./user/ProfileFields.yaml"
+AccountAuthType:
+  $ref: "./user/AccountAuthType.yaml"
+AccountAuthTypeFields:
+  $ref: "./user/AccountAuthTypeFields.yaml"
 Device:
   $ref: "./user/Device.yaml"
+DeviceFields:
+  $ref: "./user/DeviceFields.yaml"
+
+##### APIs requests and responses - they are at bottom 
+
+#### shared requests and responses
+_res_shared_RokwireToken:
+  $ref: "../schemas/apis/shared/responses/RokwireToken.yaml"
+_res_shared_ParamsOidc:
+  $ref: "../schemas/apis/shared/responses/ParamsOidc.yaml"
+
+### login API
+_req_login_Request:
+  $ref: "./apis/services/login/request/Request.yaml"
+_req_login_CredsEmail:
+  $ref: "./apis/services/login/request/CredsEmail.yaml"
+_req_login_CredsPhone:
+  $ref: "./apis/services/login/request/CredsPhone.yaml"
+_req_login_CredsOidc:
+  $ref: "./apis/services/login/request/CredsOidc.yaml"
+_req_login_ParamsEmail:
+  $ref: "./apis/services/login/request/ParamsEmail.yaml"
+_req_login_ParamsPhone:
+   $ref: "./apis/services/login/request/ParamsPhone.yaml"
+_req_login_ParamsOidc:
+  $ref: "./apis/services/login/request/ParamsOidc.yaml"
+_res_login_Response:
+  $ref: "./apis/services/login/response/Response.yaml"
+_res_login_Account:
+  $ref: "./apis/services/login/response/Account.yaml"
+
+### login-url API
+_req_login-url_Request:
+  $ref: "./apis/services/login-url/request/Request.yaml"
+_res_login-url_Response:
+  $ref: "./apis/services/login-url/response/Response.yaml"
+
+### refresh API
+_res_refresh_Response:
+  $ref: "./apis/services/refresh/response/Response.yaml"
+
+### authorize-service API
+_req_authorize-service_Request:
+  $ref: "./apis/services/authorize-service/request/Request.yaml"
+_res_authorize-service_Response:
+  $ref: "./apis/services/authorize-service/response/Response.yaml"

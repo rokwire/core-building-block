@@ -4,141 +4,138 @@ import (
 	"core-building-block/core/model"
 )
 
-//User
-func userFromStorage(item *user, sa *Adapter) model.User {
-	if item == nil {
-		return model.User{}
-	}
-
+//Account
+func accountFromStorage(item account, sa *Adapter, application model.Application, organization model.Organization) model.Account {
 	id := item.ID
-	account := item.Account
-	profile := item.Profile
-	permissions := item.Permissions
-	roles := item.Roles
-	groups := item.Groups
-	organziationsMemberships := userMembershipsFromStorage(*item, sa)
-	devices := userDevicesFromStorage(*item)
+	permissions := applicationPermissionsFromStorage(item.Permissions, application)
+	roles := applicationRolesFromStorage(item.Roles, application)
+	groups := applicationGroupsFromStorage(item.Groups, application)
+	authTypes := accountAuthTypesFromStorage(item.AuthTypes)
+	profile := profileFromStorage(item.Profile)
+	devices := accountDevicesFromStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
-
-	return model.User{ID: id, Account: account, Profile: profile,
-		Permissions: permissions, Roles: roles, Groups: groups,
-		OrganizationsMemberships: organziationsMemberships, Devices: devices,
-		DateCreated: dateCreated, DateUpdated: dateUpdated}
-
+	return model.Account{ID: id, Application: application, Organization: organization,
+		Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes, Profile: profile,
+		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
-func userToStorage(item *model.User) *user {
-	if item == nil {
-		return nil
-	}
-
+func accountToStorage(item *model.Account) *account {
 	id := item.ID
-	account := item.Account
-	profile := item.Profile
-	permissions := item.Permissions
-	roles := item.Roles
-	groups := item.Groups
-	organziationsMemberships := userMembershipsToStorage(item)
-	devices := userDevicesToStorage(item)
-	dateCreated := item.DateCreated
-	dateUpdated := item.DateUpdated
-
-	return &user{ID: id, Account: account, Profile: profile, Permissions: permissions, Roles: roles, Groups: groups,
-		OrganizationsMemberships: organziationsMemberships, Devices: devices,
-		DateCreated: dateCreated, DateUpdated: dateUpdated}
-}
-
-func userMembershipsFromStorage(item user, sa *Adapter) []model.OrganizationMembership {
-	memberships := make([]model.OrganizationMembership, len(item.OrganizationsMemberships))
-
-	for i, membership := range item.OrganizationsMemberships {
-		organization, err := sa.getCachedOrganization(membership.OrgID)
-		if err != nil {
-			sa.logger.Errorf("error getting organziation - %s", err)
-		}
-
-		memberships[i] = userMembershipFromStorage(membership, *organization)
-	}
-	return memberships
-}
-
-func userMembershipFromStorage(item userMembership, organization model.Organization) model.OrganizationMembership {
-	id := item.ID
-	orgUserData := item.OrgUserData
-	permissions := organizationPermissionsFromStorage(item.Permissions, organization)
-	roles := organizationRolesFromStorage(item.Roles, organization)
-	groups := organizationGroupsFromStorage(item.Groups, organization)
-	dateCreated := item.DateCreated
-	dateUpdated := item.DateUpdated
-
-	return model.OrganizationMembership{ID: id, Organization: organization, OrgUserData: orgUserData,
-		Permissions: permissions, Roles: roles, Groups: groups, DateCreated: dateCreated, DateUpdated: dateUpdated}
-}
-
-func userMembershipsToStorage(item *model.User) []userMembership {
-	memberships := make([]userMembership, len(item.OrganizationsMemberships))
-
-	for i, membership := range item.OrganizationsMemberships {
-		memberships[i] = userMembershipToStorage(membership)
-	}
-	return memberships
-}
-
-func userMembershipToStorage(item model.OrganizationMembership) userMembership {
-	id := item.ID
+	appID := item.Application.ID
 	orgID := item.Organization.ID
-	orgUserData := item.OrgUserData
-	permissions := organizationPermissionsToStorage(item.Permissions)
-	roles := organizationRolesToStorage(item.Roles)
-	groups := organizationGroupsToStorage(item.Groups)
+	permissions := applicationPermissionsToStorage(item.Permissions)
+	roles := applicationRolesToStorage(item.Roles)
+	groups := applicationGroupsToStorage(item.Groups)
+	authTypes := accountAuthTypesToStorage(item.AuthTypes)
+	profile := profileToStorage(item.Profile)
+	devices := accountDevicesToStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
-	return userMembership{ID: id, OrgID: orgID, OrgUserData: orgUserData,
-		Permissions: permissions, Roles: roles, Groups: groups, DateCreated: dateCreated, DateUpdated: dateUpdated}
+	return &account{ID: id, AppID: appID, OrgID: orgID, Permissions: permissions, Roles: roles, Groups: groups,
+		AuthTypes: authTypes, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
-func userDevicesFromStorage(item user) []model.Device {
+func accountDevicesFromStorage(item account) []model.Device {
 	devices := make([]model.Device, len(item.Devices))
 
 	for i, device := range item.Devices {
-		devices[i] = userDeviceFromStorage(device)
+		devices[i] = accountDeviceFromStorage(device)
 	}
 	return devices
 }
 
-func userDeviceFromStorage(item userDevice) model.Device {
+func accountDeviceFromStorage(item userDevice) model.Device {
 	return model.Device{ID: item.ID, Type: item.Type, OS: item.OS, MacAddress: item.MacAddress,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-func userDevicesToStorage(item *model.User) []userDevice {
+func accountDevicesToStorage(item *model.Account) []userDevice {
 	devices := make([]userDevice, len(item.Devices))
 
 	for i, device := range item.Devices {
-		devices[i] = userDeviceToStorage(device)
+		devices[i] = accountDeviceToStorage(device)
 	}
 	return devices
 }
 
-func userDeviceToStorage(item model.Device) userDevice {
+func accountDeviceToStorage(item model.Device) userDevice {
 	return userDevice{ID: item.ID, Type: item.Type, OS: item.OS, MacAddress: item.MacAddress,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-//Device
+//AccountAuthType
+func accountAuthTypeFromStorage(item accountAuthType) model.AccountAuthType {
+	id := item.ID
+	authType := model.AuthType{ID: item.AuthTypeID}
+	identifier := item.Identifier
+	params := item.Params
+	var credential *model.Credential
+	if item.CredentialID != nil {
+		credential = &model.Credential{ID: *item.CredentialID}
+	}
+	active := item.Active
+	active2FA := item.Active2FA
+	return model.AccountAuthType{ID: id, AuthType: authType, Identifier: identifier, Params: params, Credential: credential,
+		Active: active, Active2FA: active2FA, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
 
+func accountAuthTypesFromStorage(items []accountAuthType) []model.AccountAuthType {
+	if len(items) == 0 {
+		return make([]model.AccountAuthType, 0)
+	}
+
+	res := make([]model.AccountAuthType, len(items))
+	for i, aat := range items {
+		res[i] = accountAuthTypeFromStorage(aat)
+	}
+	return res
+}
+
+func accountAuthTypeToStorage(item model.AccountAuthType) accountAuthType {
+	var credentialID *string
+	if item.Credential != nil {
+		credentialID = &item.Credential.ID
+	}
+	return accountAuthType{ID: item.ID, AuthTypeID: item.AuthType.ID, Identifier: item.Identifier,
+		Params: item.Params, CredentialID: credentialID, Active: item.Active, Active2FA: item.Active2FA, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func accountAuthTypesToStorage(items []model.AccountAuthType) []accountAuthType {
+	if len(items) == 0 {
+		return make([]accountAuthType, 0)
+	}
+
+	res := make([]accountAuthType, len(items))
+	for i, aat := range items {
+		res[i] = accountAuthTypeToStorage(aat)
+	}
+	return res
+}
+
+//Profile
+func profileFromStorage(item profile) model.Profile {
+	return model.Profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func profileToStorage(item model.Profile) profile {
+	return profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+//Device
 func deviceToStorage(item *model.Device) *device {
 	if item == nil {
 		return nil
 	}
 
-	users := make([]string, len(item.Users))
-	for i, user := range item.Users {
-		users[i] = user.ID
+	accounts := make([]string, len(item.Accounts))
+	for i, account := range item.Accounts {
+		accounts[i] = account.ID
 	}
 
 	return &device{ID: item.ID, Type: item.Type, OS: item.OS, MacAddress: item.MacAddress,
-		Users: users, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Accounts: accounts, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

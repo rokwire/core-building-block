@@ -18,22 +18,15 @@ type phoneAuthImpl struct {
 	authType string
 }
 
-func (a *phoneAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
-	//TODO: Implement
-	return nil, errors.New(logutils.Unimplemented)
+func (a *phoneAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
+	return nil, nil, nil
 }
 
 func (a *phoneAuthImpl) verify(id string, verification string, l *logs.Log) error {
 	return errors.New(logutils.Unimplemented)
 }
-
-//refresh is enabled for phone auth, but no operation is needed
-func (a *phoneAuthImpl) refresh(refreshToken string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
-	return nil, nil
-}
-
-func (a *phoneAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
-	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
+func (a *phoneAuthImpl) checkCredentials(userAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*bool, *bool, error) {
+	return nil, nil, nil
 }
 
 //initPhoneAuth initializes and registers a new phone auth instance

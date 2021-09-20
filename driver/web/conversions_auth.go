@@ -48,9 +48,6 @@ func serviceRegToDef(item *model.ServiceReg) *Def.ServiceReg {
 }
 
 func serviceRegListToDef(items []model.ServiceReg) []Def.ServiceReg {
-	if items == nil {
-		return nil
-	}
 	out := make([]Def.ServiceReg, len(items))
 	for i, item := range items {
 		defItem := serviceRegToDef(&item)
@@ -72,9 +69,6 @@ func authServiceRegToDef(item *authservice.ServiceReg) *Def.AuthServiceReg {
 }
 
 func authServiceRegListToDef(items []model.ServiceReg) []Def.AuthServiceReg {
-	if items == nil {
-		return nil
-	}
 	out := make([]Def.AuthServiceReg, len(items))
 	for i, item := range items {
 		defItem := authServiceRegToDef(&item.Registration)
@@ -127,9 +121,6 @@ func serviceScopeListFromDef(items *[]Def.ServiceScope) ([]model.ServiceScope, e
 }
 
 func serviceScopeListToDef(items []model.ServiceScope) []Def.ServiceScope {
-	if items == nil {
-		return nil
-	}
 	out := make([]Def.ServiceScope, len(items))
 	for i, item := range items {
 		defItem := serviceScopeToDef(&item)
@@ -171,4 +162,27 @@ func scopeListToDef(items []authorization.Scope) []string {
 		out[i] = defItem
 	}
 	return out
+}
+
+func jsonWebKeyToDef(item *model.JSONWebKey) *Def.JWK {
+	if item == nil {
+		return nil
+	}
+	return &Def.JWK{Alg: Def.JWKAlg(item.Alg), Kid: item.Kid, Kty: Def.JWKKty(item.Kty), Use: Def.JWKUse(item.Use), N: item.N, E: item.E}
+}
+
+func jsonWebKeySetDef(items *model.JSONWebKeySet) *Def.JWKS {
+	if items == nil || items.Keys == nil {
+		return nil
+	}
+	out := make([]Def.JWK, len(items.Keys))
+	for i, item := range items.Keys {
+		defItem := jsonWebKeyToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.JWK{}
+		}
+	}
+	return &Def.JWKS{Keys: out}
 }

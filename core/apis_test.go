@@ -98,7 +98,7 @@ func TestAdmGetOrganization(t *testing.T) {
 	getOrganization, _ := app.Administration.AdmGetOrganization("_id")
 
 	if getOrganization == nil {
-		t.Errorf("Error on geting the organization")
+		t.Errorf("Error on getting the organization")
 	}
 	// second case error
 	storage2 := genmocks.Storage{}
@@ -116,17 +116,17 @@ func TestAdmGetOrganization(t *testing.T) {
 
 func TestGetOrganizations(t *testing.T) {
 	storage := genmocks.Storage{}
-	storage.On("GetOrganizations").Return([]model.Organization{}, nil)
+	storage.On("LoadOrganizations").Return([]model.Organization{}, nil)
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
 	getOrganization, _ := app.Administration.AdmGetOrganizations()
 
 	if getOrganization == nil {
-		t.Errorf("Error on geting the organizations")
+		t.Errorf("Error on getting the organizations")
 	}
 	// second case error
 	storage2 := genmocks.Storage{}
-	storage2.On("GetOrganizations").Return([]model.Organization{}, nil)
+	storage2.On("LoadOrganizations").Return([]model.Organization{}, nil)
 	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
 	err, _ := app.Administration.AdmGetOrganizations()
@@ -158,7 +158,29 @@ func TestAdmGetApplication(t *testing.T) {
 		t.Error("We are expecting error")
 		return
 	}
+}
 
+func TestGetApplications(t *testing.T) {
+	storage := genmocks.Storage{}
+	storage.On("FindApplications").Return([]model.Application{}, nil)
+	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	getApplications, _ := app.Administration.AdmGetApplications()
+
+	if getApplications == nil {
+		t.Errorf("Error on getting the appllications")
+	}
+	// second case error
+	storage2 := genmocks.Storage{}
+	storage2.On("FindApplications").Return([]model.Application{}, nil)
+	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
+
+	err, _ := app.Administration.AdmGetApplications()
+
+	if err == nil {
+		t.Error("We are expecting error")
+		return
+	}
 }
 
 ///
