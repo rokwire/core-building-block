@@ -1518,6 +1518,30 @@ components:
             - huge
         config:
           $ref: '#/components/schemas/OrganizationConfigFields'
+    _res_get_Organizations_Response:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationConfigFields'
     _req_create_Application_Request:
       required:
         - name
