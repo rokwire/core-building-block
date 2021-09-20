@@ -80,20 +80,6 @@ func (_m *Storage) DeleteApplicationRole(id string) error {
 	return r0
 }
 
-// DeletePII provides a mock function with given fields: ID
-func (_m *Storage) DeletePII(ID string) error {
-	ret := _m.Called(ID)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(ID)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // FindApplication provides a mock function with given fields: ID
 func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	ret := _m.Called(ID)
@@ -163,16 +149,16 @@ func (_m *Storage) FindOrganization(id string) (*model.Organization, error) {
 	return r0, r1
 }
 
-// FindPII provides a mock function with given fields: ID
-func (_m *Storage) FindPII(ID string) (*model.Pii, error) {
+// FindProfile provides a mock function with given fields: ID
+func (_m *Storage) FindProfile(ID string) (*model.Profile, error) {
 	ret := _m.Called(ID)
 
-	var r0 *model.Pii
-	if rf, ok := ret.Get(0).(func(string) *model.Pii); ok {
+	var r0 *model.Profile
+	if rf, ok := ret.Get(0).(func(string) *model.Profile); ok {
 		r0 = rf(ID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.Pii)
+			r0 = ret.Get(0).(*model.Profile)
 		}
 	}
 
@@ -376,13 +362,13 @@ func (_m *Storage) UpdateOrganization(ID string, name string, requestType string
 	return r0
 }
 
-// UpdatePII provides a mock function with given fields: pii, ID
-func (_m *Storage) UpdatePII(pii *model.Pii, ID string) error {
-	ret := _m.Called(pii, ID)
+// UpdateProfile provides a mock function with given fields: profile, ID
+func (_m *Storage) UpdateProfile(profile *model.Profile, ID string) error {
+	ret := _m.Called(profile, ID)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*model.Pii, string) error); ok {
-		r0 = rf(pii, ID)
+	if rf, ok := ret.Get(0).(func(*model.Profile, string) error); ok {
+		r0 = rf(profile, ID)
 	} else {
 		r0 = ret.Error(0)
 	}

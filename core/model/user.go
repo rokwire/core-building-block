@@ -12,8 +12,8 @@ const (
 	TypeAccount logutils.MessageDataType = "account"
 	//TypeAccountAuthType account auth type
 	TypeAccountAuthType logutils.MessageDataType = "account auth type"
-	//TypePii Pii
-	TypePii logutils.MessageDataType = "pii"
+	//TypeProfile profile
+	TypeProfile logutils.MessageDataType = "profile"
 )
 
 //Account represents account entity
@@ -89,27 +89,21 @@ type Credential struct {
 type Profile struct {
 	ID string
 
-	PII Pii
+	PhotoURL  string
+	FirstName string
+	LastName  string
+	Email     string
+	Phone     string
+	BirthYear int8
+	Address   string
+	ZipCode   string
+	State     string
+	Country   string
 
 	Accounts []Account //the users can share profiles between their applications accounts for some applications
 
 	DateCreated time.Time
 	DateUpdated *time.Time
-}
-
-//Pii represents PII entity. The PII is personal information about the user.
-type Pii struct {
-	PhotoURL    string
-	FirstName   string
-	LastName    string
-	Address     string
-	Country     string
-	DateOfBirth string
-	HomeCounty  string
-	MiddleName  string
-	State       string
-	WorkCounty  string
-	ZipCode     string
 }
 
 //Device represents user devices entity.

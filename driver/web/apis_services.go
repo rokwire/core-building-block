@@ -177,54 +177,43 @@ func (h ServicesApisHandler) getServiceRegistrations(l *logs.Log, r *http.Reques
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h ServicesApisHandler) getPII(l *logs.Log, r *http.Request) logs.HttpResponse {
-	//TODO: get user ID from access token to pass to SerGetPII
+func (h ServicesApisHandler) getProfile(l *logs.Log, r *http.Request) logs.HttpResponse {
+	//TODO: get account ID from access token to pass to SerGetProfile
 
-	pii, err := h.coreAPIs.Services.SerGetPII("")
+	profile, err := h.coreAPIs.Services.SerGetProfile("")
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypePii, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
 	}
 
-	piiResp := piiToDef(pii)
+	profileResp := profileToDef(profile)
 
-	data, err := json.Marshal(piiResp)
+	data, err := json.Marshal(profileResp)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypePii, nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeProfile, nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h ServicesApisHandler) updatePII(l *logs.Log, r *http.Request) logs.HttpResponse {
-	//TODO: get user ID from access token to pass to SerUpdatePII
+func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request) logs.HttpResponse {
+	//TODO: get account ID from access token to pass to SerUpdateProfile
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.Pii
+	var requestData Def.ProfileFields
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "profiles update PII request", nil, err, http.StatusBadRequest, true)
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "profile update request", nil, err, http.StatusBadRequest, true)
 	}
 
-	pii := piiFromDef(&requestData)
+	profile := profileFromDef(&requestData)
 
-	err = h.coreAPIs.Services.SerUpdatePII(pii, "")
+	err = h.coreAPIs.Services.SerUpdateProfile(profile, "")
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypePii, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HttpResponseSuccess()
-}
-
-func (h ServicesApisHandler) deletePII(l *logs.Log, r *http.Request) logs.HttpResponse {
-	//TODO: get user ID from access token to pass to SerDeletePII
-
-	err := h.coreAPIs.Services.SerDeletePII("")
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypePii, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()

@@ -40,24 +40,19 @@ type accountAuthType struct {
 type profile struct {
 	ID string `bson:"id"`
 
-	PII pii `bson:"pii"`
+	PhotoURL  string `bson:"photo_url"`
+	FirstName string `bson:"first_name"`
+	LastName  string `bson:"last_name"`
+	Email     string `bson:"email"`
+	Phone     string `bson:"phone"`
+	BirthYear int8   `bson:"birth_year"`
+	Address   string `bson:"address"`
+	ZipCode   string `bson:"zip_code"`
+	State     string `bson:"state"`
+	Country   string `bson:"country"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type pii struct {
-	PhotoURL    string `bson:"photo_url"`
-	FirstName   string `bson:"first_name"`
-	LastName    string `bson:"last_name"`
-	Address     string `bson:"address"`
-	Country     string `bson:"country"`
-	DateOfBirth string `bson:"date_of_birth"`
-	HomeCounty  string `bson:"home_county"`
-	MiddleName  string `bson:"middle_name"`
-	State       string `bson:"state"`
-	WorkCounty  string `bson:"work_county"`
-	ZipCode     string `bson:"zip_code"`
 }
 
 type userMembership struct {

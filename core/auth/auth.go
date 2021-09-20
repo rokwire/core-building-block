@@ -236,8 +236,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		photoURL := ""
 		firstName := ""
 		lastName := ""
-		pii := model.Pii{PhotoURL: photoURL, FirstName: firstName, LastName: lastName}
-		profile := &model.Profile{ID: profileID.String(), PII: pii, DateCreated: now}
+		profile := &model.Profile{ID: profileID.String(), PhotoURL: photoURL, FirstName: firstName, LastName: lastName, DateCreated: now}
 
 		account, err = a.registerUser(appOrg, *accountAuthType, useSharedProfile, profile, l)
 		if err != nil {
