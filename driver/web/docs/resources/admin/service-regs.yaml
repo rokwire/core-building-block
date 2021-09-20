@@ -40,6 +40,8 @@ post:
     Creates a new service registration
 
     The "service_id" of the registration must not match an existing registration  
+
+    **Auth:** Requires auth token with `service_admin` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -71,6 +73,8 @@ put:
     Update an existing service registration
 
     The "service_id" of the registration must match an existing registration
+
+    **Auth:** Requires auth token with `service_admin` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -100,6 +104,8 @@ delete:
   summary: Deregister service
   description: |
     Deletes an existing service registration record
+
+    **Auth:** Requires auth token with `service_admin` permission
   security:
     - bearerAuth: []
   parameters:

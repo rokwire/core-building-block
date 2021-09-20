@@ -44,6 +44,8 @@ get:
   summary: Get organization
   description: |
     Gets organization
+
+    **Auth:** Requires auth token with `org_admin` permission
   security:
     - bearerAuth: []
   parameters:

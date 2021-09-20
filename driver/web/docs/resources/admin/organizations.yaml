@@ -29,6 +29,8 @@
   summary: Create organization
   description: |
     Creates organization
+
+    **Auth:** Requires auth token with `org_admin` permission
   security:
     - bearerAuth: []
   requestBody:
