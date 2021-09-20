@@ -31,8 +31,6 @@ paths:
       summary: Login
       description: |
         Login using credentials to retrieve access token, refresh token, and user data
-      security:
-        - bearerAuth: []
       requestBody:
         description: |
           User credential details and parameters
@@ -99,8 +97,6 @@ paths:
       summary: Refresh
       description: |
         Refresh access token using a refresh token
-      security:
-        - bearerAuth: []
       requestBody:
         description: |
           Refresh token
@@ -129,8 +125,6 @@ paths:
       summary: Get SSO login url
       description: |
         Retrieve a pre-formatted SSO login URL
-      security:
-        - bearerAuth: []
       requestBody:
         content:
           application/json:
