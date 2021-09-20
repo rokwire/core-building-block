@@ -102,9 +102,6 @@ type createOrganizationRequest struct {
 	Domains []string
 }
 
-type createOrganizationResponse struct {
-}
-
 //createOrganization creates organization
 func (h AdminApisHandler) createOrganization(l *logs.Log, r *http.Request) logs.HttpResponse {
 
