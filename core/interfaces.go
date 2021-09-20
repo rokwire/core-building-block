@@ -9,6 +9,8 @@ import (
 
 //Services exposes APIs for the driver adapters
 type Services interface {
+	SerDeleteAccount(id string) error
+
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
 }
@@ -45,6 +47,8 @@ type BBs interface {
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
+
+	DeleteAccount(id string) error
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	GetGlobalConfig() (*model.GlobalConfig, error)

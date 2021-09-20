@@ -381,7 +381,19 @@ func (sa *Adapter) UpdateAccount(updatedUser *model.Account, orgID string, newOr
 //DeleteAccount deletes an account
 func (sa *Adapter) DeleteAccount(id string) error {
 	//TODO - we have to decide what we do on delete user operation - removing all user relations, (or) mark the user disabled etc
-	return errors.New(logutils.Unimplemented)
+
+	filter := bson.M{"_id": id}
+	res, err := sa.db.accounts.DeleteOne(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+	}
+	if res.DeletedCount != 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeAccount, logutils.StringArgs("unexpected deleted count"))
+	}
+
+	//TODO - need to decide if we should also remove devices from devices collection
+
+	return nil
 }
 
 //UpdateAccountAuthType updates account auth type

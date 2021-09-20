@@ -177,6 +177,17 @@ func (h ServicesApisHandler) getServiceRegistrations(l *logs.Log, r *http.Reques
 	return l.HttpResponseSuccessJSON(data)
 }
 
+func (h ServicesApisHandler) deleteAccount(l *logs.Log, r *http.Request) logs.HttpResponse {
+	//TODO: get account ID from access token to pass to SerDeleteAccount
+
+	err := h.coreAPIs.Services.SerDeleteAccount("")
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 //getCommonTest TODO get test
 func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResponse {
 	res := h.coreAPIs.Services.SerGetCommonTest(l)
