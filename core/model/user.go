@@ -8,8 +8,6 @@ import (
 )
 
 const (
-	//TypeOrganization ...
-	TypeAnonymousProfile logutils.MessageDataType = "anonymous profile"
 	//TypeAccount account
 	TypeAccount logutils.MessageDataType = "account"
 	//TypeAccountPreferences account preferences

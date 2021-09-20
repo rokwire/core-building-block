@@ -384,6 +384,7 @@ func (sa *Adapter) DeleteAccount(id string) error {
 	return errors.New(logutils.Unimplemented)
 }
 
+//UpdateAccountPreferences updates account preferences
 func (sa *Adapter) UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 	update := bson.D{
