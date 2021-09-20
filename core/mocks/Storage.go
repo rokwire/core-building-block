@@ -329,6 +329,20 @@ func (_m *Storage) UpdateAccount(updatedUser *model.Account, orgID string, newOr
 	return r0, r1
 }
 
+// UpdateAccountPreferences provides a mock function with given fields: accountID, preferences
+func (_m *Storage) UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error {
+	ret := _m.Called(accountID, preferences)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, map[string]interface{}) error); ok {
+		r0 = rf(accountID, preferences)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UpdateApplicationGroup provides a mock function with given fields: item
 func (_m *Storage) UpdateApplicationGroup(item model.ApplicationGroup) error {
 	ret := _m.Called(item)
