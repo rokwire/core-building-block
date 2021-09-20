@@ -283,6 +283,8 @@ paths:
       summary: Create global config
       description: |
         Creates the system global config
+
+        **Auth:** Requires auth token with `config_admin` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -311,6 +313,8 @@ paths:
       summary: Update global config
       description: |
         Updates the system global config
+
+        **Auth:** Requires auth token with `config_admin` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -380,6 +384,8 @@ paths:
       summary: Get organization
       description: |
         Gets organization
+
+        **Auth:** Requires auth token with `org_admin` permission
       security:
         - bearerAuth: []
       parameters:
@@ -438,6 +444,8 @@ paths:
       summary: Create organization
       description: |
         Creates organization
+
+        **Auth:** Requires auth token with `org_admin` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -504,6 +512,8 @@ paths:
         Creates a new service registration
 
         The "service_id" of the registration must not match an existing registration  
+
+        **Auth:** Requires auth token with `service_admin` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -535,6 +545,8 @@ paths:
         Update an existing service registration
 
         The "service_id" of the registration must match an existing registration
+
+        **Auth:** Requires auth token with `service_admin` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -564,6 +576,8 @@ paths:
       summary: Deregister service
       description: |
         Deletes an existing service registration record
+
+        **Auth:** Requires auth token with `service_admin` permission
       security:
         - bearerAuth: []
       parameters:
