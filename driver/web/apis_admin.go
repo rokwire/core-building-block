@@ -96,30 +96,39 @@ func (h AdminApisHandler) updateGlobalConfig(l *logs.Log, r *http.Request) logs.
 	return l.HttpResponseSuccess()
 }
 
+type createOrganizationRequest struct {
+	Name    string
+	Type    string //micro small medium large - based on the users count
+	Domains []string
+}
+
+type createOrganizationResponse struct {
+}
+
 //createOrganization creates organization
 func (h AdminApisHandler) createOrganization(l *logs.Log, r *http.Request) logs.HttpResponse {
-	//TODO
-	return l.HttpResponseSuccess()
-	/*data, err := ioutil.ReadAll(r.Body)
+
+	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
-	var requestData Def.Organization
+
+	var requestData createOrganizationRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
 	}
 
 	name := requestData.Name
-	requestType := requestData.Type
-	organizationDomains := requestData.Config.Domains
+	types := requestData.Type
+	domains := requestData.Domains
 
-	_, err = h.coreAPIs.Administration.AdmCreateOrganization(name, string(requestType), *organizationDomains)
+	_, err = h.coreAPIs.Administration.AdmCreateOrganization(name, string(types), domains)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 	}
 
-	return l.HttpResponseSuccess() */
+	return l.HttpResponseSuccess()
 }
 
 //updateOrganization updates organization
@@ -181,23 +190,24 @@ func (h AdminApisHandler) getOrganization(l *logs.Log, r *http.Request) logs.Htt
 //getOrganizations gets organizations
 func (h AdminApisHandler) getOrganizations(l *logs.Log, r *http.Request) logs.HttpResponse {
 	//TODO
-	return l.HttpResponseSuccess()
+	//return l.HttpResponseSuccess()
 
-	/*organizations, err := h.coreAPIs.Administration.AdmGetOrganizations()
+	organizations, err := h.coreAPIs.Administration.AdmGetOrganizations()
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 	}
-	var response []Def.Organization
-	for _, organization := range organizations {
-		r := organizationToDef(&organization)
-		response = append(response, *r)
-	}
+	//var response []Def.Organization
+	//for _, organization := range organizations {
+	//	r := organizationsToDef(&organization)
+	//	response = append(response, *r)
+	//}
+	response := organizationsToDef(organizations)
 
 	data, err := json.Marshal(response)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeOrganization, nil, err, http.StatusInternalServerError, false)
 	}
-	return l.HttpResponseSuccessJSON(data) */
+	return l.HttpResponseSuccessJSON(data)
 }
 
 func (h AdminApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request) logs.HttpResponse {
