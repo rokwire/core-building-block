@@ -11,10 +11,10 @@ import (
 type Services interface {
 	SerGetProfile(accountID string) (*model.Profile, error)
 	SerUpdateProfile(profile *model.Profile, ID string) error
+	SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error
 
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
-	SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error
 }
 
 //Administration exposes administration APIs for the driver adapters
