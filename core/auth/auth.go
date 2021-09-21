@@ -296,11 +296,11 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		//User exists
 		//TODO: Do we need to update any account info?
 		//2. it seems the user exist, now check the credentials
-		validCredentials, isVerified, err := authImpl.checkCredentials(accountAuthType, creds, appOrg, l)
+		credentials, isVerified, err := authImpl.checkCredentials(accountAuthType, creds, appOrg, l)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
 		}
-		if !*validCredentials {
+		if credentials == nil {
 			return nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
 		}
 		if !*isVerified {
@@ -308,18 +308,16 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		}
 
 	} else if account == nil && accountAuthType == nil {
-		//2. it seems the user exist, now check the credentials
-		validCredentials, isVerified, err := authImpl.checkCredentials(accountAuthType, creds, appOrg, l)
+		credentials, isVerified, err := authImpl.checkCredentials(accountAuthType, creds, appOrg, l)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
 		}
-		if !*validCredentials {
+		if credentials == nil {
 			return nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
 		}
 		if !*isVerified {
-			//TODO: return verification sent message
+			//TODO: return please verify email message
 			return nil, nil, nil
-			// return nil, nil, errors.WrapErrorAction("credentials is not verified", "", nil, err)
 		}
 
 		//setup account

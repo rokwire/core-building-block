@@ -346,7 +346,7 @@ func (a *Auth) Verify(authenticationType string, appID string, orgID string, id 
 	}
 
 	//TODO: Implement account management
-	err = auth.verify(id, verification, l)
+	err = auth.verify(id, verification, appID, orgID, l)
 	if err != nil {
 		errors.WrapErrorAction(logutils.ActionValidate, "creds", nil, err)
 	}

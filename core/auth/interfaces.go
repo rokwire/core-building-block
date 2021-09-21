@@ -7,16 +7,17 @@ import (
 
 	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/logging-library/logs"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 //authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
 type authType interface {
 	//checks the verification code generated on email signup
-	verify(id string, verification string, l *logs.Log) error
+	verify(id string, verification string, appID string, orgID string, l *logs.Log) error
 	//userExist checks if the user exists for application and organizations
 	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error)
 	//checkCredentials checks if the account credentials are valid for the account auth type
-	checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*bool, *bool, error)
+	checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AuthCreds, *bool, error)
 }
 
 //externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
@@ -139,6 +140,7 @@ type Storage interface {
 	FindCredentialsByID(ID string) (*model.AuthCreds, error)
 	FindCredentials(orgID string, appID string, authType string, params map[string]interface{}) (*model.AuthCreds, error)
 	UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCreds) error
+	InsertCredentials(creds *model.AuthCreds, context mongo.SessionContext) error
 
 	//RefreshTokens
 	FindRefreshToken(token string) (*model.AuthRefresh, error)
