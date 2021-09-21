@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set up logging [#6](https://github.com/rokwire/core-building-block/issues/6)
 
 ### Fixed
+- Fix login issues [#178](https://github.com/rokwire/core-building-block/issues/178)
 - Fix base path validation issue [#174](https://github.com/rokwire/core-building-block/issues/174)
 - Fix auth credentials search for multiple apps [#153](https://github.com/rokwire/core-building-block/issues/153)
 - Fix GlobalPermission and OrganizationPermission in the doc APIs model [#151](https://github.com/rokwire/core-building-block/issues/151)

@@ -351,36 +351,37 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "user info", nil, err)
 	}
 
-	userClaimsSub := userClaims["sub"].(string)
+	userClaimsSub, _ := userClaims["sub"].(string)
 	if userClaimsSub != sub {
 		return nil, nil, errors.Newf("mismatching user info sub %s and id token sub %s", userClaimsSub, sub)
 	}
 
-	identityProviderID := authType.Params["identity_provider"].(string)
+	identityProviderID, _ := authType.Params["identity_provider"].(string)
 	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
 
 	//identifier
-	identifier := userClaims[identityProviderSetting.UserIdentifierField].(string)
+	identifier, _ := userClaims[identityProviderSetting.UserIdentifierField].(string)
 	//first name
-	firstName := userClaims[identityProviderSetting.FirstNameField].(string)
+	firstName, _ := userClaims[identityProviderSetting.FirstNameField].(string)
 	//middle name
-	middleName := userClaims[identityProviderSetting.MiddleNameField].(string)
+	middleName, _ := userClaims[identityProviderSetting.MiddleNameField].(string)
 	//last name
-	lastName := userClaims[identityProviderSetting.LastNameField].(string)
+	lastName, _ := userClaims[identityProviderSetting.LastNameField].(string)
 	//email
-	email := userClaims[identityProviderSetting.EmailField].(string)
+	email, _ := userClaims[identityProviderSetting.EmailField].(string)
 	//groups
-	groupsList := userClaims[identityProviderSetting.GroupsField].([]interface{})
+	groupsList, _ := userClaims[identityProviderSetting.GroupsField].([]interface{})
 	groups := make([]string, len(groupsList))
 	for i, item := range groupsList {
-		groups[i] = item.(string)
+		group, _ := item.(string)
+		groups[i] = group
 	}
 	//system specific
 	systemSpecific := map[string]interface{}{}
 	userSpecificFields := identityProviderSetting.UserSpecificFields
 	if len(userSpecificFields) > 0 {
 		for _, field := range userSpecificFields {
-			fieldValue := userClaims[field].(string)
+			fieldValue, _ := userClaims[field].(string)
 			systemSpecific[field] = fieldValue
 		}
 	}
@@ -495,7 +496,10 @@ func (a *oidcAuthImpl) loadOidcUserInfo(token *oidcToken, url string) ([]byte, e
 func (a *oidcAuthImpl) getOidcAuthConfig(authType model.AuthType, appType model.ApplicationType) (*oidcAuthConfig, error) {
 	errFields := &logutils.FieldArgs{"auth_type_id": authType.ID, "app_type_id": appType}
 
-	identityProviderID := authType.Params["identity_provider"].(string)
+	identityProviderID, ok := authType.Params["identity_provider"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "identity provider", errFields)
+	}
 	appTypeID := appType.ID
 	authConfig, err := a.auth.getCachedIdentityProviderConfig(identityProviderID, appTypeID)
 	if err != nil {
