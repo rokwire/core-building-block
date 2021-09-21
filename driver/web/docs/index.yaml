@@ -13,16 +13,16 @@ servers:
 - url: http://localhost/core
   description: Local server
 tags:
-- name: Services
-  description: End users applications APIs.
-- name: Admin
-  description: Administration applications APIs.
-- name: Enc
-  description: APIs consumed by the Encryption building block.
-- name: BBs
-  description: APIs consumed by the platform building blocks.
-- name: Third-Party Services
-  description: APIs consumed by third-party services.
+  - name: Services
+    description: End users applications APIs.
+  - name: Admin
+    description: Administration applications APIs.
+  - name: Enc
+    description: APIs consumed by the Encryption building block.
+  - name: BBs
+    description: APIs consumed by the platform building blocks.
+  - name: Third-Party Services
+    description: APIs consumed by third-party services.
 paths:
   #services
   /services/auth/login:
@@ -37,6 +37,10 @@ paths:
     $ref: "./resources/services/auth/service-regs.yaml"
   /services/account:
     $ref: "./resources/services/accounts/account.yaml"
+  /services/account-preferences:
+    $ref: "./resources/services/account-preferences.yaml"
+  /services/profile:
+    $ref: "./resources/services/accounts/profile.yaml"  
   /services/test:
     $ref: "./resources/services/test.yaml"
 
