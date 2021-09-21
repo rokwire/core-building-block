@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
+- Anonymous profile(non-pii) endpoints [#135](https://github.com/rokwire/core-building-block/issues/135)
 - User PII endpoints [#128](https://github.com/rokwire/core-building-block/issues/128)
 - Handle refresh tokens across multiple devices/apps/orgs [#149](https://github.com/rokwire/core-building-block/issues/149)
 - Expose admin API which gets applications list [#104](https://github.com/rokwire/core-building-block/issues/104)

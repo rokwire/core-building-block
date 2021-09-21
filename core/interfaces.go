@@ -11,6 +11,7 @@ import (
 type Services interface {
 	SerGetProfile(accountID string) (*model.Profile, error)
 	SerUpdateProfile(profile *model.Profile, ID string) error
+	SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error
 
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
@@ -50,6 +51,8 @@ type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
 	FindAccountByID(id string) (*model.Account, error)
+
+	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 
 	UpdateProfile(profile *model.Profile, ID string) error
 

@@ -10,6 +10,8 @@ import (
 const (
 	//TypeAccount account
 	TypeAccount logutils.MessageDataType = "account"
+	//TypeAccountPreferences account preferences
+	TypeAccountPreferences logutils.MessageDataType = "account preferences"
 	//TypeAccountAuthType account auth type
 	TypeAccountAuthType logutils.MessageDataType = "account auth type"
 	//TypeProfile profile
@@ -33,7 +35,8 @@ type Account struct {
 
 	AuthTypes []AccountAuthType
 
-	Profile Profile //one account has one profile, one profile can be shared between many accounts
+	Preferences map[string]interface{}
+	Profile     Profile //one account has one profile, one profile can be shared between many accounts
 
 	Devices []Device
 

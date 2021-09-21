@@ -77,6 +77,10 @@ func (s *servicesImpl) SerGetCommonTest(l *logs.Log) string {
 	return s.app.serGetCommonTest(l)
 }
 
+func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error {
+	return s.app.serUpdateAccountPreferences(id, preferences)
+}
+
 ///
 
 //administrationImpl

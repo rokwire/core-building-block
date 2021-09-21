@@ -24,6 +24,14 @@ func (app *application) serUpdateProfile(profile *model.Profile, ID string) erro
 	return app.storage.UpdateProfile(profile, ID)
 }
 
+func (app *application) serUpdateAccountPreferences(id string, preferences map[string]interface{}) error {
+	err := app.storage.UpdateAccountPreferences(id, preferences)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
+	}
+	return nil
+}
+
 func (app *application) serGetAuthTest(l *logs.Log) string {
 	return "Services - Auth - test"
 }

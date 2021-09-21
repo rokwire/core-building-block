@@ -394,6 +394,26 @@ func (sa *Adapter) DeleteAccount(id string) error {
 	return errors.New(logutils.Unimplemented)
 }
 
+//UpdateAccountPreferences updates account preferences
+func (sa *Adapter) UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "preferences", Value: preferences},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountPreferences, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
 //UpdateAccountAuthType updates account auth type
 func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	// transaction
@@ -568,7 +588,7 @@ func (sa *Adapter) UpdateRefreshToken(token string, refresh *model.AuthRefresh) 
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAuthRefresh, logutils.StringArgs("unexpected modified count"))
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAuthRefresh, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return nil
