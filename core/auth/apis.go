@@ -39,13 +39,13 @@ func (a *Auth) GetHost() string {
 //		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //		Account (Account): Account object for authenticated user
 //		Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Login(authenticationType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error) {
+func (a *Auth) Login(authenticationType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, string, *model.Account, interface{}, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appID, orgID)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+		return "", "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
 	var account *model.Account
@@ -56,14 +56,17 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 	if authType.IsExternal {
 		account, accountAuthType, extParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
+			return "", "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 		}
 
 		//TODO groups mapping
 	} else {
-		message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
+		message, account, accountAuthType, err := a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
+			return "", "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
+		}
+		if message != nil {
+			return *message, "", "", nil, nil, nil
 		}
 
 		//the credentials are valid
@@ -72,10 +75,10 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 	//now we are ready to apply login for the user
 	accessToken, refreshToken, err := a.applyLogin(*account, *accountAuthType, *appType, extParams, l)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+		return "", "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}
 
-	return *accessToken, *refreshToken, account, extParams, nil
+	return "", *accessToken, *refreshToken, account, extParams, nil
 }
 
 //Refresh refreshes an access token using a refresh token

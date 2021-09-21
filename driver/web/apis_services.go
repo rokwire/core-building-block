@@ -188,7 +188,6 @@ func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResp
 //Handler for verify endpoint
 func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request) logs.HttpResponse {
 	params := mux.Vars(r)
-	// parse app and orgID as path params?
 	authType, id, code, appID, orgID := params["auth-type"], params["id"], params["code"], params["appID"], params["orgID"]
 	if authType == "" || id == "" || code == "" {
 		return l.HttpResponseError(string(logutils.StatusMissing), nil, http.StatusBadRequest, false)

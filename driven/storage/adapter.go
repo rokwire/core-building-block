@@ -483,15 +483,15 @@ func (sa *Adapter) InsertCredential(creds *model.Credential, context mongo.Sessi
 }
 
 //Update credentials updates a set of credentials
-func (sa *Adapter) UpdateCredentialByID(ID string, creds *model.Credential) error {
+func (sa *Adapter) UpdateCredentialByID(creds *model.Credential) error {
 	if creds == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeCredential))
 	}
 
-	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	filter := bson.D{primitive.E{Key: "_id", Value: creds.ID}}
 	err := sa.db.credentials.ReplaceOne(filter, creds, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"_id": ID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"_id": creds.ID}, err)
 	}
 
 	return nil
