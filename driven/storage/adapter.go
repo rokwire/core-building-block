@@ -269,23 +269,33 @@ func (sa *Adapter) FindAccountByID(id string) (*model.Account, error) {
 }
 
 func (sa *Adapter) findAccount(key string, id string) (*model.Account, error) {
-	/*filter := bson.M{key: id}
-	var users []user
-	err := sa.db.users.Find(filter, &users, nil)
+	filter := bson.M{key: id}
+	var accounts []account
+	err := sa.db.accounts.Find(filter, &accounts, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
-	if len(users) == 0 {
+	if len(accounts) == 0 {
 		//not found
 		return nil, nil
 	}
 
-	user := users[0]
+	account := accounts[0]
 
-	modelUser := userFromStorage(&user, sa)
-	return &modelUser, nil */
+	//application - from cache
+	application, err := sa.getCachedApplication(account.AppID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+	}
 
-	return nil, nil
+	//organization - from cache
+	organization, err := sa.getCachedOrganization(account.OrgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
+	}
+
+	modelAccount := accountFromStorage(account, sa, *application, *organization)
+	return &modelAccount, nil
 }
 
 //InsertAccount inserts an account
@@ -713,23 +723,9 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 	return result, nil
 }
 
-//FindProfile finds an account profile
-func (sa *Adapter) FindProfile(ID string) (*model.Profile, error) {
-	account, err := sa.FindAccountByID(ID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeProfile, nil, err)
-	}
-
-	if account == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, logutils.StringArgs(ID))
-	}
-
-	return &account.Profile, nil
-}
-
 //UpdateProfile updates an account profile
 func (sa *Adapter) UpdateProfile(profile *model.Profile, ID string) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	filter := bson.D{primitive.E{Key: "profile.id", Value: ID}}
 
 	now := time.Now().UTC()
 	if profile == nil {

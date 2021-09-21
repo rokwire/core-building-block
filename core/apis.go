@@ -61,8 +61,8 @@ type servicesImpl struct {
 	app *application
 }
 
-func (s *servicesImpl) SerGetProfile(ID string) (*model.Profile, error) {
-	return s.app.serGetProfile(ID)
+func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, error) {
+	return s.app.serGetProfile(accountID)
 }
 
 func (s *servicesImpl) SerUpdateProfile(profile *model.Profile, ID string) error {

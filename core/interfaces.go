@@ -9,7 +9,7 @@ import (
 
 //Services exposes APIs for the driver adapters
 type Services interface {
-	SerGetProfile(ID string) (*model.Profile, error)
+	SerGetProfile(accountID string) (*model.Profile, error)
 	SerUpdateProfile(profile *model.Profile, ID string) error
 
 	SerGetAuthTest(l *logs.Log) string
@@ -49,7 +49,8 @@ type BBs interface {
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
-	FindProfile(ID string) (*model.Profile, error)
+	FindAccountByID(id string) (*model.Account, error)
+
 	UpdateProfile(profile *model.Profile, ID string) error
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
