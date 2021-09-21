@@ -8,12 +8,20 @@ import (
 	"github.com/rokmetro/logging-library/logutils"
 )
 
-func (app *application) serGetAuthTest(l *logs.Log) string {
-	return "Services - Auth - test"
+func (app *application) serGetProfile(accountID string) (*model.Profile, error) {
+	//find the account
+	account, err := app.storage.FindAccountByID(accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	//get the profile for the account
+	profile := account.Profile
+	return &profile, nil
 }
 
-func (app *application) serGetCommonTest(l *logs.Log) string {
-	return "Services - Common - test"
+func (app *application) serUpdateProfile(profile *model.Profile, ID string) error {
+	return app.storage.UpdateProfile(profile, ID)
 }
 
 func (app *application) serUpdateAccountPreferences(id string, preferences map[string]interface{}) error {
@@ -22,4 +30,12 @@ func (app *application) serUpdateAccountPreferences(id string, preferences map[s
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
 	return nil
+}
+
+func (app *application) serGetAuthTest(l *logs.Log) string {
+	return "Services - Auth - test"
+}
+
+func (app *application) serGetCommonTest(l *logs.Log) string {
+	return "Services - Common - test"
 }

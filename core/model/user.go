@@ -14,6 +14,8 @@ const (
 	TypeAccountPreferences logutils.MessageDataType = "account preferences"
 	//TypeAccountAuthType account auth type
 	TypeAccountAuthType logutils.MessageDataType = "account auth type"
+	//TypeProfile profile
+	TypeProfile logutils.MessageDataType = "profile"
 )
 
 //Account represents account entity
@@ -95,6 +97,13 @@ type Profile struct {
 	PhotoURL  string
 	FirstName string
 	LastName  string
+	Email     string
+	Phone     string
+	BirthYear int8
+	Address   string
+	ZipCode   string
+	State     string
+	Country   string
 
 	Accounts []Account //the users can share profiles between their applications accounts for some applications
 

@@ -61,6 +61,14 @@ type servicesImpl struct {
 	app *application
 }
 
+func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, error) {
+	return s.app.serGetProfile(accountID)
+}
+
+func (s *servicesImpl) SerUpdateProfile(profile *model.Profile, ID string) error {
+	return s.app.serUpdateProfile(profile, ID)
+}
+
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
 	return s.app.serGetAuthTest(l)
 }

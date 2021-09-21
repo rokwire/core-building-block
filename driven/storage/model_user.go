@@ -46,6 +46,13 @@ type profile struct {
 	PhotoURL  string `bson:"photo_url"`
 	FirstName string `bson:"first_name"`
 	LastName  string `bson:"last_name"`
+	Email     string `bson:"email"`
+	Phone     string `bson:"phone"`
+	BirthYear int8   `bson:"birth_year"`
+	Address   string `bson:"address"`
+	ZipCode   string `bson:"zip_code"`
+	State     string `bson:"state"`
+	Country   string `bson:"country"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
