@@ -1568,10 +1568,6 @@ components:
           type: boolean
         requires_own_users:
           type: boolean
-        organization:
-          $ref: '#/components/schemas/ApplicationOrganization'
-        applicationType:
-          $ref: '#/components/schemas/ApplicationType'
     _req_get_Application_Request:
       required:
         - id
