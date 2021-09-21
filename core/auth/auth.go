@@ -73,16 +73,6 @@ type Auth struct {
 	timerDone          chan bool
 }
 
-//TokenClaims is a temporary claims model to provide backwards compatibility
-//TODO: Once the profile has been transferred and the new user ID scheme has been adopted across all services
-//		this should be replaced by tokenauth.Claims directly
-type TokenClaims struct {
-	tokenauth.Claims
-	UID   string `json:"uid,omitempty"`
-	Email string `json:"email,omitempty"`
-	Phone string `json:"phone,omitempty"`
-}
-
 //NewAuth creates a new auth instance
 func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
@@ -537,14 +527,14 @@ func (a *Auth) getExternalAuthTypeImpl(authType model.AuthType) (externalAuthTyp
 	return nil, errors.ErrorData(logutils.StatusInvalid, typeExternalAuthType, logutils.StringArgs(key))
 }
 
-func (a *Auth) buildAccessToken(claims TokenClaims, permissions string, scope string) (string, error) {
+func (a *Auth) buildAccessToken(claims tokenauth.Claims, permissions string, scope string) (string, error) {
 	claims.Purpose = "access"
 	claims.Permissions = permissions
 	claims.Scope = scope
 	return a.generateToken(&claims)
 }
 
-func (a *Auth) buildCsrfToken(claims TokenClaims) (string, error) {
+func (a *Auth) buildCsrfToken(claims tokenauth.Claims) (string, error) {
 	claims.Purpose = "csrf"
 	return a.generateToken(&claims)
 }
@@ -559,21 +549,19 @@ func (a *Auth) buildRefreshToken() (string, *time.Time, error) {
 	return newToken, &expireTime, nil
 }
 
-func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string, exp *int64) TokenClaims {
-	return TokenClaims{
-		Claims: tokenauth.Claims{
-			StandardClaims: jwt.StandardClaims{
-				Audience:  aud,
-				Subject:   sub,
-				ExpiresAt: a.getExp(exp),
-				IssuedAt:  time.Now().Unix(),
-				Issuer:    a.host,
-			}, OrgID: orgID, AppID: appID,
-		}, UID: uid, Email: email, Phone: phone,
+func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string, exp *int64) tokenauth.Claims {
+	return tokenauth.Claims{
+		StandardClaims: jwt.StandardClaims{
+			Audience:  aud,
+			Subject:   sub,
+			ExpiresAt: a.getExp(exp),
+			IssuedAt:  time.Now().Unix(),
+			Issuer:    a.host,
+		}, OrgID: orgID, AppID: appID, UID: uid, Email: email, Phone: phone,
 	}
 }
 
-func (a *Auth) generateToken(claims *TokenClaims) (string, error) {
+func (a *Auth) generateToken(claims *tokenauth.Claims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	kid, err := authutils.GetKeyFingerprint(&a.authPrivKey.PublicKey)
 	if err != nil {
