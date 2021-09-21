@@ -381,7 +381,7 @@ func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.Account, error) {
 	if err != nil {
 		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("profile_id"), err)
 	}
-	newUser.Profile = model.UserProfile{ID: profileID.String(), FirstName: userAuth.FirstName, LastName: userAuth.LastName, DateCreated: now}
+	newUser.Profile = model.UserProfile{ID: profileID.String(), PII: &model.UserPII{FirstName: userAuth.FirstName, LastName: userAuth.LastName}, DateCreated: now}
 
 	if userAuth.OrgID != "" {
 		membershipID, err := uuid.NewUUID()

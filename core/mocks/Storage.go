@@ -80,6 +80,29 @@ func (_m *Storage) DeleteApplicationRole(id string) error {
 	return r0
 }
 
+// FindAccountByID provides a mock function with given fields: id
+func (_m *Storage) FindAccountByID(id string) (*model.Account, error) {
+	ret := _m.Called(id)
+
+	var r0 *model.Account
+	if rf, ok := ret.Get(0).(func(string) *model.Account); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Account)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindApplication provides a mock function with given fields: ID
 func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	ret := _m.Called(ID)
@@ -332,6 +355,20 @@ func (_m *Storage) UpdateOrganization(ID string, name string, requestType string
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string, string, []string) error); ok {
 		r0 = rf(ID, name, requestType, organizationDomains)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateProfile provides a mock function with given fields: profile, ID
+func (_m *Storage) UpdateProfile(profile *model.Profile, ID string) error {
+	ret := _m.Called(profile, ID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*model.Profile, string) error); ok {
+		r0 = rf(profile, ID)
 	} else {
 		r0 = ret.Error(0)
 	}
