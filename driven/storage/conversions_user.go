@@ -17,7 +17,7 @@ func accountFromStorage(item account, sa *Adapter, application model.Application
 	dateUpdated := item.DateUpdated
 	return model.Account{ID: id, Application: application, Organization: organization, Permissions: permissions,
 		Roles: roles, Groups: groups, AuthTypes: authTypes, Preferences: item.Preferences, Profile: profile,
-		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated, Anonymous: item.Anonymous}
+		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountToStorage(item *model.Account) *account {
@@ -32,10 +32,9 @@ func accountToStorage(item *model.Account) *account {
 	devices := accountDevicesToStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
-	anonymous := item.Anonymous
 
 	return &account{ID: id, AppID: appID, OrgID: orgID, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
-		Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated, Anonymous: anonymous}
+		Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountDevicesFromStorage(item account) []model.Device {

@@ -21,8 +21,6 @@ type account struct {
 
 	Devices []userDevice `bson:"devices,omitempty"`
 
-	Anonymous bool `bson:"anonymous"`
-
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
