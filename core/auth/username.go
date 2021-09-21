@@ -26,8 +26,8 @@ func (a *usernameAuthImpl) verify(id string, verification string, appID string, 
 	return errors.New(logutils.Unimplemented)
 }
 
-func (a *usernameAuthImpl) checkCredentials(userAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AuthCreds, *bool, error) {
-	return nil, nil, nil
+func (a *usernameAuthImpl) checkCredentials(userAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, interface{}, *bool, error) {
+	return nil, nil, nil, nil
 }
 
 //initUsernameAuth initializes and registers a new username auth instance

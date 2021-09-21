@@ -17,7 +17,7 @@ type authType interface {
 	//userExist checks if the user exists for application and organizations
 	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error)
 	//checkCredentials checks if the account credentials are valid for the account auth type
-	checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AuthCreds, *bool, error)
+	checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, interface{}, *bool, error) //TODO: is there a way to remove identifier from return val
 }
 
 //externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
@@ -137,10 +137,13 @@ type Storage interface {
 	FindOrganization(id string) (*model.Organization, error)
 
 	//Credentials
-	FindCredentialsByID(ID string) (*model.AuthCreds, error)
-	FindCredentials(orgID string, appID string, authType string, params map[string]interface{}) (*model.AuthCreds, error)
-	UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCreds) error
-	InsertCredentials(creds *model.AuthCreds, context mongo.SessionContext) error
+	// FindCredentialsByID(ID string) (*model.AuthCreds, error)
+	// FindCredentials(orgID string, appID string, authType string, params map[string]interface{}) (*model.AuthCreds, error)
+	// UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCreds) error
+	// InsertCredentials(creds *model.AuthCreds, context mongo.SessionContext) error
+	FindCredentialByID(ID string) (*model.Credential, error)
+	UpdateCredentialByID(ID string, creds *model.Credential) error
+	InsertCredential(creds *model.Credential, context mongo.SessionContext) error
 
 	//RefreshTokens
 	FindRefreshToken(token string) (*model.AuthRefresh, error)

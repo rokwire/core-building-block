@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/rokmetro/logging-library/errors"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
@@ -36,37 +35,40 @@ type emailCreds struct {
 }
 
 // check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error)
-func (a *emailAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AuthCreds, *bool, error) {
-	appID := appOrg.Application.ID
-	orgID := appOrg.Organization.ID
+func (a *emailAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, interface{}, *bool, error) {
+	// appID := appOrg.Application.ID
+	// orgID := appOrg.Organization.ID
+	var credID string
+	if accountAuthType != nil {
+		credID = accountAuthType.Credential.ID
+	}
 	isVerified := false
 	var requestCreds *emailCreds
 	err := json.Unmarshal([]byte(creds), requestCreds)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	paramsMap := make(map[string]interface{})
 	err = json.Unmarshal([]byte(creds), &paramsMap)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	newUser, ok := paramsMap["newUser"].(bool)
 	if !ok {
-		return nil, nil, errors.New("newUser flag missing or invalid")
+		return nil, nil, nil, errors.New("newUser flag missing or invalid")
 	}
 
-	params := map[string]interface{}{"email": requestCreds.Email}
-	authCreds, err := a.auth.storage.FindCredentials(orgID, appID, a.authType, params)
+	credential, err := a.auth.storage.FindCredentialByID(credID)
 	if err != nil {
-		errFields := logutils.FieldArgs{"org_id": orgID, "app_id": appID, "type": model.TypeAuthCred, "user_id": requestCreds.Email}
-		l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionFind, model.TypeAuthCred, &errFields)
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
+		errFields := logutils.FieldArgs{"_id": credID}
+		l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionFind, model.TypeCredential, &errFields)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
 	var user *emailCreds
-	if authCreds != nil {
-		user, err = mapToEmailCreds(authCreds.Creds)
+	if credential != nil {
+		user, err = mapToEmailCreds(credential.Value)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 	}
 
@@ -74,34 +76,35 @@ func (a *emailAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType,
 	//TODO: Prevent multiple signups if email is not verified
 	if accountAuthType == nil {
 		if !newUser {
-			return nil, nil, errors.New("no account found newUser flag must be set") // TODO:
+			return nil, nil, nil, errors.New("no account found newUser flag must be set") // TODO:
 		}
 		if user != nil {
-			return nil, nil, errors.New("email is not verified yet")
+			return nil, nil, nil, errors.New("email is not verified yet")
 		}
 		newCreds, err := a.handleSignup(requestCreds, user)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		//user verified insert credentials for new user
-		id, _ := uuid.NewUUID()
-		now := time.Now()
-		credsMap, err := emailCredsToMap(newCreds)
-		if err != nil {
-			return nil, nil, err
-		}
-		authCreds = &model.AuthCreds{ID: id.String(), OrgID: orgID, AppID: appID, AuthType: authTypeEmail, AccountID: newCreds.Email, Creds: credsMap, DateCreated: now, DateUpdated: &now}
-		if err = a.auth.storage.InsertCredentials(authCreds, nil); err != nil {
-			return nil, nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthCred, nil, err)
-		}
-		return authCreds, &isVerified, nil
+		// id, _ := uuid.NewUUID()
+		// credID = id.String()
+		// now := time.Now()
+		// credsMap, err := emailCredsToMap(newCreds)
+		// if err != nil {
+		// 	return nil, nil, nil, err
+		// }
+		// credential = &model.Credential{ID: credID, AccountsAuthTypes: []model.AccountAuthType{*accountAuthType}, Value: credsMap, DateCreated: now, DateUpdated: &now}
+		// if err = a.auth.storage.InsertCredential(credential, nil); err != nil {
+		// 	return nil, nil, nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthCred, nil, err)
+		// }
+		return &credID, credential, &isVerified, nil
 	}
 
 	isVerified = true
 	if err = a.handleSignin(requestCreds, user); err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeEmailCreds, nil, err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeEmailCreds, nil, err)
 	}
-	return authCreds, &isVerified, nil
+	return &credID, credential, &isVerified, nil
 }
 
 func (a *emailAuthImpl) handleSignup(requestCreds *emailCreds, storageCreds *emailCreds) (*emailCreds, error) {
@@ -149,14 +152,14 @@ func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode stri
 // 	return a.auth.SendEmail(email, "Password Reset", "Your temporary password is "+password, "")
 // }
 
-func (a *emailAuthImpl) verify(id string, verification string, appID string, orgID string, l *logs.Log) error {
-	params := map[string]interface{}{"email": id}
-	authCreds, err := a.auth.storage.FindCredentials(orgID, appID, a.authType, params)
+func (a *emailAuthImpl) verify(accountAuthType *model.AccountAuthType, id string, verification string, appID string, orgID string, l *logs.Log) error {
+	credID := accountAuthType.Credential.ID
+	credential, err := a.auth.storage.FindCredentialByID(credID)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, errors.New("no credentials found in storage"))
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, errors.New("no credentials found in storage"))
 	}
 
-	credBytes, err := json.Marshal(authCreds.Creds)
+	credBytes, err := json.Marshal(credential.Value)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
 	}
@@ -178,9 +181,9 @@ func (a *emailAuthImpl) verify(id string, verification string, appID string, org
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
 	}
-	authCreds.Creds = credsMap
+	credential.Value = credsMap
 
-	if err = a.auth.storage.UpdateCredentials(orgID, appID, authTypeEmail, authCreds); err != nil {
+	if err = a.auth.storage.UpdateCredential(orgID, appID, authTypeEmail, credential); err != nil {
 		return err
 	}
 	return nil

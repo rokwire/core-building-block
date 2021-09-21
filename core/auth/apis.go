@@ -61,7 +61,7 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 
 		//TODO groups mapping
 	} else {
-		account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
+		message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
 			return "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
@@ -335,20 +335,19 @@ func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
 }
 
 //Verify checks the verification code generated on signup
-func (a *Auth) Verify(authenticationType string, appID string, orgID string, id string, verification string, l *logs.Log) error {
-	authType, _, _, err := a.validateAuthType(authenticationType, appID, orgID)
+func (a *Auth) Verify(authenticationType string, appID string, orgID string, identifier string, verification string, l *logs.Log) error {
+	//TODO: should it also return a message for verify
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appID, orgID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
-	auth, err := a.getAuthTypeImpl(*authType)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	if authType.IsExternal {
+		return errors.WrapErrorAction("invalid auth type for verify", model.TypeAuthType, nil, err)
 	}
 
-	//TODO: Implement account management
-	err = auth.verify(id, verification, appID, orgID, l)
+	err = a.verifyAuthType(*authType, *appType, *appOrg, identifier, verification, l)
 	if err != nil {
-		errors.WrapErrorAction(logutils.ActionValidate, "creds", nil, err)
+		return errors.WrapErrorAction(logutils.ActionValidate, "verification", nil, err)
 	}
 
 	return nil

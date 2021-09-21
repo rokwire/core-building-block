@@ -40,6 +40,7 @@ type Account struct {
 }
 
 //FindAccountAuthType finds account auth type
+//TODO: find credential and populate db
 func (a Account) FindAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
 	for _, aat := range a.AuthTypes {
 		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {
@@ -74,7 +75,7 @@ type Credential struct {
 
 	AccountsAuthTypes []AccountAuthType //one credential can be used for more than one account auth type
 
-	Value interface{} //credential value
+	Value map[string]interface{} //credential value
 
 	DateCreated time.Time
 	DateUpdated *time.Time

@@ -25,8 +25,8 @@ func (a *phoneAuthImpl) userExist(authType model.AuthType, appType model.Applica
 func (a *phoneAuthImpl) verify(id string, verification string, appID string, orgID string, l *logs.Log) error {
 	return errors.New(logutils.Unimplemented)
 }
-func (a *phoneAuthImpl) checkCredentials(userAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AuthCreds, *bool, error) {
-	return nil, nil, nil
+func (a *phoneAuthImpl) checkCredentials(userAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, interface{}, *bool, error) {
+	return nil, nil, nil, nil
 }
 
 //initPhoneAuth initializes and registers a new phone auth instance

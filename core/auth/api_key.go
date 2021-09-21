@@ -25,8 +25,8 @@ func (a *apiKeyAuthImpl) userExist(authType model.AuthType, appType model.Applic
 func (a *apiKeyAuthImpl) verify(id string, verification string, appID string, orgID string, l *logs.Log) error {
 	return errors.New(logutils.Unimplemented)
 }
-func (a *apiKeyAuthImpl) checkCredentials(userAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AuthCreds, *bool, error) {
-	return nil, nil, nil
+func (a *apiKeyAuthImpl) checkCredentials(userAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, interface{}, *bool, error) {
+	return nil, nil, nil, nil
 }
 
 //initAPIKeyAuth initializes and registers a new API key auth instance

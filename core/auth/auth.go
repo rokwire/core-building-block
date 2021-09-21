@@ -277,7 +277,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	return account, accountAuthType, extParams, nil
 }
 
-func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
+func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (message, *model.Account, *model.AccountAuthType, error) {
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
 
@@ -296,13 +296,15 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		//User exists
 		//TODO: Do we need to update any account info?
 		//2. it seems the user exist, now check the credentials
-		credentials, isVerified, err := authImpl.checkCredentials(accountAuthType, creds, appOrg, l)
+		//TODO: remove isVerified
+		credentials, err := authImpl.checkCredentials(accountAuthType, creds, appOrg, l)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
 		}
 		if credentials == nil {
 			return nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
 		}
+		check isVerified
 		if !*isVerified {
 			return nil, nil, errors.WrapErrorAction("credentials is not verified", "", nil, err)
 		}
@@ -325,14 +327,14 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		//account auth type
 		accountAuthTypeID, _ := uuid.NewUUID()
 		accAuthType := authType
-		var credential *model.Credential
 		identifier := authType.Code //TODO: Verify if this is correct???
 		params := map[string]interface{}{}
 		active := true
 		active2FA := false
+		credential := model.Credential{ID: accountAuthTypeID.String(), Value: credentials, DateCreated: now, DateUpdated: &now}
 		accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: accAuthType,
-			Identifier: identifier, Params: params, Credential: credential, Active: active, Active2FA: active2FA, DateCreated: now}
-
+			Identifier: identifier, Params: params, Credential: &credential, Active: active, Active2FA: active2FA, DateCreated: now}
+		accountAuthType.Credential.AccountsAuthTypes = append(accountAuthType.Credential.AccountsAuthTypes, *accountAuthType)
 		//use shared profile
 		useSharedProfile := false
 
@@ -352,6 +354,23 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 
 	return account, accountAuthType, nil
+}
+
+func (a *Auth) verifyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, identifier string, verification string, l *logs.Log) error {
+	auth, err := a.getAuthTypeImpl(*authType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	//1. check if the account exists
+	account, accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	err = auth.verify(id, verification, appID, orgID, l)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "creds", nil, err)
+	}
 }
 
 func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAuthType, appType model.ApplicationType, params interface{}, l *logs.Log) (*string, *string, error) {

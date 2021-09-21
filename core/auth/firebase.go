@@ -25,8 +25,8 @@ func (a *firebaseAuthImpl) userExist(authType model.AuthType, appType model.Appl
 func (a *firebaseAuthImpl) verify(id string, verification string, appID string, orgID string, l *logs.Log) error {
 	return errors.New(logutils.Unimplemented)
 }
-func (a *firebaseAuthImpl) checkCredentials(userAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AuthCreds, *bool, error) {
-	return nil, nil, nil
+func (a *firebaseAuthImpl) checkCredentials(userAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, interface{}, *bool, error) {
+	return nil, nil, nil, nil
 }
 
 //initFirebaseAuth initializes and registers a new Firebase auth instance
