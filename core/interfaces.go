@@ -52,6 +52,8 @@ type Storage interface {
 
 	FindAccountByID(id string) (*model.Account, error)
 
+	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
+
 	UpdateProfile(profile *model.Profile, ID string) error
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
@@ -68,8 +70,6 @@ type Storage interface {
 	DeleteApplicationGroup(id string) error
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
-	UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
-	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 	LoadOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)
