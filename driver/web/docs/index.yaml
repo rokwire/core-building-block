@@ -4,14 +4,14 @@ info:
   description: Core Building Block API Documentation
   version: 1.0.0
 servers:
-- url: https://api.rokwire.illinois.edu/core
-  description: Production server
-- url: https://api-test.rokwire.illinois.edu/core
-  description: Test server
-- url: https://api-dev.rokwire.illinois.edu/core
-  description: Development server
-- url: http://localhost/core
-  description: Local server
+  - url: https://api.rokwire.illinois.edu/core
+    description: Production server
+  - url: https://api-test.rokwire.illinois.edu/core
+    description: Test server
+  - url: https://api-dev.rokwire.illinois.edu/core
+    description: Development server
+  - url: http://localhost/core
+    description: Local server
 tags:
   - name: Services
     description: End users applications APIs.
@@ -26,11 +26,9 @@ tags:
 paths:
   #auth
   /services/auth/test:
-    $ref: "./resources/auth/test.yaml"
+    $ref: "./resources/services/test.yaml"
   /services/auth/verify/{auth-type}/{id}/{code}:
     $ref: "./resources/auth/verify.yaml"
-  /services/auth/service-regs:
-    $ref: "./resources/auth/service-regs.yaml"
   /services/auth/login:
     $ref: "./resources/services/auth/login.yaml"
   /services/auth/refresh:
@@ -42,7 +40,7 @@ paths:
   /services/auth/service-regs:
     $ref: "./resources/services/auth/service-regs.yaml"
   /services/profile:
-    $ref: "./resources/services/accounts/profile.yaml"  
+    $ref: "./resources/services/accounts/profile.yaml"
   /services/test:
     $ref: "./resources/services/test.yaml"
   /services/account-preferences:
