@@ -61,6 +61,14 @@ type servicesImpl struct {
 	app *application
 }
 
+func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, error) {
+	return s.app.serGetProfile(accountID)
+}
+
+func (s *servicesImpl) SerUpdateProfile(profile *model.Profile, ID string) error {
+	return s.app.serUpdateProfile(profile, ID)
+}
+
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
 	return s.app.serGetAuthTest(l)
 }
@@ -69,8 +77,8 @@ func (s *servicesImpl) SerGetCommonTest(l *logs.Log) string {
 	return s.app.serGetCommonTest(l)
 }
 
-func (s *servicesImpl) UpdateUserAnonymousProfile(l *logs.Log, id string, profile *model.AnonymousProfile) error {
-	return s.app.updateUserAnonymousProfile(l, id, profile)
+func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error {
+	return s.app.serUpdateAccountPreferences(id, preferences)
 }
 
 ///

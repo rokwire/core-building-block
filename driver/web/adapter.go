@@ -70,7 +70,9 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations)).Methods("GET")
-
+	servicesSubRouter.HandleFunc("/account-preferences", we.wrapFunc(we.servicesApisHandler.updateAccountPreferences)).Methods("PUT")
+	servicesSubRouter.HandleFunc("/profile", we.wrapFunc(we.servicesApisHandler.getProfile)).Methods("GET")
+	servicesSubRouter.HandleFunc("/profile", we.wrapFunc(we.servicesApisHandler.updateProfile)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest)).Methods("GET")
 	///
 

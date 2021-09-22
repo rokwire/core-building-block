@@ -12,8 +12,12 @@ const (
 	TypeAnonymousProfile logutils.MessageDataType = "anonymous profile"
 	//TypeAccount account
 	TypeAccount logutils.MessageDataType = "account"
+	//TypeAccountPreferences account preferences
+	TypeAccountPreferences logutils.MessageDataType = "account preferences"
 	//TypeAccountAuthType account auth type
 	TypeAccountAuthType logutils.MessageDataType = "account auth type"
+	//TypeProfile profile
+	TypeProfile logutils.MessageDataType = "profile"
 )
 
 //Account represents account entity
@@ -32,8 +36,11 @@ type Account struct {
 	Groups      []ApplicationGroup
 
 	AuthTypes []AccountAuthType
-	Anonymous bool
-	Profile   Profile //one account has one profile, one profile can be shared between many accounts
+
+	Preferences map[string]interface{}
+	Profile     Profile //one account has one profile, one profile can be shared between many accounts
+
+	// Anonymous bool
 
 	Devices []Device
 
@@ -101,10 +108,16 @@ type Credential struct {
 type Profile struct {
 	ID string
 
-	PhotoURL         string
-	FirstName        string
-	LastName         string
-	AnonymousProfile AnonymousProfile
+	PhotoURL  string
+	FirstName string
+	LastName  string
+	Email     string
+	Phone     string
+	BirthYear int8
+	Address   string
+	ZipCode   string
+	State     string
+	Country   string
 
 	Accounts []Account //the users can share profiles between their applications accounts for some applications
 

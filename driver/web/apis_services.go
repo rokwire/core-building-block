@@ -177,6 +177,70 @@ func (h ServicesApisHandler) getServiceRegistrations(l *logs.Log, r *http.Reques
 	return l.HttpResponseSuccessJSON(data)
 }
 
+func (h ServicesApisHandler) getProfile(l *logs.Log, r *http.Request) logs.HttpResponse {
+	//TODO: get account ID from access token to pass to SerGetProfile
+
+	profile, err := h.coreAPIs.Services.SerGetProfile("")
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
+	}
+
+	profileResp := profileToDef(profile)
+
+	data, err := json.Marshal(profileResp)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeProfile, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request) logs.HttpResponse {
+	//TODO: get account ID from access token to pass to SerUpdateProfile
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ProfileFields
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "profile update request", nil, err, http.StatusBadRequest, true)
+	}
+
+	profile := profileFromDef(&requestData)
+
+	err = h.coreAPIs.Services.SerUpdateProfile(profile, "")
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h ServicesApisHandler) updateAccountPreferences(l *logs.Log, r *http.Request) logs.HttpResponse {
+	//TODO: get account ID from access token to pass to SerUpdateProfile
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var preferences map[string]interface{}
+	err = json.Unmarshal(data, &preferences)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "account preferences update request", nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Services.SerUpdateAccountPreferences("", preferences)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 //getCommonTest TODO get test
 func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResponse {
 	res := h.coreAPIs.Services.SerGetCommonTest(l)

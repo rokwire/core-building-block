@@ -8,5 +8,24 @@ properties:
     type: string
   last_name:
     type: string
-  anonymous_profile:
-    $ref: "./AnonymousProfile.yaml"
+  email:
+    type: string
+    nullable: true
+  phone:
+    type: string
+    nullable: true
+  birth_year:
+    type: integer
+    nullable: true
+  address:
+    type: string
+    nullable: true
+  zip_code:
+    type: string
+    nullable: true
+  state:
+    type: string
+    nullable: true
+  country:
+    type: string
+    nullable: true
