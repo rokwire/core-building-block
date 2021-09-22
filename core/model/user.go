@@ -39,9 +39,8 @@ type Account struct {
 	DateUpdated *time.Time
 }
 
-//FindAccountAuthType finds account auth type
-//TODO: find credential and populate db
-func (a Account) FindAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
+//GetAccountAuthType finds account auth type
+func (a Account) GetAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
 	for _, aat := range a.AuthTypes {
 		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {
 			return &aat

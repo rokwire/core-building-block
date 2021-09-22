@@ -34,7 +34,7 @@ type emailCreds struct {
 }
 
 // check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error)
-func (a *emailAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, interface{}, error) {
+func (a *emailAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, error) {
 	// appID := appOrg.Application.ID
 	// orgID := appOrg.Organization.ID
 	var credID string
@@ -83,13 +83,17 @@ func (a *emailAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType,
 		if err != nil {
 			return nil, nil, err
 		}
-		return &user.Email, newCreds, nil
+		newCredsMap, err := emailCredsToMap(newCreds)
+		if err != nil {
+			return nil, nil, err
+		}
+		return &user.Email, newCredsMap, nil
 	}
 
 	if err = a.handleSignin(requestCreds, user); err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeEmailCreds, nil, err)
 	}
-	return &user.Email, user, nil
+	return &user.Email, credential.Value, nil
 }
 
 func (a *emailAuthImpl) handleSignup(requestCreds *emailCreds, storageCreds *emailCreds) (*emailCreds, error) {
@@ -196,7 +200,7 @@ func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.Applica
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 
-	accountAuthType := account.FindAccountAuthType(authTypeID, accountAuthTypeIdentifier)
+	accountAuthType, err := a.auth.FindAccountAuthType(account, authTypeID, accountAuthTypeIdentifier)
 	if accountAuthType == nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err) //TODO add args..
 	}

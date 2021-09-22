@@ -215,9 +215,9 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		//user exists, just check if need to update it
 
 		//get the current external user
-		accountAuthType = account.FindAccountAuthType(authType.ID, externalUser.Identifier)
-		if accountAuthType == nil {
-			return nil, nil, nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
+		accountAuthType, err = a.FindAccountAuthType(account, authType.ID, externalUser.Identifier)
+		if err != nil {
+			return nil, nil, nil, err
 		}
 		currentDataMap := accountAuthType.Params["user"]
 		currentDataJSON, err := utils.ConvertToJSON(currentDataMap)
@@ -325,15 +325,18 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		accountAuthTypeID, _ := uuid.NewUUID()
 		accAuthType := authType
 		params := map[string]interface{}{}
-		value, _ := authTypeCreds.(map[string]interface{})
+		value := authTypeCreds
 		active := true
 		active2FA := false
-		credential := model.Credential{ID: accountAuthTypeID.String(), Value: value, Verified: false, DateCreated: now, DateUpdated: &now}
-
-		///////TODO: insert credentials
 		accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: accAuthType,
-			Identifier: *identifier, Params: params, Credential: &credential, Active: active, Active2FA: active2FA, DateCreated: now}
-		accountAuthType.Credential.AccountsAuthTypes = append(accountAuthType.Credential.AccountsAuthTypes, *accountAuthType)
+			Identifier: *identifier, Params: params, Active: active, Active2FA: active2FA, DateCreated: now}
+		credential := model.Credential{ID: accountAuthTypeID.String(), Value: value, Verified: false, DateCreated: now, DateUpdated: &now}
+		credential.AccountsAuthTypes = append(credential.AccountsAuthTypes, *accountAuthType)
+		accountAuthType.Credential = &credential
+		//TODO: insert credentials
+		if err = a.storage.InsertCredential(&credential, nil); err != nil {
+			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
+		}
 		//use shared profile
 		useSharedProfile := false
 
@@ -353,6 +356,20 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 
 	return nil, account, accountAuthType, nil
+}
+
+func (a *Auth) FindAccountAuthType(account *model.Account, authTypeID string, identifier string) (*model.AccountAuthType, error) {
+	accountAuthType := account.GetAccountAuthType(authTypeID, identifier)
+	if accountAuthType == nil {
+		return nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
+	}
+	//populate credentials in accountAuthType
+	credential, err := a.storage.FindCredentialByID(accountAuthType.Credential.ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+	}
+	accountAuthType.Credential = credential
+	return accountAuthType, nil
 }
 
 func (a *Auth) verifyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, identifier string, verification string, l *logs.Log) error {

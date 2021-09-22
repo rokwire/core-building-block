@@ -50,6 +50,7 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
+	var message *string
 	var extParams interface{}
 
 	//get the auth type implementation for the auth type
@@ -61,7 +62,7 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 
 		//TODO groups mapping
 	} else {
-		message, account, accountAuthType, err := a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
+		message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
 			return "", "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
