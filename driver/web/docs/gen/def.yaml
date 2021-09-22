@@ -247,6 +247,8 @@ paths:
       summary: Get user profile
       description: |
         Returns a user profile
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Success
@@ -266,6 +268,8 @@ paths:
       summary: Update user profile
       description: |
         Updates a user profile
+      security:
+        - bearerAuth: []
       requestBody:
         description: Profile update
         content:
@@ -307,6 +311,8 @@ paths:
       summary: Update account preferences
       description: |
         Updates account preferences
+      security:
+        - bearerAuth: []
       requestBody:
         description: Account preferences
         content:

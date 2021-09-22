@@ -40,7 +40,7 @@ paths:
   /services/test:
     $ref: "./resources/services/test.yaml"
   /services/account-preferences:
-    $ref: "./resources/services/account-preferences.yaml"
+    $ref: "./resources/services/accounts/account-preferences.yaml"
 
   #admin
   /admin/global-config:
