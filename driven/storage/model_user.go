@@ -7,18 +7,19 @@ import (
 type account struct {
 	ID string `bson:"_id"`
 
-	AppID string `bson:"app_id"`
-	OrgID string `bson:"org_id"`
+	AppID string `bson:"app_id,omitempty"`
+	OrgID string `bson:"org_id,omitempty"`
 
-	Permissions []applicationPermission `bson:"permissions"`
-	Roles       []applicationRole       `bson:"roles"`
-	Groups      []applicationGroup      `bson:"groups"`
+	Permissions []applicationPermission `bson:"permissions,omitempty"`
+	Roles       []applicationRole       `bson:"roles,omitempty"`
+	Groups      []applicationGroup      `bson:"groups,omitempty"`
 
-	AuthTypes []accountAuthType `bson:"auth_types"`
+	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
 
-	Profile profile `bson:"profile"`
+	Preferences map[string]interface{} `bson:"preferences"`
+	Profile     profile                `bson:"profile"`
 
-	Devices []userDevice `bson:"devices"`
+	Devices []userDevice `bson:"devices,omitempty"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -43,6 +44,13 @@ type profile struct {
 	PhotoURL  string `bson:"photo_url"`
 	FirstName string `bson:"first_name"`
 	LastName  string `bson:"last_name"`
+	Email     string `bson:"email"`
+	Phone     string `bson:"phone"`
+	BirthYear int8   `bson:"birth_year"`
+	Address   string `bson:"address"`
+	ZipCode   string `bson:"zip_code"`
+	State     string `bson:"state"`
+	Country   string `bson:"country"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

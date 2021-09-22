@@ -84,6 +84,7 @@ type Account struct {
 	Groups       *[]ApplicationGroup      `json:"groups,omitempty"`
 	Organization *Organization            `json:"organization,omitempty"`
 	Permissions  *[]ApplicationPermission `json:"permissions,omitempty"`
+	Preferences  *map[string]interface{}  `json:"preferences,omitempty"`
 	Profile      *Profile                 `json:"profile,omitempty"`
 	Roles        *[]ApplicationRole       `json:"roles,omitempty"`
 }
@@ -330,10 +331,17 @@ type Profile struct {
 
 // ProfileFields defines model for ProfileFields.
 type ProfileFields struct {
+	Address   *string `json:"address"`
+	BirthYear *int    `json:"birth_year"`
+	Country   *string `json:"country"`
+	Email     *string `json:"email"`
 	FirstName *string `json:"first_name,omitempty"`
 	Id        *string `json:"id,omitempty"`
 	LastName  *string `json:"last_name,omitempty"`
+	Phone     *string `json:"phone"`
 	PhotoUrl  *string `json:"photo_url,omitempty"`
+	State     *string `json:"state"`
+	ZipCode   *string `json:"zip_code"`
 }
 
 // PubKey defines model for PubKey.
@@ -538,6 +546,9 @@ type GetBbsServiceRegsParams struct {
 	Ids string `json:"ids"`
 }
 
+// PutServicesAccountPreferencesJSONBody defines parameters for PutServicesAccountPreferences.
+type PutServicesAccountPreferencesJSONBody map[string]interface{}
+
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
@@ -553,6 +564,9 @@ type GetServicesAuthServiceRegsParams struct {
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
+
+// PutServicesProfileJSONBody defines parameters for PutServicesProfile.
+type PutServicesProfileJSONBody ProfileFields
 
 // GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
 type GetTpsServiceRegsParams struct {
@@ -582,6 +596,9 @@ type PostAdminServiceRegsJSONRequestBody PostAdminServiceRegsJSONBody
 // PutAdminServiceRegsJSONRequestBody defines body for PutAdminServiceRegs for application/json ContentType.
 type PutAdminServiceRegsJSONRequestBody PutAdminServiceRegsJSONBody
 
+// PutServicesAccountPreferencesJSONRequestBody defines body for PutServicesAccountPreferences for application/json ContentType.
+type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJSONBody
+
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody
 
@@ -590,6 +607,9 @@ type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 
 // PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
 type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
+
+// PutServicesProfileJSONRequestBody defines body for PutServicesProfile for application/json ContentType.
+type PutServicesProfileJSONRequestBody PutServicesProfileJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found

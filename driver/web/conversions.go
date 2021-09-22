@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/rokmetro/logging-library/errors"
 	"github.com/rokmetro/logging-library/logutils"
@@ -17,6 +18,32 @@ func defString(pointer *string) string {
 func defMap(pointer *map[string]interface{}) map[string]interface{} {
 	if pointer == nil {
 		return map[string]interface{}{}
+	}
+	return *pointer
+}
+
+func defStringArray(pointer *[]string) []string {
+	if pointer == nil {
+		return []string{}
+	}
+	return *pointer
+}
+
+func defTimestamp(pointer *string) time.Time {
+	if pointer == nil {
+		return time.Time{}
+	}
+	t, err := time.Parse(time.RFC3339, *pointer)
+
+	if err != nil {
+		return time.Time{}
+	}
+	return t
+}
+
+func defBool(pointer *bool) bool {
+	if pointer == nil {
+		return false
 	}
 	return *pointer
 }

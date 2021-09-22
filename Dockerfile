@@ -24,7 +24,5 @@ COPY --from=builder /etc/passwd /etc/passwd
 #we need timezone database
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo 
 
-ENV ENV_TYPE=aws_secrets_manager
-
 EXPOSE 80
 ENTRYPOINT ["/core-building-block"]
