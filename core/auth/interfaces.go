@@ -13,11 +13,11 @@ import (
 //authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
 type authType interface {
 	//checks the verification code generated on email signup
-	verify(id string, verification string, appID string, orgID string, l *logs.Log) error
+	verify(accountAuthType *model.AccountAuthType, id string, verification string, l *logs.Log) error
 	//userExist checks if the user exists for application and organizations
 	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error)
 	//checkCredentials checks if the account credentials are valid for the account auth type
-	checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AuthCreds, *bool, error)
+	checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, error) //TODO: is there a way to remove identifier from return val
 }
 
 //externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
@@ -57,7 +57,7 @@ type APIs interface {
 	//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//		Account (Account): Account object for authenticated user
 	//		Params (interface{}): authType-specific set of parameters passed back to client
-	Login(authType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error)
+	Login(authType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, string, *model.Account, interface{}, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
@@ -114,7 +114,7 @@ type APIs interface {
 	DeregisterService(serviceID string) error
 
 	//Verify checks the verification code in the credentials collection
-	Verify(authenticationType string, appID string, orgID string, id string, verification string, l *logs.Log) error
+	Verify(authenticationType string, appID string, orgID string, identifier string, verification string, l *logs.Log) error
 }
 
 //Storage interface to communicate with the storage
@@ -137,10 +137,13 @@ type Storage interface {
 	FindOrganization(id string) (*model.Organization, error)
 
 	//Credentials
-	FindCredentialsByID(ID string) (*model.AuthCreds, error)
-	FindCredentials(orgID string, appID string, authType string, params map[string]interface{}) (*model.AuthCreds, error)
-	UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCreds) error
-	InsertCredentials(creds *model.AuthCreds, context mongo.SessionContext) error
+	// FindCredentialsByID(ID string) (*model.AuthCreds, error)
+	// FindCredentials(orgID string, appID string, authType string, params map[string]interface{}) (*model.AuthCreds, error)
+	// UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCreds) error
+	// InsertCredentials(creds *model.AuthCreds, context mongo.SessionContext) error
+	FindCredentialByID(ID string) (*model.Credential, error)
+	UpdateCredentialByID(creds *model.Credential) error
+	InsertCredential(creds *model.Credential, context mongo.SessionContext) error
 
 	//RefreshTokens
 	FindRefreshToken(token string) (*model.AuthRefresh, error)

@@ -42,9 +42,12 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppId, requestData.OrgId, requestParams, l)
+	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppId, requestData.OrgId, requestParams, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
+	}
+	if message != "" {
+		return l.HttpResponseSuccessJSON([]byte(message))
 	}
 
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
@@ -188,7 +191,6 @@ func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResp
 //Handler for verify endpoint
 func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request) logs.HttpResponse {
 	params := mux.Vars(r)
-	// parse app and orgID as path params?
 	authType, id, code, appID, orgID := params["auth-type"], params["id"], params["code"], params["appID"], params["orgID"]
 	if authType == "" || id == "" || code == "" {
 		return l.HttpResponseError(string(logutils.StatusMissing), nil, http.StatusBadRequest, false)

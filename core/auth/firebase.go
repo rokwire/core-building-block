@@ -22,10 +22,10 @@ func (a *firebaseAuthImpl) userExist(authType model.AuthType, appType model.Appl
 	return nil, nil, nil
 }
 
-func (a *firebaseAuthImpl) verify(id string, verification string, appID string, orgID string, l *logs.Log) error {
+func (a *firebaseAuthImpl) verify(accountAuthType *model.AccountAuthType, id string, verification string, l *logs.Log) error {
 	return errors.New(logutils.Unimplemented)
 }
-func (a *firebaseAuthImpl) checkCredentials(userAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AuthCreds, *bool, error) {
+func (a *firebaseAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, error) {
 	return nil, nil, nil
 }
 

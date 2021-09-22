@@ -39,31 +39,35 @@ func (a *Auth) GetHost() string {
 //		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //		Account (Account): Account object for authenticated user
 //		Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Login(authenticationType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error) {
+func (a *Auth) Login(authenticationType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, string, *model.Account, interface{}, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appID, orgID)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+		return "", "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
+	var message *string
 	var extParams interface{}
 
 	//get the auth type implementation for the auth type
 	if authType.IsExternal {
 		account, accountAuthType, extParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
+			return "", "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 		}
 
 		//TODO groups mapping
 	} else {
-		account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
+		message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
+			return "", "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
+		}
+		if message != nil {
+			return *message, "", "", nil, nil, nil
 		}
 
 		//the credentials are valid
@@ -72,10 +76,10 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 	//now we are ready to apply login for the user
 	accessToken, refreshToken, err := a.applyLogin(*account, *accountAuthType, *appType, extParams, l)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+		return "", "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}
 
-	return *accessToken, *refreshToken, account, extParams, nil
+	return "", *accessToken, *refreshToken, account, extParams, nil
 }
 
 //Refresh refreshes an access token using a refresh token
@@ -335,20 +339,19 @@ func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
 }
 
 //Verify checks the verification code generated on signup
-func (a *Auth) Verify(authenticationType string, appID string, orgID string, id string, verification string, l *logs.Log) error {
-	authType, _, _, err := a.validateAuthType(authenticationType, appID, orgID)
+func (a *Auth) Verify(authenticationType string, appID string, orgID string, identifier string, verification string, l *logs.Log) error {
+	//TODO: should it also return a message for verify
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appID, orgID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
-	auth, err := a.getAuthTypeImpl(*authType)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	if authType.IsExternal {
+		return errors.WrapErrorAction("invalid auth type for verify", model.TypeAuthType, nil, err)
 	}
 
-	//TODO: Implement account management
-	err = auth.verify(id, verification, appID, orgID, l)
+	err = a.verifyAuthType(*authType, *appType, *appOrg, identifier, verification, l)
 	if err != nil {
-		errors.WrapErrorAction(logutils.ActionValidate, "creds", nil, err)
+		return errors.WrapErrorAction(logutils.ActionValidate, "verification", nil, err)
 	}
 
 	return nil

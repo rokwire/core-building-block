@@ -24,6 +24,8 @@ const (
 	TypeUserAuth logutils.MessageDataType = "user auth"
 	//TypeAuthCred auth cred type
 	TypeAuthCred logutils.MessageDataType = "auth cred"
+	//TypeCredential credential type
+	TypeCredential logutils.MessageDataType = "credential"
 	//TypeAuthRefresh auth refresh type
 	TypeAuthRefresh logutils.MessageDataType = "auth refresh"
 	//TypeRefreshToken refresh token type
