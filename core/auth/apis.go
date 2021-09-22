@@ -50,17 +50,26 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
-	var extParams interface{}
+	var responseParams interface{}
 
 	//get the auth type implementation for the auth type
 	if authType.IsAnonymous {
-		account, accountAuthType, err = a.applyAnonymousAuthType(*authType, *appType, *appOrg, creds, params, l)
+		anonymousID := ""
+		anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
 			return "", "", nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
 		}
 
+		//now we are ready to apply login for the user
+		accessToken, err := a.applyAnonymousLogin(anonymousID, orgID, *appType, params, l)
+		if err != nil {
+			return "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+		}
+
+		return *accessToken, "", nil, responseParams, nil
+
 	} else if authType.IsExternal {
-		account, accountAuthType, extParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, l)
+		account, accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
 			return "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 		}
@@ -76,12 +85,12 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 	}
 
 	//now we are ready to apply login for the user
-	accessToken, refreshToken, err := a.applyLogin(*account, *accountAuthType, *appType, extParams, l)
+	accessToken, refreshToken, err := a.applyLogin(*account, *accountAuthType, *appType, responseParams, l)
 	if err != nil {
 		return "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}
 
-	return *accessToken, *refreshToken, account, extParams, nil
+	return *accessToken, *refreshToken, account, responseParams, nil
 }
 
 //Refresh refreshes an access token using a refresh token

@@ -39,16 +39,3 @@ func (app *application) serGetAuthTest(l *logs.Log) string {
 func (app *application) serGetCommonTest(l *logs.Log) string {
 	return "Services - Common - test"
 }
-
-func (app *application) updateUserAnonymousProfile(l *logs.Log, id string, profile *model.AnonymousProfile) error {
-	acc, err := app.storage.FindAccountByID(id)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-	acc.Profile.AnonymousProfile = *profile
-	_, err = app.storage.UpdateAccount(acc, "", nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
-	}
-	return nil
-}

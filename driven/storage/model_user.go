@@ -53,6 +53,9 @@ type profile struct {
 	ZipCode   string `bson:"zip_code"`
 	State     string `bson:"state"`
 	Country   string `bson:"country"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 type userMembership struct {

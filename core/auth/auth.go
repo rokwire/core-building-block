@@ -244,54 +244,50 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	return account, accountAuthType, extParams, nil
 }
 
-func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
-	var account *model.Account
-	var accountAuthType *model.AccountAuthType
-
-	//auth type
+func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (string, interface{}, error) { //auth type
 	authImpl, err := a.getAnonymousAuthTypeImpl(authType)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAnonymousAuthType, nil, err)
+		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAnonymousAuthType, nil, err)
 	}
 
 	//Check the credentials
-	anonymousProfileID, err := authImpl.checkCredentials(authType, appType, appOrg, creds, l)
+	anonymousID, anonymousParams, err := authImpl.checkCredentials(authType, appType, appOrg, creds, l)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCreds, nil, err)
+		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCreds, nil, err)
 	}
 
-	if anonymousProfileID != "" {
-		appID := appOrg.Application.ID
-		orgID := appOrg.Organization.ID
-		authTypeID := authType.ID
-		identifier := anonymousProfileID
+	// if anonymousProfileID != "" {
+	// 	appID := appOrg.Application.ID
+	// 	orgID := appOrg.Organization.ID
+	// 	authTypeID := authType.ID
+	// 	identifier := anonymousProfileID
 
-		//FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
-		account, err = a.storage.FindAccount(appID, orgID, authTypeID, identifier)
-		if err != nil || account == nil {
-			return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-		}
+	// 	//FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
+	// 	account, err = a.storage.FindAccount(appID, orgID, authTypeID, identifier)
+	// 	if err != nil || account == nil {
+	// 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	// 	}
 
-		//CRITICAL: CANNOT ACCESS NON-ANONYMOUS ACCOUNTS THROUGH ANONYMOUS AUTH TYPES
-		if !account.Anonymous {
-			return nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAccount, nil, err)
-		}
-	} else {
-		//use shared profile
-		useSharedProfile := false
+	// 	//CRITICAL: CANNOT ACCESS NON-ANONYMOUS ACCOUNTS THROUGH ANONYMOUS AUTH TYPES
+	// 	if !account.Anonymous {
+	// 		return nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAccount, nil, err)
+	// 	}
+	// } else {
+	// 	//use shared profile
+	// 	useSharedProfile := false
 
-		anonymousID, _ := uuid.NewUUID()
+	// 	anonymousID, _ := uuid.NewUUID()
 
-		var profile *model.Profile
-		accountAuthType, profile = a.createNewUser(anonymousID.String(), authType)
+	// 	var profile *model.Profile
+	// 	accountAuthType, profile = a.createNewUser(anonymousID.String(), authType)
 
-		account, err = a.registerUser(appOrg, *accountAuthType, useSharedProfile, profile, l)
-		if err != nil {
-			return nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
-		}
-	}
+	// 	account, err = a.registerUser(appOrg, *accountAuthType, useSharedProfile, profile, l)
+	// 	if err != nil {
+	// 		return nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+	// 	}
+	// }
 
-	return account, accountAuthType, nil
+	return anonymousID, anonymousParams, nil
 }
 
 func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
@@ -332,7 +328,7 @@ func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAu
 	//access token
 	orgID := account.Organization.ID
 	appTypeIdentifier := appType.Identifier
-	claims := a.getStandardClaims(account.ID, account.ID, "", "", "rokwire", orgID, appTypeIdentifier, nil, account.Anonymous)
+	claims := a.getStandardClaims(account.ID, account.ID, "", "", "rokwire", orgID, appTypeIdentifier, nil, false)
 	accessToken, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -345,6 +341,18 @@ func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAu
 	}
 
 	return &accessToken, &refreshToken, nil
+}
+
+func (a *Auth) applyAnonymousLogin(anonymousID string, orgID string, appType model.ApplicationType, params interface{}, l *logs.Log) (*string, error) {
+	//access token
+	appTypeIdentifier := appType.Identifier
+	claims := a.getStandardClaims(anonymousID, "", "", "", "rokwire", orgID, appTypeIdentifier, nil, false)
+	accessToken, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+	}
+
+	return &accessToken, nil
 }
 
 //createNewUser creates a new empty user object
@@ -364,22 +372,22 @@ func (a *Auth) createNewUser(id string, authType model.AuthType) (*model.Account
 	accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: accAuthType,
 		Identifier: identifier, Params: params, Credential: credential, Active: active, Active2FA: active2FA, DateCreated: now}
 
-	anonymousProfileIDString := ""
-	if authType.IsAnonymous {
-		anonymousProfileIDString = id
-	} else {
-		anonymousProfileID, _ := uuid.NewUUID()
-		anonymousProfileIDString = anonymousProfileID.String()
-	}
+	// anonymousProfileIDString := ""
+	// if authType.IsAnonymous {
+	// 	anonymousProfileIDString = id
+	// } else {
+	// 	anonymousProfileID, _ := uuid.NewUUID()
+	// 	anonymousProfileIDString = anonymousProfileID.String()
+	// }
 
-	anonymousProfile := model.AnonymousProfile{ID: anonymousProfileIDString, CreationDate: now}
+	// anonymousProfile := model.AnonymousProfile{ID: anonymousProfileIDString, CreationDate: now}
 
 	//profile
 	profileID, _ := uuid.NewUUID()
 	photoURL := ""
 	firstName := ""
 	lastName := ""
-	profile := &model.Profile{ID: profileID.String(), PhotoURL: photoURL, FirstName: firstName, LastName: lastName, DateCreated: now, AnonymousProfile: anonymousProfile}
+	profile := &model.Profile{ID: profileID.String(), PhotoURL: photoURL, FirstName: firstName, LastName: lastName, DateCreated: now} //AnonymousProfile: anonymousProfile}
 
 	return accountAuthType, profile
 }
@@ -403,8 +411,7 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 	authTypes := []model.AccountAuthType{accountAuthType}
 
 	account := model.Account{ID: accountID.String(), Application: application, Organization: organization,
-		Permissions: nil, Roles: nil, Groups: nil, AuthTypes: authTypes, Profile: *profile, DateCreated: time.Now(),
-		Anonymous: accountAuthType.AuthType.IsAnonymous}
+		Permissions: nil, Roles: nil, Groups: nil, AuthTypes: authTypes, Profile: *profile, DateCreated: time.Now()} // Anonymous: accountAuthType.AuthType.IsAnonymous
 
 	insertedAccount, err := a.storage.InsertAccount(account)
 	if err != nil {

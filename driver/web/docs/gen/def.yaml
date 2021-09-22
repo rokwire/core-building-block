@@ -1591,7 +1591,7 @@ components:
       properties:
         api_key:
           type: string
-        anonymous_profile_id:
+        anonymous_id:
           type: string
     _req_login_ParamsEmail:
       type: object
@@ -1624,6 +1624,10 @@ components:
           nullable: true
           anyOf:
             - $ref: '#/components/schemas/_res_shared_ParamsOIDC'
+            - type: object
+              properties:
+                anonymous_id:
+                  type: string
             - $ref: '#/components/schemas/_res_shared_ParamsNone'
     _res_login_Account:
       required:

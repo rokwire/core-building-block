@@ -402,8 +402,8 @@ type ReqLoginUrlRequestAuthType string
 
 // Auth login creds for auth_type="api_key"
 type ReqLoginCredsAPIKey struct {
-	AnonymousProfileId *string `json:"anonymous_profile_id,omitempty"`
-	ApiKey             string  `json:"api_key"`
+	AnonymousId *string `json:"anonymous_id,omitempty"`
+	ApiKey      string  `json:"api_key"`
 }
 
 // Auth login creds for auth_type="email"

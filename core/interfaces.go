@@ -15,7 +15,6 @@ type Services interface {
 
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
-	UpdateUserAnonymousProfile(l *logs.Log, id string, profile *model.AnonymousProfile) error
 }
 
 //Administration exposes administration APIs for the driver adapters
@@ -50,8 +49,6 @@ type BBs interface {
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
-
-	FindAccountByID(id string) (*model.Account, error)
 
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 
