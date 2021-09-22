@@ -275,7 +275,7 @@ func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAu
 	//access token
 	orgID := account.Organization.ID
 	appTypeIdentifier := appType.Identifier
-	claims := a.getStandardClaims(account.ID, account.ID, "", "", "rokwire", orgID, appTypeIdentifier, nil)
+	claims := a.getStandardClaims(account.ID, accountAuthType.Identifier, account.Profile.Email, account.Profile.Phone, "rokwire", orgID, appTypeIdentifier, accountAuthType.AuthType.Code, nil)
 	accessToken, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -549,7 +549,7 @@ func (a *Auth) buildRefreshToken() (string, *time.Time, error) {
 	return newToken, &expireTime, nil
 }
 
-func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string, exp *int64) tokenauth.Claims {
+func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string, authType string, exp *int64) tokenauth.Claims {
 	return tokenauth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			Audience:  aud,
@@ -557,7 +557,7 @@ func (a *Auth) getStandardClaims(sub string, uid string, email string, phone str
 			ExpiresAt: a.getExp(exp),
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    a.host,
-		}, OrgID: orgID, AppID: appID, UID: uid, Email: email, Phone: phone,
+		}, OrgID: orgID, AppID: appID, AuthType: authType, UID: uid, Email: email, Phone: phone,
 	}
 }
 

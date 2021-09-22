@@ -278,7 +278,7 @@ func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 	aud := strings.Join(services, ",")
 	scope := strings.Join(scopeStrings, " ")
 
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, nil)
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, nil)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
