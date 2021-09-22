@@ -22,12 +22,14 @@ type Administration interface {
 	AdmGetGlobalConfig() (*model.GlobalConfig, error)
 	AdmUpdateGlobalConfig(setting string) error
 
-	AdmCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error)
-	AdmUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
+	AdmCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error)
 	AdmGetOrganizations() ([]model.Organization, error)
 	AdmGetOrganization(ID string) (*model.Organization, error)
+	AdmUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 
+	AdmCreateApplication(name string, versions []string) (*model.Application, error)
 	AdmGetApplication(ID string) (*model.Application, error)
+	AdmGetApplications() ([]model.Application, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -48,12 +50,24 @@ type Storage interface {
 	GetGlobalConfig() (*model.GlobalConfig, error)
 	SaveGlobalConfig(setting *model.GlobalConfig) error
 
+	UpdateApplicationPermission(item model.ApplicationPermission) error
+	DeleteApplicationPermission(id string) error
+
+	UpdateApplicationRole(item model.ApplicationRole) error
+	DeleteApplicationRole(id string) error
+
+	UpdateApplicationGroup(item model.ApplicationGroup) error
+	DeleteApplicationGroup(id string) error
+
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
-	UpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error
-	GetOrganizations() ([]model.Organization, error)
+	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
+	LoadOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)
 
-	GetApplication(ID string) (*model.Application, error)
+	LoadApplications() ([]model.Application, error)
+	InsertApplication(application model.Application) (*model.Application, error)
+	FindApplication(ID string) (*model.Application, error)
+	FindApplications() ([]model.Application, error)
 }
 
 //StorageListener listenes for change data storage events

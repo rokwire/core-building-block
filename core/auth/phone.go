@@ -72,16 +72,19 @@ type checkStatusResponse struct {
 	DateUpdated time.Time `json:"date_updated"`
 }
 
-func (a *phoneAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
+func (a *phoneAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AuthCreds, *bool, error) {
+	appID := appOrg.Application.ID
+	orgID := appOrg.Organization.ID
+	isVerified := false
 	var verificationCreds phoneCreds
 	err := json.Unmarshal([]byte(creds), &verificationCreds)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneCreds, nil, err)
+		return nil, &isVerified, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneCreds, nil, err)
 	}
 	validate := validator.New()
 	err = validate.Struct(verificationCreds)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionValidate, typePhoneCreds, nil, err)
+		return nil, &isVerified, errors.WrapErrorAction(logutils.ActionValidate, typePhoneCreds, nil, err)
 	}
 
 	// phoneAuthConfig, err := a.getPhoneAuthConfig(orgID, appID)
@@ -90,51 +93,54 @@ func (a *phoneAuthImpl) check(creds string, orgID string, appID string, params s
 	// }
 
 	if a.verifyServiceID == "" {
-		return nil, errors.ErrorData(logutils.StatusMissing, typeVerifyServiceID, nil)
+		return nil, &isVerified, errors.ErrorData(logutils.StatusMissing, typeVerifyServiceID, nil)
 	}
 
 	phone := verificationCreds.Phone
 	validPhone := regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
 	if !validPhone.MatchString(phone) {
-		return nil, errors.ErrorData(logutils.StatusInvalid, typePhoneNumber, &logutils.FieldArgs{"phone": phone})
+		return nil, &isVerified, errors.ErrorData(logutils.StatusInvalid, typePhoneNumber, &logutils.FieldArgs{"phone": phone})
 	}
 
-	errFields := logutils.FieldArgs{"org_id": "", "app_id": "", "type": authTypePhone, "user_id": phone}
-	authCreds, err := a.auth.storage.FindCredentials("", "", authTypePhone, phone)
+	errFields := logutils.FieldArgs{"org_id": orgID, "app_id": appID, "type": authTypePhone, "user_id": phone}
+	params := map[string]interface{}{"phone": phone}
+
+	authCreds, err := a.auth.storage.FindCredentials(orgID, appID, authTypePhone, params)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, typePhoneCreds, &errFields, nil)
+		return nil, &isVerified, errors.WrapErrorAction(logutils.ActionFind, typePhoneCreds, &errFields, nil)
 	}
 
-	claims := &model.UserAuth{Phone: phone, UserID: phone}
+	now := time.Now()
+	claims := &model.AuthCreds{OrgID: orgID, AppID: appID, AuthType: authTypePhone, AccountID: phone, DateCreated: now, DateUpdated: &now}
 
 	if len(authCreds.AccountID) > 0 {
 		// existing user
 		_, err := a.handlePhoneVerify(phone, verificationCreds, false, l)
 		if err != nil {
-			return nil, err
+			return nil, &isVerified, err
 		}
 		claims.AccountID = authCreds.AccountID
-		return claims, nil
+		return claims, &isVerified, nil
 	}
 
 	// new user
-	newCreds, err := a.handlePhoneVerify(phone, verificationCreds, true, l)
+	newCredsMap, err := a.handlePhoneVerify(phone, verificationCreds, true, l)
 	if err != nil {
-		return nil, err
+		return nil, &isVerified, err
 	}
-	if newCreds != nil {
-		authCreds.Creds = newCreds
+	if newCredsMap != nil {
+		authCreds.Creds = newCredsMap
 		if err = a.auth.storage.UpdateCredentials("", "", authTypePhone, authCreds); err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthCred, nil, err)
+			return nil, &isVerified, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthCred, nil, err)
 		}
-		claims.NewCreds = newCreds
-		return claims, nil
+		claims.Creds = newCredsMap
+		return claims, &isVerified, nil
 	}
 
-	return nil, errors.ErrorData(logutils.StatusMissing, typePhoneCreds, nil)
+	return nil, &isVerified, errors.ErrorData(logutils.StatusMissing, typePhoneCreds, nil)
 }
 
-func (a *phoneAuthImpl) handlePhoneVerify(phone string, verificationCreds phoneCreds, newUser bool, l *logs.Log) (*phoneCreds, error) {
+func (a *phoneAuthImpl) handlePhoneVerify(phone string, verificationCreds phoneCreds, newUser bool, l *logs.Log) (map[string]interface{}, error) {
 	data := url.Values{}
 	data.Add("to", phone)
 	if verificationCreds.Code != "" {
@@ -179,7 +185,21 @@ func (a *phoneAuthImpl) startVerification(verifyServiceID string, phone string, 
 	return nil
 }
 
-func (a *phoneAuthImpl) checkVerification(verifyServiceID string, phone string, data url.Values, newUser bool, l *logs.Log) (*phoneCreds, error) {
+func phoneCredsToMap(creds *phoneCreds) (map[string]interface{}, error) {
+	credBytes, err := json.Marshal(creds)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, model.TypeAuthCred, nil, err)
+	}
+	var credsMap map[string]interface{}
+	err = json.Unmarshal(credBytes, &credsMap)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeAuthCred, nil, err)
+	}
+
+	return credsMap, nil
+}
+
+func (a *phoneAuthImpl) checkVerification(verifyServiceID string, phone string, data url.Values, newUser bool, l *logs.Log) (map[string]interface{}, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -210,7 +230,11 @@ func (a *phoneAuthImpl) checkVerification(verifyServiceID string, phone string, 
 		newCreds := phoneCreds{}
 		newCreds.Phone = phone
 		newCreds.Status = "approved"
-		return &newCreds, nil
+		credsMap, err := phoneCredsToMap(&newCreds)
+		if err != nil {
+			return nil, err
+		}
+		return credsMap, nil
 	}
 
 	return nil, nil
@@ -272,17 +296,12 @@ func makeRequest(ctx context.Context, method string, pathPart string, data url.V
 	return resp, nil
 }
 
-func (a *phoneAuthImpl) verify(id string, verification string, l *logs.Log) error {
-	return nil
+func (a *phoneAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
+	return nil, nil, nil
 }
 
-//refresh is enabled for phone auth, but no operation is needed
-func (a *phoneAuthImpl) refresh(refreshToken string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
-	return nil, nil
-}
-
-func (a *phoneAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
-	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
+func (a *phoneAuthImpl) verify(id string, verification string, appID string, orgID string, l *logs.Log) error {
+	return errors.New(logutils.Unimplemented)
 }
 
 //initPhoneAuth initializes and registers a new phone auth instance

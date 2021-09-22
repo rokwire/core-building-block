@@ -9,6 +9,3 @@ func (app *application) serGetAuthTest(l *logs.Log) string {
 func (app *application) serGetCommonTest(l *logs.Log) string {
 	return "Services - Common - test"
 }
-func (app *application) verifyAuth(l *logs.Log) string {
-	return "Services - Common - test"
-}

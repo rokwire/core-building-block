@@ -18,17 +18,15 @@ type signatureAuthImpl struct {
 	authType string
 }
 
-func (a *signatureAuthImpl) check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error) {
-	//TODO: Implement
-	return nil, errors.New(logutils.Unimplemented)
+func (a *signatureAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
+	return nil, nil, nil
 }
 
-func (a *signatureAuthImpl) refresh(refreshToken string, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
-	return nil, errors.Newf("refresh operation invalid for auth_type=%s", authTypeSignature)
+func (a *signatureAuthImpl) verify(id string, verification string, appID string, orgID string, l *logs.Log) error {
+	return errors.New(logutils.Unimplemented)
 }
-
-func (a *signatureAuthImpl) getLoginURL(orgID string, appID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
-	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
+func (a *signatureAuthImpl) checkCredentials(userAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AuthCreds, *bool, error) {
+	return nil, nil, nil
 }
 
 //initSignatureAuth initializes and registers a new signature auth instance

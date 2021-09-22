@@ -1,0 +1,12 @@
+type: object
+properties:
+  fields:
+    $ref: "./ApplicationFields.yaml"
+  types:
+    type: array
+    items:
+      $ref: "./ApplicationType.yaml"
+  organizations:
+    type: array
+    items:
+      $ref: "./ApplicationOrganization.yaml"

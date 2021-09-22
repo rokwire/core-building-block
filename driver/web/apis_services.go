@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
 )
@@ -25,7 +26,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.AuthLoginRequest
+	var requestData Def.ReqLoginRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login request"), nil, err, http.StatusBadRequest, true)
@@ -41,13 +42,28 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	accessToken, refreshToken, user, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.OrgId, requestData.AppId, requestParams, l)
+	accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppId, requestData.OrgId, requestParams, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
 
-	tokenType := Def.AuthLoginResponseTokenTypeBearer
-	responseData := &Def.AuthLoginResponse{AccessToken: &accessToken, User: userToDef(user), RefreshToken: &refreshToken, TokenType: &tokenType}
+	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
+	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
+
+	///prepare response
+	//profile
+	profile := profileToDef(&account.Profile)
+	//permissions
+	permissions := applicationPermissionsToDef(account.Permissions)
+	//roles
+	roles := applicationRolesToDef(account.Roles)
+	//groups
+	groups := applicationGroupsToDef(account.Groups)
+	//account auth types
+	accountAuthTypes := accountAuthTypesToDef(account.AuthTypes)
+	accountData := Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &accountAuthTypes, Profile: profile}
+
+	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: &accountData, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
@@ -62,12 +78,14 @@ func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request) logs.Http
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	accessToken, refreshToken, err := h.coreAPIs.Auth.Refresh(string(requestData), l)
+	accessToken, refreshToken, params, err := h.coreAPIs.Auth.Refresh(string(requestData), l)
 	if err != nil {
 		return l.HttpResponseError("Error refreshing token", err, http.StatusInternalServerError, true)
 	}
 
-	responseData := &Def.AuthRefreshResponse{AccessToken: &accessToken, RefreshToken: &refreshToken}
+	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
+	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
+	responseData := &Def.ResRefreshResponse{Token: &rokwireToken, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth refresh response"), nil, err, http.StatusInternalServerError, false)
@@ -82,18 +100,18 @@ func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request) logs.Htt
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.AuthLoginUrlRequest
+	var requestData Def.ReqLoginUrlRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "auth login url request", nil, err, http.StatusBadRequest, true)
 	}
 
-	loginURL, params, err := h.coreAPIs.Auth.GetLoginURL(string(requestData.AuthType), requestData.OrgId, requestData.AppId, requestData.RedirectUri, l)
+	loginURL, params, err := h.coreAPIs.Auth.GetLoginURL(string(requestData.AuthType), requestData.AppId, requestData.OrgId, requestData.RedirectUri, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, "login url", nil, err, http.StatusInternalServerError, true)
 	}
 
-	responseData := &Def.AuthLoginUrlResponse{LoginUrl: loginURL, Params: &params}
+	responseData := &Def.ResLoginUrlResponse{LoginUrl: loginURL, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "auth login url response", nil, err, http.StatusInternalServerError, false)
@@ -108,7 +126,7 @@ func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request) 
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.AuthAuthorizeServiceRequest
+	var requestData Def.ReqAuthorizeServiceRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "auth authorize service request", nil, err, http.StatusBadRequest, true)
@@ -127,9 +145,9 @@ func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request) 
 
 	scopesResp := scopeListToDef(tokenScopes)
 	regResp := serviceRegToDef(reg)
-	tokenType := Def.AuthAuthorizeServiceResponseTokenTypeBearer
+	tokenType := Def.ResAuthorizeServiceResponseTokenTypeBearer
 
-	responseData := &Def.AuthAuthorizeServiceResponse{AccessToken: &token, TokenType: &tokenType, ApprovedScopes: &scopesResp, ServiceReg: regResp}
+	responseData := &Def.ResAuthorizeServiceResponse{AccessToken: &token, TokenType: &tokenType, ApprovedScopes: &scopesResp, ServiceReg: regResp}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "auth login url response", nil, err, http.StatusInternalServerError, false)
@@ -165,6 +183,22 @@ func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResp
 	res := h.coreAPIs.Services.SerGetCommonTest(l)
 
 	return l.HttpResponseSuccessMessage(res)
+}
+
+//Handler for verify endpoint
+func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request) logs.HttpResponse {
+	params := mux.Vars(r)
+	// parse app and orgID as path params?
+	authType, id, code, appID, orgID := params["auth-type"], params["id"], params["code"], params["appID"], params["orgID"]
+	if authType == "" || id == "" || code == "" {
+		return l.HttpResponseError(string(logutils.StatusMissing), nil, http.StatusBadRequest, false)
+
+	}
+	if err := h.coreAPIs.Auth.Verify(authType, appID, orgID, id, code, l); err != nil {
+		return l.HttpResponseError("", err, http.StatusInternalServerError, false)
+
+	}
+	return l.HttpResponseSuccessMessage("code verified")
 }
 
 //NewServicesApisHandler creates new rest services Handler instance

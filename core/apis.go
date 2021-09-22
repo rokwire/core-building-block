@@ -14,7 +14,7 @@ type APIs struct {
 	Encryption     Encryption     //expose to the drivers adapters
 	BBs            BBs            //expose to the drivers adapters
 
-	Auth *auth.Auth //expose to the drivers auth
+	Auth auth.APIs //expose to the drivers auth
 
 	app *application
 }
@@ -22,9 +22,7 @@ type APIs struct {
 //Start starts the core part of the application
 func (c *APIs) Start() {
 	c.app.start()
-
-	storageListener := auth.StorageListener{Auth: c.Auth}
-	c.app.storage.RegisterStorageListener(&storageListener)
+	c.Auth.Start()
 }
 
 //AddListener adds application listener
@@ -38,7 +36,7 @@ func (c *APIs) GetVersion() string {
 }
 
 //NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, auth *auth.Auth) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
 	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners}
@@ -99,12 +97,12 @@ func (s *administrationImpl) AdmUpdateGlobalConfig(setting string) error {
 	return s.app.admUpdateGlobalConfig(setting)
 }
 
-func (s *administrationImpl) AdmCreateOrganization(name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) (*model.Organization, error) {
-	return s.app.admCreateOrganization(name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+func (s *administrationImpl) AdmCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {
+	return s.app.admCreateOrganization(name, requestType, organizationDomains)
 }
 
-func (s *administrationImpl) AdmUpdateOrganization(ID string, name string, requestType string, requiresOwnLogin bool, loginTypes []string, organizationDomains []string) error {
-	return s.app.admUpdateOrganization(ID, name, requestType, requiresOwnLogin, loginTypes, organizationDomains)
+func (s *administrationImpl) AdmUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error {
+	return s.app.admUpdateOrganization(ID, name, requestType, organizationDomains)
 }
 
 func (s *administrationImpl) AdmGetOrganizations() ([]model.Organization, error) {
@@ -115,8 +113,16 @@ func (s *administrationImpl) AdmGetOrganization(ID string) (*model.Organization,
 	return s.app.admGetOrganization(ID)
 }
 
+func (s *administrationImpl) AdmCreateApplication(name string, versions []string) (*model.Application, error) {
+	return s.app.admCreateApplication(name, versions)
+}
+
 func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, error) {
 	return s.app.admGetApplication(ID)
+}
+
+func (s *administrationImpl) AdmGetApplications() ([]model.Application, error) {
+	return s.app.admGetApplications()
 }
 
 ///
