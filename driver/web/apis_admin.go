@@ -312,12 +312,6 @@ func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.Http
 	return l.HttpResponseSuccessJSON(data)
 }
 
-type createApplicationRequest struct {
-	Name             string `json:"name"`
-	MultiTenant      *bool  `json:"multi_tenant"`
-	RequiresOwnUsers *bool  `json:"requires_own_users"`
-}
-
 //createApplication creates an application
 func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
 
@@ -326,7 +320,7 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.H
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData createApplicationRequest
+	var requestData 
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
