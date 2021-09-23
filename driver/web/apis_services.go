@@ -2,7 +2,6 @@ package web
 
 import (
 	"core-building-block/core"
-	"core-building-block/core/auth"
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
@@ -10,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
 )
@@ -137,7 +137,7 @@ func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request) 
 	}
 
 	//TODO: Fill "claims" with claims from access token
-	token, tokenScopes, reg, err := h.coreAPIs.Auth.AuthorizeService(auth.TokenClaims{}, requestData.ServiceId, scopes, l)
+	token, tokenScopes, reg, err := h.coreAPIs.Auth.AuthorizeService(tokenauth.Claims{}, requestData.ServiceId, scopes, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, "login url", nil, err, http.StatusInternalServerError, true)
 	}
