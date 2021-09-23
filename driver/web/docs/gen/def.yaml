@@ -619,7 +619,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_create_Application_Requestfsewdfwe'
+              $ref: '#/components/schemas/_req_create_Application_Request'
         required: true
       responses:
         '200':
@@ -1414,7 +1414,7 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
-    _req_create_Application_Requestfsewdfwe:
+    _req_create_Application_Request:
       required:
         - name
         - multi_tenant

@@ -141,7 +141,7 @@ _res_authorize-service_Response:
 # $ref: "./apis/admin/get-organizations/response/Response.yaml"
 
  ### application API
-_req_create_Application_Requestfsewdfwe:
+_req_create_Application_Request:
   $ref: "./apis/admin/create-application/request/Request.yaml"
 #_res_create_Application_Response:
 # $ref: "./apis/admin/create-application/response/Response.yaml"
