@@ -619,7 +619,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Application'
+              $ref: '#/components/schemas/_req_create_Application_Requestfsewdfwe'
         required: true
       responses:
         '200':
@@ -1414,3 +1414,19 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
+    _req_create_Application_Requestfsewdfwe:
+      required:
+        - name
+        - multi_tenant
+        - reqires_own_users
+      type: object
+      properties:
+        name:
+          type: string
+        multi_tenant:
+          type: boolean
+        requires_own_users:
+          type: boolean
+        application_types:
+          type: array
+          $ref: '#/components/schemas/ApplicationTypeFields'

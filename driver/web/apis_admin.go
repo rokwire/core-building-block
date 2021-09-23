@@ -320,7 +320,7 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.H
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData 
+	var requestData Def.ReqCreateApplicationRequestfsewdfwe
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)

@@ -368,6 +368,14 @@ type ReqAuthorizeServiceRequest struct {
 	ServiceId      string    `json:"service_id"`
 }
 
+// ReqCreateApplicationRequestfsewdfwe defines model for _req_create_Application_Requestfsewdfwe.
+type ReqCreateApplicationRequestfsewdfwe struct {
+	ApplicationTypes *ApplicationTypeFields `json:"application_types,omitempty"`
+	MultiTenant      bool                   `json:"multi_tenant"`
+	Name             string                 `json:"name"`
+	RequiresOwnUsers *bool                  `json:"requires_own_users,omitempty"`
+}
+
 // ReqLoginUrlRequest defines model for _req_login-url_Request.
 type ReqLoginUrlRequest struct {
 	AppId       string                     `json:"app_id"`
@@ -492,7 +500,7 @@ type ResSharedRokwireToken struct {
 type ResSharedRokwireTokenTokenType string
 
 // PostAdminApplicationsJSONBody defines parameters for PostAdminApplications.
-type PostAdminApplicationsJSONBody Application
+type PostAdminApplicationsJSONBody ReqCreateApplicationRequestfsewdfwe
 
 // PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
 type PostAdminGlobalConfigJSONBody GlobalConfig
