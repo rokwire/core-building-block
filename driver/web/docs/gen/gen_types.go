@@ -370,10 +370,14 @@ type ReqAuthorizeServiceRequest struct {
 
 // ReqCreateApplicationRequestfsewdfwe defines model for _req_create_Application_Requestfsewdfwe.
 type ReqCreateApplicationRequestfsewdfwe struct {
-	ApplicationTypes *ApplicationTypeFields `json:"application_types,omitempty"`
-	MultiTenant      bool                   `json:"multi_tenant"`
-	Name             string                 `json:"name"`
-	RequiresOwnUsers *bool                  `json:"requires_own_users,omitempty"`
+	ApplicationTypes *[]struct {
+		Identifier string    `json:"identifier"`
+		Name       *string   `json:"name,omitempty"`
+		Versions   *[]string `json:"versions,omitempty"`
+	} `json:"application_types,omitempty"`
+	MultiTenant      bool   `json:"multi_tenant"`
+	Name             string `json:"name"`
+	RequiresOwnUsers bool   `json:"requires_own_users"`
 }
 
 // ReqLoginUrlRequest defines model for _req_login-url_Request.

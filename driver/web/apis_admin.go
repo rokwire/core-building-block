@@ -330,7 +330,7 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.H
 	multiTenant := requestData.MultiTenant
 	requiresOwnUsers := requestData.RequiresOwnUsers
 
-	_, err = h.coreAPIs.Administration.AdmCreateApplication(name, *multiTenant, *requiresOwnUsers)
+	_, err = h.coreAPIs.Administration.AdmCreateApplication(name, multiTenant, requiresOwnUsers)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}

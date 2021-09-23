@@ -1418,7 +1418,7 @@ components:
       required:
         - name
         - multi_tenant
-        - reqires_own_users
+        - requires_own_users
       type: object
       properties:
         name:
@@ -1429,4 +1429,16 @@ components:
           type: boolean
         application_types:
           type: array
-          $ref: '#/components/schemas/ApplicationTypeFields'
+          items:
+            required:
+              - identifier
+            type: object
+            properties:
+              identifier:
+                type: string
+              name:
+                type: string
+              versions:
+                type: array
+                items:
+                  type: string
