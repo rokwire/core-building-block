@@ -16,6 +16,8 @@ const (
 	TypeAccountAuthType logutils.MessageDataType = "account auth type"
 	//TypeProfile profile
 	TypeProfile logutils.MessageDataType = "profile"
+	//TypeDevice device
+	TypeDevice logutils.MessageDataType = "device"
 )
 
 //Account represents account entity

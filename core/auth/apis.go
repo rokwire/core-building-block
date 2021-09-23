@@ -6,6 +6,7 @@ import (
 
 	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/auth-library/authutils"
+	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/errors"
 	"github.com/rokmetro/logging-library/logutils"
 
@@ -223,7 +224,7 @@ func (a *Auth) GetLoginURL(authenticationType string, appID string, orgID string
 //	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
 //	return a scoped access token which reflects this change.
 //	Input:
-//		claims (tokenClaims): Claims from un-scoped user access token
+//		claims (tokenauth.Claims): Claims from un-scoped user access token
 //		serviceID (string): ID of the service to be authorized
 //		approvedScopes ([]string): list of scope strings to be approved
 //		l (*logs.Log): Log object pointer for request
@@ -231,7 +232,7 @@ func (a *Auth) GetLoginURL(authenticationType string, appID string, orgID string
 //		Access token (string): Signed scoped access token to be used to authorize requests to the specified service
 //		Approved Scopes ([]authorization.Scope): The approved scopes included in the provided token
 //		Service reg (*model.ServiceReg): The service registration record for the requested service
-func (a *Auth) AuthorizeService(claims TokenClaims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceReg, error) {
+func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceReg, error) {
 	var authorization model.ServiceAuthorization
 	if approvedScopes != nil {
 		//If approved scopes are being updated, save update and return token with updated scopes
@@ -268,7 +269,7 @@ func (a *Auth) AuthorizeService(claims TokenClaims, serviceID string, approvedSc
 }
 
 //GetScopedAccessToken returns a scoped access token with the requested scopes
-func (a *Auth) GetScopedAccessToken(claims TokenClaims, serviceID string, scopes []authorization.Scope) (string, error) {
+func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scopes []authorization.Scope) (string, error) {
 	scopeStrings := []string{}
 	services := []string{serviceID}
 	for _, scope := range scopes {
@@ -281,7 +282,7 @@ func (a *Auth) GetScopedAccessToken(claims TokenClaims, serviceID string, scopes
 	aud := strings.Join(services, ",")
 	scope := strings.Join(scopeStrings, " ")
 
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, nil)
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, nil)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 

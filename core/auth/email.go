@@ -193,7 +193,7 @@ func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.Applica
 		return nil, nil, nil
 	}
 
-	accountAuthType, err := a.auth.FindAccountAuthType(account, authTypeID, requestCreds.Email)
+	accountAuthType, err := a.auth.findAccountAuthType(account, authTypeID, requestCreds.Email)
 	if accountAuthType == nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err) //TODO add args..
 	}

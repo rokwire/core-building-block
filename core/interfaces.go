@@ -9,6 +9,7 @@ import (
 
 //Services exposes APIs for the driver adapters
 type Services interface {
+	SerDeleteAccount(id string) error
 	SerGetProfile(accountID string) (*model.Profile, error)
 	SerUpdateProfile(profile *model.Profile, ID string) error
 	SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error
@@ -50,10 +51,9 @@ type BBs interface {
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
+	DeleteAccount(id string) error
 	FindAccountByID(id string) (*model.Account, error)
-
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
-
 	UpdateProfile(profile *model.Profile, ID string) error
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
