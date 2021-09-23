@@ -22,11 +22,11 @@ func (a *phoneAuthImpl) userExist(authType model.AuthType, appType model.Applica
 	return nil, nil, nil
 }
 
-func (a *phoneAuthImpl) verify(accountAuthType *model.AccountAuthType, id string, verification string, l *logs.Log) error {
-	return errors.New(logutils.Unimplemented)
+func (a *phoneAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
+	return nil, errors.New(logutils.Unimplemented)
 }
-func (a *phoneAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, error) {
-	return nil, nil, nil
+func (a *phoneAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, bool, error) {
+	return nil, nil, false, nil
 }
 
 //initPhoneAuth initializes and registers a new phone auth instance

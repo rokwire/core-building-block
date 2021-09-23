@@ -339,18 +339,39 @@ func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
 }
 
 //Verify checks the verification code generated on signup
-func (a *Auth) Verify(authenticationType string, appID string, orgID string, identifier string, verification string, l *logs.Log) error {
-	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appID, orgID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
+	credential, err := a.storage.FindCredential(id)
+	if err != nil || credential == nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+	}
+
+	if credential.Verified {
+		return errors.New("credential has already been verified")
+	}
+
+	//get the auth type
+	authType, err := a.getCachedAuthType(credential.AuthType)
+	if err != nil || authType == nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType), err)
 	}
 	if authType.IsExternal {
 		return errors.WrapErrorAction("invalid auth type for verify", model.TypeAuthType, nil, err)
 	}
 
-	err = a.verifyAuthType(*authType, *appType, *appOrg, identifier, verification, l)
+	authImpl, err := a.getAuthTypeImpl(*authType)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionValidate, "verification", nil, err)
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	authTypeCreds, err := authImpl.verify(credential, verification, l)
+	if err != nil || authTypeCreds == nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "verification code", nil, err)
+	}
+
+	credential.Verified = true
+	credential.Value = authTypeCreds
+	if err = a.storage.UpdateCredential(credential); err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 
 	return nil

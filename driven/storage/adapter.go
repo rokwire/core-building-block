@@ -481,29 +481,35 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 }
 
 //FindCredentialsByID finds a credential by ID
-func (sa *Adapter) FindCredentialByID(ID string) (*model.Credential, error) {
+func (sa *Adapter) FindCredential(ID string) (*model.Credential, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 
-	var creds model.Credential
+	var creds credential
 	err := sa.db.credentials.FindOne(filter, &creds, nil)
 	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
+			return nil, nil
+		}
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
 
-	return &creds, nil
+	modelCreds := credentialFromStorage(creds)
+	return &modelCreds, nil
 }
 
 //InsertCredentials inserts a set of credential
 func (sa *Adapter) InsertCredential(creds *model.Credential, context mongo.SessionContext) error {
-	if creds == nil {
+	storageCreds := credentialToStorage(creds)
+
+	if storageCreds == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeCredential))
 	}
 
 	var err error
 	if context == nil {
-		_, err = sa.db.credentials.InsertOne(creds)
+		_, err = sa.db.credentials.InsertOne(storageCreds)
 	} else {
-		_, err = sa.db.credentials.InsertOneWithContext(context, creds)
+		_, err = sa.db.credentials.InsertOneWithContext(context, storageCreds)
 	}
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
@@ -514,14 +520,16 @@ func (sa *Adapter) InsertCredential(creds *model.Credential, context mongo.Sessi
 
 //Update credentials updates a set of credentials
 func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
-	if creds == nil {
+	storageCreds := credentialToStorage(creds)
+
+	if storageCreds == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeCredential))
 	}
 
-	filter := bson.D{primitive.E{Key: "_id", Value: creds.ID}}
-	err := sa.db.credentials.ReplaceOne(filter, creds, nil)
+	filter := bson.D{primitive.E{Key: "_id", Value: storageCreds.ID}}
+	err := sa.db.credentials.ReplaceOne(filter, storageCreds, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"_id": creds.ID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"_id": storageCreds.ID}, err)
 	}
 
 	return nil

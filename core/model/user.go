@@ -75,14 +75,15 @@ type AccountAuthType struct {
 
 //Credential represents a credential for account auth type/s
 type Credential struct {
-	ID string `json:"_id" bson:"_id"`
+	ID string
 
-	AccountsAuthTypes []AccountAuthType      `json:"account_auth_type" bson:"account_auth_type"` //one credential can be used for more than one account auth type
-	Verified          bool                   `json:"verified" bson:"verified"`
-	Value             map[string]interface{} `json:"value" bson:"value"` //credential value
+	AuthType          string
+	AccountsAuthTypes []AccountAuthType //one credential can be used for more than one account auth type
+	Verified          bool
+	Value             map[string]interface{} //credential value
 
-	DateCreated time.Time  `json:"date_created" bson:"date_created"`
-	DateUpdated *time.Time `json:"date_updated" bson:"date_updated"`
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 //Profile represents profile entity

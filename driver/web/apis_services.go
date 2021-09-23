@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
 )
@@ -260,17 +259,21 @@ func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResp
 
 //Handler for verify endpoint
 func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request) logs.HttpResponse {
-	params := mux.Vars(r)
-	authType, id, code, appID, orgID := params["auth-type"], params["id"], params["code"], params["app-id"], params["org-id"]
-	if authType == "" || id == "" || code == "" || appID == "" || orgID == "" {
-		return l.HttpResponseError(string(logutils.StatusMissing), nil, http.StatusBadRequest, false)
-
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
-	if err := h.coreAPIs.Auth.Verify(authType, appID, orgID, id, code, l); err != nil {
-		return l.HttpResponseError("", err, http.StatusInternalServerError, false)
 
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("code"), nil, http.StatusBadRequest, false)
 	}
-	return l.HttpResponseSuccessMessage("code verified")
+
+	if err := h.coreAPIs.Auth.Verify(id, code, l); err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionValidate, "code", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessMessage("Code verified!")
 }
 
 //NewServicesApisHandler creates new rest services Handler instance

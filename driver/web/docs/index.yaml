@@ -27,14 +27,14 @@ paths:
   #auth
   /services/auth/test:
     $ref: "./resources/services/test.yaml"
-  /services/auth/verify/{auth-type}/{id}/{code}/{app-id}/{org-id}:
-    $ref: "./resources/auth/verify.yaml"
   /services/auth/login:
     $ref: "./resources/services/auth/login.yaml"
   /services/auth/refresh:
     $ref: "./resources/services/auth/refresh.yaml"
   /services/auth/login-url:
     $ref: "./resources/services/auth/login-url.yaml"
+  /services/auth/verify:
+    $ref: "./resources/services/auth/verify.yaml"
   /services/auth/authorize-service:
     $ref: "./resources/services/auth/authorize-service.yaml"
   /services/auth/service-regs:

@@ -22,11 +22,11 @@ func (a *signatureAuthImpl) userExist(authType model.AuthType, appType model.App
 	return nil, nil, nil
 }
 
-func (a *signatureAuthImpl) verify(accountAuthType *model.AccountAuthType, id string, verification string, l *logs.Log) error {
-	return errors.New(logutils.Unimplemented)
+func (a *signatureAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
+	return nil, errors.New(logutils.Unimplemented)
 }
-func (a *signatureAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, error) {
-	return nil, nil, nil
+func (a *signatureAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, bool, error) {
+	return nil, nil, false, nil
 }
 
 //initSignatureAuth initializes and registers a new signature auth instance

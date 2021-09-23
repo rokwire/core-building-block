@@ -13,11 +13,22 @@ import (
 //authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
 type authType interface {
 	//checks the verification code generated on email signup
-	verify(accountAuthType *model.AccountAuthType, id string, verification string, l *logs.Log) error
+	// Returns:
+	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
+	verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error)
+
 	//userExist checks if the user exists for application and organizations
+	// Returns:
+	//	account (*model.Account): User account
+	//	accountAuthType (*model.AccountAuthType): User account auth type
 	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error)
+
 	//checkCredentials checks if the account credentials are valid for the account auth type
-	checkCredentials(accountAuthType *model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, error)
+	// Returns:
+	//	identifier (*string): Unique identifier to find account for this auth type
+	//	authTypeCreds (map[string]interface{}): New Credential.Value
+	//	verified (bool): Has the credential ownership been verified?
+	checkCredentials(accountAuthType *model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, bool, error)
 }
 
 //externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
@@ -25,10 +36,8 @@ type authType interface {
 type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
-
 	//externalLogin logins in the external system and provides the authenticated user
 	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, interface{}, error)
-
 	//userExist checks if the user exists
 	userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error)
 
@@ -114,7 +123,7 @@ type APIs interface {
 	DeregisterService(serviceID string) error
 
 	//Verify checks the verification code in the credentials collection
-	Verify(authenticationType string, appID string, orgID string, identifier string, verification string, l *logs.Log) error
+	Verify(id string, verification string, l *logs.Log) error
 }
 
 //Storage interface to communicate with the storage
@@ -141,7 +150,7 @@ type Storage interface {
 	// FindCredentials(orgID string, appID string, authType string, params map[string]interface{}) (*model.AuthCreds, error)
 	// UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCreds) error
 	// InsertCredentials(creds *model.AuthCreds, context mongo.SessionContext) error
-	FindCredentialByID(ID string) (*model.Credential, error)
+	FindCredential(ID string) (*model.Credential, error)
 	UpdateCredential(creds *model.Credential) error
 	InsertCredential(creds *model.Credential, context mongo.SessionContext) error
 
