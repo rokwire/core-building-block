@@ -34,9 +34,9 @@ type emailCreds struct {
 }
 
 // check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error)
-func (a *emailAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, error) {
-	// appID := appOrg.Application.ID
-	// orgID := appOrg.Organization.ID
+func (a *emailAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, error) {
+	appID := appOrg.Application.ID
+	orgID := appOrg.Organization.ID
 	var credID string
 	if accountAuthType != nil {
 		credID = accountAuthType.Credential.ID
@@ -47,7 +47,7 @@ func (a *emailAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType,
 		return nil, nil, err
 	}
 	paramsMap := make(map[string]interface{})
-	err = json.Unmarshal([]byte(creds), &paramsMap)
+	err = json.Unmarshal([]byte(params), &paramsMap)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -71,15 +71,14 @@ func (a *emailAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType,
 	}
 
 	//Handle sign up
-	//TODO: Prevent multiple signups if email is not verified
 	if accountAuthType == nil {
 		if !newUser {
-			return nil, nil, errors.New("no account found newUser flag must be set") // TODO:
+			return nil, nil, errors.New("no account found newUser flag must be set")
 		}
 		// if user != nil {
 		// 	return nil, nil, errors.New("email is not verified yet")
 		// }
-		newCreds, err := a.handleSignup(requestCreds, user)
+		newCreds, err := a.handleSignup(requestCreds, user, appID, orgID)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -96,7 +95,7 @@ func (a *emailAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType,
 	return &user.Email, credential.Value, nil
 }
 
-func (a *emailAuthImpl) handleSignup(requestCreds *emailCreds, storageCreds *emailCreds) (*emailCreds, error) {
+func (a *emailAuthImpl) handleSignup(requestCreds *emailCreds, storageCreds *emailCreds, appID string, orgID string) (*emailCreds, error) {
 	if storageCreds != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, errors.New("email already in use"))
 	}
@@ -114,7 +113,7 @@ func (a *emailAuthImpl) handleSignup(requestCreds *emailCreds, storageCreds *ema
 	newCreds.VerificationCode = code
 	newCreds.Password = string(hashedPassword)
 	newCreds.VerificationExpiry = time.Now().Add(time.Hour * 24)
-	if err = a.sendVerificationCode(newCreds.Email, newCreds.VerificationCode); err != nil {
+	if err = a.sendVerificationCode(newCreds.Email, newCreds.VerificationCode, appID, orgID); err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, errors.New("failed to send verification email for user"))
 	}
 	return &newCreds, nil
@@ -130,9 +129,8 @@ func (a *emailAuthImpl) handleSignin(requestCreds *emailCreds, storageCreds *ema
 	return nil
 }
 
-func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode string) error {
-	//TODO: include appID orgID
-	verificationLink := a.auth.host + fmt.Sprintf("/auth/verify/%v/%v/%v", "emailAuthImpl", email, verificationCode)
+func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode string, appID string, orgID string) error {
+	verificationLink := a.auth.host + fmt.Sprintf("/auth/verify/%v/%v/%v/%v/%v", a.authType, email, verificationCode, appID, orgID)
 	return a.auth.sendEmail(email, "Verify your email", "Please click the link below to verify your email:\n"+verificationLink, "")
 }
 
@@ -172,7 +170,7 @@ func (a *emailAuthImpl) verify(accountAuthType *model.AccountAuthType, id string
 	credential.Value = credsMap
 	credential.Verified = true
 
-	if err = a.auth.storage.UpdateCredentialByID(credential); err != nil {
+	if err = a.auth.storage.UpdateCredential(credential); err != nil {
 		return err
 	}
 	return nil
@@ -233,13 +231,6 @@ func mapToEmailCreds(credsMap map[string]interface{}) (*emailCreds, error) {
 	}
 	return creds, nil
 }
-
-// func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (*bool, error) {
-// 	//TODO - get the password from the creds and check it using user auth type id - from the credentials collection
-
-// 	result := true
-// 	return &result, nil
-// }
 
 //initEmailAuth initializes and registers a new email auth instance
 func initEmailAuth(auth *Auth) (*emailAuthImpl, error) {

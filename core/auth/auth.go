@@ -258,7 +258,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: accAuthType,
 			Identifier: identifier, Params: params, Credential: credential, Active: active, Active2FA: active2FA, DateCreated: now}
 
-		//use shared profile
+		//TODO: use shared profile
 		useSharedProfile := false
 
 		//profile
@@ -294,10 +294,8 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 	if account != nil && accountAuthType != nil {
 		//User exists
-		//TODO: Do we need to update any account info?
 		//2. it seems the user exist, now check the credentials
-		//TODO: remove isVerified
-		_, authTypeCreds, err := authImpl.checkCredentials(accountAuthType, creds, appOrg, l)
+		_, authTypeCreds, err := authImpl.checkCredentials(accountAuthType, creds, params, appOrg, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
 		}
@@ -311,7 +309,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		}
 
 	} else if account == nil && accountAuthType == nil {
-		identifier, authTypeCreds, err := authImpl.checkCredentials(accountAuthType, creds, appOrg, l)
+		identifier, authTypeCreds, err := authImpl.checkCredentials(accountAuthType, creds, params, appOrg, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
 		}
@@ -333,7 +331,6 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		credential := model.Credential{ID: accountAuthTypeID.String(), Value: value, Verified: false, DateCreated: now, DateUpdated: &now}
 		credential.AccountsAuthTypes = append(credential.AccountsAuthTypes, *accountAuthType)
 		accountAuthType.Credential = &credential
-		//TODO: insert credentials
 		if err = a.storage.InsertCredential(&credential, nil); err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 		}
@@ -383,7 +380,7 @@ func (a *Auth) verifyAuthType(authType model.AuthType, appType model.Application
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
-	if account == nil && accountAuthType == nil {
+	if account == nil || accountAuthType == nil {
 		return errors.Newf("no account found to verify identifier: %v", identifier)
 	}
 	err = authImpl.verify(accountAuthType, identifier, verification, l)

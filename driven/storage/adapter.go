@@ -513,7 +513,7 @@ func (sa *Adapter) InsertCredential(creds *model.Credential, context mongo.Sessi
 }
 
 //Update credentials updates a set of credentials
-func (sa *Adapter) UpdateCredentialByID(creds *model.Credential) error {
+func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
 	if creds == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeCredential))
 	}
@@ -575,29 +575,29 @@ func (sa *Adapter) UpdateCredentialByID(creds *model.Credential) error {
 // 	return nil
 // }
 
-//Update credentials updates a set of credentials
-func (sa *Adapter) UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCreds) error {
-	if creds == nil {
-		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
-	}
+// //Update credentials updates a set of credentials
+// func (sa *Adapter) UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCreds) error {
+// 	if creds == nil {
+// 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
+// 	}
 
-	var filter bson.D
-	if len(orgID) > 0 {
-		filter = bson.D{
-			primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID},
-			primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.AccountID}, //replaced by _id or account_id??
-		}
-	} else {
-		filter = bson.D{primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.AccountID}}
-	}
+// 	var filter bson.D
+// 	if len(orgID) > 0 {
+// 		filter = bson.D{
+// 			primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID},
+// 			primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.AccountID}, //replaced by _id or account_id??
+// 		}
+// 	} else {
+// 		filter = bson.D{primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.AccountID}}
+// 	}
 
-	err := sa.db.credentials.ReplaceOne(filter, creds, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthCred, &logutils.FieldArgs{"user_id": creds.AccountID}, err)
-	}
+// 	err := sa.db.credentials.ReplaceOne(filter, creds, nil)
+// 	if err != nil {
+// 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthCred, &logutils.FieldArgs{"user_id": creds.AccountID}, err)
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 //FindRefreshToken finds a refresh token
 func (sa *Adapter) FindRefreshToken(token string) (*model.AuthRefresh, error) {

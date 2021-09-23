@@ -25,7 +25,7 @@ func (a *phoneAuthImpl) userExist(authType model.AuthType, appType model.Applica
 func (a *phoneAuthImpl) verify(accountAuthType *model.AccountAuthType, id string, verification string, l *logs.Log) error {
 	return errors.New(logutils.Unimplemented)
 }
-func (a *phoneAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, error) {
+func (a *phoneAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, error) {
 	return nil, nil, nil
 }
 

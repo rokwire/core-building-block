@@ -26,7 +26,7 @@ tags:
 paths:
   /services/auth/test:
     $ref: '#/paths/~1services~1test'
-  '/services/auth/verify/{auth-type}/{id}/{code}':
+  '/services/auth/verify/{auth-type}/{id}/{code}/{app-id}/{org-id}':
     post:
       tags:
         - Auth
@@ -53,6 +53,22 @@ paths:
         - name: code
           in: path
           description: Verification code
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: app-id
+          in: path
+          description: ID of the app/client that the user is logging in from
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: org-id
+          in: path
+          description: ID of the organization that the user is logging in
           required: true
           style: simple
           explode: false
@@ -1465,6 +1481,8 @@ components:
           nullable: true
           anyOf:
             - $ref: '#/components/schemas/_res_shared_ParamsOidc'
+        message:
+          type: string
     _res_login_Account:
       required:
         - id

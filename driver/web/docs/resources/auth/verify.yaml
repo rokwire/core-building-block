@@ -31,6 +31,23 @@ post:
       explode: false
       schema:
         type: string
+    - name: app-id
+      in: path
+      description: ID of the app/client that the user is logging in from
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+
+    - name: org-id
+      in: path
+      description: ID of the organization that the user is logging in
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
 
   responses:
     200:

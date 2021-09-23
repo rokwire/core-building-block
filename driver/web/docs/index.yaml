@@ -27,7 +27,7 @@ paths:
   #auth
   /services/auth/test:
     $ref: "./resources/services/test.yaml"
-  /services/auth/verify/{auth-type}/{id}/{code}:
+  /services/auth/verify/{auth-type}/{id}/{code}/{app-id}/{org-id}:
     $ref: "./resources/auth/verify.yaml"
   /services/auth/login:
     $ref: "./resources/services/auth/login.yaml"

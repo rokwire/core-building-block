@@ -340,7 +340,6 @@ func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
 
 //Verify checks the verification code generated on signup
 func (a *Auth) Verify(authenticationType string, appID string, orgID string, identifier string, verification string, l *logs.Log) error {
-	//TODO: should it also return a message for verify
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appID, orgID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)

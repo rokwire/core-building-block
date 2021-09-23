@@ -7,6 +7,7 @@ require (
 	github.com/casbin/casbin v1.9.1
 	github.com/casbin/casbin/v2 v2.35.1 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/deepmap/oapi-codegen v1.8.2 // indirect
 	github.com/getkin/kin-openapi v0.72.0
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/spec v0.20.3 // indirect
