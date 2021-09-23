@@ -312,34 +312,36 @@ func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.Http
 	return l.HttpResponseSuccessJSON(data)
 }
 
+type createApplicationRequest struct {
+	Name             string `json:"name"`
+	MultiTenant      *bool  `json:"multi_tenant"`
+	RequiresOwnUsers *bool  `json:"requires_own_users"`
+}
+
 //createApplication creates an application
 func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
+
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		l.Errorf("Error on marshal create application - %s\n", err.Error())
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.Application
+	var requestData createApplicationRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		l.Errorf("Error on unmarshal the create application - %s\n", err.Error())
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
 	}
 
-	//TODO
-	//name := requestData.Name
-	//versions := requestData.Versions
+	name := requestData.Name
+	multiTenant := requestData.MultiTenant
+	requiresOwnUsers := requestData.RequiresOwnUsers
 
-	_, err = h.coreAPIs.Administration.AdmCreateApplication("TODO", nil)
+	_, err = h.coreAPIs.Administration.AdmCreateApplication(name, *multiTenant, *requiresOwnUsers)
 	if err != nil {
-		l.Errorf(err.Error())
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}
 
-	headers := map[string]string{}
-	headers["Content-Type"] = "text/plain"
-	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+	return l.HttpResponseSuccess()
 }
 
 //getAppilcations gets applications list

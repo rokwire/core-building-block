@@ -258,17 +258,17 @@ func (app *application) admGetApplication(ID string) (*model.Application, error)
 	return appAdm, nil
 }
 
-func (app *application) admCreateApplication(name string, versions []string) (*model.Application, error) {
-	/*id, _ := uuid.NewUUID()
+func (app *application) admCreateApplication(name string, multi_tenant bool, requires_own_users bool) (*model.Application, error) {
 	now := time.Now()
-	application := model.Application{ID: id.String(), Name: name, Versions: versions, DateCreated: now}
 
-	inserted, err := app.storage.InsertApplication(application)
+	applicationID, _ := uuid.NewUUID()
+	application := model.Application{ID: applicationID.String(), Name: name, MultiTenant: multi_tenant, RequiresOwnUsers: requires_own_users, DateCreated: now}
+
+	insertApplication, err := app.storage.InsertApplication(application)
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 	}
-	return inserted, nil */
-	return nil, nil
+	return insertApplication, nil
 }
 
 func (app *application) admGetApplications() ([]model.Application, error) {

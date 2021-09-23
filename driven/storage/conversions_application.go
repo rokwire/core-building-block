@@ -207,3 +207,12 @@ func applicationOrganizationFromStorage(item applicationOrganization, applicatio
 		IdentityProvidersSettings: item.IdentityProvidersSettings, SupportedAuthTypes: item.SupportedAuthTypes,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
+
+func applicationToStorage(item *model.Application) *application {
+	if item == nil {
+		return nil
+	}
+
+	return &application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, RequiresOwnUsers: item.RequiresOwnUsers,
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}

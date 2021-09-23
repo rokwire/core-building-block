@@ -1545,6 +1545,8 @@ components:
     _req_create_Application_Request:
       required:
         - name
+        - multi_tenant
+        - reqires_own_users
       type: object
       properties:
         name:
@@ -1557,6 +1559,8 @@ components:
       required:
         - id
         - name
+        - multi_tenant
+        - requires_own_users
       type: object
       properties:
         id:
