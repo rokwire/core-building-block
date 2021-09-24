@@ -1,6 +1,8 @@
 package storage
 
-import "core-building-block/core/model"
+import (
+	"core-building-block/core/model"
+)
 
 //Application
 func applicationFromStorage(item *application) model.Application {
@@ -208,11 +210,25 @@ func applicationOrganizationFromStorage(item applicationOrganization, applicatio
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-func applicationToStorage(item *model.Application) *application {
-	if item == nil {
-		return nil
+func applicationTypeToStorage(item model.ApplicationType) applicationType {
+	return applicationType{ID: item.ID, Identifier: item.Identifier, Name: item.Name}
+}
+
+func applicationTypesToStorage(items []model.ApplicationType) []applicationType {
+	if len(items) == 0 {
+		return make([]applicationType, 0)
 	}
 
-	return &application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, RequiresOwnUsers: item.RequiresOwnUsers,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	res := make([]applicationType, len(items))
+	for i, appllicationType := range items {
+		res[i] = applicationTypeToStorage(appllicationType)
+	}
+	return res
+}
+
+func applicationToStorage(item model.Application) application {
+	applicationTypes := applicationTypesToStorage(item.Types)
+
+	return application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, RequiresOwnUsers: item.RequiresOwnUsers,
+		Types: applicationTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
