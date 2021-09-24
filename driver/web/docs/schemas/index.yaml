@@ -145,4 +145,6 @@ _req_get_Application_Request:
  $ref: "./apis/admin/get-application/request/Request.yaml"
 _res_get_Application_Response:
  $ref: "./apis/admin/get-application/response/Response.yaml"
+_res_get_Applications_Response:
+ $ref: "./apis/admin/get-applications/response/Response.yaml"
  

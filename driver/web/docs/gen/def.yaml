@@ -697,7 +697,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Application'
+                  $ref: '#/components/schemas/_res_get_Applications_Response'
         '400':
           description: Bad request
         '401':
@@ -1723,3 +1723,22 @@ components:
           $ref: '#/components/schemas/ApplicationOrganization'
         applicationType:
           $ref: '#/components/schemas/ApplicationType'
+    _res_get_Applications_Response:
+      required:
+        - id
+        - name
+        - multi_tenant
+        - requires_own_users
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        multi_tenant:
+          type: boolean
+        requires_own_users:
+          type: boolean
+        application_types:
+          $ref: '#/components/schemas/ApplicationTypeFields'
