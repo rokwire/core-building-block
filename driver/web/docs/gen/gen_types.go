@@ -78,6 +78,19 @@ const (
 	ReqLoginRequestAuthTypeUsername ReqLoginRequestAuthType = "username"
 )
 
+// Defines values for ReqUpdateOrganizationRequestType.
+const (
+	ReqUpdateOrganizationRequestTypeHuge ReqUpdateOrganizationRequestType = "huge"
+
+	ReqUpdateOrganizationRequestTypeLarge ReqUpdateOrganizationRequestType = "large"
+
+	ReqUpdateOrganizationRequestTypeMedium ReqUpdateOrganizationRequestType = "medium"
+
+	ReqUpdateOrganizationRequestTypeMicro ReqUpdateOrganizationRequestType = "micro"
+
+	ReqUpdateOrganizationRequestTypeSmall ReqUpdateOrganizationRequestType = "small"
+)
+
 // Defines values for ResAuthorizeServiceResponseTokenType.
 const (
 	ResAuthorizeServiceResponseTokenTypeBearer ResAuthorizeServiceResponseTokenType = "Bearer"
@@ -457,6 +470,16 @@ type ReqLoginRequest struct {
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
 type ReqLoginRequestAuthType string
 
+// ReqUpdateOrganizationRequest defines model for _req_update_Organization_Request.
+type ReqUpdateOrganizationRequest struct {
+	Id   string                           `json:"id"`
+	Name string                           `json:"name"`
+	Type ReqUpdateOrganizationRequestType `json:"type"`
+}
+
+// ReqUpdateOrganizationRequestType defines model for ReqUpdateOrganizationRequest.Type.
+type ReqUpdateOrganizationRequestType string
+
 // ResAuthorizeServiceResponse defines model for _res_authorize-service_Response.
 type ResAuthorizeServiceResponse struct {
 	AccessToken    *string   `json:"access_token,omitempty"`
@@ -540,7 +563,7 @@ type PutAdminGlobalConfigJSONBody GlobalConfig
 type PostAdminOrganizationsJSONBody ReqCreateOrganizationRequest
 
 // PutAdminOrganizationsIdJSONBody defines parameters for PutAdminOrganizationsId.
-type PutAdminOrganizationsIdJSONBody Organization
+type PutAdminOrganizationsIdJSONBody ReqUpdateOrganizationRequest
 
 // DeleteAdminServiceRegsParams defines parameters for DeleteAdminServiceRegs.
 type DeleteAdminServiceRegsParams struct {

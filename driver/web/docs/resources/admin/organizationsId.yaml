@@ -18,7 +18,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/application/Organization.yaml"
+          $ref: "../../schemas/apis/admin/update-organization/request/Request.yaml"
     required: true
   responses:
     200:
