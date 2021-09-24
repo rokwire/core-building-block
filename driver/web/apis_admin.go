@@ -122,12 +122,6 @@ func (h AdminApisHandler) createOrganization(l *logs.Log, r *http.Request) logs.
 	return l.HttpResponseSuccess()
 }
 
-type updateOrganizationRequest struct {
-	Name    string
-	Type    string //micro small medium large - based on the users count
-	Domains []string
-}
-
 //updateOrganization updates organization
 func (h AdminApisHandler) updateOrganization(l *logs.Log, r *http.Request) logs.HttpResponse {
 	params := mux.Vars(r)
@@ -140,7 +134,7 @@ func (h AdminApisHandler) updateOrganization(l *logs.Log, r *http.Request) logs.
 	if err != nil {
 		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
-	var requestData updateOrganizationRequest
+	var requestData Def.ReqUpdateOrganizationRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
@@ -148,9 +142,9 @@ func (h AdminApisHandler) updateOrganization(l *logs.Log, r *http.Request) logs.
 
 	name := requestData.Name
 	requestType := requestData.Type
-	organizationDomains := requestData.Domains
+	organizationDomains := requestData.Config.Domains
 
-	err = h.coreAPIs.Administration.AdmUpdateOrganization(ID, name, string(requestType), organizationDomains)
+	err = h.coreAPIs.Administration.AdmUpdateOrganization(ID, name, string(requestType), *organizationDomains)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 	}
