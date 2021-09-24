@@ -391,7 +391,74 @@ func (sa *Adapter) UpdateAccount(updatedUser *model.Account, orgID string, newOr
 //DeleteAccount deletes an account
 func (sa *Adapter) DeleteAccount(id string) error {
 	//TODO - we have to decide what we do on delete user operation - removing all user relations, (or) mark the user disabled etc
-	return errors.New(logutils.Unimplemented)
+
+	// transaction
+	return sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+		err := sessionContext.StartTransaction()
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
+		}
+
+		account, err := sa.FindAccountByID(id)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		if account == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+		}
+
+		filter := bson.M{"_id": id}
+		res, err := sa.db.accounts.DeleteOneWithContext(sessionContext, filter, nil)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+		}
+		if res.DeletedCount != 1 {
+			sa.abortTransaction(sessionContext)
+			return errors.ErrorAction(logutils.ActionDelete, model.TypeAccount, logutils.StringArgs("unexpected deleted count"))
+		}
+
+		for _, device := range account.Devices {
+			filter := bson.M{"_id": device.ID}
+			if len(device.Accounts) > 1 {
+				update := bson.D{
+					primitive.E{Key: "$pull", Value: bson.D{
+						primitive.E{Key: "accounts", Value: account.ID},
+					}},
+					primitive.E{Key: "$set", Value: bson.D{
+						primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+					}},
+				}
+				res, err := sa.db.devices.UpdateOneWithContext(sessionContext, filter, update, nil)
+				if err != nil {
+					sa.abortTransaction(sessionContext)
+					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeDevice, nil, err)
+				}
+				if res.ModifiedCount != 1 {
+					sa.abortTransaction(sessionContext)
+					return errors.ErrorAction(logutils.ActionUpdate, model.TypeDevice, logutils.StringArgs("unexpected modified count"))
+				}
+			} else {
+				res, err := sa.db.devices.DeleteOneWithContext(sessionContext, filter, nil)
+				if err != nil {
+					sa.abortTransaction(sessionContext)
+					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeDevice, nil, err)
+				}
+				if res.DeletedCount != 1 {
+					sa.abortTransaction(sessionContext)
+					return errors.ErrorAction(logutils.ActionDelete, model.TypeDevice, logutils.StringArgs("unexpected deleted count"))
+				}
+			}
+		}
+
+		err = sessionContext.CommitTransaction(sessionContext)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
+		}
+		return nil
+	})
 }
 
 //UpdateAccountPreferences updates account preferences

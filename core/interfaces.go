@@ -9,6 +9,7 @@ import (
 
 //Services exposes APIs for the driver adapters
 type Services interface {
+	SerDeleteAccount(id string) error
 	SerGetProfile(accountID string) (*model.Profile, error)
 	SerUpdateProfile(profile *model.Profile, ID string) error
 	SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error
@@ -50,8 +51,10 @@ type BBs interface {
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
+	FindAccountByID(id string) (*model.Account, error)
+	UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
+	DeleteAccount(id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
-
 	UpdateProfile(profile *model.Profile, ID string) error
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
@@ -68,8 +71,6 @@ type Storage interface {
 	DeleteApplicationGroup(id string) error
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
-	FindAccountByID(id string) (*model.Account, error)
-	UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 	LoadOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)

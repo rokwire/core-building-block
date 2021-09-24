@@ -61,6 +61,10 @@ type servicesImpl struct {
 	app *application
 }
 
+func (s *servicesImpl) SerDeleteAccount(id string) error {
+	return s.app.serDeleteAccount(id)
+}
+
 func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, error) {
 	return s.app.serGetProfile(accountID)
 }

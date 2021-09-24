@@ -17,12 +17,11 @@ import (
 	"github.com/rokmetro/auth-library/authservice"
 	"github.com/rokmetro/auth-library/authutils"
 	"github.com/rokmetro/auth-library/tokenauth"
-	"golang.org/x/sync/syncmap"
-	"gopkg.in/go-playground/validator.v9"
-
 	"github.com/rokmetro/logging-library/errors"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
+	"golang.org/x/sync/syncmap"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 const (
@@ -76,16 +75,6 @@ type Auth struct {
 	//delete refresh tokens timer
 	deleteRefreshTimer *time.Timer
 	timerDone          chan bool
-}
-
-//TokenClaims is a temporary claims model to provide backwards compatibility
-//TODO: Once the profile has been transferred and the new user ID scheme has been adopted across all services
-//		this should be replaced by tokenauth.Claims directly
-type TokenClaims struct {
-	tokenauth.Claims
-	UID   string `json:"uid,omitempty"`
-	Email string `json:"email,omitempty"`
-	Phone string `json:"phone,omitempty"`
 }
 
 //NewAuth creates a new auth instance
@@ -328,7 +317,7 @@ func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAu
 	//access token
 	orgID := account.Organization.ID
 	appTypeIdentifier := appType.Identifier
-	claims := a.getStandardClaims(account.ID, account.ID, "", "", "rokwire", orgID, appTypeIdentifier, nil, false)
+	claims := a.getStandardClaims(account.ID, accountAuthType.Identifier, account.Profile.Email, account.Profile.Phone, "rokwire", orgID, appTypeIdentifier, accountAuthType.AuthType.Code, nil, false)
 	accessToken, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -343,10 +332,10 @@ func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAu
 	return &accessToken, &refreshToken, nil
 }
 
-func (a *Auth) applyAnonymousLogin(anonymousID string, orgID string, appType model.ApplicationType, params interface{}, l *logs.Log) (*string, error) {
+func (a *Auth) applyAnonymousLogin(authType *model.AuthType, anonymousID string, orgID string, appType model.ApplicationType, params interface{}, l *logs.Log) (*string, error) {
 	//access token
 	appTypeIdentifier := appType.Identifier
-	claims := a.getStandardClaims(anonymousID, "", "", "", "rokwire", orgID, appTypeIdentifier, nil, false)
+	claims := a.getStandardClaims(anonymousID, "", "", "", "rokwire", orgID, appTypeIdentifier, authType.Code, nil, false)
 	accessToken, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -648,7 +637,7 @@ func (a *Auth) getAnonymousAuthTypeImpl(authType model.AuthType) (anonymousAuthT
 	return nil, errors.ErrorData(logutils.StatusInvalid, typeAnonymousAuthType, logutils.StringArgs(authType.Code))
 }
 
-func (a *Auth) buildAccessToken(claims TokenClaims, permissions string, scope string) (string, error) {
+func (a *Auth) buildAccessToken(claims tokenauth.Claims, permissions string, scope string) (string, error) {
 	claims.Purpose = "access"
 	if !claims.Anonymous {
 		claims.Permissions = permissions
@@ -657,7 +646,7 @@ func (a *Auth) buildAccessToken(claims TokenClaims, permissions string, scope st
 	return a.generateToken(&claims)
 }
 
-func (a *Auth) buildCsrfToken(claims TokenClaims) (string, error) {
+func (a *Auth) buildCsrfToken(claims tokenauth.Claims) (string, error) {
 	claims.Purpose = "csrf"
 	return a.generateToken(&claims)
 }
@@ -672,21 +661,19 @@ func (a *Auth) buildRefreshToken() (string, *time.Time, error) {
 	return newToken, &expireTime, nil
 }
 
-func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string, exp *int64, anonymous bool) TokenClaims {
-	return TokenClaims{
-		Claims: tokenauth.Claims{
-			StandardClaims: jwt.StandardClaims{
-				Audience:  aud,
-				Subject:   sub,
-				ExpiresAt: a.getExp(exp),
-				IssuedAt:  time.Now().Unix(),
-				Issuer:    a.host,
-			}, OrgID: orgID, AppID: appID, Anonymous: anonymous,
-		}, UID: uid, Email: email, Phone: phone,
+func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string, authType string, exp *int64, anonymous bool) tokenauth.Claims {
+	return tokenauth.Claims{
+		StandardClaims: jwt.StandardClaims{
+			Audience:  aud,
+			Subject:   sub,
+			ExpiresAt: a.getExp(exp),
+			IssuedAt:  time.Now().Unix(),
+			Issuer:    a.host,
+		}, OrgID: orgID, AppID: appID, AuthType: authType, UID: uid, Email: email, Phone: phone, Anonymous: anonymous,
 	}
 }
 
-func (a *Auth) generateToken(claims *TokenClaims) (string, error) {
+func (a *Auth) generateToken(claims *tokenauth.Claims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	kid, err := authutils.GetKeyFingerprint(&a.authPrivKey.PublicKey)
 	if err != nil {

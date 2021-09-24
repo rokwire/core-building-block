@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Set up anonymous tokens [#26](https://github.com/rokwire/core-building-block/issues/26)
+- Set up delete account endpoint [#180](https://github.com/rokwire/core-building-block/issues/180)
 - Anonymous profile(non-pii) endpoints [#135](https://github.com/rokwire/core-building-block/issues/135)
 - User PII endpoints [#128](https://github.com/rokwire/core-building-block/issues/128)
 - Handle refresh tokens across multiple devices/apps/orgs [#149](https://github.com/rokwire/core-building-block/issues/149)
@@ -61,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixing the Log and the Changelog for issues #35 and #36 [#54](https://github.com/rokwire/core-building-block/issues/54)
 
 ### Changed
+- Move temporary claims to auth library [#183](https://github.com/rokwire/core-building-block/issues/183)
 - Prepare the service to be deployed into Rokwire infrastructure [#176](https://github.com/rokwire/core-building-block/issues/176)
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
