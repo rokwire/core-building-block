@@ -7,6 +7,7 @@ import (
 	"core-building-block/driver/web"
 	"io/ioutil"
 	"strconv"
+	"strings"
 
 	"github.com/golang-jwt/jwt"
 
@@ -64,15 +65,15 @@ func main() {
 	smtpPassword := envLoader.GetAndLogEnvVar("HEALTH_SMTP_PASSWORD", false, true)
 	smtpFrom := envLoader.GetAndLogEnvVar("HEALTH_EMAIL_FROM", false, false)
 
-	smtpPortNum, err := strconv.Atoi(smtpPort)
-	if err != nil {
-		// handle error
-		logger.Fatal("Invalid SMTP port")
-	}
+	smtpPortNum, _ := strconv.Atoi(smtpPort)
 
 	var authPrivKeyPem []byte
 	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
 	if authPrivKeyPemString != "" {
+
+		//make it to be a single line - AWS environemnt variable issue
+		authPrivKeyPemString = strings.Replace(authPrivKeyPemString, `\n`, "\n", -1)
+
 		authPrivKeyPem = []byte(authPrivKeyPemString)
 	} else {
 		authPrivateKeyPath := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY_PATH", true, false)

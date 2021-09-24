@@ -2,7 +2,6 @@ package web
 
 import (
 	"core-building-block/core"
-	"core-building-block/core/auth"
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
@@ -10,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
+	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
 )
@@ -46,8 +45,14 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
+
 	if message != "" {
-		return l.HttpResponseSuccessJSON([]byte(message))
+		responseData := &Def.ResLoginResponse{Message: &message}
+		respData, err := json.Marshal(responseData)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
+		}
+		return l.HttpResponseSuccessJSON(respData)
 	}
 
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
@@ -141,7 +146,7 @@ func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request) 
 	}
 
 	//TODO: Fill "claims" with claims from access token
-	token, tokenScopes, reg, err := h.coreAPIs.Auth.AuthorizeService(auth.TokenClaims{}, requestData.ServiceId, scopes, l)
+	token, tokenScopes, reg, err := h.coreAPIs.Auth.AuthorizeService(tokenauth.Claims{}, requestData.ServiceId, scopes, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, "login url", nil, err, http.StatusInternalServerError, true)
 	}
@@ -181,6 +186,81 @@ func (h ServicesApisHandler) getServiceRegistrations(l *logs.Log, r *http.Reques
 	return l.HttpResponseSuccessJSON(data)
 }
 
+func (h ServicesApisHandler) deleteAccount(l *logs.Log, r *http.Request) logs.HttpResponse {
+	//TODO: get account ID from access token to pass to SerDeleteAccount
+
+	err := h.coreAPIs.Services.SerDeleteAccount("")
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h ServicesApisHandler) getProfile(l *logs.Log, r *http.Request) logs.HttpResponse {
+	//TODO: get account ID from access token to pass to SerGetProfile
+
+	profile, err := h.coreAPIs.Services.SerGetProfile("")
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
+	}
+
+	profileResp := profileToDef(profile)
+
+	data, err := json.Marshal(profileResp)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeProfile, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request) logs.HttpResponse {
+	//TODO: get account ID from access token to pass to SerUpdateProfile
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ProfileFields
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "profile update request", nil, err, http.StatusBadRequest, true)
+	}
+
+	profile := profileFromDef(&requestData)
+
+	err = h.coreAPIs.Services.SerUpdateProfile(profile, "")
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h ServicesApisHandler) updateAccountPreferences(l *logs.Log, r *http.Request) logs.HttpResponse {
+	//TODO: get account ID from access token to pass to SerUpdateProfile
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var preferences map[string]interface{}
+	err = json.Unmarshal(data, &preferences)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "account preferences update request", nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Services.SerUpdateAccountPreferences("", preferences)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 //getCommonTest TODO get test
 func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResponse {
 	res := h.coreAPIs.Services.SerGetCommonTest(l)
@@ -190,17 +270,21 @@ func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResp
 
 //Handler for verify endpoint
 func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request) logs.HttpResponse {
-	params := mux.Vars(r)
-	authType, id, code, appID, orgID := params["auth-type"], params["id"], params["code"], params["appID"], params["orgID"]
-	if authType == "" || id == "" || code == "" {
-		return l.HttpResponseError(string(logutils.StatusMissing), nil, http.StatusBadRequest, false)
-
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
-	if err := h.coreAPIs.Auth.Verify(authType, appID, orgID, id, code, l); err != nil {
-		return l.HttpResponseError("", err, http.StatusInternalServerError, false)
 
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("code"), nil, http.StatusBadRequest, false)
 	}
-	return l.HttpResponseSuccessMessage("code verified")
+
+	if err := h.coreAPIs.Auth.Verify(id, code, l); err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionValidate, "code", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessMessage("Code verified!")
 }
 
 //NewServicesApisHandler creates new rest services Handler instance

@@ -44,6 +44,11 @@ type phoneCreds struct {
 	// TODO: Password
 }
 
+// phoneParams represents the params struct for phone auth
+type phoneParams struct {
+	NewUser bool `json:"new_user"`
+}
+
 type verifyPhoneResponse struct {
 	Sid         string    `json:"sid"`
 	ServiceSid  string    `json:"service_sid"`
@@ -72,21 +77,16 @@ type checkStatusResponse struct {
 	DateUpdated time.Time `json:"date_updated"`
 }
 
-func (a *phoneAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, error) {
-	var credID string
-	if accountAuthType != nil {
-		credID = accountAuthType.Credential.ID
-	}
-
-	var verificationCreds phoneCreds
-	err := json.Unmarshal([]byte(creds), &verificationCreds)
+func (a *phoneAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, bool, error) {
+	var requestCreds phoneCreds
+	err := json.Unmarshal([]byte(creds), &requestCreds)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneCreds, nil, err)
+		return nil, nil, false, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneCreds, nil, err)
 	}
 	validate := validator.New()
-	err = validate.Struct(verificationCreds)
+	err = validate.Struct(requestCreds)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typePhoneCreds, nil, err)
+		return nil, nil, false, errors.WrapErrorAction(logutils.ActionValidate, typePhoneCreds, nil, err)
 	}
 
 	// phoneAuthConfig, err := a.getPhoneAuthConfig(orgID, appID)
@@ -95,47 +95,56 @@ func (a *phoneAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType,
 	// }
 
 	if a.verifyServiceID == "" {
-		return nil, nil, errors.ErrorData(logutils.StatusMissing, typeVerifyServiceID, nil)
+		return nil, nil, false, errors.ErrorData(logutils.StatusMissing, typeVerifyServiceID, nil)
 	}
 
-	phone := verificationCreds.Phone
+	phone := requestCreds.Phone
 	validPhone := regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
 	if !validPhone.MatchString(phone) {
-		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typePhoneNumber, &logutils.FieldArgs{"phone": phone})
+		return nil, nil, false, errors.ErrorData(logutils.StatusInvalid, typePhoneNumber, &logutils.FieldArgs{"phone": phone})
 	}
 
-	errFields := logutils.FieldArgs{"_id": credID}
-
-	credential, err := a.auth.storage.FindCredentialByID(credID)
-	if err != nil {
-		l.LogAction(logs.Warn, logutils.StatusError, logutils.ActionFind, model.TypeCredential, &errFields)
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, typePhoneCreds, &errFields, nil)
+	newUser := false
+	var requestParams phoneParams
+	err = json.Unmarshal([]byte(params), &requestParams)
+	if err == nil {
+		newUser = requestParams.NewUser
 	}
 
-	var user *phoneCreds
-	if credential != nil {
-		user, err = mapToPhoneCreds(credential.Value)
+	var storedCreds *phoneCreds
+	if accountAuthType != nil && accountAuthType.Credential != nil {
+		storedCreds, err = mapToPhoneCreds(accountAuthType.Credential.Value)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, false, err
 		}
 	}
-	if len(credential.ID) > 0 {
-		// existing user
-		_, err := a.handlePhoneVerify(phone, verificationCreds, false, l)
-		if err != nil {
-			return nil, nil, err
+
+	// Handle sign up
+	if accountAuthType == nil {
+		if !newUser {
+			return nil, nil, false, errors.New("no account found newUser flag must be set")
 		}
 
-		return &user.Phone, credential.Value, nil
+		// new user
+		newCredsMap, err := a.handlePhoneVerify(phone, requestCreds, newUser, l)
+		if err != nil {
+			return nil, nil, false, err
+		}
+
+		return &storedCreds.Phone, newCredsMap, false, nil
 	}
 
-	// new user
-	newCredsMap, err := a.handlePhoneVerify(phone, verificationCreds, true, l)
+	if newUser {
+		return nil, nil, false, errors.Newf("account already exists for phone: %s", requestCreds.Phone)
+	}
+
+	// existing user
+	_, err = a.handlePhoneVerify(phone, requestCreds, newUser, l)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, false, err
 	}
 
-	return &user.Phone, newCredsMap, errors.ErrorData(logutils.StatusMissing, typePhoneCreds, nil)
+	return &storedCreds.Phone, accountAuthType.Credential.Value, accountAuthType.Credential.Verified, nil
 }
 
 func (a *phoneAuthImpl) handlePhoneVerify(phone string, verificationCreds phoneCreds, newUser bool, l *logs.Log) (map[string]interface{}, error) {
@@ -292,7 +301,7 @@ func (a *phoneAuthImpl) userExist(authType model.AuthType, appType model.Applica
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 
-	accountAuthType, err := a.auth.FindAccountAuthType(account, authTypeID, identifier)
+	accountAuthType, err := a.auth.findAccountAuthType(account, authTypeID, identifier)
 	if accountAuthType == nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
@@ -300,8 +309,8 @@ func (a *phoneAuthImpl) userExist(authType model.AuthType, appType model.Applica
 	return account, accountAuthType, nil
 }
 
-func (a *phoneAuthImpl) verify(accountAuthType *model.AccountAuthType, id string, verification string, l *logs.Log) error {
-	return errors.New(logutils.Unimplemented)
+func (a *phoneAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
+	return nil, errors.New(logutils.Unimplemented)
 }
 
 func phoneCredsToMap(creds *phoneCreds) (map[string]interface{}, error) {

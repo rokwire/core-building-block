@@ -3,9 +3,11 @@ properties:
   token:
     $ref: "../../../shared/responses/RokwireToken.yaml"
   account:
-   $ref: "./Account.yaml"
+    $ref: "./Account.yaml"
   params:
     type: object
     nullable: true
     anyOf:
       - $ref: "../../../shared/responses/ParamsOidc.yaml"
+  message:
+    type: string

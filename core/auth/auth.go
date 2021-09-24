@@ -79,16 +79,6 @@ type Auth struct {
 	timerDone          chan bool
 }
 
-//TokenClaims is a temporary claims model to provide backwards compatibility
-//TODO: Once the profile has been transferred and the new user ID scheme has been adopted across all services
-//		this should be replaced by tokenauth.Claims directly
-type TokenClaims struct {
-	tokenauth.Claims
-	UID   string `json:"uid,omitempty"`
-	Email string `json:"email,omitempty"`
-	Phone string `json:"phone,omitempty"`
-}
-
 //NewAuth creates a new auth instance
 func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, phoneVerifyServiceID string, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
@@ -217,7 +207,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		//user exists, just check if need to update it
 
 		//get the current external user
-		accountAuthType, err = a.FindAccountAuthType(account, authType.ID, externalUser.Identifier)
+		accountAuthType, err = a.findAccountAuthType(account, authType.ID, externalUser.Identifier)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -260,7 +250,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: accAuthType,
 			Identifier: identifier, Params: params, Credential: credential, Active: active, Active2FA: active2FA, DateCreated: now}
 
-		//use shared profile
+		//TODO: use shared profile
 		useSharedProfile := false
 
 		//profile
@@ -296,10 +286,8 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 	if account != nil && accountAuthType != nil {
 		//User exists
-		//TODO: Do we need to update any account info?
 		//2. it seems the user exist, now check the credentials
-		//TODO: remove isVerified
-		_, authTypeCreds, err := authImpl.checkCredentials(accountAuthType, creds, appOrg, l)
+		_, authTypeCreds, verified, err := authImpl.checkCredentials(accountAuthType, creds, params, appOrg, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
 		}
@@ -307,13 +295,11 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 			return nil, nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
 		}
 		// check isVerified
-		if !accountAuthType.Credential.Verified {
-			verifyMessage := "Please check your verification email or text"
-			return &verifyMessage, nil, nil, nil
+		if !verified {
+			return nil, nil, nil, errors.New("verification required")
 		}
-
 	} else if account == nil && accountAuthType == nil {
-		identifier, authTypeCreds, err := authImpl.checkCredentials(accountAuthType, creds, appOrg, l)
+		identifier, authTypeCreds, verified, err := authImpl.checkCredentials(accountAuthType, creds, params, appOrg, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
 		}
@@ -325,74 +311,58 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		now := time.Now()
 		//account auth type
 		accountAuthTypeID, _ := uuid.NewUUID()
-		accAuthType := authType
-		params := map[string]interface{}{}
-		value := authTypeCreds
-		active := true
-		active2FA := false
-		accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: accAuthType,
-			Identifier: *identifier, Params: params, Active: active, Active2FA: active2FA, DateCreated: now}
-		credential := model.Credential{ID: accountAuthTypeID.String(), Value: value, Verified: false, DateCreated: now, DateUpdated: &now}
-		credential.AccountsAuthTypes = append(credential.AccountsAuthTypes, *accountAuthType)
+		accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: authType,
+			Identifier: *identifier, Params: nil, Active: true, Active2FA: false, DateCreated: now}
+		credential := model.Credential{ID: accountAuthTypeID.String(), AccountsAuthTypes: []model.AccountAuthType{*accountAuthType}, Value: authTypeCreds, Verified: verified,
+			AuthType: authType.Code, DateCreated: now, DateUpdated: &now}
 		accountAuthType.Credential = &credential
-		//TODO: insert credentials
 		if err = a.storage.InsertCredential(&credential, nil); err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 		}
-		//use shared profile
+
+		//TODO: use shared profile
 		useSharedProfile := false
 
 		//profile
 		profileID, _ := uuid.NewUUID()
-		photoURL := ""
-		firstName := ""
-		lastName := ""
-		profile := &model.Profile{ID: profileID.String(), PhotoURL: photoURL, FirstName: firstName, LastName: lastName, DateCreated: now}
+		profile := &model.Profile{ID: profileID.String(), PhotoURL: "", FirstName: "", LastName: "", DateCreated: now}
 
 		account, err = a.registerUser(appOrg, *accountAuthType, useSharedProfile, profile, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
+
+		if !verified {
+			verifyMessage := "verification code sent successfully"
+			return &verifyMessage, nil, nil, nil
+		}
 	} else {
-		return nil, nil, nil, errors.WrapErrorAction("doesnt exist", model.TypeAccount, nil, err)
+		return nil, nil, nil, errors.New("either account or account auth type is nil")
 	}
 
 	return nil, account, accountAuthType, nil
 }
 
-func (a *Auth) FindAccountAuthType(account *model.Account, authTypeID string, identifier string) (*model.AccountAuthType, error) {
+func (a *Auth) findAccountAuthType(account *model.Account, authTypeID string, identifier string) (*model.AccountAuthType, error) {
+	if account == nil {
+		return nil, errors.New("account is nil")
+	}
+
 	accountAuthType := account.GetAccountAuthType(authTypeID, identifier)
 	if accountAuthType == nil {
-		return nil, errors.ErrorAction("for some reasons the user auth type is nil", "", nil)
+		return nil, errors.New("for some reasons the user auth type is nil")
 	}
-	//populate credentials in accountAuthType
-	credential, err := a.storage.FindCredentialByID(accountAuthType.Credential.ID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+
+	if accountAuthType.Credential != nil {
+		//populate credentials in accountAuthType
+		credential, err := a.storage.FindCredential(accountAuthType.Credential.ID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+		}
+		accountAuthType.Credential = credential
 	}
-	accountAuthType.Credential = credential
+
 	return accountAuthType, nil
-}
-
-func (a *Auth) verifyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, identifier string, verification string, l *logs.Log) error {
-	authImpl, err := a.getAuthTypeImpl(authType)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
-	}
-
-	//1. check if the account exists
-	account, accountAuthType, err := authImpl.userExist(authType, appType, appOrg, identifier, l)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-	if account == nil && accountAuthType == nil {
-		return errors.Newf("no account found to verify identifier: %v", identifier)
-	}
-	err = authImpl.verify(accountAuthType, identifier, verification, l)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionValidate, "creds", nil, err)
-	}
-	return nil
 }
 
 func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAuthType, appType model.ApplicationType, params interface{}, l *logs.Log) (*string, *string, error) {
@@ -402,7 +372,7 @@ func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAu
 	//access token
 	orgID := account.Organization.ID
 	appTypeIdentifier := appType.Identifier
-	claims := a.getStandardClaims(account.ID, account.ID, "", "", "rokwire", orgID, appTypeIdentifier, nil)
+	claims := a.getStandardClaims(account.ID, accountAuthType.Identifier, account.Profile.Email, account.Profile.Phone, "rokwire", orgID, appTypeIdentifier, accountAuthType.AuthType.Code, nil)
 	accessToken, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -498,7 +468,7 @@ func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.Account, error) {
 	if err != nil {
 		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("profile_id"), err)
 	}
-	newUser.Profile = model.UserProfile{ID: profileID.String(), FirstName: userAuth.FirstName, LastName: userAuth.LastName, DateCreated: now}
+	newUser.Profile = model.UserProfile{ID: profileID.String(), PII: &model.UserPII{FirstName: userAuth.FirstName, LastName: userAuth.LastName}, DateCreated: now}
 
 	if userAuth.OrgID != "" {
 		membershipID, err := uuid.NewUUID()
@@ -654,14 +624,14 @@ func (a *Auth) getExternalAuthTypeImpl(authType model.AuthType) (externalAuthTyp
 	return nil, errors.ErrorData(logutils.StatusInvalid, typeExternalAuthType, logutils.StringArgs(key))
 }
 
-func (a *Auth) buildAccessToken(claims TokenClaims, permissions string, scope string) (string, error) {
+func (a *Auth) buildAccessToken(claims tokenauth.Claims, permissions string, scope string) (string, error) {
 	claims.Purpose = "access"
 	claims.Permissions = permissions
 	claims.Scope = scope
 	return a.generateToken(&claims)
 }
 
-func (a *Auth) buildCsrfToken(claims TokenClaims) (string, error) {
+func (a *Auth) buildCsrfToken(claims tokenauth.Claims) (string, error) {
 	claims.Purpose = "csrf"
 	return a.generateToken(&claims)
 }
@@ -676,21 +646,19 @@ func (a *Auth) buildRefreshToken() (string, *time.Time, error) {
 	return newToken, &expireTime, nil
 }
 
-func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string, exp *int64) TokenClaims {
-	return TokenClaims{
-		Claims: tokenauth.Claims{
-			StandardClaims: jwt.StandardClaims{
-				Audience:  aud,
-				Subject:   sub,
-				ExpiresAt: a.getExp(exp),
-				IssuedAt:  time.Now().Unix(),
-				Issuer:    a.host,
-			}, OrgID: orgID, AppID: appID,
-		}, UID: uid, Email: email, Phone: phone,
+func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string, authType string, exp *int64) tokenauth.Claims {
+	return tokenauth.Claims{
+		StandardClaims: jwt.StandardClaims{
+			Audience:  aud,
+			Subject:   sub,
+			ExpiresAt: a.getExp(exp),
+			IssuedAt:  time.Now().Unix(),
+			Issuer:    a.host,
+		}, OrgID: orgID, AppID: appID, AuthType: authType, UID: uid, Email: email, Phone: phone,
 	}
 }
 
-func (a *Auth) generateToken(claims *TokenClaims) (string, error) {
+func (a *Auth) generateToken(claims *tokenauth.Claims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	kid, err := authutils.GetKeyFingerprint(&a.authPrivKey.PublicKey)
 	if err != nil {

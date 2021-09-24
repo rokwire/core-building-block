@@ -1,37 +1,26 @@
-post:
+get:
   tags:
-    - Auth
-  summary: Send verify code
+    - Services
+  summary: Validate verification code
   description: |
-    Sends code as path parameter for verification of the auth type
+    Validates verification code to verify account ownership
   parameters:
-    - name: auth-type
-      in: path
-      description: Auth type of the verification code
-      required: true
-      style: simple
-      explode: false
-      schema:
-        type: string
-
     - name: id
-      in: path
-      description: ID of the verification code
+      in: query
+      description: Credential ID
       required: true
-      style: simple
+      style: form
       explode: false
       schema:
         type: string
-
     - name: code
-      in: path
+      in: query
       description: Verification code
       required: true
-      style: simple
+      style: form
       explode: false
       schema:
         type: string
-
   responses:
     200:
       description: Successful operation

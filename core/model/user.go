@@ -10,8 +10,14 @@ import (
 const (
 	//TypeAccount account
 	TypeAccount logutils.MessageDataType = "account"
+	//TypeAccountPreferences account preferences
+	TypeAccountPreferences logutils.MessageDataType = "account preferences"
 	//TypeAccountAuthType account auth type
 	TypeAccountAuthType logutils.MessageDataType = "account auth type"
+	//TypeProfile profile
+	TypeProfile logutils.MessageDataType = "profile"
+	//TypeDevice device
+	TypeDevice logutils.MessageDataType = "device"
 )
 
 //Account represents account entity
@@ -31,7 +37,8 @@ type Account struct {
 
 	AuthTypes []AccountAuthType
 
-	Profile Profile //one account has one profile, one profile can be shared between many accounts
+	Preferences map[string]interface{}
+	Profile     Profile //one account has one profile, one profile can be shared between many accounts
 
 	Devices []Device
 
@@ -70,14 +77,15 @@ type AccountAuthType struct {
 
 //Credential represents a credential for account auth type/s
 type Credential struct {
-	ID string `json:"_id" bson:"_id"`
+	ID string
 
-	AccountsAuthTypes []AccountAuthType      `json:"account_auth_type" bson:"account_auth_type"` //one credential can be used for more than one account auth type
-	Verified          bool                   `json:"verified" bson:"verified"`
-	Value             map[string]interface{} `json:"value" bson:"value"` //credential value
+	AuthType          string
+	AccountsAuthTypes []AccountAuthType //one credential can be used for more than one account auth type
+	Verified          bool
+	Value             map[string]interface{} //credential value
 
-	DateCreated time.Time  `json:"date_created" bson:"date_created"`
-	DateUpdated *time.Time `json:"date_updated" bson:"date_updated"`
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 //Profile represents profile entity
@@ -90,6 +98,13 @@ type Profile struct {
 	PhotoURL  string
 	FirstName string
 	LastName  string
+	Email     string
+	Phone     string
+	BirthYear int8
+	Address   string
+	ZipCode   string
+	State     string
+	Country   string
 
 	Accounts []Account //the users can share profiles between their applications accounts for some applications
 

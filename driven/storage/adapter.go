@@ -269,23 +269,33 @@ func (sa *Adapter) FindAccountByID(id string) (*model.Account, error) {
 }
 
 func (sa *Adapter) findAccount(key string, id string) (*model.Account, error) {
-	/*filter := bson.M{key: id}
-	var users []user
-	err := sa.db.users.Find(filter, &users, nil)
+	filter := bson.M{key: id}
+	var accounts []account
+	err := sa.db.accounts.Find(filter, &accounts, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
-	if len(users) == 0 {
+	if len(accounts) == 0 {
 		//not found
 		return nil, nil
 	}
 
-	user := users[0]
+	account := accounts[0]
 
-	modelUser := userFromStorage(&user, sa)
-	return &modelUser, nil */
+	//application - from cache
+	application, err := sa.getCachedApplication(account.AppID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+	}
 
-	return nil, nil
+	//organization - from cache
+	organization, err := sa.getCachedOrganization(account.OrgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
+	}
+
+	modelAccount := accountFromStorage(account, sa, *application, *organization)
+	return &modelAccount, nil
 }
 
 //InsertAccount inserts an account
@@ -381,7 +391,94 @@ func (sa *Adapter) UpdateAccount(updatedUser *model.Account, orgID string, newOr
 //DeleteAccount deletes an account
 func (sa *Adapter) DeleteAccount(id string) error {
 	//TODO - we have to decide what we do on delete user operation - removing all user relations, (or) mark the user disabled etc
-	return errors.New(logutils.Unimplemented)
+
+	// transaction
+	return sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+		err := sessionContext.StartTransaction()
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
+		}
+
+		account, err := sa.FindAccountByID(id)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		if account == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+		}
+
+		filter := bson.M{"_id": id}
+		res, err := sa.db.accounts.DeleteOneWithContext(sessionContext, filter, nil)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+		}
+		if res.DeletedCount != 1 {
+			sa.abortTransaction(sessionContext)
+			return errors.ErrorAction(logutils.ActionDelete, model.TypeAccount, logutils.StringArgs("unexpected deleted count"))
+		}
+
+		for _, device := range account.Devices {
+			filter := bson.M{"_id": device.ID}
+			if len(device.Accounts) > 1 {
+				update := bson.D{
+					primitive.E{Key: "$pull", Value: bson.D{
+						primitive.E{Key: "accounts", Value: account.ID},
+					}},
+					primitive.E{Key: "$set", Value: bson.D{
+						primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+					}},
+				}
+				res, err := sa.db.devices.UpdateOneWithContext(sessionContext, filter, update, nil)
+				if err != nil {
+					sa.abortTransaction(sessionContext)
+					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeDevice, nil, err)
+				}
+				if res.ModifiedCount != 1 {
+					sa.abortTransaction(sessionContext)
+					return errors.ErrorAction(logutils.ActionUpdate, model.TypeDevice, logutils.StringArgs("unexpected modified count"))
+				}
+			} else {
+				res, err := sa.db.devices.DeleteOneWithContext(sessionContext, filter, nil)
+				if err != nil {
+					sa.abortTransaction(sessionContext)
+					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeDevice, nil, err)
+				}
+				if res.DeletedCount != 1 {
+					sa.abortTransaction(sessionContext)
+					return errors.ErrorAction(logutils.ActionDelete, model.TypeDevice, logutils.StringArgs("unexpected deleted count"))
+				}
+			}
+		}
+
+		err = sessionContext.CommitTransaction(sessionContext)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
+		}
+		return nil
+	})
+}
+
+//UpdateAccountPreferences updates account preferences
+func (sa *Adapter) UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "preferences", Value: preferences},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountPreferences, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
 }
 
 //UpdateAccountAuthType updates account auth type
@@ -450,30 +547,36 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	return nil
 }
 
-//FindCredentialsByID finds a credential by ID
-func (sa *Adapter) FindCredentialByID(ID string) (*model.Credential, error) {
+//FindCredential finds a credential by ID
+func (sa *Adapter) FindCredential(ID string) (*model.Credential, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 
-	var creds model.Credential
+	var creds credential
 	err := sa.db.credentials.FindOne(filter, &creds, nil)
 	if err != nil {
+		if err.Error() == "mongo: no documents in result" {
+			return nil, nil
+		}
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
 
-	return &creds, nil
+	modelCreds := credentialFromStorage(creds)
+	return &modelCreds, nil
 }
 
-//InsertCredentials inserts a set of credential
+//InsertCredential inserts a set of credential
 func (sa *Adapter) InsertCredential(creds *model.Credential, context mongo.SessionContext) error {
-	if creds == nil {
+	storageCreds := credentialToStorage(creds)
+
+	if storageCreds == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeCredential))
 	}
 
 	var err error
 	if context == nil {
-		_, err = sa.db.credentials.InsertOne(creds)
+		_, err = sa.db.credentials.InsertOne(storageCreds)
 	} else {
-		_, err = sa.db.credentials.InsertOneWithContext(context, creds)
+		_, err = sa.db.credentials.InsertOneWithContext(context, storageCreds)
 	}
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
@@ -482,16 +585,18 @@ func (sa *Adapter) InsertCredential(creds *model.Credential, context mongo.Sessi
 	return nil
 }
 
-//Update credentials updates a set of credentials
-func (sa *Adapter) UpdateCredentialByID(creds *model.Credential) error {
-	if creds == nil {
+//UpdateCredential updates a set of credentials
+func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
+	storageCreds := credentialToStorage(creds)
+
+	if storageCreds == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeCredential))
 	}
 
-	filter := bson.D{primitive.E{Key: "_id", Value: creds.ID}}
-	err := sa.db.credentials.ReplaceOne(filter, creds, nil)
+	filter := bson.D{primitive.E{Key: "_id", Value: storageCreds.ID}}
+	err := sa.db.credentials.ReplaceOne(filter, storageCreds, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"_id": creds.ID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"_id": storageCreds.ID}, err)
 	}
 
 	return nil
@@ -545,29 +650,29 @@ func (sa *Adapter) UpdateCredentialByID(creds *model.Credential) error {
 // 	return nil
 // }
 
-//Update credentials updates a set of credentials
-func (sa *Adapter) UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCreds) error {
-	if creds == nil {
-		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
-	}
+// //Update credentials updates a set of credentials
+// func (sa *Adapter) UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCreds) error {
+// 	if creds == nil {
+// 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
+// 	}
 
-	var filter bson.D
-	if len(orgID) > 0 {
-		filter = bson.D{
-			primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID},
-			primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.AccountID}, //replaced by _id or account_id??
-		}
-	} else {
-		filter = bson.D{primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.AccountID}}
-	}
+// 	var filter bson.D
+// 	if len(orgID) > 0 {
+// 		filter = bson.D{
+// 			primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID},
+// 			primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.AccountID}, //replaced by _id or account_id??
+// 		}
+// 	} else {
+// 		filter = bson.D{primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.AccountID}}
+// 	}
 
-	err := sa.db.credentials.ReplaceOne(filter, creds, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthCred, &logutils.FieldArgs{"user_id": creds.AccountID}, err)
-	}
+// 	err := sa.db.credentials.ReplaceOne(filter, creds, nil)
+// 	if err != nil {
+// 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthCred, &logutils.FieldArgs{"user_id": creds.AccountID}, err)
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 //FindRefreshToken finds a refresh token
 func (sa *Adapter) FindRefreshToken(token string) (*model.AuthRefresh, error) {
@@ -629,7 +734,7 @@ func (sa *Adapter) UpdateRefreshToken(token string, refresh *model.AuthRefresh) 
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAuthRefresh, logutils.StringArgs("unexpected modified count"))
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAuthRefresh, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return nil
@@ -782,6 +887,41 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 	}
 
 	return result, nil
+}
+
+//UpdateProfile updates an account profile
+func (sa *Adapter) UpdateProfile(profile *model.Profile, ID string) error {
+	filter := bson.D{primitive.E{Key: "profile.id", Value: ID}}
+
+	now := time.Now().UTC()
+	if profile == nil {
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeProfile))
+	}
+	profileUpdate := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "profile.photo_url", Value: profile.PhotoURL},
+			primitive.E{Key: "profile.first_name", Value: profile.FirstName},
+			primitive.E{Key: "profile.last_name", Value: profile.LastName},
+			primitive.E{Key: "profile.email", Value: profile.Email},
+			primitive.E{Key: "profile.phone", Value: profile.Phone},
+			primitive.E{Key: "profile.birth_year", Value: profile.BirthYear},
+			primitive.E{Key: "profile.address", Value: profile.Address},
+			primitive.E{Key: "profile.zip_code", Value: profile.ZipCode},
+			primitive.E{Key: "profile.state", Value: profile.State},
+			primitive.E{Key: "profile.country", Value: profile.Country},
+			primitive.E{Key: "profile.date_updated", Value: &now},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, profileUpdate, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeProfile, logutils.StringArgs("unexpected modified count"))
+	}
+
+	return nil
 }
 
 //CreateGlobalConfig creates global config
@@ -956,8 +1096,10 @@ func (sa *Adapter) LoadApplications() ([]model.Application, error) {
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 	}
+
 	if len(result) == 0 {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, nil, err)
+		//no data
+		return make([]model.Application, 0), nil
 	}
 
 	applications := applicationsFromStorage(result)

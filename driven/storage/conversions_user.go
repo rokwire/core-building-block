@@ -15,8 +15,8 @@ func accountFromStorage(item account, sa *Adapter, application model.Application
 	devices := accountDevicesFromStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
-	return model.Account{ID: id, Application: application, Organization: organization,
-		Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes, Profile: profile,
+	return model.Account{ID: id, Application: application, Organization: organization, Permissions: permissions,
+		Roles: roles, Groups: groups, AuthTypes: authTypes, Preferences: item.Preferences, Profile: profile,
 		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
@@ -33,8 +33,8 @@ func accountToStorage(item *model.Account) *account {
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
-	return &account{ID: id, AppID: appID, OrgID: orgID, Permissions: permissions, Roles: roles, Groups: groups,
-		AuthTypes: authTypes, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+	return &account{ID: id, AppID: appID, OrgID: orgID, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
+		Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountDevicesFromStorage(item account) []model.Device {
@@ -117,12 +117,14 @@ func accountAuthTypesToStorage(items []model.AccountAuthType) []accountAuthType 
 //Profile
 func profileFromStorage(item profile) model.Profile {
 	return model.Profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Email: item.Email, Phone: item.Phone, BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode,
+		State: item.State, Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func profileToStorage(item model.Profile) profile {
 	return profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Email: item.Email, Phone: item.Phone, BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode,
+		State: item.State, Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 //Device
@@ -138,4 +140,27 @@ func deviceToStorage(item *model.Device) *device {
 
 	return &device{ID: item.ID, Type: item.Type, OS: item.OS, MacAddress: item.MacAddress,
 		Accounts: accounts, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+//Credential
+func credentialFromStorage(item credential) model.Credential {
+	accountAuthTypes := make([]model.AccountAuthType, len(item.AccountsAuthTypes))
+	for i, id := range item.AccountsAuthTypes {
+		accountAuthTypes[i] = model.AccountAuthType{ID: id}
+	}
+	return model.Credential{ID: item.ID, AuthType: item.AuthType, AccountsAuthTypes: accountAuthTypes, Verified: item.Verified,
+		Value: item.Value, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func credentialToStorage(item *model.Credential) *credential {
+	if item == nil {
+		return nil
+	}
+
+	accountAuthTypes := make([]string, len(item.AccountsAuthTypes))
+	for i, aat := range item.AccountsAuthTypes {
+		accountAuthTypes[i] = aat.ID
+	}
+	return &credential{ID: item.ID, AuthType: item.AuthType, AccountsAuthTypes: accountAuthTypes, Verified: item.Verified,
+		Value: item.Value, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
