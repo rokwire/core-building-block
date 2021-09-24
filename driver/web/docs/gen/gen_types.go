@@ -438,6 +438,11 @@ type ReqCreateApplicationRequest struct {
 	RequiresOwnUsers bool   `json:"requires_own_users"`
 }
 
+// ReqGetApplicationRequest defines model for _req_get_Application_Request.
+type ReqGetApplicationRequest struct {
+	Id string `json:"id"`
+}
+
 // ReqGetOrganizationRequest defines model for _req_get_Organization_Request.
 type ReqGetOrganizationRequest struct {
 	Id string `json:"id"`
