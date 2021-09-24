@@ -472,9 +472,10 @@ type ReqLoginRequestAuthType string
 
 // ReqUpdateOrganizationRequest defines model for _req_update_Organization_Request.
 type ReqUpdateOrganizationRequest struct {
-	Id   string                           `json:"id"`
-	Name string                           `json:"name"`
-	Type ReqUpdateOrganizationRequestType `json:"type"`
+	Config *OrganizationConfigFields        `json:"config,omitempty"`
+	Id     string                           `json:"id"`
+	Name   string                           `json:"name"`
+	Type   ReqUpdateOrganizationRequestType `json:"type"`
 }
 
 // ReqUpdateOrganizationRequestType defines model for ReqUpdateOrganizationRequest.Type.

@@ -1472,6 +1472,8 @@ components:
             - medium
             - large
             - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
     _req_create_Application_Request:
       required:
         - name
