@@ -269,23 +269,33 @@ func (sa *Adapter) FindAccountByID(id string) (*model.Account, error) {
 }
 
 func (sa *Adapter) findAccount(key string, id string) (*model.Account, error) {
-	/*filter := bson.M{key: id}
-	var users []user
-	err := sa.db.users.Find(filter, &users, nil)
+	filter := bson.M{key: id}
+	var accounts []account
+	err := sa.db.accounts.Find(filter, &accounts, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
-	if len(users) == 0 {
+	if len(accounts) == 0 {
 		//not found
 		return nil, nil
 	}
 
-	user := users[0]
+	account := accounts[0]
 
-	modelUser := userFromStorage(&user, sa)
-	return &modelUser, nil */
+	//application - from cache
+	application, err := sa.getCachedApplication(account.AppID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+	}
 
-	return nil, nil
+	//organization - from cache
+	organization, err := sa.getCachedOrganization(account.OrgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
+	}
+
+	modelAccount := accountFromStorage(account, sa, *application, *organization)
+	return &modelAccount, nil
 }
 
 //InsertAccount inserts an account
@@ -381,7 +391,94 @@ func (sa *Adapter) UpdateAccount(updatedUser *model.Account, orgID string, newOr
 //DeleteAccount deletes an account
 func (sa *Adapter) DeleteAccount(id string) error {
 	//TODO - we have to decide what we do on delete user operation - removing all user relations, (or) mark the user disabled etc
-	return errors.New(logutils.Unimplemented)
+
+	// transaction
+	return sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+		err := sessionContext.StartTransaction()
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
+		}
+
+		account, err := sa.FindAccountByID(id)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		if account == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+		}
+
+		filter := bson.M{"_id": id}
+		res, err := sa.db.accounts.DeleteOneWithContext(sessionContext, filter, nil)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+		}
+		if res.DeletedCount != 1 {
+			sa.abortTransaction(sessionContext)
+			return errors.ErrorAction(logutils.ActionDelete, model.TypeAccount, logutils.StringArgs("unexpected deleted count"))
+		}
+
+		for _, device := range account.Devices {
+			filter := bson.M{"_id": device.ID}
+			if len(device.Accounts) > 1 {
+				update := bson.D{
+					primitive.E{Key: "$pull", Value: bson.D{
+						primitive.E{Key: "accounts", Value: account.ID},
+					}},
+					primitive.E{Key: "$set", Value: bson.D{
+						primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+					}},
+				}
+				res, err := sa.db.devices.UpdateOneWithContext(sessionContext, filter, update, nil)
+				if err != nil {
+					sa.abortTransaction(sessionContext)
+					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeDevice, nil, err)
+				}
+				if res.ModifiedCount != 1 {
+					sa.abortTransaction(sessionContext)
+					return errors.ErrorAction(logutils.ActionUpdate, model.TypeDevice, logutils.StringArgs("unexpected modified count"))
+				}
+			} else {
+				res, err := sa.db.devices.DeleteOneWithContext(sessionContext, filter, nil)
+				if err != nil {
+					sa.abortTransaction(sessionContext)
+					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeDevice, nil, err)
+				}
+				if res.DeletedCount != 1 {
+					sa.abortTransaction(sessionContext)
+					return errors.ErrorAction(logutils.ActionDelete, model.TypeDevice, logutils.StringArgs("unexpected deleted count"))
+				}
+			}
+		}
+
+		err = sessionContext.CommitTransaction(sessionContext)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
+		}
+		return nil
+	})
+}
+
+//UpdateAccountPreferences updates account preferences
+func (sa *Adapter) UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "preferences", Value: preferences},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountPreferences, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
 }
 
 //UpdateAccountAuthType updates account auth type
@@ -558,7 +655,7 @@ func (sa *Adapter) UpdateRefreshToken(token string, refresh *model.AuthRefresh) 
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAuthRefresh, logutils.StringArgs("unexpected modified count"))
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAuthRefresh, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return nil
@@ -711,6 +808,41 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 	}
 
 	return result, nil
+}
+
+//UpdateProfile updates an account profile
+func (sa *Adapter) UpdateProfile(profile *model.Profile, ID string) error {
+	filter := bson.D{primitive.E{Key: "profile.id", Value: ID}}
+
+	now := time.Now().UTC()
+	if profile == nil {
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeProfile))
+	}
+	profileUpdate := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "profile.photo_url", Value: profile.PhotoURL},
+			primitive.E{Key: "profile.first_name", Value: profile.FirstName},
+			primitive.E{Key: "profile.last_name", Value: profile.LastName},
+			primitive.E{Key: "profile.email", Value: profile.Email},
+			primitive.E{Key: "profile.phone", Value: profile.Phone},
+			primitive.E{Key: "profile.birth_year", Value: profile.BirthYear},
+			primitive.E{Key: "profile.address", Value: profile.Address},
+			primitive.E{Key: "profile.zip_code", Value: profile.ZipCode},
+			primitive.E{Key: "profile.state", Value: profile.State},
+			primitive.E{Key: "profile.country", Value: profile.Country},
+			primitive.E{Key: "profile.date_updated", Value: &now},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, profileUpdate, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeProfile, logutils.StringArgs("unexpected modified count"))
+	}
+
+	return nil
 }
 
 //CreateGlobalConfig creates global config
@@ -885,8 +1017,10 @@ func (sa *Adapter) LoadApplications() ([]model.Application, error) {
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 	}
+
 	if len(result) == 0 {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, nil, err)
+		//no data
+		return make([]model.Application, 0), nil
 	}
 
 	applications := applicationsFromStorage(result)

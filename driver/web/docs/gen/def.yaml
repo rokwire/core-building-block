@@ -10,7 +10,7 @@ servers:
     description: Test server
   - url: 'https://api-dev.rokwire.illinois.edu/core'
     description: Development server
-  - url: 'http://localhost'
+  - url: 'http://localhost/core'
     description: Local server
 tags:
   - name: Services
@@ -230,6 +230,102 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ServiceReg'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/account:
+    delete:
+      tags:
+        - Services
+      summary: Delete user account
+      description: |
+        Deletes a user account
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/account-preferences:
+    put:
+      tags:
+        - Services
+      summary: Update account preferences
+      description: |
+        Updates account preferences
+      requestBody:
+        description: Account preferences
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/profile:
+    get:
+      tags:
+        - Services
+      summary: Get user profile
+      description: |
+        Returns a user profile
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileFields'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      tags:
+        - Services
+      summary: Update user profile
+      description: |
+        Updates a user profile
+      requestBody:
+        description: Profile update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileFields'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -1121,6 +1217,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthType'
+        preferences:
+          type: object
         profile:
           $ref: '#/components/schemas/Profile'
         devices:
@@ -1154,6 +1252,27 @@ components:
           type: string
         last_name:
           type: string
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        birth_year:
+          type: integer
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        zip_code:
+          type: string
+          nullable: true
+        state:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
     AccountAuthType:
       type: object
       properties:

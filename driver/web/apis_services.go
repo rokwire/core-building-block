@@ -2,7 +2,6 @@ package web
 
 import (
 	"core-building-block/core"
-	"core-building-block/core/auth"
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
@@ -10,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
 )
@@ -137,7 +137,7 @@ func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request) 
 	}
 
 	//TODO: Fill "claims" with claims from access token
-	token, tokenScopes, reg, err := h.coreAPIs.Auth.AuthorizeService(auth.TokenClaims{}, requestData.ServiceId, scopes, l)
+	token, tokenScopes, reg, err := h.coreAPIs.Auth.AuthorizeService(tokenauth.Claims{}, requestData.ServiceId, scopes, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, "login url", nil, err, http.StatusInternalServerError, true)
 	}
@@ -175,6 +175,81 @@ func (h ServicesApisHandler) getServiceRegistrations(l *logs.Log, r *http.Reques
 	}
 
 	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h ServicesApisHandler) deleteAccount(l *logs.Log, r *http.Request) logs.HttpResponse {
+	//TODO: get account ID from access token to pass to SerDeleteAccount
+
+	err := h.coreAPIs.Services.SerDeleteAccount("")
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h ServicesApisHandler) getProfile(l *logs.Log, r *http.Request) logs.HttpResponse {
+	//TODO: get account ID from access token to pass to SerGetProfile
+
+	profile, err := h.coreAPIs.Services.SerGetProfile("")
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
+	}
+
+	profileResp := profileToDef(profile)
+
+	data, err := json.Marshal(profileResp)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeProfile, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request) logs.HttpResponse {
+	//TODO: get account ID from access token to pass to SerUpdateProfile
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ProfileFields
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "profile update request", nil, err, http.StatusBadRequest, true)
+	}
+
+	profile := profileFromDef(&requestData)
+
+	err = h.coreAPIs.Services.SerUpdateProfile(profile, "")
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h ServicesApisHandler) updateAccountPreferences(l *logs.Log, r *http.Request) logs.HttpResponse {
+	//TODO: get account ID from access token to pass to SerUpdateProfile
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var preferences map[string]interface{}
+	err = json.Unmarshal(data, &preferences)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "account preferences update request", nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Services.SerUpdateAccountPreferences("", preferences)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
 }
 
 //getCommonTest TODO get test

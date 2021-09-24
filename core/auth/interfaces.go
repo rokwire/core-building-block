@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/rokmetro/auth-library/authorization"
+	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/logs"
 )
 
@@ -82,7 +83,7 @@ type APIs interface {
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
 	//	return a scoped access token which reflects this change.
 	//	Input:
-	//		claims (tokenClaims): Claims from un-scoped user access token
+	//		claims (tokenauth.Claims): Claims from un-scoped user access token
 	//		serviceID (string): ID of the service to be authorized
 	//		approvedScopes ([]string): list of scope strings to be approved
 	//		l (*logs.Log): Log object pointer for request
@@ -90,10 +91,10 @@ type APIs interface {
 	//		Access token (string): Signed scoped access token to be used to authorize requests to the specified service
 	//		Approved Scopes ([]authorization.Scope): The approved scopes included in the provided token
 	//		Service reg (*model.ServiceReg): The service registration record for the requested service
-	AuthorizeService(claims TokenClaims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceReg, error)
+	AuthorizeService(claims tokenauth.Claims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceReg, error)
 
 	//GetScopedAccessToken returns a scoped access token with the requested scopes
-	GetScopedAccessToken(claims TokenClaims, serviceID string, scopes []authorization.Scope) (string, error)
+	GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scopes []authorization.Scope) (string, error)
 
 	//GetAuthKeySet generates a JSON Web Key Set for auth service registration
 	GetAuthKeySet() (*model.JSONWebKeySet, error)
