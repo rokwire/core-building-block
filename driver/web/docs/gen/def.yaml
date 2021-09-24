@@ -1415,6 +1415,9 @@ components:
         - type
       type: object
       properties:
+        id:
+          readOnly: true
+          type: string
         name:
           type: string
         type:
@@ -1425,6 +1428,8 @@ components:
             - medium
             - large
             - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
     _res_create_Organization_Response:
       required:
         - id

@@ -383,8 +383,10 @@ type ReqAuthorizeServiceRequest struct {
 
 // ReqCreateOrganizationRequest defines model for _req_create-Organization_Request.
 type ReqCreateOrganizationRequest struct {
-	Name string                           `json:"name"`
-	Type ReqCreateOrganizationRequestType `json:"type"`
+	Config *OrganizationConfigFields        `json:"config,omitempty"`
+	Id     *string                          `json:"id,omitempty"`
+	Name   string                           `json:"name"`
+	Type   ReqCreateOrganizationRequestType `json:"type"`
 }
 
 // ReqCreateOrganizationRequestType defines model for ReqCreateOrganizationRequest.Type.

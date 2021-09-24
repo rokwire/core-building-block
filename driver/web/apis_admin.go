@@ -96,12 +96,6 @@ func (h AdminApisHandler) updateGlobalConfig(l *logs.Log, r *http.Request) logs.
 	return l.HttpResponseSuccess()
 }
 
-type createOrganizationRequest struct {
-	Name    string
-	Type    string //micro small medium large - based on the users count
-	Domains []string
-}
-
 //createOrganization creates organization
 func (h AdminApisHandler) createOrganization(l *logs.Log, r *http.Request) logs.HttpResponse {
 
@@ -110,7 +104,7 @@ func (h AdminApisHandler) createOrganization(l *logs.Log, r *http.Request) logs.
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData createOrganizationRequest
+	var requestData Def.ReqCreateOrganizationRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
@@ -118,9 +112,9 @@ func (h AdminApisHandler) createOrganization(l *logs.Log, r *http.Request) logs.
 
 	name := requestData.Name
 	types := requestData.Type
-	domains := requestData.Domains
+	domains := requestData.Config.Domains
 
-	_, err = h.coreAPIs.Administration.AdmCreateOrganization(name, string(types), domains)
+	_, err = h.coreAPIs.Administration.AdmCreateOrganization(name, string(types), *domains)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 	}
@@ -314,26 +308,30 @@ func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.Http
 
 //createApplication creates an application
 func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
+	/*	data, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+		}
 
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
+		var requestData Def.ReqCreateApplicationRequest
+		err = json.Unmarshal(data, &requestData)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
+		}
 
-	var requestData Def.ReqCreateApplicationRequest
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
-	}
+		name := requestData.Name
+		multiTenant := requestData.MultiTenant
+		requiresOwnUsers := requestData.RequiresOwnUsers
 
-	name := requestData.Name
-	multiTenant := requestData.MultiTenant
-	requiresOwnUsers := requestData.RequiresOwnUsers
+		var applicationTypes Def.ApplicationTypeFields
+		identifier := applicationTypes.Identifier
+		nameInType := applicationTypes.Name
+		versions := applicationTypes.Versions
 
-	_, err = h.coreAPIs.Administration.AdmCreateApplication(name, multiTenant, requiresOwnUsers)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
-	}
+		_, err = h.coreAPIs.Administration.AdmCreateApplication(name, multiTenant, requiresOwnUsers, identifier, *nameInType, *versions)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
+		}*/
 
 	return l.HttpResponseSuccess()
 }
