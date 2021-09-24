@@ -49,6 +49,19 @@ const (
 	OrganizationFieldsTypeSmall OrganizationFieldsType = "small"
 )
 
+// Defines values for ReqCreateOrganizationRequestType.
+const (
+	ReqCreateOrganizationRequestTypeHuge ReqCreateOrganizationRequestType = "huge"
+
+	ReqCreateOrganizationRequestTypeLarge ReqCreateOrganizationRequestType = "large"
+
+	ReqCreateOrganizationRequestTypeMedium ReqCreateOrganizationRequestType = "medium"
+
+	ReqCreateOrganizationRequestTypeMicro ReqCreateOrganizationRequestType = "micro"
+
+	ReqCreateOrganizationRequestTypeSmall ReqCreateOrganizationRequestType = "small"
+)
+
 // Defines values for ReqLoginUrlRequestAuthType.
 const (
 	ReqLoginUrlRequestAuthTypeIllinoisOidc ReqLoginUrlRequestAuthType = "illinois_oidc"
@@ -368,9 +381,14 @@ type ReqAuthorizeServiceRequest struct {
 	ServiceId      string    `json:"service_id"`
 }
 
-// Auth login creds for auth_type="oidc"
-//   - full redirect URI received from OIDC provider
-type ReqCreateOrganizationRequest string
+// ReqCreateOrganizationRequest defines model for _req_create-Organization_Request.
+type ReqCreateOrganizationRequest struct {
+	Name string                           `json:"name"`
+	Type ReqCreateOrganizationRequestType `json:"type"`
+}
+
+// ReqCreateOrganizationRequestType defines model for ReqCreateOrganizationRequest.Type.
+type ReqCreateOrganizationRequestType string
 
 // ReqCreateApplicationRequest defines model for _req_create_Application_Request.
 type ReqCreateApplicationRequest struct {

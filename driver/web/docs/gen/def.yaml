@@ -1410,10 +1410,21 @@ components:
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
     _req_create-Organization_Request:
-      type: string
-      description: |
-        Auth login creds for auth_type="oidc"
-          - full redirect URI received from OIDC provider
+      required:
+        - name
+        - type
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
     _res_create_Organization_Response:
       required:
         - id
