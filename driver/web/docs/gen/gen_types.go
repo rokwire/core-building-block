@@ -368,6 +368,10 @@ type ReqAuthorizeServiceRequest struct {
 	ServiceId      string    `json:"service_id"`
 }
 
+// Auth login creds for auth_type="oidc"
+//   - full redirect URI received from OIDC provider
+type ReqCreateOrganizationRequest string
+
 // ReqCreateApplicationRequest defines model for _req_create_Application_Request.
 type ReqCreateApplicationRequest struct {
 	ApplicationTypes *[]struct {
@@ -513,7 +517,7 @@ type PostAdminGlobalConfigJSONBody GlobalConfig
 type PutAdminGlobalConfigJSONBody GlobalConfig
 
 // PostAdminOrganizationsJSONBody defines parameters for PostAdminOrganizations.
-type PostAdminOrganizationsJSONBody Organization
+type PostAdminOrganizationsJSONBody ReqCreateOrganizationRequest
 
 // PutAdminOrganizationsIdJSONBody defines parameters for PutAdminOrganizationsId.
 type PutAdminOrganizationsIdJSONBody Organization

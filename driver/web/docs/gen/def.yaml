@@ -421,7 +421,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Organization'
+              $ref: '#/components/schemas/_req_create-Organization_Request'
         required: true
       responses:
         '200':
@@ -1381,11 +1381,6 @@ components:
           type: object
           anyOf:
             - $ref: '#/components/schemas/_res_shared_ParamsOidc'
-    _req_blabla2_Request:
-      type: string
-      description: |
-        Auth login creds for auth_type="oidc"
-          - full redirect URI received from OIDC provider
     _req_authorize-service_Request:
       required:
         - service_id
@@ -1414,6 +1409,33 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
+    _req_create-Organization_Request:
+      type: string
+      description: |
+        Auth login creds for auth_type="oidc"
+          - full redirect URI received from OIDC provider
+    _res_create_Organization_Response:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
     _req_create_Application_Request:
       required:
         - name

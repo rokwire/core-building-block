@@ -114,9 +114,6 @@ _res_login-url_Response:
 _res_refresh_Response:
   $ref: "./apis/services/refresh/response/Response.yaml"
 
-_req_blabla2_Request:
-  $ref: "./apis/admin/create-organization/request/Request.yaml"
-
 ### authorize-service API
 _req_authorize-service_Request:
   $ref: "./apis/services/authorize-service/request/Request.yaml"
@@ -127,8 +124,10 @@ _res_authorize-service_Response:
 #_req_HHHHHH:
  # $ref: "./apis/services/authorize-service/request/Request.yaml"
  #$ref: "./apis/admin/create-organization/request/Request.yaml"
-#_res_create_Organization_Response:
-# $ref: "./apis/admin/create-organization/response/Response.yaml"
+_req_create-Organization_Request:
+  $ref: "./apis/admin/create-organization/request/Request.yaml"
+_res_create_Organization_Response:
+ $ref: "./apis/admin/create-organization/response/Response.yaml"
 #_req_update_Organization_Request:
 # $ref: "./apis/admin/update-organization/request/Request.yaml"
 #_res_update_Organization_Response:
