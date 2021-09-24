@@ -439,9 +439,7 @@ type ReqCreateApplicationRequest struct {
 }
 
 // ReqGetApplicationRequest defines model for _req_get_Application_Request.
-type ReqGetApplicationRequest struct {
-	Id string `json:"id"`
-}
+type ReqGetApplicationRequest string
 
 // ReqGetOrganizationRequest defines model for _req_get_Organization_Request.
 type ReqGetOrganizationRequest struct {
