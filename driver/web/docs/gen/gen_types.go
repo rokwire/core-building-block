@@ -96,6 +96,19 @@ const (
 	ResAuthorizeServiceResponseTokenTypeBearer ResAuthorizeServiceResponseTokenType = "Bearer"
 )
 
+// Defines values for ResGetOrganizationsResponseType.
+const (
+	ResGetOrganizationsResponseTypeHuge ResGetOrganizationsResponseType = "huge"
+
+	ResGetOrganizationsResponseTypeLarge ResGetOrganizationsResponseType = "large"
+
+	ResGetOrganizationsResponseTypeMedium ResGetOrganizationsResponseType = "medium"
+
+	ResGetOrganizationsResponseTypeMicro ResGetOrganizationsResponseType = "micro"
+
+	ResGetOrganizationsResponseTypeSmall ResGetOrganizationsResponseType = "small"
+)
+
 // Defines values for ResSharedRokwireTokenTokenType.
 const (
 	ResSharedRokwireTokenTokenTypeBearer ResSharedRokwireTokenTokenType = "Bearer"
@@ -417,6 +430,11 @@ type ReqCreateApplicationRequest struct {
 	RequiresOwnUsers bool   `json:"requires_own_users"`
 }
 
+// ReqGetOrganizationRequest defines model for _req_get_Organization_Request.
+type ReqGetOrganizationRequest struct {
+	Id string `json:"id"`
+}
+
 // ReqLoginUrlRequest defines model for _req_login-url_Request.
 type ReqLoginUrlRequest struct {
 	AppId       string                     `json:"app_id"`
@@ -495,6 +513,17 @@ type ResAuthorizeServiceResponse struct {
 
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResAuthorizeServiceResponseTokenType string
+
+// ResGetOrganizationsResponse defines model for _res_get_Organizations_Response.
+type ResGetOrganizationsResponse struct {
+	Config *[]OrganizationConfigFields     `json:"config,omitempty"`
+	Id     string                          `json:"id"`
+	Name   string                          `json:"name"`
+	Type   ResGetOrganizationsResponseType `json:"type"`
+}
+
+// ResGetOrganizationsResponseType defines model for ResGetOrganizationsResponse.Type.
+type ResGetOrganizationsResponseType string
 
 // ResLoginUrlResponse defines model for _res_login-url_Response.
 type ResLoginUrlResponse struct {

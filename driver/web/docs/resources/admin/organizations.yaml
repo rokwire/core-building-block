@@ -12,7 +12,7 @@
             schema:
               type: array
               items:
-                $ref: "../../schemas/application/Organization.yaml"
+                $ref: "../../schemas/apis/admin/get-organizations/response/Response.yaml"
       400:
         description: Bad request
       401:

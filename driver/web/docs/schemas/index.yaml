@@ -136,8 +136,8 @@ _req_get_Organization_Request:
  $ref: "./apis/admin/get-organization/request/Request.yaml"
 _res_get_Organization_Response:
  $ref: "./apis/admin/get-organization/response/Response.yaml"
-#_res_get_Organizations_Response:
-# $ref: "./apis/admin/get-organizations/response/Response.yaml"
+_res_get_Organizations_Response:
+ $ref: "./apis/admin/get-organizations/response/Response.yaml"
 
  ### application API
 _req_create_Application_Request:
