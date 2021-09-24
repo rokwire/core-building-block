@@ -335,7 +335,7 @@ func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAu
 func (a *Auth) applyAnonymousLogin(authType *model.AuthType, anonymousID string, orgID string, appType model.ApplicationType, params interface{}, l *logs.Log) (*string, error) {
 	//access token
 	appTypeIdentifier := appType.Identifier
-	claims := a.getStandardClaims(anonymousID, "", "", "", "rokwire", orgID, appTypeIdentifier, authType.Code, nil, false)
+	claims := a.getStandardClaims(anonymousID, "", "", "", "rokwire", orgID, appTypeIdentifier, authType.Code, nil, true)
 	accessToken, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
