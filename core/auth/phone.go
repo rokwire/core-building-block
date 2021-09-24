@@ -72,13 +72,7 @@ type checkStatusResponse struct {
 	DateUpdated time.Time `json:"date_updated"`
 }
 
-// func (a *phoneAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, error) {
-// 	return nil, nil, nil
-// }
-
 func (a *phoneAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, error) {
-	// appID := appOrg.Application.ID
-	// orgID := appOrg.Organization.ID
 	var credID string
 	if accountAuthType != nil {
 		credID = accountAuthType.Credential.ID
@@ -287,7 +281,23 @@ func makeRequest(ctx context.Context, method string, pathPart string, data url.V
 }
 
 func (a *phoneAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
-	return nil, nil, nil
+	appID := appOrg.Application.ID
+	orgID := appOrg.Organization.ID
+	authTypeID := authType.ID
+	identifier := "" // TODO: fetch from creds
+
+	//FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
+	account, err := a.auth.storage.FindAccount(appID, orgID, authTypeID, identifier)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
+	}
+
+	accountAuthType, err := a.auth.FindAccountAuthType(account, authTypeID, identifier)
+	if accountAuthType == nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+	}
+
+	return account, accountAuthType, nil
 }
 
 func (a *phoneAuthImpl) verify(accountAuthType *model.AccountAuthType, id string, verification string, l *logs.Log) error {
