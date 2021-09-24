@@ -350,12 +350,16 @@ func (a *Auth) findAccountAuthType(account *model.Account, authTypeID string, id
 	if accountAuthType == nil {
 		return nil, errors.New("for some reasons the user auth type is nil")
 	}
-	//populate credentials in accountAuthType
-	credential, err := a.storage.FindCredential(accountAuthType.Credential.ID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+
+	if accountAuthType.Credential != nil {
+		//populate credentials in accountAuthType
+		credential, err := a.storage.FindCredential(accountAuthType.Credential.ID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+		}
+		accountAuthType.Credential = credential
 	}
-	accountAuthType.Credential = credential
+
 	return accountAuthType, nil
 }
 
