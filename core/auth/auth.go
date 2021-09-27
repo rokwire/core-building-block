@@ -258,7 +258,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		lastName := ""
 		profile := &model.Profile{ID: profileID.String(), PhotoURL: photoURL, FirstName: firstName, LastName: lastName, DateCreated: now}
 
-		account, err = a.registerUser(appOrg, *accountAuthType, useSharedProfile, profile, l)
+		account, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, profile, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
@@ -314,9 +314,6 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		credential := model.Credential{ID: accountAuthTypeID.String(), AccountsAuthTypes: []model.AccountAuthType{*accountAuthType}, Value: authTypeCreds, Verified: verified,
 			AuthType: authType.Code, DateCreated: now, DateUpdated: &now}
 		accountAuthType.Credential = &credential
-		if err = a.storage.InsertCredential(&credential, nil); err != nil {
-			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
-		}
 
 		//TODO: use shared profile
 		useSharedProfile := false
@@ -325,7 +322,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		profileID, _ := uuid.NewUUID()
 		profile := &model.Profile{ID: profileID.String(), PhotoURL: "", FirstName: "", LastName: "", DateCreated: now}
 
-		account, err = a.registerUser(appOrg, *accountAuthType, useSharedProfile, profile, l)
+		account, err = a.registerUser(appOrg, *accountAuthType, &credential, useSharedProfile, profile, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
@@ -389,12 +386,14 @@ func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAu
 //	Input:
 //		appOrg (ApplicationOrganization): The application organization which the user is registering in
 //		accountAuthType (AccountAuthType): In which way the user will be logging in the application
+//		credential (*Credential): Information for the user
 //		useSharedProfile (bool): It says if the system to look if the user has account in another application in the system and to use its profile instead of creating a new profile
 //		profile (Profile): Information for the user
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		Registered account (Account): Registered Account object
-func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthType model.AccountAuthType, useSharedProfile bool, profile *model.Profile, l *logs.Log) (*model.Account, error) {
+func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthType model.AccountAuthType, credential *model.Credential,
+	useSharedProfile bool, profile *model.Profile, l *logs.Log) (*model.Account, error) {
 	//TODO - analyse what should go in one transaction
 
 	//TODO - ignore useSharedProfile for now
@@ -409,6 +408,14 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
 	}
+
+	if credential != nil {
+		//TODO - in one transaction
+		if err = a.storage.InsertCredential(credential, nil); err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
+		}
+	}
+
 	return insertedAccount, nil
 }
 
