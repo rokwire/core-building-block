@@ -7,6 +7,7 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 	"time"
@@ -268,6 +269,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 }
 
 func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*string, *model.Account, *model.AccountAuthType, error) {
+	var message *string
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
 
@@ -277,65 +279,114 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	//1. check if the account exists
-	account, accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
+	//check if it is sign in or sign up
+	isSignUp, err := a.isSignUp(authImpl, authType, appType, appOrg, creds, params, l)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, nil, nil, errors.WrapErrorAction("error checking is sign up", "", nil, err)
 	}
-	if account != nil && accountAuthType != nil {
-		//User exists
-		//2. it seems the user exist, now check the credentials
-		_, authTypeCreds, verified, err := authImpl.checkCredentials(accountAuthType, creds, params, appOrg, l)
-		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
-		}
-		if authTypeCreds == nil {
-			return nil, nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
-		}
-		// check isVerified
-		if !verified {
-			return nil, nil, nil, errors.New("verification required")
-		}
-	} else if account == nil && accountAuthType == nil {
-		identifier, authTypeCreds, verified, err := authImpl.checkCredentials(accountAuthType, creds, params, appOrg, l)
-		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
-		}
-		if authTypeCreds == nil {
-			return nil, nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
-		}
-
-		//setup account
-		now := time.Now()
-		//account auth type
-		accountAuthTypeID, _ := uuid.NewUUID()
-		accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: authType,
-			Identifier: *identifier, Params: nil, Active: true, Active2FA: false, DateCreated: now}
-		credential := model.Credential{ID: accountAuthTypeID.String(), AccountsAuthTypes: []model.AccountAuthType{*accountAuthType}, Value: authTypeCreds, Verified: verified,
-			AuthType: authType.Code, DateCreated: now, DateUpdated: &now}
-		accountAuthType.Credential = &credential
-
-		//TODO: use shared profile
-		useSharedProfile := false
-
-		//profile
-		profileID, _ := uuid.NewUUID()
-		profile := &model.Profile{ID: profileID.String(), PhotoURL: "", FirstName: "", LastName: "", DateCreated: now}
-
-		account, err = a.registerUser(appOrg, *accountAuthType, &credential, useSharedProfile, profile, l)
-		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
-		}
-
-		if !verified {
-			verifyMessage := "verification code sent successfully"
-			return &verifyMessage, nil, nil, nil
-		}
+	if *isSignUp {
+		//apply sign up
+		//TODO
+		log.Println("signUp")
 	} else {
-		return nil, nil, nil, errors.New("either account or account auth type is nil")
+		//apply sign in
+		log.Println("signIn")
 	}
 
-	return nil, account, accountAuthType, nil
+	/*	//1. check if the account exists
+		account, accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
+		if err != nil {
+			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		if account != nil && accountAuthType != nil {
+			//User exists
+			//2. it seems the user exist, now check the credentials
+			_, authTypeCreds, verified, err := authImpl.checkCredentials(accountAuthType, creds, params, appOrg, l)
+			if err != nil {
+				return nil, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
+			}
+			if authTypeCreds == nil {
+				return nil, nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
+			}
+			// check isVerified
+			if !verified {
+				return nil, nil, nil, errors.New("verification required")
+			}
+		} else if account == nil && accountAuthType == nil {
+			identifier, authTypeCreds, verified, err := authImpl.checkCredentials(accountAuthType, creds, params, appOrg, l)
+			if err != nil {
+				return nil, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
+			}
+			if authTypeCreds == nil {
+				return nil, nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
+			}
+
+			//setup account
+			now := time.Now()
+			//account auth type
+			accountAuthTypeID, _ := uuid.NewUUID()
+			accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: authType,
+				Identifier: *identifier, Params: nil, Active: true, Active2FA: false, DateCreated: now}
+			credential := model.Credential{ID: accountAuthTypeID.String(), AccountsAuthTypes: []model.AccountAuthType{*accountAuthType}, Value: authTypeCreds, Verified: verified,
+				AuthType: authType.Code, DateCreated: now, DateUpdated: &now}
+			accountAuthType.Credential = &credential
+
+			//TODO: use shared profile
+			useSharedProfile := false
+
+			//profile
+			profileID, _ := uuid.NewUUID()
+			profile := &model.Profile{ID: profileID.String(), PhotoURL: "", FirstName: "", LastName: "", DateCreated: now}
+
+			account, err = a.registerUser(appOrg, *accountAuthType, &credential, useSharedProfile, profile, l)
+			if err != nil {
+				return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+			}
+
+			if !verified {
+				verifyMessage := "verification code sent successfully"
+				return &verifyMessage, nil, nil, nil
+			}
+		} else {
+			return nil, nil, nil, errors.New("either account or account auth type is nil")
+		} */
+
+	return message, account, accountAuthType, nil
+}
+
+//isSignUp checks if the operation is sign in or sign up
+// 	first check if the client has set sign_up field
+//	if sign_up field has not been sent then check if the user exists
+func (a *Auth) isSignUp(authImpl authType, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*bool, error) {
+	//check if sign_up field has been passed
+	useSignUpFieldCheck := strings.Contains(params, "sign_up")
+
+	if useSignUpFieldCheck {
+		type signUpParams struct {
+			SignUp bool `json:"sign_up"`
+		}
+		var sParams signUpParams
+		err := json.Unmarshal([]byte(params), &sParams)
+		if err != nil {
+			return nil, errors.WrapErrorAction("error getting sign_up field", "", nil, err)
+		}
+		return &sParams.SignUp, nil
+	} else {
+		//check if the user exists check
+		account, accountAuthType, err := authImpl.userExist(authType, appType, appOrg, creds, l)
+		if err != nil {
+			return nil, errors.WrapErrorAction("error checking if the user exists", "", nil, err)
+		}
+		var signUp bool
+		if account != nil && accountAuthType != nil {
+			//the user exists, so return false
+			signUp = false
+		} else {
+			//the user does not exists, so it has to register
+			signUp = true
+		}
+		return &signUp, nil
+	}
 }
 
 func (a *Auth) findAccountAuthType(account *model.Account, authTypeID string, identifier string) (*model.AccountAuthType, error) {
