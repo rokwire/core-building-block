@@ -305,15 +305,20 @@ func (a *phoneAuthImpl) userExist(authType model.AuthType, appType model.Applica
 	appID := appOrg.Application.ID
 	orgID := appOrg.Organization.ID
 	authTypeID := authType.ID
-	identifier := "" // TODO: fetch from creds
+
+	var requestCreds phoneCreds
+	err := json.Unmarshal([]byte(creds), &requestCreds)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneCreds, logutils.StringArgs("request"), err)
+	}
 
 	//FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
-	account, err := a.auth.storage.FindAccount(appID, orgID, authTypeID, identifier)
+	account, err := a.auth.storage.FindAccount(appID, orgID, authTypeID, requestCreds.Phone)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 
-	accountAuthType, err := a.auth.findAccountAuthType(account, authTypeID, identifier)
+	accountAuthType, err := a.auth.findAccountAuthType(account, authTypeID, requestCreds.Phone)
 	if accountAuthType == nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
