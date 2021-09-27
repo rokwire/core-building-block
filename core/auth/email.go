@@ -56,6 +56,8 @@ func (a *emailAuthImpl) applySignUp(authType model.AuthType, appType model.Appli
 		return nil, nil, errors.WrapErrorAction("passwords fields do not match", "", nil, err)
 	}
 
+	//TODO do not allow to register the user if already exists
+
 	//password hash
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -70,9 +72,9 @@ func (a *emailAuthImpl) applySignUp(authType model.AuthType, appType model.Appli
 	}
 
 	//send verification code
-	if err = a.sendVerificationCode(email, code, appOrg.Application.ID, appOrg.Organization.ID); err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, errors.New("failed to send verification email to user"))
-	}
+	//if err = a.sendVerificationCode(email, code, appOrg.Application.ID, appOrg.Organization.ID); err != nil {
+	//	return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, errors.New("failed to send verification email to user"))
+	//}
 
 	emailCredValue := emailCreds{Email: email, Password: string(hashedPassword), VerificationCode: code, VerificationExpiry: time.Now().Add(time.Hour * 24)}
 	emailCredValueMap, err := emailCredsToMap(&emailCredValue)

@@ -298,7 +298,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: authType,
 			Identifier: *identifier, Params: nil, Active: true, Active2FA: false, DateCreated: now}
 		credential := model.Credential{ID: accountAuthTypeID.String(), AccountsAuthTypes: []model.AccountAuthType{*accountAuthType}, Value: credentialValue, Verified: false,
-			AuthType: authType.Code, DateCreated: now, DateUpdated: &now}
+			AuthType: authType, DateCreated: now, DateUpdated: &now}
 		accountAuthType.Credential = &credential
 
 		//TODO: use shared profile

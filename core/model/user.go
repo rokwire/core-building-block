@@ -79,7 +79,7 @@ type AccountAuthType struct {
 type Credential struct {
 	ID string
 
-	AuthType          string
+	AuthType          AuthType
 	AccountsAuthTypes []AccountAuthType //one credential can be used for more than one account auth type
 	Verified          bool
 	Value             map[string]interface{} //credential value
