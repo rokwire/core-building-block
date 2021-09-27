@@ -18,6 +18,10 @@ type apiKeyAuthImpl struct {
 	authType string
 }
 
+func (a *apiKeyAuthImpl) applySignUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (string, *string, map[string]interface{}, error) {
+	return "", nil, nil, nil
+}
+
 func (a *apiKeyAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
 	return nil, nil, nil
 }
@@ -25,8 +29,8 @@ func (a *apiKeyAuthImpl) userExist(authType model.AuthType, appType model.Applic
 func (a *apiKeyAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
-func (a *apiKeyAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, bool, error) {
-	return nil, nil, false, nil
+func (a *apiKeyAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error) {
+	return "", nil, nil
 }
 
 //initAPIKeyAuth initializes and registers a new API key auth instance

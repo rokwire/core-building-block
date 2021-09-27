@@ -92,7 +92,7 @@ type device struct {
 type credential struct {
 	ID string `bson:"_id"`
 
-	AuthType          string                 `bson:"auth_type"`
+	AuthTypeID        string                 `bson:"auth_type_id"`
 	AccountsAuthTypes []string               `bson:"account_auth_types"`
 	Verified          bool                   `bson:"verified"`
 	Value             map[string]interface{} `bson:"value"`

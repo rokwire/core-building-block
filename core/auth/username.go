@@ -18,6 +18,10 @@ type usernameAuthImpl struct {
 	authType string
 }
 
+func (a *usernameAuthImpl) applySignUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (string, *string, map[string]interface{}, error) {
+	return "", nil, nil, nil
+}
+
 func (a *usernameAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
 	return nil, nil, nil
 }
@@ -26,8 +30,8 @@ func (a *usernameAuthImpl) verify(credential *model.Credential, verification str
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *usernameAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, bool, error) {
-	return nil, nil, false, nil
+func (a *usernameAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error) {
+	return "", nil, nil
 }
 
 //initUsernameAuth initializes and registers a new username auth instance

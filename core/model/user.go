@@ -79,7 +79,7 @@ type AccountAuthType struct {
 type Credential struct {
 	ID string
 
-	AuthType          string
+	AuthType          AuthType
 	AccountsAuthTypes []AccountAuthType //one credential can be used for more than one account auth type
 	Verified          bool
 	Value             map[string]interface{} //credential value
@@ -114,12 +114,12 @@ type Profile struct {
 
 //Device represents user devices entity.
 type Device struct {
-	ID   string `bson:"_id"`
-	Type string `bson:"type"` //mobile, web, desktop, other
+	ID   string
+	Type string //mobile, web, desktop, other
 
 	//TODO - other fields when they are clear
-	OS         string `bson:"os"`          //?
-	MacAddress string `bson:"mac_address"` //?
+	OS         string //?
+	MacAddress string //?
 	///
 
 	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc

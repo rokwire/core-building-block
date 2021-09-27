@@ -351,9 +351,9 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 	}
 
 	//get the auth type
-	authType, err := a.getCachedAuthType(credential.AuthType)
+	authType, err := a.getCachedAuthType(credential.AuthType.ID)
 	if err != nil || authType == nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType), err)
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
 	}
 	if authType.IsExternal {
 		return errors.WrapErrorAction("invalid auth type for verify", model.TypeAuthType, nil, err)

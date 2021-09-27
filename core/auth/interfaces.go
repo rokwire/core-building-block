@@ -13,6 +13,12 @@ import (
 
 //authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
 type authType interface {
+	//applySignUp applies sign up operation
+	// Returns:
+	//	identifier (*string): The unique identifier
+	//	credentialValue (map): Credential value
+	applySignUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (string, *string, map[string]interface{}, error)
+
 	//checks the verification code generated on email signup
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
@@ -25,11 +31,7 @@ type authType interface {
 	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error)
 
 	//checkCredentials checks if the account credentials are valid for the account auth type
-	// Returns:
-	//	identifier (*string): Unique identifier to find account for this auth type
-	//	authTypeCreds (map[string]interface{}): New Credential.Value
-	//	verified (bool): Has the credential ownership been verified?
-	checkCredentials(accountAuthType *model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, bool, error)
+	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error)
 }
 
 //externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
