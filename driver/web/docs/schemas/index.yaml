@@ -120,6 +120,3 @@ _req_authorize-service_Request:
 _res_authorize-service_Response:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
 
-### getProfile API
-_res_getProfile_Response:
-  $ref: "./apis/services/get-profile/response/Response.yaml"

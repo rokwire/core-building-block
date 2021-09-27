@@ -444,21 +444,6 @@ type ResAuthorizeServiceResponse struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResAuthorizeServiceResponseTokenType string
 
-// ResGetProfileResponse defines model for _res_getProfile_Response.
-type ResGetProfileResponse struct {
-	Address   *string `json:"address"`
-	BirthYear *int    `json:"birth_year"`
-	Country   *string `json:"country"`
-	Email     *string `json:"email"`
-	FirstName *string `json:"first_name,omitempty"`
-	Id        *string `json:"id,omitempty"`
-	LastName  *string `json:"last_name,omitempty"`
-	Phone     *string `json:"phone"`
-	PhotoUrl  *string `json:"photo_url,omitempty"`
-	State     *string `json:"state"`
-	ZipCode   *string `json:"zip_code"`
-}
-
 // ResLoginUrlResponse defines model for _res_login-url_Response.
 type ResLoginUrlResponse struct {
 	LoginUrl string `json:"login_url"`
