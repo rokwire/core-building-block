@@ -72,8 +72,8 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.deleteAccount)).Methods("DELETE")
 	servicesSubRouter.HandleFunc("/account-preferences", we.wrapFunc(we.servicesApisHandler.updateAccountPreferences)).Methods("PUT")
-	servicesSubRouter.HandleFunc("/profile", we.wrapFunc(we.servicesApisHandler.getProfile)).Methods("GET")
-	servicesSubRouter.HandleFunc("/profile", we.wrapFunc(we.servicesApisHandler.updateProfile)).Methods("PUT")
+	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.getProfile)).Methods("GET")
+	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.updateProfile)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest)).Methods("GET")
 	///
 
