@@ -36,7 +36,7 @@ paths:
   /services/auth/service-regs:
     $ref: "./resources/services/auth/service-regs.yaml"
   /services/account:
-    $ref: "./resources/services/account/account.yaml"
+    $ref: "./resources/services/account.yaml"
   /services/account/account-preferences:
     $ref: "./resources/services/account-preferences.yaml"
   /services/account/profile:
