@@ -302,43 +302,40 @@ func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.Http
 
 //createApplication creates an application
 func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
-	/*	data, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-		}
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
 
-		var requestData Def.ReqCreateApplicationRequest
-		err = json.Unmarshal(data, &requestData)
-		if err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
-		}
+	var requestData Def.ReqCreateApplicationRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
+	}
 
-		name := requestData.Name
-		multiTenant := requestData.MultiTenant
-		requiresOwnUsers := requestData.RequiresOwnUsers
+	name := requestData.Name
+	multiTenant := requestData.MultiTenant
+	requiresOwnUsers := requestData.RequiresOwnUsers
 
-		var applicationTypes Def.ApplicationTypeFields
-		identifier := applicationTypes.Identifier
-		nameInType := applicationTypes.Name
-		versions := applicationTypes.Versions
-
-		_, err = h.coreAPIs.Administration.AdmCreateApplication(name, multiTenant, requiresOwnUsers, identifier, *nameInType, *versions)
-		if err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
-		}*/
+	var appType Def.ApplicationTypeFields
+	applicationType := []string{}
+	applicationType = append(applicationType, appType.Identifier, *appType.Name)
+	_, err = h.coreAPIs.Administration.AdmCreateApplication(name, multiTenant, requiresOwnUsers, appType.Identifier, *appType.Name, *appType.Versions)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
+	}
 
 	return l.HttpResponseSuccess()
 }
 
 //getAppilcations gets applications list
 func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request) logs.HttpResponse {
-	//TODO
-	return l.HttpResponseSuccess()
-	/*applications, err := h.coreAPIs.Administration.AdmGetApplications()
+
+	applications, err := h.coreAPIs.Administration.AdmGetApplications()
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}
-	var response []Def.Application
+	var response []Def.ApplicationFields
 	for _, application := range applications {
 		r := applicationToDef(&application)
 		response = append(response, *r)
@@ -348,7 +345,7 @@ func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request) logs.Htt
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
 	}
-	return l.HttpResponseSuccessJSON(data) */
+	return l.HttpResponseSuccessJSON(data)
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance

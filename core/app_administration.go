@@ -258,7 +258,7 @@ func (app *application) admGetApplication(ID string) (*model.Application, error)
 	return appAdm, nil
 }
 
-func (app *application) admCreateApplication(name string, multi_tenant bool, requires_own_users bool) (*model.Application, error) {
+func (app *application) admCreateApplication(name string, multi_tenant bool, requires_own_users bool, identifier string, Name string, versions []string) (*model.Application, error) {
 	now := time.Now()
 
 	applicationID, _ := uuid.NewUUID()

@@ -808,6 +808,7 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 	}
 
 	return result, nil
+
 }
 
 //UpdateProfile updates an account profile
