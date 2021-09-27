@@ -269,7 +269,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 }
 
 func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*string, *model.Account, *model.AccountAuthType, error) {
-	var message *string
+	var message string
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
 
@@ -286,11 +286,36 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 	if *isSignUp {
 		//apply sign up
-		message, account, accountAuthType, err = authImpl.applySignUp(authType, appType, appOrg, creds, params, l)
+		identifier, credentialValue, err := authImpl.applySignUp(authType, appType, appOrg, creds, params, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("error applying sign up", "", nil, err)
 		}
-		return message, account, accountAuthType, nil
+
+		//setup account
+		now := time.Now()
+		//account auth type
+		accountAuthTypeID, _ := uuid.NewUUID()
+		accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: authType,
+			Identifier: *identifier, Params: nil, Active: true, Active2FA: false, DateCreated: now}
+		credential := model.Credential{ID: accountAuthTypeID.String(), AccountsAuthTypes: []model.AccountAuthType{*accountAuthType}, Value: credentialValue, Verified: false,
+			AuthType: authType.Code, DateCreated: now, DateUpdated: &now}
+		accountAuthType.Credential = &credential
+
+		//TODO: use shared profile
+		useSharedProfile := false
+
+		//profile
+		profileID, _ := uuid.NewUUID()
+		profile := &model.Profile{ID: profileID.String(), PhotoURL: "", FirstName: "", LastName: "", DateCreated: now}
+
+		account, err = a.registerUser(appOrg, *accountAuthType, &credential, useSharedProfile, profile, l)
+		if err != nil {
+			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+		}
+
+		message = "verification code sent successfully"
+
+		return &message, account, accountAuthType, nil
 	} else {
 		//apply sign in
 		log.Println("signIn")
@@ -316,45 +341,13 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 				return nil, nil, nil, errors.New("verification required")
 			}
 		} else if account == nil && accountAuthType == nil {
-			identifier, authTypeCreds, verified, err := authImpl.checkCredentials(accountAuthType, creds, params, appOrg, l)
-			if err != nil {
-				return nil, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
-			}
-			if authTypeCreds == nil {
-				return nil, nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
-			}
 
-			//setup account
-			now := time.Now()
-			//account auth type
-			accountAuthTypeID, _ := uuid.NewUUID()
-			accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: authType,
-				Identifier: *identifier, Params: nil, Active: true, Active2FA: false, DateCreated: now}
-			credential := model.Credential{ID: accountAuthTypeID.String(), AccountsAuthTypes: []model.AccountAuthType{*accountAuthType}, Value: authTypeCreds, Verified: verified,
-				AuthType: authType.Code, DateCreated: now, DateUpdated: &now}
-			accountAuthType.Credential = &credential
-
-			//TODO: use shared profile
-			useSharedProfile := false
-
-			//profile
-			profileID, _ := uuid.NewUUID()
-			profile := &model.Profile{ID: profileID.String(), PhotoURL: "", FirstName: "", LastName: "", DateCreated: now}
-
-			account, err = a.registerUser(appOrg, *accountAuthType, &credential, useSharedProfile, profile, l)
-			if err != nil {
-				return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
-			}
-
-			if !verified {
-				verifyMessage := "verification code sent successfully"
-				return &verifyMessage, nil, nil, nil
-			}
 		} else {
 			return nil, nil, nil, errors.New("either account or account auth type is nil")
 		} */
 
-	return message, account, accountAuthType, nil
+	//	return message, account, accountAuthType, nil
+	return nil, nil, nil, nil
 }
 
 //isSignUp checks if the operation is sign in or sign up

@@ -15,12 +15,9 @@ import (
 type authType interface {
 	//applySignUp applies sign up operation
 	// Returns:
-	//	message (*string): Message
-	//	account (*model.Account): User account
-	//	accountAuthType (*model.AccountAuthType): User account auth type
-	applySignUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*string, *model.Account, *model.AccountAuthType, error)
-
-	//TODO apply SignIn
+	//	identifier (*string): The unique identifier
+	//	credentialValue (map): Credential value
+	applySignUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*string, map[string]interface{}, error)
 
 	//checks the verification code generated on email signup
 	// Returns:
