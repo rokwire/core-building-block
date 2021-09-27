@@ -6,6 +6,7 @@ import (
 
 	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/auth-library/authutils"
+	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/errors"
 	"github.com/rokmetro/logging-library/logutils"
 
@@ -39,31 +40,35 @@ func (a *Auth) GetHost() string {
 //		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //		Account (Account): Account object for authenticated user
 //		Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Login(authenticationType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error) {
+func (a *Auth) Login(authenticationType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, string, *model.Account, interface{}, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appID, orgID)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+		return "", "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
+	var message *string
 	var extParams interface{}
 
 	//get the auth type implementation for the auth type
 	if authType.IsExternal {
 		account, accountAuthType, extParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
+			return "", "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 		}
 
 		//TODO groups mapping
 	} else {
-		account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
+		message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
+			return "", "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
+		}
+		if message != nil {
+			return *message, "", "", nil, nil, nil
 		}
 
 		//the credentials are valid
@@ -72,10 +77,10 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 	//now we are ready to apply login for the user
 	accessToken, refreshToken, err := a.applyLogin(*account, *accountAuthType, *appType, extParams, l)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+		return "", "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}
 
-	return *accessToken, *refreshToken, account, extParams, nil
+	return "", *accessToken, *refreshToken, account, extParams, nil
 }
 
 //Refresh refreshes an access token using a refresh token
@@ -219,7 +224,7 @@ func (a *Auth) GetLoginURL(authenticationType string, appID string, orgID string
 //	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
 //	return a scoped access token which reflects this change.
 //	Input:
-//		claims (tokenClaims): Claims from un-scoped user access token
+//		claims (tokenauth.Claims): Claims from un-scoped user access token
 //		serviceID (string): ID of the service to be authorized
 //		approvedScopes ([]string): list of scope strings to be approved
 //		l (*logs.Log): Log object pointer for request
@@ -227,7 +232,7 @@ func (a *Auth) GetLoginURL(authenticationType string, appID string, orgID string
 //		Access token (string): Signed scoped access token to be used to authorize requests to the specified service
 //		Approved Scopes ([]authorization.Scope): The approved scopes included in the provided token
 //		Service reg (*model.ServiceReg): The service registration record for the requested service
-func (a *Auth) AuthorizeService(claims TokenClaims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceReg, error) {
+func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceReg, error) {
 	var authorization model.ServiceAuthorization
 	if approvedScopes != nil {
 		//If approved scopes are being updated, save update and return token with updated scopes
@@ -264,7 +269,7 @@ func (a *Auth) AuthorizeService(claims TokenClaims, serviceID string, approvedSc
 }
 
 //GetScopedAccessToken returns a scoped access token with the requested scopes
-func (a *Auth) GetScopedAccessToken(claims TokenClaims, serviceID string, scopes []authorization.Scope) (string, error) {
+func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scopes []authorization.Scope) (string, error) {
 	scopeStrings := []string{}
 	services := []string{serviceID}
 	for _, scope := range scopes {
@@ -277,7 +282,7 @@ func (a *Auth) GetScopedAccessToken(claims TokenClaims, serviceID string, scopes
 	aud := strings.Join(services, ",")
 	scope := strings.Join(scopeStrings, " ")
 
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, nil)
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, nil)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
@@ -332,4 +337,43 @@ func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
 	}
 
 	return &model.JSONWebKeySet{Keys: []model.JSONWebKey{*jwk}}, nil
+}
+
+//Verify checks the verification code generated on signup
+func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
+	credential, err := a.storage.FindCredential(id)
+	if err != nil || credential == nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+	}
+
+	if credential.Verified {
+		return errors.New("credential has already been verified")
+	}
+
+	//get the auth type
+	authType, err := a.getCachedAuthType(credential.AuthType.ID)
+	if err != nil || authType == nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
+	}
+	if authType.IsExternal {
+		return errors.WrapErrorAction("invalid auth type for verify", model.TypeAuthType, nil, err)
+	}
+
+	authImpl, err := a.getAuthTypeImpl(*authType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	authTypeCreds, err := authImpl.verify(credential, verification, l)
+	if err != nil || authTypeCreds == nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "verification code", nil, err)
+	}
+
+	credential.Verified = true
+	credential.Value = authTypeCreds
+	if err = a.storage.UpdateCredential(credential); err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
+
+	return nil
 }

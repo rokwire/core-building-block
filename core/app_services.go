@@ -32,6 +32,10 @@ func (app *application) serUpdateAccountPreferences(id string, preferences map[s
 	return nil
 }
 
+func (app *application) serDeleteAccount(id string) error {
+	return app.storage.DeleteAccount(id)
+}
+
 func (app *application) serGetAuthTest(l *logs.Log) string {
 	return "Services - Auth - test"
 }
