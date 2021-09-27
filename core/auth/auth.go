@@ -286,8 +286,11 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 	if *isSignUp {
 		//apply sign up
-		//TODO
-		log.Println("signUp")
+		message, account, accountAuthType, err = authImpl.applySignUp(authType, appType, appOrg, creds, params, l)
+		if err != nil {
+			return nil, nil, nil, errors.WrapErrorAction("error applying sign up", "", nil, err)
+		}
+		return message, account, accountAuthType, nil
 	} else {
 		//apply sign in
 		log.Println("signIn")

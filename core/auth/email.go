@@ -13,12 +13,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Email implementation of authType
-type emailAuthImpl struct {
-	auth     *Auth
-	authType string
-}
-
 const (
 	typeTime        logutils.MessageDataType = "time.Time"
 	authTypeEmail   string                   = "email"
@@ -37,6 +31,16 @@ type emailCreds struct {
 //emailParams represents the params struct for email auth
 type emailParams struct {
 	NewUser bool `json:"new_user"`
+}
+
+// Email implementation of authType
+type emailAuthImpl struct {
+	auth     *Auth
+	authType string
+}
+
+func (a *emailAuthImpl) applySignUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*string, *model.Account, *model.AccountAuthType, error) {
+	return nil, nil, nil, nil
 }
 
 // check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error)

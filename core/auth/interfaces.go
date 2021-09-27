@@ -13,6 +13,15 @@ import (
 
 //authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
 type authType interface {
+	//applySignUp applies sign up operation
+	// Returns:
+	//	message (*string): Message
+	//	account (*model.Account): User account
+	//	accountAuthType (*model.AccountAuthType): User account auth type
+	applySignUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*string, *model.Account, *model.AccountAuthType, error)
+
+	//TODO apply SignIn
+
 	//checks the verification code generated on email signup
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value

@@ -18,6 +18,10 @@ type usernameAuthImpl struct {
 	authType string
 }
 
+func (a *usernameAuthImpl) applySignUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*string, *model.Account, *model.AccountAuthType, error) {
+	return nil, nil, nil, nil
+}
+
 func (a *usernameAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
 	return nil, nil, nil
 }
