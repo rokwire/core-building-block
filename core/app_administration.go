@@ -279,3 +279,65 @@ func (app *application) admGetApplications() ([]model.Application, error) {
 
 	return getApplications, nil
 }
+
+func (app *application) admCreateApplicationPermission(name string, appID string) (*model.ApplicationPermission, error) {
+	id, _ := uuid.NewUUID()
+	now := time.Now()
+	permission := model.ApplicationPermission{ID: id.String(), Name: name, Application: model.Application{ID: appID}, DateCreated: now}
+
+	err := app.storage.InsertApplicationPermission(permission)
+	if err != nil {
+		return nil, err
+	}
+	return &permission, nil
+}
+
+func (app *application) admCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error) {
+	permissions, err := app.storage.FindApplicationPermissionsByName(permissionNames, appID)
+	if err != nil {
+		return nil, err
+	}
+
+	id, _ := uuid.NewUUID()
+	now := time.Now()
+	role := model.ApplicationRole{ID: id.String(), Name: name, Description: description, Application: model.Application{ID: appID}, Permissions: permissions, DateCreated: now}
+	err = app.storage.InsertApplicationRole(role)
+	if err != nil {
+		return nil, err
+	}
+	return &role, nil
+}
+
+func (app *application) admGrantAccountPermissions(accountID string, appID string, permissionNames []string) error {
+	permissions, err := app.storage.FindApplicationPermissionsByName(permissionNames, appID)
+	if err != nil {
+		return err
+	}
+
+	if len(permissions) == 0 {
+		return errors.Newf("no permissions found for names: %v", permissionNames)
+	}
+
+	err = app.storage.InsertAccountPermissions(accountID, permissions)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (app *application) admGrantAccountRoles(accountID string, appID string, roleIDs []string) error {
+	roles, err := app.storage.FindApplicationRoles(roleIDs, appID)
+	if err != nil {
+		return err
+	}
+
+	if len(roles) == 0 {
+		return errors.Newf("no roles found for IDs: %v", roleIDs)
+	}
+
+	err = app.storage.InsertAccountRoles(accountID, roles)
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -14,6 +14,10 @@ import (
 	"github.com/rokmetro/logging-library/logutils"
 )
 
+const (
+	actionGrant logutils.MessageActionType = "granting"
+)
+
 //AdminApisHandler handles the admin rest APIs implementation
 type AdminApisHandler struct {
 	coreAPIs *core.APIs
@@ -313,14 +317,12 @@ func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.Http
 func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		l.Errorf("Error on marshal create application - %s\n", err.Error())
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
 	var requestData Def.Application
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		l.Errorf("Error on unmarshal the create application - %s\n", err.Error())
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
 	}
 
@@ -330,13 +332,10 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.H
 
 	_, err = h.coreAPIs.Administration.AdmCreateApplication("TODO", nil)
 	if err != nil {
-		l.Errorf(err.Error())
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}
 
-	headers := map[string]string{}
-	headers["Content-Type"] = "text/plain"
-	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+	return l.HttpResponseSuccess()
 }
 
 //getAppilcations gets applications list
@@ -358,6 +357,90 @@ func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request) logs.Htt
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
 	}
 	return l.HttpResponseSuccessJSON(data) */
+}
+
+//createApplicationPermission creates an application permission
+func (h AdminApisHandler) createApplicationPermission(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqApplicationPermissionsRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationPermission, nil, err, http.StatusBadRequest, true)
+	}
+
+	_, err = h.coreAPIs.Administration.AdmCreateApplicationPermission(requestData.Name, requestData.AppId)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationPermission, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+//createApplicationRole creates an application role
+func (h AdminApisHandler) createApplicationRole(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqApplicationRolesRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationRole, nil, err, http.StatusBadRequest, true)
+	}
+
+	_, err = h.coreAPIs.Administration.AdmCreateApplicationRole(requestData.Name, requestData.AppId, requestData.Description, requestData.Permissions)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationRole, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+//grantAccountPermissions grants an account the given permissions
+func (h AdminApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqAccountPermissionsRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationPermission, nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Administration.AdmGrantAccountPermissions(requestData.AccountId, requestData.AppId, requestData.Permissions)
+	if err != nil {
+		return l.HttpResponseErrorAction(actionGrant, model.TypeApplicationPermission, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+//grantAccountRoles grants an account the given roles
+func (h AdminApisHandler) grantAccountRoles(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqAccountRolesRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationRole, nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Administration.AdmGrantAccountRoles(requestData.AccountId, requestData.AppId, requestData.RoleIds)
+	if err != nil {
+		return l.HttpResponseErrorAction(actionGrant, model.TypeApplicationRole, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance

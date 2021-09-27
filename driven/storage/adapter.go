@@ -481,6 +481,50 @@ func (sa *Adapter) UpdateAccountPreferences(accountID string, preferences map[st
 	return nil
 }
 
+//InsertAccountPermissions inserts account permissions
+func (sa *Adapter) InsertAccountPermissions(accountID string, permissions []model.ApplicationPermission) error {
+	stgPermissions := applicationPermissionsToStorage(permissions)
+
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "permissions", Value: bson.M{"$each": stgPermissions}},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+//InsertAccountRole inserts account role
+func (sa *Adapter) InsertAccountRoles(accountID string, roles []model.ApplicationRole) error {
+	stgRoles := applicationRolesToStorage(roles)
+
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "roles", Value: bson.M{"$each": stgRoles}},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
 //UpdateAccountAuthType updates account auth type
 func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	// transaction
@@ -769,6 +813,7 @@ func (sa *Adapter) DeleteExpiredRefreshTokens(now *time.Time) error {
 
 //FindApplicationPermissions finds a set of application permissions
 func (sa *Adapter) FindApplicationPermissions(ids []string, appID string) ([]model.ApplicationPermission, error) {
+	//TODO: Do we need to specify app_id in this search since _id is globally unique?
 	permissionsFilter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var permissionsResult []applicationPermission
 	err := sa.db.applicationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
@@ -779,12 +824,47 @@ func (sa *Adapter) FindApplicationPermissions(ids []string, appID string) ([]mod
 	//get the application from the cached ones
 	application, err := sa.getCachedApplication(appID)
 	if err != nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_id": application}, err)
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, &logutils.FieldArgs{"app_id": application}, err)
 	}
 
 	result := applicationPermissionsFromStorage(permissionsResult, *application)
 
 	return result, nil
+}
+
+//FindApplicationPermissionsByName finds a set of application permissions
+func (sa *Adapter) FindApplicationPermissionsByName(names []string, appID string) ([]model.ApplicationPermission, error) {
+	permissionsFilter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "name", Value: bson.M{"$in": names}}}
+	var permissionsResult []applicationPermission
+	err := sa.db.applicationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	//get the application from the cached ones
+	application, err := sa.getCachedApplication(appID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, &logutils.FieldArgs{"app_id": application}, err)
+	}
+
+	result := applicationPermissionsFromStorage(permissionsResult, *application)
+
+	return result, nil
+}
+
+//InsertApplicationPermission inserts a new application permission
+func (sa *Adapter) InsertApplicationPermission(item model.ApplicationPermission) error {
+	_, err := sa.getCachedApplication(item.Application.ID)
+	if err != nil {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, &logutils.FieldArgs{"app_id": item.Application.ID}, err)
+	}
+
+	permission := applicationPermissionToStorage(item)
+	_, err = sa.db.applicationsPermissions.InsertOne(permission)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplicationPermission, nil, err)
+	}
+	return nil
 }
 
 //UpdateApplicationPermission updates application permission
@@ -805,6 +885,7 @@ func (sa *Adapter) DeleteApplicationPermission(id string) error {
 
 //FindApplicationRoles finds a set of application roles
 func (sa *Adapter) FindApplicationRoles(ids []string, appID string) ([]model.ApplicationRole, error) {
+	//TODO: Do we need to specify app_id in this search since _id is globally unique?
 	rolesFilter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var rolesResult []applicationRole
 	err := sa.db.applicationsRoles.Find(rolesFilter, &rolesResult, nil)
@@ -821,6 +902,21 @@ func (sa *Adapter) FindApplicationRoles(ids []string, appID string) ([]model.App
 	result := applicationRolesFromStorage(rolesResult, *application)
 
 	return result, nil
+}
+
+//InsertApplicationRole inserts a new application role
+func (sa *Adapter) InsertApplicationRole(item model.ApplicationRole) error {
+	_, err := sa.getCachedApplication(item.Application.ID)
+	if err != nil {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, &logutils.FieldArgs{"app_id": item.Application.ID}, err)
+	}
+
+	role := applicationRoleToStorage(item)
+	_, err = sa.db.applicationsRoles.InsertOne(role)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplicationRole, nil, err)
+	}
+	return nil
 }
 
 //UpdateApplicationRole updates application role
@@ -841,6 +937,7 @@ func (sa *Adapter) DeleteApplicationRole(id string) error {
 
 //FindApplicationGroups finds a set of application groups
 func (sa *Adapter) FindApplicationGroups(ids []string, appID string) ([]model.ApplicationGroup, error) {
+	//TODO: Do we need to specify app_id in this search since _id is globally unique?
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var groupsResult []applicationGroup
 	err := sa.db.applicationsGroups.Find(filter, &groupsResult, nil)
@@ -856,6 +953,16 @@ func (sa *Adapter) FindApplicationGroups(ids []string, appID string) ([]model.Ap
 	result := applicationGroupsFromStorage(groupsResult, *application)
 
 	return result, nil
+}
+
+//InsertApplicationGroup inserts a new application group
+func (sa *Adapter) InsertApplicationGroup(item model.ApplicationGroup) error {
+	group := applicationGroupToStorage(item)
+	_, err := sa.db.applicationsGroups.InsertOne(group)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplicationGroup, nil, err)
+	}
+	return nil
 }
 
 //UpdateApplicationGroup updates application group

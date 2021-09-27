@@ -405,7 +405,8 @@ func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAu
 	orgID := account.Organization.ID
 	appTypeIdentifier := appType.Identifier
 	claims := a.getStandardClaims(account.ID, accountAuthType.Identifier, account.Profile.Email, account.Profile.Phone, "rokwire", orgID, appTypeIdentifier, accountAuthType.AuthType.Code, nil)
-	accessToken, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
+	permissions := account.GetPermissionNames()
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}

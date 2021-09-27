@@ -372,6 +372,34 @@ type ServiceScope struct {
 	Scope       string  `json:"scope"`
 }
 
+// ReqAccountPermissionsRequest defines model for _req_account-permissions_Request.
+type ReqAccountPermissionsRequest struct {
+	AccountId   string   `json:"account_id"`
+	AppId       string   `json:"app_id"`
+	Permissions []string `json:"permissions"`
+}
+
+// ReqAccountRolesRequest defines model for _req_account-roles_Request.
+type ReqAccountRolesRequest struct {
+	AccountId string   `json:"account_id"`
+	AppId     string   `json:"app_id"`
+	RoleIds   []string `json:"role_ids"`
+}
+
+// ReqApplicationPermissionsRequest defines model for _req_application-permissions_Request.
+type ReqApplicationPermissionsRequest struct {
+	AppId string `json:"app_id"`
+	Name  string `json:"name"`
+}
+
+// ReqApplicationRolesRequest defines model for _req_application-roles_Request.
+type ReqApplicationRolesRequest struct {
+	AppId       string   `json:"app_id"`
+	Description string   `json:"description"`
+	Name        string   `json:"name"`
+	Permissions []string `json:"permissions"`
+}
+
 // ReqAuthorizeServiceRequest defines model for _req_authorize-service_Request.
 type ReqAuthorizeServiceRequest struct {
 
@@ -505,6 +533,18 @@ type ResSharedRokwireToken struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResSharedRokwireTokenTokenType string
 
+// PutAdminAccountPermissionsJSONBody defines parameters for PutAdminAccountPermissions.
+type PutAdminAccountPermissionsJSONBody ReqAccountPermissionsRequest
+
+// PutAdminAccountRolesJSONBody defines parameters for PutAdminAccountRoles.
+type PutAdminAccountRolesJSONBody ReqAccountRolesRequest
+
+// PostAdminApplicationPermissionsJSONBody defines parameters for PostAdminApplicationPermissions.
+type PostAdminApplicationPermissionsJSONBody ReqApplicationPermissionsRequest
+
+// PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
+type PostAdminApplicationRolesJSONBody ReqApplicationRolesRequest
+
 // PostAdminApplicationsJSONBody defines parameters for PostAdminApplications.
 type PostAdminApplicationsJSONBody Application
 
@@ -585,6 +625,18 @@ type GetTpsServiceRegsParams struct {
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
+
+// PutAdminAccountPermissionsJSONRequestBody defines body for PutAdminAccountPermissions for application/json ContentType.
+type PutAdminAccountPermissionsJSONRequestBody PutAdminAccountPermissionsJSONBody
+
+// PutAdminAccountRolesJSONRequestBody defines body for PutAdminAccountRoles for application/json ContentType.
+type PutAdminAccountRolesJSONRequestBody PutAdminAccountRolesJSONBody
+
+// PostAdminApplicationPermissionsJSONRequestBody defines body for PostAdminApplicationPermissions for application/json ContentType.
+type PostAdminApplicationPermissionsJSONRequestBody PostAdminApplicationPermissionsJSONBody
+
+// PostAdminApplicationRolesJSONRequestBody defines body for PostAdminApplicationRoles for application/json ContentType.
+type PostAdminApplicationRolesJSONRequestBody PostAdminApplicationRolesJSONBody
 
 // PostAdminApplicationsJSONRequestBody defines body for PostAdminApplications for application/json ContentType.
 type PostAdminApplicationsJSONRequestBody PostAdminApplicationsJSONBody

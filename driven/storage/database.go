@@ -424,7 +424,7 @@ func (m *database) applyApplicationsPermissionsChecks(applicationsPermissions *c
 	m.logger.Info("apply applications permissions checks.....")
 
 	//add application index
-	err := applicationsPermissions.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}}, false)
+	err := applicationsPermissions.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "name", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
