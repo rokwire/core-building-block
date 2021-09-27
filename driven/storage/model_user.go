@@ -88,3 +88,15 @@ type device struct {
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
+
+type credential struct {
+	ID string `bson:"_id"`
+
+	AuthTypeID        string                 `bson:"auth_type_id"`
+	AccountsAuthTypes []string               `bson:"account_auth_types"`
+	Verified          bool                   `bson:"verified"`
+	Value             map[string]interface{} `bson:"value"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
