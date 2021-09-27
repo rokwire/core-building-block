@@ -1,9 +1,9 @@
 package utils
 
 import (
-	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"math/rand"
 	"reflect"
 
 	"github.com/rokmetro/logging-library/errors"

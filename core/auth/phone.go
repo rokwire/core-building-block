@@ -18,11 +18,18 @@ type phoneAuthImpl struct {
 	authType string
 }
 
+func (a *phoneAuthImpl) applySignUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*string, map[string]interface{}, error) {
+	return nil, nil, nil
+}
+
 func (a *phoneAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
 	return nil, nil, nil
 }
 
-func (a *phoneAuthImpl) checkCredentials(userAuthType model.AccountAuthType, creds string, l *logs.Log) (*bool, error) {
+func (a *phoneAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
+	return nil, errors.New(logutils.Unimplemented)
+}
+func (a *phoneAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (*bool, error) {
 	return nil, nil
 }
 
