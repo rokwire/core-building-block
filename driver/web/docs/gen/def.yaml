@@ -1436,7 +1436,8 @@ components:
         params:
           type: object
           nullable: true
-          anyOf: null
+          anyOf:
+            - $ref: '#/components/schemas/_res_shared_ParamsOidc'
         auth_type:
           type: string
           enum:

@@ -477,7 +477,7 @@ type ResLoginAccount struct {
 type ResLoginResponse struct {
 	Account  *ResLoginAccount          `json:"account,omitempty"`
 	AuthType *ResLoginResponseAuthType `json:"auth_type,omitempty"`
-	Params   *map[string]interface{}   `json:"params"`
+	Params   *interface{}              `json:"params"`
 	Token    *ResSharedRokwireToken    `json:"token,omitempty"`
 }
 
