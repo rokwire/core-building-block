@@ -484,6 +484,7 @@ type ResLoginAccount struct {
 // ResLoginResponse defines model for _res_login_Response.
 type ResLoginResponse struct {
 	Account *ResLoginAccount       `json:"account,omitempty"`
+	Message *string                `json:"message,omitempty"`
 	Params  *interface{}           `json:"params"`
 	Token   *ResSharedRokwireToken `json:"token,omitempty"`
 }
@@ -607,6 +608,16 @@ type GetServicesAuthServiceRegsParams struct {
 
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
+}
+
+// GetServicesAuthVerifyParams defines parameters for GetServicesAuthVerify.
+type GetServicesAuthVerifyParams struct {
+
+	// Credential ID
+	Id string `json:"id"`
+
+	// Verification code
+	Code string `json:"code"`
 }
 
 // PutServicesProfileJSONBody defines parameters for PutServicesProfile.

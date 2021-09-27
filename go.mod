@@ -7,6 +7,7 @@ require (
 	github.com/casbin/casbin v1.9.1
 	github.com/casbin/casbin/v2 v2.35.1 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/deepmap/oapi-codegen v1.8.2 // indirect
 	github.com/getkin/kin-openapi v0.72.0
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/spec v0.20.3 // indirect
@@ -24,7 +25,7 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/swaggo/http-swagger v1.0.0
 	go.mongodb.org/mongo-driver v1.7.1
-	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
+	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d // indirect
 	golang.org/x/oauth2 v0.0.0-20210810183815-faf39c7919d5 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c

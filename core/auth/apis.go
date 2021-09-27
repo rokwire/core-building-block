@@ -40,17 +40,18 @@ func (a *Auth) GetHost() string {
 //		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //		Account (Account): Account object for authenticated user
 //		Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Login(authenticationType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error) {
+func (a *Auth) Login(authenticationType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, string, *model.Account, interface{}, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appID, orgID)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+		return "", "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
+	var message *string
 	var responseParams interface{}
 
 	//get the auth type implementation for the auth type
@@ -71,14 +72,17 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 	} else if authType.IsExternal {
 		account, accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
+			return "", "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 		}
 
 		//TODO groups mapping
 	} else {
-		account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
+		message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
+			return "", "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
+		}
+		if message != nil {
+			return *message, "", "", nil, nil, nil
 		}
 
 		//the credentials are valid
@@ -87,10 +91,10 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 	//now we are ready to apply login for the user
 	accessToken, refreshToken, err := a.applyLogin(*account, *accountAuthType, *appType, responseParams, l)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+		return "", "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}
 
-	return *accessToken, *refreshToken, account, responseParams, nil
+	return "", *accessToken, *refreshToken, account, responseParams, nil
 }
 
 //Refresh refreshes an access token using a refresh token
@@ -228,6 +232,45 @@ func (a *Auth) GetLoginURL(authenticationType string, appID string, orgID string
 	}
 
 	return loginURL, params, nil
+}
+
+//Verify checks the verification code generated on signup
+func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
+	credential, err := a.storage.FindCredential(id)
+	if err != nil || credential == nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+	}
+
+	if credential.Verified {
+		return errors.New("credential has already been verified")
+	}
+
+	//get the auth type
+	authType, err := a.getCachedAuthType(credential.AuthType.ID)
+	if err != nil || authType == nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
+	}
+	if authType.IsExternal {
+		return errors.WrapErrorAction("invalid auth type for verify", model.TypeAuthType, nil, err)
+	}
+
+	authImpl, err := a.getAuthTypeImpl(*authType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	authTypeCreds, err := authImpl.verify(credential, verification, l)
+	if err != nil || authTypeCreds == nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "verification code", nil, err)
+	}
+
+	credential.Verified = true
+	credential.Value = authTypeCreds
+	if err = a.storage.UpdateCredential(credential); err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
+
+	return nil
 }
 
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or

@@ -11,3 +11,5 @@ properties:
       - $ref: "../../../shared/responses/ParamsOIDC.yaml"
       - $ref: "./ParamsAPIKey.yaml"
       - $ref: "../../../shared/responses/ParamsNone.yaml"  
+  message:
+    type: string

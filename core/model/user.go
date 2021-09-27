@@ -50,8 +50,8 @@ type Account struct {
 	DateUpdated *time.Time
 }
 
-//FindAccountAuthType finds account auth type
-func (a Account) FindAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
+//GetAccountAuthType finds account auth type
+func (a Account) GetAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
 	for _, aat := range a.AuthTypes {
 		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {
 			return &aat
@@ -95,9 +95,10 @@ type AccountAuthType struct {
 type Credential struct {
 	ID string
 
+	AuthType          AuthType
 	AccountsAuthTypes []AccountAuthType //one credential can be used for more than one account auth type
-
-	Value interface{} //credential value
+	Verified          bool
+	Value             map[string]interface{} //credential value
 
 	DateCreated time.Time
 	DateUpdated *time.Time

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Set up anonymous tokens [#26](https://github.com/rokwire/core-building-block/issues/26)
+- Add Email authentication and verification [#23](https://github.com/rokwire/core-building-block/issues/23)
 - Set up delete account endpoint [#180](https://github.com/rokwire/core-building-block/issues/180)
 - Anonymous profile(non-pii) endpoints [#135](https://github.com/rokwire/core-building-block/issues/135)
 - User PII endpoints [#128](https://github.com/rokwire/core-building-block/issues/128)

@@ -547,53 +547,132 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	return nil
 }
 
-//FindCredentialsByID finds a set of credentials by ID
-func (sa *Adapter) FindCredentialsByID(ID string) (*model.AuthCreds, error) {
+//FindCredential finds a credential by ID
+func (sa *Adapter) FindCredential(ID string) (*model.Credential, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 
-	var creds model.AuthCreds
+	var creds credential
 	err := sa.db.credentials.FindOne(filter, &creds, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
+		if err.Error() == "mongo: no documents in result" {
+			return nil, nil
+		}
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
 
-	return &creds, nil
+	modelCreds := credentialFromStorage(creds)
+	return &modelCreds, nil
 }
 
-//FindCredentials find a set of credentials
-func (sa *Adapter) FindCredentials(orgID string, authType string, params map[string]interface{}) (*model.AuthCreds, error) {
-	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "auth_type", Value: authType}}
-	for k, v := range params {
-		filter = append(filter, primitive.E{Key: "creds." + k, Value: v})
-	}
+//InsertCredential inserts a set of credential
+func (sa *Adapter) InsertCredential(creds *model.Credential, context mongo.SessionContext) error {
+	storageCreds := credentialToStorage(creds)
 
-	var creds model.AuthCreds
-	err := sa.db.credentials.FindOne(filter, &creds, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
-	}
-
-	return &creds, nil
-}
-
-//InsertCredentials inserts a set of credentials
-func (sa *Adapter) InsertCredentials(creds *model.AuthCreds, context mongo.SessionContext) error {
-	if creds == nil {
-		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
+	if storageCreds == nil {
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeCredential))
 	}
 
 	var err error
 	if context == nil {
-		_, err = sa.db.credentials.InsertOne(creds)
+		_, err = sa.db.credentials.InsertOne(storageCreds)
 	} else {
-		_, err = sa.db.credentials.InsertOneWithContext(context, creds)
+		_, err = sa.db.credentials.InsertOneWithContext(context, storageCreds)
 	}
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthCred, nil, err)
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 	}
 
 	return nil
 }
+
+//UpdateCredential updates a set of credentials
+func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
+	storageCreds := credentialToStorage(creds)
+
+	if storageCreds == nil {
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeCredential))
+	}
+
+	filter := bson.D{primitive.E{Key: "_id", Value: storageCreds.ID}}
+	err := sa.db.credentials.ReplaceOne(filter, storageCreds, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"_id": storageCreds.ID}, err)
+	}
+
+	return nil
+}
+
+// //FindCredentialsByID finds a set of credentials by ID
+// func (sa *Adapter) FindCredentialsByID(ID string) (*model.AuthCreds, error) {
+// 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+
+// 	var creds model.AuthCreds
+// 	err := sa.db.credentials.FindOne(filter, &creds, nil)
+// 	if err != nil {
+// 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
+// 	}
+
+// 	return &creds, nil
+// }
+
+// //FindCredentials find a set of credentials
+// func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, params map[string]interface{}) (*model.AuthCreds, error) {
+// 	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "auth_type", Value: authType}}
+// 	for k, v := range params {
+// 		filter = append(filter, primitive.E{Key: "creds." + k, Value: v})
+// 	}
+
+// 	var creds model.AuthCreds
+// 	err := sa.db.credentials.FindOne(filter, &creds, nil)
+// 	if err != nil {
+// 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
+// 	}
+
+// 	return &creds, nil
+// }
+
+// //InsertCredentials inserts a set of credentials
+// func (sa *Adapter) InsertCredentials(creds *model.AuthCreds, context mongo.SessionContext) error {
+// 	if creds == nil {
+// 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
+// 	}
+
+// 	var err error
+// 	if context == nil {
+// 		_, err = sa.db.credentials.InsertOne(creds)
+// 	} else {
+// 		_, err = sa.db.credentials.InsertOneWithContext(context, creds)
+// 	}
+// 	if err != nil {
+// 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthCred, nil, err)
+// 	}
+
+// 	return nil
+// }
+
+// //Update credentials updates a set of credentials
+// func (sa *Adapter) UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCreds) error {
+// 	if creds == nil {
+// 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
+// 	}
+
+// 	var filter bson.D
+// 	if len(orgID) > 0 {
+// 		filter = bson.D{
+// 			primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID},
+// 			primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.AccountID}, //replaced by _id or account_id??
+// 		}
+// 	} else {
+// 		filter = bson.D{primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.AccountID}}
+// 	}
+
+// 	err := sa.db.credentials.ReplaceOne(filter, creds, nil)
+// 	if err != nil {
+// 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthCred, &logutils.FieldArgs{"user_id": creds.AccountID}, err)
+// 	}
+
+// 	return nil
+// }
 
 //FindRefreshToken finds a refresh token
 func (sa *Adapter) FindRefreshToken(token string) (*model.AuthRefresh, error) {

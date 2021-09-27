@@ -41,9 +41,18 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppId, requestData.OrgId, requestParams, l)
+	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppId, requestData.OrgId, requestParams, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
+	}
+
+	if message != "" {
+		responseData := &Def.ResLoginResponse{Message: &message}
+		respData, err := json.Marshal(responseData)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
+		}
+		return l.HttpResponseSuccessJSON(respData)
 	}
 
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
@@ -260,6 +269,25 @@ func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResp
 	res := h.coreAPIs.Services.SerGetCommonTest(l)
 
 	return l.HttpResponseSuccessMessage(res)
+}
+
+//Handler for verify endpoint
+func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request) logs.HttpResponse {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("code"), nil, http.StatusBadRequest, false)
+	}
+
+	if err := h.coreAPIs.Auth.Verify(id, code, l); err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionValidate, "code", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessMessage("Code verified!")
 }
 
 //NewServicesApisHandler creates new rest services Handler instance
