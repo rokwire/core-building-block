@@ -8,6 +8,7 @@ properties:
     type: object
     nullable: true
     anyOf:
+      - $ref: "../../../shared/responses/ParamsResponse.yaml"
   auth_type:
     type: string
     enum:

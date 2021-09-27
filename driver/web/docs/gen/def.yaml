@@ -1437,7 +1437,14 @@ components:
           type: object
           nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_res_shared_ParamsOidc'
+            - type: object
+              properties:
+                id_token:
+                  type: string
+                access_token:
+                  type: string
+                token_type:
+                  type: string
         auth_type:
           type: string
           enum:
