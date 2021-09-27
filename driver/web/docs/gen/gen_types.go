@@ -70,6 +70,17 @@ const (
 	ResAuthorizeServiceResponseTokenTypeBearer ResAuthorizeServiceResponseTokenType = "Bearer"
 )
 
+// Defines values for ResLoginResponseAuthType.
+const (
+	ResLoginResponseAuthTypeEmail ResLoginResponseAuthType = "email"
+
+	ResLoginResponseAuthTypeIllinoisOidc ResLoginResponseAuthType = "illinois_oidc"
+
+	ResLoginResponseAuthTypePhone ResLoginResponseAuthType = "phone"
+
+	ResLoginResponseAuthTypeUsername ResLoginResponseAuthType = "username"
+)
+
 // Defines values for ResSharedRokwireTokenTokenType.
 const (
 	ResSharedRokwireTokenTokenTypeBearer ResSharedRokwireTokenTokenType = "Bearer"
@@ -464,10 +475,14 @@ type ResLoginAccount struct {
 
 // ResLoginResponse defines model for _res_login_Response.
 type ResLoginResponse struct {
-	Account *ResLoginAccount       `json:"account,omitempty"`
-	Params  *interface{}           `json:"params"`
-	Token   *ResSharedRokwireToken `json:"token,omitempty"`
+	Account  *ResLoginAccount          `json:"account,omitempty"`
+	AuthType *ResLoginResponseAuthType `json:"auth_type,omitempty"`
+	Params   *map[string]interface{}   `json:"params"`
+	Token    *ResSharedRokwireToken    `json:"token,omitempty"`
 }
+
+// ResLoginResponseAuthType defines model for ResLoginResponse.AuthType.
+type ResLoginResponseAuthType string
 
 // ResRefreshResponse defines model for _res_refresh_Response.
 type ResRefreshResponse struct {

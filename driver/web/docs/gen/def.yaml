@@ -1436,20 +1436,14 @@ components:
         params:
           type: object
           nullable: true
-          anyOf:
-            - type: object
-              properties:
-                id:
-                  type: string
-                code:
-                  type: string
-                description:
-                  type: string
-                is_external:
-                  type: boolean
-                params:
-                  type: object
-                  additionalProperties: true
+          anyOf: null
+        auth_type:
+          type: string
+          enum:
+            - username
+            - email
+            - phone
+            - illinois_oidc
     _res_login_Account:
       required:
         - id

@@ -8,4 +8,10 @@ properties:
     type: object
     nullable: true
     anyOf:
-      - $ref: "../../../shared/responses/AuthTypeFields.yaml"
+  auth_type:
+    type: string
+    enum:
+      - username
+      - email
+      - phone
+      - illinois_oidc
