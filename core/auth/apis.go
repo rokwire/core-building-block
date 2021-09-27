@@ -59,15 +59,15 @@ func (a *Auth) Login(authenticationType string, creds string, appID string, orgI
 		anonymousID := ""
 		anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
+			return "", "", "", nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
 		}
 
 		accessToken, err := a.applyAnonymousLogin(authType, anonymousID, orgID, *appType, params, l)
 		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+			return "", "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 		}
 
-		return *accessToken, "", nil, responseParams, nil
+		return "", *accessToken, "", nil, responseParams, nil
 
 	} else if authType.IsExternal {
 		account, accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, l)

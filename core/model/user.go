@@ -8,8 +8,6 @@ import (
 )
 
 const (
-	//TypeOrganization ...
-	TypeAnonymousProfile logutils.MessageDataType = "anonymous profile"
 	//TypeAccount account
 	TypeAccount logutils.MessageDataType = "account"
 	//TypeAccountPreferences account preferences
@@ -58,18 +56,6 @@ func (a Account) GetAccountAuthType(authTypeID string, identifier string) *Accou
 		}
 	}
 	return nil
-}
-
-type AnonymousProfile struct {
-	ID                   string
-	Interests            []string
-	Favorites            []string
-	Over13               bool
-	PositiveInterestTags []string
-	NegativeInterestTags []string
-	CreationDate         time.Time
-	LastModifiedDate     time.Time
-	PrivacySettings      string
 }
 
 //AccountAuthType represents account auth type

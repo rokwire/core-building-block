@@ -24,8 +24,6 @@ import (
 	"github.com/rokmetro/logging-library/errors"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
-	"golang.org/x/sync/syncmap"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 const (
@@ -375,29 +373,29 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		message = "verification code sent successfully"
 
 		return &message, account, accountAuthType, nil
-	} else {
-		//apply sign in
-
-		//1. check if the account exists
-		account, accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
-		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-		}
-		if account == nil || accountAuthType == nil {
-			return nil, nil, nil, errors.WrapErrorAction("exist", model.TypeAccount, nil, err)
-		}
-
-		//2. it seems the user exist, now check the credentials
-		validCredentials, err := authImpl.checkCredentials(*accountAuthType, creds, l)
-		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
-		}
-		if !*validCredentials {
-			return nil, nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
-		}
-
-		return nil, account, accountAuthType, nil
 	}
+
+	//apply sign in
+
+	//1. check if the account exists
+	account, accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
+	if err != nil {
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if account == nil || accountAuthType == nil {
+		return nil, nil, nil, errors.WrapErrorAction("exist", model.TypeAccount, nil, err)
+	}
+
+	//2. it seems the user exist, now check the credentials
+	validCredentials, err := authImpl.checkCredentials(*accountAuthType, creds, l)
+	if err != nil {
+		return nil, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
+	}
+	if !*validCredentials {
+		return nil, nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
+	}
+
+	return nil, account, accountAuthType, nil
 }
 
 //isSignUp checks if the operation is sign in or sign up
@@ -417,22 +415,22 @@ func (a *Auth) isSignUp(authImpl authType, authType model.AuthType, appType mode
 			return nil, errors.WrapErrorAction("error getting sign_up field", "", nil, err)
 		}
 		return &sParams.SignUp, nil
-	} else {
-		//check if the user exists check
-		account, accountAuthType, err := authImpl.userExist(authType, appType, appOrg, creds, l)
-		if err != nil {
-			return nil, errors.WrapErrorAction("error checking if the user exists", "", nil, err)
-		}
-		var signUp bool
-		if account != nil && accountAuthType != nil {
-			//the user exists, so return false
-			signUp = false
-		} else {
-			//the user does not exists, so it has to register
-			signUp = true
-		}
-		return &signUp, nil
 	}
+
+	//check if the user exists check
+	account, accountAuthType, err := authImpl.userExist(authType, appType, appOrg, creds, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error checking if the user exists", "", nil, err)
+	}
+	var signUp bool
+	if account != nil && accountAuthType != nil {
+		//the user exists, so return false
+		signUp = false
+	} else {
+		//the user does not exists, so it has to register
+		signUp = true
+	}
+	return &signUp, nil
 }
 
 func (a *Auth) findAccountAuthType(account *model.Account, authTypeID string, identifier string) (*model.AccountAuthType, error) {
