@@ -72,9 +72,9 @@ func (a *emailAuthImpl) applySignUp(authType model.AuthType, appType model.Appli
 	}
 
 	//send verification code
-	//if err = a.sendVerificationCode(email, code, appOrg.Application.ID, appOrg.Organization.ID); err != nil {
-	//	return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, errors.New("failed to send verification email to user"))
-	//}
+	if err = a.sendVerificationCode(email, code, appOrg.Application.ID, appOrg.Organization.ID); err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, errors.New("failed to send verification email to user"))
+	}
 
 	emailCredValue := emailCreds{Email: email, Password: string(hashedPassword), VerificationCode: code, VerificationExpiry: time.Now().Add(time.Hour * 24)}
 	emailCredValueMap, err := emailCredsToMap(&emailCredValue)
@@ -85,68 +85,37 @@ func (a *emailAuthImpl) applySignUp(authType model.AuthType, appType model.Appli
 	return &email, emailCredValueMap, nil
 }
 
-// check(creds string, orgID string, appID string, params string, l *logs.Log) (*model.UserAuth, error)
-func (a *emailAuthImpl) checkCredentials(accountAuthType *model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization, l *logs.Log) (*string, map[string]interface{}, bool, error) {
-	//appID := appOrg.Application.ID
-	//orgID := appOrg.Organization.ID
-
-	/*
-		var requestCreds emailCreds
-		err := json.Unmarshal([]byte(creds), &requestCreds)
-		if err != nil {
-			return nil, nil, false, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, logutils.StringArgs("request"), err)
-		}
-
-		newUser := false
-			var requestParams emailParams
-			err = json.Unmarshal([]byte(params), &requestParams)
-			if err == nil {
-				newUser = requestParams.NewUser
-			}
-
-			var storedCreds *emailCreds
-			if accountAuthType != nil && accountAuthType.Credential != nil {
-				storedCreds, err = mapToEmailCreds(accountAuthType.Credential.Value)
-				if err != nil {
-					return nil, nil, false, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, logutils.StringArgs("stored"), err)
-				}
-			}
-	*/
-	//Handle sign up
-	/*	if accountAuthType == nil {
-		if !newUser {
-			return nil, nil, false, errors.New("no account found newUser flag must be set")
-		}
-
-		newCreds, err := a.handleSignup(&requestCreds, storedCreds, appID, orgID)
-		if err != nil {
-			return nil, nil, false, err
-		}
-		newCredsMap, err := emailCredsToMap(newCreds)
-		if err != nil {
-			return nil, nil, false, err
-		}
-		return &newCreds.Email, newCredsMap, false, nil
-	} */
-	/*
-		if newUser {
-			return nil, nil, false, errors.Newf("account already exists for email: %s", requestCreds.Email)
-		}
-		if err = a.handleSignin(&requestCreds, storedCreds); err != nil {
-			return nil, nil, false, errors.WrapErrorAction(logutils.ActionValidate, typeEmailCreds, nil, err)
-		}
-		return &storedCreds.Email, accountAuthType.Credential.Value, accountAuthType.Credential.Verified, nil */
-	return nil, nil, false, nil
-}
-
-func (a *emailAuthImpl) handleSignin(requestCreds *emailCreds, storageCreds *emailCreds) error {
-	if storageCreds == nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeAuthCred, logutils.StringArgs("stored"))
+func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (*bool, error) {
+	//check is verified
+	if !accountAuthType.Credential.Verified {
+		return nil, errors.ErrorAction("not verified", "", nil)
 	}
-	if err := bcrypt.CompareHashAndPassword([]byte(storageCreds.Password), []byte(requestCreds.Password)); err != nil {
-		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, nil, err)
+
+	//get stored credential
+	storedCreds, err := mapToEmailCreds(accountAuthType.Credential.Value)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error on map to email creds", "", nil, err)
 	}
-	return nil
+
+	//get request credential
+	type signInPasswordCred struct {
+		Password string `json:"password"`
+	}
+	var sPasswordParams signInPasswordCred
+	err = json.Unmarshal([]byte(creds), &sPasswordParams)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error getting sign_in password creds", "", nil, err)
+	}
+	requestPassword := sPasswordParams.Password
+
+	//compare stored and requets ones
+	err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(requestPassword))
+	if err != nil {
+		return nil, errors.WrapErrorAction("bad credentials", "", nil, err)
+	}
+
+	valid := true
+	return &valid, nil
 }
 
 func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode string, appID string, orgID string) error {

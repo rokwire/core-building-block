@@ -7,7 +7,6 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 	"time"
@@ -318,36 +317,27 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		return &message, account, accountAuthType, nil
 	} else {
 		//apply sign in
-		log.Println("signIn")
-	}
 
-	/*	//1. check if the account exists
+		//1. check if the account exists
 		account, accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
-		if account != nil && accountAuthType != nil {
-			//User exists
-			//2. it seems the user exist, now check the credentials
-			_, authTypeCreds, verified, err := authImpl.checkCredentials(accountAuthType, creds, params, appOrg, l)
-			if err != nil {
-				return nil, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
-			}
-			if authTypeCreds == nil {
-				return nil, nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
-			}
-			// check isVerified
-			if !verified {
-				return nil, nil, nil, errors.New("verification required")
-			}
-		} else if account == nil && accountAuthType == nil {
+		if account == nil || accountAuthType == nil {
+			return nil, nil, nil, errors.WrapErrorAction("exist", model.TypeAccount, nil, err)
+		}
 
-		} else {
-			return nil, nil, nil, errors.New("either account or account auth type is nil")
-		} */
+		//2. it seems the user exist, now check the credentials
+		validCredentials, err := authImpl.checkCredentials(*accountAuthType, creds, l)
+		if err != nil {
+			return nil, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
+		}
+		if !*validCredentials {
+			return nil, nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
+		}
 
-	//	return message, account, accountAuthType, nil
-	return nil, nil, nil, nil
+		return nil, account, accountAuthType, nil
+	}
 }
 
 //isSignUp checks if the operation is sign in or sign up
