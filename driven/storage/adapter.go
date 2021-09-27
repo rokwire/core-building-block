@@ -503,7 +503,7 @@ func (sa *Adapter) InsertAccountPermissions(accountID string, permissions []mode
 	return nil
 }
 
-//InsertAccountRole inserts account role
+//InsertAccountRoles inserts account roles
 func (sa *Adapter) InsertAccountRoles(accountID string, roles []model.ApplicationRole) error {
 	stgRoles := applicationRolesToStorage(roles)
 

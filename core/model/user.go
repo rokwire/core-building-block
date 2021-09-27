@@ -67,7 +67,7 @@ func (a Account) GetPermissions() []ApplicationPermission {
 	i := 0
 	for _, permission := range permissionsMap {
 		permissions[i] = permission
-		i += 1
+		i++
 	}
 	return permissions
 }
@@ -79,12 +79,12 @@ func (a Account) GetPermissionNames() []string {
 	i := 0
 	for name := range permissionsMap {
 		permissions[i] = name
-		i += 1
+		i++
 	}
 	return permissions
 }
 
-//GetPermissionMap returns a map of all permissions granted to this account
+//GetPermissionsMap returns a map of all permissions granted to this account
 func (a Account) GetPermissionsMap() map[string]ApplicationPermission {
 	permissionsMap := make(map[string]ApplicationPermission, len(a.Permissions))
 	for _, permission := range a.Permissions {
