@@ -1477,21 +1477,7 @@ components:
           type: object
           nullable: true
           anyOf:
-            - type: object
-              properties:
-                id_token:
-                  type: string
-                access_token:
-                  type: string
-                token_type:
-                  type: string
-        auth_type:
-          type: string
-          enum:
-            - username
-            - email
-            - phone
-            - illinois_oidc
+            - $ref: '#/components/schemas/_res_shared_ParamsOidc'
     _res_login_Account:
       required:
         - id

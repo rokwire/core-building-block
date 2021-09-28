@@ -70,17 +70,6 @@ const (
 	ResAuthorizeServiceResponseTokenTypeBearer ResAuthorizeServiceResponseTokenType = "Bearer"
 )
 
-// Defines values for ResLoginResponseAuthType.
-const (
-	ResLoginResponseAuthTypeEmail ResLoginResponseAuthType = "email"
-
-	ResLoginResponseAuthTypeIllinoisOidc ResLoginResponseAuthType = "illinois_oidc"
-
-	ResLoginResponseAuthTypePhone ResLoginResponseAuthType = "phone"
-
-	ResLoginResponseAuthTypeUsername ResLoginResponseAuthType = "username"
-)
-
 // Defines values for ResSharedRokwireTokenTokenType.
 const (
 	ResSharedRokwireTokenTokenTypeBearer ResSharedRokwireTokenTokenType = "Bearer"
@@ -476,13 +465,9 @@ type ResLoginAccount struct {
 // ResLoginResponse defines model for _res_login_Response.
 type ResLoginResponse struct {
 	Account *ResLoginAccount       `json:"account,omitempty"`
-	Message *string                `json:"message,omitempty"`
 	Params  *interface{}           `json:"params"`
 	Token   *ResSharedRokwireToken `json:"token,omitempty"`
 }
-
-// ResLoginResponseAuthType defines model for ResLoginResponse.AuthType.
-type ResLoginResponseAuthType string
 
 // ResRefreshResponse defines model for _res_refresh_Response.
 type ResRefreshResponse struct {
@@ -553,11 +538,8 @@ type GetBbsServiceRegsParams struct {
 	Ids string `json:"ids"`
 }
 
-// PutServicesAccountAccountPreferencesJSONBody defines parameters for PutServicesAccountAccountPreferences.
-type PutServicesAccountAccountPreferencesJSONBody map[string]interface{}
-
-// PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
-type PutServicesAccountProfileJSONBody ProfileFields
+// PutServicesAccountPreferencesJSONBody defines parameters for PutServicesAccountPreferences.
+type PutServicesAccountPreferencesJSONBody map[string]interface{}
 
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
@@ -576,7 +558,6 @@ type GetServicesAuthServiceRegsParams struct {
 
 // GetServicesAuthVerifyParams defines parameters for GetServicesAuthVerify.
 type GetServicesAuthVerifyParams struct {
-
 	// Credential ID
 	Id string `json:"id"`
 
@@ -614,11 +595,8 @@ type PostAdminServiceRegsJSONRequestBody PostAdminServiceRegsJSONBody
 // PutAdminServiceRegsJSONRequestBody defines body for PutAdminServiceRegs for application/json ContentType.
 type PutAdminServiceRegsJSONRequestBody PutAdminServiceRegsJSONBody
 
-// PutServicesAccountAccountPreferencesJSONRequestBody defines body for PutServicesAccountAccountPreferences for application/json ContentType.
-type PutServicesAccountAccountPreferencesJSONRequestBody PutServicesAccountAccountPreferencesJSONBody
-
-// PutServicesAccountProfileJSONRequestBody defines body for PutServicesAccountProfile for application/json ContentType.
-type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
+// PutServicesAccountPreferencesJSONRequestBody defines body for PutServicesAccountPreferences for application/json ContentType.
+type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJSONBody
 
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody
@@ -628,6 +606,9 @@ type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 
 // PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
 type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
+
+// PutServicesProfileJSONRequestBody defines body for PutServicesProfile for application/json ContentType.
+type PutServicesProfileJSONRequestBody PutServicesProfileJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found
