@@ -410,10 +410,10 @@ type ReqAuthorizeServiceRequest struct {
 
 // ReqLoginUrlRequest defines model for _req_login-url_Request.
 type ReqLoginUrlRequest struct {
-	AppId       string                     `json:"app_id"`
-	AuthType    ReqLoginUrlRequestAuthType `json:"auth_type"`
-	OrgId       string                     `json:"org_id"`
-	RedirectUri string                     `json:"redirect_uri"`
+	AppTypeIdentifier string                     `json:"app_type_identifier"`
+	AuthType          ReqLoginUrlRequestAuthType `json:"auth_type"`
+	OrgId             string                     `json:"org_id"`
+	RedirectUri       string                     `json:"redirect_uri"`
 }
 
 // ReqLoginUrlRequestAuthType defines model for ReqLoginUrlRequest.AuthType.
@@ -451,11 +451,11 @@ type ReqLoginParamsPhone map[string]interface{}
 
 // ReqLoginRequest defines model for _req_login_Request.
 type ReqLoginRequest struct {
-	AppId    string                  `json:"app_id"`
-	AuthType ReqLoginRequestAuthType `json:"auth_type"`
-	Creds    *interface{}            `json:"creds,omitempty"`
-	OrgId    string                  `json:"org_id"`
-	Params   *interface{}            `json:"params,omitempty"`
+	AppTypeIdentifier string                  `json:"app_type_identifier"`
+	AuthType          ReqLoginRequestAuthType `json:"auth_type"`
+	Creds             *interface{}            `json:"creds,omitempty"`
+	OrgId             string                  `json:"org_id"`
+	Params            *interface{}            `json:"params,omitempty"`
 }
 
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.

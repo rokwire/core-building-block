@@ -46,7 +46,7 @@ paths:
                 value: |
                   {
                     "auth_type": "email",
-                    "app_id": "edu.illinois.rokwire.safercommunity",
+                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "creds": {
                       "email": "test@test.com", 
@@ -58,7 +58,7 @@ paths:
                 value: |
                   {
                     "auth_type": "phone",
-                    "app_id": "edu.illinois.rokwire",
+                    "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "creds": {
                       "phone": "+12223334444", 
@@ -70,7 +70,7 @@ paths:
                 value: |
                   {
                     "auth_type": "illinois_oidc",
-                    "app_id": "edu.illinois.rokwire",
+                    "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
                     "params": {
@@ -1508,7 +1508,7 @@ components:
     _req_login_Request:
       required:
         - auth_type
-        - app_id
+        - app_type_identifier
         - org_id
       type: object
       properties:
@@ -1519,7 +1519,7 @@ components:
             - email
             - phone
             - illinois_oidc
-        app_id:
+        app_type_identifier:
           type: string
         org_id:
           type: string
@@ -1620,7 +1620,7 @@ components:
     _req_login-url_Request:
       required:
         - auth_type
-        - app_id
+        - app_type_identifier
         - org_id
         - redirect_uri
       type: object
@@ -1629,7 +1629,7 @@ components:
           type: string
           enum:
             - illinois_oidc
-        app_id:
+        app_type_identifier:
           type: string
         org_id:
           type: string

@@ -610,7 +610,7 @@ func (a *Auth) registerExternalAuthType(name string, auth externalAuthType) erro
 	return nil
 }
 
-func (a *Auth) validateAuthType(authenticationType string, appID string, orgID string) (*model.AuthType, *model.ApplicationType, *model.ApplicationOrganization, error) {
+func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier string, orgID string) (*model.AuthType, *model.ApplicationType, *model.ApplicationOrganization, error) {
 	//get the auth type
 	authType, err := a.getCachedAuthType(authenticationType)
 	if err != nil {
@@ -618,13 +618,13 @@ func (a *Auth) validateAuthType(authenticationType string, appID string, orgID s
 	}
 
 	//get the app type
-	applicationType, err := a.storage.FindApplicationTypeByIdentifier(appID)
+	applicationType, err := a.storage.FindApplicationTypeByIdentifier(appTypeIdentifier)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appID), err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
 
 	}
 	if applicationType == nil {
-		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appID))
+		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier))
 	}
 
 	//get the app org

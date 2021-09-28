@@ -1,6 +1,6 @@
 required:
   - auth_type
-  - app_id
+  - app_type_identifier
   - org_id
 type: object
 properties:
@@ -11,7 +11,7 @@ properties:
       - email
       - phone
       - illinois_oidc
-  app_id:
+  app_type_identifier:
     type: string
   org_id:
     type: string
