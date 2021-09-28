@@ -252,13 +252,23 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		useSharedProfile := false
 
 		//profile
+		//TODO: set search params, profileBB URL, and auth token
+		profileSearch := map[string]string{
+			"": "",
+		}
+		profile, preferences, err := a.getProfileBBData("", "", profileSearch)
+		if err != nil {
+			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "profile building block data", nil, err)
+		}
 		profileID, _ := uuid.NewUUID()
-		photoURL := ""
-		firstName := ""
-		lastName := ""
-		profile := &model.Profile{ID: profileID.String(), PhotoURL: photoURL, FirstName: firstName, LastName: lastName, DateCreated: now}
+		if profile == nil {
+			profile = &model.Profile{ID: profileID.String(), PhotoURL: "", FirstName: "", LastName: "", DateCreated: now}
+		} else {
+			profile.ID = profileID.String()
+			profile.DateUpdated = &now
+		}
 
-		account, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, profile, l)
+		account, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, preferences, profile, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
@@ -304,10 +314,23 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		useSharedProfile := false
 
 		//profile
+		//TODO: set search params, profileBB URL, and auth token
+		profileSearch := map[string]string{
+			"": "",
+		}
+		profile, preferences, err := a.getProfileBBData("", "", profileSearch)
+		if err != nil {
+			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "profile building block data", nil, err)
+		}
 		profileID, _ := uuid.NewUUID()
-		profile := &model.Profile{ID: profileID.String(), PhotoURL: "", FirstName: "", LastName: "", DateCreated: now}
+		if profile == nil {
+			profile = &model.Profile{ID: profileID.String(), PhotoURL: "", FirstName: "", LastName: "", DateCreated: now}
+		} else {
+			profile.ID = profileID.String()
+			profile.DateUpdated = &now
+		}
 
-		account, err = a.registerUser(appOrg, *accountAuthType, &credential, useSharedProfile, profile, l)
+		account, err = a.registerUser(appOrg, *accountAuthType, &credential, useSharedProfile, preferences, profile, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
@@ -315,29 +338,28 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		message = "verification code sent successfully"
 
 		return &message, account, accountAuthType, nil
-	} else {
-		//apply sign in
-
-		//1. check if the account exists
-		account, accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
-		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-		}
-		if account == nil || accountAuthType == nil {
-			return nil, nil, nil, errors.WrapErrorAction("exist", model.TypeAccount, nil, err)
-		}
-
-		//2. it seems the user exist, now check the credentials
-		validCredentials, err := authImpl.checkCredentials(*accountAuthType, creds, l)
-		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
-		}
-		if !*validCredentials {
-			return nil, nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
-		}
-
-		return nil, account, accountAuthType, nil
 	}
+
+	//apply sign in
+	//1. check if the account exists
+	account, accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
+	if err != nil {
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if account == nil || accountAuthType == nil {
+		return nil, nil, nil, errors.WrapErrorAction("exist", model.TypeAccount, nil, err)
+	}
+
+	//2. it seems the user exist, now check the credentials
+	validCredentials, err := authImpl.checkCredentials(*accountAuthType, creds, l)
+	if err != nil {
+		return nil, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
+	}
+	if !*validCredentials {
+		return nil, nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
+	}
+
+	return nil, account, accountAuthType, nil
 }
 
 //isSignUp checks if the operation is sign in or sign up
@@ -357,22 +379,22 @@ func (a *Auth) isSignUp(authImpl authType, authType model.AuthType, appType mode
 			return nil, errors.WrapErrorAction("error getting sign_up field", "", nil, err)
 		}
 		return &sParams.SignUp, nil
-	} else {
-		//check if the user exists check
-		account, accountAuthType, err := authImpl.userExist(authType, appType, appOrg, creds, l)
-		if err != nil {
-			return nil, errors.WrapErrorAction("error checking if the user exists", "", nil, err)
-		}
-		var signUp bool
-		if account != nil && accountAuthType != nil {
-			//the user exists, so return false
-			signUp = false
-		} else {
-			//the user does not exists, so it has to register
-			signUp = true
-		}
-		return &signUp, nil
 	}
+
+	//check if the user exists check
+	account, accountAuthType, err := authImpl.userExist(authType, appType, appOrg, creds, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error checking if the user exists", "", nil, err)
+	}
+	var signUp bool
+	if account != nil && accountAuthType != nil {
+		//the user exists, so return false
+		signUp = false
+	} else {
+		//the user does not exists, so it has to register
+		signUp = true
+	}
+	return &signUp, nil
 }
 
 func (a *Auth) findAccountAuthType(account *model.Account, authTypeID string, identifier string) (*model.AccountAuthType, error) {
@@ -430,7 +452,7 @@ func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAu
 //	Returns:
 //		Registered account (Account): Registered Account object
 func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthType model.AccountAuthType, credential *model.Credential,
-	useSharedProfile bool, profile *model.Profile, l *logs.Log) (*model.Account, error) {
+	useSharedProfile bool, preferences *map[string]interface{}, profile *model.Profile, l *logs.Log) (*model.Account, error) {
 	//TODO - analyse what should go in one transaction
 
 	//TODO - ignore useSharedProfile for now
@@ -439,7 +461,7 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 	organization := appOrg.Organization
 	authTypes := []model.AccountAuthType{accountAuthType}
 	account := model.Account{ID: accountID.String(), Application: application, Organization: organization,
-		Permissions: nil, Roles: nil, Groups: nil, AuthTypes: authTypes, Profile: *profile, DateCreated: time.Now()}
+		Permissions: nil, Roles: nil, Groups: nil, AuthTypes: authTypes, Preferences: *preferences, Profile: *profile, DateCreated: time.Now()}
 
 	insertedAccount, err := a.storage.InsertAccount(account)
 	if err != nil {

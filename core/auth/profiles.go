@@ -7,73 +7,81 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/rokmetro/logging-library/errors"
 	"github.com/rokmetro/logging-library/logutils"
 )
 
-func (a *Auth) getProfileBBPiiData(piiUrl string, token string, queryData map[string]string) (*model.Profile, error) {
+type profileBBData struct {
+	PII    profileBBPii           `json:"pii"`
+	NonPII map[string]interface{} `json:"non_pii"`
+}
+
+type profileBBPii struct {
+	LastName  string `json:"lastname"`
+	FirstName string `json:"firstname"`
+	Phone     string `json:"phone"`
+	Email     string `json:"email"`
+	BirthYear int8   `json:"birthYear"`
+	Address   string `json:"address"`
+	ZipCode   string `json:"zipCode"`
+	State     string `json:"state"`
+	Country   string `json:"country"`
+
+	DateCreated string `json:"creationDate"`
+	// DateUpdated string `json:"lastModifiedDate"`
+}
+
+func (a *Auth) getProfileBBData(profileURL string, token string, queryData map[string]string) (*model.Profile, *map[string]interface{}, error) {
 	query := url.Values{}
 	for k, v := range queryData {
 		query.Set(k, v)
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodGet, piiUrl+"?"+query.Encode(), nil)
+	req, err := http.NewRequest(http.MethodGet, profileURL+"?"+query.Encode(), nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
 	}
 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
 	}
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeResponse, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeResponse, nil, err)
 	}
 	if resp.StatusCode != 200 {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
 	}
 	if len(body) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeResponseBody, nil)
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeResponseBody, nil)
 	}
 
-	var piiData model.Profile
-	err = json.Unmarshal(body, &piiData)
+	var profileData profileBBData
+	err = json.Unmarshal(body, &profileData)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.TypeResponseBody, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.TypeResponseBody, nil, err)
 	}
 
-	return &piiData, nil
-}
-
-func (a *Auth) getProfileBBNonPiiData(nonPiiUrl string, token string) (*map[string]interface{}, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodGet, nonPiiUrl, nil)
+	dateCreated, err := time.Parse("2006-01-02T15:04:05.000Z", profileData.PII.DateCreated)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, logutils.TypeString, &logutils.FieldArgs{"creationDate": profileData.PII.DateCreated}, err)
 	}
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	// dateUpdated, err := time.Parse("2006-01-02T15:04:05.000Z", profileData.PII.DateUpdated)
+	// if err != nil {
+	// 	return nil, nil, errors.WrapErrorAction(logutils.ActionParse, logutils.TypeString, &logutils.FieldArgs{"lastModifiedDate": profileData.PII.DateCreated}, err)
+	// }
+	existingProfile := model.Profile{FirstName: profileData.PII.FirstName, LastName: profileData.PII.LastName,
+		Email: profileData.PII.Email, Phone: profileData.PII.Phone, BirthYear: profileData.PII.BirthYear,
+		Address: profileData.PII.Address, ZipCode: profileData.PII.ZipCode, State: profileData.PII.State,
+		Country: profileData.PII.Country, DateCreated: dateCreated}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeResponse, nil, err)
-	}
-	if resp.StatusCode != 200 {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
-	}
-	if len(body) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeResponseBody, nil)
-	}
+	return &existingProfile, &profileData.NonPII, nil
 }
