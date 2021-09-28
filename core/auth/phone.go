@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	authTypePhone string = "phone"
+	//AuthTypePhone phone auth type
+	AuthTypePhone string = "phone"
 )
 
 // Phone implementation of authType
@@ -35,7 +36,7 @@ func (a *phoneAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, 
 
 //initPhoneAuth initializes and registers a new phone auth instance
 func initPhoneAuth(auth *Auth) (*phoneAuthImpl, error) {
-	phone := &phoneAuthImpl{auth: auth, authType: authTypePhone}
+	phone := &phoneAuthImpl{auth: auth, authType: AuthTypePhone}
 
 	err := auth.registerAuthType(phone.authType, phone)
 	if err != nil {

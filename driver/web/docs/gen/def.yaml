@@ -46,7 +46,7 @@ paths:
                 value: |
                   {
                     "auth_type": "email",
-                    "app_id": "edu.illinois.rokwire.safercommunity",
+                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "creds": {
                       "email": "test@test.com", 
@@ -58,7 +58,7 @@ paths:
                 value: |
                   {
                     "auth_type": "phone",
-                    "app_id": "edu.illinois.rokwire",
+                    "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "creds": {
                       "phone": "+12223334444", 
@@ -70,12 +70,23 @@ paths:
                 value: |
                   {
                     "auth_type": "illinois_oidc",
-                    "app_id": "edu.illinois.rokwire",
+                    "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
                     "params": {
                       "redirect_uri": "https://redirect.example.com",
                       "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                    }
+                  }
+              api_key:
+                summary: API key login (Anonymous)
+                value: |
+                  {
+                    "auth_type": "api_key",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "app_id": "edu.illinois.rokwire",
+                    "creds": {
+                      "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738"
                     }
                   }
         required: true
@@ -771,6 +782,250 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /admin/application-permissions:
+    post:
+      tags:
+        - Admin
+      summary: Create application permission
+      description: |
+        Creates application permission
+      requestBody:
+        description: Application permission
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_application-permissions_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/application-roles:
+    post:
+      tags:
+        - Admin
+      summary: Create application role
+      description: |
+        Creates application role
+      requestBody:
+        description: Application role
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_application-roles_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/account/permissions:
+    put:
+      tags:
+        - Admin
+      summary: Grant account permissions
+      description: |
+        Grant account permissions
+      requestBody:
+        description: Permissions
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_account-permissions_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/account/roles:
+    put:
+      tags:
+        - Admin
+      summary: Grant account roles
+      description: |
+        Grant account roles
+      requestBody:
+        description: Roles
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_account-roles_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/api-keys:
+    get:
+      tags:
+        - Admin
+      summary: Get API key
+      description: |
+        Returns API key record
+      parameters:
+        - name: org_id
+          in: query
+          description: The org ID of the API key to return
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: app_id
+          in: query
+          description: The app ID of the API key to return
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKey'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      tags:
+        - Admin
+      summary: Create API key
+      description: |
+        Creates a new API key record
+
+        The "org_id" and "app_id" of the record must not match an existing registration  
+      requestBody:
+        description: API key record to be added
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIKey'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      tags:
+        - Admin
+      summary: Update API key
+      description: |
+        Update an existing API key record
+
+        The "org_id" and "app_id" of the record must match an existing registration  
+      requestBody:
+        description: API key record update to be applied
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIKey'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      tags:
+        - Admin
+      summary: Delete API key
+      description: |
+        Deletes an existing API key record
+      parameters:
+        - name: org_id
+          in: query
+          description: The org ID of the API key to delete
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: app_id
+          in: query
+          description: The app ID of the API key to delete
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /enc/test:
     get:
       tags:
@@ -899,7 +1154,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OidcDiscovery'
+                $ref: '#/components/schemas/OIDCDiscovery'
 components:
   schemas:
     GlobalConfig:
@@ -1176,6 +1431,20 @@ components:
         explanation:
           description: Explanation displayed to users for why this scope is requested/required
           type: string
+    APIKey:
+      required:
+        - org_id
+        - app_id
+        - key
+      type: object
+      description: API key record
+      properties:
+        org_id:
+          type: string
+        app_id:
+          type: string
+        key:
+          type: string
     JWK:
       required:
         - kty
@@ -1221,7 +1490,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/JWK'
-    OidcDiscovery:
+    OIDCDiscovery:
       required:
         - issuer
         - jwks_uri
@@ -1348,6 +1617,38 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Account'
+    AnonymousProfile:
+      required:
+        - id
+      type: object
+      description: Anonymous data of user profile
+      properties:
+        id:
+          type: string
+        interests:
+          type: array
+          items:
+            type: string
+        favorites:
+          type: array
+          items:
+            type: string
+        over_13:
+          type: boolean
+        positive_interest_tags:
+          type: array
+          items:
+            type: string
+        negative_interest_tags:
+          type: array
+          items:
+            type: string
+        creation_date:
+          type: string
+        last_modified_date:
+          type: string
+        privacy_settings:
+          type: string
     DeviceFields:
       required:
         - id
@@ -1381,7 +1682,7 @@ components:
           type: string
           enum:
             - Bearer
-    _res_shared_ParamsOidc:
+    _res_shared_ParamsOIDC:
       type: object
       properties:
         oidc_token:
@@ -1393,10 +1694,14 @@ components:
               type: string
             token_type:
               type: string
+    _res_shared_ParamsNone:
+      type: object
+      description: Auth login response params for unlisted auth_types (None)
+      nullable: true
     _req_login_Request:
       required:
         - auth_type
-        - app_id
+        - app_type_identifier
         - org_id
       type: object
       properties:
@@ -1407,7 +1712,8 @@ components:
             - email
             - phone
             - illinois_oidc
-        app_id:
+            - api_key
+        app_type_identifier:
           type: string
         org_id:
           type: string
@@ -1415,13 +1721,14 @@ components:
           anyOf:
             - $ref: '#/components/schemas/_req_login_CredsEmail'
             - $ref: '#/components/schemas/_req_login_CredsPhone'
-            - $ref: '#/components/schemas/_req_login_CredsOidc'
+            - $ref: '#/components/schemas/_req_login_CredsOIDC'
+            - $ref: '#/components/schemas/_req_login_CredsAPIKey'
         params:
           type: object
           anyOf:
             - $ref: '#/components/schemas/_req_login_ParamsEmail'
-            - $ref: '#/components/schemas/_req_login_ParamsPhone'
-            - $ref: '#/components/schemas/_req_login_ParamsOidc'
+            - $ref: '#/components/schemas/_req_login_ParamsOIDC'
+            - $ref: '#/components/schemas/_req_login_ParamsNone'
     _req_login_CredsEmail:
       required:
         - email
@@ -1443,11 +1750,21 @@ components:
           type: string
         code:
           type: string
-    _req_login_CredsOidc:
+    _req_login_CredsOIDC:
       type: string
       description: |
         Auth login creds for auth_type="oidc"
           - full redirect URI received from OIDC provider
+    _req_login_CredsAPIKey:
+      required:
+        - api_key
+      type: object
+      description: Auth login creds for auth_type="api_key"
+      properties:
+        api_key:
+          type: string
+        anonymous_id:
+          type: string
     _req_login_ParamsEmail:
       type: object
       description: Auth login params for auth_type="email"
@@ -1455,10 +1772,7 @@ components:
         new_user:
           type: boolean
           default: false
-    _req_login_ParamsPhone:
-      type: object
-      description: Auth login params for auth_type="phone" (None)
-    _req_login_ParamsOidc:
+    _req_login_ParamsOIDC:
       type: object
       description: Auth login params for auth_type="oidc"
       properties:
@@ -1466,6 +1780,10 @@ components:
           type: string
         pkce_verifier:
           type: string
+    _req_login_ParamsNone:
+      type: object
+      description: Auth login request params for unlisted auth_types (None)
+      nullable: true
     _res_login_Response:
       type: object
       properties:
@@ -1477,7 +1795,12 @@ components:
           type: object
           nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_res_shared_ParamsOidc'
+            - $ref: '#/components/schemas/_res_shared_ParamsOIDC'
+            - type: object
+              properties:
+                anonymous_id:
+                  type: string
+            - $ref: '#/components/schemas/_res_shared_ParamsNone'
         message:
           type: string
     _res_login_Account:
@@ -1508,7 +1831,7 @@ components:
     _req_login-url_Request:
       required:
         - auth_type
-        - app_id
+        - app_type_identifier
         - org_id
         - redirect_uri
       type: object
@@ -1517,7 +1840,7 @@ components:
           type: string
           enum:
             - illinois_oidc
-        app_id:
+        app_type_identifier:
           type: string
         org_id:
           type: string
@@ -1541,7 +1864,8 @@ components:
         params:
           type: object
           anyOf:
-            - $ref: '#/components/schemas/_res_shared_ParamsOidc'
+            - $ref: '#/components/schemas/_res_shared_ParamsOIDC'
+            - $ref: '#/components/schemas/_res_shared_ParamsNone'
     _req_authorize-service_Request:
       required:
         - service_id
@@ -1570,3 +1894,61 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
+    _req_application-permissions_Request:
+      required:
+        - name
+        - app_id
+      type: object
+      properties:
+        name:
+          type: string
+        app_id:
+          type: string
+    _req_application-roles_Request:
+      required:
+        - name
+        - app_id
+        - description
+        - permissions
+      type: object
+      properties:
+        name:
+          type: string
+        app_id:
+          type: string
+        description:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+    _req_account-permissions_Request:
+      required:
+        - account_id
+        - app_id
+        - permissions
+      type: object
+      properties:
+        account_id:
+          type: string
+        app_id:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+    _req_account-roles_Request:
+      required:
+        - account_id
+        - app_id
+        - role_ids
+      type: object
+      properties:
+        account_id:
+          type: string
+        app_id:
+          type: string
+        role_ids:
+          type: array
+          items:
+            type: string

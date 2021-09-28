@@ -56,6 +56,8 @@ const (
 
 // Defines values for ReqLoginRequestAuthType.
 const (
+	ReqLoginRequestAuthTypeApiKey ReqLoginRequestAuthType = "api_key"
+
 	ReqLoginRequestAuthTypeEmail ReqLoginRequestAuthType = "email"
 
 	ReqLoginRequestAuthTypeIllinoisOidc ReqLoginRequestAuthType = "illinois_oidc"
@@ -74,6 +76,13 @@ const (
 const (
 	ResSharedRokwireTokenTokenTypeBearer ResSharedRokwireTokenTokenType = "Bearer"
 )
+
+// API key record
+type APIKey struct {
+	AppId string `json:"app_id"`
+	Key   string `json:"key"`
+	OrgId string `json:"org_id"`
+}
 
 // Account defines model for Account.
 type Account struct {
@@ -286,7 +295,7 @@ type JWKS struct {
 }
 
 // OpenID Connect Discovery Metadata
-type OidcDiscovery struct {
+type OIDCDiscovery struct {
 	Issuer  string `json:"issuer"`
 	JwksUri string `json:"jwks_uri"`
 }
@@ -369,6 +378,34 @@ type ServiceScope struct {
 	Scope       string  `json:"scope"`
 }
 
+// ReqAccountPermissionsRequest defines model for _req_account-permissions_Request.
+type ReqAccountPermissionsRequest struct {
+	AccountId   string   `json:"account_id"`
+	AppId       string   `json:"app_id"`
+	Permissions []string `json:"permissions"`
+}
+
+// ReqAccountRolesRequest defines model for _req_account-roles_Request.
+type ReqAccountRolesRequest struct {
+	AccountId string   `json:"account_id"`
+	AppId     string   `json:"app_id"`
+	RoleIds   []string `json:"role_ids"`
+}
+
+// ReqApplicationPermissionsRequest defines model for _req_application-permissions_Request.
+type ReqApplicationPermissionsRequest struct {
+	AppId string `json:"app_id"`
+	Name  string `json:"name"`
+}
+
+// ReqApplicationRolesRequest defines model for _req_application-roles_Request.
+type ReqApplicationRolesRequest struct {
+	AppId       string   `json:"app_id"`
+	Description string   `json:"description"`
+	Name        string   `json:"name"`
+	Permissions []string `json:"permissions"`
+}
+
 // ReqAuthorizeServiceRequest defines model for _req_authorize-service_Request.
 type ReqAuthorizeServiceRequest struct {
 	// Scopes to be granted to this service in this and future tokens. Replaces existing scopes if present.
@@ -378,14 +415,20 @@ type ReqAuthorizeServiceRequest struct {
 
 // ReqLoginUrlRequest defines model for _req_login-url_Request.
 type ReqLoginUrlRequest struct {
-	AppId       string                     `json:"app_id"`
-	AuthType    ReqLoginUrlRequestAuthType `json:"auth_type"`
-	OrgId       string                     `json:"org_id"`
-	RedirectUri string                     `json:"redirect_uri"`
+	AppTypeIdentifier string                     `json:"app_type_identifier"`
+	AuthType          ReqLoginUrlRequestAuthType `json:"auth_type"`
+	OrgId             string                     `json:"org_id"`
+	RedirectUri       string                     `json:"redirect_uri"`
 }
 
 // ReqLoginUrlRequestAuthType defines model for ReqLoginUrlRequest.AuthType.
 type ReqLoginUrlRequestAuthType string
+
+// Auth login creds for auth_type="api_key"
+type ReqLoginCredsAPIKey struct {
+	AnonymousId *string `json:"anonymous_id,omitempty"`
+	ApiKey      string  `json:"api_key"`
+}
 
 // Auth login creds for auth_type="email"
 type ReqLoginCredsEmail struct {
@@ -395,7 +438,7 @@ type ReqLoginCredsEmail struct {
 
 // Auth login creds for auth_type="oidc"
 //   - full redirect URI received from OIDC provider
-type ReqLoginCredsOidc string
+type ReqLoginCredsOIDC string
 
 // Auth login creds for auth_type="phone"
 type ReqLoginCredsPhone struct {
@@ -408,22 +451,22 @@ type ReqLoginParamsEmail struct {
 	NewUser *bool `json:"new_user,omitempty"`
 }
 
+// Auth login request params for unlisted auth_types (None)
+type ReqLoginParamsNone map[string]interface{}
+
 // Auth login params for auth_type="oidc"
-type ReqLoginParamsOidc struct {
+type ReqLoginParamsOIDC struct {
 	PkceVerifier *string `json:"pkce_verifier,omitempty"`
 	RedirectUri  *string `json:"redirect_uri,omitempty"`
 }
 
-// Auth login params for auth_type="phone" (None)
-type ReqLoginParamsPhone map[string]interface{}
-
 // ReqLoginRequest defines model for _req_login_Request.
 type ReqLoginRequest struct {
-	AppId    string                  `json:"app_id"`
-	AuthType ReqLoginRequestAuthType `json:"auth_type"`
-	Creds    *interface{}            `json:"creds,omitempty"`
-	OrgId    string                  `json:"org_id"`
-	Params   *interface{}            `json:"params,omitempty"`
+	AppTypeIdentifier string                  `json:"app_type_identifier"`
+	AuthType          ReqLoginRequestAuthType `json:"auth_type"`
+	Creds             *interface{}            `json:"creds,omitempty"`
+	OrgId             string                  `json:"org_id"`
+	Params            *interface{}            `json:"params,omitempty"`
 }
 
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
@@ -476,8 +519,11 @@ type ResRefreshResponse struct {
 	Token  *ResSharedRokwireToken `json:"token,omitempty"`
 }
 
-// ResSharedParamsOidc defines model for _res_shared_ParamsOidc.
-type ResSharedParamsOidc struct {
+// Auth login response params for unlisted auth_types (None)
+type ResSharedParamsNone map[string]interface{}
+
+// ResSharedParamsOIDC defines model for _res_shared_ParamsOIDC.
+type ResSharedParamsOIDC struct {
 	OidcToken *struct {
 		AccessToken *string `json:"access_token,omitempty"`
 		IdToken     *string `json:"id_token,omitempty"`
@@ -499,6 +545,42 @@ type ResSharedRokwireToken struct {
 
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResSharedRokwireTokenTokenType string
+
+// PutAdminAccountPermissionsJSONBody defines parameters for PutAdminAccountPermissions.
+type PutAdminAccountPermissionsJSONBody ReqAccountPermissionsRequest
+
+// PutAdminAccountRolesJSONBody defines parameters for PutAdminAccountRoles.
+type PutAdminAccountRolesJSONBody ReqAccountRolesRequest
+
+// DeleteAdminApiKeysParams defines parameters for DeleteAdminApiKeys.
+type DeleteAdminApiKeysParams struct {
+	// The org ID of the API key to delete
+	OrgId string `json:"org_id"`
+
+	// The app ID of the API key to delete
+	AppId string `json:"app_id"`
+}
+
+// GetAdminApiKeysParams defines parameters for GetAdminApiKeys.
+type GetAdminApiKeysParams struct {
+	// The org ID of the API key to return
+	OrgId string `json:"org_id"`
+
+	// The app ID of the API key to return
+	AppId string `json:"app_id"`
+}
+
+// PostAdminApiKeysJSONBody defines parameters for PostAdminApiKeys.
+type PostAdminApiKeysJSONBody APIKey
+
+// PutAdminApiKeysJSONBody defines parameters for PutAdminApiKeys.
+type PutAdminApiKeysJSONBody APIKey
+
+// PostAdminApplicationPermissionsJSONBody defines parameters for PostAdminApplicationPermissions.
+type PostAdminApplicationPermissionsJSONBody ReqApplicationPermissionsRequest
+
+// PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
+type PostAdminApplicationRolesJSONBody ReqApplicationRolesRequest
 
 // PostAdminApplicationsJSONBody defines parameters for PostAdminApplications.
 type PostAdminApplicationsJSONBody Application
@@ -574,6 +656,24 @@ type GetTpsServiceRegsParams struct {
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
+
+// PutAdminAccountPermissionsJSONRequestBody defines body for PutAdminAccountPermissions for application/json ContentType.
+type PutAdminAccountPermissionsJSONRequestBody PutAdminAccountPermissionsJSONBody
+
+// PutAdminAccountRolesJSONRequestBody defines body for PutAdminAccountRoles for application/json ContentType.
+type PutAdminAccountRolesJSONRequestBody PutAdminAccountRolesJSONBody
+
+// PostAdminApiKeysJSONRequestBody defines body for PostAdminApiKeys for application/json ContentType.
+type PostAdminApiKeysJSONRequestBody PostAdminApiKeysJSONBody
+
+// PutAdminApiKeysJSONRequestBody defines body for PutAdminApiKeys for application/json ContentType.
+type PutAdminApiKeysJSONRequestBody PutAdminApiKeysJSONBody
+
+// PostAdminApplicationPermissionsJSONRequestBody defines body for PostAdminApplicationPermissions for application/json ContentType.
+type PostAdminApplicationPermissionsJSONRequestBody PostAdminApplicationPermissionsJSONBody
+
+// PostAdminApplicationRolesJSONRequestBody defines body for PostAdminApplicationRoles for application/json ContentType.
+type PostAdminApplicationRolesJSONRequestBody PostAdminApplicationRolesJSONBody
 
 // PostAdminApplicationsJSONRequestBody defines body for PostAdminApplications for application/json ContentType.
 type PostAdminApplicationsJSONRequestBody PostAdminApplicationsJSONBody
