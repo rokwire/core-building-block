@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	authTypeFirebase string = "firebase"
+	//AuthTypeFirebase firebase auth type
+	AuthTypeFirebase string = "firebase"
 )
 
 // Firebase implementation of authType
@@ -35,7 +36,7 @@ func (a *firebaseAuthImpl) checkCredentials(accountAuthType model.AccountAuthTyp
 
 //initFirebaseAuth initializes and registers a new Firebase auth instance
 func initFirebaseAuth(auth *Auth) (*firebaseAuthImpl, error) {
-	firebase := &firebaseAuthImpl{auth: auth, authType: authTypeFirebase}
+	firebase := &firebaseAuthImpl{auth: auth, authType: AuthTypeFirebase}
 
 	err := auth.registerAuthType(firebase.authType, firebase)
 	if err != nil {

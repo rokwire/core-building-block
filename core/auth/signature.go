@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	authTypeSignature string = "signature"
+	//AuthTypeSignature signature auth type
+	AuthTypeSignature string = "signature"
 )
 
 //Signature implementation of authType
@@ -35,7 +36,7 @@ func (a *signatureAuthImpl) checkCredentials(accountAuthType model.AccountAuthTy
 
 //initSignatureAuth initializes and registers a new signature auth instance
 func initSignatureAuth(auth *Auth) (*signatureAuthImpl, error) {
-	signature := &signatureAuthImpl{auth: auth, authType: authTypeSignature}
+	signature := &signatureAuthImpl{auth: auth, authType: AuthTypeSignature}
 
 	err := auth.registerAuthType(signature.authType, signature)
 	if err != nil {

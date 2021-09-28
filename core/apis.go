@@ -141,6 +141,22 @@ func (s *administrationImpl) AdmGetApplications() ([]model.Application, error) {
 	return s.app.admGetApplications()
 }
 
+func (s *administrationImpl) AdmCreateApplicationPermission(name string, appID string) (*model.ApplicationPermission, error) {
+	return s.app.admCreateApplicationPermission(name, appID)
+}
+
+func (s *administrationImpl) AdmCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error) {
+	return s.app.admCreateApplicationRole(name, appID, description, permissionNames)
+}
+
+func (s *administrationImpl) AdmGrantAccountPermissions(accountID string, appID string, permissionNames []string) error {
+	return s.app.admGrantAccountPermissions(accountID, appID, permissionNames)
+}
+
+func (s *administrationImpl) AdmGrantAccountRoles(accountID string, appID string, roleIDs []string) error {
+	return s.app.admGrantAccountRoles(accountID, appID, roleIDs)
+}
+
 ///
 
 //encryptionImpl

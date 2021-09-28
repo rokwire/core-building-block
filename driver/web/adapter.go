@@ -98,11 +98,21 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.adminApisHandler.getApplication, we.auth.adminAuth)).Methods("GET")
 	adminSubrouter.HandleFunc("/applications", we.wrapFunc(we.adminApisHandler.getApplications, we.auth.adminAuth)).Methods("GET")
 
+	adminSubrouter.HandleFunc("/application-permissions", we.wrapFunc(we.adminApisHandler.createApplicationPermission, we.auth.adminAuth)).Methods("POST")
+	adminSubrouter.HandleFunc("/application-roles", we.wrapFunc(we.adminApisHandler.createApplicationRole, we.auth.adminAuth)).Methods("POST")
+
+	adminSubrouter.HandleFunc("/account/permissions", we.wrapFunc(we.adminApisHandler.grantAccountPermissions, we.auth.adminAuth)).Methods("PUT")
+	adminSubrouter.HandleFunc("/account/roles", we.wrapFunc(we.adminApisHandler.grantAccountRoles, we.auth.adminAuth)).Methods("PUT")
+
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.getServiceRegistrations, we.auth.adminAuth)).Methods("GET")
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.registerService, we.auth.adminAuth)).Methods("POST")
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.updateServiceRegistration, we.auth.adminAuth)).Methods("PUT")
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.deregisterService, we.auth.adminAuth)).Methods("DELETE")
 
+	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.getAPIKey)).Methods("GET")
+	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.createAPIKey)).Methods("POST")
+	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.updateAPIKey)).Methods("PUT")
+	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.deleteAPIKey)).Methods("DELETE")
 	///
 
 	///enc ///
