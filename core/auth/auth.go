@@ -277,7 +277,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(authType)
 	if err != nil {
-		return &message, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
 	//check if it is sign in or sign up
@@ -319,6 +319,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		return &message, account, accountAuthType, nil
 	}
 	//apply sign in
+
 	//1. check if the account exists
 	account, accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
 	if err != nil {
@@ -336,8 +337,6 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	if !*validCredentials {
 		return &message, nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
 	}
-
-	message = "signed in successfully"
 
 	return &message, account, accountAuthType, nil
 }
@@ -360,7 +359,6 @@ func (a *Auth) isSignUp(authImpl authType, authType model.AuthType, appType mode
 		}
 		return &sParams.SignUp, nil
 	}
-
 	//check if the user exists check
 	account, accountAuthType, err := authImpl.userExist(authType, appType, appOrg, creds, l)
 	if err != nil {
@@ -374,7 +372,6 @@ func (a *Auth) isSignUp(authImpl authType, authType model.AuthType, appType mode
 		//the user does not exists, so it has to register
 		signUp = true
 	}
-
 	return &signUp, nil
 }
 
