@@ -32,7 +32,7 @@ type Administration interface {
 	AdmGetOrganization(ID string) (*model.Organization, error)
 	AdmUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 
-	AdmCreateApplication(name string, multi_tenant bool, requires_own_users bool, Identifier string, Name string, Versions []string) (*model.Application, error)
+	AdmCreateApplication(name string, multi_tenant bool, requires_own_users bool, identifier string, nameInType string, versions []string) (*model.Application, error)
 	AdmGetApplication(ID string) (*model.Application, error)
 	AdmGetApplications() ([]model.Application, error)
 }

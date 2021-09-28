@@ -211,7 +211,7 @@ func applicationOrganizationFromStorage(item applicationOrganization, applicatio
 }
 
 func applicationTypeToStorage(item model.ApplicationType) applicationType {
-	return applicationType{ID: item.ID, Identifier: item.Identifier, Name: item.Name}
+	return applicationType{ID: item.ID, Identifier: item.Identifier, Name: item.Name, Versions: item.Versions}
 }
 
 func applicationTypesToStorage(items []model.ApplicationType) []applicationType {
@@ -226,9 +226,9 @@ func applicationTypesToStorage(items []model.ApplicationType) []applicationType 
 	return res
 }
 
-func applicationToStorage(item model.Application) application {
+func applicationToStorage(item *model.Application) *application {
 	applicationTypes := applicationTypesToStorage(item.Types)
 
-	return application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, RequiresOwnUsers: item.RequiresOwnUsers,
+	return &application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, RequiresOwnUsers: item.RequiresOwnUsers,
 		Types: applicationTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

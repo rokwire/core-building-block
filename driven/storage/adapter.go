@@ -1030,7 +1030,7 @@ func (sa *Adapter) LoadApplications() ([]model.Application, error) {
 
 //InsertApplication inserts an application
 func (sa *Adapter) InsertApplication(application model.Application) (*model.Application, error) {
-	app := applicationToStorage(application)
+	app := applicationToStorage(&application)
 	_, err := sa.db.applications.InsertOne(app)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, nil, err)
