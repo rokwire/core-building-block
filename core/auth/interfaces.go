@@ -47,6 +47,13 @@ type externalAuthType interface {
 	//TODO refresh
 }
 
+//anonymousAuthType is the interface for authentication for auth types which are anonymous
+type anonymousAuthType interface {
+	//checkCredentials checks the credentials for the provided app and organization
+	//	Returns anonymous profile identifier
+	checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, interface{}, error)
+}
+
 //APIs is the interface which defines the APIs provided by the auth package
 type APIs interface {
 	//Start starts the auth service
@@ -80,6 +87,9 @@ type APIs interface {
 	//		Refresh token (string): Refresh token that can be sent to refresh the access token once it expires
 	//		Params (interface{}): authType-specific set of parameters passed back to client
 	Refresh(refreshToken string, l *logs.Log) (string, string, interface{}, error)
+
+	//Verify checks the verification code in the credentials collection
+	Verify(id string, verification string, l *logs.Log) error
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:
@@ -125,8 +135,17 @@ type APIs interface {
 	//DeregisterService deletes an existing service registration
 	DeregisterService(serviceID string) error
 
-	//Verify checks the verification code in the credentials collection
-	Verify(id string, verification string, l *logs.Log) error
+	//GetAPIKey finds and returns the API key for the provided org and app
+	GetAPIKey(orgID string, appID string) (*model.APIKey, error)
+
+	//CreateAPIKey creates a new API key for the provided org and app
+	CreateAPIKey(apiKey *model.APIKey) error
+
+	//UpdateAPIKey updates an existing API key
+	UpdateAPIKey(apiKey *model.APIKey) error
+
+	//DeleteAPIKey deletes an existing API key
+	DeleteAPIKey(orgID string, appID string) error
 }
 
 //Storage interface to communicate with the storage
@@ -180,6 +199,14 @@ type Storage interface {
 	FindServiceAuthorization(userID string, orgID string) (*model.ServiceAuthorization, error)
 	SaveServiceAuthorization(authorization *model.ServiceAuthorization) error
 	DeleteServiceAuthorization(userID string, orgID string) error
+
+	//APIKeys
+	LoadAPIKeys() ([]model.APIKey, error)
+	FindAPIKey(orgID string, appID string) (*model.APIKey, error)
+	FindAPIKeys(orgID string) ([]model.APIKey, error)
+	InsertAPIKey(apiKey *model.APIKey) error
+	UpdateAPIKey(apiKey *model.APIKey) error
+	DeleteAPIKey(orgID string, appID string) error
 
 	//ApplicationTypes
 	FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error)

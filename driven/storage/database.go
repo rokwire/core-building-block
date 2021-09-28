@@ -21,6 +21,7 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
+	apiKeys                   *collectionWrapper
 	authTypes                 *collectionWrapper
 	identityProviders         *collectionWrapper
 	accounts                  *collectionWrapper
@@ -129,6 +130,12 @@ func (m *database) start() error {
 		return err
 	}
 
+	apiKeys := &collectionWrapper{database: m, coll: db.Collection("api_keys")}
+	err = m.applyAPIKeysChecks(apiKeys)
+	if err != nil {
+		return err
+	}
+
 	applicationsOrganziations := &collectionWrapper{database: m, coll: db.Collection("applications_organizations")}
 	err = m.applyApplicationsOrganizationsChecks(applicationsOrganziations)
 	if err != nil {
@@ -164,6 +171,7 @@ func (m *database) start() error {
 	m.credentials = credentials
 	m.refreshTokens = refreshTokens
 	m.globalConfig = globalConfig
+	m.apiKeys = apiKeys
 	m.serviceRegs = serviceRegs
 	m.serviceAuthorizations = serviceAuthorizations
 	m.organizations = organizations
@@ -173,6 +181,7 @@ func (m *database) start() error {
 	m.applicationsRoles = applicationsRoles
 	m.applicationsPermissions = applicationsPermissions
 
+	go m.apiKeys.Watch(nil)
 	go m.authTypes.Watch(nil)
 	go m.identityProviders.Watch(nil)
 	go m.serviceRegs.Watch(nil)
@@ -273,6 +282,19 @@ func (m *database) applyRefreshTokenChecks(refreshTokens *collectionWrapper) err
 		return err
 	}
 	m.logger.Info("refresh tokens check passed")
+	return nil
+}
+
+func (m *database) applyAPIKeysChecks(apiKeys *collectionWrapper) error {
+	m.logger.Info("apply api keys checks.....")
+
+	// Add org_id, app_id compound index - unique
+	err := apiKeys.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("api keys check passed")
 	return nil
 }
 
@@ -446,6 +468,12 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 	coll := nsMap["coll"]
 
 	switch coll {
+	case "api_keys":
+		m.logger.Info("api_keys collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnAPIKeysUpdated()
+		}
 	case "auth_types":
 		m.logger.Info("auth_types collection changed")
 
@@ -483,5 +511,4 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 			go listener.OnApplicationsOrganizationsUpdated()
 		}
 	}
-
 }

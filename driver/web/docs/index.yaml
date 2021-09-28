@@ -70,6 +70,9 @@ paths:
     $ref: "./resources/admin/account/permissions.yaml"
   /admin/account/roles:
     $ref: "./resources/admin/account/roles.yaml"
+    
+  /admin/api-keys:
+    $ref: "./resources/admin/api-keys.yaml"
 
   #enc
   /enc/test:

@@ -11,6 +11,7 @@ properties:
       - email
       - phone
       - illinois_oidc
+      - api_key
   app_type_identifier:
     type: string
   org_id:
@@ -19,10 +20,11 @@ properties:
     anyOf:
       - $ref: "./CredsEmail.yaml"
       - $ref: "./CredsPhone.yaml"
-      - $ref: "./CredsOidc.yaml"
+      - $ref: "./CredsOIDC.yaml"
+      - $ref: "./CredsAPIKey.yaml"
   params:
     type: object
     anyOf:
       - $ref: "./ParamsEmail.yaml"
-      - $ref: "./ParamsPhone.yaml"
-      - $ref: "./ParamsOidc.yaml"
+      - $ref: "./ParamsOIDC.yaml"
+      - $ref: "./ParamsNone.yaml"

@@ -34,6 +34,7 @@ const (
 	typeMail              logutils.MessageDataType = "mail"
 	typeAuthType          logutils.MessageDataType = "auth type"
 	typeExternalAuthType  logutils.MessageDataType = "external auth type"
+	typeAnonymousAuthType logutils.MessageDataType = "anonymous auth type"
 	typeAuth              logutils.MessageDataType = "auth"
 	typeAuthRefreshParams logutils.MessageDataType = "auth refresh params"
 
@@ -49,8 +50,9 @@ type Auth struct {
 
 	logger *logs.Logger
 
-	authTypes         map[string]authType
-	externalAuthTypes map[string]externalAuthType
+	authTypes          map[string]authType
+	externalAuthTypes  map[string]externalAuthType
+	anonymousAuthTypes map[string]anonymousAuthType
 
 	authPrivKey *rsa.PrivateKey
 
@@ -71,6 +73,9 @@ type Auth struct {
 
 	cachedApplicationsOrganizations *syncmap.Map //cache applications organizations
 	applicationsOrganizationsLock   *sync.RWMutex
+
+	apiKeys     *syncmap.Map //cache api keys / api_key (string) -> APIKey
+	apiKeysLock *sync.RWMutex
 
 	//delete refresh tokens timer
 	deleteRefreshTimer *time.Timer
@@ -93,6 +98,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	authTypes := map[string]authType{}
 	externalAuthTypes := map[string]externalAuthType{}
+	anonymousAuthTypes := map[string]anonymousAuthType{}
 
 	cachedAuthTypes := &syncmap.Map{}
 	authTypesLock := &sync.RWMutex{}
@@ -103,13 +109,16 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	cachedApplicationsOrganizations := &syncmap.Map{}
 	applicationsOrganizationsLock := &sync.RWMutex{}
 
+	apiKeys := &syncmap.Map{}
+	apiKeysLock := &sync.RWMutex{}
+
 	timerDone := make(chan bool)
-	auth := &Auth{storage: storage, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes,
+	auth := &Auth{storage: storage, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		authPrivKey: authPrivKey, AuthService: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
 		maxTokenExp: *maxTokenExp, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
 		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock,
-		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom}
+		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
 	err := auth.storeReg()
 	if err != nil {
@@ -150,6 +159,12 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	if err != nil {
 		logger.Warnf("NewAuth() failed to cache applications organizations: %v", err)
 	}
+
+	err = auth.cacheAPIKeys()
+	if err != nil {
+		logger.Warnf("NewAuth() failed to cache api keys: %v", err)
+	}
+
 	return auth, nil
 
 }
@@ -193,13 +208,13 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	var externalUser *model.ExternalSystemUser
 	externalUser, extParams, err = authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction("error getting external user", "external user", nil, err)
+		return nil, nil, nil, errors.WrapErrorAction("logging in", "external user", nil, err)
 	}
 
 	//2. check if the user exists
 	account, err = authImpl.userExist(externalUser.Identifier, authType, appType, appOrg, l)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction("error checking if external user exists", "external user", nil, err)
+		return nil, nil, nil, errors.WrapErrorData(logutils.StatusMissing, "external user", nil, err)
 	}
 	if account != nil {
 		//user exists, just check if need to update it
@@ -212,12 +227,12 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		currentDataMap := accountAuthType.Params["user"]
 		currentDataJSON, err := utils.ConvertToJSON(currentDataMap)
 		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction("error converting map to json", "", nil, err)
+			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionMarshal, "external user", nil, err)
 		}
 		var currentData *model.ExternalSystemUser
 		err = json.Unmarshal(currentDataJSON, &currentData)
 		if err != nil {
-			return nil, nil, nil, errors.ErrorAction("error converting json to type", "", nil)
+			return nil, nil, nil, errors.ErrorAction(logutils.ActionUnmarshal, "external user", nil)
 		}
 
 		newData := *externalUser
@@ -251,12 +266,9 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		//TODO: use shared profile
 		useSharedProfile := false
 
-		//profile
-		profileID, _ := uuid.NewUUID()
-		photoURL := ""
-		firstName := ""
-		lastName := ""
-		profile := &model.Profile{ID: profileID.String(), PhotoURL: photoURL, FirstName: firstName, LastName: lastName, DateCreated: now}
+		var profile *model.Profile
+		accountAuthType, profile = a.createNewUser(externalUser.Identifier, authType)
+		accountAuthType.Params["user"] = externalUser
 
 		account, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, profile, l)
 		if err != nil {
@@ -265,6 +277,52 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	}
 
 	return account, accountAuthType, extParams, nil
+}
+
+func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (string, interface{}, error) { //auth type
+	authImpl, err := a.getAnonymousAuthTypeImpl(authType)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAnonymousAuthType, nil, err)
+	}
+
+	//Check the credentials
+	anonymousID, anonymousParams, err := authImpl.checkCredentials(authType, appType, appOrg, creds, l)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCreds, nil, err)
+	}
+
+	// if anonymousProfileID != "" {
+	// 	appID := appOrg.Application.ID
+	// 	orgID := appOrg.Organization.ID
+	// 	authTypeID := authType.ID
+	// 	identifier := anonymousProfileID
+
+	// 	//FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
+	// 	account, err = a.storage.FindAccount(appID, orgID, authTypeID, identifier)
+	// 	if err != nil || account == nil {
+	// 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	// 	}
+
+	// 	//CRITICAL: CANNOT ACCESS NON-ANONYMOUS ACCOUNTS THROUGH ANONYMOUS AUTH TYPES
+	// 	if !account.Anonymous {
+	// 		return nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAccount, nil, err)
+	// 	}
+	// } else {
+	// 	//use shared profile
+	// 	useSharedProfile := false
+
+	// 	anonymousID, _ := uuid.NewUUID()
+
+	// 	var profile *model.Profile
+	// 	accountAuthType, profile = a.createNewUser(anonymousID.String(), authType)
+
+	// 	account, err = a.registerUser(appOrg, *accountAuthType, useSharedProfile, profile, l)
+	// 	if err != nil {
+	// 		return nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+	// 	}
+	// }
+
+	return anonymousID, anonymousParams, nil
 }
 
 func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*string, *model.Account, *model.AccountAuthType, error) {
@@ -402,7 +460,7 @@ func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAu
 	//access token
 	orgID := account.Organization.ID
 	appTypeIdentifier := appType.Identifier
-	claims := a.getStandardClaims(account.ID, accountAuthType.Identifier, account.Profile.Email, account.Profile.Phone, "rokwire", orgID, appTypeIdentifier, accountAuthType.AuthType.Code, nil)
+	claims := a.getStandardClaims(account.ID, accountAuthType.Identifier, account.Profile.Email, account.Profile.Phone, "rokwire", orgID, appTypeIdentifier, accountAuthType.AuthType.Code, nil, false)
 	permissions := account.GetPermissionNames()
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
@@ -416,6 +474,55 @@ func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAu
 	}
 
 	return &accessToken, &refreshToken, nil
+}
+
+func (a *Auth) applyAnonymousLogin(authType *model.AuthType, anonymousID string, orgID string, appType model.ApplicationType, params interface{}, l *logs.Log) (*string, error) {
+	//access token
+	appTypeIdentifier := appType.Identifier
+	claims := a.getStandardClaims(anonymousID, "", "", "", "rokwire", orgID, appTypeIdentifier, authType.Code, nil, true)
+	accessToken, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+	}
+
+	return &accessToken, nil
+}
+
+//createNewUser creates a new empty user object
+func (a *Auth) createNewUser(id string, authType model.AuthType) (*model.AccountAuthType, *model.Profile) {
+	var accountAuthType *model.AccountAuthType
+
+	now := time.Now()
+
+	//account auth type
+	accountAuthTypeID, _ := uuid.NewUUID()
+	accAuthType := authType
+	identifier := id
+	var credential *model.Credential //it is nill as it is external user
+	params := map[string]interface{}{}
+	active := true
+	active2FA := false
+	accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: accAuthType,
+		Identifier: identifier, Params: params, Credential: credential, Active: active, Active2FA: active2FA, DateCreated: now}
+
+	// anonymousProfileIDString := ""
+	// if authType.IsAnonymous {
+	// 	anonymousProfileIDString = id
+	// } else {
+	// 	anonymousProfileID, _ := uuid.NewUUID()
+	// 	anonymousProfileIDString = anonymousProfileID.String()
+	// }
+
+	// anonymousProfile := model.AnonymousProfile{ID: anonymousProfileIDString, CreationDate: now}
+
+	//profile
+	profileID, _ := uuid.NewUUID()
+	photoURL := ""
+	firstName := ""
+	lastName := ""
+	profile := &model.Profile{ID: profileID.String(), PhotoURL: photoURL, FirstName: firstName, LastName: lastName, DateCreated: now} //AnonymousProfile: anonymousProfile}
+
+	return accountAuthType, profile
 }
 
 //registerUser registers account for an organization in an application
@@ -437,8 +544,9 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 	application := appOrg.Application
 	organization := appOrg.Organization
 	authTypes := []model.AccountAuthType{accountAuthType}
+
 	account := model.Account{ID: accountID.String(), Application: application, Organization: organization,
-		Permissions: nil, Roles: nil, Groups: nil, AuthTypes: authTypes, Profile: *profile, DateCreated: time.Now()}
+		Permissions: nil, Roles: nil, Groups: nil, AuthTypes: authTypes, Profile: *profile, DateCreated: time.Now()} // Anonymous: accountAuthType.AuthType.IsAnonymous
 
 	insertedAccount, err := a.storage.InsertAccount(account)
 	if err != nil {
@@ -495,26 +603,26 @@ func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.Account, error) {
 	now := time.Now().UTC()
 	newID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("user_id"), err)
+		return nil, errors.WrapErrorAction("generating", "uuid", logutils.StringArgs("user_id"), err)
 	}
 	newUser := model.User{ID: newID.String(), DateCreated: now}
 
 	accountID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("account_id"), err)
+		return nil, errors.WrapErrorAction("generating", "uuid", logutils.StringArgs("account_id"), err)
 	}
 	newUser.Account = model.UserAccount{ID: accountID.String(), Email: userAuth.Email, Phone: userAuth.Phone, Username: userAuth.UserID, DateCreated: now}
 
 	profileID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("profile_id"), err)
+		return nil, errors.WrapErrorAction("generating", "uuid", logutils.StringArgs("profile_id"), err)
 	}
 	newUser.Profile = model.UserProfile{ID: profileID.String(), PII: &model.UserPII{FirstName: userAuth.FirstName, LastName: userAuth.LastName}, DateCreated: now}
 
 	if userAuth.OrgID != "" {
 		membershipID, err := uuid.NewUUID()
 		if err != nil {
-			return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("membership_id"), err)
+			return nil, errors.WrapErrorAction("generating", "uuid", logutils.StringArgs("membership_id"), err)
 		}
 
 		organization, err := a.storage.FindOrganization(userAuth.OrgID)
@@ -532,7 +640,7 @@ func (a *Auth) setupUser(userAuth *model.UserAuth) (*model.Account, error) {
 	//TODO: populate new device with device information (search for existing device first)
 	deviceID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, errors.WrapErrorAction("generate", "uuid", logutils.StringArgs("device_id"), err)
+		return nil, errors.WrapErrorAction("generating", "uuid", logutils.StringArgs("device_id"), err)
 	}
 	newDevice := model.Device{ID: deviceID.String(), Type: "other", Users: []model.User{newUser}, DateCreated: now}
 	newUser.Devices = []model.Device{newDevice}
@@ -610,6 +718,16 @@ func (a *Auth) registerExternalAuthType(name string, auth externalAuthType) erro
 	return nil
 }
 
+func (a *Auth) registerAnonymousAuthType(name string, auth anonymousAuthType) error {
+	if _, ok := a.anonymousAuthTypes[name]; ok {
+		return errors.Newf("the requested anonymous auth type name has already been registered: %s", name)
+	}
+
+	a.anonymousAuthTypes[name] = auth
+
+	return nil
+}
+
 func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier string, orgID string) (*model.AuthType, *model.ApplicationType, *model.ApplicationOrganization, error) {
 	//get the auth type
 	authType, err := a.getCachedAuthType(authenticationType)
@@ -665,9 +783,19 @@ func (a *Auth) getExternalAuthTypeImpl(authType model.AuthType) (externalAuthTyp
 	return nil, errors.ErrorData(logutils.StatusInvalid, typeExternalAuthType, logutils.StringArgs(key))
 }
 
+func (a *Auth) getAnonymousAuthTypeImpl(authType model.AuthType) (anonymousAuthType, error) {
+	if auth, ok := a.anonymousAuthTypes[authType.Code]; ok {
+		return auth, nil
+	}
+
+	return nil, errors.ErrorData(logutils.StatusInvalid, typeAnonymousAuthType, logutils.StringArgs(authType.Code))
+}
+
 func (a *Auth) buildAccessToken(claims tokenauth.Claims, permissions string, scope string) (string, error) {
 	claims.Purpose = "access"
-	claims.Permissions = permissions
+	if !claims.Anonymous {
+		claims.Permissions = permissions
+	}
 	claims.Scope = scope
 	return a.generateToken(&claims)
 }
@@ -687,7 +815,7 @@ func (a *Auth) buildRefreshToken() (string, *time.Time, error) {
 	return newToken, &expireTime, nil
 }
 
-func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string, authType string, exp *int64) tokenauth.Claims {
+func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string, authType string, exp *int64, anonymous bool) tokenauth.Claims {
 	return tokenauth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			Audience:  aud,
@@ -695,7 +823,7 @@ func (a *Auth) getStandardClaims(sub string, uid string, email string, phone str
 			ExpiresAt: a.getExp(exp),
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    a.host,
-		}, OrgID: orgID, AppID: appID, AuthType: authType, UID: uid, Email: email, Phone: phone,
+		}, OrgID: orgID, AppID: appID, AuthType: authType, UID: uid, Email: email, Phone: phone, Anonymous: anonymous,
 	}
 }
 
@@ -859,6 +987,39 @@ func (a *Auth) getCachedIdentityProviderConfig(id string, appTypeID string) (*mo
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, errArgs)
 }
 
+func (a *Auth) cacheAPIKeys() error {
+	apiKeys, err := a.storage.LoadAPIKeys()
+	if err != nil {
+		return errors.WrapErrorAction("loading", model.TypeAPIKey, nil, err)
+	}
+	a.setCachedAPIKeys(apiKeys)
+	return nil
+}
+
+func (a *Auth) setCachedAPIKeys(apiKeys []model.APIKey) {
+	a.apiKeysLock.Lock()
+	defer a.apiKeysLock.Unlock()
+
+	a.apiKeys = &syncmap.Map{}
+	for _, apiKey := range apiKeys {
+		a.apiKeys.Store(apiKey.Key, apiKey)
+	}
+}
+
+func (a *Auth) getCachedAPIKey(key string) (*model.APIKey, error) {
+	a.apiKeysLock.RLock()
+	defer a.apiKeysLock.RUnlock()
+
+	item, _ := a.apiKeys.Load(key)
+	if item != nil {
+		if key, ok := item.(model.APIKey); ok {
+			return &key, nil
+		}
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil)
+	}
+	return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeAPIKey, nil)
+}
+
 //cacheApplicationsOrganizations caches the applications organizations
 func (a *Auth) cacheApplicationsOrganizations() error {
 	a.logger.Info("cacheApplicationsOrganizations..")
@@ -1007,6 +1168,11 @@ func (al *StorageListener) OnAuthTypesUpdated() {
 //OnIdentityProvidersUpdated notifies that identity providers have been updated
 func (al *StorageListener) OnIdentityProvidersUpdated() {
 	al.auth.cacheIdentityProviders()
+}
+
+//OnAPIKeysUpdated notifies api keys have been updated
+func (al *StorageListener) OnAPIKeysUpdated() {
+	al.auth.cacheAPIKeys()
 }
 
 //OnApplicationsOrganizationsUpdated notifies that applications organizations have been updated

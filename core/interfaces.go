@@ -59,11 +59,12 @@ type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
 	FindAccountByID(id string) (*model.Account, error)
-	UpdateProfile(profile *model.Profile, ID string) error
+	UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
+	DeleteAccount(id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
+	UpdateProfile(profile *model.Profile, ID string) error
 	InsertAccountPermissions(accountID string, appID string, permissions []model.ApplicationPermission) error
 	InsertAccountRoles(accountID string, appID string, roles []model.ApplicationRole) error
-	DeleteAccount(id string) error
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	GetGlobalConfig() (*model.GlobalConfig, error)
