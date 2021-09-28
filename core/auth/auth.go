@@ -220,7 +220,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		//user exists, just check if need to update it
 
 		//get the current external user
-		accountAuthType, err = a.findAccountAuthType(account, authType.ID, externalUser.Identifier)
+		accountAuthType, err = a.findAccountAuthType(account, &authType, externalUser.Identifier)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -374,7 +374,6 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 
 		return &message, account, accountAuthType, nil
 	}
-
 	//apply sign in
 
 	//1. check if the account exists
@@ -416,7 +415,6 @@ func (a *Auth) isSignUp(authImpl authType, authType model.AuthType, appType mode
 		}
 		return &sParams.SignUp, nil
 	}
-
 	//check if the user exists check
 	account, accountAuthType, err := authImpl.userExist(authType, appType, appOrg, creds, l)
 	if err != nil {
@@ -433,15 +431,21 @@ func (a *Auth) isSignUp(authImpl authType, authType model.AuthType, appType mode
 	return &signUp, nil
 }
 
-func (a *Auth) findAccountAuthType(account *model.Account, authTypeID string, identifier string) (*model.AccountAuthType, error) {
+func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthType, identifier string) (*model.AccountAuthType, error) {
 	if account == nil {
-		return nil, errors.New("account is nil")
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 	}
 
-	accountAuthType := account.GetAccountAuthType(authTypeID, identifier)
+	if authType == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, typeAuthType, nil)
+	}
+
+	accountAuthType := account.GetAccountAuthType(authType.ID, identifier)
 	if accountAuthType == nil {
 		return nil, errors.New("for some reasons the user auth type is nil")
 	}
+
+	accountAuthType.AuthType = *authType
 
 	if accountAuthType.Credential != nil {
 		//populate credentials in accountAuthType
@@ -461,9 +465,10 @@ func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAu
 
 	//access token
 	orgID := account.Organization.ID
-	appTypeIdentifier := appType.Identifier
-	claims := a.getStandardClaims(account.ID, accountAuthType.Identifier, account.Profile.Email, account.Profile.Phone, "rokwire", orgID, appTypeIdentifier, accountAuthType.AuthType.Code, nil, false)
-	accessToken, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
+	appID := account.Application.ID
+	claims := a.getStandardClaims(account.ID, accountAuthType.Identifier, account.Profile.Email, account.Profile.Phone, "rokwire", orgID, appID, accountAuthType.AuthType.Code, nil, false)
+	permissions := account.GetPermissionNames()
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
@@ -729,7 +734,7 @@ func (a *Auth) registerAnonymousAuthType(name string, auth anonymousAuthType) er
 	return nil
 }
 
-func (a *Auth) validateAuthType(authenticationType string, appID string, orgID string) (*model.AuthType, *model.ApplicationType, *model.ApplicationOrganization, error) {
+func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier string, orgID string) (*model.AuthType, *model.ApplicationType, *model.ApplicationOrganization, error) {
 	//get the auth type
 	authType, err := a.getCachedAuthType(authenticationType)
 	if err != nil {
@@ -737,13 +742,13 @@ func (a *Auth) validateAuthType(authenticationType string, appID string, orgID s
 	}
 
 	//get the app type
-	applicationType, err := a.storage.FindApplicationTypeByIdentifier(appID)
+	applicationType, err := a.storage.FindApplicationTypeByIdentifier(appTypeIdentifier)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appID), err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
 
 	}
 	if applicationType == nil {
-		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appID))
+		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier))
 	}
 
 	//get the app org

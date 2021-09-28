@@ -481,6 +481,52 @@ func (sa *Adapter) UpdateAccountPreferences(accountID string, preferences map[st
 	return nil
 }
 
+//InsertAccountPermissions inserts account permissions
+func (sa *Adapter) InsertAccountPermissions(accountID string, appID string, permissions []model.ApplicationPermission) error {
+	stgPermissions := applicationPermissionsToStorage(permissions)
+
+	//appID included in search to prevent accidentally assigning permissions to account from different application
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}}
+	update := bson.D{
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "permissions", Value: bson.M{"$each": stgPermissions}},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+//InsertAccountRoles inserts account roles
+func (sa *Adapter) InsertAccountRoles(accountID string, appID string, roles []model.ApplicationRole) error {
+	stgRoles := applicationRolesToStorage(roles)
+
+	//appID included in search to prevent accidentally assigning permissions to account from different application
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}}
+	update := bson.D{
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "roles", Value: bson.M{"$each": stgRoles}},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
 //UpdateAccountAuthType updates account auth type
 func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	// transaction
@@ -779,12 +825,47 @@ func (sa *Adapter) FindApplicationPermissions(ids []string, appID string) ([]mod
 	//get the application from the cached ones
 	application, err := sa.getCachedApplication(appID)
 	if err != nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_id": application}, err)
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, &logutils.FieldArgs{"app_id": application}, err)
 	}
 
 	result := applicationPermissionsFromStorage(permissionsResult, *application)
 
 	return result, nil
+}
+
+//FindApplicationPermissionsByName finds a set of application permissions
+func (sa *Adapter) FindApplicationPermissionsByName(names []string, appID string) ([]model.ApplicationPermission, error) {
+	permissionsFilter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "name", Value: bson.M{"$in": names}}}
+	var permissionsResult []applicationPermission
+	err := sa.db.applicationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	//get the application from the cached ones
+	application, err := sa.getCachedApplication(appID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, &logutils.FieldArgs{"app_id": application}, err)
+	}
+
+	result := applicationPermissionsFromStorage(permissionsResult, *application)
+
+	return result, nil
+}
+
+//InsertApplicationPermission inserts a new application permission
+func (sa *Adapter) InsertApplicationPermission(item model.ApplicationPermission) error {
+	_, err := sa.getCachedApplication(item.Application.ID)
+	if err != nil {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, &logutils.FieldArgs{"app_id": item.Application.ID}, err)
+	}
+
+	permission := applicationPermissionToStorage(item)
+	_, err = sa.db.applicationsPermissions.InsertOne(permission)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplicationPermission, nil, err)
+	}
+	return nil
 }
 
 //UpdateApplicationPermission updates application permission
@@ -823,6 +904,21 @@ func (sa *Adapter) FindApplicationRoles(ids []string, appID string) ([]model.App
 	return result, nil
 }
 
+//InsertApplicationRole inserts a new application role
+func (sa *Adapter) InsertApplicationRole(item model.ApplicationRole) error {
+	_, err := sa.getCachedApplication(item.Application.ID)
+	if err != nil {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, &logutils.FieldArgs{"app_id": item.Application.ID}, err)
+	}
+
+	role := applicationRoleToStorage(item)
+	_, err = sa.db.applicationsRoles.InsertOne(role)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplicationRole, nil, err)
+	}
+	return nil
+}
+
 //UpdateApplicationRole updates application role
 func (sa *Adapter) UpdateApplicationRole(item model.ApplicationRole) error {
 	//TODO
@@ -856,6 +952,16 @@ func (sa *Adapter) FindApplicationGroups(ids []string, appID string) ([]model.Ap
 	result := applicationGroupsFromStorage(groupsResult, *application)
 
 	return result, nil
+}
+
+//InsertApplicationGroup inserts a new application group
+func (sa *Adapter) InsertApplicationGroup(item model.ApplicationGroup) error {
+	group := applicationGroupToStorage(item)
+	_, err := sa.db.applicationsGroups.InsertOne(group)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplicationGroup, nil, err)
+	}
+	return nil
 }
 
 //UpdateApplicationGroup updates application group

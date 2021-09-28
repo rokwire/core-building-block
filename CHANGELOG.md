@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
+- Add permissions to tokens [#189](https://github.com/rokwire/core-building-block/issues/189)
 - Set up anonymous tokens [#26](https://github.com/rokwire/core-building-block/issues/26)
 - Add Email authentication and verification [#23](https://github.com/rokwire/core-building-block/issues/23)
 - Set up delete account endpoint [#180](https://github.com/rokwire/core-building-block/issues/180)

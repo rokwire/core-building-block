@@ -14,6 +14,10 @@ const (
 	TypeAccountPreferences logutils.MessageDataType = "account preferences"
 	//TypeAccountAuthType account auth type
 	TypeAccountAuthType logutils.MessageDataType = "account auth type"
+	//TypeAccountPermissions account permissions
+	TypeAccountPermissions logutils.MessageDataType = "account permissions"
+	//TypeAccountRoles account roles
+	TypeAccountRoles logutils.MessageDataType = "account roles"
 	//TypeProfile profile
 	TypeProfile logutils.MessageDataType = "profile"
 	//TypeDevice device
@@ -56,6 +60,54 @@ func (a Account) GetAccountAuthType(authTypeID string, identifier string) *Accou
 		}
 	}
 	return nil
+}
+
+//GetPermissions returns all permissions granted to this account
+func (a Account) GetPermissions() []ApplicationPermission {
+	permissionsMap := a.GetPermissionsMap()
+	permissions := make([]ApplicationPermission, len(permissionsMap))
+	i := 0
+	for _, permission := range permissionsMap {
+		permissions[i] = permission
+		i++
+	}
+	return permissions
+}
+
+//GetPermissionNames returns all names of permissions granted to this account
+func (a Account) GetPermissionNames() []string {
+	permissionsMap := a.GetPermissionsMap()
+	permissions := make([]string, len(permissionsMap))
+	i := 0
+	for name := range permissionsMap {
+		permissions[i] = name
+		i++
+	}
+	return permissions
+}
+
+//GetPermissionsMap returns a map of all permissions granted to this account
+func (a Account) GetPermissionsMap() map[string]ApplicationPermission {
+	permissionsMap := make(map[string]ApplicationPermission, len(a.Permissions))
+	for _, permission := range a.Permissions {
+		permissionsMap[permission.Name] = permission
+	}
+	for _, role := range a.Roles {
+		for _, permission := range role.Permissions {
+			permissionsMap[permission.Name] = permission
+		}
+	}
+	for _, group := range a.Groups {
+		for _, permission := range group.Permissions {
+			permissionsMap[permission.Name] = permission
+		}
+		for _, role := range group.Roles {
+			for _, permission := range role.Permissions {
+				permissionsMap[permission.Name] = permission
+			}
+		}
+	}
+	return permissionsMap
 }
 
 //AccountAuthType represents account auth type
