@@ -4,6 +4,8 @@ put:
   summary: Update account preferences
   description: |
     Updates account preferences
+
+    **Auth:** Requires user auth token
   security:
     - bearerAuth: []
   requestBody:

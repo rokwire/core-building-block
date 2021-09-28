@@ -71,13 +71,13 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL, nil)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh, nil)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/verify", we.wrapFunc(we.servicesApisHandler.verifyCode, nil)).Methods("GET")
-	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService, we.auth.servicesAuth)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService, we.auth.servicesUserAuth)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations, we.auth.servicesAuth)).Methods("GET")
-	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.deleteAccount, we.auth.servicesAuth)).Methods("DELETE")
-	servicesSubRouter.HandleFunc("/account-preferences", we.wrapFunc(we.servicesApisHandler.updateAccountPreferences, we.auth.servicesAuth)).Methods("PUT")
-	servicesSubRouter.HandleFunc("/profile", we.wrapFunc(we.servicesApisHandler.getProfile, we.auth.servicesAuth)).Methods("GET")
-	servicesSubRouter.HandleFunc("/profile", we.wrapFunc(we.servicesApisHandler.updateProfile, we.auth.servicesAuth)).Methods("PUT")
-	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest, we.auth.servicesAuth)).Methods("GET")
+	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.deleteAccount, we.auth.servicesUserAuth)).Methods("DELETE")
+	servicesSubRouter.HandleFunc("/account-preferences", we.wrapFunc(we.servicesApisHandler.updateAccountPreferences, we.auth.servicesUserAuth)).Methods("PUT")
+	servicesSubRouter.HandleFunc("/profile", we.wrapFunc(we.servicesApisHandler.getProfile, we.auth.servicesUserAuth)).Methods("GET")
+	servicesSubRouter.HandleFunc("/profile", we.wrapFunc(we.servicesApisHandler.updateProfile, we.auth.servicesUserAuth)).Methods("PUT")
+	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest, nil)).Methods("GET")
 	///
 
 	///admin ///

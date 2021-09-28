@@ -4,6 +4,8 @@ get:
   summary: Get user profile
   description: |
     Returns a user profile
+
+    **Auth:** Requires user auth token
   security:
     - bearerAuth: []
   responses:
@@ -25,6 +27,8 @@ put:
   summary: Update user profile
   description: |
     Updates a user profile
+
+    **Auth:** Requires user auth token
   security:
     - bearerAuth: []
   requestBody:

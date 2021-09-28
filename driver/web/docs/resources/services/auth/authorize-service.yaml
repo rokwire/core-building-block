@@ -4,6 +4,8 @@ post:
   summary: Authorize service
   description: |
     Authorize a third-party service and get a scoped access token that can be used to access its APIs
+
+    **Auth:** Requires user auth token
   security:
     - bearerAuth: []
   requestBody:

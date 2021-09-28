@@ -21,11 +21,12 @@ const (
 
 //Auth handler
 type Auth struct {
-	authService  *authservice.AuthService
-	servicesAuth *ServicesAuth
-	adminAuth    *AdminAuth
-	encAuth      *EncAuth
-	bbsAuth      *BBsAuth
+	authService      *authservice.AuthService
+	servicesAuth     *ServicesAuth
+	servicesUserAuth *ServicesUserAuth
+	adminAuth        *AdminAuth
+	encAuth          *EncAuth
+	bbsAuth          *BBsAuth
 
 	logger *logs.Logger
 }
@@ -40,6 +41,7 @@ func (auth *Auth) Start() error {
 	auth.logger.Info("Auth -> start")
 
 	auth.servicesAuth.start()
+	auth.servicesUserAuth.start()
 	auth.adminAuth.start()
 	auth.encAuth.start()
 	auth.bbsAuth.start()
@@ -53,6 +55,8 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "auth handler", nil, err)
 	}
+	servicesUserAuth := newServicesUserAuth(*servicesAuth)
+
 	adminAuth, err := newAdminAuth(coreAPIs, authService, logger)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "auth handler", nil, err)
@@ -60,7 +64,7 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 	encAuth := newEncAuth(coreAPIs, logger)
 	bbsAuth := newBBsAuth(coreAPIs, logger)
 
-	auth := Auth{servicesAuth: servicesAuth, adminAuth: adminAuth, encAuth: encAuth, bbsAuth: bbsAuth, logger: logger}
+	auth := Auth{servicesAuth: servicesAuth, servicesUserAuth: servicesUserAuth, adminAuth: adminAuth, encAuth: encAuth, bbsAuth: bbsAuth, logger: logger}
 
 	return &auth, nil
 }
@@ -101,6 +105,32 @@ func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, 
 
 	auth := ServicesAuth{coreAPIs: coreAPIs, tokenAuth: servicesTokenAuth, logger: logger}
 	return &auth, nil
+}
+
+//ServicesUserAuth entity
+type ServicesUserAuth struct {
+	servicesAuth ServicesAuth
+}
+
+func (auth *ServicesUserAuth) start() {
+	auth.servicesAuth.logger.Info("ServicesUserAuth -> start")
+}
+
+func (auth *ServicesUserAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
+	status, claims, err := auth.servicesAuth.check(req)
+
+	if err == nil && claims != nil {
+		if claims.Anonymous {
+			return http.StatusForbidden, nil, errors.New("token must not be anonymous")
+		}
+	}
+
+	return status, claims, err
+}
+
+func newServicesUserAuth(servicesAuth ServicesAuth) *ServicesUserAuth {
+	auth := ServicesUserAuth{servicesAuth: servicesAuth}
+	return &auth
 }
 
 //AdminAuth entity
