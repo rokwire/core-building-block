@@ -4,6 +4,10 @@ put:
   summary: Grant account roles
   description: |
     Grant account roles
+  
+    **Auth:** Requires auth token with `auth_admin` permission
+  security:
+    - bearerAuth: []
   requestBody:
     description: Roles
     content:

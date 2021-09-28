@@ -4,6 +4,10 @@ get:
   summary: Get API key
   description: |
     Returns API key record
+
+    **Auth:** Requires auth token with `auth_admin` permission
+  security:
+    - bearerAuth: []
   parameters:
     - name: org_id
       in: query
@@ -42,6 +46,10 @@ post:
     Creates a new API key record
 
     The "org_id" and "app_id" of the record must not match an existing registration  
+
+    **Auth:** Requires auth token with `auth_admin` permission
+  security:
+    - bearerAuth: []
   requestBody:
     description: API key record to be added
     content:
@@ -71,6 +79,10 @@ put:
     Update an existing API key record
 
     The "org_id" and "app_id" of the record must match an existing registration  
+
+    **Auth:** Requires auth token with `auth_admin` permission
+  security:
+    - bearerAuth: []
   requestBody:
     description: API key record update to be applied
     content:
@@ -98,6 +110,10 @@ delete:
   summary: Delete API key
   description: |
     Deletes an existing API key record
+
+    **Auth:** Requires auth token with `auth_admin` permission
+  security:
+    - bearerAuth: []
   parameters:
     - name: org_id
       in: query

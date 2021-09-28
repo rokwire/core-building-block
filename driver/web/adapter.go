@@ -214,11 +214,17 @@ func (we Adapter) validateRequest(req *http.Request) (*openapi3filter.RequestVal
 		return nil, err
 	}
 
+	dummyAuthFunc := func(c context.Context, input *openapi3filter.AuthenticationInput) error {
+		return nil
+	}
+	options := &openapi3filter.Options{AuthenticationFunc: dummyAuthFunc}
 	requestValidationInput := &openapi3filter.RequestValidationInput{
 		Request:    req,
 		PathParams: pathParams,
 		Route:      route,
+		Options:    options,
 	}
+
 	if err := openapi3filter.ValidateRequest(context.Background(), requestValidationInput); err != nil {
 		return nil, err
 	}

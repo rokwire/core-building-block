@@ -4,6 +4,10 @@
   summary: Get applications
   description: |
     Gets applications
+  
+    **Auth:** Requires auth token with `app_admin` permission
+  security:
+    - bearerAuth: []
   responses:
       200:
         description: Successful operation

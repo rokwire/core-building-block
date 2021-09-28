@@ -4,6 +4,10 @@ post:
   summary: Create application permission
   description: |
     Creates application permission
+
+    **Auth:** Requires auth token with `auth_admin` permission
+  security:
+    - bearerAuth: []
   requestBody:
     description: Application permission
     content:

@@ -798,6 +798,10 @@ paths:
       summary: Get applications
       description: |
         Gets applications
+
+        **Auth:** Requires auth token with `app_admin` permission
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Successful operation
@@ -851,6 +855,10 @@ paths:
       summary: Create application permission
       description: |
         Creates application permission
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: Application permission
         content:
@@ -879,6 +887,10 @@ paths:
       summary: Create application role
       description: |
         Creates application role
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: Application role
         content:
@@ -907,6 +919,10 @@ paths:
       summary: Grant account permissions
       description: |
         Grant account permissions
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: Permissions
         content:
@@ -935,6 +951,10 @@ paths:
       summary: Grant account roles
       description: |
         Grant account roles
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: Roles
         content:
@@ -963,6 +983,10 @@ paths:
       summary: Get API key
       description: |
         Returns API key record
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: org_id
           in: query
@@ -1001,6 +1025,10 @@ paths:
         Creates a new API key record
 
         The "org_id" and "app_id" of the record must not match an existing registration  
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: API key record to be added
         content:
@@ -1030,6 +1058,10 @@ paths:
         Update an existing API key record
 
         The "org_id" and "app_id" of the record must match an existing registration  
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: API key record update to be applied
         content:
@@ -1057,6 +1089,10 @@ paths:
       summary: Delete API key
       description: |
         Deletes an existing API key record
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: org_id
           in: query
