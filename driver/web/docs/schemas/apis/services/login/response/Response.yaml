@@ -9,4 +9,6 @@ properties:
     nullable: true
     anyOf:
        - $ref: "../../../shared/responses/ParamsOidc.yaml"
+  message:
+    type: string
  

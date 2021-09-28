@@ -1478,6 +1478,8 @@ components:
           nullable: true
           anyOf:
             - $ref: '#/components/schemas/_res_shared_ParamsOidc'
+        message:
+          type: string
     _res_login_Account:
       required:
         - id

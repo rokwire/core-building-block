@@ -465,6 +465,7 @@ type ResLoginAccount struct {
 // ResLoginResponse defines model for _res_login_Response.
 type ResLoginResponse struct {
 	Account *ResLoginAccount       `json:"account,omitempty"`
+	Message *string                `json:"message,omitempty"`
 	Params  *interface{}           `json:"params"`
 	Token   *ResSharedRokwireToken `json:"token,omitempty"`
 }
