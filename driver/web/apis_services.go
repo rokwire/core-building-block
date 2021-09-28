@@ -41,12 +41,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	requestAuthType, err := interfaceToJSON(requestData.AuthType)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, "auth_type", nil, err, http.StatusBadRequest, true)
-	}
-
-	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(requestAuthType, requestCreds, requestData.AppId, requestData.OrgId, requestParams, l)
+	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppId, requestData.OrgId, requestParams, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
