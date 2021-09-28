@@ -14,8 +14,10 @@ import (
 )
 
 const (
+	//AuthTypeEmail email auth type
+	AuthTypeEmail string = "email"
+
 	typeTime        logutils.MessageDataType = "time.Time"
-	authTypeEmail   string                   = "email"
 	typeEmailCreds  logutils.MessageDataType = "email creds"
 	typeEmailParams logutils.MessageDataType = "email params"
 )
@@ -222,7 +224,7 @@ func mapToEmailCreds(credsMap map[string]interface{}) (*emailCreds, error) {
 
 //initEmailAuth initializes and registers a new email auth instance
 func initEmailAuth(auth *Auth) (*emailAuthImpl, error) {
-	email := &emailAuthImpl{auth: auth, authType: authTypeEmail}
+	email := &emailAuthImpl{auth: auth, authType: AuthTypeEmail}
 
 	err := auth.registerAuthType(email.authType, email)
 	if err != nil {

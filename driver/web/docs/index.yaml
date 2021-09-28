@@ -61,6 +61,8 @@ paths:
     $ref: "./resources/admin/applicationsId.yaml"
   /admin/applications:
     $ref: "./resources/admin/applications.yaml"
+  /admin/api-keys:
+    $ref: "./resources/admin/api-keys.yaml"
 
   #enc
   /enc/test:

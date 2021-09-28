@@ -874,6 +874,80 @@ func (sa *Adapter) DeleteApplicationGroup(id string) error {
 	return errors.New(logutils.Unimplemented)
 }
 
+//LoadAPIKeys finds all api key documents in the DB
+func (sa *Adapter) LoadAPIKeys() ([]model.APIKey, error) {
+	filter := bson.D{}
+	var result []model.APIKey
+	err := sa.db.apiKeys.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+	}
+
+	return result, nil
+}
+
+//FindAPIKey finds the api key document from DB by orgID and appID
+func (sa *Adapter) FindAPIKey(orgID string, appID string) (*model.APIKey, error) {
+	errFields := &logutils.FieldArgs{"org_id": orgID, "app_id": appID}
+	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID}}
+	var result *model.APIKey
+	err := sa.db.apiKeys.FindOne(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, errFields, err)
+	}
+	return result, nil
+}
+
+//FindAPIKeys finds the api key documents from DB for an orgID
+func (sa *Adapter) FindAPIKeys(orgID string) ([]model.APIKey, error) {
+	errFields := &logutils.FieldArgs{"org_id": orgID}
+	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}}
+	var result []model.APIKey
+	err := sa.db.apiKeys.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, errFields, err)
+	}
+	return result, nil
+}
+
+//InsertAPIKey inserts an API key
+func (sa *Adapter) InsertAPIKey(apiKey *model.APIKey) error {
+	_, err := sa.db.apiKeys.InsertOne(apiKey)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAPIKey, &logutils.FieldArgs{"org_id": apiKey.OrgID, "app_id": apiKey.AppID}, err)
+	}
+	return nil
+}
+
+//UpdateAPIKey updates the API key in storage
+func (sa *Adapter) UpdateAPIKey(apiKey *model.APIKey) error {
+	filter := bson.M{"org_id": apiKey.OrgID, "app_id": apiKey.AppID}
+	err := sa.db.apiKeys.ReplaceOne(filter, apiKey, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAPIKey, &logutils.FieldArgs{"org_id": apiKey.OrgID, "app_id": apiKey.AppID}, err)
+	}
+
+	return nil
+}
+
+//DeleteAPIKey deletes the API key from storage
+func (sa *Adapter) DeleteAPIKey(orgID string, appID string) error {
+	filter := bson.M{"org_id": orgID, "app_id": appID}
+	result, err := sa.db.apiKeys.DeleteOne(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAPIKey, &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
+	}
+	if result == nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
+	}
+	deletedCount := result.DeletedCount
+	if deletedCount == 0 {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeAPIKey, &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
+	}
+
+	return nil
+}
+
 //LoadIdentityProviders finds all identity providers documents in the DB
 func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 	filter := bson.D{}
@@ -1247,7 +1321,7 @@ func (sa *Adapter) UpdateServiceReg(reg *model.ServiceReg) error {
 	filter := bson.M{"registration.service_id": reg.Registration.ServiceID}
 	err := sa.db.serviceRegs.ReplaceOne(filter, reg, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceReg, &logutils.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceReg, &logutils.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
 	}
 
 	return nil
@@ -1397,6 +1471,7 @@ func (sl *storageListener) OnApplicationsOrganizationsUpdated() {
 
 //Listener represents storage listener
 type Listener interface {
+	OnAPIKeysUpdated()
 	OnAuthTypesUpdated()
 	OnIdentityProvidersUpdated()
 	OnServiceRegsUpdated()
@@ -1407,6 +1482,9 @@ type Listener interface {
 
 //DefaultListenerImpl default listener implementation
 type DefaultListenerImpl struct{}
+
+//OnAPIKeysUpdated notifies api keys have been updated
+func (d *DefaultListenerImpl) OnAPIKeysUpdated() {}
 
 //OnAuthTypesUpdated notifies auth types have been updated
 func (d *DefaultListenerImpl) OnAuthTypesUpdated() {}

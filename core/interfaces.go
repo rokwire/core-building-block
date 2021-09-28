@@ -51,8 +51,9 @@ type BBs interface {
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
-	DeleteAccount(id string) error
 	FindAccountByID(id string) (*model.Account, error)
+	UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
+	DeleteAccount(id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(profile *model.Profile, ID string) error
 

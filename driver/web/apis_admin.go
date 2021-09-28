@@ -286,6 +286,94 @@ func (h AdminApisHandler) deregisterService(l *logs.Log, r *http.Request) logs.H
 	return l.HttpResponseSuccess()
 }
 
+func (h AdminApisHandler) getAPIKey(l *logs.Log, r *http.Request) logs.HttpResponse {
+	orgID := r.URL.Query().Get("org_id")
+	if orgID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
+	}
+
+	appID := r.URL.Query().Get("app_id")
+	if orgID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	}
+
+	apiKey, err := h.coreAPIs.Auth.GetAPIKey(orgID, appID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAPIKey, nil, err, http.StatusInternalServerError, true)
+	}
+	if apiKey == nil {
+		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeAPIKey, &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, nil, http.StatusNotFound, false)
+	}
+
+	responseData := apiKeyToDef(apiKey)
+	data, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAPIKey, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h AdminApisHandler) createAPIKey(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.APIKey
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAPIKey, nil, err, http.StatusBadRequest, true)
+	}
+
+	apiKey := apiKeyFromDef(&requestData)
+	err = h.coreAPIs.Auth.CreateAPIKey(apiKey)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAPIKey, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h AdminApisHandler) updateAPIKey(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.APIKey
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAPIKey, nil, err, http.StatusBadRequest, true)
+	}
+
+	apiKey := apiKeyFromDef(&requestData)
+	err = h.coreAPIs.Auth.UpdateAPIKey(apiKey)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAPIKey, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h AdminApisHandler) deleteAPIKey(l *logs.Log, r *http.Request) logs.HttpResponse {
+	orgID := r.URL.Query().Get("org_id")
+	if orgID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
+	}
+
+	appID := r.URL.Query().Get("app_id")
+	if orgID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	}
+
+	err := h.coreAPIs.Auth.DeleteAPIKey(orgID, appID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeAPIKey, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
 
 	params := mux.Vars(r)

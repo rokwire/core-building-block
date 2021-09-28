@@ -40,6 +40,8 @@ type Account struct {
 	Preferences map[string]interface{}
 	Profile     Profile //one account has one profile, one profile can be shared between many accounts
 
+	// Anonymous bool
+
 	Devices []Device
 
 	DateCreated time.Time

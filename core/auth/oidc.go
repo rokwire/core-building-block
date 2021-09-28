@@ -23,7 +23,8 @@ import (
 )
 
 const (
-	authTypeOidc string = "oidc"
+	//AuthTypeOidc oidc auth type
+	AuthTypeOidc string = "oidc"
 
 	typeOidcAuthConfig    logutils.MessageDataType = "oidc auth config"
 	typeOidcCheckParams   logutils.MessageDataType = "oidc check params"
@@ -575,7 +576,7 @@ func generatePkceChallenge() (string, string, error) {
 
 //initOidcAuth initializes and registers a new OIDC auth instance
 func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
-	oidc := &oidcAuthImpl{auth: auth, authType: authTypeOidc}
+	oidc := &oidcAuthImpl{auth: auth, authType: AuthTypeOidc}
 
 	err := auth.registerExternalAuthType(oidc.authType, oidc)
 	if err != nil {
