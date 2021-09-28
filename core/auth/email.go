@@ -42,7 +42,6 @@ func (a *emailAuthImpl) applySignUp(authType model.AuthType, appType model.Appli
 		Password        string `json:"password"`
 		ConfirmPassword string `json:"confirm_password"`
 	}
-	var message string
 	var sEmailParams signUpEmailParams
 	err := json.Unmarshal([]byte(params), &sEmailParams)
 	if err != nil {
@@ -85,11 +84,10 @@ func (a *emailAuthImpl) applySignUp(authType model.AuthType, appType model.Appli
 		return "", nil, nil, errors.WrapErrorAction("failed email params to map", "", nil, err)
 	}
 
-	return message, &email, emailCredValueMap, nil
+	return "verification code sent successfully", &email, emailCredValueMap, nil
 }
 
 func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error) {
-	var message string
 	//check is verified
 	if !accountAuthType.Credential.Verified {
 		return "", nil, errors.ErrorAction("not verified", "", nil)
@@ -119,7 +117,7 @@ func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, 
 	}
 
 	valid := true
-	return message, &valid, nil
+	return "", &valid, nil
 }
 
 func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode string, appID string, orgID string) error {

@@ -1270,23 +1270,6 @@ components:
         permissions:
           type: array
           items:
-<<<<<<< HEAD
-<<<<<<< HEAD
-            $ref: "#/components/schemas/GlobalRole"
-        users:
-          type: array
-          items:
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-            $ref: "#/components/schemas/User"
-=======
->>>>>>> issues/ID-23
-            $ref: '#/components/schemas/User'
-    Application:
-=======
-=======
->>>>>>> issues/ID-23
             $ref: '#/components/schemas/ApplicationPermission'
         roles:
           type: array
@@ -1302,21 +1285,6 @@ components:
           type: string
         name:
           type: string
-<<<<<<< HEAD
-<<<<<<< HEAD
-        versions:
-          type: array
-          nullable: true
-          items:
-            type: string
-<<<<<<< HEAD
-=======
->>>>>>> develop
-=======
->>>>>>> develop
->>>>>>> issues/ID-23
-=======
->>>>>>> issues/ID-23
     Organization:
       type: object
       properties:
