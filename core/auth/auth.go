@@ -220,7 +220,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		//user exists, just check if need to update it
 
 		//get the current external user
-		accountAuthType, err = a.findAccountAuthType(account, authType.ID, externalUser.Identifier)
+		accountAuthType, err = a.findAccountAuthType(account, &authType, externalUser.Identifier)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -431,15 +431,21 @@ func (a *Auth) isSignUp(authImpl authType, authType model.AuthType, appType mode
 	return &signUp, nil
 }
 
-func (a *Auth) findAccountAuthType(account *model.Account, authTypeID string, identifier string) (*model.AccountAuthType, error) {
+func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthType, identifier string) (*model.AccountAuthType, error) {
 	if account == nil {
-		return nil, errors.New("account is nil")
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 	}
 
-	accountAuthType := account.GetAccountAuthType(authTypeID, identifier)
+	if authType == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, typeAuthType, nil)
+	}
+
+	accountAuthType := account.GetAccountAuthType(authType.ID, identifier)
 	if accountAuthType == nil {
 		return nil, errors.New("for some reasons the user auth type is nil")
 	}
+
+	accountAuthType.AuthType = *authType
 
 	if accountAuthType.Credential != nil {
 		//populate credentials in accountAuthType
