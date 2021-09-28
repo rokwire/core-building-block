@@ -41,7 +41,12 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppId, requestData.OrgId, requestParams, l)
+	requestAuthType, err := interfaceToJSON(requestData.AuthType)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "auth_type", nil, err, http.StatusBadRequest, true)
+	}
+
+	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(requestAuthType, requestCreds, requestData.AppId, requestData.OrgId, requestParams, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
@@ -67,6 +72,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 	roles := applicationRolesToDef(account.Roles)
 	//groups
 	groups := applicationGroupsToDef(account.Groups)
+
 	//account auth types
 	accountAuthTypes := accountAuthTypesToDef(account.AuthTypes)
 	accountData := Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &accountAuthTypes, Profile: profile}
