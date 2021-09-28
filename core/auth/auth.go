@@ -459,8 +459,8 @@ func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAu
 
 	//access token
 	orgID := account.Organization.ID
-	appTypeIdentifier := appType.Identifier
-	claims := a.getStandardClaims(account.ID, accountAuthType.Identifier, account.Profile.Email, account.Profile.Phone, "rokwire", orgID, appTypeIdentifier, accountAuthType.AuthType.Code, nil, false)
+	appID := account.Application.ID
+	claims := a.getStandardClaims(account.ID, accountAuthType.Identifier, account.Profile.Email, account.Profile.Phone, "rokwire", orgID, appID, accountAuthType.AuthType.Code, nil, false)
 	permissions := account.GetPermissionNames()
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
