@@ -109,10 +109,10 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.updateServiceRegistration, we.auth.adminAuth)).Methods("PUT")
 	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.deregisterService, we.auth.adminAuth)).Methods("DELETE")
 
-	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.getAPIKey)).Methods("GET")
-	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.createAPIKey)).Methods("POST")
-	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.updateAPIKey)).Methods("PUT")
-	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.deleteAPIKey)).Methods("DELETE")
+	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.getAPIKey, we.auth.adminAuth)).Methods("GET")
+	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.createAPIKey, we.auth.adminAuth)).Methods("POST")
+	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.updateAPIKey, we.auth.adminAuth)).Methods("PUT")
+	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.deleteAPIKey, we.auth.adminAuth)).Methods("DELETE")
 	///
 
 	///enc ///

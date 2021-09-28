@@ -448,7 +448,7 @@ func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request, claims *
 }
 
 //createApplicationPermission creates an application permission
-func (h AdminApisHandler) createApplicationPermission(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) createApplicationPermission(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -469,7 +469,7 @@ func (h AdminApisHandler) createApplicationPermission(l *logs.Log, r *http.Reque
 }
 
 //createApplicationRole creates an application role
-func (h AdminApisHandler) createApplicationRole(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) createApplicationRole(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -490,7 +490,7 @@ func (h AdminApisHandler) createApplicationRole(l *logs.Log, r *http.Request) lo
 }
 
 //grantAccountPermissions grants an account the given permissions
-func (h AdminApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -511,7 +511,7 @@ func (h AdminApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request) 
 }
 
 //grantAccountRoles grants an account the given roles
-func (h AdminApisHandler) grantAccountRoles(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h AdminApisHandler) grantAccountRoles(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
