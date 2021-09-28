@@ -24,6 +24,20 @@ func pubKeyToDef(item *authservice.PubKey) *Def.PubKey {
 	return &Def.PubKey{KeyPem: item.KeyPem, Alg: item.Alg}
 }
 
+func apiKeyFromDef(item *Def.APIKey) *model.APIKey {
+	if item == nil {
+		return nil
+	}
+	return &model.APIKey{OrgID: item.OrgId, AppID: item.AppId, Key: item.Key}
+}
+
+func apiKeyToDef(item *model.APIKey) *Def.APIKey {
+	if item == nil {
+		return nil
+	}
+	return &Def.APIKey{OrgId: item.OrgID, AppId: item.AppID, Key: item.Key}
+}
+
 func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceReg, error) {
 	if item == nil {
 		return nil, nil

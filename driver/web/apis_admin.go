@@ -14,6 +14,10 @@ import (
 	"github.com/rokmetro/logging-library/logutils"
 )
 
+const (
+	actionGrant logutils.MessageActionType = "granting"
+)
+
 //AdminApisHandler handles the admin rest APIs implementation
 type AdminApisHandler struct {
 	coreAPIs *core.APIs
@@ -286,6 +290,94 @@ func (h AdminApisHandler) deregisterService(l *logs.Log, r *http.Request) logs.H
 	return l.HttpResponseSuccess()
 }
 
+func (h AdminApisHandler) getAPIKey(l *logs.Log, r *http.Request) logs.HttpResponse {
+	orgID := r.URL.Query().Get("org_id")
+	if orgID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
+	}
+
+	appID := r.URL.Query().Get("app_id")
+	if orgID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	}
+
+	apiKey, err := h.coreAPIs.Auth.GetAPIKey(orgID, appID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAPIKey, nil, err, http.StatusInternalServerError, true)
+	}
+	if apiKey == nil {
+		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeAPIKey, &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, nil, http.StatusNotFound, false)
+	}
+
+	responseData := apiKeyToDef(apiKey)
+	data, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAPIKey, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h AdminApisHandler) createAPIKey(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.APIKey
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAPIKey, nil, err, http.StatusBadRequest, true)
+	}
+
+	apiKey := apiKeyFromDef(&requestData)
+	err = h.coreAPIs.Auth.CreateAPIKey(apiKey)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAPIKey, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h AdminApisHandler) updateAPIKey(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.APIKey
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAPIKey, nil, err, http.StatusBadRequest, true)
+	}
+
+	apiKey := apiKeyFromDef(&requestData)
+	err = h.coreAPIs.Auth.UpdateAPIKey(apiKey)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAPIKey, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h AdminApisHandler) deleteAPIKey(l *logs.Log, r *http.Request) logs.HttpResponse {
+	orgID := r.URL.Query().Get("org_id")
+	if orgID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
+	}
+
+	appID := r.URL.Query().Get("app_id")
+	if orgID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	}
+
+	err := h.coreAPIs.Auth.DeleteAPIKey(orgID, appID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeAPIKey, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
 
 	params := mux.Vars(r)
@@ -313,14 +405,12 @@ func (h AdminApisHandler) getApplication(l *logs.Log, r *http.Request) logs.Http
 func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		l.Errorf("Error on marshal create application - %s\n", err.Error())
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
 	var requestData Def.Application
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		l.Errorf("Error on unmarshal the create application - %s\n", err.Error())
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
 	}
 
@@ -330,13 +420,10 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request) logs.H
 
 	_, err = h.coreAPIs.Administration.AdmCreateApplication("TODO", nil)
 	if err != nil {
-		l.Errorf(err.Error())
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}
 
-	headers := map[string]string{}
-	headers["Content-Type"] = "text/plain"
-	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+	return l.HttpResponseSuccess()
 }
 
 //getAppilcations gets applications list
@@ -358,6 +445,90 @@ func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request) logs.Htt
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
 	}
 	return l.HttpResponseSuccessJSON(data) */
+}
+
+//createApplicationPermission creates an application permission
+func (h AdminApisHandler) createApplicationPermission(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqApplicationPermissionsRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationPermission, nil, err, http.StatusBadRequest, true)
+	}
+
+	_, err = h.coreAPIs.Administration.AdmCreateApplicationPermission(requestData.Name, requestData.AppId)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationPermission, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+//createApplicationRole creates an application role
+func (h AdminApisHandler) createApplicationRole(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqApplicationRolesRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationRole, nil, err, http.StatusBadRequest, true)
+	}
+
+	_, err = h.coreAPIs.Administration.AdmCreateApplicationRole(requestData.Name, requestData.AppId, requestData.Description, requestData.Permissions)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationRole, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+//grantAccountPermissions grants an account the given permissions
+func (h AdminApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqAccountPermissionsRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationPermission, nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Administration.AdmGrantAccountPermissions(requestData.AccountId, requestData.AppId, requestData.Permissions)
+	if err != nil {
+		return l.HttpResponseErrorAction(actionGrant, model.TypeApplicationPermission, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+//grantAccountRoles grants an account the given roles
+func (h AdminApisHandler) grantAccountRoles(l *logs.Log, r *http.Request) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqAccountRolesRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationRole, nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Administration.AdmGrantAccountRoles(requestData.AccountId, requestData.AppId, requestData.RoleIds)
+	if err != nil {
+		return l.HttpResponseErrorAction(actionGrant, model.TypeApplicationRole, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance

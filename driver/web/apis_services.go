@@ -33,7 +33,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 
 	requestCreds, err := interfaceToJSON(requestData.Creds)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, "creds", nil, err, http.StatusBadRequest, true)
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
 	}
 
 	requestParams, err := interfaceToJSON(requestData.Params)
@@ -41,7 +41,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppId, requestData.OrgId, requestParams, l)
+	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
@@ -58,20 +58,23 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
-	///prepare response
-	//profile
-	profile := profileToDef(&account.Profile)
-	//permissions
-	permissions := applicationPermissionsToDef(account.Permissions)
-	//roles
-	roles := applicationRolesToDef(account.Roles)
-	//groups
-	groups := applicationGroupsToDef(account.Groups)
-	//account auth types
-	accountAuthTypes := accountAuthTypesToDef(account.AuthTypes)
-	accountData := Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &accountAuthTypes, Profile: profile}
+	var accountData *Def.ResLoginAccount
+	if account != nil {
+		///prepare response
+		//profile
+		profile := profileToDef(&account.Profile)
+		//permissions
+		permissions := applicationPermissionsToDef(account.Permissions)
+		//roles
+		roles := applicationRolesToDef(account.Roles)
+		//groups
+		groups := applicationGroupsToDef(account.Groups)
+		//account auth types
+		accountAuthTypes := accountAuthTypesToDef(account.AuthTypes)
+		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &accountAuthTypes, Profile: profile}
+	}
 
-	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: &accountData, Params: &params}
+	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: accountData, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
@@ -114,7 +117,7 @@ func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request) logs.Htt
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "auth login url request", nil, err, http.StatusBadRequest, true)
 	}
 
-	loginURL, params, err := h.coreAPIs.Auth.GetLoginURL(string(requestData.AuthType), requestData.AppId, requestData.OrgId, requestData.RedirectUri, l)
+	loginURL, params, err := h.coreAPIs.Auth.GetLoginURL(string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.OrgId, requestData.RedirectUri, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, "login url", nil, err, http.StatusInternalServerError, true)
 	}

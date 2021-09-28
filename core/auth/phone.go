@@ -18,7 +18,8 @@ import (
 )
 
 const (
-	authTypePhone            string                   = "phone"
+	//AuthTypePhone phone auth type
+	AuthTypePhone            string                   = "phone"
 	servicesPathPart                                  = "https://verify.twilio.com/v2/Services"
 	verificationsPathPart                             = "Verifications"
 	verificationCheckPart                             = "VerificationCheck"
@@ -318,7 +319,7 @@ func (a *phoneAuthImpl) userExist(authType model.AuthType, appType model.Applica
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 
-	accountAuthType, err := a.auth.findAccountAuthType(account, authTypeID, requestCreds.Phone)
+	accountAuthType, err := a.auth.findAccountAuthType(account, &authType, requestCreds.Phone)
 	if accountAuthType == nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
@@ -360,7 +361,7 @@ func mapToPhoneCreds(credsMap map[string]interface{}) (*phoneCreds, error) {
 
 //initPhoneAuth initializes and registers a new phone auth instance
 func initPhoneAuth(auth *Auth) (*phoneAuthImpl, error) {
-	phone := &phoneAuthImpl{auth: auth, authType: authTypePhone, verifyServiceID: auth.phoneVerifyServiceID}
+	phone := &phoneAuthImpl{auth: auth, authType: AuthTypePhone, verifyServiceID: auth.phoneVerifyServiceID}
 
 	err := auth.registerAuthType(phone.authType, phone)
 	if err != nil {

@@ -14,8 +14,10 @@ import (
 )
 
 const (
+	//AuthTypeEmail email auth type
+	AuthTypeEmail string = "email"
+
 	typeTime        logutils.MessageDataType = "time.Time"
-	authTypeEmail   string                   = "email"
 	typeEmailCreds  logutils.MessageDataType = "email creds"
 	typeEmailParams logutils.MessageDataType = "email params"
 )
@@ -188,7 +190,7 @@ func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.Applica
 		return nil, nil, nil
 	}
 
-	accountAuthType, err := a.auth.findAccountAuthType(account, authTypeID, requestCreds.Email)
+	accountAuthType, err := a.auth.findAccountAuthType(account, &authType, requestCreds.Email)
 	if accountAuthType == nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err) //TODO add args..
 	}
@@ -224,7 +226,7 @@ func mapToEmailCreds(credsMap map[string]interface{}) (*emailCreds, error) {
 
 //initEmailAuth initializes and registers a new email auth instance
 func initEmailAuth(auth *Auth) (*emailAuthImpl, error) {
-	email := &emailAuthImpl{auth: auth, authType: authTypeEmail}
+	email := &emailAuthImpl{auth: auth, authType: AuthTypeEmail}
 
 	err := auth.registerAuthType(email.authType, email)
 	if err != nil {
