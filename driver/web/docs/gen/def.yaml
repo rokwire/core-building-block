@@ -297,7 +297,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/account/account-preferences:
+  /services/account/preferences:
     put:
       tags:
         - Services
@@ -325,7 +325,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/account/profile:
+  /services/profile:
     get:
       tags:
         - Services
