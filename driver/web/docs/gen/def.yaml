@@ -298,6 +298,8 @@ paths:
       summary: Delete user account
       description: |
         Deletes a user account
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Success
