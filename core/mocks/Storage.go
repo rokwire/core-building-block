@@ -436,6 +436,29 @@ func (_m *Storage) SaveGlobalConfig(setting *model.GlobalConfig) error {
 	return r0
 }
 
+// UpdateAccount provides a mock function with given fields: updatedUser, orgID, newOrgData
+func (_m *Storage) UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error) {
+	ret := _m.Called(updatedUser, orgID, newOrgData)
+
+	var r0 *model.Account
+	if rf, ok := ret.Get(0).(func(*model.Account, string, *map[string]interface{}) *model.Account); ok {
+		r0 = rf(updatedUser, orgID, newOrgData)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Account)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*model.Account, string, *map[string]interface{}) error); ok {
+		r1 = rf(updatedUser, orgID, newOrgData)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UpdateAccountPreferences provides a mock function with given fields: accountID, preferences
 func (_m *Storage) UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error {
 	ret := _m.Called(accountID, preferences)
