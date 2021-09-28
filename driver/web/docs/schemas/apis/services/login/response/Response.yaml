@@ -8,6 +8,8 @@ properties:
     type: object
     nullable: true
     anyOf:
-      - $ref: "../../../shared/responses/ParamsOidc.yaml"
+      - $ref: "../../../shared/responses/ParamsOIDC.yaml"
+      - $ref: "./ParamsAPIKey.yaml"
+      - $ref: "../../../shared/responses/ParamsNone.yaml"  
   message:
     type: string

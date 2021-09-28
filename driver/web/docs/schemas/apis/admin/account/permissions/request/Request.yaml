@@ -1,0 +1,14 @@
+required:
+  - account_id
+  - app_id
+  - permissions
+type: object
+properties:
+  account_id:
+    type: string
+  app_id:
+    type: string
+  permissions:
+    type: array
+    items:
+      type: string

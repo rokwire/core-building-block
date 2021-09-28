@@ -5,4 +5,5 @@ properties:
   params:
     type: object
     anyOf:
-      - $ref: "../../../shared/responses/ParamsOidc.yaml"
+      - $ref: "../../../shared/responses/ParamsOIDC.yaml"
+      - $ref: "../../../shared/responses/ParamsNone.yaml"
