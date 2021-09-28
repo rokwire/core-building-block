@@ -68,8 +68,6 @@ type Auth struct {
 	cachedAuthTypes *syncmap.Map //cache auth types
 	authTypesLock   *sync.RWMutex
 
-	phoneVerifyServiceID string
-
 	cachedIdentityProviders *syncmap.Map //cache identityProviders
 	identityProvidersLock   *sync.RWMutex
 
@@ -85,7 +83,8 @@ type Auth struct {
 }
 
 //NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, phoneVerifyServiceID string, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
+func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, twilioAccountSID string,
+	twilioToken string, twilioServiceSID string, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -120,7 +119,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 		maxTokenExp: *maxTokenExp, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
 		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock,
-		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock, phoneVerifyServiceID: phoneVerifyServiceID}
+		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
 	err := auth.storeReg()
 	if err != nil {
@@ -139,7 +138,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	//Initialize auth types
 	initUsernameAuth(auth)
 	initEmailAuth(auth)
-	initPhoneAuth(auth)
+	initPhoneAuth(auth, twilioAccountSID, twilioToken, twilioServiceSID)
 	initFirebaseAuth(auth)
 	initAPIKeyAuth(auth)
 	initSignatureAuth(auth)

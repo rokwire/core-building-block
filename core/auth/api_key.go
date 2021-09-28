@@ -24,11 +24,6 @@ type apiKeyAuthImpl struct {
 	authType string
 }
 
-func (a *apiKeyAuthImpl) applySignUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (string, *string, map[string]interface{}, error) {
-
-	return "", nil, nil, nil
-}
-
 type apiKeyCreds struct {
 	APIKey      string `json:"api_key" validate:"required"`
 	AnonymousID string `json:"anonymous_id"`

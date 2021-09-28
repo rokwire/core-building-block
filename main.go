@@ -57,13 +57,15 @@ func main() {
 	}
 
 	//auth
-	phoneVerifyServiceID := envLoader.GetAndLogEnvVar("HEALTH_PHONE_VERIFY_SERVICE_ID", false, true)
+	twilioAccountSID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_ACCOUNT_SID", false, true)
+	twilioToken := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_TOKEN", false, true)
+	twilioServiceSID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_SERVICE_SID", false, true)
 
-	smtpHost := envLoader.GetAndLogEnvVar("HEALTH_SMTP_HOST", false, false)
-	smtpPort := envLoader.GetAndLogEnvVar("HEALTH_SMTP_PORT", false, false)
-	smtpUser := envLoader.GetAndLogEnvVar("HEALTH_SMTP_USER", false, true)
-	smtpPassword := envLoader.GetAndLogEnvVar("HEALTH_SMTP_PASSWORD", false, true)
-	smtpFrom := envLoader.GetAndLogEnvVar("HEALTH_EMAIL_FROM", false, false)
+	smtpHost := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_SMTP_HOST", false, false)
+	smtpPort := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_SMTP_PORT", false, false)
+	smtpUser := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_SMTP_USER", false, true)
+	smtpPassword := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_SMTP_PASSWORD", false, true)
+	smtpFrom := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_EMAIL_FROM", false, false)
 
 	smtpPortNum, _ := strconv.Atoi(smtpPort)
 
@@ -105,7 +107,7 @@ func main() {
 		logger.Infof("Error parsing max token exp, applying defaults: %v", err)
 	}
 
-	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, phoneVerifyServiceID, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
+	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, twilioAccountSID, twilioToken, twilioServiceSID, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
