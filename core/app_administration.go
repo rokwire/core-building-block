@@ -318,7 +318,7 @@ func (app *application) admGrantAccountPermissions(accountID string, appID strin
 		return errors.Newf("no permissions found for names: %v", permissionNames)
 	}
 
-	err = app.storage.InsertAccountPermissions(accountID, permissions)
+	err = app.storage.InsertAccountPermissions(accountID, appID, permissions)
 	if err != nil {
 		return err
 	}
@@ -335,7 +335,7 @@ func (app *application) admGrantAccountRoles(accountID string, appID string, rol
 		return errors.Newf("no roles found for IDs: %v", roleIDs)
 	}
 
-	err = app.storage.InsertAccountRoles(accountID, roles)
+	err = app.storage.InsertAccountRoles(accountID, appID, roles)
 	if err != nil {
 		return err
 	}

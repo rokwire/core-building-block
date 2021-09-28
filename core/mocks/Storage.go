@@ -255,13 +255,13 @@ func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	return r0, r1
 }
 
-// InsertAccountPermissions provides a mock function with given fields: accountID, permissions
-func (_m *Storage) InsertAccountPermissions(accountID string, permissions []model.ApplicationPermission) error {
-	ret := _m.Called(accountID, permissions)
+// InsertAccountPermissions provides a mock function with given fields: accountID, appID, permissions
+func (_m *Storage) InsertAccountPermissions(accountID string, appID string, permissions []model.ApplicationPermission) error {
+	ret := _m.Called(accountID, appID, permissions)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, []model.ApplicationPermission) error); ok {
-		r0 = rf(accountID, permissions)
+	if rf, ok := ret.Get(0).(func(string, string, []model.ApplicationPermission) error); ok {
+		r0 = rf(accountID, appID, permissions)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -269,13 +269,13 @@ func (_m *Storage) InsertAccountPermissions(accountID string, permissions []mode
 	return r0
 }
 
-// InsertAccountRoles provides a mock function with given fields: accountID, roles
-func (_m *Storage) InsertAccountRoles(accountID string, roles []model.ApplicationRole) error {
-	ret := _m.Called(accountID, roles)
+// InsertAccountRoles provides a mock function with given fields: accountID, appID, roles
+func (_m *Storage) InsertAccountRoles(accountID string, appID string, roles []model.ApplicationRole) error {
+	ret := _m.Called(accountID, appID, roles)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, []model.ApplicationRole) error); ok {
-		r0 = rf(accountID, roles)
+	if rf, ok := ret.Get(0).(func(string, string, []model.ApplicationRole) error); ok {
+		r0 = rf(accountID, appID, roles)
 	} else {
 		r0 = ret.Error(0)
 	}

@@ -61,8 +61,8 @@ type Storage interface {
 	FindAccountByID(id string) (*model.Account, error)
 	UpdateProfile(profile *model.Profile, ID string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
-	InsertAccountPermissions(accountID string, permissions []model.ApplicationPermission) error
-	InsertAccountRoles(accountID string, roles []model.ApplicationRole) error
+	InsertAccountPermissions(accountID string, appID string, permissions []model.ApplicationPermission) error
+	InsertAccountRoles(accountID string, appID string, roles []model.ApplicationRole) error
 	DeleteAccount(id string) error
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)

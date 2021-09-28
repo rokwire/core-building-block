@@ -482,10 +482,11 @@ func (sa *Adapter) UpdateAccountPreferences(accountID string, preferences map[st
 }
 
 //InsertAccountPermissions inserts account permissions
-func (sa *Adapter) InsertAccountPermissions(accountID string, permissions []model.ApplicationPermission) error {
+func (sa *Adapter) InsertAccountPermissions(accountID string, appID string, permissions []model.ApplicationPermission) error {
 	stgPermissions := applicationPermissionsToStorage(permissions)
 
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	//appID included in search to prevent accidentally assigning permissions to account from different application
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}}
 	update := bson.D{
 		primitive.E{Key: "$push", Value: bson.D{
 			primitive.E{Key: "permissions", Value: bson.M{"$each": stgPermissions}},
@@ -504,10 +505,11 @@ func (sa *Adapter) InsertAccountPermissions(accountID string, permissions []mode
 }
 
 //InsertAccountRoles inserts account roles
-func (sa *Adapter) InsertAccountRoles(accountID string, roles []model.ApplicationRole) error {
+func (sa *Adapter) InsertAccountRoles(accountID string, appID string, roles []model.ApplicationRole) error {
 	stgRoles := applicationRolesToStorage(roles)
 
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	//appID included in search to prevent accidentally assigning permissions to account from different application
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}}
 	update := bson.D{
 		primitive.E{Key: "$push", Value: bson.D{
 			primitive.E{Key: "roles", Value: bson.M{"$each": stgRoles}},
@@ -813,7 +815,6 @@ func (sa *Adapter) DeleteExpiredRefreshTokens(now *time.Time) error {
 
 //FindApplicationPermissions finds a set of application permissions
 func (sa *Adapter) FindApplicationPermissions(ids []string, appID string) ([]model.ApplicationPermission, error) {
-	//TODO: Do we need to specify app_id in this search since _id is globally unique?
 	permissionsFilter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var permissionsResult []applicationPermission
 	err := sa.db.applicationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
@@ -885,7 +886,6 @@ func (sa *Adapter) DeleteApplicationPermission(id string) error {
 
 //FindApplicationRoles finds a set of application roles
 func (sa *Adapter) FindApplicationRoles(ids []string, appID string) ([]model.ApplicationRole, error) {
-	//TODO: Do we need to specify app_id in this search since _id is globally unique?
 	rolesFilter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var rolesResult []applicationRole
 	err := sa.db.applicationsRoles.Find(rolesFilter, &rolesResult, nil)
@@ -937,7 +937,6 @@ func (sa *Adapter) DeleteApplicationRole(id string) error {
 
 //FindApplicationGroups finds a set of application groups
 func (sa *Adapter) FindApplicationGroups(ids []string, appID string) ([]model.ApplicationGroup, error) {
-	//TODO: Do we need to specify app_id in this search since _id is globally unique?
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var groupsResult []applicationGroup
 	err := sa.db.applicationsGroups.Find(filter, &groupsResult, nil)
