@@ -147,7 +147,7 @@ type APIs interface {
 	//DeleteAPIKey deletes an existing API key
 	DeleteAPIKey(orgID string, appID string) error
 
-	//LoadAuthTypes gets all the auth types
+	//GetAuthTypes gets all the auth types
 	GetAuthTypes() ([]model.AuthType, error)
 }
 
