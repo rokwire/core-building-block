@@ -146,6 +146,9 @@ type APIs interface {
 
 	//DeleteAPIKey deletes an existing API key
 	DeleteAPIKey(orgID string, appID string) error
+
+	//LoadAuthTypes loads auth types
+	LoadAuthTypes() ([]model.AuthType, error)
 }
 
 //Storage interface to communicate with the storage
