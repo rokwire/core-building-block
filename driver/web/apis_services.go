@@ -84,15 +84,20 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseError("Error getting auth types", err, http.StatusInternalServerError, true)
 	}
 
-	var result model.AuthType
+	var authFields model.AuthType
 	if authTypeFields != nil {
 		for _, current := range authTypeFields {
 			if current.Code == string(requestData.AuthType) {
-				result = current
+				authFields = current
 			}
 		}
 	}
-	log.Println(result)
+	for _, authFields := range account.AuthTypes {
+		if authFields.ID == account.ID {
+			authFields.ID = account.ID
+		}
+	}
+	log.Println(authFields)
 
 	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: accountData, Params: &params}
 	respData, err := json.Marshal(responseData)
