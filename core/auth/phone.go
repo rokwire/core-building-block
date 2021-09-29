@@ -138,15 +138,15 @@ func (a *twilioPhoneAuthImpl) handlePhoneVerify(phone string, verificationCreds 
 	}
 
 	data := url.Values{}
-	data.Add("to", phone)
+	data.Add("To", phone)
 	if verificationCreds.Code != "" {
 		// check verification
-		data.Add("code", verificationCreds.Code)
+		data.Add("Code", verificationCreds.Code)
 		return "", a.checkVerification(phone, data, l)
 	}
 
 	// start verification
-	data.Add("channel", "sms")
+	data.Add("Channel", "sms")
 
 	message := ""
 	err := a.startVerification(phone, data, l)
@@ -159,13 +159,9 @@ func (a *twilioPhoneAuthImpl) handlePhoneVerify(phone string, verificationCreds 
 func (a *twilioPhoneAuthImpl) startVerification(phone string, data url.Values, l *logs.Log) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	resp, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationsPathPart, data, a.twilioAccountSID, a.twilioToken)
+	body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationsPathPart, data, a.twilioAccountSID, a.twilioToken)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, &logutils.FieldArgs{"verification params": data}, err)
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionRead, logutils.TypeResponseBody, nil, err)
 	}
 
 	var verifyResult verifyPhoneResponse
@@ -191,14 +187,9 @@ func (a *twilioPhoneAuthImpl) checkVerification(phone string, data url.Values, l
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	resp, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationCheckPart, data, a.twilioAccountSID, a.twilioToken)
+	body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationCheckPart, data, a.twilioAccountSID, a.twilioToken)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionRead, logutils.TypeResponseBody, nil, err)
 	}
 
 	var checkResponse checkStatusResponse
@@ -239,7 +230,7 @@ func (a *twilioPhoneAuthImpl) checkVerification(phone string, data url.Values, l
 // 	return &phoneConfig, nil
 // }
 
-func makeRequest(ctx context.Context, method string, pathPart string, data url.Values, user string, token string) (*http.Response, error) {
+func makeRequest(ctx context.Context, method string, pathPart string, data url.Values, user string, token string) ([]byte, error) {
 	client := &http.Client{}
 	rb := new(strings.Reader)
 	logAction := logutils.ActionSend
@@ -260,6 +251,8 @@ func makeRequest(ctx context.Context, method string, pathPart string, data url.V
 	if token != "" {
 		req.Header.Add("Authorization", "Basic "+basicAuth(user, token))
 	}
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -271,10 +264,10 @@ func makeRequest(ctx context.Context, method string, pathPart string, data url.V
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
 	}
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != 200 && resp.StatusCode != 201 {
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
 	}
-	return resp, nil
+	return body, nil
 }
 
 func basicAuth(username, password string) string {
