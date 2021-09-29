@@ -326,7 +326,7 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.App
 	return anonymousID, anonymousParams, nil
 }
 
-func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*string, *model.Account, *model.AccountAuthType, error) {
+func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (string, *model.Account, *model.AccountAuthType, error) {
 	var message string
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
@@ -334,19 +334,19 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(authType)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+		return "", nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
 	//check if it is sign in or sign up
 	isSignUp, err := a.isSignUp(authImpl, authType, appType, appOrg, creds, params, l)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction("error checking is sign up", "", nil, err)
+		return "", nil, nil, errors.WrapErrorAction("error checking is sign up", "", nil, err)
 	}
 	if *isSignUp {
 		//apply sign up
 		message, identifier, credentialValue, err := authImpl.applySignUp(authType, appType, appOrg, creds, params, l)
 		if err != nil {
-			return &message, nil, nil, errors.WrapErrorAction("error applying sign up", "", nil, err)
+			return message, nil, nil, errors.WrapErrorAction("error applying sign up", "", nil, err)
 		}
 
 		//setup account
@@ -368,34 +368,34 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 
 		account, err = a.registerUser(appOrg, *accountAuthType, &credential, useSharedProfile, profile, l)
 		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+			return "", nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
 
 		message = "verification code sent successfully"
 
-		return &message, account, accountAuthType, nil
+		return message, account, accountAuthType, nil
 	}
 	//apply sign in
 
 	//1. check if the account exists
 	account, accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return "", nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if account == nil || accountAuthType == nil {
-		return nil, nil, nil, errors.WrapErrorAction("exist", model.TypeAccount, nil, err)
+		return "", nil, nil, errors.WrapErrorAction("exist", model.TypeAccount, nil, err)
 	}
 
 	//2. it seems the user exist, now check the credentials
 	message, validCredentials, err := authImpl.checkCredentials(*accountAuthType, creds, l)
 	if err != nil {
-		return &message, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
+		return message, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
 	}
 	if !*validCredentials {
-		return &message, nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
+		return message, nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
 	}
 
-	return &message, account, accountAuthType, nil
+	return message, account, accountAuthType, nil
 }
 
 //isSignUp checks if the operation is sign in or sign up
