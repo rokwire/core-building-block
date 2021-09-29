@@ -4,6 +4,10 @@ delete:
   summary: Delete user account
   description: |
     Deletes a user account
+
+    **Auth:** Requires user auth token
+  security:
+    - bearerAuth: []
   responses:
     200:
       description: Success

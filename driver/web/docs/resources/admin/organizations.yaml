@@ -4,6 +4,10 @@
   summary: Get organizations
   description: |
     Gets organizations
+
+    **Auth:** Requires auth token with `org_admin` permission
+  security:
+    - bearerAuth: []
   responses:
       200:
         description: Successful operation
@@ -25,6 +29,10 @@
   summary: Create organization
   description: |
     Creates organization
+
+    **Auth:** Requires auth token with `org_admin` permission
+  security:
+    - bearerAuth: []
   requestBody:
     description: creates one organization
     content:

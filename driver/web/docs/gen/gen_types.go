@@ -10,6 +10,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	BearerAuthScopes = "bearerAuth.Scopes"
+)
+
 // Defines values for DeviceFieldsType.
 const (
 	DeviceFieldsTypeDesktop DeviceFieldsType = "desktop"
