@@ -49,31 +49,31 @@ type twilioPhoneCreds struct {
 }
 
 type verifyPhoneResponse struct {
-	Sid         string    `json:"sid"`
-	ServiceSid  string    `json:"service_sid"`
-	AccountSid  string    `json:"account_sid"`
-	To          string    `json:"to" validate:"required"`
-	Channel     string    `json:"channel" validate:"required"`
-	Status      string    `json:"status"`
-	Lookup      string    `json:"lookup"`
-	Amount      string    `json:"amount"`
-	Payee       string    `json:"payee"`
-	DateCreated time.Time `json:"date_created"`
-	DateUpdated time.Time `json:"date_updated"`
-	URL         string    `json:"url"`
+	Status      string      `json:"status"`
+	Payee       interface{} `json:"payee"`
+	DateUpdated time.Time   `json:"date_updated"`
+	AccountSid  string      `json:"account_sid"`
+	To          string      `json:"to"`
+	Amount      interface{} `json:"amount"`
+	Valid       bool        `json:"valid"`
+	URL         string      `json:"url"`
+	Sid         string      `json:"sid"`
+	DateCreated time.Time   `json:"date_created"`
+	ServiceSid  string      `json:"service_sid"`
+	Channel     string      `json:"channel"`
 }
 
 type checkStatusResponse struct {
-	Sid         string    `json:"sid"`
-	ServiceSid  string    `json:"service_sid"`
-	AccountSid  string    `json:"account_sid"`
-	To          string    `json:"to" validate:"required"`
-	Channel     string    `json:"channel"`
-	Status      string    `json:"status"`
-	Amount      string    `json:"amount"`
-	Payee       string    `json:"payee"`
-	DateCreated time.Time `json:"date_created"`
-	DateUpdated time.Time `json:"date_updated"`
+	Sid         string      `json:"sid"`
+	ServiceSid  string      `json:"service_sid"`
+	AccountSid  string      `json:"account_sid"`
+	To          string      `json:"to" validate:"required"`
+	Channel     string      `json:"channel"`
+	Status      string      `json:"status"`
+	Amount      interface{} `json:"amount"`
+	Payee       interface{} `json:"payee"`
+	DateCreated time.Time   `json:"date_created"`
+	DateUpdated time.Time   `json:"date_updated"`
 }
 
 func (a *twilioPhoneAuthImpl) checkRequestCreds(creds string) (*twilioPhoneCreds, error) {
@@ -138,15 +138,15 @@ func (a *twilioPhoneAuthImpl) handlePhoneVerify(phone string, verificationCreds 
 	}
 
 	data := url.Values{}
-	data.Add("to", phone)
+	data.Add("To", phone)
 	if verificationCreds.Code != "" {
 		// check verification
-		data.Add("code", verificationCreds.Code)
+		data.Add("Code", verificationCreds.Code)
 		return "", a.checkVerification(phone, data, l)
 	}
 
 	// start verification
-	data.Add("channel", "sms")
+	data.Add("Channel", "sms")
 
 	message := ""
 	err := a.startVerification(phone, data, l)
@@ -159,13 +159,9 @@ func (a *twilioPhoneAuthImpl) handlePhoneVerify(phone string, verificationCreds 
 func (a *twilioPhoneAuthImpl) startVerification(phone string, data url.Values, l *logs.Log) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	resp, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationsPathPart, data, a.twilioAccountSID, a.twilioToken)
+	body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationsPathPart, data, a.twilioAccountSID, a.twilioToken)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, &logutils.FieldArgs{"verification params": data}, err)
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionRead, logutils.TypeResponseBody, nil, err)
 	}
 
 	var verifyResult verifyPhoneResponse
@@ -191,14 +187,9 @@ func (a *twilioPhoneAuthImpl) checkVerification(phone string, data url.Values, l
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	resp, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationCheckPart, data, a.twilioAccountSID, a.twilioToken)
+	body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationCheckPart, data, a.twilioAccountSID, a.twilioToken)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionRead, logutils.TypeResponseBody, nil, err)
 	}
 
 	var checkResponse checkStatusResponse
@@ -217,29 +208,7 @@ func (a *twilioPhoneAuthImpl) checkVerification(phone string, data url.Values, l
 	return nil
 }
 
-// func (a *phoneAuthImpl) getPhoneAuthConfig(orgID string, appID string) (*phoneAuthConfig, error) {
-// 	errFields := &logutils.FieldArgs{"org_id": orgID, "app_id": appID, "auth_type": a.authType}
-
-// 	authConfig, err := a.auth.getAuthConfig(orgID, appID, "phone")
-// 	if err != nil {
-// 		return nil, errors.WrapErrorAction(log.ActionFind, model.TypeAuthConfig, errFields, err)
-// 	}
-
-// 	var phoneConfig phoneAuthConfig
-// 	err = json.Unmarshal(authConfig.Config, &phoneConfig)
-// 	if err != nil {
-// 		return nil, errors.WrapErrorAction(log.ActionUnmarshal, model.TypeAuthConfig, errFields, err)
-// 	}
-// 	validate := validator.New()
-// 	err = validate.Struct(phoneConfig)
-// 	if err != nil {
-// 		return nil, errors.WrapErrorAction(log.ActionValidate, model.TypeAuthConfig, errFields, err)
-// 	}
-
-// 	return &phoneConfig, nil
-// }
-
-func makeRequest(ctx context.Context, method string, pathPart string, data url.Values, user string, token string) (*http.Response, error) {
+func makeRequest(ctx context.Context, method string, pathPart string, data url.Values, user string, token string) ([]byte, error) {
 	client := &http.Client{}
 	rb := new(strings.Reader)
 	logAction := logutils.ActionSend
@@ -252,7 +221,7 @@ func makeRequest(ctx context.Context, method string, pathPart string, data url.V
 		logAction = logutils.ActionRead
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, pathPart, rb)
+	req, err := http.NewRequest(method, pathPart, rb)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logAction, logutils.TypeRequest, &logutils.FieldArgs{"path": pathPart}, err)
 	}
@@ -271,10 +240,11 @@ func makeRequest(ctx context.Context, method string, pathPart string, data url.V
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
 	}
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != 200 && resp.StatusCode != 201 {
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
 	}
-	return resp, nil
+
+	return body, nil
 }
 
 func basicAuth(username, password string) string {
@@ -313,34 +283,6 @@ func (a *twilioPhoneAuthImpl) userExist(authType model.AuthType, appType model.A
 func (a *twilioPhoneAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
-
-// func phoneCredsToMap(creds *phoneCreds) (map[string]interface{}, error) {
-// 	credBytes, err := json.Marshal(creds)
-// 	if err != nil {
-// 		return nil, errors.WrapErrorAction(logutils.ActionMarshal, model.TypeAuthCred, nil, err)
-// 	}
-// 	var credsMap map[string]interface{}
-// 	err = json.Unmarshal(credBytes, &credsMap)
-// 	if err != nil {
-// 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeAuthCred, nil, err)
-// 	}
-
-// 	return credsMap, nil
-// }
-
-// func mapToPhoneCreds(credsMap map[string]interface{}) (*phoneCreds, error) {
-// 	credBytes, err := json.Marshal(credsMap)
-// 	if err != nil {
-// 		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typePhoneCreds, nil, err)
-// 	}
-// 	var creds *phoneCreds
-// 	err = json.Unmarshal(credBytes, creds)
-// 	if err != nil {
-// 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneCreds, nil, err)
-// 	}
-
-// 	return creds, nil
-// }
 
 //initPhoneAuth initializes and registers a new phone auth instance
 func initPhoneAuth(auth *Auth, twilioAccountSID string, twilioToken string, twilioServiceSID string) (*twilioPhoneAuthImpl, error) {
