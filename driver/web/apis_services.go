@@ -74,6 +74,18 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &accountAuthTypes, Profile: profile}
 	}
 
+	authTypeFields, err := h.coreAPIs.Auth.GetAuthTypes()
+	if err != nil {
+		return l.HttpResponseError("Error getting auth types", err, http.StatusInternalServerError, true)
+
+	}
+	if authTypeFields == nil {
+		return l.HttpResponseError("Error getting auth types", err, http.StatusInternalServerError, true)
+	}
+
+	/*for _, authTypeF := range authTypeFields {
+
+	}*/
 	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: accountData, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
