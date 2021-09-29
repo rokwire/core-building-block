@@ -6,6 +6,7 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 
@@ -83,9 +84,16 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseError("Error getting auth types", err, http.StatusInternalServerError, true)
 	}
 
-	/*for _, authTypeF := range authTypeFields {
+	var result model.AuthType
+	if authTypeFields != nil {
+		for _, current := range authTypeFields {
+			if current.Code == string(requestData.AuthType) {
+				result = current
+			}
+		}
+	}
+	log.Println(result)
 
-	}*/
 	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: accountData, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
