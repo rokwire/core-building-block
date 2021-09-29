@@ -1070,8 +1070,8 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 }
 
 //UpdateProfile updates an account profile
-func (sa *Adapter) UpdateProfile(profile *model.Profile, ID string) error {
-	filter := bson.D{primitive.E{Key: "profile.id", Value: ID}}
+func (sa *Adapter) UpdateProfile(id string, profile *model.Profile) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: id}}
 
 	now := time.Now().UTC()
 	if profile == nil {
