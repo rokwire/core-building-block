@@ -229,6 +229,8 @@ func makeRequest(ctx context.Context, method string, pathPart string, data url.V
 	if token != "" {
 		req.Header.Add("Authorization", "Basic "+basicAuth(user, token))
 	}
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -243,7 +245,6 @@ func makeRequest(ctx context.Context, method string, pathPart string, data url.V
 	if resp.StatusCode != 200 && resp.StatusCode != 201 {
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
 	}
-
 	return body, nil
 }
 
