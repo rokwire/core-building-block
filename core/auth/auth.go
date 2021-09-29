@@ -741,6 +741,15 @@ func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier str
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, logutils.StringArgs(authenticationType), err)
 	}
 
+	authTypeFields, err := a.storage.LoadAuthTypes()
+	if err != nil {
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, logutils.StringArgs(appTypeIdentifier), err)
+
+	}
+	if authTypeFields == nil {
+		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthType, logutils.StringArgs(appTypeIdentifier))
+	}
+
 	//get the app type
 	applicationType, err := a.storage.FindApplicationTypeByIdentifier(appTypeIdentifier)
 	if err != nil {
