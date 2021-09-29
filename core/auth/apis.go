@@ -411,3 +411,8 @@ func (a *Auth) UpdateAPIKey(apiKey *model.APIKey) error {
 func (a *Auth) DeleteAPIKey(orgID string, appID string) error {
 	return a.storage.DeleteAPIKey(orgID, appID)
 }
+
+//GetAuthTypes loads all auth types
+func (a *Auth) GetAuthTypes() ([]model.AuthType, error) {
+	return a.storage.LoadAuthTypes()
+}
