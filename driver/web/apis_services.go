@@ -6,7 +6,6 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 
@@ -70,34 +69,15 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		roles := applicationRolesToDef(account.Roles)
 		//groups
 		groups := applicationGroupsToDef(account.Groups)
-		//account auth types
-		accountAuthTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &accountAuthTypes, Profile: profile}
-	}
-
-	authTypeFields, err := h.coreAPIs.Auth.GetAuthTypes()
-	if err != nil {
-		return l.HttpResponseError("Error getting auth types", err, http.StatusInternalServerError, true)
-
-	}
-	if authTypeFields == nil {
-		return l.HttpResponseError("Error getting auth types", err, http.StatusInternalServerError, true)
-	}
-
-	var authFields model.AuthType
-	if authTypeFields != nil {
-		for _, current := range authTypeFields {
-			if current.Code == string(requestData.AuthType) {
-				authFields = current
+		//account auth types - we return only the one used for login
+		authTypes := make([]Def.AccountAuthTypeFields, 1)
+		for _, current := range account.AuthTypes {
+			if current.AuthType.Code == string(requestData.AuthType) {
+				authTypes[0] = accountAuthTypeToDef(current)
 			}
 		}
+		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
 	}
-	for _, authFields := range account.AuthTypes {
-		if authFields.ID == account.ID {
-			authFields.ID = account.ID
-		}
-	}
-	log.Println(authFields)
 
 	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: accountData, Params: &params}
 	respData, err := json.Marshal(responseData)
