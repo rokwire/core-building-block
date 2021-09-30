@@ -56,7 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set up logging [#6](https://github.com/rokwire/core-building-block/issues/6)
 
 ### Fixed
-- Fix admin APIs after the model changes [#173] (https://github.com/rokwire/core-building-block/issues/173)
+- Fix build failure [#196](https://github.com/rokwire/core-building-block/issues/196)
+- Fix admin APIs after the model changes [#173](https://github.com/rokwire/core-building-block/issues/173)
 - Fix login issues [#178](https://github.com/rokwire/core-building-block/issues/178)
 - Fix base path validation issue [#174](https://github.com/rokwire/core-building-block/issues/174)
 - Fix auth credentials search for multiple apps [#153](https://github.com/rokwire/core-building-block/issues/153)
