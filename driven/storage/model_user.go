@@ -30,6 +30,7 @@ type account struct {
 type accountAuthType struct {
 	ID           string                 `bson:"id"`
 	AuthTypeID   string                 `bson:"auth_type_id"`
+	AuthTypeCode string                 `bson:"auth_type_code"`
 	Identifier   string                 `bson:"identifier"`
 	Params       map[string]interface{} `bson:"params"`
 	CredentialID *string                `bson:"credential_id"`
