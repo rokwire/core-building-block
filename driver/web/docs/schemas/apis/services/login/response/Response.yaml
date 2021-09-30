@@ -13,4 +13,3 @@ properties:
       - $ref: "../../../shared/responses/ParamsNone.yaml"  
   message:
     type: string
- 
