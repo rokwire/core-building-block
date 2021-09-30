@@ -526,7 +526,10 @@ type ReqLoginCredsPhone struct {
 
 // Auth login params for auth_type="email"
 type ReqLoginParamsEmail struct {
-	NewUser *bool `json:"new_user,omitempty"`
+
+	// This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+	ConfirmPassword *string `json:"confirm_password,omitempty"`
+	SignUp          *bool   `json:"sign_up,omitempty"`
 }
 
 // Auth login request params for unlisted auth_types (None)
