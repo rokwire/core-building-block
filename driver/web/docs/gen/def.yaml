@@ -527,7 +527,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Organization'
+              $ref: '#/components/schemas/_req_update_Organization_Request'
         required: true
       responses:
         '200':
@@ -568,7 +568,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Organization'
+                $ref: '#/components/schemas/_req_get_Organization_Request'
         '400':
           description: Bad request
         '401':
@@ -596,7 +596,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Organization'
+                  $ref: '#/components/schemas/_res_get_Organizations_Response'
         '400':
           description: Bad request
         '401':
@@ -618,7 +618,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Organization'
+              $ref: '#/components/schemas/_req_create-Organization_Request'
         required: true
       responses:
         '200':
@@ -794,7 +794,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Application'
+                $ref: '#/components/schemas/_req_get_Application_Request'
         '400':
           description: Bad request
         '401':
@@ -822,7 +822,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Application'
+                  $ref: '#/components/schemas/_res_get_Applications_Response'
         '400':
           description: Bad request
         '401':
@@ -844,7 +844,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Application'
+              $ref: '#/components/schemas/_req_create_Application_Request'
         required: true
       responses:
         '200':
@@ -2009,6 +2009,220 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
+    _req_create-Organization_Request:
+      required:
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    _res_create_Organization_Response:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    _req_update_Organization_Request:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    _res_update_Organization_Response:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    _req_get_Organization_Request:
+      required:
+        - id
+      properties:
+        id:
+          readOnly: true
+          type: string
+    _res_get_Organization_Response:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    _res_get_Organizations_Response:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationConfigFields'
+    _req_create_Application_Request:
+      required:
+        - name
+        - multi_tenant
+        - requires_own_users
+      type: object
+      properties:
+        name:
+          type: string
+        multi_tenant:
+          type: boolean
+        requires_own_users:
+          type: boolean
+        application_types:
+          type: array
+          items:
+            required:
+              - identifier
+            type: object
+            properties:
+              identifier:
+                type: string
+              name:
+                type: string
+              versions:
+                type: array
+                items:
+                  type: string
+    _req_get_Application_Request:
+      required:
+        - id
+      type: string
+      properties:
+        id:
+          readOnly: true
+          type: string
+    _res_get_Application_Response:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        multi_tenant:
+          type: boolean
+        requires_own_users:
+          type: boolean
+        organization:
+          $ref: '#/components/schemas/ApplicationOrganization'
+        applicationType:
+          $ref: '#/components/schemas/ApplicationType'
+    _res_get_Applications_Response:
+      required:
+        - id
+        - name
+        - multi_tenant
+        - requires_own_users
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        multi_tenant:
+          type: boolean
+        requires_own_users:
+          type: boolean
+        application_types:
+          $ref: '#/components/schemas/ApplicationTypeFields'
     _req_application-permissions_Request:
       required:
         - name

@@ -16,7 +16,7 @@
             schema:
               type: array
               items:
-                $ref: "../../schemas/application/Application.yaml"
+                $ref: "../../schemas/apis/admin/get-applications/response/Response.yaml"
       400:
         description: Bad request
       401:
@@ -38,7 +38,7 @@
     content:
       application/json:
         schema:
-          $ref: "../../schemas/application/Application.yaml"
+         $ref: "../../schemas/apis/admin/create-application/request/Request.yaml"
     required: true
   responses:
     200:
