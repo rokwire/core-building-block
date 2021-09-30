@@ -169,30 +169,6 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 }
 
-//sendEmail is used to send verification and password reset emails using Smtp connection
-func (a *Auth) sendEmail(toEmail string, subject string, body string, attachmentFilename string) error {
-	if a.emailDialer == nil {
-		return errors.New("email Dialer is nil")
-	}
-	if toEmail == "" {
-		return errors.New("Missing email addresses")
-	}
-
-	emails := strings.Split(toEmail, ",")
-
-	m := gomail.NewMessage()
-	m.SetHeader("From", a.emailFrom)
-	m.SetHeader("To", emails...)
-	m.SetHeader("Subject", subject)
-	m.SetBody("text/plain", body)
-	m.Attach(attachmentFilename)
-
-	if err := a.emailDialer.DialAndSend(m); err != nil {
-		return errors.WrapErrorAction(logutils.ActionSend, typeMail, nil, err)
-	}
-	return nil
-}
-
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.Account, *model.AccountAuthType, interface{}, error) {
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
