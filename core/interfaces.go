@@ -11,7 +11,7 @@ import (
 type Services interface {
 	SerDeleteAccount(id string) error
 	SerGetProfile(accountID string) (*model.Profile, error)
-	SerUpdateProfile(profile *model.Profile, ID string) error
+	SerUpdateProfile(accountID string, profile *model.Profile) error
 	SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error
 
 	SerGetAuthTest(l *logs.Log) string
@@ -32,7 +32,7 @@ type Administration interface {
 	AdmGetOrganization(ID string) (*model.Organization, error)
 	AdmUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 
-	AdmCreateApplication(name string, versions []string) (*model.Application, error)
+	AdmCreateApplication(name string, multiTenant bool, requiresOwnUsers bool, identifier string, nameInType string, versions []string) (*model.Application, error)
 	AdmGetApplication(ID string) (*model.Application, error)
 	AdmGetApplications() ([]model.Application, error)
 
@@ -62,7 +62,7 @@ type Storage interface {
 	UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
 	DeleteAccount(id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
-	UpdateProfile(profile *model.Profile, ID string) error
+	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, appID string, permissions []model.ApplicationPermission) error
 	InsertAccountRoles(accountID string, appID string, roles []model.ApplicationRole) error
 

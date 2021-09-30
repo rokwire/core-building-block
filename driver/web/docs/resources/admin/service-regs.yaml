@@ -4,6 +4,10 @@ get:
   summary: Get service registrations
   description: |
     Returns service registration records
+
+    **Auth:** Requires auth token with `service_admin` permission
+  security:
+    - bearerAuth: []
   parameters:
     - name: ids
       in: query
@@ -36,6 +40,10 @@ post:
     Creates a new service registration
 
     The "service_id" of the registration must not match an existing registration  
+
+    **Auth:** Requires auth token with `service_admin` permission
+  security:
+    - bearerAuth: []
   requestBody:
     description: service registration record to be added
     content:
@@ -65,6 +73,10 @@ put:
     Update an existing service registration
 
     The "service_id" of the registration must match an existing registration
+
+    **Auth:** Requires auth token with `service_admin` permission
+  security:
+    - bearerAuth: []
   requestBody:
     description: Service registration record update to be applied
     content:
@@ -92,6 +104,10 @@ delete:
   summary: Deregister service
   description: |
     Deletes an existing service registration record
+
+    **Auth:** Requires auth token with `service_admin` permission
+  security:
+    - bearerAuth: []
   parameters:
     - name: id
       in: query

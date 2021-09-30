@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
 )
@@ -16,7 +17,7 @@ type TPSApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	serviceIDsParam := r.URL.Query().Get("ids")
 	if serviceIDsParam == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("ids"), nil, http.StatusBadRequest, false)
@@ -38,7 +39,7 @@ func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request) lo
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h TPSApisHandler) getAuthKeys(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h TPSApisHandler) getAuthKeys(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	keys, err := h.coreAPIs.Auth.GetAuthKeySet()
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeJSONWebKeySet, logutils.StringArgs("auth"), err, http.StatusInternalServerError, true)

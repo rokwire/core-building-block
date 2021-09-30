@@ -20,8 +20,8 @@ func (app *application) serGetProfile(accountID string) (*model.Profile, error) 
 	return &profile, nil
 }
 
-func (app *application) serUpdateProfile(profile *model.Profile, ID string) error {
-	return app.storage.UpdateProfile(profile, ID)
+func (app *application) serUpdateProfile(accountID string, profile *model.Profile) error {
+	return app.storage.UpdateProfile(accountID, profile)
 }
 
 func (app *application) serUpdateAccountPreferences(id string, preferences map[string]interface{}) error {

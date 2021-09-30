@@ -6,3 +6,5 @@ build/
 *.pem
 env.list
 *.exe
+*.DS_Store
+.idea/
