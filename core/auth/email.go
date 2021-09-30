@@ -33,6 +33,7 @@ type emailCreds struct {
 // Email implementation of authType
 type emailAuthImpl struct {
 	auth     *Auth
+	sender   *SenderAdapter
 	authType string
 }
 
@@ -121,8 +122,8 @@ func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, 
 }
 
 func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode string, appID string, orgID string) error {
-	verificationLink := a.auth.host + fmt.Sprintf("/auth/verify/%v/%v/%v/%v/%v", a.authType, email, verificationCode, appID, orgID)
-	return a.auth.sendEmail(email, "Verify your email", "Please click the link below to verify your email:\n"+verificationLink, "")
+	verificationLink := a.auth.host + fmt.Sprintf("/auth/verify/%v/%v/%v/%v/%v", a.sender, a.authType, email, verificationCode, appID, orgID)
+	return a.auth.sendEmail.SendEmail(email, "Verify your email", "Please click the link below to verify your email:\n"+verificationLink, "")
 }
 
 //TODO: To be used in password reset flow

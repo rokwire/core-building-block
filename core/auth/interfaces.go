@@ -214,3 +214,8 @@ type Storage interface {
 	//ApplicationsOrganizations
 	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
 }
+
+//SenderAdapter is used by core to send emails
+type SenderAdapter interface {
+	SendEmail(toEmail string, subject string, body string, attachmentFilename string) error
+}
