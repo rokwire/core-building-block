@@ -31,7 +31,7 @@ func (a *Auth) GetHost() string {
 //	Input:
 //		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
-//		appID (string): ID of the app/client that the user is logging in from
+//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
 //		params (string): JSON encoded params defined by specified auth type
 //		l (*logs.Log): Log object pointer for request
@@ -40,43 +40,61 @@ func (a *Auth) GetHost() string {
 //		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //		Account (Account): Account object for authenticated user
 //		Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Login(authenticationType string, creds string, appID string, orgID string, params string, l *logs.Log) (string, string, *model.Account, interface{}, error) {
+func (a *Auth) Login(authenticationType string, creds string, appTypeIdentifier string, orgID string, params string, l *logs.Log) (string, string, string, *model.Account, interface{}, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
-	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appID, orgID)
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+		return "", "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
-	var extParams interface{}
+	var message *string
+	var responseParams interface{}
 
 	//get the auth type implementation for the auth type
-	if authType.IsExternal {
-		account, accountAuthType, extParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, l)
+	if authType.IsAnonymous {
+		anonymousID := ""
+		anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
+			return "", "", "", nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
+		}
+
+		accessToken, err := a.applyAnonymousLogin(authType, anonymousID, orgID, *appType, params, l)
+		if err != nil {
+			return "", "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+		}
+
+		return "", *accessToken, "", nil, responseParams, nil
+
+	} else if authType.IsExternal {
+		account, accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, l)
+		if err != nil {
+			return "", "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 		}
 
 		//TODO groups mapping
 	} else {
-		account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
+		message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
+			return "", "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
+		}
+		if message != nil {
+			return *message, "", "", nil, nil, nil
 		}
 
 		//the credentials are valid
 	}
 
 	//now we are ready to apply login for the user
-	accessToken, refreshToken, err := a.applyLogin(*account, *accountAuthType, *appType, extParams, l)
+	accessToken, refreshToken, err := a.applyLogin(*account, *accountAuthType, *appType, responseParams, l)
 	if err != nil {
-		return "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+		return "", "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}
 
-	return *accessToken, *refreshToken, account, extParams, nil
+	return "", *accessToken, *refreshToken, account, responseParams, nil
 }
 
 //Refresh refreshes an access token using a refresh token
@@ -187,16 +205,16 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interf
 //GetLoginURL returns a pre-formatted login url for SSO providers
 //	Input:
 //		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
-//		appID (string): ID of the app/client that the user is logging in from
+//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
 //		redirectURI (string): Registered redirect URI where client will receive response
 //		l (*loglib.Log): Log object pointer for request
 //	Returns:
 //		Login URL (string): SSO provider login URL to be launched in a browser
 //		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
-func (a *Auth) GetLoginURL(authenticationType string, appID string, orgID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, orgID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	//validate if the provided auth type is supported by the provided application and organization
-	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appID, orgID)
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
@@ -214,6 +232,45 @@ func (a *Auth) GetLoginURL(authenticationType string, appID string, orgID string
 	}
 
 	return loginURL, params, nil
+}
+
+//Verify checks the verification code generated on signup
+func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
+	credential, err := a.storage.FindCredential(id)
+	if err != nil || credential == nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+	}
+
+	if credential.Verified {
+		return errors.New("credential has already been verified")
+	}
+
+	//get the auth type
+	authType, err := a.getCachedAuthType(credential.AuthType.ID)
+	if err != nil || authType == nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
+	}
+	if authType.IsExternal {
+		return errors.WrapErrorAction("invalid auth type for verify", model.TypeAuthType, nil, err)
+	}
+
+	authImpl, err := a.getAuthTypeImpl(*authType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	authTypeCreds, err := authImpl.verify(credential, verification, l)
+	if err != nil || authTypeCreds == nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "verification code", nil, err)
+	}
+
+	credential.Verified = true
+	credential.Value = authTypeCreds
+	if err = a.storage.UpdateCredential(credential); err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
+
+	return nil
 }
 
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
@@ -278,7 +335,7 @@ func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 	aud := strings.Join(services, ",")
 	scope := strings.Join(scopeStrings, " ")
 
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, nil)
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, nil, claims.Anonymous)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
@@ -333,4 +390,24 @@ func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
 	}
 
 	return &model.JSONWebKeySet{Keys: []model.JSONWebKey{*jwk}}, nil
+}
+
+//GetAPIKey finds and returns the API key for the provided org and app
+func (a *Auth) GetAPIKey(orgID string, appID string) (*model.APIKey, error) {
+	return a.storage.FindAPIKey(orgID, appID)
+}
+
+//CreateAPIKey creates a new API key for the provided org and app
+func (a *Auth) CreateAPIKey(apiKey *model.APIKey) error {
+	return a.storage.InsertAPIKey(apiKey)
+}
+
+//UpdateAPIKey updates an existing API key
+func (a *Auth) UpdateAPIKey(apiKey *model.APIKey) error {
+	return a.storage.UpdateAPIKey(apiKey)
+}
+
+//DeleteAPIKey deletes an existing API key
+func (a *Auth) DeleteAPIKey(orgID string, appID string) error {
+	return a.storage.DeleteAPIKey(orgID, appID)
 }

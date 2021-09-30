@@ -4,6 +4,7 @@ import (
 	"core-building-block/core"
 	"net/http"
 
+	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/logs"
 )
 
@@ -13,7 +14,7 @@ type EncApisHandler struct {
 }
 
 //getTest TODO get test
-func (h EncApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h EncApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	res := h.coreAPIs.Encryption.EncGetTest()
 
 	return l.HttpResponseSuccessMessage(res)

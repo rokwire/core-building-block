@@ -4,6 +4,10 @@ get:
   summary: Get application
   description: |
     Gets application
+
+    **Auth:** Requires auth token with `app_admin` permission
+  security:
+    - bearerAuth: []
   parameters:
   - name: id
     in: path

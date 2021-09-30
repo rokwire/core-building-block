@@ -21,6 +21,8 @@ type account struct {
 
 	Devices []userDevice `bson:"devices,omitempty"`
 
+	// Anonymous bool         `bson:"anonymous"`
+
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
@@ -84,6 +86,18 @@ type device struct {
 	MacAddress string `bson:"mac_address"`
 
 	Accounts []string `bson:"accounts"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type credential struct {
+	ID string `bson:"_id"`
+
+	AuthTypeID        string                 `bson:"auth_type_id"`
+	AccountsAuthTypes []string               `bson:"account_auth_types"`
+	Verified          bool                   `bson:"verified"`
+	Value             map[string]interface{} `bson:"value"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

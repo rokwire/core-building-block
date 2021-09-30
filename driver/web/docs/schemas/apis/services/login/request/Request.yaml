@@ -1,6 +1,6 @@
 required:
   - auth_type
-  - app_id
+  - app_type_identifier
   - org_id
 type: object
 properties:
@@ -11,7 +11,8 @@ properties:
       - email
       - phone
       - illinois_oidc
-  app_id:
+      - api_key
+  app_type_identifier:
     type: string
   org_id:
     type: string
@@ -19,10 +20,11 @@ properties:
     anyOf:
       - $ref: "./CredsEmail.yaml"
       - $ref: "./CredsPhone.yaml"
-      - $ref: "./CredsOidc.yaml"
+      - $ref: "./CredsOIDC.yaml"
+      - $ref: "./CredsAPIKey.yaml"
   params:
     type: object
     anyOf:
       - $ref: "./ParamsEmail.yaml"
-      - $ref: "./ParamsPhone.yaml"
-      - $ref: "./ParamsOidc.yaml"
+      - $ref: "./ParamsOIDC.yaml"
+      - $ref: "./ParamsNone.yaml"

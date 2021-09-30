@@ -69,8 +69,8 @@ func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, error) {
 	return s.app.serGetProfile(accountID)
 }
 
-func (s *servicesImpl) SerUpdateProfile(profile *model.Profile, ID string) error {
-	return s.app.serUpdateProfile(profile, ID)
+func (s *servicesImpl) SerUpdateProfile(accountID string, profile *model.Profile) error {
+	return s.app.serUpdateProfile(accountID, profile)
 }
 
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
@@ -139,6 +139,22 @@ func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, e
 
 func (s *administrationImpl) AdmGetApplications() ([]model.Application, error) {
 	return s.app.admGetApplications()
+}
+
+func (s *administrationImpl) AdmCreateApplicationPermission(name string, appID string) (*model.ApplicationPermission, error) {
+	return s.app.admCreateApplicationPermission(name, appID)
+}
+
+func (s *administrationImpl) AdmCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error) {
+	return s.app.admCreateApplicationRole(name, appID, description, permissionNames)
+}
+
+func (s *administrationImpl) AdmGrantAccountPermissions(accountID string, appID string, permissionNames []string) error {
+	return s.app.admGrantAccountPermissions(accountID, appID, permissionNames)
+}
+
+func (s *administrationImpl) AdmGrantAccountRoles(accountID string, appID string, roleIDs []string) error {
+	return s.app.admGrantAccountRoles(accountID, appID, roleIDs)
 }
 
 ///

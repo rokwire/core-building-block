@@ -140,6 +140,52 @@ func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	return r0, r1
 }
 
+// FindApplicationPermissionsByName provides a mock function with given fields: names, appID
+func (_m *Storage) FindApplicationPermissionsByName(names []string, appID string) ([]model.ApplicationPermission, error) {
+	ret := _m.Called(names, appID)
+
+	var r0 []model.ApplicationPermission
+	if rf, ok := ret.Get(0).(func([]string, string) []model.ApplicationPermission); ok {
+		r0 = rf(names, appID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.ApplicationPermission)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func([]string, string) error); ok {
+		r1 = rf(names, appID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindApplicationRoles provides a mock function with given fields: ids, appID
+func (_m *Storage) FindApplicationRoles(ids []string, appID string) ([]model.ApplicationRole, error) {
+	ret := _m.Called(ids, appID)
+
+	var r0 []model.ApplicationRole
+	if rf, ok := ret.Get(0).(func([]string, string) []model.ApplicationRole); ok {
+		r0 = rf(ids, appID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.ApplicationRole)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func([]string, string) error); ok {
+		r1 = rf(ids, appID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindApplications provides a mock function with given fields:
 func (_m *Storage) FindApplications() ([]model.Application, error) {
 	ret := _m.Called()
@@ -209,6 +255,34 @@ func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	return r0, r1
 }
 
+// InsertAccountPermissions provides a mock function with given fields: accountID, appID, permissions
+func (_m *Storage) InsertAccountPermissions(accountID string, appID string, permissions []model.ApplicationPermission) error {
+	ret := _m.Called(accountID, appID, permissions)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string, []model.ApplicationPermission) error); ok {
+		r0 = rf(accountID, appID, permissions)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// InsertAccountRoles provides a mock function with given fields: accountID, appID, roles
+func (_m *Storage) InsertAccountRoles(accountID string, appID string, roles []model.ApplicationRole) error {
+	ret := _m.Called(accountID, appID, roles)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string, []model.ApplicationRole) error); ok {
+		r0 = rf(accountID, appID, roles)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // InsertApplication provides a mock function with given fields: application
 func (_m *Storage) InsertApplication(application model.Application) (*model.Application, error) {
 	ret := _m.Called(application)
@@ -230,6 +304,48 @@ func (_m *Storage) InsertApplication(application model.Application) (*model.Appl
 	}
 
 	return r0, r1
+}
+
+// InsertApplicationGroup provides a mock function with given fields: item
+func (_m *Storage) InsertApplicationGroup(item model.ApplicationGroup) error {
+	ret := _m.Called(item)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.ApplicationGroup) error); ok {
+		r0 = rf(item)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// InsertApplicationPermission provides a mock function with given fields: item
+func (_m *Storage) InsertApplicationPermission(item model.ApplicationPermission) error {
+	ret := _m.Called(item)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.ApplicationPermission) error); ok {
+		r0 = rf(item)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// InsertApplicationRole provides a mock function with given fields: item
+func (_m *Storage) InsertApplicationRole(item model.ApplicationRole) error {
+	ret := _m.Called(item)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.ApplicationRole) error); ok {
+		r0 = rf(item)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // InsertOrganization provides a mock function with given fields: organization
@@ -413,13 +529,13 @@ func (_m *Storage) UpdateOrganization(ID string, name string, requestType string
 	return r0
 }
 
-// UpdateProfile provides a mock function with given fields: profile, ID
-func (_m *Storage) UpdateProfile(profile *model.Profile, ID string) error {
-	ret := _m.Called(profile, ID)
+// UpdateProfile provides a mock function with given fields: accountID, profile
+func (_m *Storage) UpdateProfile(accountID string, profile *model.Profile) error {
+	ret := _m.Called(accountID, profile)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*model.Profile, string) error); ok {
-		r0 = rf(profile, ID)
+	if rf, ok := ret.Get(0).(func(string, *model.Profile) error); ok {
+		r0 = rf(accountID, profile)
 	} else {
 		r0 = ret.Error(0)
 	}
