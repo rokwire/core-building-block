@@ -3,7 +3,6 @@ package auth
 import (
 	"core-building-block/core/model"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -31,10 +30,9 @@ type profileBBPii struct {
 	Country   string `json:"country"`
 
 	DateCreated string `json:"creationDate"`
-	// DateUpdated string `json:"lastModifiedDate"`
 }
 
-func (a *Auth) getProfileBBData(profileURL string, token string, queryData map[string]string, l *logs.Log) (*model.Profile, *map[string]interface{}, error) {
+func (a *Auth) getProfileBBData(profileURL string, apiKey string, queryData map[string]string, l *logs.Log) (*model.Profile, *map[string]interface{}, error) {
 	query := url.Values{}
 	for k, v := range queryData {
 		query.Set(k, v)
@@ -46,7 +44,7 @@ func (a *Auth) getProfileBBData(profileURL string, token string, queryData map[s
 		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Set("ROKWIRE-PBB-API-KEY", apiKey)
 
 	resp, err := client.Do(req)
 	if err != nil {
