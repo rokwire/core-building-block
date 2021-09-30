@@ -24,8 +24,6 @@ tags:
   - name: Third-Party Services
     description: APIs consumed by third-party services.
 paths:
-  /services/auth/test:
-    $ref: '#/paths/~1services~1test'
   /services/auth/login:
     post:
       tags:
@@ -202,6 +200,10 @@ paths:
       summary: Authorize service
       description: |
         Authorize a third-party service and get a scoped access token that can be used to access its APIs
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -263,6 +265,10 @@ paths:
       summary: Get service registrations
       description: |
         Returns service registration records
+
+        **Auth:** Requires auth token
+      security:
+        - bearerAuth: []
       parameters:
         - name: ids
           in: query
@@ -294,6 +300,10 @@ paths:
       summary: Delete user account
       description: |
         Deletes a user account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Success
@@ -308,13 +318,17 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/account/preferences:
+  /services/account-preferences:
     put:
       tags:
         - Services
       summary: Update account preferences
       description: |
         Updates account preferences
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
       requestBody:
         description: Account preferences
         content:
@@ -336,13 +350,17 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/account/profile:
+  /services/profile:
     get:
       tags:
         - Services
       summary: Get user profile
       description: |
         Returns a user profile
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Success
@@ -362,6 +380,10 @@ paths:
       summary: Update user profile
       description: |
         Updates a user profile
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
       requestBody:
         description: Profile update
         content:
@@ -403,6 +425,10 @@ paths:
       summary: Get global config
       description: |
         Gives the system global config
+
+        **Auth:** Requires auth token with `config_admin` permission
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Success
@@ -422,6 +448,10 @@ paths:
       summary: Create global config
       description: |
         Creates the system global config
+
+        **Auth:** Requires auth token with `config_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -448,6 +478,10 @@ paths:
       summary: Update global config
       description: |
         Updates the system global config
+
+        **Auth:** Requires auth token with `config_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -475,6 +509,10 @@ paths:
       summary: Update organization
       description: |
         Updates organization
+
+         **Auth:** Requires auth token with `org_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -489,7 +527,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Organization'
+              $ref: '#/components/schemas/_req_update_Organization_Request'
         required: true
       responses:
         '200':
@@ -511,6 +549,10 @@ paths:
       summary: Get organization
       description: |
         Gets organization
+
+        **Auth:** Requires auth token with `org_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -526,7 +568,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Organization'
+                $ref: '#/components/schemas/_req_get_Organization_Request'
         '400':
           description: Bad request
         '401':
@@ -542,6 +584,10 @@ paths:
       summary: Get organizations
       description: |
         Gets organizations
+
+        **Auth:** Requires auth token with `org_admin` permission
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Successful operation
@@ -550,7 +596,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Organization'
+                  $ref: '#/components/schemas/_res_get_Organizations_Response'
         '400':
           description: Bad request
         '401':
@@ -563,12 +609,16 @@ paths:
       summary: Create organization
       description: |
         Creates organization
+
+        **Auth:** Requires auth token with `org_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: creates one organization
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Organization'
+              $ref: '#/components/schemas/_req_create-Organization_Request'
         required: true
       responses:
         '200':
@@ -591,6 +641,10 @@ paths:
       summary: Get service registrations
       description: |
         Returns service registration records
+
+        **Auth:** Requires auth token with `service_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: ids
           in: query
@@ -623,6 +677,10 @@ paths:
         Creates a new service registration
 
         The "service_id" of the registration must not match an existing registration  
+
+        **Auth:** Requires auth token with `service_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: service registration record to be added
         content:
@@ -652,6 +710,10 @@ paths:
         Update an existing service registration
 
         The "service_id" of the registration must match an existing registration
+
+        **Auth:** Requires auth token with `service_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: Service registration record update to be applied
         content:
@@ -679,6 +741,10 @@ paths:
       summary: Deregister service
       description: |
         Deletes an existing service registration record
+
+        **Auth:** Requires auth token with `service_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: query
@@ -709,6 +775,10 @@ paths:
       summary: Get application
       description: |
         Gets application
+
+        **Auth:** Requires auth token with `app_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -724,7 +794,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Application'
+                $ref: '#/components/schemas/_req_get_Application_Request'
         '400':
           description: Bad request
         '401':
@@ -740,6 +810,10 @@ paths:
       summary: Get applications
       description: |
         Gets applications
+
+        **Auth:** Requires auth token with `app_admin` permission
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Successful operation
@@ -748,7 +822,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Application'
+                  $ref: '#/components/schemas/_res_get_Applications_Response'
         '400':
           description: Bad request
         '401':
@@ -761,12 +835,16 @@ paths:
       summary: Create application
       description: |
         Creates application
+
+        **Auth:** Requires auth token with `app_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: creates one application
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Application'
+              $ref: '#/components/schemas/_req_create_Application_Request'
         required: true
       responses:
         '200':
@@ -789,6 +867,10 @@ paths:
       summary: Create application permission
       description: |
         Creates application permission
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: Application permission
         content:
@@ -817,6 +899,10 @@ paths:
       summary: Create application role
       description: |
         Creates application role
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: Application role
         content:
@@ -845,6 +931,10 @@ paths:
       summary: Grant account permissions
       description: |
         Grant account permissions
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: Permissions
         content:
@@ -873,6 +963,10 @@ paths:
       summary: Grant account roles
       description: |
         Grant account roles
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: Roles
         content:
@@ -901,6 +995,10 @@ paths:
       summary: Get API key
       description: |
         Returns API key record
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: org_id
           in: query
@@ -939,6 +1037,10 @@ paths:
         Creates a new API key record
 
         The "org_id" and "app_id" of the record must not match an existing registration  
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: API key record to be added
         content:
@@ -968,6 +1070,10 @@ paths:
         Update an existing API key record
 
         The "org_id" and "app_id" of the record must match an existing registration  
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: API key record update to be applied
         content:
@@ -995,6 +1101,10 @@ paths:
       summary: Delete API key
       description: |
         Deletes an existing API key record
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: org_id
           in: query
@@ -1156,6 +1266,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/OIDCDiscovery'
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     GlobalConfig:
       required:
@@ -1894,6 +2009,220 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
+    _req_create-Organization_Request:
+      required:
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    _res_create_Organization_Response:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    _req_update_Organization_Request:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    _res_update_Organization_Response:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    _req_get_Organization_Request:
+      required:
+        - id
+      properties:
+        id:
+          readOnly: true
+          type: string
+    _res_get_Organization_Response:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    _res_get_Organizations_Response:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationConfigFields'
+    _req_create_Application_Request:
+      required:
+        - name
+        - multi_tenant
+        - requires_own_users
+      type: object
+      properties:
+        name:
+          type: string
+        multi_tenant:
+          type: boolean
+        requires_own_users:
+          type: boolean
+        application_types:
+          type: array
+          items:
+            required:
+              - identifier
+            type: object
+            properties:
+              identifier:
+                type: string
+              name:
+                type: string
+              versions:
+                type: array
+                items:
+                  type: string
+    _req_get_Application_Request:
+      required:
+        - id
+      type: string
+      properties:
+        id:
+          readOnly: true
+          type: string
+    _res_get_Application_Response:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        multi_tenant:
+          type: boolean
+        requires_own_users:
+          type: boolean
+        organization:
+          $ref: '#/components/schemas/ApplicationOrganization'
+        applicationType:
+          $ref: '#/components/schemas/ApplicationType'
+    _res_get_Applications_Response:
+      required:
+        - id
+        - name
+        - multi_tenant
+        - requires_own_users
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        multi_tenant:
+          type: boolean
+        requires_own_users:
+          type: boolean
+        application_types:
+          $ref: '#/components/schemas/ApplicationTypeFields'
     _req_application-permissions_Request:
       required:
         - name

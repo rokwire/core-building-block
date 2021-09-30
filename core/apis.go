@@ -69,8 +69,8 @@ func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, error) {
 	return s.app.serGetProfile(accountID)
 }
 
-func (s *servicesImpl) SerUpdateProfile(profile *model.Profile, ID string) error {
-	return s.app.serUpdateProfile(profile, ID)
+func (s *servicesImpl) SerUpdateProfile(accountID string, profile *model.Profile) error {
+	return s.app.serUpdateProfile(accountID, profile)
 }
 
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
@@ -129,8 +129,8 @@ func (s *administrationImpl) AdmGetOrganization(ID string) (*model.Organization,
 	return s.app.admGetOrganization(ID)
 }
 
-func (s *administrationImpl) AdmCreateApplication(name string, versions []string) (*model.Application, error) {
-	return s.app.admCreateApplication(name, versions)
+func (s *administrationImpl) AdmCreateApplication(name string, multi_tenant bool, requires_own_users bool, identifier string, nameInType string, versions []string) (*model.Application, error) {
+	return s.app.admCreateApplication(name, multi_tenant, requires_own_users, identifier, nameInType, versions)
 }
 
 func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, error) {

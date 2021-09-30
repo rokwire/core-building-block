@@ -4,6 +4,10 @@ put:
   summary: Update organization
   description: |
     Updates organization
+
+     **Auth:** Requires auth token with `org_admin` permission
+  security:
+    - bearerAuth: []
   parameters:
   - name: id
     in: path
@@ -18,7 +22,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/application/Organization.yaml"
+          $ref: "../../schemas/apis/admin/update-organization/request/Request.yaml"
     required: true
   responses:
     200:
@@ -40,6 +44,10 @@ get:
   summary: Get organization
   description: |
     Gets organization
+
+    **Auth:** Requires auth token with `org_admin` permission
+  security:
+    - bearerAuth: []
   parameters:
   - name: id
     in: path
@@ -55,7 +63,7 @@ get:
       content:
         application/json:
             schema:
-              $ref: "../../schemas/application/Organization.yaml"
+              $ref: "../../schemas/apis/admin/get-organization/request/Request.yaml"
     400:
       description: Bad request
     401:
