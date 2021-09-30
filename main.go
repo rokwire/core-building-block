@@ -65,6 +65,8 @@ func main() {
 
 	smtpPortNum, _ := strconv.Atoi(smtpPort)
 
+	profileBBHost := envLoader.GetAndLogEnvVar("PROFILE_BB_HOST", true, false)
+
 	var authPrivKeyPem []byte
 	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
 	if authPrivKeyPemString != "" {
@@ -103,7 +105,7 @@ func main() {
 		logger.Infof("Error parsing max token exp, applying defaults: %v", err)
 	}
 
-	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
+	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, profileBBHost, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}

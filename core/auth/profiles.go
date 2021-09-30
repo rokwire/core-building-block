@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/rokmetro/logging-library/errors"
+	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
 )
 
@@ -33,7 +34,7 @@ type profileBBPii struct {
 	// DateUpdated string `json:"lastModifiedDate"`
 }
 
-func (a *Auth) getProfileBBData(profileURL string, token string, queryData map[string]string) (*model.Profile, *map[string]interface{}, error) {
+func (a *Auth) getProfileBBData(profileURL string, token string, queryData map[string]string, l *logs.Log) (*model.Profile, *map[string]interface{}, error) {
 	query := url.Values{}
 	for k, v := range queryData {
 		query.Set(k, v)
@@ -74,14 +75,31 @@ func (a *Auth) getProfileBBData(profileURL string, token string, queryData map[s
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, logutils.TypeString, &logutils.FieldArgs{"creationDate": profileData.PII.DateCreated}, err)
 	}
-	// dateUpdated, err := time.Parse("2006-01-02T15:04:05.000Z", profileData.PII.DateUpdated)
-	// if err != nil {
-	// 	return nil, nil, errors.WrapErrorAction(logutils.ActionParse, logutils.TypeString, &logutils.FieldArgs{"lastModifiedDate": profileData.PII.DateCreated}, err)
-	// }
 	existingProfile := model.Profile{FirstName: profileData.PII.FirstName, LastName: profileData.PII.LastName,
 		Email: profileData.PII.Email, Phone: profileData.PII.Phone, BirthYear: profileData.PII.BirthYear,
 		Address: profileData.PII.Address, ZipCode: profileData.PII.ZipCode, State: profileData.PII.State,
 		Country: profileData.PII.Country, DateCreated: dateCreated}
+
+	if profileData.NonPII != nil {
+		if creationDate, ok := profileData.NonPII["creationDate"].(string); ok {
+			dateCreated, err := time.Parse("2006-01-02T15:04:05.000Z", creationDate)
+			if err != nil {
+				l.WarnAction(logutils.ActionParse, logutils.TypeString, err)
+			} else {
+				profileData.NonPII["date_created"] = dateCreated
+				delete(profileData.NonPII, "creationDate")
+			}
+		}
+		if lastModifiedDate, ok := profileData.NonPII["lastModifiedDate"].(string); ok {
+			dateUpdated, err := time.Parse("2006-01-02T15:04:05.000Z", lastModifiedDate)
+			if err != nil {
+				l.WarnAction(logutils.ActionParse, logutils.TypeString, err)
+			} else {
+				profileData.NonPII["date_updated"] = dateUpdated
+				delete(profileData.NonPII, "lastModifiedDate")
+			}
+		}
+	}
 
 	return &existingProfile, &profileData.NonPII, nil
 }

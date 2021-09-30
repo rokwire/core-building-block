@@ -63,6 +63,8 @@ type Auth struct {
 	minTokenExp int64  //Minimum access token expiration time in minutes
 	maxTokenExp int64  //Maximum access token expiration time in minutes
 
+	profileBBHost string
+
 	emailFrom       string
 	emailDialer     *gomail.Dialer
 	cachedAuthTypes *syncmap.Map //cache auth types
@@ -83,7 +85,7 @@ type Auth struct {
 }
 
 //NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
+func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, profileBBHost string, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -114,8 +116,8 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	timerDone := make(chan bool)
 	auth := &Auth{storage: storage, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
-		authPrivKey: authPrivKey, AuthService: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
-		maxTokenExp: *maxTokenExp, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
+		authPrivKey: authPrivKey, AuthService: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp,
+		profileBBHost: profileBBHost, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
 		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock,
 		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
@@ -269,9 +271,9 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		//profile
 		//TODO: set search params, profileBB URL, and auth token
 		profileSearch := map[string]string{
-			"": "",
+			"netid": identifier,
 		}
-		profile, preferences, err := a.getProfileBBData("", "", profileSearch)
+		profile, preferences, err := a.getProfileBBData(a.profileBBHost+"/core", "", profileSearch, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "profile building block data", nil, err)
 		}
@@ -378,9 +380,9 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		//profile
 		//TODO: set search params, profileBB URL, and auth token
 		profileSearch := map[string]string{
-			"": "",
+			"netid": *identifier,
 		}
-		profile, preferences, err := a.getProfileBBData("", "", profileSearch)
+		profile, preferences, err := a.getProfileBBData(a.profileBBHost+"/core", "", profileSearch, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "profile building block data", nil, err)
 		}
