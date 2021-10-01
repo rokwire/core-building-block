@@ -23,13 +23,13 @@ type EmailAdapter struct {
 	emailDialer  *gomail.Dialer
 }
 
-//SendEmail is used to send verification and password reset emails using Smtp connection
-func (a *EmailAdapter) SendEmail(toEmail string, subject string, body string, attachmentFilename string) error {
+//sendEmail is used to send verification and password reset emails using Smtp connection
+func (a *EmailAdapter) SendEmail(toEmail string, subject string, body string, attachmentFilename *string) error {
 	if a.emailDialer == nil {
-		return errors.New("email Dialer is nil")
+		return errors.New("email dialer is nil")
 	}
 	if toEmail == "" {
-		return errors.New("Missing email addresses")
+		return errors.New("missing email addresses")
 	}
 
 	emails := strings.Split(toEmail, ",")
@@ -39,7 +39,9 @@ func (a *EmailAdapter) SendEmail(toEmail string, subject string, body string, at
 	m.SetHeader("To", emails...)
 	m.SetHeader("Subject", subject)
 	m.SetBody("text/plain", body)
-	m.Attach(attachmentFilename)
+	if attachmentFilename != nil {
+		m.Attach(*attachmentFilename)
+	}
 
 	if err := a.emailDialer.DialAndSend(m); err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, typeMail, nil, err)
