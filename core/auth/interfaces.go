@@ -13,11 +13,11 @@ import (
 
 //authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
 type authType interface {
-	//applySignUp applies sign up operation
+	//signUp applies sign up operation
 	// Returns:
 	//	identifier (*string): The unique identifier
 	//	credentialValue (map): Credential value
-	applySignUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*string, map[string]interface{}, error)
+	signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (*string, map[string]interface{}, error)
 
 	//checks the verification code generated on email signup
 	// Returns:

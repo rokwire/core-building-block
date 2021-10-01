@@ -18,7 +18,7 @@ type usernameAuthImpl struct {
 	authType string
 }
 
-func (a *usernameAuthImpl) applySignUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*string, map[string]interface{}, error) {
+func (a *usernameAuthImpl) signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (*string, map[string]interface{}, error) {
 	return nil, nil, nil
 }
 
