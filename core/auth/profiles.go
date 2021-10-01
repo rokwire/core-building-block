@@ -44,7 +44,7 @@ func (a *Auth) getProfileBBData(profileURL string, apiKey string, queryData map[
 		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
 	}
 
-	req.Header.Set("ROKWIRE-PBB-API-KEY", apiKey)
+	req.Header.Set("ROKWIRE-CBB-API-KEY", apiKey)
 
 	resp, err := client.Do(req)
 	if err != nil {
