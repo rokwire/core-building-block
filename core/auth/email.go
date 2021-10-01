@@ -33,7 +33,7 @@ type emailCreds struct {
 // Email implementation of authType
 type emailAuthImpl struct {
 	auth     *Auth
-	sender   *SenderAdapter
+	sender   *EmailAdapter
 	authType string
 }
 

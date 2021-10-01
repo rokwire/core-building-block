@@ -47,7 +47,7 @@ const (
 //Auth represents the auth functionality unit
 type Auth struct {
 	storage   Storage
-	sendEmail SenderAdapter
+	sendEmail EmailAdapter
 
 	logger *logs.Logger
 
