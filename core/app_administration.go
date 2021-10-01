@@ -258,11 +258,11 @@ func (app *application) admGetApplication(ID string) (*model.Application, error)
 	return appAdm, nil
 }
 
-func (app *application) admCreateApplication(name string, multi_tenant bool, requires_own_users bool, identifier string, nameInType string, versions []string) (*model.Application, error) {
+func (app *application) admCreateApplication(name string, multiTenant bool, requiresOwnUsers bool, identifier string, nameInType string, versions []string) (*model.Application, error) {
 	/*now := time.Now()
 
 	applicationID, _ := uuid.NewUUID()
-	application := model.Application{ID: applicationID.String(), Name: name, MultiTenant: multi_tenant, RequiresOwnUsers: requires_own_users,
+	application := model.Application{ID: applicationID.String(), Name: name, MultiTenant: multiTenant, RequiresOwnUsers: requiresOwnUsers,
 		DateCreated: now}
 
 	insertedApplication, err := app.storage.InsertApplication(application)
