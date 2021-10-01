@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"core-building-block/core"
-	"core-building-block/driven/sender"
 	"fmt"
 	"net/http"
 
@@ -253,7 +252,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, serviceID string, authService *authservice.AuthService, sender sender.Sender, port string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, serviceID string, authService *authservice.AuthService, sender core.Sender, port string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")

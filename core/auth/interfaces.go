@@ -214,8 +214,3 @@ type Storage interface {
 	//ApplicationsOrganizations
 	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
 }
-
-//Sender is used by core to send emails
-type Sender interface {
-	SendEmail(toEmail string, subject string, body string, attachmentFilename string) error
-}

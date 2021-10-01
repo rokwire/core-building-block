@@ -13,8 +13,8 @@ const (
 	typeMail logutils.MessageDataType = "mail"
 )
 
-//Sender implements the interface
-type Sender struct {
+//Adapter implements the Sender interface
+type Adapter struct {
 	smptHost     string
 	smtpPort     string
 	smtpUser     string
@@ -24,7 +24,7 @@ type Sender struct {
 }
 
 //SendEmail is used to send verification and password reset emails using Smtp connection
-func (a *Sender) SendEmail(toEmail string, subject string, body string, attachmentFilename *string) error {
+func (a *Adapter) SendEmail(toEmail string, subject string, body string, attachmentFilename *string) error {
 	if a.emailDialer == nil {
 		return errors.New("email dialer is nil")
 	}
@@ -50,6 +50,6 @@ func (a *Sender) SendEmail(toEmail string, subject string, body string, attachme
 }
 
 //NewSenderAdapter creates a new sender adapter instance
-func NewEmailSenderAdapter(smtpHost string, smtpPort string, smtpUser string, smtpPassword string, smtpFrom string) *Sender {
-	return &Sender{smptHost: smtpHost, smtpPort: smtpPort, smtpUser: smtpUser, smtpPassword: smtpPassword, smtpFrom: smtpFrom}
+func NewEmailSenderAdapter(smtpHost string, smtpPort string, smtpUser string, smtpPassword string, smtpFrom string) *Adapter {
+	return &Adapter{smptHost: smtpHost, smtpPort: smtpPort, smtpUser: smtpUser, smtpPassword: smtpPassword, smtpFrom: smtpFrom}
 }

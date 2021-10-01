@@ -47,7 +47,6 @@ const (
 //Auth represents the auth functionality unit
 type Auth struct {
 	storage Storage
-	sender  Sender
 
 	logger *logs.Logger
 

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/sender"
 	"core-building-block/utils"
 	"encoding/json"
 	"fmt"
@@ -35,6 +36,7 @@ type emailCreds struct {
 type emailAuthImpl struct {
 	auth     *Auth
 	authType string
+	sander   sender.Adapter
 }
 
 func (a *emailAuthImpl) signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (*string, map[string]interface{}, error) {
@@ -137,7 +139,7 @@ func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode stri
 	params.Add("code", verificationCode)
 
 	verificationLink := a.auth.host + fmt.Sprintf("/services/auth/verify?%s", params.Encode())
-	return a.auth.sender.SendEmail(email, "Verify your email address", "Please click the link below to verify your email address:\n"+verificationLink+"\n\nIf you did not request this verification link, please ignore this message.", "")
+	return a.sander.SendEmail(email, "Verify your email address", "Please click the link below to verify your email address:\n"+verificationLink+"\n\nIf you did not request this verification link, please ignore this message.", &verificationLink)
 }
 
 //TODO: To be used in password reset flow

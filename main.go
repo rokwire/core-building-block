@@ -57,7 +57,7 @@ func main() {
 		logger.Fatalf("Cannot start the mongoDB adapter: %v", err)
 	}
 
-	//auth
+	//sender adapter
 	smtpHost := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_HOST", false, false)
 	smtpPort := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_PORT", false, false)
 	smtpUser := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_USER", false, true)
@@ -110,10 +110,10 @@ func main() {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, sender, storageAdapter, auth)
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, serviceID, auth.AuthService, *sender, port, coreAPIs, host, logger)
+	webAdapter := web.NewWebAdapter(env, serviceID, auth.AuthService, sender, port, coreAPIs, host, logger)
 	webAdapter.Start()
 }

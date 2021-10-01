@@ -14,6 +14,8 @@ type APIs struct {
 	Encryption     Encryption     //expose to the drivers adapters
 	BBs            BBs            //expose to the drivers adapters
 
+	sender Sender
+
 	Auth auth.APIs //expose to the drivers auth
 
 	app *application
@@ -36,7 +38,7 @@ func (c *APIs) GetVersion() string {
 }
 
 //NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, sender Sender, auth auth.APIs) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
 	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners}
@@ -49,7 +51,7 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 
 	//+ auth
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
-		BBs: bbsImpl, Auth: auth, app: &application}
+		BBs: bbsImpl, sender: sender, Auth: auth, app: &application}
 
 	return &coreAPIs
 }
