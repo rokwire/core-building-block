@@ -277,7 +277,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		}
 		profile, preferences, err := a.getProfileBBData(a.profileBBHost+"/core", a.profileBBApiKey, profileSearch, l)
 		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "profile building block data", nil, err)
+			l.ErrorAction(logutils.ActionGet, "profile building block data", err)
 		}
 		profileID, _ := uuid.NewUUID()
 		if profile == nil {
@@ -401,7 +401,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		}
 		profile, preferences, err := a.getProfileBBData(a.profileBBHost+"/core", a.profileBBApiKey, profileSearch, l)
 		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "profile building block data", nil, err)
+			l.ErrorAction(logutils.ActionGet, "profile building block data", err)
 		}
 		profileID, _ := uuid.NewUUID()
 		if profile == nil {
