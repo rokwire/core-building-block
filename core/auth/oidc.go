@@ -393,9 +393,9 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	externalUser := model.ExternalSystemUser{Identifier: identifier, FirstName: firstName, MiddleName: middleName, LastName: lastName,
 		Email: email, Groups: groups, SystemSpecific: systemSpecific}
 
-	tokenResponseParams := oidcTokenResponseParams{IDToken: token.IDToken, AccessToken: token.AccessToken, TokenType: token.TokenType}
+	params := oidcResponseParams{oidcTokenResponseParams{IDToken: token.IDToken, AccessToken: token.AccessToken, TokenType: token.TokenType}}
 
-	return &externalUser, tokenResponseParams, nil
+	return &externalUser, params, nil
 }
 
 func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcConfig *oidcAuthConfig) (*oidcToken, error) {
