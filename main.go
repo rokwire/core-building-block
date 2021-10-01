@@ -26,7 +26,7 @@ func main() {
 	if len(Version) == 0 {
 		Version = "dev"
 	}
-	loggerOpts := logs.LoggerOpts{SuppressRequests: []logs.HttpRequestProperties{logs.NewAwsHealthCheckHttpRequestProperties("")}}
+	loggerOpts := logs.LoggerOpts{SuppressRequests: []logs.HttpRequestProperties{logs.NewAwsHealthCheckHttpRequestProperties("/core/version")}}
 	logger := logs.NewLogger("core", &loggerOpts)
 	envLoader := envloader.NewEnvLoader(Version, logger)
 
