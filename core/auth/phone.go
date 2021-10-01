@@ -98,7 +98,7 @@ func (a *twilioPhoneAuthImpl) checkRequestCreds(creds string) (*twilioPhoneCreds
 	return &requestCreds, nil
 }
 
-func (a *twilioPhoneAuthImpl) applySignUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (string, *string, map[string]interface{}, error) {
+func (a *twilioPhoneAuthImpl) signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, *string, map[string]interface{}, error) {
 	requestCreds, err := a.checkRequestCreds(creds)
 	if err != nil {
 		return "", nil, nil, err

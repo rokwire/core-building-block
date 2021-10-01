@@ -94,7 +94,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.adminApisHandler.getOrganization, we.auth.adminAuth)).Methods("GET")
 	adminSubrouter.HandleFunc("/organizations", we.wrapFunc(we.adminApisHandler.getOrganizations, we.auth.adminAuth)).Methods("GET")
 
-	adminSubrouter.HandleFunc("/application", we.wrapFunc(we.adminApisHandler.createApplication, we.auth.adminAuth)).Methods("POST")
+	adminSubrouter.HandleFunc("/applications", we.wrapFunc(we.adminApisHandler.createApplication, we.auth.adminAuth)).Methods("POST")
 	adminSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.adminApisHandler.getApplication, we.auth.adminAuth)).Methods("GET")
 	adminSubrouter.HandleFunc("/applications", we.wrapFunc(we.adminApisHandler.getApplications, we.auth.adminAuth)).Methods("GET")
 

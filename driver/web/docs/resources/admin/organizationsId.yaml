@@ -22,7 +22,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/application/Organization.yaml"
+          $ref: "../../schemas/apis/admin/update-organization/request/Request.yaml"
     required: true
   responses:
     200:
@@ -63,7 +63,7 @@ get:
       content:
         application/json:
             schema:
-              $ref: "../../schemas/application/Organization.yaml"
+              $ref: "../../schemas/apis/admin/get-organization/request/Request.yaml"
     400:
       description: Bad request
     401:

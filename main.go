@@ -61,11 +61,11 @@ func main() {
 	twilioToken := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_TOKEN", false, true)
 	twilioServiceSID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_SERVICE_SID", false, true)
 
-	smtpHost := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_SMTP_HOST", false, false)
-	smtpPort := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_SMTP_PORT", false, false)
-	smtpUser := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_SMTP_USER", false, true)
-	smtpPassword := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_SMTP_PASSWORD", false, true)
-	smtpFrom := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_EMAIL_FROM", false, false)
+	smtpHost := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_HOST", false, false)
+	smtpPort := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_PORT", false, false)
+	smtpUser := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_USER", false, true)
+	smtpPassword := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_PASSWORD", false, true)
+	smtpFrom := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_EMAIL_FROM", false, false)
 
 	smtpPortNum, _ := strconv.Atoi(smtpPort)
 

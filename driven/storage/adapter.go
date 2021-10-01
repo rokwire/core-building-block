@@ -1067,6 +1067,7 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 	}
 
 	return result, nil
+
 }
 
 //UpdateProfile updates an account profile
@@ -1288,9 +1289,10 @@ func (sa *Adapter) LoadApplications() ([]model.Application, error) {
 
 //InsertApplication inserts an application
 func (sa *Adapter) InsertApplication(application model.Application) (*model.Application, error) {
-	_, err := sa.db.applications.InsertOne(application)
+	app := applicationToStorage(&application)
+	_, err := sa.db.applications.InsertOne(app)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, &logutils.FieldArgs{"id": application.ID}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, nil, err)
 	}
 
 	return &application, nil
