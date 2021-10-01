@@ -14,7 +14,7 @@ import (
 )
 
 type profileBBData struct {
-	PII    profileBBPii           `json:"pii"`
+	PII    *profileBBPii          `json:"pii"`
 	NonPII map[string]interface{} `json:"non_pii"`
 }
 
@@ -32,7 +32,7 @@ type profileBBPii struct {
 	DateCreated string `json:"creationDate"`
 }
 
-func (a *Auth) getProfileBBData(profileURL string, apiKey string, queryData map[string]string, l *logs.Log) (*model.Profile, *map[string]interface{}, error) {
+func (a *Auth) getProfileBBData(profileURL string, apiKey string, queryData map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error) {
 	query := url.Values{}
 	for k, v := range queryData {
 		query.Set(k, v)
@@ -69,6 +69,10 @@ func (a *Auth) getProfileBBData(profileURL string, apiKey string, queryData map[
 		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.TypeResponseBody, nil, err)
 	}
 
+	if profileData.PII == nil {
+		return nil, nil, nil
+	}
+
 	dateCreated, err := time.Parse("2006-01-02T15:04:05.000Z", profileData.PII.DateCreated)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, logutils.TypeString, &logutils.FieldArgs{"creationDate": profileData.PII.DateCreated}, err)
@@ -99,5 +103,5 @@ func (a *Auth) getProfileBBData(profileURL string, apiKey string, queryData map[
 		}
 	}
 
-	return &existingProfile, &profileData.NonPII, nil
+	return &existingProfile, profileData.NonPII, nil
 }
