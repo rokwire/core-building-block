@@ -21,9 +21,6 @@ type EmailAdapter struct {
 	smtpPassword string
 	smtpFrom     string
 	emailDialer  *gomail.Dialer
-
-	from string
-	to   []string
 }
 
 //SendEmail is used to send verification and password reset emails using Smtp connection
