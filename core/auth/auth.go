@@ -173,12 +173,12 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 }
 
 //sendEmail is used to send verification and password reset emails using Smtp connection
-func (a *Auth) sendEmail(toEmail string, subject string, body string, attachmentFilename string) error {
+func (a *Auth) sendEmail(toEmail string, subject string, body string, attachmentFilename *string) error {
 	if a.emailDialer == nil {
-		return errors.New("email Dialer is nil")
+		return errors.New("email dialer is nil")
 	}
 	if toEmail == "" {
-		return errors.New("Missing email addresses")
+		return errors.New("missing email addresses")
 	}
 
 	emails := strings.Split(toEmail, ",")
@@ -188,7 +188,9 @@ func (a *Auth) sendEmail(toEmail string, subject string, body string, attachment
 	m.SetHeader("To", emails...)
 	m.SetHeader("Subject", subject)
 	m.SetBody("text/plain", body)
-	m.Attach(attachmentFilename)
+	if attachmentFilename != nil {
+		m.Attach(*attachmentFilename)
+	}
 
 	if err := a.emailDialer.DialAndSend(m); err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, typeMail, nil, err)
@@ -352,16 +354,30 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
+	//check if the user exists check
+	account, accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
+	if err != nil {
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	accountExists := (account != nil && accountAuthType != nil)
+
 	//check if it is sign in or sign up
-	isSignUp, err := a.isSignUp(authImpl, authType, appType, appOrg, creds, params, l)
+	isSignUp, err := a.isSignUp(accountExists, params, l)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction("error checking is sign up", "", nil, err)
 	}
-	if *isSignUp {
+	if isSignUp {
+		if accountExists {
+			return nil, nil, nil, errors.New("account already exists")
+		}
+
+		credentialID, _ := uuid.NewUUID()
+
 		//apply sign up
-		identifier, credentialValue, err := authImpl.applySignUp(authType, appType, appOrg, creds, params, l)
+		identifier, credentialValue, err := authImpl.signUp(authType, appType, appOrg, creds, params, credentialID.String(), l)
 		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction("error applying sign up", "", nil, err)
+			return nil, nil, nil, errors.Wrap("error signing up", err)
 		}
 
 		//setup account
@@ -370,8 +386,10 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		accountAuthTypeID, _ := uuid.NewUUID()
 		accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: authType,
 			Identifier: *identifier, Params: nil, Active: true, Active2FA: false, DateCreated: now}
-		credential := model.Credential{ID: accountAuthTypeID.String(), AccountsAuthTypes: []model.AccountAuthType{*accountAuthType}, Value: credentialValue, Verified: false,
+
+		credential := model.Credential{ID: credentialID.String(), AccountsAuthTypes: []model.AccountAuthType{*accountAuthType}, Value: credentialValue, Verified: false,
 			AuthType: authType, DateCreated: now, DateUpdated: &now}
+
 		accountAuthType.Credential = &credential
 
 		//TODO: use shared profile
@@ -402,24 +420,19 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 
 		return &message, account, accountAuthType, nil
 	}
-	//apply sign in
 
-	//1. check if the account exists
-	account, accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
-	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-	if account == nil || accountAuthType == nil {
-		return nil, nil, nil, errors.WrapErrorAction("exist", model.TypeAccount, nil, err)
+	//apply sign in
+	if !accountExists {
+		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 	}
 
 	//2. it seems the user exist, now check the credentials
 	validCredentials, err := authImpl.checkCredentials(*accountAuthType, creds, l)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction("error checking credentials", "", nil, err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
 	}
 	if !*validCredentials {
-		return nil, nil, nil, errors.WrapErrorAction("invalid credentials", "", nil, err)
+		return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeCredential, nil)
 	}
 
 	return nil, account, accountAuthType, nil
@@ -428,7 +441,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 //isSignUp checks if the operation is sign in or sign up
 // 	first check if the client has set sign_up field
 //	if sign_up field has not been sent then check if the user exists
-func (a *Auth) isSignUp(authImpl authType, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*bool, error) {
+func (a *Auth) isSignUp(accountExists bool, params string, l *logs.Log) (bool, error) {
 	//check if sign_up field has been passed
 	useSignUpFieldCheck := strings.Contains(params, "sign_up")
 
@@ -439,24 +452,19 @@ func (a *Auth) isSignUp(authImpl authType, authType model.AuthType, appType mode
 		var sParams signUpParams
 		err := json.Unmarshal([]byte(params), &sParams)
 		if err != nil {
-			return nil, errors.WrapErrorAction("error getting sign_up field", "", nil, err)
+			return false, errors.WrapErrorAction(logutils.ActionUnmarshal, "sign up params", nil, err)
 		}
-		return &sParams.SignUp, nil
+
+		return sParams.SignUp, nil
 	}
-	//check if the user exists check
-	account, accountAuthType, err := authImpl.userExist(authType, appType, appOrg, creds, l)
-	if err != nil {
-		return nil, errors.WrapErrorAction("error checking if the user exists", "", nil, err)
-	}
-	var signUp bool
-	if account != nil && accountAuthType != nil {
+
+	if accountExists {
 		//the user exists, so return false
-		signUp = false
-	} else {
-		//the user does not exists, so it has to register
-		signUp = true
+		return false, nil
 	}
-	return &signUp, nil
+
+	//the user does not exists, so it has to register
+	return true, nil
 }
 
 func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthType, identifier string) (*model.AccountAuthType, error) {

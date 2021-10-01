@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Populate profile data automatically from ROKWIRE 2.0 Profile BB [#185](https://github.com/rokwire/core-building-block/issues/185)
+- Create a Security.md [#193] (https://github.com/rokwire/core-building-block/issues/193)
 - Set up authorization system [#45](https://github.com/rokwire/core-building-block/issues/45)
 - Add permissions to tokens [#189](https://github.com/rokwire/core-building-block/issues/189)
 - Set up anonymous tokens [#26](https://github.com/rokwire/core-building-block/issues/26)
@@ -57,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set up logging [#6](https://github.com/rokwire/core-building-block/issues/6)
 
 ### Fixed
+- Fix email account verification [#198](https://github.com/rokwire/core-building-block/issues/198)
 - Fix build failure [#196](https://github.com/rokwire/core-building-block/issues/196)
 - Fix admin APIs after the model changes [#173](https://github.com/rokwire/core-building-block/issues/173)
 - Fix login issues [#178](https://github.com/rokwire/core-building-block/issues/178)

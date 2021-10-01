@@ -57,11 +57,11 @@ func main() {
 	}
 
 	//auth
-	smtpHost := envLoader.GetAndLogEnvVar("HEALTH_SMTP_HOST", false, false)
-	smtpPort := envLoader.GetAndLogEnvVar("HEALTH_SMTP_PORT", false, false)
-	smtpUser := envLoader.GetAndLogEnvVar("HEALTH_SMTP_USER", false, true)
-	smtpPassword := envLoader.GetAndLogEnvVar("HEALTH_SMTP_PASSWORD", false, true)
-	smtpFrom := envLoader.GetAndLogEnvVar("HEALTH_EMAIL_FROM", false, false)
+	smtpHost := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_HOST", false, false)
+	smtpPort := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_PORT", false, false)
+	smtpUser := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_USER", false, true)
+	smtpPassword := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_PASSWORD", false, true)
+	smtpFrom := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_EMAIL_FROM", false, false)
 
 	smtpPortNum, _ := strconv.Atoi(smtpPort)
 
