@@ -1884,7 +1884,10 @@ components:
       type: object
       description: Auth login params for auth_type="email"
       properties:
-        new_user:
+        confirm_password:
+          type: string
+          description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+        sign_up:
           type: boolean
           default: false
     _req_login_ParamsOIDC:

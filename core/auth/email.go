@@ -5,6 +5,7 @@ import (
 	"core-building-block/utils"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/rokmetro/logging-library/errors"
@@ -36,29 +37,39 @@ type emailAuthImpl struct {
 	authType string
 }
 
-func (a *emailAuthImpl) applySignUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*string, map[string]interface{}, error) {
+func (a *emailAuthImpl) signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (*string, map[string]interface{}, error) {
 	type signUpEmailParams struct {
-		Email           string `json:"email"`
-		Password        string `json:"password"`
 		ConfirmPassword string `json:"confirm_password"`
 	}
-	var sEmailParams signUpEmailParams
-	err := json.Unmarshal([]byte(params), &sEmailParams)
+
+	var sEmailCreds emailCreds
+	err := json.Unmarshal([]byte(creds), &sEmailCreds)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction("error getting sign_up email params", "", nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
 	}
-	email := sEmailParams.Email
-	password := sEmailParams.Password
+
+	var sEmailParams signUpEmailParams
+	err = json.Unmarshal([]byte(params), &sEmailParams)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailParams, nil, err)
+	}
+
+	email := sEmailCreds.Email
+	password := sEmailCreds.Password
 	confirmPassword := sEmailParams.ConfirmPassword
-	if len(email) == 0 || len(password) == 0 || len(confirmPassword) == 0 {
-		return nil, nil, errors.WrapErrorAction("bad params data", "", nil, err)
+	if len(email) == 0 {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, typeEmailCreds, logutils.StringArgs("email"))
+	}
+	if len(password) == 0 {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, typeEmailCreds, logutils.StringArgs("password"))
+	}
+	if len(confirmPassword) == 0 {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, typeEmailParams, logutils.StringArgs("confirm_password"))
 	}
 	//check if the passwrod matches with the confirm password one
 	if password != confirmPassword {
 		return nil, nil, errors.WrapErrorAction("passwords fields do not match", "", nil, err)
 	}
-
-	//TODO do not allow to register the user if already exists
 
 	//password hash
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -73,15 +84,15 @@ func (a *emailAuthImpl) applySignUp(authType model.AuthType, appType model.Appli
 
 	}
 
-	//send verification code
-	if err = a.sendVerificationCode(email, code, appOrg.Application.ID, appOrg.Organization.ID); err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, errors.New("failed to send verification email to user"))
-	}
-
 	emailCredValue := emailCreds{Email: email, Password: string(hashedPassword), VerificationCode: code, VerificationExpiry: time.Now().Add(time.Hour * 24)}
 	emailCredValueMap, err := emailCredsToMap(&emailCredValue)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction("failed email params to map", "", nil, err)
+	}
+
+	//send verification code
+	if err = a.sendVerificationCode(email, code, newCredentialID); err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
 	}
 
 	return &email, emailCredValueMap, nil
@@ -120,9 +131,13 @@ func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, 
 	return &valid, nil
 }
 
-func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode string, appID string, orgID string) error {
-	verificationLink := a.auth.host + fmt.Sprintf("/auth/verify/%v/%v/%v/%v/%v", a.authType, email, verificationCode, appID, orgID)
-	return a.auth.sendEmail(email, "Verify your email", "Please click the link below to verify your email:\n"+verificationLink, "")
+func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode string, credentialID string) error {
+	params := url.Values{}
+	params.Add("id", credentialID)
+	params.Add("code", verificationCode)
+
+	verificationLink := a.auth.host + fmt.Sprintf("/services/auth/verify?%s", params.Encode())
+	return a.auth.sendEmail(email, "Verify your email address", "Please click the link below to verify your email address:\n"+verificationLink+"\n\nIf you did not request this verification link, please ignore this message.", nil)
 }
 
 //TODO: To be used in password reset flow
