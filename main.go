@@ -3,6 +3,7 @@ package main
 import (
 	"core-building-block/core"
 	"core-building-block/core/auth"
+	"core-building-block/driven/sender"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
 	"io/ioutil"
@@ -62,6 +63,7 @@ func main() {
 	smtpUser := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_USER", false, true)
 	smtpPassword := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_PASSWORD", false, true)
 	smtpFrom := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_EMAIL_FROM", false, false)
+	sender := sender.NewEmailSenderAdapter(smtpHost, smtpPort, smtpUser, smtpPassword, smtpFrom)
 
 	smtpPortNum, _ := strconv.Atoi(smtpPort)
 
@@ -112,6 +114,6 @@ func main() {
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, serviceID, auth.AuthService, port, coreAPIs, host, logger)
+	webAdapter := web.NewWebAdapter(env, serviceID, auth.AuthService, *sender, port, coreAPIs, host, logger)
 	webAdapter.Start()
 }
