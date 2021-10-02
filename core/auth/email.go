@@ -2,7 +2,6 @@ package auth
 
 import (
 	"core-building-block/core/model"
-	"core-building-block/driven/sender"
 	"core-building-block/utils"
 	"encoding/json"
 	"fmt"
@@ -36,7 +35,6 @@ type emailCreds struct {
 type emailAuthImpl struct {
 	auth     *Auth
 	authType string
-	sander   sender.Adapter
 }
 
 func (a *emailAuthImpl) signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (*string, map[string]interface{}, error) {
