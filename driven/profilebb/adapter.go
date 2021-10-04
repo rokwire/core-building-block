@@ -1,4 +1,4 @@
-package auth
+package profilebb
 
 import (
 	"core-building-block/core/model"
@@ -12,6 +12,12 @@ import (
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
 )
+
+//Adapter implements the ProfileBuildingBlock interface
+type Adapter struct {
+	host   string
+	apiKey string
+}
 
 type profileBBData struct {
 	PII    *profileBBPii          `json:"pii"`
@@ -32,19 +38,20 @@ type profileBBPii struct {
 	DateCreated string `json:"creationDate"`
 }
 
-func (a *Auth) getProfileBBData(profileURL string, apiKey string, queryData map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error) {
+//GetProfileBBData gets profile data by queryParams
+func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error) {
 	query := url.Values{}
-	for k, v := range queryData {
+	for k, v := range queryParams {
 		query.Set(k, v)
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodGet, profileURL+"?"+query.Encode(), nil)
+	req, err := http.NewRequest(http.MethodGet, a.host+"/core?"+query.Encode(), nil)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
 	}
 
-	req.Header.Set("ROKWIRE-CBB-API-KEY", apiKey)
+	req.Header.Set("ROKWIRE-CBB-API-KEY", a.apiKey)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -104,4 +111,9 @@ func (a *Auth) getProfileBBData(profileURL string, apiKey string, queryData map[
 	}
 
 	return &existingProfile, profileData.NonPII, nil
+}
+
+//NewProfileBBAdapter creates a new profile building block adapter instance
+func NewProfileBBAdapter(profileHost string, apiKey string) *Adapter {
+	return &Adapter{host: profileHost, apiKey: apiKey}
 }

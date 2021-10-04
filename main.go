@@ -3,6 +3,7 @@ package main
 import (
 	"core-building-block/core"
 	"core-building-block/core/auth"
+	"core-building-block/driven/profilebb"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
 	"io/ioutil"
@@ -106,7 +107,9 @@ func main() {
 		logger.Infof("Error parsing max token exp, applying defaults: %v", err)
 	}
 
-	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, profileBBHost, profileBBApiKey, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
+	profileBBAdapter := profilebb.NewProfileBBAdapter(profileBBHost, profileBBApiKey)
+
+	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
