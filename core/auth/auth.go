@@ -473,20 +473,26 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 		accountAuthType.Credential = credential
 	}
 
-	//TODO - preferences
-
-	//profile
+	//get params map
 	paramsMap := map[string]interface{}{}
 	err := json.Unmarshal([]byte(params), &paramsMap)
 	if err != nil {
 		return nil, nil, nil, nil, errors.WrapErrorAction("error unmarshal params", "", nil, err)
 	}
+
+	//preferences
+	var preferences map[string]interface{}
+	preferencesParams := paramsMap["preferences"]
+	if preferencesParams != nil {
+		preferences = preferencesParams.(map[string]interface{})
+	}
+
+	//profile
 	profileParams := paramsMap["profile"]
 	profileData, err := json.Marshal(profileParams)
 	if err != nil {
 		return nil, nil, nil, nil, errors.WrapErrorAction("error marshal profile params", "", nil, err)
 	}
-
 	var profile *model.Profile
 	err = json.Unmarshal([]byte(profileData), &profile)
 	if err != nil {
@@ -495,7 +501,7 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 	profileID, _ := uuid.NewUUID()
 	profile.ID = profileID.String()
 
-	return accountAuthType, credential, nil, profile, nil
+	return accountAuthType, credential, preferences, profile, nil
 }
 
 //registerUser registers account for an organization in an application
