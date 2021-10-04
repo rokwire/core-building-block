@@ -95,11 +95,6 @@ type Storage interface {
 	FindApplications() ([]model.Application, error)
 }
 
-//Sender is used by core to send emails
-type Sender interface {
-	SendEmail(toEmail string, subject string, body string, attachmentFilename string) error
-}
-
 //StorageListener listenes for change data storage events
 type StorageListener struct {
 	app *application

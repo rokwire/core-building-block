@@ -47,6 +47,7 @@ const (
 //Auth represents the auth functionality unit
 type Auth struct {
 	storage Storage
+	sender  Sender
 
 	logger *logs.Logger
 
@@ -83,7 +84,7 @@ type Auth struct {
 }
 
 //NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
+func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, sender Sender, minTokenExp *int64, maxTokenExp *int64, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -94,7 +95,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 		maxTokenExp = &maxTokenExpVal
 	}
 	//maybe set up from config collection for diff types of auth
-	emailDialer := gomail.NewDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
+	//emailDialer := gomail.NewDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
 
 	authTypes := map[string]authType{}
 	externalAuthTypes := map[string]externalAuthType{}
@@ -113,12 +114,12 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	apiKeysLock := &sync.RWMutex{}
 
 	timerDone := make(chan bool)
-	auth := &Auth{storage: storage, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
+	auth := &Auth{storage: storage, sender: sender, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		authPrivKey: authPrivKey, AuthService: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
 		maxTokenExp: *maxTokenExp, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
 		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock,
-		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
+		timerDone: timerDone /*emailDialer: emailDialer,*/, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
 	err := auth.storeReg()
 	if err != nil {

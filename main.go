@@ -62,10 +62,11 @@ func main() {
 	smtpPort := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_PORT", false, false)
 	smtpUser := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_USER", false, true)
 	smtpPassword := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_PASSWORD", false, true)
-	smtpFrom := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_EMAIL_FROM", false, false)
-	sender := sender.NewEmailSenderAdapter(smtpHost, smtpPort, smtpUser, smtpPassword, smtpFrom)
+	smtpFrom := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_EMAIL_FROM", false, false)
 
 	smtpPortNum, _ := strconv.Atoi(smtpPort)
+
+	sender := sender.NewEmailSenderAdapter(smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom)
 
 	var authPrivKeyPem []byte
 	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
@@ -105,12 +106,12 @@ func main() {
 		logger.Infof("Error parsing max token exp, applying defaults: %v", err)
 	}
 
-	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
+	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, sender, minTokenExp, maxTokenExp, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, sender, auth)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth)
 	coreAPIs.Start()
 
 	//web adapter
