@@ -49,7 +49,7 @@ type profile struct {
 	LastName  string `bson:"last_name"`
 	Email     string `bson:"email"`
 	Phone     string `bson:"phone"`
-	BirthYear int8   `bson:"birth_year"`
+	BirthYear int16  `bson:"birth_year"`
 	Address   string `bson:"address"`
 	ZipCode   string `bson:"zip_code"`
 	State     string `bson:"state"`

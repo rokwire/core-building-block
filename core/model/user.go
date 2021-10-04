@@ -154,7 +154,7 @@ type Profile struct {
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
 	Phone     string `json:"phone"`
-	BirthYear int8   `json:"birth_year"`
+	BirthYear int16  `json:"birth_year"`
 	Address   string `json:"address"`
 	ZipCode   string `json:"zip_code"`
 	State     string `json:"state"`
