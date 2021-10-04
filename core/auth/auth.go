@@ -95,7 +95,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 		maxTokenExp = &maxTokenExpVal
 	}
 	//maybe set up from config collection for diff types of auth
-	//emailDialer := gomail.NewDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
+	emailDialer := gomail.NewDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
 
 	authTypes := map[string]authType{}
 	externalAuthTypes := map[string]externalAuthType{}
@@ -119,7 +119,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 		maxTokenExp: *maxTokenExp, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
 		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock,
-		timerDone: timerDone /*emailDialer: emailDialer,*/, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
+		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
 	err := auth.storeReg()
 	if err != nil {
