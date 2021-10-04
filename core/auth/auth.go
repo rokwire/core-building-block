@@ -251,31 +251,19 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	} else {
 		//user does not exist, we need to register it
 
-		now := time.Now()
-
-		//account auth type
-		accountAuthTypeID, _ := uuid.NewUUID()
-		accAuthType := authType
-		identifier := externalUser.Identifier
-		var credential *model.Credential //it is nill as it is external user
-		params := map[string]interface{}{}
-		params["user"] = externalUser
-		active := true
-		active2FA := false
-		accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: accAuthType,
-			Identifier: identifier, Params: params, Credential: credential, Active: active, Active2FA: active2FA, DateCreated: now}
-
 		//TODO: use shared profile
 		useSharedProfile := false
 
-		var profile *model.Profile
-		accountAuthType, profile = a.createNewUser(externalUser.Identifier, authType)
-		accountAuthType.Params["user"] = externalUser
+		identifier := externalUser.Identifier
+		accountAuthTypeParams := map[string]interface{}{}
+		accountAuthTypeParams["user"] = externalUser
 
-		//TODO
-		var preferences map[string]interface{}
+		accountAuthType, credential, preferences, profile, err := a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, nil, nil, l)
+		if err != nil {
+			return nil, nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
+		}
 
-		account, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, preferences, profile, l)
+		account, err = a.registerUser(appOrg, *accountAuthType, credential, useSharedProfile, preferences, profile, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
@@ -295,37 +283,6 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.App
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCreds, nil, err)
 	}
-
-	// if anonymousProfileID != "" {
-	// 	appID := appOrg.Application.ID
-	// 	orgID := appOrg.Organization.ID
-	// 	authTypeID := authType.ID
-	// 	identifier := anonymousProfileID
-
-	// 	//FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
-	// 	account, err = a.storage.FindAccount(appID, orgID, authTypeID, identifier)
-	// 	if err != nil || account == nil {
-	// 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	// 	}
-
-	// 	//CRITICAL: CANNOT ACCESS NON-ANONYMOUS ACCOUNTS THROUGH ANONYMOUS AUTH TYPES
-	// 	if !account.Anonymous {
-	// 		return nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAccount, nil, err)
-	// 	}
-	// } else {
-	// 	//use shared profile
-	// 	useSharedProfile := false
-
-	// 	anonymousID, _ := uuid.NewUUID()
-
-	// 	var profile *model.Profile
-	// 	accountAuthType, profile = a.createNewUser(anonymousID.String(), authType)
-
-	// 	account, err = a.registerUser(appOrg, *accountAuthType, useSharedProfile, profile, l)
-	// 	if err != nil {
-	// 		return nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
-	// 	}
-	// }
 
 	return anonymousID, anonymousParams, nil
 }
@@ -359,37 +316,24 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 			return nil, nil, nil, errors.New("account already exists")
 		}
 
+		//TODO: use shared profile
+		useSharedProfile := false
+
 		credentialID, _ := uuid.NewUUID()
+		credID := credentialID.String()
 
 		//apply sign up
-		identifier, credentialValue, err := authImpl.signUp(authType, appType, appOrg, creds, params, credentialID.String(), l)
+		identifier, credentialValue, err := authImpl.signUp(authType, appType, appOrg, creds, params, credID, l)
 		if err != nil {
 			return nil, nil, nil, errors.Wrap("error signing up", err)
 		}
 
-		//setup account
-		now := time.Now()
-		//account auth type
-		accountAuthTypeID, _ := uuid.NewUUID()
-		accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: authType,
-			Identifier: *identifier, Params: nil, Active: true, Active2FA: false, DateCreated: now}
+		accountAuthType, credential, preferences, profile, err := a.prepareRegistrationData(authType, *identifier, nil, &credID, credentialValue, l)
+		if err != nil {
+			return nil, nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
+		}
 
-		credential := model.Credential{ID: credentialID.String(), AccountsAuthTypes: []model.AccountAuthType{*accountAuthType}, Value: credentialValue, Verified: false,
-			AuthType: authType, DateCreated: now, DateUpdated: &now}
-
-		accountAuthType.Credential = &credential
-
-		//TODO: use shared profile
-		useSharedProfile := false
-
-		//profile
-		profileID, _ := uuid.NewUUID()
-		profile := &model.Profile{ID: profileID.String(), PhotoURL: "", FirstName: "", LastName: "", DateCreated: now}
-
-		//TODO
-		var preferences map[string]interface{}
-
-		account, err = a.registerUser(appOrg, *accountAuthType, &credential, useSharedProfile, preferences, profile, l)
+		account, err = a.registerUser(appOrg, *accountAuthType, credential, useSharedProfile, preferences, profile, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
@@ -508,41 +452,32 @@ func (a *Auth) applyAnonymousLogin(authType *model.AuthType, anonymousID string,
 	return &accessToken, nil
 }
 
-//createNewUser creates a new empty user object
-func (a *Auth) createNewUser(id string, authType model.AuthType) (*model.AccountAuthType, *model.Profile) {
-	var accountAuthType *model.AccountAuthType
-
+func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier string, accountAuthTypeParams map[string]interface{},
+	credentialID *string, credentialValue map[string]interface{}, l *logs.Log) (*model.AccountAuthType, *model.Credential, map[string]interface{}, *model.Profile, error) {
 	now := time.Now()
 
 	//account auth type
 	accountAuthTypeID, _ := uuid.NewUUID()
-	accAuthType := authType
-	identifier := id
-	var credential *model.Credential //it is nill as it is external user
-	params := map[string]interface{}{}
 	active := true
 	active2FA := false
-	accountAuthType = &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: accAuthType,
-		Identifier: identifier, Params: params, Credential: credential, Active: active, Active2FA: active2FA, DateCreated: now}
+	accountAuthType := &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: authType,
+		Identifier: identifier, Params: accountAuthTypeParams, Credential: nil, Active: active, Active2FA: active2FA, DateCreated: now}
 
-	// anonymousProfileIDString := ""
-	// if authType.IsAnonymous {
-	// 	anonymousProfileIDString = id
-	// } else {
-	// 	anonymousProfileID, _ := uuid.NewUUID()
-	// 	anonymousProfileIDString = anonymousProfileID.String()
-	// }
+	//credential
+	var credential *model.Credential
+	if credentialID != nil && credentialValue != nil {
+		//there is a credential
+		credential = &model.Credential{ID: *credentialID, AccountsAuthTypes: []model.AccountAuthType{*accountAuthType}, Value: credentialValue, Verified: false,
+			AuthType: authType, DateCreated: now, DateUpdated: &now}
 
-	// anonymousProfile := model.AnonymousProfile{ID: anonymousProfileIDString, CreationDate: now}
+		accountAuthType.Credential = credential
+	}
 
-	//profile
+	//TODO - preferences + profile
 	profileID, _ := uuid.NewUUID()
-	photoURL := ""
-	firstName := ""
-	lastName := ""
-	profile := &model.Profile{ID: profileID.String(), PhotoURL: photoURL, FirstName: firstName, LastName: lastName, DateCreated: now} //AnonymousProfile: anonymousProfile}
+	profile := &model.Profile{ID: string(profileID.String())}
 
-	return accountAuthType, profile
+	return accountAuthType, credential, nil, profile, nil
 }
 
 //registerUser registers account for an organization in an application
