@@ -64,7 +64,7 @@ type Auth struct {
 	minTokenExp int64  //Minimum access token expiration time in minutes
 	maxTokenExp int64  //Maximum access token expiration time in minutes
 
-	profileBB *profilebb.Adapter
+	profileBB ProfileBuildingBlock
 
 	emailFrom       string
 	emailDialer     *gomail.Dialer
