@@ -1,4 +1,4 @@
-p, all_all, /core/admin/*, (GET)|(POST)|(DELETE)|(PUT)
+p, all_core, /core/admin/*, (GET)|(POST)|(DELETE)|(PUT)
 p, all_test, /core/admin/test, (GET)|(POST)|(DELETE)|(PUT)
 p, get_test, /core/admin/test, (GET)
 p, get_test-model, /core/admin/test-model, (GET)
