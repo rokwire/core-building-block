@@ -548,6 +548,7 @@ type ReqLoginRequest struct {
 	Creds             *interface{}            `json:"creds,omitempty"`
 	OrgId             string                  `json:"org_id"`
 	Params            *interface{}            `json:"params,omitempty"`
+	Preferences       *map[string]interface{} `json:"preferences,omitempty"`
 	Profile           *ReqLoginProfile        `json:"profile,omitempty"`
 }
 
