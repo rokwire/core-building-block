@@ -28,3 +28,7 @@ properties:
       - $ref: "./ParamsEmail.yaml"
       - $ref: "./ParamsOIDC.yaml"
       - $ref: "./ParamsNone.yaml"
+  profile:
+      - $ref: "./Profile.yaml"
+  preferences:
+    type: object    
