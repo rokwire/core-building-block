@@ -31,4 +31,5 @@ properties:
   profile:
       - $ref: "./Profile.yaml"
   preferences:
-    type: object    
+      - $ref: "./Preferences.yaml"
+       

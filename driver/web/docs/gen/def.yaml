@@ -1913,7 +1913,7 @@ components:
         profile:
           - $ref: '#/components/schemas/_req_login_Profile'
         preferences:
-          type: object
+          - $ref: '#/components/schemas/_req_login_Preferences'
     _req_login_CredsEmail:
       required:
         - email
