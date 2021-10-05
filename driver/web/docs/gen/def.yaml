@@ -1911,9 +1911,7 @@ components:
             - $ref: '#/components/schemas/_req_login_ParamsOIDC'
             - $ref: '#/components/schemas/_req_login_ParamsNone'
         profile:
-          - $ref: '#/components/schemas/_req_login_Profile'
-        preferences:
-          - $ref: '#/components/schemas/_req_login_Preferences'
+          $ref: '#/components/schemas/_req_login_Profile'
     _req_login_CredsEmail:
       required:
         - email
@@ -2005,9 +2003,6 @@ components:
           country:
             type: string
             nullable: true
-    _req_login_Preferences:
-      preferences:
-        type: object
     _res_login_Response:
       type: object
       properties:

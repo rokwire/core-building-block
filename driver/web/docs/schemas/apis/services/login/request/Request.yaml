@@ -29,7 +29,8 @@ properties:
       - $ref: "./ParamsOIDC.yaml"
       - $ref: "./ParamsNone.yaml"
   profile:
-      - $ref: "./Profile.yaml"
-  preferences:
-      - $ref: "./Preferences.yaml"
+    $ref: "./Profile.yaml"
+ 
+ 
+    
        

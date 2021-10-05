@@ -110,8 +110,6 @@ _req_login_ParamsNone:
   $ref: "./apis/services/login/request/ParamsNone.yaml"
 _req_login_Profile:
   $ref: "./apis/services/login/request/Profile.yaml"
-_req_login_Preferences:
-  $ref: "./apis/services/login/request/Preferences.yaml"
 _res_login_Response:
   $ref: "./apis/services/login/response/Response.yaml"
 _res_login_Account:
