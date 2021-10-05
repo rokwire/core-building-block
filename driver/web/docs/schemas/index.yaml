@@ -107,11 +107,11 @@ _req_login_ParamsEmail:
 _req_login_ParamsOIDC:
   $ref: "./apis/services/login/request/ParamsOIDC.yaml"
 _req_login_ParamsNone:
-   $ref: "./apis/services/login/request/ParamsNone.yaml"
+  $ref: "./apis/services/login/request/ParamsNone.yaml"
 _req_login_Profile:
-   $ref: "./apis/services/login/request/Profile.yaml"
+  $ref: "./apis/services/login/request/Profile.yaml"
 _req_login_Preferences:
-   $ref: "./apis/services/login/request/Preferences.yaml"
+  $ref: "./apis/services/login/request/Preferences.yaml"
 _res_login_Response:
   $ref: "./apis/services/login/response/Response.yaml"
 _res_login_Account:
