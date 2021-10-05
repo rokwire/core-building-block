@@ -273,7 +273,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 
 		//profile
 		profileSearch := map[string]string{
-			"netid": identifier,
+			"uin": identifier,
 		}
 		profile, preferences, err := a.profileBB.GetProfileBBData(profileSearch, l)
 		if err != nil {
@@ -396,13 +396,18 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		useSharedProfile := false
 
 		//profile
-		profileSearch := map[string]string{
-			"netid": *identifier,
+		var profile *model.Profile
+		var preferences map[string]interface{}
+		if authType.Code == "phone" {
+			profileSearch := map[string]string{
+				"phone": *identifier,
+			}
+			profile, preferences, err = a.profileBB.GetProfileBBData(profileSearch, l)
+			if err != nil {
+				l.ErrorAction(logutils.ActionGet, "profile building block data", err)
+			}
 		}
-		profile, preferences, err := a.profileBB.GetProfileBBData(profileSearch, l)
-		if err != nil {
-			l.ErrorAction(logutils.ActionGet, "profile building block data", err)
-		}
+
 		profileID, _ := uuid.NewUUID()
 		if profile == nil {
 			profile = &model.Profile{ID: profileID.String(), PhotoURL: "", FirstName: "", LastName: "", DateCreated: now}
