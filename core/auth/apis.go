@@ -57,7 +57,6 @@ func (a *Auth) Login(authenticationType string, creds string, appTypeIdentifier 
 
 	//get the auth type implementation for the auth type
 	if authType.IsAnonymous {
-		anonymousID := ""
 		anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, *appType, *appOrg, creds, params, anonymousID, l)
 		if err != nil {
 			return "", "", "", nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)

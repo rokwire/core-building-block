@@ -2,13 +2,12 @@ package auth
 
 import (
 	"core-building-block/core/model"
-	"encoding/json"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rokmetro/logging-library/errors"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 const (
@@ -24,28 +23,13 @@ type apiKeyAuthImpl struct {
 	authType string
 }
 
-type apiKeyCreds struct {
-	APIKey string `json:"api_key" validate:"required"`
-}
-
 type apiKeyResponseParams struct {
 	AnonymousID string `json:"anonymous_id"`
 }
 
 func (a *apiKeyAuthImpl) checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, anonymousID string, l *logs.Log) (string, interface{}, error) {
-	var keyCreds apiKeyCreds
-	err := json.Unmarshal([]byte(creds), &keyCreds)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeAPIKeyCreds, nil, err)
-	}
-
-	validate := validator.New()
-	err = validate.Struct(keyCreds)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAPIKeyCreds, nil, err)
-	}
-
-	apiKey, err := a.auth.getCachedAPIKey(keyCreds.APIKey)
+	creds = strings.ReplaceAll(creds, `"`, "")
+	apiKey, err := a.auth.getCachedAPIKey(creds)
 	if err != nil || apiKey == nil {
 		return "", nil, errors.Newf("incorrect key for org_id=%v, app_id=%v", appOrg.Organization.ID, appOrg.Application.ID)
 	}
