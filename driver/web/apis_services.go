@@ -41,6 +41,11 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
+	var profileData *Def.ProfileFields
+	profileData = &Def.ProfileFields{Address: profileData.Address, BirthYear: profileData.BirthYear, Country: profileData.Country,
+		Email: profileData.Email, FirstName: profileData.FirstName, LastName: profileData.LastName, Phone: profileData.Phone,
+		PhotoUrl: profileData.PhotoUrl, State: profileData.State, ZipCode: profileData.ZipCode}
+
 	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
