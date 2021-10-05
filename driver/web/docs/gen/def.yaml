@@ -1880,8 +1880,6 @@ components:
       properties:
         api_key:
           type: string
-        anonymous_id:
-          type: string
     _req_login_ParamsEmail:
       type: object
       description: Auth login params for auth_type="email"
