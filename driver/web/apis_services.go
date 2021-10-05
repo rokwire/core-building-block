@@ -41,13 +41,16 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
+
+	var preferencesData map[string]interface{}
+
 	var profile model.Profile
 	profilDataID, _ := uuid.NewUUID()
 	profileData := model.Profile{ID: profilDataID.String(), PhotoURL: profile.PhotoURL, FirstName: profile.FirstName, LastName: profile.LastName,
 		Email: profile.Email, Phone: profile.Phone, BirthYear: profile.BirthYear, Address: profile.Address, ZipCode: profile.ZipCode,
 		State: profile.State, Country: profile.Country}
 
-	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, profileData, l)
+	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, profileData, preferencesData, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}

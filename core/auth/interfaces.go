@@ -76,7 +76,7 @@ type APIs interface {
 	//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//		Account (Account): Account object for authenticated user
 	//		Params (interface{}): authType-specific set of parameters passed back to client
-	Login(authType string, creds string, appTypeIdentifier string, orgID string, params string, profileData model.Profile, l *logs.Log) (string, string, string, *model.Account, interface{}, error)
+	Login(authType string, creds string, appTypeIdentifier string, orgID string, params string, profileData model.Profile, preferences map[string]interface{}, l *logs.Log) (string, string, string, *model.Account, interface{}, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
