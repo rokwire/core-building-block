@@ -543,6 +543,7 @@ type ReqLoginParamsOIDC struct {
 
 // ReqLoginRequest defines model for _req_login_Request.
 type ReqLoginRequest struct {
+	AnonymousId       *string                 `json:"anonymous_id,omitempty"`
 	AppTypeIdentifier string                  `json:"app_type_identifier"`
 	AuthType          ReqLoginRequestAuthType `json:"auth_type"`
 	Creds             *interface{}            `json:"creds,omitempty"`

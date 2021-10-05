@@ -1844,6 +1844,8 @@ components:
             - $ref: '#/components/schemas/_req_login_ParamsEmail'
             - $ref: '#/components/schemas/_req_login_ParamsOIDC'
             - $ref: '#/components/schemas/_req_login_ParamsNone'
+        anonymous_id:
+          type: string
     _req_login_CredsEmail:
       required:
         - email

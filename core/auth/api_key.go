@@ -25,15 +25,14 @@ type apiKeyAuthImpl struct {
 }
 
 type apiKeyCreds struct {
-	APIKey      string `json:"api_key" validate:"required"`
-	AnonymousID string `json:"anonymous_id"`
+	APIKey string `json:"api_key" validate:"required"`
 }
 
 type apiKeyResponseParams struct {
 	AnonymousID string `json:"anonymous_id"`
 }
 
-func (a *apiKeyAuthImpl) checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, interface{}, error) {
+func (a *apiKeyAuthImpl) checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, anonymousID string, l *logs.Log) (string, interface{}, error) {
 	var keyCreds apiKeyCreds
 	err := json.Unmarshal([]byte(creds), &keyCreds)
 	if err != nil {
@@ -55,7 +54,6 @@ func (a *apiKeyAuthImpl) checkCredentials(authType model.AuthType, appType model
 		return "", nil, errors.Newf("incorrect key for org_id=%v, app_id=%v", appOrg.Organization.ID, appOrg.Application.ID)
 	}
 
-	anonymousID := keyCreds.AnonymousID
 	if anonymousID == "" {
 		anonymousUUID, _ := uuid.NewUUID()
 		anonymousID = anonymousUUID.String()
