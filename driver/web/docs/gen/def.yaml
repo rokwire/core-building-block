@@ -1975,35 +1975,36 @@ components:
     _req_login_Profile:
       type: object
       properties:
-        id:
-          type: string
-        photo_url:
-          type: string
-        first_name:
-          type: string
-        last_name:
-          type: string
-        email:
-          type: string
-          nullable: true
-        phone:
-          type: string
-          nullable: true
-        birth_year:
-          type: integer
-          nullable: true
-        address:
-          type: string
-          nullable: true
-        zip_code:
-          type: string
-          nullable: true
-        state:
-          type: string
-          nullable: true
-        country:
-          type: string
-          nullable: true
+        fields:
+          id:
+            type: string
+          photo_url:
+            type: string
+          first_name:
+            type: string
+          last_name:
+            type: string
+          email:
+            type: string
+            nullable: true
+          phone:
+            type: string
+            nullable: true
+          birth_year:
+            type: integer
+            nullable: true
+          address:
+            type: string
+            nullable: true
+          zip_code:
+            type: string
+            nullable: true
+          state:
+            type: string
+            nullable: true
+          country:
+            type: string
+            nullable: true
     _req_login_Preferences:
       preferences:
         type: object
