@@ -40,7 +40,7 @@ func (a *Auth) GetHost() string {
 //		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //		Account (Account): Account object for authenticated user
 //		Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Login(authenticationType string, creds string, appTypeIdentifier string, orgID string, params string, l *logs.Log) (string, string, string, *model.Account, interface{}, error) {
+func (a *Auth) Login(authenticationType string, creds string, appTypeIdentifier string, orgID string, params string, profilData model.Profile, l *logs.Log) (string, string, string, *model.Account, interface{}, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
@@ -77,7 +77,7 @@ func (a *Auth) Login(authenticationType string, creds string, appTypeIdentifier 
 
 		//TODO groups mapping
 	} else {
-		message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, l)
+		message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profilData, l)
 		if err != nil {
 			return "", "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
