@@ -5,5 +5,3 @@ description: Auth login creds for auth_type="api_key"
 properties:
   api_key:
     type: string
-  anonymous_id:
-    type: string
