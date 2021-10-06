@@ -154,7 +154,7 @@ type Profile struct {
 	LastName  string
 	Email     string
 	Phone     string
-	BirthYear int8
+	BirthYear int16
 	Address   string
 	ZipCode   string
 	State     string

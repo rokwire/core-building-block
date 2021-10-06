@@ -28,6 +28,10 @@ properties:
       - $ref: "./ParamsEmail.yaml"
       - $ref: "./ParamsOIDC.yaml"
       - $ref: "./ParamsNone.yaml"
+  profile:
+    $ref:  "../../../../user/ProfileFields.yaml"  
+  preferences:
+    type: object
   anonymous_id:
     type: string
        

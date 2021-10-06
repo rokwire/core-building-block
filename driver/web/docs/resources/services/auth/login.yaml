@@ -12,8 +12,8 @@ post:
         schema:
           $ref: "../../../schemas/apis/services/login/request/Request.yaml"
         examples:
-          email:
-            summary: Email login
+          email-sign_in:
+            summary: Email - sign in
             value: |
               {
                 "auth_type": "email",
@@ -24,8 +24,40 @@ post:
                   "password": "test12345"
                 }
               }
+          email-sign_up:
+            summary: Email - sign up
+            value: |
+              {
+                "auth_type": "email",
+                "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                "creds": {
+                  "email": "test@test.com", 
+                  "password": "test12345"
+                },
+                "params":{
+                    "sign_up":true,
+                    "confirm_password": "test12345"
+                },
+                "preferences":{
+                    "key1":"value1",
+                    "key2":"value2"
+                },
+                "profile":{
+                  "address": "address",
+                  "birth_year": 1990,
+                  "country": "county",
+                  "email": "email",
+                  "first_name": "first name",
+                  "last_name": "last name",
+                  "phone": "+000000000000",
+                  "photo_url": "photo url",
+                  "state": "state",
+                  "zip_code": "zip code"
+                }
+              }
           phone:
-            summary: Phone login
+            summary: Phone - sign in OR sign up
             value: |
               {
                 "auth_type": "twilio_phone",
@@ -34,6 +66,22 @@ post:
                 "creds": {
                   "phone": "+12223334444", 
                   "code": "123456"
+                },
+                "preferences":{
+                    "key1":"value1",
+                    "key2":"value2"
+                },
+                "profile":{
+                  "address": "address",
+                  "birth_year": 1990,
+                  "country": "county",
+                  "email": "email",
+                  "first_name": "first name",
+                  "last_name": "last name",
+                  "phone": "+000000000000",
+                  "photo_url": "photo url",
+                  "state": "state",
+                  "zip_code": "zip code"
                 }
               }
           illinois_oidc:
@@ -47,6 +95,22 @@ post:
                 "params": {
                   "redirect_uri": "https://redirect.example.com",
                   "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                },
+                "preferences":{
+                    "key1":"value1",
+                    "key2":"value2"
+                },
+                "profile":{
+                  "address": "address",
+                  "birth_year": 1990,
+                  "country": "county",
+                  "email": "email",
+                  "first_name": "first name",
+                  "last_name": "last name",
+                  "phone": "+000000000000",
+                  "photo_url": "photo url",
+                  "state": "state",
+                  "zip_code": "zip code"
                 }
               }
           api_key:
