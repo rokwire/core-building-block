@@ -198,7 +198,7 @@ func (a *Auth) sendEmail(toEmail string, subject string, body string, attachment
 }
 
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
-	creds string, params string, anonymousID string, l *logs.Log) (*model.Account, *model.AccountAuthType, interface{}, error) {
+	creds string, params string, anonymousID string, profileData model.Profile, preferences map[string]interface{}, l *logs.Log) (*model.Account, *model.AccountAuthType, interface{}, error) {
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
 	var extParams interface{}
@@ -300,7 +300,7 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.App
 }
 
 func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
-	creds string, params string, anonymousID string, profilData model.Profile, preferences map[string]interface{}, l *logs.Log) (string, *model.Account, *model.AccountAuthType, error) {
+	creds string, params string, anonymousID string, profileData model.Profile, preferences map[string]interface{}, l *logs.Log) (string, *model.Account, *model.AccountAuthType, error) {
 	var message string
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
@@ -341,7 +341,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 			return "", nil, nil, errors.Wrap("error signing up", err)
 		}
 
-		accountAuthType, credential, preferences, profile, err := a.prepareRegistrationData(authType, *identifier, nil, &credID, credentialValue, params, profilData, l)
+		accountAuthType, credential, preferences, profile, err := a.prepareRegistrationData(authType, *identifier, nil, &credID, credentialValue, params, profileData, l)
 		if err != nil {
 			return "", nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}

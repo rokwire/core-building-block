@@ -50,8 +50,8 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 	var preferencesData map[string]interface{}
 
 	var profile model.Profile
-	profilDataID, _ := uuid.NewUUID()
-	profileData := model.Profile{ID: profilDataID.String(), PhotoURL: profile.PhotoURL, FirstName: profile.FirstName, LastName: profile.LastName,
+	profileDataID, _ := uuid.NewUUID()
+	profileData := model.Profile{ID: profileDataID.String(), PhotoURL: profile.PhotoURL, FirstName: profile.FirstName, LastName: profile.LastName,
 		Email: profile.Email, Phone: profile.Phone, BirthYear: profile.BirthYear, Address: profile.Address, ZipCode: profile.ZipCode,
 		State: profile.State, Country: profile.Country}
 
