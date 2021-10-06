@@ -64,23 +64,23 @@ paths:
                     },
                     "params":{
                         "sign_up":true,
-                        "confirm_password": "test12345",
-                        "preferences":{
-                            "key1":"value1",
-                            "key2":"value2"
-                        },
-                        "profile":{
-                          "address": "address",
-                          "birth_year": 1990,
-                          "country": "county",
-                          "email": "email",
-                          "first_name": "first name",
-                          "last_name": "last name",
-                          "phone": "+000000000000",
-                          "photo_url": "photo url",
-                          "state": "state",
-                          "zip_code": "zip code"
-                        }
+                        "confirm_password": "test12345"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
                     }
                   }
               phone:
@@ -94,23 +94,21 @@ paths:
                       "phone": "+12223334444", 
                       "code": "123456"
                     },
-                    "params":{
-                        "preferences":{
-                            "key1":"value1",
-                            "key2":"value2"
-                        },
-                        "profile":{
-                          "address": "address",
-                          "birth_year": 1990,
-                          "country": "county",
-                          "email": "email",
-                          "first_name": "first name",
-                          "last_name": "last name",
-                          "phone": "+000000000000",
-                          "photo_url": "photo url",
-                          "state": "state",
-                          "zip_code": "zip code"
-                        }
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
                     }
                   }
               illinois_oidc:
@@ -123,23 +121,23 @@ paths:
                     "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
                     "params": {
                       "redirect_uri": "https://redirect.example.com",
-                      "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia",
-                      "preferences":{
-                          "key1":"value1",
-                          "key2":"value2"
-                      },
-                      "profile":{
-                        "address": "address",
-                        "birth_year": 1990,
-                        "country": "county",
-                        "email": "email",
-                        "first_name": "first name",
-                        "last_name": "last name",
-                        "phone": "+000000000000",
-                        "photo_url": "photo url",
-                        "state": "state",
-                        "zip_code": "zip code"
-                      }
+                      "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
                     }
                   }
               api_key:
