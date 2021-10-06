@@ -149,16 +149,16 @@ type Credential struct {
 type Profile struct {
 	ID string
 
-	PhotoURL  string `json:"photo_url"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
-	Phone     string `json:"phone"`
-	BirthYear int16  `json:"birth_year"`
-	Address   string `json:"address"`
-	ZipCode   string `json:"zip_code"`
-	State     string `json:"state"`
-	Country   string `json:"country"`
+	PhotoURL  string
+	FirstName string
+	LastName  string
+	Email     string
+	Phone     string
+	BirthYear int16
+	Address   string
+	ZipCode   string
+	State     string
+	Country   string
 
 	Accounts []Account //the users can share profiles between their applications accounts for some applications
 
