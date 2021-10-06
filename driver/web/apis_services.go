@@ -8,7 +8,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
@@ -46,15 +48,20 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		anonymousID = *requestData.AnonymousId
 	}
 
-	var preferencesData map[string]interface{}
+	//preferences
+	preferences := requestData.Preferences
 
-	var profile model.Profile
-	/*profileID, _ := uuid.NewUUID()
-	profileData := model.Profile{ID: profileID.String(), PhotoURL: profile.PhotoURL, FirstName: profile.FirstName, LastName: profile.LastName,
-		Email: profile.Email, Phone: profile.Phone, BirthYear: profile.BirthYear, Address: profile.Address, ZipCode: profile.ZipCode,
-		State: profile.State, Country: profile.Country} */
+	//profile ////
+	requestProfile := requestData.Profile
+	//generate ID
+	profileIDUUID, _ := uuid.NewUUID()
+	profileID := profileIDUUID.String()
+	requestProfile.Id = &profileID
+	profile := profileFromDef(requestProfile)
+	//set date created
+	profile.DateCreated = time.Now()
 
-	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, anonymousID, profile, preferencesData, l)
+	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, anonymousID, *profile, *preferences, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}

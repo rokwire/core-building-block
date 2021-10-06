@@ -261,9 +261,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		accountAuthTypeParams := map[string]interface{}{}
 		accountAuthTypeParams["user"] = externalUser
 
-		var profileFields model.Profile
-
-		accountAuthType, credential, preferences, profile, err := a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, nil, nil, params, profileFields, l)
+		accountAuthType, credential, err := a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, nil, nil, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
@@ -341,7 +339,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 			return "", nil, nil, errors.Wrap("error signing up", err)
 		}
 
-		accountAuthType, credential, preferences, profile, err := a.prepareRegistrationData(authType, *identifier, nil, &credID, credentialValue, params, profile, l)
+		accountAuthType, credential, err := a.prepareRegistrationData(authType, *identifier, nil, &credID, credentialValue, l)
 		if err != nil {
 			return "", nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
@@ -464,7 +462,7 @@ func (a *Auth) applyAnonymousLogin(authType *model.AuthType, anonymousID string,
 }
 
 func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier string, accountAuthTypeParams map[string]interface{},
-	credentialID *string, credentialValue map[string]interface{}, params string, profileFields model.Profile, l *logs.Log) (*model.AccountAuthType, *model.Credential, map[string]interface{}, *model.Profile, error) {
+	credentialID *string, credentialValue map[string]interface{}, l *logs.Log) (*model.AccountAuthType, *model.Credential, error) {
 	now := time.Now()
 
 	//account auth type
@@ -484,35 +482,7 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 		accountAuthType.Credential = credential
 	}
 
-	//get params map
-	paramsMap := map[string]interface{}{}
-	err := json.Unmarshal([]byte(params), &paramsMap)
-	if err != nil {
-		return nil, nil, nil, nil, errors.WrapErrorAction("error unmarshal params", "", nil, err)
-	}
-
-	//preferences
-	var preferences map[string]interface{}
-	preferencesParams := paramsMap["preferences"]
-	if preferencesParams != nil {
-		preferences = preferencesParams.(map[string]interface{})
-	}
-
-	//profile
-	profileParams := profileFields
-	profileData, err := json.Marshal(profileParams)
-	if err != nil {
-		return nil, nil, nil, nil, errors.WrapErrorAction("error marshal profile params", "", nil, err)
-	}
-	var profile *model.Profile
-	err = json.Unmarshal([]byte(profileData), &profile)
-	if err != nil {
-		return nil, nil, nil, nil, errors.WrapErrorAction("error unmarshal profile", "", nil, err)
-	}
-	profileID, _ := uuid.NewUUID()
-	profile.ID = profileID.String()
-
-	return accountAuthType, credential, preferences, profile, nil
+	return accountAuthType, credential, nil
 }
 
 //registerUser registers account for an organization in an application
@@ -527,7 +497,7 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 //	Returns:
 //		Registered account (Account): Registered Account object
 func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthType model.AccountAuthType, credential *model.Credential,
-	useSharedProfile bool, profile *model.Profile, preferences map[string]interface{}, anonymousID string, l *logs.Log) (*model.Account, error) {
+	useSharedProfile bool, profile model.Profile, preferences map[string]interface{}, anonymousID string, l *logs.Log) (*model.Account, error) {
 	//TODO - analyse what should go in one transaction
 
 	//TODO - ignore useSharedProfile for now
@@ -543,7 +513,7 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 	authTypes := []model.AccountAuthType{accountAuthType}
 
 	account := model.Account{ID: accountID, Application: application, Organization: organization,
-		Permissions: nil, Roles: nil, Groups: nil, AuthTypes: authTypes, Preferences: preferences, Profile: *profile, DateCreated: time.Now()} // Anonymous: accountAuthType.AuthType.IsAnonymous
+		Permissions: nil, Roles: nil, Groups: nil, AuthTypes: authTypes, Preferences: preferences, Profile: profile, DateCreated: time.Now()} // Anonymous: accountAuthType.AuthType.IsAnonymous
 
 	insertedAccount, err := a.storage.InsertAccount(account)
 	if err != nil {
