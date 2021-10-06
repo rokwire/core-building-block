@@ -537,7 +537,18 @@ type ReqLoginParamsOIDC struct {
 
 // ReqLoginProfile defines model for _req_login_Profile.
 type ReqLoginProfile struct {
-	Fields *interface{} `json:"fields,omitempty"`
+	Fields *struct {
+		Address   *string `json:"address"`
+		BirthYear *int    `json:"birth_year"`
+		Country   *string `json:"country"`
+		Email     *string `json:"email"`
+		FirstName *string `json:"first_name,omitempty"`
+		LastName  *string `json:"last_name,omitempty"`
+		Phone     *string `json:"phone"`
+		PhotoUrl  *string `json:"photo_url,omitempty"`
+		State     *string `json:"state"`
+		ZipCode   *string `json:"zip_code"`
+	} `json:"fields,omitempty"`
 }
 
 // ReqLoginRequest defines model for _req_login_Request.
