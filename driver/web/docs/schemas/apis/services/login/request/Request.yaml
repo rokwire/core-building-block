@@ -28,3 +28,6 @@ properties:
       - $ref: "./ParamsEmail.yaml"
       - $ref: "./ParamsOIDC.yaml"
       - $ref: "./ParamsNone.yaml"
+  anonymous_id:
+    type: string
+       
