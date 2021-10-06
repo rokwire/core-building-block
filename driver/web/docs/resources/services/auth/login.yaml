@@ -60,7 +60,7 @@ post:
             summary: Phone - sign in OR sign up
             value: |
               {
-                "auth_type": "phone",
+                "auth_type": "twilio_phone",
                 "app_type_identifier": "edu.illinois.rokwire",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                 "creds": {
@@ -120,11 +120,10 @@ post:
             value: |
               {
                 "auth_type": "api_key",
+                "app_type_identifier": "edu.illinois.rokwire",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                "app_id": "edu.illinois.rokwire",
-                "creds": {
-                  "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738"
-                }
+                "creds": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                "anonymous_id": "a9a0204d-62f7-40d3-a14a-d8ecae89dad2"
               }
     required: true
   responses:

@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
+- Add phone authentication support [#24](https://github.com/rokwire/core-building-block/issues/24)
+- Handle anonymous ID conversion [#204](https://github.com/rokwire/core-building-block/issues/204)
 - Create a Security.md [#193] (https://github.com/rokwire/core-building-block/issues/193)
 - Set up authorization system [#45](https://github.com/rokwire/core-building-block/issues/45)
 - Add permissions to tokens [#189](https://github.com/rokwire/core-building-block/issues/189)
