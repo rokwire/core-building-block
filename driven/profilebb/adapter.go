@@ -29,7 +29,7 @@ type profileBBPii struct {
 	FirstName string `json:"firstname"`
 	Phone     string `json:"phone"`
 	Email     string `json:"email"`
-	BirthYear int8   `json:"birthYear"`
+	BirthYear int16  `json:"birthYear"`
 	Address   string `json:"address"`
 	ZipCode   string `json:"zipCode"`
 	State     string `json:"state"`
