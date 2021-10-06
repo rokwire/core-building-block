@@ -8,7 +8,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
@@ -41,7 +43,25 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, l)
+	anonymousID := ""
+	if requestData.AnonymousId != nil {
+		anonymousID = *requestData.AnonymousId
+	}
+
+	//preferences
+	preferences := requestData.Preferences
+
+	//profile ////
+	requestProfile := requestData.Profile
+	//generate ID
+	profileIDUUID, _ := uuid.NewUUID()
+	profileID := profileIDUUID.String()
+	requestProfile.Id = &profileID
+	profile := profileFromDef(requestProfile)
+	//set date created
+	profile.DateCreated = time.Now()
+
+	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, anonymousID, *profile, *preferences, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
@@ -69,9 +89,14 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		roles := applicationRolesToDef(account.Roles)
 		//groups
 		groups := applicationGroupsToDef(account.Groups)
-		//account auth types
-		accountAuthTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &accountAuthTypes, Profile: profile}
+		//account auth types - we return only the one used for login
+		authTypes := make([]Def.AccountAuthTypeFields, 1)
+		for _, current := range account.AuthTypes {
+			if current.AuthType.Code == string(requestData.AuthType) {
+				authTypes[0] = accountAuthTypeToDef(current)
+			}
+		}
+		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
 	}
 
 	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: accountData, Params: &params}

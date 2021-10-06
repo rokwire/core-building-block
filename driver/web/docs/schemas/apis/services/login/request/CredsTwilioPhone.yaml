@@ -1,5 +1,5 @@
 type: object
-description: Auth login creds for auth_type="phone"
+description: Auth login creds for auth_type="twilio_phone"
 required:
   - phone
 properties:
