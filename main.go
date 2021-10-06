@@ -66,8 +66,8 @@ func main() {
 
 	smtpPortNum, _ := strconv.Atoi(smtpPort)
 
-	profileBBHost := envLoader.GetAndLogEnvVar("PROFILE_BB_HOST", true, false)
-	profileBBApiKey := envLoader.GetAndLogEnvVar("PROFILE_BB_API_KEY", true, true)
+	profileBBHost := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PROFILE_BB_HOST", true, false)
+	profileBBApiKey := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PROFILE_BB_API_KEY", true, true)
 
 	var authPrivKeyPem []byte
 	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
