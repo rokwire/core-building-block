@@ -1910,7 +1910,7 @@ components:
             - $ref: '#/components/schemas/_req_login_ParamsOIDC'
             - $ref: '#/components/schemas/_req_login_ParamsNone'
         profile:
-          $ref: '#/components/schemas/_req_login_Profile'
+          $ref: '#/components/schemas/ProfileFields'
         preferences:
           type: object
         anonymous_id:
@@ -1971,39 +1971,6 @@ components:
       type: object
       description: Auth login request params for unlisted auth_types (None)
       nullable: true
-    _req_login_Profile:
-      type: object
-      properties:
-        fields:
-          type: object
-          properties:
-            photo_url:
-              type: string
-            first_name:
-              type: string
-            last_name:
-              type: string
-            email:
-              type: string
-              nullable: true
-            phone:
-              type: string
-              nullable: true
-            birth_year:
-              type: integer
-              nullable: true
-            address:
-              type: string
-              nullable: true
-            zip_code:
-              type: string
-              nullable: true
-            state:
-              type: string
-              nullable: true
-            country:
-              type: string
-              nullable: true
     _res_login_Response:
       type: object
       properties:

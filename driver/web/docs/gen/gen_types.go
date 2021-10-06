@@ -535,22 +535,6 @@ type ReqLoginParamsOIDC struct {
 	RedirectUri  *string `json:"redirect_uri,omitempty"`
 }
 
-// ReqLoginProfile defines model for _req_login_Profile.
-type ReqLoginProfile struct {
-	Fields *struct {
-		Address   *string `json:"address"`
-		BirthYear *int    `json:"birth_year"`
-		Country   *string `json:"country"`
-		Email     *string `json:"email"`
-		FirstName *string `json:"first_name,omitempty"`
-		LastName  *string `json:"last_name,omitempty"`
-		Phone     *string `json:"phone"`
-		PhotoUrl  *string `json:"photo_url,omitempty"`
-		State     *string `json:"state"`
-		ZipCode   *string `json:"zip_code"`
-	} `json:"fields,omitempty"`
-}
-
 // ReqLoginRequest defines model for _req_login_Request.
 type ReqLoginRequest struct {
 	AnonymousId       *string                 `json:"anonymous_id,omitempty"`
@@ -560,7 +544,7 @@ type ReqLoginRequest struct {
 	OrgId             string                  `json:"org_id"`
 	Params            *interface{}            `json:"params,omitempty"`
 	Preferences       *map[string]interface{} `json:"preferences,omitempty"`
-	Profile           *ReqLoginProfile        `json:"profile,omitempty"`
+	Profile           *ProfileFields          `json:"profile,omitempty"`
 }
 
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
