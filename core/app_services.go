@@ -20,6 +20,18 @@ func (app *application) serGetProfile(accountID string) (*model.Profile, error) 
 	return &profile, nil
 }
 
+func (app *application) serGetPreferences(accountID string) (*model.Account, map[string]interface{}, error) {
+	//find the account
+	account, err := app.storage.FindAccountByID(accountID)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	//get the preferences for the account
+	preferences := account.Preferences
+	return nil, preferences, nil
+}
+
 func (app *application) serUpdateProfile(accountID string, profile *model.Profile) error {
 	return app.storage.UpdateProfile(accountID, profile)
 }

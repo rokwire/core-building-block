@@ -69,6 +69,10 @@ func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, error) {
 	return s.app.serGetProfile(accountID)
 }
 
+func (s *servicesImpl) SerGetPreferences(accountID string) (*model.Account, map[string]interface{}, error) {
+	return s.app.serGetPreferences(accountID)
+}
+
 func (s *servicesImpl) SerUpdateProfile(accountID string, profile *model.Profile) error {
 	return s.app.serUpdateProfile(accountID, profile)
 }
