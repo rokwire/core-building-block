@@ -138,7 +138,7 @@ func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode stri
 
 	verificationLink := a.auth.host + fmt.Sprintf("/services/auth/verify?%s", params.Encode())
 	return a.auth.sendEmail(email, "Verify your email address", "Please click the link below to verify your email address:\n"+verificationLink+"\n\nIf you did not request this verification link, please ignore this message.", nil)
-	return nil
+
 }
 
 //TODO: To be used in password reset flow
