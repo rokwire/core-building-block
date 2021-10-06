@@ -52,7 +52,7 @@ func (a *Auth) Login(authenticationType string, creds string, appTypeIdentifier 
 
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
-	var message *string
+	var message string
 	var responseParams interface{}
 
 	//get the auth type implementation for the auth type
@@ -81,8 +81,8 @@ func (a *Auth) Login(authenticationType string, creds string, appTypeIdentifier 
 		if err != nil {
 			return "", "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
-		if message != nil {
-			return *message, "", "", nil, nil, nil
+		if message != "" {
+			return message, "", "", nil, nil, nil
 		}
 
 		//the credentials are valid

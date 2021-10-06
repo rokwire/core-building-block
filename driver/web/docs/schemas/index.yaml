@@ -96,8 +96,8 @@ _req_login_Request:
   $ref: "./apis/services/login/request/Request.yaml"
 _req_login_CredsEmail:
   $ref: "./apis/services/login/request/CredsEmail.yaml"
-_req_login_CredsPhone:
-  $ref: "./apis/services/login/request/CredsPhone.yaml"
+_req_login_CredsTwilioPhone:
+  $ref: "./apis/services/login/request/CredsTwilioPhone.yaml"
 _req_login_CredsOIDC:
   $ref: "./apis/services/login/request/CredsOIDC.yaml"
 _req_login_CredsAPIKey:

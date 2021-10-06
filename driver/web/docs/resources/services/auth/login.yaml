@@ -28,7 +28,7 @@ post:
             summary: Phone login
             value: |
               {
-                "auth_type": "phone",
+                "auth_type": "twilio_phone",
                 "app_type_identifier": "edu.illinois.rokwire",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                 "creds": {
