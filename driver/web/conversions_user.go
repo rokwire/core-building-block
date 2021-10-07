@@ -49,12 +49,8 @@ func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeF
 }
 
 //Profile
-func profileFromDef(item *Def.ProfileFields) model.Profile {
-	if item == nil {
-		return model.Profile{}
-	}
-
-	return model.Profile{ID: *item.Id, PhotoURL: *item.PhotoUrl, FirstName: *item.FirstName, LastName: *item.LastName,
+func profileFromDef(item *Def.ProfileFields) *model.Profile {
+	return &model.Profile{ID: *item.Id, PhotoURL: *item.PhotoUrl, FirstName: *item.FirstName, LastName: *item.LastName,
 		Email: *item.Email, Phone: *item.Phone, BirthYear: int16(*item.BirthYear), Address: *item.Address, ZipCode: *item.ZipCode,
 		State: *item.State, Country: *item.Country}
 }
