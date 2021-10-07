@@ -56,10 +56,13 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 
 	//profile ////
 	requestProfile := requestData.Profile
+	if requestProfile != nil {
+		//generate ID
+		profileIDUUID, _ := uuid.NewUUID()
+		profileID := profileIDUUID.String()
+		requestProfile.Id = &profileID
+	}
 	profile := profileFromDef(requestProfile)
-	//generate ID
-	profileID, _ := uuid.NewUUID()
-	profile.ID = profileID.String()
 	//set date created
 	profile.DateCreated = time.Now()
 
