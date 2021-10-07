@@ -4,6 +4,10 @@ post:
   summary: Create application role
   description: |
     Creates application role
+
+    **Auth:** Requires auth token with `auth_admin` permission
+  security:
+    - bearerAuth: []
   requestBody:
     description: Application role
     content:

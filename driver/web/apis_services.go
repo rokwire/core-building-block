@@ -8,7 +8,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
@@ -19,7 +21,7 @@ type ServicesApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -41,7 +43,30 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, l)
+	anonymousID := ""
+	if requestData.AnonymousId != nil {
+		anonymousID = *requestData.AnonymousId
+	}
+
+	//preferences
+	var preferences map[string]interface{}
+	if requestData.Preferences != nil {
+		preferences = *requestData.Preferences
+	}
+
+	//profile ////
+	requestProfile := requestData.Profile
+	if requestProfile != nil {
+		//generate ID
+		profileIDUUID, _ := uuid.NewUUID()
+		profileID := profileIDUUID.String()
+		requestProfile.Id = &profileID
+	}
+	profile := profileFromDef(requestProfile)
+	//set date created
+	profile.DateCreated = time.Now()
+
+	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, anonymousID, profile, preferences, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
@@ -69,9 +94,14 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 		roles := applicationRolesToDef(account.Roles)
 		//groups
 		groups := applicationGroupsToDef(account.Groups)
-		//account auth types
-		accountAuthTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &accountAuthTypes, Profile: profile}
+		//account auth types - we return only the one used for login
+		authTypes := make([]Def.AccountAuthTypeFields, 1)
+		for _, current := range account.AuthTypes {
+			if current.AuthType.Code == string(requestData.AuthType) {
+				authTypes[0] = accountAuthTypeToDef(current)
+			}
+		}
+		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
 	}
 
 	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: accountData, Params: &params}
@@ -83,7 +113,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request) logs.HttpRe
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	requestData, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -105,7 +135,7 @@ func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request) logs.Http
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -131,7 +161,7 @@ func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request) logs.Htt
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -167,7 +197,7 @@ func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request) 
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-func (h ServicesApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h ServicesApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	serviceIDsParam := r.URL.Query().Get("ids")
 	if serviceIDsParam == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("ids"), nil, http.StatusBadRequest, false)
@@ -189,10 +219,8 @@ func (h ServicesApisHandler) getServiceRegistrations(l *logs.Log, r *http.Reques
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h ServicesApisHandler) deleteAccount(l *logs.Log, r *http.Request) logs.HttpResponse {
-	//TODO: get account ID from access token to pass to SerDeleteAccount
-
-	err := h.coreAPIs.Services.SerDeleteAccount("")
+func (h ServicesApisHandler) deleteAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	err := h.coreAPIs.Services.SerDeleteAccount(claims.Subject)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -200,10 +228,8 @@ func (h ServicesApisHandler) deleteAccount(l *logs.Log, r *http.Request) logs.Ht
 	return l.HttpResponseSuccess()
 }
 
-func (h ServicesApisHandler) getProfile(l *logs.Log, r *http.Request) logs.HttpResponse {
-	//TODO: get account ID from access token to pass to SerGetProfile
-
-	profile, err := h.coreAPIs.Services.SerGetProfile("")
+func (h ServicesApisHandler) getProfile(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	profile, err := h.coreAPIs.Services.SerGetProfile(claims.Subject)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
 	}
@@ -218,9 +244,7 @@ func (h ServicesApisHandler) getProfile(l *logs.Log, r *http.Request) logs.HttpR
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request) logs.HttpResponse {
-	//TODO: get account ID from access token to pass to SerUpdateProfile
-
+func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -234,7 +258,7 @@ func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request) logs.Ht
 
 	profile := profileFromDef(&requestData)
 
-	err = h.coreAPIs.Services.SerUpdateProfile(profile, "")
+	err = h.coreAPIs.Services.SerUpdateProfile(claims.Subject, &profile)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
 	}
@@ -242,9 +266,7 @@ func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request) logs.Ht
 	return l.HttpResponseSuccess()
 }
 
-func (h ServicesApisHandler) updateAccountPreferences(l *logs.Log, r *http.Request) logs.HttpResponse {
-	//TODO: get account ID from access token to pass to SerUpdateProfile
-
+func (h ServicesApisHandler) updateAccountPreferences(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -256,7 +278,7 @@ func (h ServicesApisHandler) updateAccountPreferences(l *logs.Log, r *http.Reque
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "account preferences update request", nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.Services.SerUpdateAccountPreferences("", preferences)
+	err = h.coreAPIs.Services.SerUpdateAccountPreferences(claims.Subject, preferences)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, nil, err, http.StatusInternalServerError, true)
 	}
@@ -265,14 +287,14 @@ func (h ServicesApisHandler) updateAccountPreferences(l *logs.Log, r *http.Reque
 }
 
 //getCommonTest TODO get test
-func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	res := h.coreAPIs.Services.SerGetCommonTest(l)
 
 	return l.HttpResponseSuccessMessage(res)
 }
 
 //Handler for verify endpoint
-func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)

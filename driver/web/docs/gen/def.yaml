@@ -24,8 +24,6 @@ tags:
   - name: Third-Party Services
     description: APIs consumed by third-party services.
 paths:
-  /services/auth/test:
-    $ref: '#/paths/~1services~1test'
   /services/auth/login:
     post:
       tags:
@@ -41,8 +39,8 @@ paths:
             schema:
               $ref: '#/components/schemas/_req_login_Request'
             examples:
-              email:
-                summary: Email login
+              email-sign_in:
+                summary: Email - sign in
                 value: |
                   {
                     "auth_type": "email",
@@ -53,16 +51,64 @@ paths:
                       "password": "test12345"
                     }
                   }
-              phone:
-                summary: Phone login
+              email-sign_up:
+                summary: Email - sign up
                 value: |
                   {
-                    "auth_type": "phone",
+                    "auth_type": "email",
+                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "creds": {
+                      "email": "test@test.com", 
+                      "password": "test12345"
+                    },
+                    "params":{
+                        "sign_up":true,
+                        "confirm_password": "test12345"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
+                    }
+                  }
+              phone:
+                summary: Phone - sign in OR sign up
+                value: |
+                  {
+                    "auth_type": "twilio_phone",
                     "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "creds": {
                       "phone": "+12223334444", 
                       "code": "123456"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
                     }
                   }
               illinois_oidc:
@@ -76,6 +122,22 @@ paths:
                     "params": {
                       "redirect_uri": "https://redirect.example.com",
                       "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
                     }
                   }
               api_key:
@@ -83,11 +145,10 @@ paths:
                 value: |
                   {
                     "auth_type": "api_key",
+                    "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "app_id": "edu.illinois.rokwire",
-                    "creds": {
-                      "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738"
-                    }
+                    "creds": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "anonymous_id": "a9a0204d-62f7-40d3-a14a-d8ecae89dad2"
                   }
         required: true
       responses:
@@ -202,6 +263,10 @@ paths:
       summary: Authorize service
       description: |
         Authorize a third-party service and get a scoped access token that can be used to access its APIs
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -263,6 +328,10 @@ paths:
       summary: Get service registrations
       description: |
         Returns service registration records
+
+        **Auth:** Requires auth token
+      security:
+        - bearerAuth: []
       parameters:
         - name: ids
           in: query
@@ -294,6 +363,10 @@ paths:
       summary: Delete user account
       description: |
         Deletes a user account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Success
@@ -308,13 +381,17 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/account-preferences:
+  /services/account/preferences:
     put:
       tags:
         - Services
       summary: Update account preferences
       description: |
         Updates account preferences
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
       requestBody:
         description: Account preferences
         content:
@@ -336,13 +413,17 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/profile:
+  /services/account/profile:
     get:
       tags:
         - Services
       summary: Get user profile
       description: |
         Returns a user profile
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Success
@@ -362,6 +443,10 @@ paths:
       summary: Update user profile
       description: |
         Updates a user profile
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
       requestBody:
         description: Profile update
         content:
@@ -403,6 +488,10 @@ paths:
       summary: Get global config
       description: |
         Gives the system global config
+
+        **Auth:** Requires auth token with `config_admin` permission
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Success
@@ -422,6 +511,10 @@ paths:
       summary: Create global config
       description: |
         Creates the system global config
+
+        **Auth:** Requires auth token with `config_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -448,6 +541,10 @@ paths:
       summary: Update global config
       description: |
         Updates the system global config
+
+        **Auth:** Requires auth token with `config_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -475,6 +572,10 @@ paths:
       summary: Update organization
       description: |
         Updates organization
+
+         **Auth:** Requires auth token with `org_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -489,7 +590,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Organization'
+              $ref: '#/components/schemas/_req_update_Organization_Request'
         required: true
       responses:
         '200':
@@ -511,6 +612,10 @@ paths:
       summary: Get organization
       description: |
         Gets organization
+
+        **Auth:** Requires auth token with `org_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -526,7 +631,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Organization'
+                $ref: '#/components/schemas/_req_get_Organization_Request'
         '400':
           description: Bad request
         '401':
@@ -542,6 +647,10 @@ paths:
       summary: Get organizations
       description: |
         Gets organizations
+
+        **Auth:** Requires auth token with `org_admin` permission
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Successful operation
@@ -550,7 +659,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Organization'
+                  $ref: '#/components/schemas/_res_get_Organizations_Response'
         '400':
           description: Bad request
         '401':
@@ -563,12 +672,16 @@ paths:
       summary: Create organization
       description: |
         Creates organization
+
+        **Auth:** Requires auth token with `org_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: creates one organization
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Organization'
+              $ref: '#/components/schemas/_req_create-Organization_Request'
         required: true
       responses:
         '200':
@@ -591,6 +704,10 @@ paths:
       summary: Get service registrations
       description: |
         Returns service registration records
+
+        **Auth:** Requires auth token with `service_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: ids
           in: query
@@ -623,6 +740,10 @@ paths:
         Creates a new service registration
 
         The "service_id" of the registration must not match an existing registration  
+
+        **Auth:** Requires auth token with `service_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: service registration record to be added
         content:
@@ -652,6 +773,10 @@ paths:
         Update an existing service registration
 
         The "service_id" of the registration must match an existing registration
+
+        **Auth:** Requires auth token with `service_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: Service registration record update to be applied
         content:
@@ -679,6 +804,10 @@ paths:
       summary: Deregister service
       description: |
         Deletes an existing service registration record
+
+        **Auth:** Requires auth token with `service_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: query
@@ -709,6 +838,10 @@ paths:
       summary: Get application
       description: |
         Gets application
+
+        **Auth:** Requires auth token with `app_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -724,7 +857,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Application'
+                $ref: '#/components/schemas/_req_get_Application_Request'
         '400':
           description: Bad request
         '401':
@@ -740,6 +873,10 @@ paths:
       summary: Get applications
       description: |
         Gets applications
+
+        **Auth:** Requires auth token with `app_admin` permission
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Successful operation
@@ -748,7 +885,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Application'
+                  $ref: '#/components/schemas/_res_get_Applications_Response'
         '400':
           description: Bad request
         '401':
@@ -761,12 +898,16 @@ paths:
       summary: Create application
       description: |
         Creates application
+
+        **Auth:** Requires auth token with `app_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: creates one application
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Application'
+              $ref: '#/components/schemas/_req_create_Application_Request'
         required: true
       responses:
         '200':
@@ -789,6 +930,10 @@ paths:
       summary: Create application permission
       description: |
         Creates application permission
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: Application permission
         content:
@@ -817,6 +962,10 @@ paths:
       summary: Create application role
       description: |
         Creates application role
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: Application role
         content:
@@ -845,6 +994,10 @@ paths:
       summary: Grant account permissions
       description: |
         Grant account permissions
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: Permissions
         content:
@@ -873,6 +1026,10 @@ paths:
       summary: Grant account roles
       description: |
         Grant account roles
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: Roles
         content:
@@ -901,6 +1058,10 @@ paths:
       summary: Get API key
       description: |
         Returns API key record
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: org_id
           in: query
@@ -939,6 +1100,10 @@ paths:
         Creates a new API key record
 
         The "org_id" and "app_id" of the record must not match an existing registration  
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: API key record to be added
         content:
@@ -968,6 +1133,10 @@ paths:
         Update an existing API key record
 
         The "org_id" and "app_id" of the record must match an existing registration  
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       requestBody:
         description: API key record update to be applied
         content:
@@ -995,6 +1164,10 @@ paths:
       summary: Delete API key
       description: |
         Deletes an existing API key record
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
       parameters:
         - name: org_id
           in: query
@@ -1156,6 +1329,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/OIDCDiscovery'
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     GlobalConfig:
       required:
@@ -1710,7 +1888,7 @@ components:
           enum:
             - username
             - email
-            - phone
+            - twilio_phone
             - illinois_oidc
             - api_key
         app_type_identifier:
@@ -1720,7 +1898,7 @@ components:
         creds:
           anyOf:
             - $ref: '#/components/schemas/_req_login_CredsEmail'
-            - $ref: '#/components/schemas/_req_login_CredsPhone'
+            - $ref: '#/components/schemas/_req_login_CredsTwilioPhone'
             - $ref: '#/components/schemas/_req_login_CredsOIDC'
             - $ref: '#/components/schemas/_req_login_CredsAPIKey'
         params:
@@ -1729,6 +1907,12 @@ components:
             - $ref: '#/components/schemas/_req_login_ParamsEmail'
             - $ref: '#/components/schemas/_req_login_ParamsOIDC'
             - $ref: '#/components/schemas/_req_login_ParamsNone'
+        profile:
+          $ref: '#/components/schemas/ProfileFields'
+        preferences:
+          type: object
+        anonymous_id:
+          type: string
     _req_login_CredsEmail:
       required:
         - email
@@ -1740,9 +1924,9 @@ components:
           type: string
         password:
           type: string
-    _req_login_CredsPhone:
+    _req_login_CredsTwilioPhone:
       type: object
-      description: Auth login creds for auth_type="phone"
+      description: Auth login creds for auth_type="twilio_phone"
       required:
         - phone
       properties:
@@ -1763,13 +1947,14 @@ components:
       properties:
         api_key:
           type: string
-        anonymous_id:
-          type: string
     _req_login_ParamsEmail:
       type: object
       description: Auth login params for auth_type="email"
       properties:
-        new_user:
+        confirm_password:
+          type: string
+          description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+        sign_up:
           type: boolean
           default: false
     _req_login_ParamsOIDC:
@@ -1894,6 +2079,220 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
+    _req_create-Organization_Request:
+      required:
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    _res_create_Organization_Response:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    _req_update_Organization_Request:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    _res_update_Organization_Response:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    _req_get_Organization_Request:
+      required:
+        - id
+      properties:
+        id:
+          readOnly: true
+          type: string
+    _res_get_Organization_Response:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfigFields'
+    _res_get_Organizations_Response:
+      required:
+        - id
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - micro
+            - small
+            - medium
+            - large
+            - huge
+        config:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationConfigFields'
+    _req_create_Application_Request:
+      required:
+        - name
+        - multi_tenant
+        - requires_own_users
+      type: object
+      properties:
+        name:
+          type: string
+        multi_tenant:
+          type: boolean
+        requires_own_users:
+          type: boolean
+        application_types:
+          type: array
+          items:
+            required:
+              - identifier
+            type: object
+            properties:
+              identifier:
+                type: string
+              name:
+                type: string
+              versions:
+                type: array
+                items:
+                  type: string
+    _req_get_Application_Request:
+      required:
+        - id
+      type: string
+      properties:
+        id:
+          readOnly: true
+          type: string
+    _res_get_Application_Response:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        multi_tenant:
+          type: boolean
+        requires_own_users:
+          type: boolean
+        organization:
+          $ref: '#/components/schemas/ApplicationOrganization'
+        applicationType:
+          $ref: '#/components/schemas/ApplicationType'
+    _res_get_Applications_Response:
+      required:
+        - id
+        - name
+        - multi_tenant
+        - requires_own_users
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        multi_tenant:
+          type: boolean
+        requires_own_users:
+          type: boolean
+        application_types:
+          $ref: '#/components/schemas/ApplicationTypeFields'
     _req_application-permissions_Request:
       required:
         - name

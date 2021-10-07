@@ -1,0 +1,17 @@
+required:
+  - name
+  - multi_tenant
+  - requires_own_users
+type: object
+properties:
+  name:
+    type: string
+  multi_tenant:
+    type: boolean
+  requires_own_users:
+    type: boolean  
+  application_types:
+    type: array
+    items:
+      $ref: "./ApplicationType.yaml"
+    

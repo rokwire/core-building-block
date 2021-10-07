@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/rokmetro/auth-library/tokenauth"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
 )
@@ -16,14 +17,14 @@ type DefaultApisHandler struct {
 }
 
 //getVersion gives the service version
-func (h DefaultApisHandler) getVersion(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h DefaultApisHandler) getVersion(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	version := h.coreAPIs.GetVersion()
 
 	return l.HttpResponseSuccessMessage(version)
 }
 
 //getOpenIDConfiguration gives the OpenID Connect Discovery page
-func (h DefaultApisHandler) getOpenIDConfiguration(l *logs.Log, r *http.Request) logs.HttpResponse {
+func (h DefaultApisHandler) getOpenIDConfiguration(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	discovery := Def.OIDCDiscovery{Issuer: h.coreAPIs.Auth.GetHost(), JwksUri: h.coreAPIs.Auth.GetHost() + "/tps/auth-keys"}
 
 	data, err := json.Marshal(discovery)

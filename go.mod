@@ -4,7 +4,6 @@ go 1.16
 
 require (
 	github.com/aws/aws-sdk-go v1.40.19 // indirect
-	github.com/casbin/casbin v1.9.1
 	github.com/casbin/casbin/v2 v2.35.1 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/getkin/kin-openapi v0.72.0

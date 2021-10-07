@@ -529,13 +529,13 @@ func (_m *Storage) UpdateOrganization(ID string, name string, requestType string
 	return r0
 }
 
-// UpdateProfile provides a mock function with given fields: profile, ID
-func (_m *Storage) UpdateProfile(profile *model.Profile, ID string) error {
-	ret := _m.Called(profile, ID)
+// UpdateProfile provides a mock function with given fields: accountID, profile
+func (_m *Storage) UpdateProfile(accountID string, profile *model.Profile) error {
+	ret := _m.Called(accountID, profile)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*model.Profile, string) error); ok {
-		r0 = rf(profile, ID)
+	if rf, ok := ret.Get(0).(func(string, *model.Profile) error); ok {
+		r0 = rf(accountID, profile)
 	} else {
 		r0 = ret.Error(0)
 	}

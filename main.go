@@ -26,7 +26,7 @@ func main() {
 	if len(Version) == 0 {
 		Version = "dev"
 	}
-	loggerOpts := logs.LoggerOpts{SuppressRequests: []logs.HttpRequestProperties{logs.NewAwsHealthCheckHttpRequestProperties("")}}
+	loggerOpts := logs.LoggerOpts{SuppressRequests: []logs.HttpRequestProperties{logs.NewAwsHealthCheckHttpRequestProperties("/core/version")}}
 	logger := logs.NewLogger("core", &loggerOpts)
 	envLoader := envloader.NewEnvLoader(Version, logger)
 
@@ -57,11 +57,15 @@ func main() {
 	}
 
 	//auth
-	smtpHost := envLoader.GetAndLogEnvVar("HEALTH_SMTP_HOST", false, false)
-	smtpPort := envLoader.GetAndLogEnvVar("HEALTH_SMTP_PORT", false, false)
-	smtpUser := envLoader.GetAndLogEnvVar("HEALTH_SMTP_USER", false, true)
-	smtpPassword := envLoader.GetAndLogEnvVar("HEALTH_SMTP_PASSWORD", false, true)
-	smtpFrom := envLoader.GetAndLogEnvVar("HEALTH_EMAIL_FROM", false, false)
+	twilioAccountSID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_ACCOUNT_SID", false, true)
+	twilioToken := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_TOKEN", false, true)
+	twilioServiceSID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_SERVICE_SID", false, true)
+
+	smtpHost := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_HOST", false, false)
+	smtpPort := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_PORT", false, false)
+	smtpUser := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_USER", false, true)
+	smtpPassword := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_PASSWORD", false, true)
+	smtpFrom := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_EMAIL_FROM", false, false)
 
 	smtpPortNum, _ := strconv.Atoi(smtpPort)
 
@@ -103,7 +107,7 @@ func main() {
 		logger.Infof("Error parsing max token exp, applying defaults: %v", err)
 	}
 
-	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
+	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, twilioAccountSID, twilioToken, twilioServiceSID, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
@@ -112,6 +116,6 @@ func main() {
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, port, coreAPIs, host, logger)
+	webAdapter := web.NewWebAdapter(env, serviceID, auth.AuthService, port, coreAPIs, host, logger)
 	webAdapter.Start()
 }
