@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2021-10-07
 ### Security
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
@@ -78,3 +79,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prepare the service to be deployed into Rokwire infrastructure [#176](https://github.com/rokwire/core-building-block/issues/176)
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
+
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/rokwire/core-building-block/compare/v1.1.0...v1.2.0
