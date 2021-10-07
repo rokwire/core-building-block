@@ -261,12 +261,12 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		accountAuthTypeParams := map[string]interface{}{}
 		accountAuthTypeParams["user"] = externalUser
 
-		accountAuthType, credential, err := a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, nil, nil, l)
+		accountAuthType, _, err = a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, nil, nil, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
 
-		account, err = a.registerUser(appOrg, *accountAuthType, credential, useSharedProfile, profile, preferences, anonymousID, l)
+		account, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, profile, preferences, anonymousID, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
