@@ -1,4 +1,4 @@
-package sender
+package emailer
 
 import (
 	"strings"
@@ -13,7 +13,7 @@ const (
 	typeMail logutils.MessageDataType = "mail"
 )
 
-//Adapter implements the Sender interface
+//Adapter implements the Emailer interface
 type Adapter struct {
 	smptHost     string
 	smtpPortNum  int
@@ -23,8 +23,8 @@ type Adapter struct {
 	emailDialer  *gomail.Dialer
 }
 
-//SendEmail is used to send verification and password reset emails using Smtp connection
-func (a *Adapter) SendEmail(toEmail string, subject string, body string, attachmentFilename *string) error {
+//Send is used to send verification and password reset emails using Smtp connection
+func (a *Adapter) Send(toEmail string, subject string, body string, attachmentFilename *string) error {
 	if a.emailDialer == nil {
 		return errors.New("email dialer is nil")
 	}
@@ -49,8 +49,8 @@ func (a *Adapter) SendEmail(toEmail string, subject string, body string, attachm
 	return nil
 }
 
-//NewSenderAdapter creates a new sender adapter instance
-func NewEmailSenderAdapter(smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string) *Adapter {
+//NewEmailerAdapter creates a new emailer adapter instance
+func NewEmailerAdapter(smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string) *Adapter {
 	emailDialer := gomail.NewDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
 
 	return &Adapter{smptHost: smtpHost, smtpPortNum: smtpPortNum, smtpUser: smtpUser, smtpPassword: smtpPassword, smtpFrom: smtpFrom, emailDialer: emailDialer}
