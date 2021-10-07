@@ -282,12 +282,12 @@ func (h ServicesApisHandler) updateAccountPreferences(l *logs.Log, r *http.Reque
 }
 
 func (h ServicesApisHandler) getPreferences(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	preferences, _, err := h.coreAPIs.Services.SerGetPreferences(claims.Subject)
+	preferences, err := h.coreAPIs.Services.SerGetPreferences(claims.Subject)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
 	}
 
-	response := preferencesToDef(preferences)
+	response := preferences
 
 	data, err := json.Marshal(response)
 	if err != nil {

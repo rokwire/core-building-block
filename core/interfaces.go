@@ -11,7 +11,7 @@ import (
 type Services interface {
 	SerDeleteAccount(id string) error
 	SerGetProfile(accountID string) (*model.Profile, error)
-	SerGetPreferences(accountID string) (*model.Account, map[string]interface{}, error)
+	SerGetPreferences(accountID string) (map[string]interface{}, error)
 	SerUpdateProfile(accountID string, profile *model.Profile) error
 	SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error
 

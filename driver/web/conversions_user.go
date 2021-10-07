@@ -62,10 +62,6 @@ func profileToDef(item *model.Profile) *Def.ProfileFields {
 		State: &item.State, Country: &item.Country}
 }
 
-func preferencesToDef(item *model.Account) *Def.Account {
-	return &Def.Account{Preferences: &item.Preferences}
-}
-
 //Device
 func deviceFromDef(item *Def.DeviceFields) *model.Device {
 	if item == nil {
