@@ -25,7 +25,6 @@ type Adapter struct {
 
 //SendEmail is used to send verification and password reset emails using Smtp connection
 func (a *Adapter) SendEmail(toEmail string, subject string, body string, attachmentFilename *string) error {
-
 	if a.emailDialer == nil {
 		return errors.New("email dialer is nil")
 	}
