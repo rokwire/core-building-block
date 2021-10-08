@@ -542,13 +542,13 @@ type ReqLoginParamsOIDC struct {
 
 // ReqLoginRequest defines model for _req_login_Request.
 type ReqLoginRequest struct {
-	AnonymousId       *string                 `json:"anonymous_id,omitempty"`
+	AnonymousId       *string                 `json:"anonymous_id"`
 	AppTypeIdentifier string                  `json:"app_type_identifier"`
 	AuthType          ReqLoginRequestAuthType `json:"auth_type"`
 	Creds             *interface{}            `json:"creds,omitempty"`
 	OrgId             string                  `json:"org_id"`
 	Params            *interface{}            `json:"params,omitempty"`
-	Preferences       *map[string]interface{} `json:"preferences,omitempty"`
+	Preferences       *map[string]interface{} `json:"preferences"`
 	Profile           *ReqSharedProfile       `json:"profile,omitempty"`
 }
 
@@ -629,7 +629,7 @@ type ResLoginAccount struct {
 	Groups      *[]ApplicationGroupFields      `json:"groups,omitempty"`
 	Id          string                         `json:"id"`
 	Permissions *[]ApplicationPermissionFields `json:"permissions,omitempty"`
-	Preferences *map[string]interface{}        `json:"preferences,omitempty"`
+	Preferences *map[string]interface{}        `json:"preferences"`
 	Profile     *ProfileFields                 `json:"profile,omitempty"`
 	Roles       *[]ApplicationRoleFields       `json:"roles,omitempty"`
 }
