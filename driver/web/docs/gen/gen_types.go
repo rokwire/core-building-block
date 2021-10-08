@@ -543,13 +543,13 @@ type ReqLoginParamsOIDC struct {
 
 // ReqLoginRequest defines model for _req_login_Request.
 type ReqLoginRequest struct {
-	AppTypeIdentifier string                  `json:"app_type_identifier"`
-	AuthType          ReqLoginRequestAuthType `json:"auth_type"`
-	Creds             *interface{}            `json:"creds,omitempty"`
-	OrgId             string                  `json:"org_id"`
-	Params            *interface{}            `json:"params,omitempty"`
-	Preferences       *map[string]interface{} `json:"preferences,omitempty"`
-	Profile           *ReqSharedProfile       `json:"profile,omitempty"`
+	AppTypeIdentifier string                    `json:"app_type_identifier"`
+	AuthType          ReqLoginRequestAuthType   `json:"auth_type"`
+	Creds             *interface{}              `json:"creds,omitempty"`
+	OrgId             string                    `json:"org_id"`
+	Params            *interface{}              `json:"params,omitempty"`
+	Preferences       *map[string]interface{}   `json:"preferences"`
+	Profile           *ReqSharedProfileNullable `json:"profile"`
 }
 
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
@@ -557,6 +557,20 @@ type ReqLoginRequestAuthType string
 
 // ReqSharedProfile defines model for _req_shared_Profile.
 type ReqSharedProfile struct {
+	Address   *string `json:"address"`
+	BirthYear *int    `json:"birth_year"`
+	Country   *string `json:"country"`
+	Email     *string `json:"email"`
+	FirstName *string `json:"first_name"`
+	LastName  *string `json:"last_name"`
+	Phone     *string `json:"phone"`
+	PhotoUrl  *string `json:"photo_url"`
+	State     *string `json:"state"`
+	ZipCode   *string `json:"zip_code"`
+}
+
+// ReqSharedProfileNullable defines model for _req_shared_ProfileNullable.
+type ReqSharedProfileNullable struct {
 	Address   *string `json:"address"`
 	BirthYear *int    `json:"birth_year"`
 	Country   *string `json:"country"`
@@ -629,7 +643,7 @@ type ResLoginAccount struct {
 	Groups      *[]ApplicationGroupFields      `json:"groups,omitempty"`
 	Id          string                         `json:"id"`
 	Permissions *[]ApplicationPermissionFields `json:"permissions,omitempty"`
-	Preferences *map[string]interface{}        `json:"preferences,omitempty"`
+	Preferences *map[string]interface{}        `json:"preferences"`
 	Profile     *ProfileFields                 `json:"profile,omitempty"`
 	Roles       *[]ApplicationRoleFields       `json:"roles,omitempty"`
 }

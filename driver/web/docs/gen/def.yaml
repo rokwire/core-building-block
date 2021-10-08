@@ -1903,6 +1903,40 @@ components:
         country:
           type: string
           nullable: true
+    _req_shared_ProfileNullable:
+      type: object
+      nullable: true
+      properties:
+        photo_url:
+          type: string
+          nullable: true
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        birth_year:
+          type: integer
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        zip_code:
+          type: string
+          nullable: true
+        state:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
     _res_shared_RokwireToken:
       type: object
       properties:
@@ -1965,9 +1999,10 @@ components:
             - $ref: '#/components/schemas/_req_login_ParamsOIDC'
             - $ref: '#/components/schemas/_req_login_ParamsNone'
         profile:
-          $ref: '#/components/schemas/_req_shared_Profile'
+          $ref: '#/components/schemas/_req_shared_ProfileNullable'
         preferences:
           type: object
+          nullable: true
     _req_login_CredsEmail:
       required:
         - email
@@ -2056,6 +2091,7 @@ components:
           $ref: '#/components/schemas/ProfileFields'
         preferences:
           type: object
+          nullable: true
         permissions:
           type: array
           items:

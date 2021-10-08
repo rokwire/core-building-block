@@ -70,6 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set up logging [#6](https://github.com/rokwire/core-building-block/issues/6)
 
 ### Fixed
+- Fix various issues [#215](https://github.com/rokwire/core-building-block/issues/215)
 - Fix broken OIDC login [#211](https://github.com/rokwire/core-building-block/issues/211)
 - Fix crash on phone login [#208](https://github.com/rokwire/core-building-block/issues/208)
 - Fix email account verification [#198](https://github.com/rokwire/core-building-block/issues/198)
