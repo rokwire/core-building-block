@@ -54,9 +54,9 @@ func profileFromDef(item *Def.ReqSharedProfile) model.Profile {
 		return model.Profile{}
 	}
 
-	var photoUrl string
+	var photoURL string
 	if item.PhotoUrl != nil {
-		photoUrl = *item.PhotoUrl
+		photoURL = *item.PhotoUrl
 	}
 	var firstName string
 	if item.FirstName != nil {
@@ -94,7 +94,7 @@ func profileFromDef(item *Def.ReqSharedProfile) model.Profile {
 	if item.Country != nil {
 		country = *item.Country
 	}
-	return model.Profile{PhotoURL: photoUrl, FirstName: firstName, LastName: lastName,
+	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
 		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
 		State: state, Country: country}
 }
