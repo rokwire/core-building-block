@@ -228,6 +228,34 @@ func (h ServicesApisHandler) deleteAccount(l *logs.Log, r *http.Request, claims 
 	return l.HttpResponseSuccess()
 }
 
+func (h ServicesApisHandler) getAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	account, err := h.coreAPIs.Services.SerGetAccount(claims.Subject)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	var accountData *Def.ResLoginAccount
+	if account != nil {
+		profile := profileToDef(&account.Profile)
+		//permissions
+		permissions := applicationPermissionsToDef(account.Permissions)
+		//roles
+		roles := applicationRolesToDef(account.Roles)
+		//groups
+		groups := applicationGroupsToDef(account.Groups)
+		//account auth types
+		authTypes := accountAuthTypesToDef(account.AuthTypes)
+		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
+	}
+
+	data, err := json.Marshal(accountData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
 func (h ServicesApisHandler) getProfile(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	profile, err := h.coreAPIs.Services.SerGetProfile(claims.Subject)
 	if err != nil {

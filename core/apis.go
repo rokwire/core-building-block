@@ -65,6 +65,10 @@ func (s *servicesImpl) SerDeleteAccount(id string) error {
 	return s.app.serDeleteAccount(id)
 }
 
+func (s *servicesImpl) SerGetAccount(accountID string) (*model.Account, error) {
+	return s.app.serGetAccount(accountID)
+}
+
 func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, error) {
 	return s.app.serGetProfile(accountID)
 }
