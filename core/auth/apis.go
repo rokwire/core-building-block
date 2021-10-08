@@ -97,7 +97,7 @@ func (a *Auth) Login(authenticationType string, creds string, appTypeIdentifier 
 	}
 
 	//Only return auth type used for login
-	if accountAuthType != nil {
+	if account != nil && accountAuthType != nil {
 		account.AuthTypes = []model.AccountAuthType{*accountAuthType}
 	}
 
