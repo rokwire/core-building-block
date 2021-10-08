@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.0] - 2021-10-08
 ### Added
+- Add multi-factor authentication support [#19](https://github.com/rokwire/core-building-block/issues/19)
 - Expose get account preferences services API [#206](https://github.com/rokwire/core-building-block/issues/206) 
 ### Fixed
 - Fix various issues [#215](https://github.com/rokwire/core-building-block/issues/215)
@@ -20,7 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
-- Add multi-factor authentication support [#19](https://github.com/rokwire/core-building-block/issues/19)
 - Add phone authentication support [#24](https://github.com/rokwire/core-building-block/issues/24)
 - Handle anonymous ID conversion [#204](https://github.com/rokwire/core-building-block/issues/204)
 - Create a Security.md [#193] (https://github.com/rokwire/core-building-block/issues/193)
