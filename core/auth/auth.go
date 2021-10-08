@@ -48,6 +48,7 @@ const (
 //Auth represents the auth functionality unit
 type Auth struct {
 	storage Storage
+	emailer Emailer
 
 	logger *logs.Logger
 
@@ -84,7 +85,7 @@ type Auth struct {
 }
 
 //NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, twilioAccountSID string,
+func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, emailer Emailer, minTokenExp *int64, maxTokenExp *int64, twilioAccountSID string,
 	twilioToken string, twilioServiceSID string, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
@@ -115,7 +116,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	apiKeysLock := &sync.RWMutex{}
 
 	timerDone := make(chan bool)
-	auth := &Auth{storage: storage, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
+	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		authPrivKey: authPrivKey, AuthService: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
 		maxTokenExp: *maxTokenExp, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
@@ -169,32 +170,6 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	return auth, nil
 
-}
-
-//sendEmail is used to send verification and password reset emails using Smtp connection
-func (a *Auth) sendEmail(toEmail string, subject string, body string, attachmentFilename *string) error {
-	if a.emailDialer == nil {
-		return errors.New("email dialer is nil")
-	}
-	if toEmail == "" {
-		return errors.New("missing email addresses")
-	}
-
-	emails := strings.Split(toEmail, ",")
-
-	m := gomail.NewMessage()
-	m.SetHeader("From", a.emailFrom)
-	m.SetHeader("To", emails...)
-	m.SetHeader("Subject", subject)
-	m.SetBody("text/plain", body)
-	if attachmentFilename != nil {
-		m.Attach(*attachmentFilename)
-	}
-
-	if err := a.emailDialer.DialAndSend(m); err != nil {
-		return errors.WrapErrorAction(logutils.ActionSend, typeMail, nil, err)
-	}
-	return nil
 }
 
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
