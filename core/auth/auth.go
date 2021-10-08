@@ -35,7 +35,6 @@ const (
 	typeAuthType          logutils.MessageDataType = "auth type"
 	typeExternalAuthType  logutils.MessageDataType = "external auth type"
 	typeAnonymousAuthType logutils.MessageDataType = "anonymous auth type"
-	typeAnonymousID       logutils.MessageDataType = "anonymous id"
 	typeAuth              logutils.MessageDataType = "auth"
 	typeAuthRefreshParams logutils.MessageDataType = "auth refresh params"
 
@@ -173,7 +172,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 }
 
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
-	creds string, params string, anonymousID string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*model.Account, *model.AccountAuthType, interface{}, error) {
+	creds string, params string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*model.Account, *model.AccountAuthType, interface{}, error) {
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
 	var extParams interface{}
@@ -241,7 +240,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 			return nil, nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
 
-		account, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, profile, preferences, anonymousID, l)
+		account, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, profile, preferences, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
@@ -250,21 +249,14 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	return account, accountAuthType, extParams, nil
 }
 
-func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
-	creds string, params string, anonymousID string, l *logs.Log) (string, interface{}, error) { //auth type
+func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (string, interface{}, error) { //auth type
 	authImpl, err := a.getAnonymousAuthTypeImpl(authType)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAnonymousAuthType, nil, err)
 	}
 
-	// Prevent using existing account IDs as anonymous IDs
-	account, err := a.storage.FindAccountByID(anonymousID)
-	if err == nil && account != nil {
-		return "", nil, errors.ErrorData(logutils.StatusInvalid, typeAnonymousID, nil)
-	}
-
 	//Check the credentials
-	anonymousID, anonymousParams, err := authImpl.checkCredentials(authType, appType, appOrg, creds, anonymousID, l)
+	anonymousID, anonymousParams, err := authImpl.checkCredentials(authType, appType, appOrg, creds, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCreds, nil, err)
 	}
@@ -273,7 +265,7 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.App
 }
 
 func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
-	creds string, params string, anonymousID string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (string, *model.Account, *model.AccountAuthType, error) {
+	creds string, params string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (string, *model.Account, *model.AccountAuthType, error) {
 	var message string
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
@@ -319,7 +311,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 			return "", nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
 
-		account, err = a.registerUser(appOrg, *accountAuthType, credential, useSharedProfile, profile, preferences, anonymousID, l)
+		account, err = a.registerUser(appOrg, *accountAuthType, credential, useSharedProfile, profile, preferences, l)
 		if err != nil {
 			return "", nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
@@ -472,22 +464,16 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 //	Returns:
 //		Registered account (Account): Registered Account object
 func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthType model.AccountAuthType, credential *model.Credential,
-	useSharedProfile bool, profile model.Profile, preferences map[string]interface{}, anonymousID string, l *logs.Log) (*model.Account, error) {
+	useSharedProfile bool, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*model.Account, error) {
 	//TODO - analyse what should go in one transaction
 
 	//TODO - ignore useSharedProfile for now
-
-	// Use anonymous ID as the account ID if it is provided, otherwise generate new UUID
-	accountID := anonymousID
-	if accountID == "" {
-		accountUUID, _ := uuid.NewUUID()
-		accountID = accountUUID.String()
-	}
+	accountID, _ := uuid.NewUUID()
 	application := appOrg.Application
 	organization := appOrg.Organization
 	authTypes := []model.AccountAuthType{accountAuthType}
 
-	account := model.Account{ID: accountID, Application: application, Organization: organization,
+	account := model.Account{ID: accountID.String(), Application: application, Organization: organization,
 		Permissions: nil, Roles: nil, Groups: nil, AuthTypes: authTypes, Preferences: preferences, Profile: profile, DateCreated: time.Now()} // Anonymous: accountAuthType.AuthType.IsAnonymous
 
 	insertedAccount, err := a.storage.InsertAccount(account)

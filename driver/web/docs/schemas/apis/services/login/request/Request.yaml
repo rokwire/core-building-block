@@ -32,6 +32,4 @@ properties:
     $ref:  "../../../shared/requests/Profile.yaml"  
   preferences:
     type: object
-  anonymous_id:
-    type: string
        
