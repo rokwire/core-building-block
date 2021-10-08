@@ -44,8 +44,8 @@ get:
       description: Success
       content:
         application/json:
-          schema:
-            $ref: "../../../schemas/user/Account.yaml"
+          schema: 
+            type: object
      400:
       description: Bad request
      401:
