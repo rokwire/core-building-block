@@ -226,6 +226,14 @@ func (h ServicesApisHandler) deleteAccount(l *logs.Log, r *http.Request, claims 
 	return l.HttpResponseSuccess()
 }
 
+func (h ServicesApisHandler) enrollMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	return l.HttpResponseSuccess()
+}
+
+func (h ServicesApisHandler) removeMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	return l.HttpResponseSuccess()
+}
+
 func (h ServicesApisHandler) getProfile(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	profile, err := h.coreAPIs.Services.SerGetProfile(claims.Subject)
 	if err != nil {

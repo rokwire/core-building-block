@@ -48,7 +48,9 @@ paths:
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "creds": {
                       "email": "test@test.com", 
-                      "password": "test12345"
+                      "password": "test12345",
+                      "mfa_code": "123456",
+                      "mfa_type": "totp"
                     }
                   }
               email-sign_up:
@@ -2015,6 +2017,10 @@ components:
         email:
           type: string
         password:
+          type: string
+        mfa_code:
+          type: string
+        mfa_type:
           type: string
     _req_login_CredsTwilioPhone:
       type: object

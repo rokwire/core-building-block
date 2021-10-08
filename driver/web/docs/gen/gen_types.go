@@ -509,8 +509,10 @@ type ReqLoginCredsAPIKey struct {
 
 // Auth login creds for auth_type="email"
 type ReqLoginCredsEmail struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string  `json:"email"`
+	MfaCode  *string `json:"mfa_code,omitempty"`
+	MfaType  *string `json:"mfa_type,omitempty"`
+	Password string  `json:"password"`
 }
 
 // Auth login creds for auth_type="oidc"

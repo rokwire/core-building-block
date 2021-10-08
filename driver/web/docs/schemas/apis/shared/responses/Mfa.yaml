@@ -1,0 +1,6 @@
+type: object
+properties:
+  totp_key:
+    description: The user's TOTP key
+    type: string
+    nullable: true
