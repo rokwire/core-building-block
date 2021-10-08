@@ -7,12 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2021-10-08
+### Added
+- Expose get account preferences services API [#206](https://github.com/rokwire/core-building-block/issues/206) 
+### Fixed
+- Fix various issues [#215](https://github.com/rokwire/core-building-block/issues/215)
+### Changed
+- Improve how the system sends emails [#192](https://github.com/rokwire/core-building-block/issues/192)
+
 ## [1.2.0] - 2021-10-07
 ### Security
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
-- Expose get account preferences services API [#206](https://github.com/rokwire/core-building-block/issues/206) 
 - Add phone authentication support [#24](https://github.com/rokwire/core-building-block/issues/24)
 - Handle anonymous ID conversion [#204](https://github.com/rokwire/core-building-block/issues/204)
 - Create a Security.md [#193] (https://github.com/rokwire/core-building-block/issues/193)
@@ -61,7 +68,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set up logging [#6](https://github.com/rokwire/core-building-block/issues/6)
 
 ### Fixed
-- Fix various issues [#215](https://github.com/rokwire/core-building-block/issues/215)
 - Fix broken OIDC login [#211](https://github.com/rokwire/core-building-block/issues/211)
 - Fix crash on phone login [#208](https://github.com/rokwire/core-building-block/issues/208)
 - Fix email account verification [#198](https://github.com/rokwire/core-building-block/issues/198)
@@ -76,12 +82,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixing the Log and the Changelog for issues #35 and #36 [#54](https://github.com/rokwire/core-building-block/issues/54)
 
 ### Changed
-- Improve how the system sends emails [#192](https://github.com/rokwire/core-building-block/issues/192)
 - Login API issues [#182] (https://github.com/rokwire/core-building-block/issues/182)
 - Move temporary claims to auth library [#183](https://github.com/rokwire/core-building-block/issues/183)
 - Prepare the service to be deployed into Rokwire infrastructure [#176](https://github.com/rokwire/core-building-block/issues/176)
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/rokwire/core-building-block/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/rokwire/core-building-block/compare/v1.1.0...v1.2.0
