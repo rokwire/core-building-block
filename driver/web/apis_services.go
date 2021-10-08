@@ -55,8 +55,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 	}
 
 	//profile ////
-	requestProfile := requestData.Profile
-	profile := profileFromDef(requestProfile)
+	profile := profileFromDefNullable(requestData.Profile)
 	//generate ID
 	profileID, _ := uuid.NewUUID()
 	profile.ID = profileID.String()

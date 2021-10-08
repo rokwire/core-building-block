@@ -29,8 +29,7 @@ properties:
       - $ref: "./ParamsOIDC.yaml"
       - $ref: "./ParamsNone.yaml"
   profile:
-    $ref:  "../../../shared/requests/Profile.yaml"  
-    nullable: true
+    $ref:  "../../../shared/requests/ProfileNullable.yaml"  
   preferences:
     type: object
     nullable: true
