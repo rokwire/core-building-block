@@ -34,6 +34,10 @@ func (a *signatureAuthImpl) checkCredentials(accountAuthType model.AccountAuthTy
 	return "", nil, nil
 }
 
+func (a *signatureAuthImpl) resetPassword(credential *model.Credential, password string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
+	return nil, nil
+}
+
 //initSignatureAuth initializes and registers a new signature auth instance
 func initSignatureAuth(auth *Auth) (*signatureAuthImpl, error) {
 	signature := &signatureAuthImpl{auth: auth, authType: AuthTypeSignature}

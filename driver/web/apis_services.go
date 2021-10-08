@@ -312,6 +312,26 @@ func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request, claims *to
 	return l.HttpResponseSuccessMessage("Code verified!")
 }
 
+//Handler for reset password endpoint
+func (h ServicesApisHandler) resetPassword(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqResetPasswordRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	if err := h.coreAPIs.Auth.ResetPassword(requestData.Id, requestData.Password, requestData.ConfirmPassword, l); err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessMessage("Reset Password Successfully")
+}
+
 //NewServicesApisHandler creates new rest services Handler instance
 func NewServicesApisHandler(coreAPIs *core.APIs) ServicesApisHandler {
 	return ServicesApisHandler{coreAPIs: coreAPIs}

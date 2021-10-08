@@ -34,6 +34,10 @@ func (a *usernameAuthImpl) checkCredentials(accountAuthType model.AccountAuthTyp
 	return "", nil, nil
 }
 
+func (a *usernameAuthImpl) resetPassword(credential *model.Credential, password string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
+	return nil, nil
+}
+
 //initUsernameAuth initializes and registers a new username auth instance
 func initUsernameAuth(auth *Auth) (*usernameAuthImpl, error) {
 	username := &usernameAuthImpl{auth: auth, authType: authTypeUsername}

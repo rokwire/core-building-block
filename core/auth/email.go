@@ -140,10 +140,12 @@ func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode stri
 	return a.auth.sendEmail(email, "Verify your email address", "Please click the link below to verify your email address:\n"+verificationLink+"\n\nIf you did not request this verification link, please ignore this message.", nil)
 }
 
-//TODO: To be used in password reset flow
-// func (a *emailAuthImpl) sendPasswordReset(email string, password string) error {
-// 	return a.auth.SendEmail(email, "Password Reset", "Your temporary password is "+password, "")
-// }
+func (a *emailAuthImpl) sendPasswordReset(credentialID string) error {
+	params := url.Values{}
+	params.Add("id", credentialID)
+	passwordResetLink := a.auth.host + fmt.Sprintf("/services/auth/reset-password-landing-page?%s", params.Encode())
+	return a.auth.sendEmail(email, "Password Reset", "Please click the link below to reset your password:\n"+passwordResetLink+"\n\nIf you did not request a password reset, please ignore this message.", nil)
+}
 
 func (a *emailAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
 	credBytes, err := json.Marshal(credential.Value)
@@ -183,6 +185,44 @@ func (a *emailAuthImpl) compareVerifyCode(credCode string, requestCode string, e
 	return nil
 
 }
+
+func (a *emailAuthImpl) resetPassword(credential *model.Credential, password string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
+	if len(password) == 0 {
+		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, logutils.StringArgs("password"))
+	}
+	if len(confirmPassword) == 0 {
+		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, logutils.StringArgs("confirm_password"))
+	}
+	//check if the passwrod matches with the confirm password one
+	if password != confirmPassword {
+		return nil, errors.New("passwords fields do not match")
+	}
+	credBytes, err := json.Marshal(credential.Value)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
+	}
+
+	var creds *emailCreds
+	err = json.Unmarshal(credBytes, &creds)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate hash from password"))
+	}
+
+	//Update verification data
+	creds.Password = string(hashedPassword)
+	credsMap, err := emailCredsToMap(creds)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
+	}
+
+	return credsMap, nil
+}
+
 func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
 	appID := appOrg.Application.ID
 	orgID := appOrg.Organization.ID

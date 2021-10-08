@@ -25,6 +25,10 @@ type authType interface {
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
 	verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error)
 
+	//updates the value of the credential object with new password
+	// Returns:
+	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
+	resetPassword(credential *model.Credential, password string, confirmPassword string, l *logs.Log) (map[string]interface{}, error)
 	//userExist checks if the user exists for application and organizations
 	// Returns:
 	//	account (*model.Account): User account
@@ -94,6 +98,9 @@ type APIs interface {
 
 	//Verify checks the verification code in the credentials collection
 	Verify(id string, verification string, l *logs.Log) error
+
+	//ResetPassword updates the credential object with the new password
+	ResetPassword(id string, password string, confirmPassword string, l *logs.Log) error
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:

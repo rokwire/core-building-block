@@ -1,0 +1,12 @@
+required:
+  - id
+  - password
+  - confirm_password
+type: object
+properties:
+  id:
+    type: string
+  password:
+    type: string
+  confirm_password:
+    type: string

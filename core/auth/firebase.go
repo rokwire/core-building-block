@@ -34,6 +34,10 @@ func (a *firebaseAuthImpl) checkCredentials(accountAuthType model.AccountAuthTyp
 	return "", nil, nil
 }
 
+func (a *firebaseAuthImpl) resetPassword(credential *model.Credential, password string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
+	return nil, nil
+}
+
 //initFirebaseAuth initializes and registers a new Firebase auth instance
 func initFirebaseAuth(auth *Auth) (*firebaseAuthImpl, error) {
 	firebase := &firebaseAuthImpl{auth: auth, authType: AuthTypeFirebase}

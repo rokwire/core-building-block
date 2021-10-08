@@ -275,6 +275,40 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 	return nil
 }
 
+//ResetPassword updates the value in the credential with new password
+func (a *Auth) ResetPassword(id string, password string, confirmPassword string, l *logs.Log) error {
+	credential, err := a.storage.FindCredential(id)
+	if err != nil || credential == nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+	}
+
+	//get the auth type
+	authType, err := a.getCachedAuthType(credential.AuthType.ID)
+	if err != nil || authType == nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
+	}
+	if authType.IsExternal {
+		return errors.WrapErrorAction("invalid auth type for reset password", model.TypeAuthType, nil, err)
+	}
+
+	authImpl, err := a.getAuthTypeImpl(*authType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	authTypeCreds, err := authImpl.resetPassword(credential, password, confirmPassword, l)
+	if err != nil || authTypeCreds == nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "reset password", nil, err)
+	}
+
+	credential.Value = authTypeCreds
+	if err = a.storage.UpdateCredential(credential); err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
+
+	return nil
+}
+
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 //	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
 //	return a scoped access token which reflects this change.
