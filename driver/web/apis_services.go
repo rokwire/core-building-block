@@ -85,6 +85,8 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		///prepare response
 		//profile
 		profile := profileToDef(&account.Profile)
+		//preferences
+		preferences := &account.Preferences
 		//permissions
 		permissions := applicationPermissionsToDef(account.Permissions)
 		//roles
@@ -98,7 +100,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 				authTypes[0] = accountAuthTypeToDef(current)
 			}
 		}
-		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
+		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 	}
 
 	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: accountData, Params: &params}

@@ -2050,6 +2050,8 @@ components:
           type: string
         profile:
           $ref: '#/components/schemas/ProfileFields'
+        preferences:
+          type: object
         permissions:
           type: array
           items:
