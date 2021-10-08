@@ -92,13 +92,8 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		roles := applicationRolesToDef(account.Roles)
 		//groups
 		groups := applicationGroupsToDef(account.Groups)
-		//account auth types - we return only the one used for login
-		authTypes := make([]Def.AccountAuthTypeFields, 1)
-		for _, current := range account.AuthTypes {
-			if current.AuthType.Code == string(requestData.AuthType) {
-				authTypes[0] = accountAuthTypeToDef(current)
-			}
-		}
+		//account auth types
+		authTypes := accountAuthTypesToDef(account.AuthTypes)
 		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 	}
 
