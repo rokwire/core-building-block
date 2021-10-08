@@ -37,7 +37,7 @@ type Administration interface {
 	AdmGetApplication(ID string) (*model.Application, error)
 	AdmGetApplications() ([]model.Application, error)
 
-	AdmCreateApplicationPermission(name string, appID string) (*model.ApplicationPermission, error)
+	AdmCreatePermission(name string, serviceID string) (*model.Permission, error)
 
 	AdmCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error)
 
@@ -64,17 +64,17 @@ type Storage interface {
 	DeleteAccount(id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error
-	InsertAccountPermissions(accountID string, appID string, permissions []model.ApplicationPermission) error
+	InsertAccountPermissions(accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appID string, roles []model.ApplicationRole) error
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	GetGlobalConfig() (*model.GlobalConfig, error)
 	SaveGlobalConfig(setting *model.GlobalConfig) error
 
-	FindApplicationPermissionsByName(names []string, appID string) ([]model.ApplicationPermission, error)
-	InsertApplicationPermission(item model.ApplicationPermission) error
-	UpdateApplicationPermission(item model.ApplicationPermission) error
-	DeleteApplicationPermission(id string) error
+	FindPermissionsByName(names []string) ([]model.Permission, error)
+	InsertPermission(item model.Permission) error
+	UpdatePermission(item model.Permission) error
+	DeletePermission(id string) error
 
 	FindApplicationRoles(ids []string, appID string) ([]model.ApplicationRole, error)
 	InsertApplicationRole(item model.ApplicationRole) error

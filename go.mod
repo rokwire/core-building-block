@@ -6,6 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.40.19 // indirect
 	github.com/casbin/casbin/v2 v2.35.1 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/deepmap/oapi-codegen v1.8.3 // indirect
 	github.com/getkin/kin-openapi v0.72.0
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/spec v0.20.3 // indirect

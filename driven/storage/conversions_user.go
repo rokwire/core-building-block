@@ -7,7 +7,7 @@ import (
 //Account
 func accountFromStorage(item account, sa *Adapter, application model.Application, organization model.Organization) model.Account {
 	id := item.ID
-	permissions := applicationPermissionsFromStorage(item.Permissions, application)
+	permissions := item.Permissions
 	roles := applicationRolesFromStorage(item.Roles, application)
 	groups := applicationGroupsFromStorage(item.Groups, application)
 	authTypes := accountAuthTypesFromStorage(item.AuthTypes)
@@ -24,7 +24,7 @@ func accountToStorage(item *model.Account) *account {
 	id := item.ID
 	appID := item.Application.ID
 	orgID := item.Organization.ID
-	permissions := applicationPermissionsToStorage(item.Permissions)
+	permissions := item.Permissions
 	roles := applicationRolesToStorage(item.Roles)
 	groups := applicationGroupsToStorage(item.Groups)
 	authTypes := accountAuthTypesToStorage(item.AuthTypes)

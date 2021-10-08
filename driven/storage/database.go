@@ -36,7 +36,7 @@ type database struct {
 	applicationsOrganizations *collectionWrapper
 	applicationsGroups        *collectionWrapper
 	applicationsRoles         *collectionWrapper
-	applicationsPermissions   *collectionWrapper
+	permissions   *collectionWrapper
 
 	listeners []Listener
 }
@@ -179,7 +179,7 @@ func (m *database) start() error {
 	m.applicationsOrganizations = applicationsOrganziations
 	m.applicationsGroups = applicationsGroups
 	m.applicationsRoles = applicationsRoles
-	m.applicationsPermissions = applicationsPermissions
+	m.permissions = applicationsPermissions
 
 	go m.apiKeys.Watch(nil)
 	go m.authTypes.Watch(nil)

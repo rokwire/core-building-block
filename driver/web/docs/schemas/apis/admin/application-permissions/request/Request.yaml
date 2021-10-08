@@ -1,9 +1,8 @@
 required:
   - name
-  - app_id
 type: object
 properties:
   name:
     type: string
-  app_id:
+  service_id:
     type: string

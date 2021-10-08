@@ -2,6 +2,8 @@ package storage
 
 import (
 	"time"
+
+	"core-building-block/core/model"
 )
 
 type account struct {
@@ -10,7 +12,7 @@ type account struct {
 	AppID string `bson:"app_id,omitempty"`
 	OrgID string `bson:"org_id,omitempty"`
 
-	Permissions []applicationPermission `bson:"permissions,omitempty"`
+	Permissions []model.Permission `bson:"permissions,omitempty"`
 	Roles       []applicationRole       `bson:"roles,omitempty"`
 	Groups      []applicationGroup      `bson:"groups,omitempty"`
 

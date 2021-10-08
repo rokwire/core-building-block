@@ -2354,12 +2354,11 @@ components:
     _req_application-permissions_Request:
       required:
         - name
-        - app_id
       type: object
       properties:
         name:
           type: string
-        app_id:
+        service_id:
           type: string
     _req_application-roles_Request:
       required:

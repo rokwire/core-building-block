@@ -281,12 +281,12 @@ func (app *application) admGetApplications() ([]model.Application, error) {
 	return getApplications, nil
 }
 
-func (app *application) admCreateApplicationPermission(name string, appID string) (*model.ApplicationPermission, error) {
+func (app *application) admCreatePermission(name string, serviceID string) (*model.Permission, error) {
 	id, _ := uuid.NewUUID()
 	now := time.Now()
-	permission := model.ApplicationPermission{ID: id.String(), Name: name, Application: model.Application{ID: appID}, DateCreated: now}
+	permission := model.Permission{ID: id.String(), Name: name, DateCreated: now}
 
-	err := app.storage.InsertApplicationPermission(permission)
+	err := app.storage.InsertPermission(permission)
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +294,7 @@ func (app *application) admCreateApplicationPermission(name string, appID string
 }
 
 func (app *application) admCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error) {
-	permissions, err := app.storage.FindApplicationPermissionsByName(permissionNames, appID)
+	permissions, err := app.storage.FindPermissionsByName(permissionNames)
 	if err != nil {
 		return nil, err
 	}
@@ -309,8 +309,8 @@ func (app *application) admCreateApplicationRole(name string, appID string, desc
 	return &role, nil
 }
 
-func (app *application) admGrantAccountPermissions(accountID string, appID string, permissionNames []string) error {
-	permissions, err := app.storage.FindApplicationPermissionsByName(permissionNames, appID)
+func (app *application) admGrantAccountPermissions(accountID string, permissionNames []string) error {
+	permissions, err := app.storage.FindPermissionsByName(permissionNames)
 	if err != nil {
 		return err
 	}
@@ -319,7 +319,7 @@ func (app *application) admGrantAccountPermissions(accountID string, appID strin
 		return errors.Newf("no permissions found for names: %v", permissionNames)
 	}
 
-	err = app.storage.InsertAccountPermissions(accountID, appID, permissions)
+	err = app.storage.InsertAccountPermissions(accountID, permissions)
 	if err != nil {
 		return err
 	}

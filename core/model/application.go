@@ -10,8 +10,8 @@ import (
 const (
 	//TypeApplication ...
 	TypeApplication logutils.MessageDataType = "application"
-	//TypeApplicationPermission ...
-	TypeApplicationPermission logutils.MessageDataType = "application permission"
+	//TypePermission ...
+	TypePermission logutils.MessageDataType = "permission"
 	//TypeApplicationRole ...
 	TypeApplicationRole logutils.MessageDataType = "application role"
 	//TypeApplicationGroup ...
@@ -26,19 +26,31 @@ const (
 	TypeApplicationUserRelations logutils.MessageDataType = "app user relations"
 )
 
-//ApplicationPermission represents application permission entity
-type ApplicationPermission struct {
-	ID   string
-	Name string
+//Permission represents permission entity
+type Permission struct {
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
 
-	Application Application
+	ServiceIDs []string `bson:"service_ids"`
 
-	DateCreated time.Time
-	DateUpdated *time.Time
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-func (c ApplicationPermission) String() string {
-	return fmt.Sprintf("[ID:%s\nName:%s\nApplication:%s]", c.ID, c.Name, c.Application.Name)
+func (c Permission) getServiceIDs() string {
+	s := ""
+	if len(c.ServiceIDs) == 0 {
+		return s
+	}
+	for _, id := range c.ServiceIDs {
+		s += id + ","
+	}
+
+	return s
+}
+
+func (c Permission) String() string {
+	return fmt.Sprintf("[ID:%s\nName:%s\nServiceIDs:%s]", c.ID, c.Name, c.getServiceIDs())
 }
 
 //ApplicationRole represents application role entity. It is a collection of permissions
@@ -47,7 +59,7 @@ type ApplicationRole struct {
 	Name        string
 	Description string
 
-	Permissions []ApplicationPermission
+	Permissions []Permission
 
 	Application Application
 
@@ -64,7 +76,7 @@ type ApplicationGroup struct {
 	ID   string
 	Name string
 
-	Permissions []ApplicationPermission
+	Permissions []Permission
 	Roles       []ApplicationRole
 
 	Application Application
