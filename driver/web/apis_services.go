@@ -56,13 +56,10 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 
 	//profile ////
 	requestProfile := requestData.Profile
-	if requestProfile != nil {
-		//generate ID
-		profileIDUUID, _ := uuid.NewUUID()
-		profileID := profileIDUUID.String()
-		requestProfile.Id = &profileID
-	}
 	profile := profileFromDef(requestProfile)
+	//generate ID
+	profileID, _ := uuid.NewUUID()
+	profile.ID = profileID.String()
 	//set date created
 	profile.DateCreated = time.Now()
 
@@ -250,7 +247,7 @@ func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request, claims 
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ProfileFields
+	var requestData Def.ReqSharedProfile
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "profile update request", nil, err, http.StatusBadRequest, true)

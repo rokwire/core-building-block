@@ -475,7 +475,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProfileFields'
+              $ref: '#/components/schemas/_req_shared_Profile'
         required: true
       responses:
         '200':
@@ -1869,6 +1869,36 @@ components:
           type: string
         mac_address:
           type: string
+    _req_shared_Profile:
+      type: object
+      properties:
+        photo_url:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        birth_year:
+          type: integer
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        zip_code:
+          type: string
+          nullable: true
+        state:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
     _res_shared_RokwireToken:
       type: object
       properties:
@@ -1931,7 +1961,7 @@ components:
             - $ref: '#/components/schemas/_req_login_ParamsOIDC'
             - $ref: '#/components/schemas/_req_login_ParamsNone'
         profile:
-          $ref: '#/components/schemas/ProfileFields'
+          $ref: '#/components/schemas/_req_shared_Profile'
         preferences:
           type: object
         anonymous_id:

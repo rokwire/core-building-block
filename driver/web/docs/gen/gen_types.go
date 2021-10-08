@@ -549,11 +549,25 @@ type ReqLoginRequest struct {
 	OrgId             string                  `json:"org_id"`
 	Params            *interface{}            `json:"params,omitempty"`
 	Preferences       *map[string]interface{} `json:"preferences,omitempty"`
-	Profile           *ProfileFields          `json:"profile,omitempty"`
+	Profile           *ReqSharedProfile       `json:"profile,omitempty"`
 }
 
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
 type ReqLoginRequestAuthType string
+
+// ReqSharedProfile defines model for _req_shared_Profile.
+type ReqSharedProfile struct {
+	Address   *string `json:"address"`
+	BirthYear *int    `json:"birth_year"`
+	Country   *string `json:"country"`
+	Email     *string `json:"email"`
+	FirstName *string `json:"first_name,omitempty"`
+	LastName  *string `json:"last_name,omitempty"`
+	Phone     *string `json:"phone"`
+	PhotoUrl  *string `json:"photo_url,omitempty"`
+	State     *string `json:"state"`
+	ZipCode   *string `json:"zip_code"`
+}
 
 // ReqUpdateOrganizationRequest defines model for _req_update_Organization_Request.
 type ReqUpdateOrganizationRequest struct {
@@ -745,7 +759,7 @@ type GetBbsServiceRegsParams struct {
 type PutServicesAccountPreferencesJSONBody map[string]interface{}
 
 // PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
-type PutServicesAccountProfileJSONBody ProfileFields
+type PutServicesAccountProfileJSONBody ReqSharedProfile
 
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest

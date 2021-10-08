@@ -49,15 +49,11 @@ func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeF
 }
 
 //Profile
-func profileFromDef(item *Def.ProfileFields) model.Profile {
+func profileFromDef(item *Def.ReqSharedProfile) model.Profile {
 	if item == nil {
 		return model.Profile{}
 	}
 
-	var id string
-	if item.Id != nil {
-		id = *item.Id
-	}
 	var photoUrl string
 	if item.PhotoUrl != nil {
 		photoUrl = *item.PhotoUrl
@@ -98,7 +94,7 @@ func profileFromDef(item *Def.ProfileFields) model.Profile {
 	if item.Country != nil {
 		country = *item.Country
 	}
-	return model.Profile{ID: id, PhotoURL: photoUrl, FirstName: firstName, LastName: lastName,
+	return model.Profile{PhotoURL: photoUrl, FirstName: firstName, LastName: lastName,
 		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
 		State: state, Country: country}
 }
