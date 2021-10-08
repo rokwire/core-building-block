@@ -30,6 +30,7 @@ type account struct {
 type accountAuthType struct {
 	ID           string                 `bson:"id"`
 	AuthTypeID   string                 `bson:"auth_type_id"`
+	AuthTypeCode string                 `bson:"auth_type_code"`
 	Identifier   string                 `bson:"identifier"`
 	Params       map[string]interface{} `bson:"params"`
 	CredentialID *string                `bson:"credential_id"`
@@ -48,7 +49,7 @@ type profile struct {
 	LastName  string `bson:"last_name"`
 	Email     string `bson:"email"`
 	Phone     string `bson:"phone"`
-	BirthYear int8   `bson:"birth_year"`
+	BirthYear int16  `bson:"birth_year"`
 	Address   string `bson:"address"`
 	ZipCode   string `bson:"zip_code"`
 	State     string `bson:"state"`

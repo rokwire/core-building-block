@@ -79,7 +79,7 @@ const (
 
 	ReqLoginRequestAuthTypeIllinoisOidc ReqLoginRequestAuthType = "illinois_oidc"
 
-	ReqLoginRequestAuthTypePhone ReqLoginRequestAuthType = "phone"
+	ReqLoginRequestAuthTypeTwilioPhone ReqLoginRequestAuthType = "twilio_phone"
 
 	ReqLoginRequestAuthTypeUsername ReqLoginRequestAuthType = "username"
 )
@@ -517,8 +517,8 @@ type ReqLoginCredsEmail struct {
 //   - full redirect URI received from OIDC provider
 type ReqLoginCredsOIDC string
 
-// Auth login creds for auth_type="phone"
-type ReqLoginCredsPhone struct {
+// Auth login creds for auth_type="twilio_phone"
+type ReqLoginCredsTwilioPhone struct {
 	Code  *string `json:"code,omitempty"`
 	Phone string  `json:"phone"`
 }
@@ -548,10 +548,26 @@ type ReqLoginRequest struct {
 	Creds             *interface{}            `json:"creds,omitempty"`
 	OrgId             string                  `json:"org_id"`
 	Params            *interface{}            `json:"params,omitempty"`
+	Preferences       *map[string]interface{} `json:"preferences,omitempty"`
+	Profile           *ReqSharedProfile       `json:"profile,omitempty"`
 }
 
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
 type ReqLoginRequestAuthType string
+
+// ReqSharedProfile defines model for _req_shared_Profile.
+type ReqSharedProfile struct {
+	Address   *string `json:"address"`
+	BirthYear *int    `json:"birth_year"`
+	Country   *string `json:"country"`
+	Email     *string `json:"email"`
+	FirstName *string `json:"first_name"`
+	LastName  *string `json:"last_name"`
+	Phone     *string `json:"phone"`
+	PhotoUrl  *string `json:"photo_url"`
+	State     *string `json:"state"`
+	ZipCode   *string `json:"zip_code"`
+}
 
 // ReqUpdateOrganizationRequest defines model for _req_update_Organization_Request.
 type ReqUpdateOrganizationRequest struct {
@@ -613,6 +629,7 @@ type ResLoginAccount struct {
 	Groups      *[]ApplicationGroupFields      `json:"groups,omitempty"`
 	Id          string                         `json:"id"`
 	Permissions *[]ApplicationPermissionFields `json:"permissions,omitempty"`
+	Preferences *map[string]interface{}        `json:"preferences,omitempty"`
 	Profile     *ProfileFields                 `json:"profile,omitempty"`
 	Roles       *[]ApplicationRoleFields       `json:"roles,omitempty"`
 }
@@ -742,6 +759,9 @@ type GetBbsServiceRegsParams struct {
 // PutServicesAccountPreferencesJSONBody defines parameters for PutServicesAccountPreferences.
 type PutServicesAccountPreferencesJSONBody map[string]interface{}
 
+// PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
+type PutServicesAccountProfileJSONBody ReqSharedProfile
+
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
@@ -767,9 +787,6 @@ type GetServicesAuthVerifyParams struct {
 	// Verification code
 	Code string `json:"code"`
 }
-
-// PutServicesProfileJSONBody defines parameters for PutServicesProfile.
-type PutServicesProfileJSONBody ProfileFields
 
 // GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
 type GetTpsServiceRegsParams struct {
@@ -820,6 +837,9 @@ type PutAdminServiceRegsJSONRequestBody PutAdminServiceRegsJSONBody
 // PutServicesAccountPreferencesJSONRequestBody defines body for PutServicesAccountPreferences for application/json ContentType.
 type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJSONBody
 
+// PutServicesAccountProfileJSONRequestBody defines body for PutServicesAccountProfile for application/json ContentType.
+type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
+
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody
 
@@ -828,9 +848,6 @@ type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 
 // PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
 type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
-
-// PutServicesProfileJSONRequestBody defines body for PutServicesProfile for application/json ContentType.
-type PutServicesProfileJSONRequestBody PutServicesProfileJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found

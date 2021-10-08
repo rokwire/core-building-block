@@ -84,6 +84,8 @@ DeviceFields:
 ##### APIs requests and responses - they are at bottom
 
 #### shared requests and responses
+_req_shared_Profile:
+  $ref: "../schemas/apis/shared/requests/Profile.yaml"
 _res_shared_RokwireToken:
   $ref: "../schemas/apis/shared/responses/RokwireToken.yaml"
 _res_shared_ParamsOIDC:
@@ -96,8 +98,8 @@ _req_login_Request:
   $ref: "./apis/services/login/request/Request.yaml"
 _req_login_CredsEmail:
   $ref: "./apis/services/login/request/CredsEmail.yaml"
-_req_login_CredsPhone:
-  $ref: "./apis/services/login/request/CredsPhone.yaml"
+_req_login_CredsTwilioPhone:
+  $ref: "./apis/services/login/request/CredsTwilioPhone.yaml"
 _req_login_CredsOIDC:
   $ref: "./apis/services/login/request/CredsOIDC.yaml"
 _req_login_CredsAPIKey:
@@ -107,7 +109,7 @@ _req_login_ParamsEmail:
 _req_login_ParamsOIDC:
   $ref: "./apis/services/login/request/ParamsOIDC.yaml"
 _req_login_ParamsNone:
-   $ref: "./apis/services/login/request/ParamsNone.yaml"
+  $ref: "./apis/services/login/request/ParamsNone.yaml"
 _res_login_Response:
   $ref: "./apis/services/login/response/Response.yaml"
 _res_login_Account:
