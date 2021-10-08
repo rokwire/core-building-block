@@ -286,6 +286,22 @@ func (h ServicesApisHandler) updateAccountPreferences(l *logs.Log, r *http.Reque
 	return l.HttpResponseSuccess()
 }
 
+func (h ServicesApisHandler) getPreferences(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	preferences, err := h.coreAPIs.Services.SerGetPreferences(claims.Subject)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
+	}
+
+	response := preferences
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
 //getCommonTest TODO get test
 func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	res := h.coreAPIs.Services.SerGetCommonTest(l)
