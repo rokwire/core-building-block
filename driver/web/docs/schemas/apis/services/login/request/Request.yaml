@@ -30,8 +30,11 @@ properties:
       - $ref: "./ParamsNone.yaml"
   profile:
     $ref:  "../../../shared/requests/Profile.yaml"  
+    nullable: true
   preferences:
     type: object
+    nullable: true
   anonymous_id:
     type: string
+    nullable: true
        

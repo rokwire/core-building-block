@@ -1965,10 +1965,13 @@ components:
             - $ref: '#/components/schemas/_req_login_ParamsNone'
         profile:
           $ref: '#/components/schemas/_req_shared_Profile'
+          nullable: true
         preferences:
           type: object
+          nullable: true
         anonymous_id:
           type: string
+          nullable: true
     _req_login_CredsEmail:
       required:
         - email
@@ -2055,6 +2058,7 @@ components:
           $ref: '#/components/schemas/ProfileFields'
         preferences:
           type: object
+          nullable: true
         permissions:
           type: array
           items:
