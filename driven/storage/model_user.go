@@ -13,8 +13,8 @@ type account struct {
 	OrgID string `bson:"org_id,omitempty"`
 
 	Permissions []model.Permission `bson:"permissions,omitempty"`
-	Roles       []applicationRole       `bson:"roles,omitempty"`
-	Groups      []applicationGroup      `bson:"groups,omitempty"`
+	Roles       []applicationRole  `bson:"roles,omitempty"`
+	Groups      []applicationGroup `bson:"groups,omitempty"`
 
 	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
 

@@ -56,7 +56,7 @@ type applicationGroup struct {
 	AppID string `bson:"app_id"`
 
 	Permissions []model.Permission `bson:"permissions"`
-	Roles       []applicationRole       `bson:"roles"`
+	Roles       []applicationRole  `bson:"roles"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

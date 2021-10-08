@@ -36,7 +36,7 @@ type database struct {
 	applicationsOrganizations *collectionWrapper
 	applicationsGroups        *collectionWrapper
 	applicationsRoles         *collectionWrapper
-	permissions   *collectionWrapper
+	permissions               *collectionWrapper
 
 	listeners []Listener
 }
