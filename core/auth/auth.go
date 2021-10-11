@@ -490,13 +490,29 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 }
 
 func (a *Auth) prepareProfile(clientData model.Profile, profileBBData model.Profile, l *logs.Log) model.Profile {
-	//TODO - merge from both sources
-	return profileBBData
+	clientData.PhotoURL = utils.SetStringIfEmpty(clientData.PhotoURL, profileBBData.PhotoURL)
+	clientData.FirstName = utils.SetStringIfEmpty(clientData.FirstName, profileBBData.FirstName)
+	clientData.LastName = utils.SetStringIfEmpty(clientData.LastName, profileBBData.LastName)
+	clientData.Email = utils.SetStringIfEmpty(clientData.Email, profileBBData.Email)
+	clientData.Phone = utils.SetStringIfEmpty(clientData.Phone, profileBBData.Phone)
+	clientData.Address = utils.SetStringIfEmpty(clientData.Address, profileBBData.Address)
+	clientData.ZipCode = utils.SetStringIfEmpty(clientData.ZipCode, profileBBData.ZipCode)
+	clientData.State = utils.SetStringIfEmpty(clientData.State, profileBBData.State)
+	clientData.Country = utils.SetStringIfEmpty(clientData.Country, profileBBData.Country)
+
+	if clientData.BirthYear == 0 {
+		clientData.BirthYear = profileBBData.BirthYear
+	}
+
+	return clientData
 }
 
 func (a *Auth) preparePreferences(clientData map[string]interface{}, profileBBData map[string]interface{}, l *logs.Log) map[string]interface{} {
-	//TODO - merge from both sources
-	return profileBBData
+	for k, v := range profileBBData {
+
+	}
+
+	return nil
 }
 
 func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *logs.Log) (*model.Profile, map[string]interface{}, error) {

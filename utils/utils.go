@@ -39,3 +39,10 @@ func ConvertToJSON(data interface{}) ([]byte, error) {
 func DeepEqual(a, b interface{}) bool {
 	return reflect.DeepEqual(a, b)
 }
+
+func SetStringIfEmpty(a, b string) string {
+	if a == "" {
+		return b
+	}
+	return a
+}
