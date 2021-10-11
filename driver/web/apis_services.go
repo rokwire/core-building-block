@@ -43,25 +43,21 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	anonymousID := ""
-	if requestData.AnonymousId != nil {
-		anonymousID = *requestData.AnonymousId
+	//preferences
+	var preferences map[string]interface{}
+	if requestData.Preferences != nil {
+		preferences = *requestData.Preferences
 	}
 
-	//preferences
-	preferences := requestData.Preferences
-
 	//profile ////
-	requestProfile := requestData.Profile
+	profile := profileFromDefNullable(requestData.Profile)
 	//generate ID
-	profileIDUUID, _ := uuid.NewUUID()
-	profileID := profileIDUUID.String()
-	requestProfile.Id = &profileID
-	profile := profileFromDef(requestProfile)
+	profileID, _ := uuid.NewUUID()
+	profile.ID = profileID.String()
 	//set date created
 	profile.DateCreated = time.Now()
 
-	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, anonymousID, *profile, *preferences, l)
+	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, profile, preferences, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
@@ -83,20 +79,17 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		///prepare response
 		//profile
 		profile := profileToDef(&account.Profile)
+		//preferences
+		preferences := &account.Preferences
 		//permissions
 		permissions := applicationPermissionsToDef(account.Permissions)
 		//roles
 		roles := applicationRolesToDef(account.Roles)
 		//groups
 		groups := applicationGroupsToDef(account.Groups)
-		//account auth types - we return only the one used for login
-		authTypes := make([]Def.AccountAuthTypeFields, 1)
-		for _, current := range account.AuthTypes {
-			if current.AuthType.Code == string(requestData.AuthType) {
-				authTypes[0] = accountAuthTypeToDef(current)
-			}
-		}
-		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
+		//account auth types
+		authTypes := accountAuthTypesToDef(account.AuthTypes)
+		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 	}
 
 	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: accountData, Params: &params}
@@ -245,7 +238,7 @@ func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request, claims 
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ProfileFields
+	var requestData Def.ReqSharedProfile
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "profile update request", nil, err, http.StatusBadRequest, true)
@@ -253,7 +246,7 @@ func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request, claims 
 
 	profile := profileFromDef(&requestData)
 
-	err = h.coreAPIs.Services.SerUpdateProfile(claims.Subject, profile)
+	err = h.coreAPIs.Services.SerUpdateProfile(claims.Subject, &profile)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
 	}
@@ -279,6 +272,22 @@ func (h ServicesApisHandler) updateAccountPreferences(l *logs.Log, r *http.Reque
 	}
 
 	return l.HttpResponseSuccess()
+}
+
+func (h ServicesApisHandler) getPreferences(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	preferences, err := h.coreAPIs.Services.SerGetPreferences(claims.Subject)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
+	}
+
+	response := preferences
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
 }
 
 //getCommonTest TODO get test

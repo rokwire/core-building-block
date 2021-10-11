@@ -3,6 +3,7 @@ package main
 import (
 	"core-building-block/core"
 	"core-building-block/core/auth"
+	"core-building-block/driven/emailer"
 	"core-building-block/driven/profilebb"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
@@ -66,12 +67,10 @@ func main() {
 	smtpPort := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_PORT", false, false)
 	smtpUser := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_USER", false, true)
 	smtpPassword := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_PASSWORD", false, true)
-	smtpFrom := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_EMAIL_FROM", false, false)
-
+	smtpFrom := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_EMAIL_FROM", false, false)
 	smtpPortNum, _ := strconv.Atoi(smtpPort)
 
-	profileBBHost := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PROFILE_BB_HOST", true, false)
-	profileBBApiKey := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PROFILE_BB_API_KEY", true, true)
+	emailer := emailer.NewEmailerAdapter(smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom)
 
 	var authPrivKeyPem []byte
 	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
@@ -111,9 +110,12 @@ func main() {
 		logger.Infof("Error parsing max token exp, applying defaults: %v", err)
 	}
 
+	//profile bb adapter
+	profileBBHost := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PROFILE_BB_HOST", true, false)
+	profileBBApiKey := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PROFILE_BB_API_KEY", true, true)
 	profileBBAdapter := profilebb.NewProfileBBAdapter(profileBBHost, profileBBApiKey)
 
-	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, minTokenExp, maxTokenExp, twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
+	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, emailer, minTokenExp, maxTokenExp, twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}

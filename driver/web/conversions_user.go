@@ -37,7 +37,7 @@ func userToDef(item *model.Account) *Def.Account {
 func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthTypeFields {
 	params := &Def.AccountAuthTypeFields_Params{}
 	params.AdditionalProperties = item.Params
-	return Def.AccountAuthTypeFields{Id: &item.ID, Identifier: &item.Identifier, Active: &item.Active, Active2fa: &item.Active2FA, Params: params}
+	return Def.AccountAuthTypeFields{Id: &item.ID, Code: &item.AuthType.Code, Identifier: &item.Identifier, Active: &item.Active, Active2fa: &item.Active2FA, Params: params}
 }
 
 func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeFields {
@@ -49,10 +49,54 @@ func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeF
 }
 
 //Profile
-func profileFromDef(item *Def.ProfileFields) *model.Profile {
-	return &model.Profile{ID: *item.Id, PhotoURL: *item.PhotoUrl, FirstName: *item.FirstName, LastName: *item.LastName,
-		Email: *item.Email, Phone: *item.Phone, BirthYear: int16(*item.BirthYear), Address: *item.Address, ZipCode: *item.ZipCode,
-		State: *item.State, Country: *item.Country}
+func profileFromDef(item *Def.ReqSharedProfile) model.Profile {
+	if item == nil {
+		return model.Profile{}
+	}
+
+	var photoURL string
+	if item.PhotoUrl != nil {
+		photoURL = *item.PhotoUrl
+	}
+	var firstName string
+	if item.FirstName != nil {
+		firstName = *item.FirstName
+	}
+	var lastName string
+	if item.LastName != nil {
+		lastName = *item.LastName
+	}
+	var email string
+	if item.Email != nil {
+		email = *item.Email
+	}
+	var phone string
+	if item.Phone != nil {
+		phone = *item.Phone
+	}
+	var birthYear int
+	if item.BirthYear != nil {
+		birthYear = *item.BirthYear
+	}
+	var address string
+	if item.Address != nil {
+		address = *item.Address
+	}
+	var zipCode string
+	if item.ZipCode != nil {
+		zipCode = *item.ZipCode
+	}
+	var state string
+	if item.State != nil {
+		state = *item.State
+	}
+	var country string
+	if item.Country != nil {
+		country = *item.Country
+	}
+	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
+		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
+		State: state, Country: country}
 }
 
 func profileToDef(item *model.Profile) *Def.ProfileFields {
@@ -60,6 +104,56 @@ func profileToDef(item *model.Profile) *Def.ProfileFields {
 	return &Def.ProfileFields{Id: &item.ID, PhotoUrl: &item.PhotoURL, FirstName: &item.FirstName, LastName: &item.LastName,
 		Email: &item.Email, Phone: &item.Phone, BirthYear: &birthYear, Address: &item.Address, ZipCode: &item.ZipCode,
 		State: &item.State, Country: &item.Country}
+}
+
+func profileFromDefNullable(item *Def.ReqSharedProfileNullable) model.Profile {
+	if item == nil {
+		return model.Profile{}
+	}
+
+	var photoURL string
+	if item.PhotoUrl != nil {
+		photoURL = *item.PhotoUrl
+	}
+	var firstName string
+	if item.FirstName != nil {
+		firstName = *item.FirstName
+	}
+	var lastName string
+	if item.LastName != nil {
+		lastName = *item.LastName
+	}
+	var email string
+	if item.Email != nil {
+		email = *item.Email
+	}
+	var phone string
+	if item.Phone != nil {
+		phone = *item.Phone
+	}
+	var birthYear int
+	if item.BirthYear != nil {
+		birthYear = *item.BirthYear
+	}
+	var address string
+	if item.Address != nil {
+		address = *item.Address
+	}
+	var zipCode string
+	if item.ZipCode != nil {
+		zipCode = *item.ZipCode
+	}
+	var state string
+	if item.State != nil {
+		state = *item.State
+	}
+	var country string
+	if item.Country != nil {
+		country = *item.Country
+	}
+	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
+		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
+		State: state, Country: country}
 }
 
 //Device

@@ -84,6 +84,10 @@ DeviceFields:
 ##### APIs requests and responses - they are at bottom
 
 #### shared requests and responses
+_req_shared_Profile:
+  $ref: "../schemas/apis/shared/requests/Profile.yaml"
+_req_shared_ProfileNullable:
+  $ref: "../schemas/apis/shared/requests/ProfileNullable.yaml"
 _res_shared_RokwireToken:
   $ref: "../schemas/apis/shared/responses/RokwireToken.yaml"
 _res_shared_ParamsOIDC:

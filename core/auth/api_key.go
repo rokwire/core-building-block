@@ -2,12 +2,13 @@ package auth
 
 import (
 	"core-building-block/core/model"
-	"strings"
+	"encoding/json"
 
 	"github.com/google/uuid"
 	"github.com/rokmetro/logging-library/errors"
 	"github.com/rokmetro/logging-library/logs"
 	"github.com/rokmetro/logging-library/logutils"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 const (
@@ -23,13 +24,29 @@ type apiKeyAuthImpl struct {
 	authType string
 }
 
+type apiKeyCreds struct {
+	APIKey      string `json:"api_key" validate:"required"`
+	AnonymousID string `json:"anonymous_id"`
+}
+
 type apiKeyResponseParams struct {
 	AnonymousID string `json:"anonymous_id"`
 }
 
-func (a *apiKeyAuthImpl) checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, anonymousID string, l *logs.Log) (string, interface{}, error) {
-	creds = strings.ReplaceAll(creds, `"`, "")
-	apiKey, err := a.auth.getCachedAPIKey(creds)
+func (a *apiKeyAuthImpl) checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, interface{}, error) {
+	var keyCreds apiKeyCreds
+	err := json.Unmarshal([]byte(creds), &keyCreds)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeAPIKeyCreds, nil, err)
+	}
+
+	validate := validator.New()
+	err = validate.Struct(keyCreds)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAPIKeyCreds, nil, err)
+	}
+
+	apiKey, err := a.auth.getCachedAPIKey(keyCreds.APIKey)
 	if err != nil || apiKey == nil {
 		return "", nil, errors.Newf("incorrect key for org_id=%v, app_id=%v", appOrg.Organization.ID, appOrg.Application.ID)
 	}
@@ -38,6 +55,7 @@ func (a *apiKeyAuthImpl) checkCredentials(authType model.AuthType, appType model
 		return "", nil, errors.Newf("incorrect key for org_id=%v, app_id=%v", appOrg.Organization.ID, appOrg.Application.ID)
 	}
 
+	anonymousID := keyCreds.AnonymousID
 	if anonymousID == "" {
 		anonymousUUID, _ := uuid.NewUUID()
 		anonymousID = anonymousUUID.String()

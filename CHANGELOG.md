@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2021-10-11
+### Fixed
+- Fix various issues [#215](https://github.com/rokwire/core-building-block/issues/215)
+
+### Removed
+- **REVERT:** Handle anonymous ID conversion [#204](https://github.com/rokwire/core-building-block/issues/204)
+
+## [1.3.0] - 2021-10-08
+### Added
+- Expose get account preferences services API [#206](https://github.com/rokwire/core-building-block/issues/206) 
+
+### Changed
+- Improve how the system sends emails [#192](https://github.com/rokwire/core-building-block/issues/192)
+
+## [1.2.0] - 2021-10-07
 ### Security
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
@@ -60,8 +75,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set up logging [#6](https://github.com/rokwire/core-building-block/issues/6)
 
 ### Fixed
+- Fix broken OIDC login [#211](https://github.com/rokwire/core-building-block/issues/211)
+- Fix crash on phone login [#208](https://github.com/rokwire/core-building-block/issues/208)
 - Fix email account verification [#198](https://github.com/rokwire/core-building-block/issues/198)
-- Fix build failure [#196](https://github.com/rokwire/core-building-block/issues/196)
+- Fix build failure [#196] (https://github.com/rokwire/core-building-block/issues/196)
 - Fix admin APIs after the model changes [#173](https://github.com/rokwire/core-building-block/issues/173)
 - Fix login issues [#178](https://github.com/rokwire/core-building-block/issues/178)
 - Fix base path validation issue [#174](https://github.com/rokwire/core-building-block/issues/174)
@@ -77,3 +94,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prepare the service to be deployed into Rokwire infrastructure [#176](https://github.com/rokwire/core-building-block/issues/176)
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
+
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/rokwire/core-building-block/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/rokwire/core-building-block/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/rokwire/core-building-block/compare/v1.1.0...v1.2.0

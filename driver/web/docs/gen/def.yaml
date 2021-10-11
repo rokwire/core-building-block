@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.0.0
+  version: 1.4.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -147,8 +147,9 @@ paths:
                     "auth_type": "api_key",
                     "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "creds": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "anonymous_id": "a9a0204d-62f7-40d3-a14a-d8ecae89dad2"
+                    "creds": {
+                      "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738"
+                    }
                   }
         required: true
       responses:
@@ -413,6 +414,29 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+    get:
+      tags:
+        - Services
+      summary: Get preferences
+      description: |
+        Returns a user preferences
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/account/profile:
     get:
       tags:
@@ -452,7 +476,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProfileFields'
+              $ref: '#/components/schemas/_req_shared_Profile'
         required: true
       responses:
         '200':
@@ -1776,6 +1800,8 @@ components:
       properties:
         id:
           type: string
+        code:
+          type: string
         identifier:
           type: string
         params:
@@ -1846,6 +1872,73 @@ components:
           type: string
         mac_address:
           type: string
+    _req_shared_Profile:
+      type: object
+      properties:
+        photo_url:
+          type: string
+          nullable: true
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        birth_year:
+          type: integer
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        zip_code:
+          type: string
+          nullable: true
+        state:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+    _req_shared_ProfileNullable:
+      type: object
+      nullable: true
+      properties:
+        photo_url:
+          type: string
+          nullable: true
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        birth_year:
+          type: integer
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        zip_code:
+          type: string
+          nullable: true
+        state:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
     _res_shared_RokwireToken:
       type: object
       properties:
@@ -1908,11 +2001,10 @@ components:
             - $ref: '#/components/schemas/_req_login_ParamsOIDC'
             - $ref: '#/components/schemas/_req_login_ParamsNone'
         profile:
-          $ref: '#/components/schemas/ProfileFields'
+          $ref: '#/components/schemas/_req_shared_ProfileNullable'
         preferences:
           type: object
-        anonymous_id:
-          type: string
+          nullable: true
     _req_login_CredsEmail:
       required:
         - email
@@ -1946,6 +2038,8 @@ components:
       description: Auth login creds for auth_type="api_key"
       properties:
         api_key:
+          type: string
+        anonymous_id:
           type: string
     _req_login_ParamsEmail:
       type: object
@@ -1997,6 +2091,9 @@ components:
           type: string
         profile:
           $ref: '#/components/schemas/ProfileFields'
+        preferences:
+          type: object
+          nullable: true
         permissions:
           type: array
           items:

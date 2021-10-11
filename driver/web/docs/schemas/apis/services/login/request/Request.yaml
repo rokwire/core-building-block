@@ -29,9 +29,8 @@ properties:
       - $ref: "./ParamsOIDC.yaml"
       - $ref: "./ParamsNone.yaml"
   profile:
-    $ref:  "../../../../user/ProfileFields.yaml"  
+    $ref:  "../../../shared/requests/ProfileNullable.yaml"  
   preferences:
     type: object
-  anonymous_id:
-    type: string
+    nullable: true
        
