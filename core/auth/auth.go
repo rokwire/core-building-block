@@ -466,7 +466,8 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 	//get profile BB data
 	gotProfile, gotPreferences, err := a.getProfileBBData(authType, identifier, l)
 	if err != nil {
-		l.ErrorAction(logutils.ActionGet, "profile building block data", err)
+		args := &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}
+		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "error getting profile BB data", args, err)
 	}
 	//TODO - think what to do..
 	log.Println(gotProfile)
@@ -497,7 +498,7 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 	if profileSearch != nil {
 		profile, preferences, err = a.profileBB.GetProfileBBData(profileSearch, l)
 		if err != nil {
-			l.ErrorAction(logutils.ActionGet, "profile building block data", err)
+			return nil, nil, err
 		}
 	}
 	return profile, preferences, nil
