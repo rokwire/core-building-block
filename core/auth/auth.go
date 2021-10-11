@@ -507,10 +507,6 @@ func (a *Auth) prepareProfile(clientData model.Profile, profileBBData model.Prof
 }
 
 func (a *Auth) preparePreferences(clientData map[string]interface{}, profileBBData map[string]interface{}, l *logs.Log) map[string]interface{} {
-	for k, v := range profileBBData {
-
-	}
-
 	return nil
 }
 

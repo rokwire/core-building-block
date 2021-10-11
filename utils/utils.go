@@ -40,9 +40,15 @@ func DeepEqual(a, b interface{}) bool {
 	return reflect.DeepEqual(a, b)
 }
 
+//SetStringIfEmpty returns b if a is empty, a if not
 func SetStringIfEmpty(a, b string) string {
 	if a == "" {
 		return b
 	}
 	return a
+}
+
+//GetType returns a string representing the type of data
+func GetType(data interface{}) string {
+	return reflect.TypeOf(data).String()
 }
