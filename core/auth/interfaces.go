@@ -218,6 +218,11 @@ type Storage interface {
 	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
 }
 
+//ProfileBuildingBlock is used by auth to communicate with the profile building block.
+type ProfileBuildingBlock interface {
+	GetProfileBBData(queryParams map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error)
+}
+
 //Emailer is used by core to send emails
 type Emailer interface {
 	Send(toEmail string, subject string, body string, attachmentFilename *string) error
