@@ -477,6 +477,7 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 	profile.ID = profileID.String()
 	//date created
 	profile.DateCreated = time.Now()
+	///
 
 	return accountAuthType, credential, &profile, preferences, nil
 }
@@ -487,7 +488,7 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 	var err error
 
 	profileSearch := make(map[string]string)
-	if authType.Code == "phone" {
+	if authType.Code == "twilio_phone" {
 		profileSearch["phone"] = identifier
 	}
 	if authType.Code == "illinois_oidc" {
