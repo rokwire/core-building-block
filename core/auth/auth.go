@@ -8,6 +8,7 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 	"time"
@@ -177,9 +178,11 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 }
 
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
-	creds string, params string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*model.Account, *model.AccountAuthType, interface{}, error) {
+	creds string, params string, regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (*model.Account, *model.AccountAuthType, interface{}, error) {
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
+	var profile *model.Profile
+	var preferences map[string]interface{}
 	var extParams interface{}
 
 	//external auth type
@@ -240,14 +243,13 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		accountAuthTypeParams := map[string]interface{}{}
 		accountAuthTypeParams["user"] = externalUser
 
-		//TODO - profile, preferences....
-		accountAuthType, _, _, _, err = a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, nil, nil, l)
+		accountAuthType, _, profile, preferences, err = a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, nil, nil, regProfile, regPreferences, l)
 
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
 
-		account, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, profile, preferences, l)
+		account, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, *profile, preferences, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
@@ -272,10 +274,13 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.App
 }
 
 func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
-	creds string, params string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (string, *model.Account, *model.AccountAuthType, error) {
+	creds string, params string, regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (string, *model.Account, *model.AccountAuthType, error) {
 	var message string
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
+	var credential *model.Credential
+	var profile *model.Profile
+	var preferences map[string]interface{}
 
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(authType)
@@ -313,7 +318,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 			return "", nil, nil, errors.Wrap("error signing up", err)
 		}
 
-		accountAuthType, credential, profile, preferences, err := a.prepareRegistrationData(authType, *identifier, nil, &credID, credentialValue, l)
+		accountAuthType, credential, profile, preferences, err = a.prepareRegistrationData(authType, *identifier, nil, &credID, credentialValue, regProfile, regPreferences, l)
 		if err != nil {
 			return "", nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
@@ -436,7 +441,8 @@ func (a *Auth) applyAnonymousLogin(authType *model.AuthType, anonymousID string,
 }
 
 func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier string, accountAuthTypeParams map[string]interface{},
-	credentialID *string, credentialValue map[string]interface{}, l *logs.Log) (*model.AccountAuthType, *model.Credential, *model.Profile, map[string]interface{}, error) {
+	credentialID *string, credentialValue map[string]interface{},
+	profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*model.AccountAuthType, *model.Credential, *model.Profile, map[string]interface{}, error) {
 	now := time.Now()
 
 	//account auth type
@@ -456,7 +462,26 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 		accountAuthType.Credential = credential
 	}
 
-	//profile
+	///profile and preferences
+	//get profile BB data
+	gotProfile, gotPreferences, err := a.getProfileBBData(authType, identifier, l)
+	if err != nil {
+		l.ErrorAction(logutils.ActionGet, "profile building block data", err)
+	}
+	//TODO - think what to do..
+	log.Println(gotProfile)
+	log.Println(gotPreferences)
+
+	//generate profile ID
+	profileID, _ := uuid.NewUUID()
+	profile.ID = profileID.String()
+	//date created
+	profile.DateCreated = time.Now()
+
+	return accountAuthType, credential, &profile, preferences, nil
+}
+
+func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *logs.Log) (*model.Profile, map[string]interface{}, error) {
 	var profile *model.Profile
 	var preferences map[string]interface{}
 	var err error
@@ -474,16 +499,7 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 			l.ErrorAction(logutils.ActionGet, "profile building block data", err)
 		}
 	}
-
-	profileID, _ := uuid.NewUUID()
-	if profile == nil {
-		profile = &model.Profile{ID: profileID.String(), PhotoURL: "", FirstName: "", LastName: "", DateCreated: now}
-	} else {
-		profile.ID = profileID.String()
-		profile.DateUpdated = &now
-	}
-
-	return accountAuthType, credential, profile, preferences, nil
+	return profile, preferences, nil
 }
 
 //registerUser registers account for an organization in an application
