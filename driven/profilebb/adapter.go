@@ -40,6 +40,10 @@ type profileBBPii struct {
 
 //GetProfileBBData gets profile data by queryParams
 func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error) {
+	if a.host == "" || a.apiKey == "" {
+		return nil, nil, errors.New("profile bb adapter not configured")
+	}
+
 	query := url.Values{}
 	for k, v := range queryParams {
 		query.Set(k, v)
