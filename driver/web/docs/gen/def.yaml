@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.0.0
+  version: 1.4.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -39,8 +39,8 @@ paths:
             schema:
               $ref: '#/components/schemas/_req_login_Request'
             examples:
-              email:
-                summary: Email login
+              email-sign_in:
+                summary: Email - sign in
                 value: |
                   {
                     "auth_type": "email",
@@ -51,16 +51,64 @@ paths:
                       "password": "test12345"
                     }
                   }
-              phone:
-                summary: Phone login
+              email-sign_up:
+                summary: Email - sign up
                 value: |
                   {
-                    "auth_type": "phone",
+                    "auth_type": "email",
+                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "creds": {
+                      "email": "test@test.com", 
+                      "password": "test12345"
+                    },
+                    "params":{
+                        "sign_up":true,
+                        "confirm_password": "test12345"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
+                    }
+                  }
+              phone:
+                summary: Phone - sign in OR sign up
+                value: |
+                  {
+                    "auth_type": "twilio_phone",
                     "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "creds": {
                       "phone": "+12223334444", 
                       "code": "123456"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
                     }
                   }
               illinois_oidc:
@@ -74,6 +122,22 @@ paths:
                     "params": {
                       "redirect_uri": "https://redirect.example.com",
                       "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
                     }
                   }
               api_key:
@@ -81,8 +145,8 @@ paths:
                 value: |
                   {
                     "auth_type": "api_key",
+                    "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "app_id": "edu.illinois.rokwire",
                     "creds": {
                       "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738"
                     }
@@ -318,7 +382,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/account-preferences:
+  /services/account/preferences:
     put:
       tags:
         - Services
@@ -350,7 +414,30 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/profile:
+    get:
+      tags:
+        - Services
+      summary: Get preferences
+      description: |
+        Returns a user preferences
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/account/profile:
     get:
       tags:
         - Services
@@ -389,7 +476,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProfileFields'
+              $ref: '#/components/schemas/_req_shared_Profile'
         required: true
       responses:
         '200':
@@ -1713,6 +1800,8 @@ components:
       properties:
         id:
           type: string
+        code:
+          type: string
         identifier:
           type: string
         params:
@@ -1783,6 +1872,73 @@ components:
           type: string
         mac_address:
           type: string
+    _req_shared_Profile:
+      type: object
+      properties:
+        photo_url:
+          type: string
+          nullable: true
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        birth_year:
+          type: integer
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        zip_code:
+          type: string
+          nullable: true
+        state:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+    _req_shared_ProfileNullable:
+      type: object
+      nullable: true
+      properties:
+        photo_url:
+          type: string
+          nullable: true
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        birth_year:
+          type: integer
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        zip_code:
+          type: string
+          nullable: true
+        state:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
     _res_shared_RokwireToken:
       type: object
       properties:
@@ -1825,7 +1981,7 @@ components:
           enum:
             - username
             - email
-            - phone
+            - twilio_phone
             - illinois_oidc
             - api_key
         app_type_identifier:
@@ -1835,7 +1991,7 @@ components:
         creds:
           anyOf:
             - $ref: '#/components/schemas/_req_login_CredsEmail'
-            - $ref: '#/components/schemas/_req_login_CredsPhone'
+            - $ref: '#/components/schemas/_req_login_CredsTwilioPhone'
             - $ref: '#/components/schemas/_req_login_CredsOIDC'
             - $ref: '#/components/schemas/_req_login_CredsAPIKey'
         params:
@@ -1844,6 +2000,11 @@ components:
             - $ref: '#/components/schemas/_req_login_ParamsEmail'
             - $ref: '#/components/schemas/_req_login_ParamsOIDC'
             - $ref: '#/components/schemas/_req_login_ParamsNone'
+        profile:
+          $ref: '#/components/schemas/_req_shared_ProfileNullable'
+        preferences:
+          type: object
+          nullable: true
     _req_login_CredsEmail:
       required:
         - email
@@ -1855,9 +2016,9 @@ components:
           type: string
         password:
           type: string
-    _req_login_CredsPhone:
+    _req_login_CredsTwilioPhone:
       type: object
-      description: Auth login creds for auth_type="phone"
+      description: Auth login creds for auth_type="twilio_phone"
       required:
         - phone
       properties:
@@ -1884,7 +2045,10 @@ components:
       type: object
       description: Auth login params for auth_type="email"
       properties:
-        new_user:
+        confirm_password:
+          type: string
+          description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+        sign_up:
           type: boolean
           default: false
     _req_login_ParamsOIDC:
@@ -1927,6 +2091,9 @@ components:
           type: string
         profile:
           $ref: '#/components/schemas/ProfileFields'
+        preferences:
+          type: object
+          nullable: true
         permissions:
           type: array
           items:

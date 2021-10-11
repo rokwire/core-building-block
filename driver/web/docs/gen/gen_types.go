@@ -79,7 +79,7 @@ const (
 
 	ReqLoginRequestAuthTypeIllinoisOidc ReqLoginRequestAuthType = "illinois_oidc"
 
-	ReqLoginRequestAuthTypePhone ReqLoginRequestAuthType = "phone"
+	ReqLoginRequestAuthTypeTwilioPhone ReqLoginRequestAuthType = "twilio_phone"
 
 	ReqLoginRequestAuthTypeUsername ReqLoginRequestAuthType = "username"
 )
@@ -153,6 +153,7 @@ type AccountAuthType struct {
 type AccountAuthTypeFields struct {
 	Active     *bool                         `json:"active,omitempty"`
 	Active2fa  *bool                         `json:"active_2fa,omitempty"`
+	Code       *string                       `json:"code,omitempty"`
 	Id         *string                       `json:"id,omitempty"`
 	Identifier *string                       `json:"identifier,omitempty"`
 	Params     *AccountAuthTypeFields_Params `json:"params"`
@@ -518,15 +519,18 @@ type ReqLoginCredsEmail struct {
 //   - full redirect URI received from OIDC provider
 type ReqLoginCredsOIDC string
 
-// Auth login creds for auth_type="phone"
-type ReqLoginCredsPhone struct {
+// Auth login creds for auth_type="twilio_phone"
+type ReqLoginCredsTwilioPhone struct {
 	Code  *string `json:"code,omitempty"`
 	Phone string  `json:"phone"`
 }
 
 // Auth login params for auth_type="email"
 type ReqLoginParamsEmail struct {
-	NewUser *bool `json:"new_user,omitempty"`
+
+	// This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+	ConfirmPassword *string `json:"confirm_password,omitempty"`
+	SignUp          *bool   `json:"sign_up,omitempty"`
 }
 
 // Auth login request params for unlisted auth_types (None)
@@ -540,15 +544,45 @@ type ReqLoginParamsOIDC struct {
 
 // ReqLoginRequest defines model for _req_login_Request.
 type ReqLoginRequest struct {
-	AppTypeIdentifier string                  `json:"app_type_identifier"`
-	AuthType          ReqLoginRequestAuthType `json:"auth_type"`
-	Creds             *interface{}            `json:"creds,omitempty"`
-	OrgId             string                  `json:"org_id"`
-	Params            *interface{}            `json:"params,omitempty"`
+	AppTypeIdentifier string                    `json:"app_type_identifier"`
+	AuthType          ReqLoginRequestAuthType   `json:"auth_type"`
+	Creds             *interface{}              `json:"creds,omitempty"`
+	OrgId             string                    `json:"org_id"`
+	Params            *interface{}              `json:"params,omitempty"`
+	Preferences       *map[string]interface{}   `json:"preferences"`
+	Profile           *ReqSharedProfileNullable `json:"profile"`
 }
 
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
 type ReqLoginRequestAuthType string
+
+// ReqSharedProfile defines model for _req_shared_Profile.
+type ReqSharedProfile struct {
+	Address   *string `json:"address"`
+	BirthYear *int    `json:"birth_year"`
+	Country   *string `json:"country"`
+	Email     *string `json:"email"`
+	FirstName *string `json:"first_name"`
+	LastName  *string `json:"last_name"`
+	Phone     *string `json:"phone"`
+	PhotoUrl  *string `json:"photo_url"`
+	State     *string `json:"state"`
+	ZipCode   *string `json:"zip_code"`
+}
+
+// ReqSharedProfileNullable defines model for _req_shared_ProfileNullable.
+type ReqSharedProfileNullable struct {
+	Address   *string `json:"address"`
+	BirthYear *int    `json:"birth_year"`
+	Country   *string `json:"country"`
+	Email     *string `json:"email"`
+	FirstName *string `json:"first_name"`
+	LastName  *string `json:"last_name"`
+	Phone     *string `json:"phone"`
+	PhotoUrl  *string `json:"photo_url"`
+	State     *string `json:"state"`
+	ZipCode   *string `json:"zip_code"`
+}
 
 // ReqUpdateOrganizationRequest defines model for _req_update_Organization_Request.
 type ReqUpdateOrganizationRequest struct {
@@ -610,6 +644,7 @@ type ResLoginAccount struct {
 	Groups      *[]ApplicationGroupFields      `json:"groups,omitempty"`
 	Id          string                         `json:"id"`
 	Permissions *[]ApplicationPermissionFields `json:"permissions,omitempty"`
+	Preferences *map[string]interface{}        `json:"preferences"`
 	Profile     *ProfileFields                 `json:"profile,omitempty"`
 	Roles       *[]ApplicationRoleFields       `json:"roles,omitempty"`
 }
@@ -739,6 +774,9 @@ type GetBbsServiceRegsParams struct {
 // PutServicesAccountPreferencesJSONBody defines parameters for PutServicesAccountPreferences.
 type PutServicesAccountPreferencesJSONBody map[string]interface{}
 
+// PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
+type PutServicesAccountProfileJSONBody ReqSharedProfile
+
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
@@ -764,9 +802,6 @@ type GetServicesAuthVerifyParams struct {
 	// Verification code
 	Code string `json:"code"`
 }
-
-// PutServicesProfileJSONBody defines parameters for PutServicesProfile.
-type PutServicesProfileJSONBody ProfileFields
 
 // GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
 type GetTpsServiceRegsParams struct {
@@ -817,6 +852,9 @@ type PutAdminServiceRegsJSONRequestBody PutAdminServiceRegsJSONBody
 // PutServicesAccountPreferencesJSONRequestBody defines body for PutServicesAccountPreferences for application/json ContentType.
 type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJSONBody
 
+// PutServicesAccountProfileJSONRequestBody defines body for PutServicesAccountProfile for application/json ContentType.
+type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
+
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody
 
@@ -825,9 +863,6 @@ type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 
 // PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
 type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
-
-// PutServicesProfileJSONRequestBody defines body for PutServicesProfile for application/json ContentType.
-type PutServicesProfileJSONRequestBody PutServicesProfileJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found

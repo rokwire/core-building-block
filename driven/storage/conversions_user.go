@@ -68,7 +68,7 @@ func accountDeviceToStorage(item model.Device) userDevice {
 //AccountAuthType
 func accountAuthTypeFromStorage(item accountAuthType) model.AccountAuthType {
 	id := item.ID
-	authType := model.AuthType{ID: item.AuthTypeID}
+	authType := model.AuthType{ID: item.AuthTypeID, Code: item.AuthTypeCode}
 	identifier := item.Identifier
 	params := item.Params
 	var credential *model.Credential
@@ -98,7 +98,7 @@ func accountAuthTypeToStorage(item model.AccountAuthType) accountAuthType {
 	if item.Credential != nil {
 		credentialID = &item.Credential.ID
 	}
-	return accountAuthType{ID: item.ID, AuthTypeID: item.AuthType.ID, Identifier: item.Identifier,
+	return accountAuthType{ID: item.ID, AuthTypeID: item.AuthType.ID, AuthTypeCode: item.AuthType.Code, Identifier: item.Identifier,
 		Params: item.Params, CredentialID: credentialID, Active: item.Active, Active2FA: item.Active2FA, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
