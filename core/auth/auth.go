@@ -8,7 +8,6 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 	"time"
@@ -469,18 +468,35 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 		args := &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}
 		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "error getting profile BB data", args, err)
 	}
-	//TODO - think what to do..
-	log.Println(gotProfile)
-	log.Println(gotPreferences)
+	readyProfile := profile
+	//if there is profile bb data
+	if gotProfile != nil {
+		readyProfile = a.prepareProfile(profile, *gotProfile, l)
+	}
+	readyPreferences := preferences
+	//if there is preferences bb data
+	if gotPreferences != nil {
+		readyPreferences = a.preparePreferences(preferences, gotPreferences, l)
+	}
 
 	//generate profile ID
 	profileID, _ := uuid.NewUUID()
-	profile.ID = profileID.String()
+	readyProfile.ID = profileID.String()
 	//date created
-	profile.DateCreated = time.Now()
+	readyProfile.DateCreated = time.Now()
 	///
 
-	return accountAuthType, credential, &profile, preferences, nil
+	return accountAuthType, credential, &readyProfile, readyPreferences, nil
+}
+
+func (a *Auth) prepareProfile(clientData model.Profile, profileBBData model.Profile, l *logs.Log) model.Profile {
+	//TODO
+	return clientData
+}
+
+func (a *Auth) preparePreferences(clientData map[string]interface{}, profileBBData map[string]interface{}, l *logs.Log) map[string]interface{} {
+	//TODO
+	return clientData
 }
 
 func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *logs.Log) (*model.Profile, map[string]interface{}, error) {
