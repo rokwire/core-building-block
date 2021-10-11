@@ -946,13 +946,13 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application-permissions:
+  /admin/permissions:
     post:
       tags:
         - Admin
-      summary: Create application permission
+      summary: Create permission
       description: |
-        Creates application permission
+        Creates permission
 
         **Auth:** Requires auth token with `auth_admin` permission
       security:
@@ -962,7 +962,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_application-permissions_Request'
+              $ref: '#/components/schemas/_req_permissions_Request'
         required: true
       responses:
         '200':
@@ -2351,7 +2351,7 @@ components:
           type: boolean
         application_types:
           $ref: '#/components/schemas/ApplicationTypeFields'
-    _req_application-permissions_Request:
+    _req_permissions_Request:
       required:
         - name
       type: object

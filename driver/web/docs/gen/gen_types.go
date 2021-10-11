@@ -435,12 +435,6 @@ type ReqAccountRolesRequest struct {
 	RoleIds   []string `json:"role_ids"`
 }
 
-// ReqApplicationPermissionsRequest defines model for _req_application-permissions_Request.
-type ReqApplicationPermissionsRequest struct {
-	Name      string  `json:"name"`
-	ServiceId *string `json:"service_id,omitempty"`
-}
-
 // ReqApplicationRolesRequest defines model for _req_application-roles_Request.
 type ReqApplicationRolesRequest struct {
 	AppId       string   `json:"app_id"`
@@ -549,6 +543,12 @@ type ReqLoginRequest struct {
 
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
 type ReqLoginRequestAuthType string
+
+// ReqPermissionsRequest defines model for _req_permissions_Request.
+type ReqPermissionsRequest struct {
+	Name      string  `json:"name"`
+	ServiceId *string `json:"service_id,omitempty"`
+}
 
 // ReqSharedProfile defines model for _req_shared_Profile.
 type ReqSharedProfile struct {
@@ -700,9 +700,6 @@ type PostAdminApiKeysJSONBody APIKey
 // PutAdminApiKeysJSONBody defines parameters for PutAdminApiKeys.
 type PutAdminApiKeysJSONBody APIKey
 
-// PostAdminApplicationPermissionsJSONBody defines parameters for PostAdminApplicationPermissions.
-type PostAdminApplicationPermissionsJSONBody ReqApplicationPermissionsRequest
-
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
 type PostAdminApplicationRolesJSONBody ReqApplicationRolesRequest
 
@@ -720,6 +717,9 @@ type PostAdminOrganizationsJSONBody ReqCreateOrganizationRequest
 
 // PutAdminOrganizationsIdJSONBody defines parameters for PutAdminOrganizationsId.
 type PutAdminOrganizationsIdJSONBody ReqUpdateOrganizationRequest
+
+// PostAdminPermissionsJSONBody defines parameters for PostAdminPermissions.
+type PostAdminPermissionsJSONBody ReqPermissionsRequest
 
 // DeleteAdminServiceRegsParams defines parameters for DeleteAdminServiceRegs.
 type DeleteAdminServiceRegsParams struct {
@@ -793,9 +793,6 @@ type PostAdminApiKeysJSONRequestBody PostAdminApiKeysJSONBody
 // PutAdminApiKeysJSONRequestBody defines body for PutAdminApiKeys for application/json ContentType.
 type PutAdminApiKeysJSONRequestBody PutAdminApiKeysJSONBody
 
-// PostAdminApplicationPermissionsJSONRequestBody defines body for PostAdminApplicationPermissions for application/json ContentType.
-type PostAdminApplicationPermissionsJSONRequestBody PostAdminApplicationPermissionsJSONBody
-
 // PostAdminApplicationRolesJSONRequestBody defines body for PostAdminApplicationRoles for application/json ContentType.
 type PostAdminApplicationRolesJSONRequestBody PostAdminApplicationRolesJSONBody
 
@@ -813,6 +810,9 @@ type PostAdminOrganizationsJSONRequestBody PostAdminOrganizationsJSONBody
 
 // PutAdminOrganizationsIdJSONRequestBody defines body for PutAdminOrganizationsId for application/json ContentType.
 type PutAdminOrganizationsIdJSONRequestBody PutAdminOrganizationsIdJSONBody
+
+// PostAdminPermissionsJSONRequestBody defines body for PostAdminPermissions for application/json ContentType.
+type PostAdminPermissionsJSONRequestBody PostAdminPermissionsJSONBody
 
 // PostAdminServiceRegsJSONRequestBody defines body for PostAdminServiceRegs for application/json ContentType.
 type PostAdminServiceRegsJSONRequestBody PostAdminServiceRegsJSONBody
