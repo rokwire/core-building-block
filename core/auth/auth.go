@@ -490,13 +490,13 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 }
 
 func (a *Auth) prepareProfile(clientData model.Profile, profileBBData model.Profile, l *logs.Log) model.Profile {
-	//TODO
-	return clientData
+	//TODO - merge from both sources
+	return profileBBData
 }
 
 func (a *Auth) preparePreferences(clientData map[string]interface{}, profileBBData map[string]interface{}, l *logs.Log) map[string]interface{} {
-	//TODO
-	return clientData
+	//TODO - merge from both sources
+	return profileBBData
 }
 
 func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *logs.Log) (*model.Profile, map[string]interface{}, error) {
