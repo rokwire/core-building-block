@@ -1799,6 +1799,8 @@ components:
       properties:
         id:
           type: string
+        code:
+          type: string
         identifier:
           type: string
         params:

@@ -153,6 +153,7 @@ type AccountAuthType struct {
 type AccountAuthTypeFields struct {
 	Active     *bool                         `json:"active,omitempty"`
 	Active2fa  *bool                         `json:"active_2fa,omitempty"`
+	Code       *string                       `json:"code,omitempty"`
 	Id         *string                       `json:"id,omitempty"`
 	Identifier *string                       `json:"identifier,omitempty"`
 	Params     *AccountAuthTypeFields_Params `json:"params"`

@@ -96,6 +96,11 @@ func (a *Auth) Login(authenticationType string, creds string, appTypeIdentifier 
 		return "", "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}
 
+	//Only return auth type used for login
+	if account != nil && accountAuthType != nil {
+		account.AuthTypes = []model.AccountAuthType{*accountAuthType}
+	}
+
 	return "", *accessToken, *refreshToken, account, responseParams, nil
 }
 
