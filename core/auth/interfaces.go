@@ -79,6 +79,7 @@ type APIs interface {
 	//		preferences (map): Account preferences
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
+	//		Message (*string): message
 	//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
 	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
@@ -86,7 +87,7 @@ type APIs interface {
 	//			Params (interface{}): authType-specific set of parameters passed back to client
 	Login(IP string, deviceType string, deviceOS *string, deviceMacAddress *string,
 		authenticationType string, creds string, appTypeIdentifier string, orgID string, params string,
-		profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*model.LoginSession, error)
+		profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:

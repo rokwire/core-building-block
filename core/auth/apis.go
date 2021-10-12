@@ -42,6 +42,7 @@ func (a *Auth) GetHost() string {
 //		preferences (map): Account preferences
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
+//		Message (*string): message
 //		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
 //			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
@@ -49,13 +50,13 @@ func (a *Auth) GetHost() string {
 //			Params (interface{}): authType-specific set of parameters passed back to client
 func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceMacAddress *string,
 	authenticationType string, creds string, appTypeIdentifier string, orgID string, params string,
-	profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*model.LoginSession, error) {
+	profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, error) {
 	//TODO - analyse what should go in one transaction
 	/*
 		//validate if the provided auth type is supported by the provided application and organization
 		authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+			return nil, nil,errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 		}
 
 		var account *model.Account
@@ -68,12 +69,12 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceMacAd
 			anonymousID := ""
 			anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, *appType, *appOrg, creds, params, l)
 			if err != nil {
-				return nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
+				return nil, nil,errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
 			}
 
 			accessToken, err := a.applyAnonymousLogin(authType, anonymousID, orgID, *appType, params, l)
 			if err != nil {
-				return nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+				return nil,nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 			}
 
 			return "", *accessToken, "", nil, responseParams, nil
@@ -114,7 +115,8 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceMacAd
 		}
 
 		return loginSession, nil */
-	return nil, nil
+
+	return nil, nil, nil
 }
 
 //Refresh refreshes an access token using a refresh token
