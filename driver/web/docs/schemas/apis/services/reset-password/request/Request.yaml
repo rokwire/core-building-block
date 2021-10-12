@@ -1,10 +1,14 @@
 required:
   - auth_type_id
+  - identifier
+  - password
   - new_password
   - confirm_password
 type: object
 properties:
   auth_type_id:
+    type: string
+  identifier:
     type: string
   reset_code:
     type: string

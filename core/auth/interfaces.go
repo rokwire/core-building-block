@@ -100,7 +100,7 @@ type APIs interface {
 	Verify(id string, verification string, l *logs.Log) error
 
 	//ResetPassword updates the credential object with the new password
-	ResetPassword(id string, password string, confirmPassword string, l *logs.Log) error
+	ResetPassword(accountID string, authTypeID string, identifier string, password string, newPassword string, confirmPassword string, l *logs.Log) error
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:

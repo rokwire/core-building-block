@@ -279,6 +279,7 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 //TODO: Clear login sessions using old creds
 // Handle refresh tokens when applicable
 func (a *Auth) ResetPassword(accountID string, authTypeID string, identifier string, password string, newPassword string, confirmPassword string, l *logs.Log) error {
+	//Get the user credential from account auth type in accounts collection
 	account, err := a.storage.FindAccountByID(accountID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
@@ -296,6 +297,7 @@ func (a *Auth) ResetPassword(accountID string, authTypeID string, identifier str
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
 
+	//Determine the auth type for resetPassword
 	authType := accountAuthType.AuthType
 	if authType.IsExternal {
 		return errors.WrapErrorAction("invalid auth type for reset password", model.TypeAuthType, nil, err)
@@ -310,7 +312,7 @@ func (a *Auth) ResetPassword(accountID string, authTypeID string, identifier str
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "reset password", nil, err)
 	}
-
+	//Update the credential with new password
 	credential.Value = authTypeCreds
 	if err = a.storage.UpdateCredential(credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)

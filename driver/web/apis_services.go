@@ -314,6 +314,7 @@ func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request, claims *to
 
 //Handler for reset password endpoint
 func (h ServicesApisHandler) resetPassword(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	accountID := claims.Subject
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -325,7 +326,7 @@ func (h ServicesApisHandler) resetPassword(l *logs.Log, r *http.Request, claims 
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.ResetPassword(requestData.Id, requestData.NewPassword, requestData.ConfirmPassword, l); err != nil {
+	if err := h.coreAPIs.Auth.ResetPassword(accountID, requestData.AuthTypeId, requestData.Identifier, requestData.Password, requestData.NewPassword, requestData.ConfirmPassword, l); err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
 	}
 

@@ -554,8 +554,9 @@ type ReqLoginRequestAuthType string
 type ReqResetPasswordRequest struct {
 	AuthTypeId      string  `json:"auth_type_id"`
 	ConfirmPassword string  `json:"confirm_password"`
+	Identifier      string  `json:"identifier"`
 	NewPassword     string  `json:"new_password"`
-	Password        *string `json:"password,omitempty"`
+	Password        string  `json:"password"`
 	ResetCode       *string `json:"reset_code,omitempty"`
 }
 
