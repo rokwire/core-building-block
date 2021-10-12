@@ -149,6 +149,10 @@ func (s *administrationImpl) AdmCreatePermission(name string, serviceIDs []strin
 	return s.app.admCreatePermission(name, serviceIDs)
 }
 
+func (s *administrationImpl) AdmUpdatePermission(name string, serviceIDs []string) (*model.Permission, error) {
+	return s.app.admUpdatePermission(name, serviceIDs)
+}
+
 func (s *administrationImpl) AdmCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error) {
 	return s.app.admCreateApplicationRole(name, appID, description, permissionNames)
 }

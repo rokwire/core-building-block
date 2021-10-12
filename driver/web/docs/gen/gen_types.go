@@ -724,6 +724,9 @@ type PutAdminOrganizationsIdJSONBody ReqUpdateOrganizationRequest
 // PostAdminPermissionsJSONBody defines parameters for PostAdminPermissions.
 type PostAdminPermissionsJSONBody ReqPermissionsRequest
 
+// PutAdminPermissionsJSONBody defines parameters for PutAdminPermissions.
+type PutAdminPermissionsJSONBody ReqPermissionsRequest
+
 // DeleteAdminServiceRegsParams defines parameters for DeleteAdminServiceRegs.
 type DeleteAdminServiceRegsParams struct {
 	// The service ID of the registration to delete
@@ -816,6 +819,9 @@ type PutAdminOrganizationsIdJSONRequestBody PutAdminOrganizationsIdJSONBody
 
 // PostAdminPermissionsJSONRequestBody defines body for PostAdminPermissions for application/json ContentType.
 type PostAdminPermissionsJSONRequestBody PostAdminPermissionsJSONBody
+
+// PutAdminPermissionsJSONRequestBody defines body for PutAdminPermissions for application/json ContentType.
+type PutAdminPermissionsJSONRequestBody PutAdminPermissionsJSONBody
 
 // PostAdminServiceRegsJSONRequestBody defines body for PostAdminServiceRegs for application/json ContentType.
 type PostAdminServiceRegsJSONRequestBody PostAdminServiceRegsJSONBody

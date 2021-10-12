@@ -38,6 +38,7 @@ type Administration interface {
 	AdmGetApplications() ([]model.Application, error)
 
 	AdmCreatePermission(name string, serviceIDs []string) (*model.Permission, error)
+	AdmUpdatePermission(name string, serviceIDs []string) (*model.Permission, error)
 
 	AdmCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error)
 

@@ -845,10 +845,31 @@ func (sa *Adapter) InsertPermission(permission model.Permission) error {
 
 //UpdatePermission updates permission
 func (sa *Adapter) UpdatePermission(item model.Permission) error {
+	// Update serviceIDs
+	filter := bson.D{primitive.E{Key: "name", Value: item.Name}}
+
+	now := time.Now().UTC()
+	permissionUpdate := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "service_ids", Value: item.ServiceIDs},
+			primitive.E{Key: "date_updated", Value: &now},
+		}},
+	}
+
+	res, err := sa.db.permissions.UpdateOne(filter, permissionUpdate, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypePermission, &logutils.FieldArgs{"name": item.Name}, err)
+	}
+
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypePermission, logutils.StringArgs("unexpected modified count"))
+	}
+
+	return nil
 	//TODO
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
-	return errors.New(logutils.Unimplemented)
+	// return errors.New(logutils.Unimplemented)
 }
 
 //DeletePermission deletes permission

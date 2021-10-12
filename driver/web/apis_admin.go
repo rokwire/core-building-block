@@ -459,7 +459,32 @@ func (h AdminApisHandler) createPermission(l *logs.Log, r *http.Request, claims 
 	}
 
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypePermission, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+//updatePermission updates an permission
+func (h AdminApisHandler) updatePermission(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqPermissionsRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
+	}
+
+	if requestData.ServiceIds != nil {
+		_, err = h.coreAPIs.Administration.AdmUpdatePermission(requestData.Name, *requestData.ServiceIds)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
+		}
+	} else {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypePermission, logutils.StringArgs("service_ids"), nil, http.StatusBadRequest, false)
 	}
 
 	return l.HttpResponseSuccess()
