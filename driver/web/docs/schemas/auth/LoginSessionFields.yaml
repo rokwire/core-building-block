@@ -2,6 +2,8 @@ type: object
 properties:
   id:
     type: string
+  anonymous:
+    type: boolean
   IP:
     type: string
   access_token:

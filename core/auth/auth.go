@@ -403,17 +403,43 @@ func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthT
 	return accountAuthType, nil
 }
 
-func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAuthType, appType model.ApplicationType,
+func (a *Auth) applyLogin(anonymous bool, id string, identifier string, authType model.AuthType, appOrg model.ApplicationOrganization,
+	account *model.Account, accountAuthType *model.AccountAuthType, appType model.ApplicationType,
 	IP string, deviceType string, deviceOS *string, deviceMacAddress *string, params interface{}, l *logs.Log) (*model.LoginSession, error) {
 	//TODO add login session which keeps the tokens, the auth type params(illinois tokens), eventually the device etc
 	//TODO think if to return the whole login session object..
 	//TODO work with storage
+	//TODO - clear this function
+
+	/*type LoginSession struct {
+		ID              string
+		AccountAuthType *AccountAuthType
+		Device          Device
+
+		IP           string
+		AccessToken  string
+		RefreshToken string
+		Params       interface{} //authType-specific set of parameters passed back to client
+
+		DateCreated time.Time
+	} */
 
 	//access token
-	orgID := account.Organization.ID
-	appID := account.Application.ID
-	claims := a.getStandardClaims(account.ID, accountAuthType.Identifier, account.Profile.Email, account.Profile.Phone, "rokwire", orgID, appID, accountAuthType.AuthType.Code, nil, false)
-	permissions := account.GetPermissionNames()
+	orgID := appOrg.Organization.ID
+	appID := appOrg.Application.ID
+	email := ""
+	if !anonymous {
+		email = account.Profile.Email
+	}
+	phone := ""
+	if !anonymous {
+		phone = account.Profile.Phone
+	}
+	claims := a.getStandardClaims(id, identifier, email, phone, "rokwire", orgID, appID, authType.Code, nil, anonymous)
+	permissions := []string{}
+	if !anonymous {
+		permissions = account.GetPermissionNames()
+	}
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -426,22 +452,18 @@ func (a *Auth) applyLogin(account model.Account, accountAuthType model.AccountAu
 	}
 
 	//TODO
-	accountAuthType.Account = account
+	if anonymous && account != nil {
+		accountAuthType.Account = *account
+		//TODO
+		//Only return auth type used for login
+		if account != nil && accountAuthType != nil {
+			account.AuthTypes = []model.AccountAuthType{*accountAuthType}
+		}
 
-	loginSession := model.LoginSession{AccountAuthType: accountAuthType, AccessToken: accessToken, RefreshToken: refreshToken, Params: params}
-	return &loginSession, nil
-}
-
-func (a *Auth) applyAnonymousLogin(authType *model.AuthType, anonymousID string, orgID string, appType model.ApplicationType, params interface{}, l *logs.Log) (*string, error) {
-	//access token
-	appTypeIdentifier := appType.Identifier
-	claims := a.getStandardClaims(anonymousID, "", "", "", "rokwire", orgID, appTypeIdentifier, authType.Code, nil, true)
-	accessToken, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
-	return &accessToken, nil
+	loginSession := model.LoginSession{Anonymous: anonymous, AccountAuthType: accountAuthType, AccessToken: accessToken, RefreshToken: refreshToken, Params: params}
+	return &loginSession, nil
 }
 
 func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier string, accountAuthTypeParams map[string]interface{},

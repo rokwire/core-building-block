@@ -77,30 +77,35 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		return l.HttpResponseSuccessJSON(respData)
 	}
 
-	//login sessions
+	//token
 	accessToken := loginSession.AccessToken
 	refreshToken := loginSession.RefreshToken
-	account := loginSession.AccountAuthType.Account
-	params := loginSession.Params
 
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
+	//account
 	var accountData *Def.ResLoginAccount
+	if !loginSession.Anonymous {
+		account := loginSession.AccountAuthType.Account
 
-	//profile
-	profile := profileToDef(&account.Profile)
-	//preferences
-	preferences := &account.Preferences
-	//permissions
-	permissions := applicationPermissionsToDef(account.Permissions)
-	//roles
-	roles := applicationRolesToDef(account.Roles)
-	//groups
-	groups := applicationGroupsToDef(account.Groups)
-	//account auth types
-	authTypes := accountAuthTypesToDef(account.AuthTypes)
-	accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
+		//profile
+		profile := profileToDef(&account.Profile)
+		//preferences
+		preferences := &account.Preferences
+		//permissions
+		permissions := applicationPermissionsToDef(account.Permissions)
+		//roles
+		roles := applicationRolesToDef(account.Roles)
+		//groups
+		groups := applicationGroupsToDef(account.Groups)
+		//account auth types
+		authTypes := accountAuthTypesToDef(account.AuthTypes)
+		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
+	}
+
+	//params
+	params := loginSession.Params
 
 	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: accountData, Params: &params}
 	respData, err := json.Marshal(responseData)

@@ -52,71 +52,68 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceMacAd
 	authenticationType string, creds string, appTypeIdentifier string, orgID string, params string,
 	profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, error) {
 	//TODO - analyse what should go in one transaction
-	/*
-		//validate if the provided auth type is supported by the provided application and organization
-		authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+
+	//validate if the provided auth type is supported by the provided application and organization
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	var message string
+
+	anonymous := false
+	id := ""
+	identifier := ""
+
+	var account *model.Account
+	var accountAuthType *model.AccountAuthType
+	var responseParams interface{}
+
+	//get the auth type implementation for the auth type
+	if authType.IsAnonymous {
+		anonymous = true
+
+		anonymousID := ""
+		anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return nil, nil,errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+			return nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
 		}
+		id = anonymousID
 
-		var account *model.Account
-		var accountAuthType *model.AccountAuthType
-		var message string
-		var responseParams interface{}
-
-		//get the auth type implementation for the auth type
-		if authType.IsAnonymous {
-			anonymousID := ""
-			anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, *appType, *appOrg, creds, params, l)
-			if err != nil {
-				return nil, nil,errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
-			}
-
-			accessToken, err := a.applyAnonymousLogin(authType, anonymousID, orgID, *appType, params, l)
-			if err != nil {
-				return nil,nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
-			}
-
-			return "", *accessToken, "", nil, responseParams, nil
-
-		} else if authType.IsExternal {
-			account, accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
-			if err != nil {
-				return nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
-
-			}
-
-			//TODO groups mapping
-		} else {
-			message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
-			if err != nil {
-				return nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
-			}
-
-			//TODO message
-
-			//	if message != "" {
-			//	return message, "", "", nil, nil, nil
-			//
-			//}
-
-			//the credentials are valid
-		}
-
-		//now we are ready to apply login for the user
-		loginSession, err := a.applyLogin(*account, *accountAuthType, *appType, IP, deviceType, deviceOS, deviceMacAddress, extParams, l)
+	} else if authType.IsExternal {
+		account, accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
-			return nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+			return nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
+
 		}
 
-		//Only return auth type used for login
-		if account != nil && accountAuthType != nil {
-			account.AuthTypes = []model.AccountAuthType{*accountAuthType}
+		id = account.ID
+		identifier = accountAuthType.Identifier
+
+		//TODO groups mapping
+	} else {
+		message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
+		}
+		//message
+		if len(message) > 0 {
+			return &message, nil, nil
 		}
 
-		return loginSession, nil */
+		id = account.ID
+		identifier = accountAuthType.Identifier
 
-	return nil, nil, nil
+		//the credentials are valid
+	}
+
+	//now we are ready to apply login for the user or anonymous
+	loginSession, err := a.applyLogin(anonymous, id, identifier, *authType, *appOrg, account, accountAuthType, *appType, IP, deviceType, deviceOS, deviceMacAddress, responseParams, l)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+	}
+
+	return nil, loginSession, nil
 }
 
 //Refresh refreshes an access token using a refresh token

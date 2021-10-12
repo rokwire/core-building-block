@@ -4,5 +4,6 @@ properties:
     $ref: "./LoginSessionFields.yaml"
   account_auth_type:
     $ref: "../user/AccountAuthType.yaml"
+    nullable: true
   device:
     $ref: "../user/Device.yaml"

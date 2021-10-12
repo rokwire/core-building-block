@@ -54,9 +54,12 @@ const (
 
 //LoginSession represents login session entity
 type LoginSession struct {
-	ID              string
-	AccountAuthType AccountAuthType
-	Device          Device
+	ID string
+
+	Anonymous       bool
+	AccountAuthType *AccountAuthType
+
+	Device Device
 
 	IP           string
 	AccessToken  string

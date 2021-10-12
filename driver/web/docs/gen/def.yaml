@@ -1538,6 +1538,7 @@ components:
           $ref: '#/components/schemas/LoginSessionFields'
         account_auth_type:
           $ref: '#/components/schemas/AccountAuthType'
+          nullable: true
         device:
           $ref: '#/components/schemas/Device'
     LoginSessionFields:
@@ -1545,6 +1546,8 @@ components:
       properties:
         id:
           type: string
+        anonymous:
+          type: boolean
         IP:
           type: string
         access_token:
