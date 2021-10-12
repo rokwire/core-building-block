@@ -22,6 +22,8 @@ properties:
     type: array
     items:
       $ref: "./AccountAuthType.yaml"
+  preferences:
+    type: object
   profile:
     $ref: "./Profile.yaml"
   devices:

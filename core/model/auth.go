@@ -26,6 +26,8 @@ const (
 	TypeUserAuth logutils.MessageDataType = "user auth"
 	//TypeAuthCred auth cred type
 	TypeAuthCred logutils.MessageDataType = "auth cred"
+	//TypeCredential credential type
+	TypeCredential logutils.MessageDataType = "credential"
 	//TypeAuthRefresh auth refresh type
 	TypeAuthRefresh logutils.MessageDataType = "auth refresh"
 	//TypeRefreshToken refresh token type
@@ -44,6 +46,10 @@ const (
 	TypeJSONWebKeySet logutils.MessageDataType = "jwks"
 	//TypePubKey pub key type
 	TypePubKey logutils.MessageDataType = "pub key"
+	//TypeAPIKey api key type
+	TypeAPIKey logutils.MessageDataType = "api key"
+	//TypeCreds cred type
+	TypeCreds logutils.MessageDataType = "creds"
 )
 
 //LoginSession represents login session entity
@@ -60,13 +66,21 @@ type LoginSession struct {
 	DateCreated time.Time
 }
 
+//APIKey represents an API key entity
+type APIKey struct {
+	OrgID string `json:"org_id" bson:"org_id" validate:"required"`
+	AppID string `json:"app_id" bson:"app_id" validate:"required"`
+	Key   string `json:"key" bson:"key"`
+}
+
 //AuthType represents authentication type entity
 //	The system supports different authentication types - username, email, phone, identity providers ones etc
 type AuthType struct {
 	ID          string                 `bson:"_id"`
 	Code        string                 `bson:"code"` //username or email or phone or illinois_oidc etc
 	Description string                 `bson:"description"`
-	IsExternal  bool                   `bson:"is_external"` //says if the users source is external - identity providers
+	IsExternal  bool                   `bson:"is_external"`  //says if the users source is external - identity providers
+	IsAnonymous bool                   `bson:"is_anonymous"` //says if the auth type results in anonymous users
 	Params      map[string]interface{} `bson:"params"`
 }
 
@@ -102,12 +116,14 @@ type UserAuth struct {
 	RefreshParams  map[string]interface{}
 	OrgData        map[string]interface{}
 	ResponseParams interface{}
+	Anonymous      bool
 }
 
 //AuthCreds represents represents a set of credentials used by auth
 type AuthCreds struct {
 	ID        string                 `bson:"_id"`
 	OrgID     string                 `bson:"org_id"`
+	AppID     string                 `bson:"app_id"`
 	AuthType  string                 `bson:"auth_type"`
 	AccountID string                 `bson:"account_id"`
 	Creds     map[string]interface{} `bson:"creds"`

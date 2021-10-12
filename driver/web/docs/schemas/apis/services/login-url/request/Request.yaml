@@ -1,6 +1,6 @@
 required:
   - auth_type
-  - app_id
+  - app_type_identifier
   - org_id
   - redirect_uri
 type: object
@@ -9,7 +9,7 @@ properties:
     type: string
     enum:
       - illinois_oidc
-  app_id:
+  app_type_identifier:
     type: string
   org_id:
     type: string

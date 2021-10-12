@@ -7,18 +7,21 @@ import (
 type account struct {
 	ID string `bson:"_id"`
 
-	AppID string `bson:"app_id"`
-	OrgID string `bson:"org_id"`
+	AppID string `bson:"app_id,omitempty"`
+	OrgID string `bson:"org_id,omitempty"`
 
-	Permissions []applicationPermission `bson:"permissions"`
-	Roles       []applicationRole       `bson:"roles"`
-	Groups      []applicationGroup      `bson:"groups"`
+	Permissions []applicationPermission `bson:"permissions,omitempty"`
+	Roles       []applicationRole       `bson:"roles,omitempty"`
+	Groups      []applicationGroup      `bson:"groups,omitempty"`
 
-	AuthTypes []accountAuthType `bson:"auth_types"`
+	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
 
-	Profile profile `bson:"profile"`
+	Preferences map[string]interface{} `bson:"preferences"`
+	Profile     profile                `bson:"profile"`
 
-	Devices []userDevice `bson:"devices"`
+	Devices []userDevice `bson:"devices,omitempty"`
+
+	// Anonymous bool         `bson:"anonymous"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -27,6 +30,7 @@ type account struct {
 type accountAuthType struct {
 	ID           string                 `bson:"id"`
 	AuthTypeID   string                 `bson:"auth_type_id"`
+	AuthTypeCode string                 `bson:"auth_type_code"`
 	Identifier   string                 `bson:"identifier"`
 	Params       map[string]interface{} `bson:"params"`
 	CredentialID *string                `bson:"credential_id"`
@@ -43,6 +47,13 @@ type profile struct {
 	PhotoURL  string `bson:"photo_url"`
 	FirstName string `bson:"first_name"`
 	LastName  string `bson:"last_name"`
+	Email     string `bson:"email"`
+	Phone     string `bson:"phone"`
+	BirthYear int16  `bson:"birth_year"`
+	Address   string `bson:"address"`
+	ZipCode   string `bson:"zip_code"`
+	State     string `bson:"state"`
+	Country   string `bson:"country"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -76,6 +87,18 @@ type device struct {
 	MacAddress string `bson:"mac_address"`
 
 	Accounts []string `bson:"accounts"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type credential struct {
+	ID string `bson:"_id"`
+
+	AuthTypeID        string                 `bson:"auth_type_id"`
+	AccountsAuthTypes []string               `bson:"account_auth_types"`
+	Verified          bool                   `bson:"verified"`
+	Value             map[string]interface{} `bson:"value"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

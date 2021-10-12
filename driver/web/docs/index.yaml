@@ -2,39 +2,47 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.0.0
+  version: 1.4.0
 servers:
-- url: https://api.rokwire.illinois.edu/core
-  description: Production server
-- url: https://api-test.rokwire.illinois.edu/core
-  description: Test server
-- url: https://api-dev.rokwire.illinois.edu/core
-  description: Development server
-- url: http://localhost
-  description: Local server
+  - url: https://api.rokwire.illinois.edu/core
+    description: Production server
+  - url: https://api-test.rokwire.illinois.edu/core
+    description: Test server
+  - url: https://api-dev.rokwire.illinois.edu/core
+    description: Development server
+  - url: http://localhost/core
+    description: Local server
 tags:
-- name: Services
-  description: End users applications APIs.
-- name: Admin
-  description: Administration applications APIs.
-- name: Enc
-  description: APIs consumed by the Encryption building block.
-- name: BBs
-  description: APIs consumed by the platform building blocks.
-- name: Third-Party Services
-  description: APIs consumed by third-party services.
+  - name: Services
+    description: End users applications APIs.
+  - name: Admin
+    description: Administration applications APIs.
+  - name: Enc
+    description: APIs consumed by the Encryption building block.
+  - name: BBs
+    description: APIs consumed by the platform building blocks.
+  - name: Third-Party Services
+    description: APIs consumed by third-party services.
 paths:
-  #services
+  #auth
   /services/auth/login:
     $ref: "./resources/services/auth/login.yaml"
   /services/auth/refresh:
     $ref: "./resources/services/auth/refresh.yaml"
   /services/auth/login-url:
     $ref: "./resources/services/auth/login-url.yaml"
+  /services/auth/verify:
+    $ref: "./resources/services/auth/verify.yaml"
   /services/auth/authorize-service:
     $ref: "./resources/services/auth/authorize-service.yaml"
   /services/auth/service-regs:
     $ref: "./resources/services/auth/service-regs.yaml"
+  /services/account:
+    $ref: "./resources/services/accounts/account.yaml"
+  /services/account/preferences:
+    $ref: "./resources/services/accounts/preferences.yaml"
+  /services/account/profile:
+    $ref: "./resources/services/accounts/profile.yaml"
   /services/test:
     $ref: "./resources/services/test.yaml"
 
@@ -51,6 +59,18 @@ paths:
     $ref: "./resources/admin/applicationsId.yaml"
   /admin/applications:
     $ref: "./resources/admin/applications.yaml"
+  /admin/application-permissions:
+    $ref: "./resources/admin/application-permissions.yaml"
+  /admin/application-roles:
+    $ref: "./resources/admin/application-roles.yaml"
+
+  /admin/account/permissions:
+    $ref: "./resources/admin/account/permissions.yaml"
+  /admin/account/roles:
+    $ref: "./resources/admin/account/roles.yaml"
+    
+  /admin/api-keys:
+    $ref: "./resources/admin/api-keys.yaml"
 
   #enc
   /enc/test:
@@ -74,5 +94,10 @@ paths:
   /.well-known/openid-configuration:
     $ref: "./resources/default/openid-configuration.yaml"
 components:
+  securitySchemes:
+      bearerAuth:            # arbitrary name for the security scheme
+        type: http
+        scheme: bearer
+        bearerFormat: JWT
   schemas:
     $ref: "./schemas/index.yaml"

@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	authTypeSaml string = "saml"
+	//AuthTypeSaml saml auth type
+	AuthTypeSaml string = "saml"
 )
 
 // SAML implementation of authType
@@ -22,6 +23,9 @@ func (a *samlAuthImpl) externalLogin(authType model.AuthType, appType model.Appl
 	return nil, nil, nil
 }
 
+func (a *samlAuthImpl) verify(id string, verification string, l *logs.Log) error {
+	return errors.New(logutils.Unimplemented)
+}
 func (a *samlAuthImpl) userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error) {
 	return nil, nil
 }
@@ -32,7 +36,7 @@ func (a *samlAuthImpl) getLoginURL(authType model.AuthType, appType model.Applic
 
 //initSamlAuth initializes and registers a new SAML auth instance
 func initSamlAuth(auth *Auth) (*samlAuthImpl, error) {
-	saml := &samlAuthImpl{auth: auth, authType: authTypeSaml}
+	saml := &samlAuthImpl{auth: auth, authType: AuthTypeSaml}
 
 	err := auth.registerExternalAuthType(saml.authType, saml)
 	if err != nil {

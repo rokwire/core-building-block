@@ -61,12 +61,32 @@ type servicesImpl struct {
 	app *application
 }
 
+func (s *servicesImpl) SerDeleteAccount(id string) error {
+	return s.app.serDeleteAccount(id)
+}
+
+func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, error) {
+	return s.app.serGetProfile(accountID)
+}
+
+func (s *servicesImpl) SerGetPreferences(accountID string) (map[string]interface{}, error) {
+	return s.app.serGetPreferences(accountID)
+}
+
+func (s *servicesImpl) SerUpdateProfile(accountID string, profile *model.Profile) error {
+	return s.app.serUpdateProfile(accountID, profile)
+}
+
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
 	return s.app.serGetAuthTest(l)
 }
 
 func (s *servicesImpl) SerGetCommonTest(l *logs.Log) string {
 	return s.app.serGetCommonTest(l)
+}
+
+func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error {
+	return s.app.serUpdateAccountPreferences(id, preferences)
 }
 
 ///
@@ -113,8 +133,8 @@ func (s *administrationImpl) AdmGetOrganization(ID string) (*model.Organization,
 	return s.app.admGetOrganization(ID)
 }
 
-func (s *administrationImpl) AdmCreateApplication(name string, versions []string) (*model.Application, error) {
-	return s.app.admCreateApplication(name, versions)
+func (s *administrationImpl) AdmCreateApplication(name string, multiTenant bool, requiresOwnUsers bool, identifier string, nameInType string, versions []string) (*model.Application, error) {
+	return s.app.admCreateApplication(name, multiTenant, requiresOwnUsers, identifier, nameInType, versions)
 }
 
 func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, error) {
@@ -123,6 +143,22 @@ func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, e
 
 func (s *administrationImpl) AdmGetApplications() ([]model.Application, error) {
 	return s.app.admGetApplications()
+}
+
+func (s *administrationImpl) AdmCreateApplicationPermission(name string, appID string) (*model.ApplicationPermission, error) {
+	return s.app.admCreateApplicationPermission(name, appID)
+}
+
+func (s *administrationImpl) AdmCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error) {
+	return s.app.admCreateApplicationRole(name, appID, description, permissionNames)
+}
+
+func (s *administrationImpl) AdmGrantAccountPermissions(accountID string, appID string, permissionNames []string) error {
+	return s.app.admGrantAccountPermissions(accountID, appID, permissionNames)
+}
+
+func (s *administrationImpl) AdmGrantAccountRoles(accountID string, appID string, roleIDs []string) error {
+	return s.app.admGrantAccountRoles(accountID, appID, roleIDs)
 }
 
 ///

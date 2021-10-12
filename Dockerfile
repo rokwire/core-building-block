@@ -19,12 +19,13 @@ COPY --from=builder /core-app/driver/web/docs/gen/def.yaml /driver/web/docs/gen/
 COPY --from=builder /core-app/driver/web/authorization_model.conf /driver/web/authorization_model.conf
 COPY --from=builder /core-app/driver/web/authorization_policy.csv /driver/web/authorization_policy.csv
 
+COPY --from=builder /core-app/driver/web/scope_authorization_policy_services_auth.csv /driver/web/scope_authorization_policy_services_auth.csv
+COPY --from=builder /core-app/driver/web/permission_authorization_policy_admin_auth.csv /driver/web/permission_authorization_policy_admin_auth.csv
+
 COPY --from=builder /etc/passwd /etc/passwd
 
 #we need timezone database
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo 
-
-ENV ENV_TYPE=aws_secrets_manager
 
 EXPOSE 80
 ENTRYPOINT ["/core-building-block"]

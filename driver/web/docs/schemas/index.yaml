@@ -33,7 +33,7 @@ OrganizationConfig:
   $ref: "./application/OrganizationConfig.yaml"
 OrganizationConfigFields:
   $ref: "./application/OrganizationConfigFields.yaml"
-  
+
 # auth
 LoginSession:
   $ref: "./auth/LoginSession.yaml"
@@ -55,11 +55,14 @@ PubKey:
   $ref: "./auth/PubKey.yaml"
 ServiceScope:
   $ref: "./auth/ServiceScope.yaml"
+
+APIKey:
+  $ref: "./auth/APIKey.yaml"
 JWK:
   $ref: "./auth/JWK.yaml"
 JWKS:
   $ref: "./auth/JWKS.yaml"
-OidcDiscovery:
+OIDCDiscovery:
   $ref: "./auth/OIDCDiscovery.yaml"
 
 # user
@@ -77,32 +80,42 @@ AccountAuthTypeFields:
   $ref: "./user/AccountAuthTypeFields.yaml"
 Device:
   $ref: "./user/Device.yaml"
+AnonymousProfile:
+  $ref: "./user/AnonymousProfile.yaml"
 DeviceFields:
   $ref: "./user/DeviceFields.yaml"
 
-##### APIs requests and responses - they are at bottom 
+##### APIs requests and responses - they are at bottom
 
 #### shared requests and responses
+_req_shared_Profile:
+  $ref: "../schemas/apis/shared/requests/Profile.yaml"
+_req_shared_ProfileNullable:
+  $ref: "../schemas/apis/shared/requests/ProfileNullable.yaml"
 _res_shared_RokwireToken:
   $ref: "../schemas/apis/shared/responses/RokwireToken.yaml"
-_res_shared_ParamsOidc:
-  $ref: "../schemas/apis/shared/responses/ParamsOidc.yaml"
+_res_shared_ParamsOIDC:
+  $ref: "../schemas/apis/shared/responses/ParamsOIDC.yaml"
+_res_shared_ParamsNone:
+  $ref: "../schemas/apis/shared/responses/ParamsNone.yaml"
 
 ### login API
 _req_login_Request:
   $ref: "./apis/services/login/request/Request.yaml"
 _req_login_CredsEmail:
   $ref: "./apis/services/login/request/CredsEmail.yaml"
-_req_login_CredsPhone:
-  $ref: "./apis/services/login/request/CredsPhone.yaml"
-_req_login_CredsOidc:
-  $ref: "./apis/services/login/request/CredsOidc.yaml"
+_req_login_CredsTwilioPhone:
+  $ref: "./apis/services/login/request/CredsTwilioPhone.yaml"
+_req_login_CredsOIDC:
+  $ref: "./apis/services/login/request/CredsOIDC.yaml"
+_req_login_CredsAPIKey:
+  $ref: "./apis/services/login/request/CredsAPIKey.yaml"
 _req_login_ParamsEmail:
   $ref: "./apis/services/login/request/ParamsEmail.yaml"
-_req_login_ParamsPhone:
-   $ref: "./apis/services/login/request/ParamsPhone.yaml"
-_req_login_ParamsOidc:
-  $ref: "./apis/services/login/request/ParamsOidc.yaml"
+_req_login_ParamsOIDC:
+  $ref: "./apis/services/login/request/ParamsOIDC.yaml"
+_req_login_ParamsNone:
+  $ref: "./apis/services/login/request/ParamsNone.yaml"
 _req_login_Device:
   $ref: "./apis/services/login/request/Device.yaml"
 _res_login_Response:
@@ -125,3 +138,47 @@ _req_authorize-service_Request:
   $ref: "./apis/services/authorize-service/request/Request.yaml"
 _res_authorize-service_Response:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
+
+### organization API
+_req_create-Organization_Request:
+  $ref: "./apis/admin/create-organization/request/Request.yaml"
+_res_create_Organization_Response:
+ $ref: "./apis/admin/create-organization/response/Response.yaml"
+_req_update_Organization_Request:
+ $ref: "./apis/admin/update-organization/request/Request.yaml"
+_res_update_Organization_Response:
+ $ref: "./apis/admin/update-organization/response/Response.yaml"
+_req_get_Organization_Request:
+ $ref: "./apis/admin/get-organization/request/Request.yaml"
+_res_get_Organization_Response:
+ $ref: "./apis/admin/get-organization/response/Response.yaml"
+_res_get_Organizations_Response:
+ $ref: "./apis/admin/get-organizations/response/Response.yaml"
+
+ ### application API
+_req_create_Application_Request:
+  $ref: "./apis/admin/create-application/request/Request.yaml"
+#_res_create_Application_Response:
+# $ref: "./apis/admin/create-application/response/Response.yaml"
+_req_get_Application_Request:
+ $ref: "./apis/admin/get-application/request/Request.yaml"
+_res_get_Application_Response:
+ $ref: "./apis/admin/get-application/response/Response.yaml"
+_res_get_Applications_Response:
+ $ref: "./apis/admin/get-applications/response/Response.yaml"
+ 
+### application-permissions API
+_req_application-permissions_Request:
+  $ref: "./apis/admin/application-permissions/request/Request.yaml"
+  
+### application-roles API
+_req_application-roles_Request:
+  $ref: "./apis/admin/application-roles/request/Request.yaml"
+
+### account permissions API
+_req_account-permissions_Request:
+  $ref: "./apis/admin/account/permissions/request/Request.yaml"
+
+### account roles API
+_req_account-roles_Request:
+  $ref: "./apis/admin/account/roles/request/Request.yaml"

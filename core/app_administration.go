@@ -62,17 +62,17 @@ func (app *application) admGetTestModel() string {
 	//users
 
 	globalUser1Account := model.UserAccount{ID: "1", Email: "petyo.stoyanov@inabit.eu"}
-	globalUser1Profile := model.UserProfile{ID: "1", FirstName: "Petyo", LastName: "Stoyanov"}
+	globalUser1Profile := model.UserProfile{ID: "1", PII: &model.UserPII{FirstName: "Petyo", LastName: "Stoyanov"}}
 	globalUser1 := model.User{ID: "1", Account: globalUser1Account, Profile: globalUser1Profile,
 		Permissions: nil, Roles: []model.GlobalRole{glRole1}, Groups: nil, OrganizationsMemberships: nil}
 
 	globalUser2Account := model.UserAccount{ID: "2", Email: "pencho.penchev@inabit.eu"}
-	globalUser2Profile := model.UserProfile{ID: "2", FirstName: "Pencho", LastName: "penchev"}
+	globalUser2Profile := model.UserProfile{ID: "2", PII: &model.UserPII{FirstName: "Pencho", LastName: "penchev"}}
 	globalUser2 := model.User{ID: "2", Account: globalUser2Account, Profile: globalUser2Profile,
 		Permissions: nil, Roles: []model.GlobalRole{glRole2}, Groups: nil, OrganizationsMemberships: nil}
 
 	illiniUser1Account := model.UserAccount{ID: "3", Email: "vivon@inabit.eu"}
-	illiniUser1Profile := model.UserProfile{ID: "3", FirstName: "Vivon", LastName: "Vivonov"}
+	illiniUser1Profile := model.UserProfile{ID: "3", PII: &model.UserPII{FirstName: "Vivon", LastName: "Vivonov"}}
 	illiniUser1 := model.User{ID: "3", Account: illiniUser1Account, Profile: illiniUser1Profile,
 		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
 	illiniUser1Organization := model.OrganizationMembership{ID: "1", User: illiniUser1, Organization: illinoisOrganization,
@@ -80,7 +80,7 @@ func (app *application) admGetTestModel() string {
 	illiniUser1.OrganizationsMemberships = []model.OrganizationMembership{illiniUser1Organization}
 
 	illiniUser2Account := model.UserAccount{ID: "4", Email: "vivon2@inabit.eu"}
-	illiniUser2Profile := model.UserProfile{ID: "4", FirstName: "Vivon2", LastName: "Vivonov2"}
+	illiniUser2Profile := model.UserProfile{ID: "4", PII: &model.UserPII{FirstName: "Vivon2", LastName: "Vivonov2"}}
 	illiniUser2 := model.User{ID: "4", Account: illiniUser2Account, Profile: illiniUser2Profile,
 		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
 	illiniUser2Organization := model.OrganizationMembership{ID: "2", User: illiniUser2, Organization: illinoisOrganization,
@@ -91,7 +91,7 @@ func (app *application) admGetTestModel() string {
 	illiniUser2.OrganizationsMemberships = []model.OrganizationMembership{illiniUser2Organization}
 
 	illiniUser3Account := model.UserAccount{ID: "5", Email: "vivon3@inabit.eu"}
-	illiniUser3Profile := model.UserProfile{ID: "5", FirstName: "Vivon3", LastName: "Vivonov3"}
+	illiniUser3Profile := model.UserProfile{ID: "5", PII: &model.UserPII{FirstName: "Vivon3", LastName: "Vivonov3"}}
 	illiniUser3 := model.User{ID: "5", Account: illiniUser3Account, Profile: illiniUser3Profile,
 		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
 	illiniUser3Organization := model.OrganizationMembership{ID: "3", User: illiniUser3, Organization: illinoisOrganization,
@@ -105,7 +105,7 @@ func (app *application) admGetTestModel() string {
 		Manager: illiniUser2Organization, Members: []model.OrganizationMembership{illiniUser3Organization}}
 
 	danceUser1Account := model.UserAccount{ID: "6", Email: "cocun@inabit.eu"}
-	danceUser1Profile := model.UserProfile{ID: "6", FirstName: "Cocun", LastName: "Cocunov"}
+	danceUser1Profile := model.UserProfile{ID: "6", PII: &model.UserPII{FirstName: "Cocun", LastName: "Cocunov"}}
 	danceUser1 := model.User{ID: "6", Account: danceUser1Account, Profile: danceUser1Profile,
 		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
 	danceUser1Organization := model.OrganizationMembership{ID: "4", User: danceUser1, Organization: danceOrganization,
@@ -113,7 +113,7 @@ func (app *application) admGetTestModel() string {
 	danceUser1.OrganizationsMemberships = []model.OrganizationMembership{danceUser1Organization}
 
 	diAccount := model.UserAccount{ID: "7", Email: "di@inabit.eu"}
-	diProfile := model.UserProfile{ID: "7", FirstName: "Dinko", LastName: "Dinkov"}
+	diProfile := model.UserProfile{ID: "7", PII: &model.UserPII{FirstName: "Dinko", LastName: "Dinkov"}}
 	diUser := model.User{ID: "7", Account: diAccount, Profile: diProfile,
 		Permissions: nil, Roles: nil, Groups: nil, OrganizationsMemberships: nil}
 	danceDIOrganization := model.OrganizationMembership{ID: "5", User: diUser, Organization: danceOrganization,
@@ -258,17 +258,18 @@ func (app *application) admGetApplication(ID string) (*model.Application, error)
 	return appAdm, nil
 }
 
-func (app *application) admCreateApplication(name string, versions []string) (*model.Application, error) {
-	/*id, _ := uuid.NewUUID()
-	now := time.Now()
-	application := model.Application{ID: id.String(), Name: name, Versions: versions, DateCreated: now}
+func (app *application) admCreateApplication(name string, multiTenant bool, requiresOwnUsers bool, identifier string, nameInType string, versions []string) (*model.Application, error) {
+	/*now := time.Now()
 
-	inserted, err := app.storage.InsertApplication(application)
+	applicationID, _ := uuid.NewUUID()
+	application := model.Application{ID: applicationID.String(), Name: name, MultiTenant: multiTenant, RequiresOwnUsers: requiresOwnUsers,
+		DateCreated: now}
+
+	insertedApplication, err := app.storage.InsertApplication(application)
 	if err != nil {
-		return nil, err
-	}
-	return inserted, nil */
-	return nil, nil
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+	}*/
+	return /*insertedApplication,*/ nil, nil
 }
 
 func (app *application) admGetApplications() ([]model.Application, error) {
@@ -278,4 +279,66 @@ func (app *application) admGetApplications() ([]model.Application, error) {
 	}
 
 	return getApplications, nil
+}
+
+func (app *application) admCreateApplicationPermission(name string, appID string) (*model.ApplicationPermission, error) {
+	id, _ := uuid.NewUUID()
+	now := time.Now()
+	permission := model.ApplicationPermission{ID: id.String(), Name: name, Application: model.Application{ID: appID}, DateCreated: now}
+
+	err := app.storage.InsertApplicationPermission(permission)
+	if err != nil {
+		return nil, err
+	}
+	return &permission, nil
+}
+
+func (app *application) admCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error) {
+	permissions, err := app.storage.FindApplicationPermissionsByName(permissionNames, appID)
+	if err != nil {
+		return nil, err
+	}
+
+	id, _ := uuid.NewUUID()
+	now := time.Now()
+	role := model.ApplicationRole{ID: id.String(), Name: name, Description: description, Application: model.Application{ID: appID}, Permissions: permissions, DateCreated: now}
+	err = app.storage.InsertApplicationRole(role)
+	if err != nil {
+		return nil, err
+	}
+	return &role, nil
+}
+
+func (app *application) admGrantAccountPermissions(accountID string, appID string, permissionNames []string) error {
+	permissions, err := app.storage.FindApplicationPermissionsByName(permissionNames, appID)
+	if err != nil {
+		return err
+	}
+
+	if len(permissions) == 0 {
+		return errors.Newf("no permissions found for names: %v", permissionNames)
+	}
+
+	err = app.storage.InsertAccountPermissions(accountID, appID, permissions)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (app *application) admGrantAccountRoles(accountID string, appID string, roleIDs []string) error {
+	roles, err := app.storage.FindApplicationRoles(roleIDs, appID)
+	if err != nil {
+		return err
+	}
+
+	if len(roles) == 0 {
+		return errors.Newf("no roles found for IDs: %v", roleIDs)
+	}
+
+	err = app.storage.InsertAccountRoles(accountID, appID, roles)
+	if err != nil {
+		return err
+	}
+	return nil
 }

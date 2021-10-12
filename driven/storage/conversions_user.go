@@ -15,9 +15,9 @@ func accountFromStorage(item account, sa *Adapter, application model.Application
 	devices := accountDevicesFromStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
-	return model.Account{ID: id, Application: application, Organization: organization,
-		Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes, Profile: profile,
-		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+	return model.Account{ID: id, Application: application, Organization: organization, Permissions: permissions,
+		Roles: roles, Groups: groups, AuthTypes: authTypes, Preferences: item.Preferences, Profile: profile,
+		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated} // Anonymous: item.Anonymous
 }
 
 func accountToStorage(item *model.Account) *account {
@@ -33,8 +33,8 @@ func accountToStorage(item *model.Account) *account {
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
-	return &account{ID: id, AppID: appID, OrgID: orgID, Permissions: permissions, Roles: roles, Groups: groups,
-		AuthTypes: authTypes, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+	return &account{ID: id, AppID: appID, OrgID: orgID, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
+		Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated} //Anonymous: item.Anonymous
 }
 
 func accountDevicesFromStorage(item account) []model.Device {
@@ -68,7 +68,7 @@ func accountDeviceToStorage(item model.Device) userDevice {
 //AccountAuthType
 func accountAuthTypeFromStorage(item accountAuthType) model.AccountAuthType {
 	id := item.ID
-	authType := model.AuthType{ID: item.AuthTypeID}
+	authType := model.AuthType{ID: item.AuthTypeID, Code: item.AuthTypeCode}
 	identifier := item.Identifier
 	params := item.Params
 	var credential *model.Credential
@@ -98,7 +98,7 @@ func accountAuthTypeToStorage(item model.AccountAuthType) accountAuthType {
 	if item.Credential != nil {
 		credentialID = &item.Credential.ID
 	}
-	return accountAuthType{ID: item.ID, AuthTypeID: item.AuthType.ID, Identifier: item.Identifier,
+	return accountAuthType{ID: item.ID, AuthTypeID: item.AuthType.ID, AuthTypeCode: item.AuthType.Code, Identifier: item.Identifier,
 		Params: item.Params, CredentialID: credentialID, Active: item.Active, Active2FA: item.Active2FA, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
@@ -117,12 +117,14 @@ func accountAuthTypesToStorage(items []model.AccountAuthType) []accountAuthType 
 //Profile
 func profileFromStorage(item profile) model.Profile {
 	return model.Profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Email: item.Email, Phone: item.Phone, BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode,
+		State: item.State, Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func profileToStorage(item model.Profile) profile {
 	return profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Email: item.Email, Phone: item.Phone, BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode,
+		State: item.State, Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 //Device
@@ -138,4 +140,28 @@ func deviceToStorage(item *model.Device) *device {
 
 	return &device{ID: item.ID, Type: item.Type, OS: item.OS, MacAddress: item.MacAddress,
 		Accounts: accounts, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+//Credential
+func credentialFromStorage(item credential) model.Credential {
+	accountAuthTypes := make([]model.AccountAuthType, len(item.AccountsAuthTypes))
+	for i, id := range item.AccountsAuthTypes {
+		accountAuthTypes[i] = model.AccountAuthType{ID: id}
+	}
+	authType := model.AuthType{ID: item.AuthTypeID}
+	return model.Credential{ID: item.ID, AuthType: authType, AccountsAuthTypes: accountAuthTypes, Verified: item.Verified,
+		Value: item.Value, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func credentialToStorage(item *model.Credential) *credential {
+	if item == nil {
+		return nil
+	}
+
+	accountAuthTypes := make([]string, len(item.AccountsAuthTypes))
+	for i, aat := range item.AccountsAuthTypes {
+		accountAuthTypes[i] = aat.ID
+	}
+	return &credential{ID: item.ID, AuthTypeID: item.AuthType.ID, AccountsAuthTypes: accountAuthTypes, Verified: item.Verified,
+		Value: item.Value, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

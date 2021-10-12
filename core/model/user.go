@@ -10,8 +10,18 @@ import (
 const (
 	//TypeAccount account
 	TypeAccount logutils.MessageDataType = "account"
+	//TypeAccountPreferences account preferences
+	TypeAccountPreferences logutils.MessageDataType = "account preferences"
 	//TypeAccountAuthType account auth type
 	TypeAccountAuthType logutils.MessageDataType = "account auth type"
+	//TypeAccountPermissions account permissions
+	TypeAccountPermissions logutils.MessageDataType = "account permissions"
+	//TypeAccountRoles account roles
+	TypeAccountRoles logutils.MessageDataType = "account roles"
+	//TypeProfile profile
+	TypeProfile logutils.MessageDataType = "profile"
+	//TypeDevice device
+	TypeDevice logutils.MessageDataType = "device"
 )
 
 //Account represents account entity
@@ -31,7 +41,10 @@ type Account struct {
 
 	AuthTypes []AccountAuthType
 
-	Profile Profile //one account has one profile, one profile can be shared between many accounts
+	Preferences map[string]interface{}
+	Profile     Profile //one account has one profile, one profile can be shared between many accounts
+
+	// Anonymous bool
 
 	Devices []Device
 
@@ -39,14 +52,62 @@ type Account struct {
 	DateUpdated *time.Time
 }
 
-//FindAccountAuthType finds account auth type
-func (a Account) FindAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
+//GetAccountAuthType finds account auth type
+func (a Account) GetAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
 	for _, aat := range a.AuthTypes {
 		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {
 			return &aat
 		}
 	}
 	return nil
+}
+
+//GetPermissions returns all permissions granted to this account
+func (a Account) GetPermissions() []ApplicationPermission {
+	permissionsMap := a.GetPermissionsMap()
+	permissions := make([]ApplicationPermission, len(permissionsMap))
+	i := 0
+	for _, permission := range permissionsMap {
+		permissions[i] = permission
+		i++
+	}
+	return permissions
+}
+
+//GetPermissionNames returns all names of permissions granted to this account
+func (a Account) GetPermissionNames() []string {
+	permissionsMap := a.GetPermissionsMap()
+	permissions := make([]string, len(permissionsMap))
+	i := 0
+	for name := range permissionsMap {
+		permissions[i] = name
+		i++
+	}
+	return permissions
+}
+
+//GetPermissionsMap returns a map of all permissions granted to this account
+func (a Account) GetPermissionsMap() map[string]ApplicationPermission {
+	permissionsMap := make(map[string]ApplicationPermission, len(a.Permissions))
+	for _, permission := range a.Permissions {
+		permissionsMap[permission.Name] = permission
+	}
+	for _, role := range a.Roles {
+		for _, permission := range role.Permissions {
+			permissionsMap[permission.Name] = permission
+		}
+	}
+	for _, group := range a.Groups {
+		for _, permission := range group.Permissions {
+			permissionsMap[permission.Name] = permission
+		}
+		for _, role := range group.Roles {
+			for _, permission := range role.Permissions {
+				permissionsMap[permission.Name] = permission
+			}
+		}
+	}
+	return permissionsMap
 }
 
 //AccountAuthType represents account auth type
@@ -72,9 +133,10 @@ type AccountAuthType struct {
 type Credential struct {
 	ID string
 
+	AuthType          AuthType
 	AccountsAuthTypes []AccountAuthType //one credential can be used for more than one account auth type
-
-	Value interface{} //credential value
+	Verified          bool
+	Value             map[string]interface{} //credential value
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -90,6 +152,13 @@ type Profile struct {
 	PhotoURL  string
 	FirstName string
 	LastName  string
+	Email     string
+	Phone     string
+	BirthYear int16
+	Address   string
+	ZipCode   string
+	State     string
+	Country   string
 
 	Accounts []Account //the users can share profiles between their applications accounts for some applications
 

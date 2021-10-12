@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	authTypeSignature string = "signature"
+	//AuthTypeSignature signature auth type
+	AuthTypeSignature string = "signature"
 )
 
 //Signature implementation of authType
@@ -18,17 +19,24 @@ type signatureAuthImpl struct {
 	authType string
 }
 
+func (a *signatureAuthImpl) signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, *string, map[string]interface{}, error) {
+	return "", nil, nil, nil
+}
+
 func (a *signatureAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
 	return nil, nil, nil
 }
 
-func (a *signatureAuthImpl) checkCredentials(userAuthType model.AccountAuthType, creds string, l *logs.Log) (*bool, error) {
-	return nil, nil
+func (a *signatureAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
+	return nil, errors.New(logutils.Unimplemented)
+}
+func (a *signatureAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error) {
+	return "", nil, nil
 }
 
 //initSignatureAuth initializes and registers a new signature auth instance
 func initSignatureAuth(auth *Auth) (*signatureAuthImpl, error) {
-	signature := &signatureAuthImpl{auth: auth, authType: authTypeSignature}
+	signature := &signatureAuthImpl{auth: auth, authType: AuthTypeSignature}
 
 	err := auth.registerAuthType(signature.authType, signature)
 	if err != nil {

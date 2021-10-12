@@ -4,6 +4,10 @@
   summary: Get organizations
   description: |
     Gets organizations
+
+    **Auth:** Requires auth token with `org_admin` permission
+  security:
+    - bearerAuth: []
   responses:
       200:
         description: Successful operation
@@ -12,7 +16,7 @@
             schema:
               type: array
               items:
-                $ref: "../../schemas/application/Organization.yaml"
+                $ref: "../../schemas/apis/admin/get-organizations/response/Response.yaml"
       400:
         description: Bad request
       401:
@@ -25,12 +29,16 @@
   summary: Create organization
   description: |
     Creates organization
+
+    **Auth:** Requires auth token with `org_admin` permission
+  security:
+    - bearerAuth: []
   requestBody:
     description: creates one organization
     content:
       application/json:
         schema:
-          $ref: "../../schemas/application/Organization.yaml"
+          $ref: "../../schemas/apis/admin/create-organization/request/Request.yaml"
     required: true
   responses:
     200:
