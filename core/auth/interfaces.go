@@ -106,6 +106,14 @@ type APIs interface {
 	//		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
 	GetLoginURL(authType string, appTypeIdentifier string, orgID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 
+	//AddMFA adds a form of multi factor authentication to an account
+	//	Input:
+	//		accountAuthTypeID (string): Account auth type identifier to add MFA
+	//		mfaType (string): Type of MFA to be added
+	//	Returns:
+	//		TOTP QR Code (*string): QR code user needs to enroll in TOTP MFA (if applicable)
+	AddMFA(accountAuthTypeID string, mfaType string) (*string, error)
+
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
 	//	return a scoped access token which reflects this change.

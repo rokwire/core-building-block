@@ -123,7 +123,7 @@ type AccountAuthType struct {
 	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
 
 	Active    bool
-	Active2FA bool
+	ActiveMFA map[string]interface{}
 
 	DateCreated time.Time
 	DateUpdated *time.Time

@@ -1,9 +1,13 @@
 package auth
 
 import (
+	"bytes"
 	"core-building-block/core/model"
+	"image/png"
+	"log"
 	"strings"
 
+	"github.com/pquerna/otp/totp"
 	"github.com/rokmetro/auth-library/authorization"
 	"github.com/rokmetro/auth-library/authutils"
 	"github.com/rokmetro/auth-library/tokenauth"
@@ -239,6 +243,47 @@ func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, 
 	}
 
 	return loginURL, params, nil
+}
+
+//AddMFA adds a form of multi factor authentication to an account
+//	Input:
+//		accountAuthTypeID (string): Account auth type identifier to add MFA
+//		mfaType (string): Type of MFA to be added
+//	Returns:
+//		TOTP QR Code (*string): QR code user needs to enroll in TOTP MFA (if applicable)
+func (a *Auth) AddMFA(accountAuthTypeID string, mfaType string) (*string, error) {
+	switch mfaType {
+	case "totp":
+		totpOpts := totp.GenerateOpts{
+			Issuer:      a.host,
+			AccountName: accountAuthTypeID,
+		}
+		key, err := totp.Generate(totpOpts)
+		if err != nil {
+			return nil, errors.WrapErrorAction("generate", "TOTP key", nil, err)
+		}
+
+		var buf bytes.Buffer
+		image, err := key.Image(256, 256)
+		if err != nil {
+			return nil, errors.WrapErrorAction("generate", "TOTP image", nil, err)
+		}
+		err = png.Encode(&buf, image)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionEncode, "TOTP image", nil, err)
+		}
+		qrCode := buf.String()
+
+		err = a.storage.UpdateAccountAuthType(email, "", "unverified:"+key.Secret(), "")
+		if err != nil {
+			log.Printf("Failed to update user: %v", err)
+			return "", nil, err
+		}
+
+		return &qrCode, nil
+	default:
+		return nil, nil
+	}
 }
 
 //Verify checks the verification code generated on signup

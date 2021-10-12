@@ -446,9 +446,8 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 	//account auth type
 	accountAuthTypeID, _ := uuid.NewUUID()
 	active := true
-	active2FA := false
 	accountAuthType := &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: authType,
-		Identifier: identifier, Params: accountAuthTypeParams, Credential: nil, Active: active, Active2FA: active2FA, DateCreated: now}
+		Identifier: identifier, Params: accountAuthTypeParams, Credential: nil, Active: active, ActiveMFA: nil, DateCreated: now}
 
 	//credential
 	var credential *model.Credential

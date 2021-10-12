@@ -152,7 +152,7 @@ type AccountAuthType struct {
 // AccountAuthTypeFields defines model for AccountAuthTypeFields.
 type AccountAuthTypeFields struct {
 	Active     *bool                         `json:"active,omitempty"`
-	Active2fa  *bool                         `json:"active_2fa,omitempty"`
+	ActiveMfa  *map[string]interface{}       `json:"active_mfa"`
 	Code       *string                       `json:"code,omitempty"`
 	Id         *string                       `json:"id,omitempty"`
 	Identifier *string                       `json:"identifier,omitempty"`

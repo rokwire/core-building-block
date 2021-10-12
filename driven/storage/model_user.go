@@ -35,7 +35,7 @@ type accountAuthType struct {
 	Params       map[string]interface{} `bson:"params"`
 	CredentialID *string                `bson:"credential_id"`
 	Active       bool                   `bson:"active"`
-	Active2FA    bool                   `bson:"active_2fa"`
+	ActiveMFA    map[string]interface{} `bson:"active_mfa"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

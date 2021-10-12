@@ -215,7 +215,7 @@ func (h ServicesApisHandler) addMFA(l *logs.Log, r *http.Request, claims *tokena
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("type"), nil, http.StatusBadRequest, false)
 	}
 
-	mfaData, err := h.coreAPIs.Services.SerAddMFA(mfaType)
+	mfaData, err := h.coreAPIs.Auth.AddMFA(claims.UID, mfaType)
 	if err != nil {
 		return l.HttpResponseErrorAction("add", "mfa type", nil, err, http.StatusInternalServerError, true)
 	}

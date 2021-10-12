@@ -1812,8 +1812,9 @@ components:
           nullable: true
         active:
           type: boolean
-        active_2fa:
-          type: boolean
+        active_mfa:
+          type: object
+          nullable: true
     Device:
       type: object
       properties:
