@@ -452,7 +452,12 @@ func (h AdminApisHandler) createPermission(l *logs.Log, r *http.Request, claims 
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
 	}
 
-	_, err = h.coreAPIs.Administration.AdmCreatePermission(requestData.Name, *requestData.ServiceId)
+	if requestData.ServiceIds != nil {
+		_, err = h.coreAPIs.Administration.AdmCreatePermission(requestData.Name, *requestData.ServiceIds)
+	} else {
+		_, err = h.coreAPIs.Administration.AdmCreatePermission(requestData.Name, nil)
+	}
+
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}

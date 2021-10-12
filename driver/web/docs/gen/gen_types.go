@@ -211,8 +211,9 @@ type ApplicationPermission struct {
 
 // ApplicationPermissionFields defines model for ApplicationPermissionFields.
 type ApplicationPermissionFields struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id         string    `json:"id"`
+	Name       string    `json:"name"`
+	ServiceIds *[]string `json:"service_ids,omitempty"`
 }
 
 // ApplicationRole defines model for ApplicationRole.
@@ -546,8 +547,10 @@ type ReqLoginRequestAuthType string
 
 // ReqPermissionsRequest defines model for _req_permissions_Request.
 type ReqPermissionsRequest struct {
-	Name      string  `json:"name"`
-	ServiceId *string `json:"service_id,omitempty"`
+	Name string `json:"name"`
+
+	// services that are granted the permission
+	ServiceIds *[]string `json:"service_ids,omitempty"`
 }
 
 // ReqSharedProfile defines model for _req_shared_Profile.

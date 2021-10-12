@@ -1440,6 +1440,10 @@ components:
           type: string
         name:
           type: string
+        service_ids:
+          type: array
+          items:
+            type: string
     ApplicationRole:
       type: object
       properties:
@@ -2358,8 +2362,11 @@ components:
       properties:
         name:
           type: string
-        service_id:
-          type: string
+        service_ids:
+          type: array
+          description: services that are granted the permission
+          items:
+            type: string
     _req_application-roles_Request:
       required:
         - name

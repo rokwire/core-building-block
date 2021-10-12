@@ -145,8 +145,8 @@ func (s *administrationImpl) AdmGetApplications() ([]model.Application, error) {
 	return s.app.admGetApplications()
 }
 
-func (s *administrationImpl) AdmCreatePermission(name string, serviceID string) (*model.Permission, error) {
-	return s.app.admCreatePermission(name, serviceID)
+func (s *administrationImpl) AdmCreatePermission(name string, serviceIDs []string) (*model.Permission, error) {
+	return s.app.admCreatePermission(name, serviceIDs)
 }
 
 func (s *administrationImpl) AdmCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error) {

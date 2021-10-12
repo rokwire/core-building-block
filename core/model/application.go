@@ -39,7 +39,7 @@ type Permission struct {
 
 func (c Permission) getServiceIDs() string {
 	s := ""
-	if len(c.ServiceIDs) == 0 {
+	if c.ServiceIDs == nil || len(c.ServiceIDs) == 0 {
 		return s
 	}
 	for _, id := range c.ServiceIDs {

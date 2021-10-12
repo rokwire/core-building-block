@@ -154,7 +154,7 @@ func (m *database) start() error {
 		return err
 	}
 
-	applicationsPermissions := &collectionWrapper{database: m, coll: db.Collection("applications_permissions")}
+	applicationsPermissions := &collectionWrapper{database: m, coll: db.Collection("permissions")}
 	err = m.applyApplicationsPermissionsChecks(applicationsPermissions)
 	if err != nil {
 		return err

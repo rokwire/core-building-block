@@ -281,12 +281,13 @@ func (app *application) admGetApplications() ([]model.Application, error) {
 	return getApplications, nil
 }
 
-func (app *application) admCreatePermission(name string, serviceID string) (*model.Permission, error) {
+func (app *application) admCreatePermission(name string, serviceIDs []string) (*model.Permission, error) {
 	id, _ := uuid.NewUUID()
 	now := time.Now()
-	permission := model.Permission{ID: id.String(), Name: name, DateCreated: now}
+	permission := model.Permission{ID: id.String(), Name: name, DateCreated: now, ServiceIDs: serviceIDs}
 
 	err := app.storage.InsertPermission(permission)
+
 	if err != nil {
 		return nil, err
 	}
