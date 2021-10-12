@@ -33,7 +33,7 @@ func (a *Auth) GetHost() string {
 //		deviceType (string): "mobile" or "web" or "desktop" etc
 //		deviceOS (*string): Device OS
 //		deviceMacAddress (*string): Device mac address
-//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 //		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
@@ -47,71 +47,73 @@ func (a *Auth) GetHost() string {
 //			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
 //			Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceMacAddress *string, authType string, creds string, appTypeIdentifier string, orgID string, params string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*model.LoginSession, error) {
+func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceMacAddress *string,
+	authenticationType string, creds string, appTypeIdentifier string, orgID string, params string,
+	profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*model.LoginSession, error) {
 	//TODO - analyse what should go in one transaction
 	/*
-	   	//validate if the provided auth type is supported by the provided application and organization
-	   	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
-	   	if err != nil {
-	   		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
-	   	}
+		//validate if the provided auth type is supported by the provided application and organization
+		authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+		}
 
-	   	var account *model.Account
-	   	var accountAuthType *model.AccountAuthType
-	   	var message string
-	   	var responseParams interface{}
+		var account *model.Account
+		var accountAuthType *model.AccountAuthType
+		var message string
+		var responseParams interface{}
 
-	   	//get the auth type implementation for the auth type
-	   	if authType.IsAnonymous {
-	   		anonymousID := ""
-	   		anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, *appType, *appOrg, creds, params, l)
-	   		if err != nil {
-	   			return nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
-	   		}
+		//get the auth type implementation for the auth type
+		if authType.IsAnonymous {
+			anonymousID := ""
+			anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, *appType, *appOrg, creds, params, l)
+			if err != nil {
+				return nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
+			}
 
-	   		accessToken, err := a.applyAnonymousLogin(authType, anonymousID, orgID, *appType, params, l)
-	   		if err != nil {
-	   			return nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
-	   		}
+			accessToken, err := a.applyAnonymousLogin(authType, anonymousID, orgID, *appType, params, l)
+			if err != nil {
+				return nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+			}
 
-	   		return "", *accessToken, "", nil, responseParams, nil
+			return "", *accessToken, "", nil, responseParams, nil
 
-	   	} else if authType.IsExternal {
-	   		account, accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
-	   		if err != nil {
-	   			return nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
+		} else if authType.IsExternal {
+			account, accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+			if err != nil {
+				return nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 
-	   		}
+			}
 
-	   		//TODO groups mapping
-	   	} else {
-	   		message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
-	   		if err != nil {
-	   			return nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
-	   		}
+			//TODO groups mapping
+		} else {
+			message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+			if err != nil {
+				return nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
+			}
 
-	   		//TODO message
+			//TODO message
 
-	   		//	if message != "" {
-	   		//	return message, "", "", nil, nil, nil
-	   //
-	   		//}
+			//	if message != "" {
+			//	return message, "", "", nil, nil, nil
+			//
+			//}
 
-	   		//the credentials are valid
-	   	}
+			//the credentials are valid
+		}
 
-	   	//now we are ready to apply login for the user
-	   	loginSession, err := a.applyLogin(*account, *accountAuthType, *appType, IP, deviceType, deviceOS, deviceMacAddress, extParams, l)
-	   	if err != nil {
-	   		return nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
-	   	}
+		//now we are ready to apply login for the user
+		loginSession, err := a.applyLogin(*account, *accountAuthType, *appType, IP, deviceType, deviceOS, deviceMacAddress, extParams, l)
+		if err != nil {
+			return nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+		}
 
-	   	//Only return auth type used for login
-	   	if account != nil && accountAuthType != nil {
-	   		account.AuthTypes = []model.AccountAuthType{*accountAuthType}
-	   	}
+		//Only return auth type used for login
+		if account != nil && accountAuthType != nil {
+			account.AuthTypes = []model.AccountAuthType{*accountAuthType}
+		}
 
-	   	return loginSession, nil */
+		return loginSession, nil */
 	return nil, nil
 }
 
