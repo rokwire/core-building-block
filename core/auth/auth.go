@@ -452,7 +452,7 @@ func (a *Auth) applyLogin(anonymous bool, id string, identifier string, authType
 	}
 
 	//TODO
-	if anonymous && account != nil {
+	if !anonymous && account != nil {
 		accountAuthType.Account = *account
 		//TODO
 		//Only return auth type used for login
