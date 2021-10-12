@@ -34,7 +34,7 @@ func (a *signatureAuthImpl) checkCredentials(accountAuthType model.AccountAuthTy
 	return "", nil, nil
 }
 
-func (a *signatureAuthImpl) resetPassword(credential *model.Credential, password string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
+func (a *signatureAuthImpl) resetPassword(credential *model.Credential, password string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, nil
 }
 
