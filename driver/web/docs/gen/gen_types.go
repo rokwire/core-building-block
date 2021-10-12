@@ -153,6 +153,7 @@ type AccountAuthType struct {
 type AccountAuthTypeFields struct {
 	Active     *bool                         `json:"active,omitempty"`
 	Active2fa  *bool                         `json:"active_2fa,omitempty"`
+	Code       *string                       `json:"code,omitempty"`
 	Id         *string                       `json:"id,omitempty"`
 	Identifier *string                       `json:"identifier,omitempty"`
 	Params     *AccountAuthTypeFields_Params `json:"params"`
@@ -504,7 +505,8 @@ type ReqLoginUrlRequestAuthType string
 
 // Auth login creds for auth_type="api_key"
 type ReqLoginCredsAPIKey struct {
-	ApiKey string `json:"api_key"`
+	AnonymousId *string `json:"anonymous_id,omitempty"`
+	ApiKey      string  `json:"api_key"`
 }
 
 // Auth login creds for auth_type="email"
@@ -544,7 +546,6 @@ type ReqLoginParamsOIDC struct {
 
 // ReqLoginRequest defines model for _req_login_Request.
 type ReqLoginRequest struct {
-	AnonymousId       *string                   `json:"anonymous_id"`
 	AppTypeIdentifier string                    `json:"app_type_identifier"`
 	AuthType          ReqLoginRequestAuthType   `json:"auth_type"`
 	Creds             *interface{}              `json:"creds,omitempty"`

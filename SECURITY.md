@@ -4,8 +4,8 @@
 Patches for **Core Building Block** in this repository will only be applied to the following versions:
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.3.0   | :white_check_mark: |
-| < 1.3.0 | :x:                |
+| 1.4.0   | :white_check_mark: |
+| < 1.4.0 | :x:                |
 
 ## Reporting a Vulnerability
 Vulnerabilities can be responsibly disclosed to [securitysupport@illinois.edu](mailto:securitysupport@illinois.edu).
