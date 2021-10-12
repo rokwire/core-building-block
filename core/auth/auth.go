@@ -470,12 +470,12 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 	readyProfile := profile
 	//if there is profile bb data
 	if gotProfile != nil {
-		readyProfile = a.prepareProfile(profile, *gotProfile, l)
+		readyProfile = a.prepareProfile(profile, *gotProfile)
 	}
 	readyPreferences := preferences
 	//if there is preferences bb data
 	if gotPreferences != nil {
-		readyPreferences = a.preparePreferences(preferences, gotPreferences, l)
+		readyPreferences = a.preparePreferences(preferences, gotPreferences)
 	}
 
 	//generate profile ID
@@ -488,7 +488,7 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 	return accountAuthType, credential, &readyProfile, readyPreferences, nil
 }
 
-func (a *Auth) prepareProfile(clientData model.Profile, profileBBData model.Profile, l *logs.Log) model.Profile {
+func (a *Auth) prepareProfile(clientData model.Profile, profileBBData model.Profile) model.Profile {
 	clientData.PhotoURL = utils.SetStringIfEmpty(clientData.PhotoURL, profileBBData.PhotoURL)
 	clientData.FirstName = utils.SetStringIfEmpty(clientData.FirstName, profileBBData.FirstName)
 	clientData.LastName = utils.SetStringIfEmpty(clientData.LastName, profileBBData.LastName)
@@ -506,8 +506,15 @@ func (a *Auth) prepareProfile(clientData model.Profile, profileBBData model.Prof
 	return clientData
 }
 
-func (a *Auth) preparePreferences(clientData map[string]interface{}, profileBBData map[string]interface{}, l *logs.Log) map[string]interface{} {
-	return nil
+func (a *Auth) preparePreferences(clientData map[string]interface{}, profileBBData map[string]interface{}) map[string]interface{} {
+	mergedData := profileBBData
+	for k, v := range clientData {
+		if profileBBData[k] == nil {
+			mergedData[k] = v
+		}
+	}
+
+	return mergedData
 }
 
 func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *logs.Log) (*model.Profile, map[string]interface{}, error) {
