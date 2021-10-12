@@ -80,8 +80,6 @@ AccountAuthTypeFields:
   $ref: "./user/AccountAuthTypeFields.yaml"
 Device:
   $ref: "./user/Device.yaml"
-AnonymousProfile:
-  $ref: "./user/AnonymousProfile.yaml"
 DeviceFields:
   $ref: "./user/DeviceFields.yaml"
 
