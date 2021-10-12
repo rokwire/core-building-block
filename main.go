@@ -13,8 +13,8 @@ import (
 
 	"github.com/golang-jwt/jwt"
 
-	"github.com/rokmetro/auth-library/envloader"
-	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokwire/core-auth-library-go/envloader"
+	"github.com/rokwire/logging-library-go/logs"
 )
 
 var (
