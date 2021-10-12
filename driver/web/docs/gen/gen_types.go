@@ -552,9 +552,11 @@ type ReqLoginRequestAuthType string
 
 // ReqResetPasswordRequest defines model for _req_reset-password_Request.
 type ReqResetPasswordRequest struct {
-	ConfirmPassword string `json:"confirm_password"`
-	Id              string `json:"id"`
-	Password        string `json:"password"`
+	AuthTypeId      string  `json:"auth_type_id"`
+	ConfirmPassword string  `json:"confirm_password"`
+	NewPassword     string  `json:"new_password"`
+	Password        *string `json:"password,omitempty"`
+	ResetCode       *string `json:"reset_code,omitempty"`
 }
 
 // ReqUpdateOrganizationRequest defines model for _req_update_Organization_Request.

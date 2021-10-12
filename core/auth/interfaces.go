@@ -28,7 +28,7 @@ type authType interface {
 	//updates the value of the credential object with new password
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
-	resetPassword(credential *model.Credential, password string, confirmPassword string, l *logs.Log) (map[string]interface{}, error)
+	resetPassword(credential *model.Credential, password string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error)
 	//userExist checks if the user exists for application and organizations
 	// Returns:
 	//	account (*model.Account): User account

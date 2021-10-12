@@ -186,14 +186,14 @@ func (a *emailAuthImpl) compareVerifyCode(credCode string, requestCode string, e
 
 }
 
-func (a *emailAuthImpl) resetPassword(credential *model.Credential, password string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
+func (a *emailAuthImpl) resetPassword(credential *model.Credential, password string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
 	if len(password) == 0 {
 		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, logutils.StringArgs("password"))
 	}
 	if len(confirmPassword) == 0 {
 		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, logutils.StringArgs("confirm_password"))
 	}
-	//check if the passwrod matches with the confirm password one
+	//check if the password matches with the confirm password one
 	if password != confirmPassword {
 		return nil, errors.New("passwords fields do not match")
 	}
@@ -206,6 +206,11 @@ func (a *emailAuthImpl) resetPassword(credential *model.Credential, password str
 	err = json.Unmarshal(credBytes, &creds)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
+	}
+	//validate old password
+	err = bcrypt.CompareHashAndPassword([]byte(creds.Password), []byte(password))
+	if err != nil {
+		return nil, errors.WrapErrorAction("bad credentials", "", nil, err)
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

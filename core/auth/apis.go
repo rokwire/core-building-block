@@ -276,27 +276,37 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 }
 
 //ResetPassword updates the value in the credential with new password
-func (a *Auth) ResetPassword(id string, password string, confirmPassword string, l *logs.Log) error {
-	credential, err := a.storage.FindCredential(id)
+//TODO: Clear login sessions using old creds
+// Handle refresh tokens when applicable
+func (a *Auth) ResetPassword(accountID string, authTypeID string, identifier string, password string, newPassword string, confirmPassword string, l *logs.Log) error {
+	account, err := a.storage.FindAccountByID(accountID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	accountAuthType := account.GetAccountAuthType(authTypeID, identifier)
+	if accountAuthType == nil {
+		return errors.New("for some reasons the account auth type is nil")
+	}
+	if accountAuthType.Credential == nil {
+		return errors.New("Invalid account auth type for reset password")
+	}
+	credential, err := a.storage.FindCredential(accountAuthType.Credential.ID)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
 
-	//get the auth type
-	authType, err := a.getCachedAuthType(credential.AuthType.ID)
-	if err != nil || authType == nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
-	}
+	authType := accountAuthType.AuthType
 	if authType.IsExternal {
 		return errors.WrapErrorAction("invalid auth type for reset password", model.TypeAuthType, nil, err)
 	}
 
-	authImpl, err := a.getAuthTypeImpl(*authType)
+	authImpl, err := a.getAuthTypeImpl(authType)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	authTypeCreds, err := authImpl.resetPassword(credential, password, confirmPassword, l)
+	authTypeCreds, err := authImpl.resetPassword(credential, password, newPassword, confirmPassword, l)
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "reset password", nil, err)
 	}

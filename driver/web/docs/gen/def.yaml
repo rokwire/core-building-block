@@ -2079,14 +2079,18 @@ components:
             - $ref: '#/components/schemas/_res_shared_ParamsNone'
     _req_reset-password_Request:
       required:
-        - id
-        - password
+        - auth_type_id
+        - new_password
         - confirm_password
       type: object
       properties:
-        id:
+        auth_type_id:
+          type: string
+        reset_code:
           type: string
         password:
+          type: string
+        new_password:
           type: string
         confirm_password:
           type: string

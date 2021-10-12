@@ -325,11 +325,30 @@ func (h ServicesApisHandler) resetPassword(l *logs.Log, r *http.Request, claims 
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.ResetPassword(requestData.Id, requestData.Password, requestData.ConfirmPassword, l); err != nil {
+	if err := h.coreAPIs.Auth.ResetPassword(requestData.Id, requestData.NewPassword, requestData.ConfirmPassword, l); err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HttpResponseSuccessMessage("Reset Password Successfully")
+}
+
+//Handler for verify endpoint
+func (h ServicesApisHandler) forgotPassword(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("code"), nil, http.StatusBadRequest, false)
+	}
+
+	if err := h.coreAPIs.Auth.Verify(id, code, l); err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionValidate, "code", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessMessage("Code verified!")
 }
 
 //NewServicesApisHandler creates new rest services Handler instance
