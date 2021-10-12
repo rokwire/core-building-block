@@ -991,22 +991,13 @@ func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, er
 	}
 
 	authRegs := make([]authservice.ServiceReg, len(regs))
-	serviceErrors := map[string]error{}
 	for i, serviceReg := range regs {
 		reg := serviceReg.Registration
-		err = reg.PubKey.LoadKeyFromPem()
-		if err != nil {
-			serviceErrors[reg.ServiceID] = err
-		}
+		reg.PubKey.LoadKeyFromPem()
 		authRegs[i] = reg
 	}
 
-	err = nil
-	if len(serviceErrors) > 0 {
-		err = fmt.Errorf("error loading services: %v", serviceErrors)
-	}
-
-	return authRegs, err
+	return authRegs, nil
 }
 
 //NewLocalServiceRegLoader creates and configures a new LocalServiceRegLoaderImpl instance
