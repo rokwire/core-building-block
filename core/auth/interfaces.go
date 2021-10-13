@@ -5,9 +5,9 @@ import (
 	"core-building-block/driven/storage"
 	"time"
 
-	"github.com/rokmetro/auth-library/authorization"
-	"github.com/rokmetro/auth-library/tokenauth"
-	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokwire/core-auth-library-go/authorization"
+	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/logging-library-go/logs"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 

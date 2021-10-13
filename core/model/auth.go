@@ -6,11 +6,11 @@ import (
 	"encoding/binary"
 	"time"
 
-	"github.com/rokmetro/logging-library/errors"
+	"github.com/rokwire/logging-library-go/errors"
 
-	"github.com/rokmetro/auth-library/authorization"
-	"github.com/rokmetro/auth-library/authservice"
-	"github.com/rokmetro/logging-library/logutils"
+	"github.com/rokwire/core-auth-library-go/authorization"
+	"github.com/rokwire/core-auth-library-go/authservice"
+	"github.com/rokwire/logging-library-go/logutils"
 )
 
 const (
