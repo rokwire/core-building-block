@@ -300,10 +300,9 @@ type Device struct {
 
 // DeviceFields defines model for DeviceFields.
 type DeviceFields struct {
-	Id         string           `json:"id"`
-	MacAddress *string          `json:"mac_address,omitempty"`
-	Os         *string          `json:"os,omitempty"`
-	Type       DeviceFieldsType `json:"type"`
+	Id   string           `json:"id"`
+	Os   *string          `json:"os,omitempty"`
+	Type DeviceFieldsType `json:"type"`
 }
 
 // DeviceFieldsType defines model for DeviceFields.Type.

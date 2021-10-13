@@ -170,11 +170,7 @@ type Profile struct {
 type Device struct {
 	ID   string
 	Type string //mobile, web, desktop, other
-
-	//TODO - other fields when they are clear
-	OS         string //?
-	MacAddress string //?
-	///
+	OS   string
 
 	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
 	Accounts []Account

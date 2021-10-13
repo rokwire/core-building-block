@@ -1866,8 +1866,6 @@ components:
             - other
         os:
           type: string
-        mac_address:
-          type: string
     _req_shared_Profile:
       type: object
       properties:
