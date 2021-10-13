@@ -1573,6 +1573,8 @@ components:
           type: string
         anonymous:
           type: boolean
+        identifier:
+          type: string
         IP:
           type: string
         access_token:
@@ -1582,6 +1584,8 @@ components:
         params:
           type: object
           additionalProperties: true
+        expires:
+          type: string
         date_created:
           type: string
     AuthType:

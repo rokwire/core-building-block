@@ -56,7 +56,9 @@ const (
 type LoginSession struct {
 	ID string
 
-	Anonymous       bool
+	Anonymous bool
+
+	Identifier      string //this is the account id(anonymous id for anonymous logins)
 	AccountAuthType *AccountAuthType
 
 	Device Device
@@ -65,6 +67,8 @@ type LoginSession struct {
 	AccessToken  string
 	RefreshToken string
 	Params       interface{} //authType-specific set of parameters passed back to client
+
+	Expires time.Time
 
 	DateCreated time.Time
 }

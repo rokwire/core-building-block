@@ -4,6 +4,8 @@ properties:
     type: string
   anonymous:
     type: boolean
+  identifier:
+    type: string
   IP:
     type: string
   access_token:
@@ -13,5 +15,7 @@ properties:
   params:
     type: object
     additionalProperties: true
+  expires:
+    type: string
   date_created:
     type: string

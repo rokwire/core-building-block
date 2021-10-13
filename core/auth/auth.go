@@ -404,23 +404,27 @@ func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthT
 func (a *Auth) applyLogin(anonymous bool, id string, identifier string, authType model.AuthType, appOrg model.ApplicationOrganization,
 	accountAuthType *model.AccountAuthType, appType model.ApplicationType,
 	IP string, deviceType string, deviceOS *string, deviceID string, params interface{}, l *logs.Log) (*model.LoginSession, error) {
-	//TODO add login session which keeps the tokens, the auth type params(illinois tokens), eventually the device etc
-	//TODO think if to return the whole login session object..
-	//TODO work with storage
-	//TODO - clear this function
 
 	/*type LoginSession struct {
-		ID              string
+		ID string
+
+		Anonymous bool
+
+		Identifier      string //this is the account id(anonymous id for anonymous logins)
 		AccountAuthType *AccountAuthType
-		Device          Device
+
+		Device Device
 
 		IP           string
 		AccessToken  string
 		RefreshToken string
 		Params       interface{} //authType-specific set of parameters passed back to client
 
+		Expires time.Time
+
 		DateCreated time.Time
-	} */
+	}
+	*/
 
 	//access token
 	orgID := appOrg.Organization.ID
@@ -490,8 +494,9 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 	//get profile BB data
 	gotProfile, gotPreferences, err := a.getProfileBBData(authType, identifier, l)
 	if err != nil {
-		args := &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}
-		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "error getting profile BB data", args, err)
+		//TODO revert
+		//args := &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}
+		//return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "error getting profile BB data", args, err)
 	}
 	readyProfile := profile
 	//if there is profile bb data
