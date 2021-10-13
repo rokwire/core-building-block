@@ -478,13 +478,9 @@ func (h AdminApisHandler) updatePermission(l *logs.Log, r *http.Request, claims 
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
 	}
 
-	if requestData.ServiceIds != nil {
-		_, err = h.coreAPIs.Administration.AdmUpdatePermission(requestData.Name, *requestData.ServiceIds)
-		if err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
-		}
-	} else {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypePermission, logutils.StringArgs("service_ids"), nil, http.StatusBadRequest, false)
+	_, err = h.coreAPIs.Administration.AdmUpdatePermission(requestData.Name, requestData.ServiceIds)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()

@@ -6,6 +6,6 @@ properties:
     type: string
   service_ids:
     type: array
-    description: services that are granted the permission
+    description: services that use the permission
     items:
       type: string

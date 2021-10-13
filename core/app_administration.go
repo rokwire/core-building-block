@@ -294,7 +294,7 @@ func (app *application) admCreatePermission(name string, serviceIDs []string) (*
 	return &permission, nil
 }
 
-func (app *application) admUpdatePermission(name string, serviceIDs []string) (*model.Permission, error) {
+func (app *application) admUpdatePermission(name string, serviceIDs *[]string) (*model.Permission, error) {
 	permissionNames := []string{name}
 	permissions, err := app.storage.FindPermissionsByName(permissionNames)
 	if err != nil {
@@ -303,12 +303,11 @@ func (app *application) admUpdatePermission(name string, serviceIDs []string) (*
 	if permissions == nil || len(permissions) < 1 {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
 	}
-	if serviceIDs == nil || len(serviceIDs) < 1 {
-		return nil, errors.ErrorData(logutils.StatusMissing, "Permission serviceIDs", nil)
-	}
 
 	permission := permissions[0]
-	permission.ServiceIDs = serviceIDs
+	if serviceIDs != nil {
+		permission.ServiceIDs = *serviceIDs
+	}
 	err = app.storage.UpdatePermission(permission)
 	if err != nil {
 		return nil, err
