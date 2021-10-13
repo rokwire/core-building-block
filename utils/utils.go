@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"reflect"
 
-	"github.com/rokmetro/logging-library/errors"
+	"github.com/rokwire/logging-library-go/errors"
 )
 
 // GenerateRandomBytes returns securely generated random bytes
