@@ -29,6 +29,9 @@ type authType interface {
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
 	resetPassword(credential *model.Credential, password string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error)
+
+	forgotPassword(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error)
+
 	//userExist checks if the user exists for application and organizations
 	// Returns:
 	//	account (*model.Account): User account
@@ -101,6 +104,8 @@ type APIs interface {
 
 	//ResetPassword updates the credential object with the new password
 	ResetPassword(accountID string, authTypeID string, identifier string, password string, newPassword string, confirmPassword string, l *logs.Log) error
+
+	ForgotPassword(authenticationType string, appTypeIdentifier string, orgID string, identifier string, l *logs.Log) error
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:

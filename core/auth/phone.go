@@ -289,6 +289,10 @@ func (a *twilioPhoneAuthImpl) resetPassword(credential *model.Credential, passwo
 	return nil, nil
 }
 
+func (a *twilioPhoneAuthImpl) forgotPassword(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
+	return nil, nil
+}
+
 //initPhoneAuth initializes and registers a new phone auth instance
 func initPhoneAuth(auth *Auth, twilioAccountSID string, twilioToken string, twilioServiceSID string) (*twilioPhoneAuthImpl, error) {
 	phone := &twilioPhoneAuthImpl{auth: auth, authType: AuthTypeTwilioPhone, twilioAccountSID: twilioAccountSID, twilioToken: twilioToken, twilioServiceSID: twilioServiceSID}

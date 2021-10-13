@@ -66,6 +66,19 @@ const (
 	ReqCreateOrganizationRequestTypeSmall ReqCreateOrganizationRequestType = "small"
 )
 
+// Defines values for ReqForgotPasswordRequestAuthType.
+const (
+	ReqForgotPasswordRequestAuthTypeApiKey ReqForgotPasswordRequestAuthType = "api_key"
+
+	ReqForgotPasswordRequestAuthTypeEmail ReqForgotPasswordRequestAuthType = "email"
+
+	ReqForgotPasswordRequestAuthTypeIllinoisOidc ReqForgotPasswordRequestAuthType = "illinois_oidc"
+
+	ReqForgotPasswordRequestAuthTypeTwilioPhone ReqForgotPasswordRequestAuthType = "twilio_phone"
+
+	ReqForgotPasswordRequestAuthTypeUsername ReqForgotPasswordRequestAuthType = "username"
+)
+
 // Defines values for ReqLoginUrlRequestAuthType.
 const (
 	ReqLoginUrlRequestAuthTypeIllinoisOidc ReqLoginUrlRequestAuthType = "illinois_oidc"
@@ -479,6 +492,17 @@ type ReqCreateApplicationRequest struct {
 	RequiresOwnUsers bool   `json:"requires_own_users"`
 }
 
+// ReqForgotPasswordRequest defines model for _req_forgot-password_Request.
+type ReqForgotPasswordRequest struct {
+	AppTypeIdentifier string                           `json:"app_type_identifier"`
+	AuthType          ReqForgotPasswordRequestAuthType `json:"auth_type"`
+	Identifier        string                           `json:"identifier"`
+	OrgId             string                           `json:"org_id"`
+}
+
+// ReqForgotPasswordRequestAuthType defines model for ReqForgotPasswordRequest.AuthType.
+type ReqForgotPasswordRequestAuthType string
+
 // ReqGetApplicationRequest defines model for _req_get_Application_Request.
 type ReqGetApplicationRequest string
 
@@ -749,6 +773,9 @@ type PutServicesAccountProfileJSONBody ProfileFields
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
+// PostServicesAuthForgotPasswordJSONBody defines parameters for PostServicesAuthForgotPassword.
+type PostServicesAuthForgotPasswordJSONBody ReqForgotPasswordRequest
+
 // PostServicesAuthLoginJSONBody defines parameters for PostServicesAuthLogin.
 type PostServicesAuthLoginJSONBody ReqLoginRequest
 
@@ -826,6 +853,9 @@ type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
 
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody
+
+// PostServicesAuthForgotPasswordJSONRequestBody defines body for PostServicesAuthForgotPassword for application/json ContentType.
+type PostServicesAuthForgotPasswordJSONRequestBody PostServicesAuthForgotPasswordJSONBody
 
 // PostServicesAuthLoginJSONRequestBody defines body for PostServicesAuthLogin for application/json ContentType.
 type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody

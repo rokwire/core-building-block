@@ -38,6 +38,10 @@ func (a *signatureAuthImpl) resetPassword(credential *model.Credential, password
 	return nil, nil
 }
 
+func (a *signatureAuthImpl) forgotPassword(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
+	return nil, nil
+}
+
 //initSignatureAuth initializes and registers a new signature auth instance
 func initSignatureAuth(auth *Auth) (*signatureAuthImpl, error) {
 	signature := &signatureAuthImpl{auth: auth, authType: AuthTypeSignature}

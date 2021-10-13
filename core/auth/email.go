@@ -29,6 +29,8 @@ type emailCreds struct {
 	Password           string    `json:"password" bson:"password"`
 	VerificationCode   string    `json:"verification_code" bson:"verification_code"`
 	VerificationExpiry time.Time `json:"verification_expiry" bson:"verification_expiry"`
+	ResetCode          string    `json:"reset_code" bson:"reset_code"`
+	ResetExpiry        time.Time `json:"reset_expiry" bson:"reset_expiry"`
 }
 
 // Email implementation of authType
@@ -140,9 +142,10 @@ func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode stri
 	return a.auth.sendEmail(email, "Verify your email address", "Please click the link below to verify your email address:\n"+verificationLink+"\n\nIf you did not request this verification link, please ignore this message.", nil)
 }
 
-func (a *emailAuthImpl) sendPasswordReset(credentialID string) error {
+func (a *emailAuthImpl) sendPasswordResetEmail(credentialID string, resetCode string, email string) error {
 	params := url.Values{}
 	params.Add("id", credentialID)
+	params.Add("code", resetCode)
 	passwordResetLink := a.auth.host + fmt.Sprintf("/services/auth/reset-password-landing-page?%s", params.Encode())
 	return a.auth.sendEmail(email, "Password Reset", "Please click the link below to reset your password:\n"+passwordResetLink+"\n\nIf you did not request a password reset, please ignore this message.", nil)
 }
@@ -187,14 +190,14 @@ func (a *emailAuthImpl) compareVerifyCode(credCode string, requestCode string, e
 }
 
 func (a *emailAuthImpl) resetPassword(credential *model.Credential, password string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
-	if len(password) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, logutils.StringArgs("password"))
+	if len(newPassword) == 0 {
+		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, logutils.StringArgs("new_password"))
 	}
 	if len(confirmPassword) == 0 {
 		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, logutils.StringArgs("confirm_password"))
 	}
 	//check if the password matches with the confirm password one
-	if password != confirmPassword {
+	if newPassword != confirmPassword {
 		return nil, errors.New("passwords fields do not match")
 	}
 	credBytes, err := json.Marshal(credential.Value)
@@ -213,9 +216,9 @@ func (a *emailAuthImpl) resetPassword(credential *model.Credential, password str
 		return nil, errors.WrapErrorAction("bad credentials", "", nil, err)
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate hash from password"))
+		return nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate hash from new password"))
 	}
 
 	//Update verification data
@@ -225,6 +228,29 @@ func (a *emailAuthImpl) resetPassword(credential *model.Credential, password str
 		return nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
 	}
 
+	return credsMap, nil
+}
+
+func (a *emailAuthImpl) forgotPassword(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
+	emailCreds, err := mapToEmailCreds(credential.Value)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error on map to email creds", "", nil, err)
+	}
+	resetCode, err := utils.GenerateRandomString(64)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCompute, logutils.TypeString, nil, errors.New("failed to generate random string for reset code"))
+
+	}
+	emailCreds.ResetCode = resetCode
+	emailCreds.ResetExpiry = time.Now().Add(time.Hour * 24)
+	err = a.sendPasswordResetEmail(credential.ID, resetCode, identifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeString, nil, err)
+	}
+	credsMap, err := emailCredsToMap(emailCreds)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
+	}
 	return credsMap, nil
 }
 

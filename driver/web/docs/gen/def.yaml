@@ -282,6 +282,32 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/auth/forgot-password:
+    post:
+      tags:
+        - Services
+      summary: Sends the reset password link for a given identifier
+      description: |
+        Generates a reset password link along with a reset code and expiry and sends it to the given identifier 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_forgot-password_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/auth/authorize-service:
     post:
       tags:
@@ -2097,6 +2123,28 @@ components:
         new_password:
           type: string
         confirm_password:
+          type: string
+    _req_forgot-password_Request:
+      required:
+        - auth_type
+        - app_type_identifier
+        - org_id
+        - identifier
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - username
+            - email
+            - twilio_phone
+            - illinois_oidc
+            - api_key
+        app_type_identifier:
+          type: string
+        org_id:
+          type: string
+        identifier:
           type: string
     _req_authorize-service_Request:
       required:

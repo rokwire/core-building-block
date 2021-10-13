@@ -321,6 +321,46 @@ func (a *Auth) ResetPassword(accountID string, authTypeID string, identifier str
 	return nil
 }
 
+func (a *Auth) ForgotPassword(authenticationType string, appTypeIdentifier string, orgID string, identifier string, l *logs.Log) error {
+	//validate if the provided auth type is supported by the provided application and organization
+	authType, _, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+	authImpl, err := a.getAuthTypeImpl(*authType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+	appID := appOrg.Application.ID
+	authTypeID := authType.ID
+
+	//Find the credential for setting reset code and expiry and sending credID in reset link
+	account, err := a.storage.FindAccount(appID, orgID, authTypeID, identifier)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	accountAuthType, err := a.findAccountAuthType(account, authType, identifier)
+	if accountAuthType == nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+	}
+	credential := accountAuthType.Credential
+	if credential == nil {
+		return errors.New("Invalid account auth type for reset link")
+	}
+
+	authTypeCreds, err := authImpl.forgotPassword(credential, identifier, l)
+	if err != nil || authTypeCreds == nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "forgot password", nil, err)
+	}
+	//Update the credential with reset code and expiry
+	credential.Value = authTypeCreds
+	if err = a.storage.UpdateCredential(credential); err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
+	return nil
+}
+
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 //	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
 //	return a scoped access token which reflects this change.
