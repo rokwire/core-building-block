@@ -4,7 +4,7 @@ import (
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
 
-	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokwire/logging-library-go/logs"
 )
 
 //APIs exposes to the drivers adapters access to the core functionality

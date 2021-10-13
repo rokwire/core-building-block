@@ -4,7 +4,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
-	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokwire/logging-library-go/logs"
 )
 
 //Services exposes APIs for the driver adapters

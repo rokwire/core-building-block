@@ -4,13 +4,13 @@ import (
 	"core-building-block/core/model"
 	"strings"
 
-	"github.com/rokmetro/auth-library/authorization"
-	"github.com/rokmetro/auth-library/authutils"
-	"github.com/rokmetro/auth-library/tokenauth"
-	"github.com/rokmetro/logging-library/errors"
-	"github.com/rokmetro/logging-library/logutils"
+	"github.com/rokwire/core-auth-library-go/authorization"
+	"github.com/rokwire/core-auth-library-go/authutils"
+	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logutils"
 
-	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokwire/logging-library-go/logs"
 )
 
 //Start starts the auth service
@@ -34,7 +34,6 @@ func (a *Auth) GetHost() string {
 //		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
 //		params (string): JSON encoded params defined by specified auth type
-//		anonymousID (string): An anonymous ID to be used in an anonymous token or converted to a new account
 //		profile (Profile): Account profile
 //		preferences (map): Account preferences
 //		l (*logs.Log): Log object pointer for request
@@ -43,7 +42,7 @@ func (a *Auth) GetHost() string {
 //		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //		Account (Account): Account object for authenticated user
 //		Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Login(authenticationType string, creds string, appTypeIdentifier string, orgID string, params string, anonymousID string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (string, string, string, *model.Account, interface{}, error) {
+func (a *Auth) Login(authenticationType string, creds string, appTypeIdentifier string, orgID string, params string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (string, string, string, *model.Account, interface{}, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
@@ -59,7 +58,8 @@ func (a *Auth) Login(authenticationType string, creds string, appTypeIdentifier 
 
 	//get the auth type implementation for the auth type
 	if authType.IsAnonymous {
-		anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, *appType, *appOrg, creds, params, anonymousID, l)
+		anonymousID := ""
+		anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
 			return "", "", "", nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
 		}
@@ -72,14 +72,14 @@ func (a *Auth) Login(authenticationType string, creds string, appTypeIdentifier 
 		return "", *accessToken, "", nil, responseParams, nil
 
 	} else if authType.IsExternal {
-		account, accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, anonymousID, profile, preferences, l)
+		account, accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
 			return "", "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 		}
 
 		//TODO groups mapping
 	} else {
-		message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, anonymousID, profile, preferences, l)
+		message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
 			return "", "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
@@ -94,6 +94,11 @@ func (a *Auth) Login(authenticationType string, creds string, appTypeIdentifier 
 	accessToken, refreshToken, err := a.applyLogin(*account, *accountAuthType, *appType, responseParams, l)
 	if err != nil {
 		return "", "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+	}
+
+	//Only return auth type used for login
+	if account != nil && accountAuthType != nil {
+		account.AuthTypes = []model.AccountAuthType{*accountAuthType}
 	}
 
 	return "", *accessToken, *refreshToken, account, responseParams, nil

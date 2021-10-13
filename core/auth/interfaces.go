@@ -5,9 +5,9 @@ import (
 	"core-building-block/driven/storage"
 	"time"
 
-	"github.com/rokmetro/auth-library/authorization"
-	"github.com/rokmetro/auth-library/tokenauth"
-	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokwire/core-auth-library-go/authorization"
+	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/logging-library-go/logs"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -52,7 +52,7 @@ type externalAuthType interface {
 type anonymousAuthType interface {
 	//checkCredentials checks the credentials for the provided app and organization
 	//	Returns anonymous profile identifier
-	checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, anonymousID string, l *logs.Log) (string, interface{}, error)
+	checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, interface{}, error)
 }
 
 //APIs is the interface which defines the APIs provided by the auth package
@@ -71,7 +71,6 @@ type APIs interface {
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
 	//		params (string): JSON encoded params defined by specified auth type
-	//		anonymousID (string): An anonymous ID to be used in an anonymous token or converted to a new account
 	//		profile (Profile): Account profile
 	//		preferences (map): Account preferences
 	//		l (*logs.Log): Log object pointer for request
@@ -80,7 +79,7 @@ type APIs interface {
 	//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//		Account (Account): Account object for authenticated user
 	//		Params (interface{}): authType-specific set of parameters passed back to client
-	Login(authType string, creds string, appTypeIdentifier string, orgID string, params string, anonymousID string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (string, string, string, *model.Account, interface{}, error)
+	Login(authType string, creds string, appTypeIdentifier string, orgID string, params string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (string, string, string, *model.Account, interface{}, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
@@ -160,7 +159,6 @@ type Storage interface {
 	LoadAuthTypes() ([]model.AuthType, error)
 
 	//Accounts
-	FindAccountByID(id string) (*model.Account, error)
 	FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
 	InsertAccount(account model.Account) (*model.Account, error)
 	UpdateAccount(account *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
@@ -218,6 +216,11 @@ type Storage interface {
 
 	//ApplicationsOrganizations
 	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
+}
+
+//ProfileBuildingBlock is used by auth to communicate with the profile building block.
+type ProfileBuildingBlock interface {
+	GetProfileBBData(queryParams map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error)
 }
 
 //Emailer is used by core to send emails
