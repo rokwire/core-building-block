@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Add multi-factor authentication support [#19](https://github.com/rokwire/core-building-block/issues/19)
 ### Changed
 - Switch to ROKWIRE open source libraries [#232](https://github.com/rokwire/core-building-block/issues/232)
 
@@ -18,7 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.0] - 2021-10-08
 ### Added
-- Add multi-factor authentication support [#19](https://github.com/rokwire/core-building-block/issues/19)
 - Expose get account preferences services API [#206](https://github.com/rokwire/core-building-block/issues/206) 
 
 ### Changed

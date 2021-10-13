@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"core-building-block/core/model"
 	"image/png"
-	"log"
 	"strings"
 
 	"github.com/pquerna/otp/totp"
@@ -247,11 +246,12 @@ func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, 
 
 //AddMFA adds a form of multi factor authentication to an account
 //	Input:
+//		accountID (string): Account ID to add MFA
 //		accountAuthTypeID (string): Account auth type identifier to add MFA
 //		mfaType (string): Type of MFA to be added
 //	Returns:
 //		TOTP QR Code (*string): QR code user needs to enroll in TOTP MFA (if applicable)
-func (a *Auth) AddMFA(accountAuthTypeID string, mfaType string) (*string, error) {
+func (a *Auth) AddMFA(accountID string, accountAuthTypeID string, mfaType string) (*string, error) {
 	switch mfaType {
 	case "totp":
 		totpOpts := totp.GenerateOpts{
@@ -273,11 +273,15 @@ func (a *Auth) AddMFA(accountAuthTypeID string, mfaType string) (*string, error)
 			return nil, errors.WrapErrorAction(logutils.ActionEncode, "TOTP image", nil, err)
 		}
 		qrCode := buf.String()
+		accountAuthType, err := a.storage.FindAccountAuthType(accountID, accountAuthTypeID)
+		if accountAuthType.ActiveMFA == nil {
+			accountAuthType.ActiveMFA = make(map[string]interface{})
+		}
+		accountAuthType.ActiveMFA["totp"] = "unverified:" + key.Secret()
 
-		err = a.storage.UpdateAccountAuthType(email, "", "unverified:"+key.Secret(), "")
+		err = a.storage.UpdateAccountAuthType(*accountAuthType)
 		if err != nil {
-			log.Printf("Failed to update user: %v", err)
-			return "", nil, err
+			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
 		}
 
 		return &qrCode, nil

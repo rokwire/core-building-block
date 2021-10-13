@@ -100,6 +100,10 @@ func profileFromDef(item *Def.ReqSharedProfile) model.Profile {
 		State: state, Country: country}
 }
 
+func mfaDataToDef(item *string) *Def.ResSharedMfa {
+	return &Def.ResSharedMfa{TotpKey: item}
+}
+
 func profileToDef(item *model.Profile) *Def.ProfileFields {
 	birthYear := int(item.BirthYear)
 	return &Def.ProfileFields{Id: &item.ID, PhotoUrl: &item.PhotoURL, FirstName: &item.FirstName, LastName: &item.LastName,

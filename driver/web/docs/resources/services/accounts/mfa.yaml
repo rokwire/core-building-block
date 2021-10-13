@@ -23,7 +23,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/apis/services/shared/responses/Mfa.yaml"
+            $ref: "../../../schemas/apis/shared/responses/Mfa.yaml"
     400:
       description: Bad request
     401:

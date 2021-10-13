@@ -108,11 +108,12 @@ type APIs interface {
 
 	//AddMFA adds a form of multi factor authentication to an account
 	//	Input:
+	//		accountID (string): Account ID to add MFA
 	//		accountAuthTypeID (string): Account auth type identifier to add MFA
 	//		mfaType (string): Type of MFA to be added
 	//	Returns:
 	//		TOTP QR Code (*string): QR code user needs to enroll in TOTP MFA (if applicable)
-	AddMFA(accountAuthTypeID string, mfaType string) (*string, error)
+	AddMFA(accountID string, accountAuthTypeID string, mfaType string) (*string, error)
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
@@ -173,6 +174,7 @@ type Storage interface {
 	DeleteAccount(id string) error
 
 	//AccountAuthTypes
+	FindAccountAuthType(accountID string, identifier string) (*model.AccountAuthType, error)
 	UpdateAccountAuthType(item model.AccountAuthType) error
 
 	//Organizations

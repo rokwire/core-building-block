@@ -665,6 +665,13 @@ type ResRefreshResponse struct {
 	Token  *ResSharedRokwireToken `json:"token,omitempty"`
 }
 
+// ResSharedMfa defines model for _res_shared_Mfa.
+type ResSharedMfa struct {
+
+	// The user's TOTP key
+	TotpKey *string `json:"totp_key"`
+}
+
 // Auth login response params for unlisted auth_types (None)
 type ResSharedParamsNone map[string]interface{}
 
@@ -771,6 +778,20 @@ type GetBbsServiceRegsParams struct {
 
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
+}
+
+// DeleteServicesAccountMfaParams defines parameters for DeleteServicesAccountMfa.
+type DeleteServicesAccountMfaParams struct {
+
+	// MFA type
+	Type string `json:"type"`
+}
+
+// GetServicesAccountMfaParams defines parameters for GetServicesAccountMfa.
+type GetServicesAccountMfaParams struct {
+
+	// MFA type
+	Type string `json:"type"`
 }
 
 // PutServicesAccountPreferencesJSONBody defines parameters for PutServicesAccountPreferences.

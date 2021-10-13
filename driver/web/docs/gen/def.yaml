@@ -384,6 +384,67 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/account/mfa:
+    get:
+      tags:
+        - Services
+      summary: Enroll in MFA
+      description: |
+        Add MFA to an account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: MFA type
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_shared_Mfa'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      tags:
+        - Services
+      summary: Remove MFA type
+      description: |
+        Remove MFA type from an account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: MFA type
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/account/preferences:
     put:
       tags:
@@ -1972,6 +2033,13 @@ components:
       type: object
       description: Auth login response params for unlisted auth_types (None)
       nullable: true
+    _res_shared_Mfa:
+      type: object
+      properties:
+        totp_key:
+          description: The user's TOTP key
+          type: string
+          nullable: true
     _req_login_Request:
       required:
         - auth_type

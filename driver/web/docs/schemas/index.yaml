@@ -94,6 +94,8 @@ _res_shared_ParamsOIDC:
   $ref: "../schemas/apis/shared/responses/ParamsOIDC.yaml"
 _res_shared_ParamsNone:
   $ref: "../schemas/apis/shared/responses/ParamsNone.yaml"
+_res_shared_Mfa:
+  $ref: "../schemas/apis/shared/responses/Mfa.yaml"
 
 ### login API
 _req_login_Request:
