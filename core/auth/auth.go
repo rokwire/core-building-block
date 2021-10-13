@@ -14,17 +14,17 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
-	"github.com/rokmetro/auth-library/authorization"
-	"github.com/rokmetro/auth-library/authservice"
-	"github.com/rokmetro/auth-library/authutils"
-	"github.com/rokmetro/auth-library/tokenauth"
+	"github.com/rokwire/core-auth-library-go/authorization"
+	"github.com/rokwire/core-auth-library-go/authservice"
+	"github.com/rokwire/core-auth-library-go/authutils"
+	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/go-playground/validator.v9"
 	"gopkg.in/gomail.v2"
 
-	"github.com/rokmetro/logging-library/errors"
-	"github.com/rokmetro/logging-library/logs"
-	"github.com/rokmetro/logging-library/logutils"
+	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/logutils"
 )
 
 const (
