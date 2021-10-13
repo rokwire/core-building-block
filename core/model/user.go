@@ -54,12 +54,15 @@ type Account struct {
 
 //GetAccountAuthType finds account auth type
 func (a Account) GetAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
+	var result AccountAuthType
 	for _, aat := range a.AuthTypes {
 		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {
-			return &aat
+			result = aat
 		}
 	}
-	return nil
+	//assign account
+	result.Account = a
+	return &result
 }
 
 //GetPermissions returns all permissions granted to this account

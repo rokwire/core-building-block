@@ -65,7 +65,6 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceID st
 	id := ""
 	identifier := ""
 
-	var account *model.Account
 	var accountAuthType *model.AccountAuthType
 	var responseParams interface{}
 
@@ -81,18 +80,18 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceID st
 		id = anonymousID
 
 	} else if authType.IsExternal {
-		account, accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+		accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 
 		}
 
-		id = account.ID
+		id = accountAuthType.Account.ID
 		identifier = accountAuthType.Identifier
 
 		//TODO groups mapping
 	} else {
-		message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+		message, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
@@ -101,14 +100,14 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceID st
 			return &message, nil, nil
 		}
 
-		id = account.ID
+		id = accountAuthType.Account.ID
 		identifier = accountAuthType.Identifier
 
 		//the credentials are valid
 	}
 
 	//now we are ready to apply login for the user or anonymous
-	loginSession, err := a.applyLogin(anonymous, id, identifier, *authType, *appOrg, account, accountAuthType, *appType, IP, deviceType, deviceOS, deviceID, responseParams, l)
+	loginSession, err := a.applyLogin(anonymous, id, identifier, *authType, *appOrg, accountAuthType, *appType, IP, deviceType, deviceOS, deviceID, responseParams, l)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}

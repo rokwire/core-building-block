@@ -27,9 +27,8 @@ type authType interface {
 
 	//userExist checks if the user exists for application and organizations
 	// Returns:
-	//	account (*model.Account): User account
 	//	accountAuthType (*model.AccountAuthType): User account auth type
-	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error)
+	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.AccountAuthType, error)
 
 	//checkCredentials checks if the account credentials are valid for the account auth type
 	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error)
