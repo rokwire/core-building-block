@@ -62,8 +62,8 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceID st
 	var message string
 
 	anonymous := false
-	id := ""
-	identifier := ""
+	sub := ""
+	uid := ""
 
 	var accountAuthType *model.AccountAuthType
 	var responseParams interface{}
@@ -77,7 +77,7 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceID st
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
 		}
-		id = anonymousID
+		sub = anonymousID
 
 	} else if authType.IsExternal {
 		accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
@@ -86,8 +86,8 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceID st
 
 		}
 
-		id = accountAuthType.Account.ID
-		identifier = accountAuthType.Identifier
+		sub = accountAuthType.Account.ID
+		uid = accountAuthType.Identifier
 
 		//TODO groups mapping
 	} else {
@@ -100,14 +100,14 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceID st
 			return &message, nil, nil
 		}
 
-		id = accountAuthType.Account.ID
-		identifier = accountAuthType.Identifier
+		sub = accountAuthType.Account.ID
+		uid = accountAuthType.Identifier
 
 		//the credentials are valid
 	}
 
 	//now we are ready to apply login for the user or anonymous
-	loginSession, err := a.applyLogin(anonymous, id, identifier, *authType, *appOrg, accountAuthType, *appType, IP, deviceType, deviceOS, deviceID, responseParams, l)
+	loginSession, err := a.applyLogin(anonymous, sub, uid, *authType, *appOrg, accountAuthType, *appType, IP, deviceType, deviceOS, deviceID, responseParams, l)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}

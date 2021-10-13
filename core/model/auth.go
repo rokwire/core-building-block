@@ -139,6 +139,7 @@ type AuthCreds struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
+//TODO remove
 //AuthRefresh represents refresh token info used by auth
 type AuthRefresh struct {
 	PreviousToken string                 `bson:"previous_token"`
