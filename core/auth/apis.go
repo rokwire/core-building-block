@@ -32,7 +32,7 @@ func (a *Auth) GetHost() string {
 //		IP (string): Client's IP address
 //		deviceType (string): "mobile" or "web" or "desktop" etc
 //		deviceOS (*string): Device OS
-//		deviceMacAddress (*string): Device mac address
+//		deviceID (string): Device ID
 //		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 //		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
@@ -48,7 +48,7 @@ func (a *Auth) GetHost() string {
 //			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
 //			Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceMacAddress *string,
+func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceID string,
 	authenticationType string, creds string, appTypeIdentifier string, orgID string, params string,
 	profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, error) {
 	//TODO - analyse what should go in one transaction
@@ -108,7 +108,7 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceMacAd
 	}
 
 	//now we are ready to apply login for the user or anonymous
-	loginSession, err := a.applyLogin(anonymous, id, identifier, *authType, *appOrg, account, accountAuthType, *appType, IP, deviceType, deviceOS, deviceMacAddress, responseParams, l)
+	loginSession, err := a.applyLogin(anonymous, id, identifier, *authType, *appOrg, account, accountAuthType, *appType, IP, deviceType, deviceOS, deviceID, responseParams, l)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}

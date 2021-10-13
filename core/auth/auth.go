@@ -405,7 +405,7 @@ func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthT
 
 func (a *Auth) applyLogin(anonymous bool, id string, identifier string, authType model.AuthType, appOrg model.ApplicationOrganization,
 	account *model.Account, accountAuthType *model.AccountAuthType, appType model.ApplicationType,
-	IP string, deviceType string, deviceOS *string, deviceMacAddress *string, params interface{}, l *logs.Log) (*model.LoginSession, error) {
+	IP string, deviceType string, deviceOS *string, deviceID string, params interface{}, l *logs.Log) (*model.LoginSession, error) {
 	//TODO add login session which keeps the tokens, the auth type params(illinois tokens), eventually the device etc
 	//TODO think if to return the whole login session object..
 	//TODO work with storage

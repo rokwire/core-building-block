@@ -3,6 +3,8 @@ required:
 type: object
 description: Client device
 properties:
+  device_id:
+    type: string
   type:
     type: string
     enum:
@@ -12,5 +14,4 @@ properties:
       - other
   os:
     type: string
-  mac_address:
-    type: string
+  

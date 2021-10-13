@@ -69,7 +69,7 @@ type APIs interface {
 	//		IP (string): Client's IP address
 	//		deviceType (string): "mobile" or "web" or "desktop" etc
 	//		deviceOS (*string): Device OS
-	//		deviceMacAddress (*string): Device mac address
+	//		deviceID (string): Device ID
 	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
@@ -85,7 +85,7 @@ type APIs interface {
 	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
 	//			Params (interface{}): authType-specific set of parameters passed back to client
-	Login(IP string, deviceType string, deviceOS *string, deviceMacAddress *string,
+	Login(IP string, deviceType string, deviceOS *string, deviceID string,
 		authenticationType string, creds string, appTypeIdentifier string, orgID string, params string,
 		profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, error)
 

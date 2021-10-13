@@ -49,6 +49,11 @@ paths:
                     "creds": {
                       "email": "test@test.com", 
                       "password": "test12345"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
                     }
                   }
               email-sign_up:
@@ -81,6 +86,11 @@ paths:
                       "photo_url": "photo url",
                       "state": "state",
                       "zip_code": "zip code"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
                     }
                   }
               phone:
@@ -109,6 +119,11 @@ paths:
                       "photo_url": "photo url",
                       "state": "state",
                       "zip_code": "zip code"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
                     }
                   }
               illinois_oidc:
@@ -138,6 +153,11 @@ paths:
                       "photo_url": "photo url",
                       "state": "state",
                       "zip_code": "zip code"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
                     }
                   }
               api_key:
@@ -149,6 +169,11 @@ paths:
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "creds": {
                       "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
                     }
                   }
         required: true
@@ -2066,6 +2091,8 @@ components:
       type: object
       description: Client device
       properties:
+        device_id:
+          type: string
         type:
           type: string
           enum:
@@ -2074,8 +2101,6 @@ components:
             - desktop
             - other
         os:
-          type: string
-        mac_address:
           type: string
     _res_login_Response:
       type: object

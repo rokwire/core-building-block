@@ -537,9 +537,9 @@ type ReqLoginCredsTwilioPhone struct {
 
 // Client device
 type ReqLoginDevice struct {
-	MacAddress *string            `json:"mac_address,omitempty"`
-	Os         *string            `json:"os,omitempty"`
-	Type       ReqLoginDeviceType `json:"type"`
+	DeviceId *string            `json:"device_id,omitempty"`
+	Os       *string            `json:"os,omitempty"`
+	Type     ReqLoginDeviceType `json:"type"`
 }
 
 // ReqLoginDeviceType defines model for ReqLoginDevice.Type.
