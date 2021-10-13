@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rokmetro/logging-library/logutils"
+	"github.com/rokwire/logging-library-go/logutils"
 )
 
 const (
