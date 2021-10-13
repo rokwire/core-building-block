@@ -549,7 +549,7 @@ type ReqLoginRequestAuthType string
 type ReqPermissionsRequest struct {
 	Name string `json:"name"`
 
-	// services that are granted the permission
+	// services that use the permission
 	ServiceIds *[]string `json:"service_ids,omitempty"`
 }
 
