@@ -232,7 +232,14 @@ func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
 
 //InsertLoginSession inserts login session
 func (sa *Adapter) InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error) {
-	return nil, nil
+	storageLoginSession := loginSessionToStorage(&loginSession)
+
+	_, err := sa.db.loginsSessions.InsertOne(storageLoginSession)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
+	}
+
+	return &loginSession, nil
 }
 
 //FindAccount finds an account for app, org, auth type and account auth type identifier
