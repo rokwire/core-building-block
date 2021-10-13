@@ -230,6 +230,11 @@ func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
 	return result, nil
 }
 
+//InsertLoginSession inserts login session
+func (sa *Adapter) InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error) {
+	return nil, nil
+}
+
 //FindAccount finds an account for app, org, auth type and account auth type identifier
 func (sa *Adapter) FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},

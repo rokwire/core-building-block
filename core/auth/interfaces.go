@@ -165,6 +165,9 @@ type Storage interface {
 	//AuthTypes
 	LoadAuthTypes() ([]model.AuthType, error)
 
+	//LoginsSessions
+	InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error)
+
 	//Accounts
 	FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
 	InsertAccount(account model.Account) (*model.Account, error)

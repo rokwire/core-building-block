@@ -410,12 +410,17 @@ func (a *Auth) applyLogin(anonymous bool, sub string, uid string, authType model
 	//TODO - ignore the device for now; assign to user etc
 	device := model.Device{ID: "1234", Type: "mobile"}
 
+	//create login session entity
 	loginSession, err := a.createLoginSession(anonymous, sub, uid, authType, appOrg, accountAuthType, appType, IP, params, device, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error creating a session", "", nil, err)
 	}
 
-	//TODO store it..
+	//store it
+	_, err = a.storage.InsertLoginSession(*loginSession)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
+	}
 
 	return loginSession, nil
 }
