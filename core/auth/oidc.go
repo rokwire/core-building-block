@@ -61,13 +61,13 @@ type oidcLoginParams struct {
 }
 
 type oidcResponseParams struct {
-	OIDCToken oidcTokenResponseParams `json:"oidc_token"`
+	OIDCToken oidcTokenResponseParams `json:"oidc_token" bson:"oidc_token"`
 }
 
 type oidcTokenResponseParams struct {
-	IDToken     string `json:"id_token"`
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
+	IDToken     string `json:"id_token" bson:"id_token"`
+	AccessToken string `json:"access_token" bson:"access_token"`
+	TokenType   string `json:"token_type" bson:"token_type"`
 }
 
 type oidcToken struct {

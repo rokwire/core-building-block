@@ -30,7 +30,7 @@ type apiKeyCreds struct {
 }
 
 type apiKeyResponseParams struct {
-	AnonymousID string `json:"anonymous_id"`
+	AnonymousID string `json:"anonymous_id" bson:"anonymous_id"`
 }
 
 func (a *apiKeyAuthImpl) checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, interface{}, error) {
