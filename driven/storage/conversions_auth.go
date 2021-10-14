@@ -17,9 +17,10 @@ func loginSessionToStorage(item *model.LoginSession) *loginSession {
 	refreshToken := item.RefreshToken
 	params := item.Params
 	expires := item.Expires
+	dateUpdated := item.DateUpdated
 	dateCreated := item.DateCreated
 
 	return &loginSession{ID: id, Anonymous: anonymous, Identifier: identifier, AccountAuthTypeID: accountAuthTypeID,
 		DeviceID: deviceID, IP: IP, AccessToken: accessToken, RefreshToken: refreshToken, Params: params,
-		Expires: expires, DateCreated: dateCreated}
+		Expires: expires, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }

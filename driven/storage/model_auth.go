@@ -19,5 +19,6 @@ type loginSession struct {
 
 	Expires time.Time `bson:"expires"`
 
-	DateCreated time.Time `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+	DateCreated time.Time  `bson:"date_created"`
 }

@@ -1586,6 +1586,9 @@ components:
           additionalProperties: true
         expires:
           type: string
+        date_updated:
+          type: string
+          nulable: true
         date_created:
           type: string
     AuthType:

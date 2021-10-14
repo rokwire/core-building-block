@@ -70,6 +70,7 @@ type LoginSession struct {
 
 	Expires time.Time
 
+	DateUpdated *time.Time
 	DateCreated time.Time
 }
 
