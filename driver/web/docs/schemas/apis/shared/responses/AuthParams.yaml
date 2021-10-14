@@ -1,0 +1,4 @@
+anyOf:
+      - $ref: "./ParamsOIDC.yaml"
+      - $ref: "./ParamsAPIKey.yaml"
+      - $ref: "./ParamsNone.yaml"  

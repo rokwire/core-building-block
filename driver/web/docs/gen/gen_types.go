@@ -686,6 +686,11 @@ type ResRefreshResponse struct {
 	Token  *ResSharedRokwireToken `json:"token,omitempty"`
 }
 
+// ResSharedParamsAPIKey defines model for _res_shared_ParamsAPIKey.
+type ResSharedParamsAPIKey struct {
+	AnonymousId *string `json:"anonymous_id,omitempty"`
+}
+
 // Auth login response params for unlisted auth_types (None)
 type ResSharedParamsNone map[string]interface{}
 

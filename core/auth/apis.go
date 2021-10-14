@@ -125,7 +125,7 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceID st
 //		Params (interface{}): authType-specific set of parameters passed back to client
 func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interface{}, error) {
 	//TODO - work with the logins sessions
-	return "", "", nil, nil
+	return "access token value", "refresh token value", nil, nil
 	/*
 		refresh, err := a.storage.FindRefreshToken(refreshToken)
 		if err != nil {

@@ -7,9 +7,6 @@ properties:
   params:
     type: object
     nullable: true
-    anyOf:
-      - $ref: "../../../shared/responses/ParamsOIDC.yaml"
-      - $ref: "./ParamsAPIKey.yaml"
-      - $ref: "../../../shared/responses/ParamsNone.yaml"  
+    $ref: "../../../shared/responses/AuthParams.yaml"
   message:
     type: string
