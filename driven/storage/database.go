@@ -27,6 +27,7 @@ type database struct {
 	accounts                  *collectionWrapper
 	devices                   *collectionWrapper
 	credentials               *collectionWrapper
+	mfa                       *collectionWrapper
 	refreshTokens             *collectionWrapper
 	globalConfig              *collectionWrapper
 	serviceRegs               *collectionWrapper
@@ -90,6 +91,12 @@ func (m *database) start() error {
 
 	credentials := &collectionWrapper{database: m, coll: db.Collection("credentials")}
 	err = m.applyCredentialChecks(credentials)
+	if err != nil {
+		return err
+	}
+
+	mfa := &collectionWrapper{database: m, coll: db.Collection("mfa")}
+	err = m.applyMFAChecks(mfa)
 	if err != nil {
 		return err
 	}
@@ -256,6 +263,19 @@ func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
 	}
 
 	m.logger.Info("credentials check passed")
+	return nil
+}
+
+func (m *database) applyMFAChecks(mfa *collectionWrapper) error {
+	m.logger.Info("apply mfa checks.....")
+
+	// Add account_id index
+	err := mfa.AddIndex(bson.D{primitive.E{Key: "account_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("mfa check passed")
 	return nil
 }
 

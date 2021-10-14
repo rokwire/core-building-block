@@ -103,3 +103,16 @@ type credential struct {
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
+
+type mfa struct {
+	ID string `bson:"_id"`
+
+	Type      string `bson:"auth_type_id"`
+	AccountID string `bson:"account_id"`
+	// AccountAuthTypeIdentifiers []string               `bson:"account_auth_types_identifiers"`
+	Verified bool                   `bson:"verified"`
+	Params   map[string]interface{} `bson:"params"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}

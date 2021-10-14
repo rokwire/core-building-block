@@ -5,7 +5,9 @@ import (
 	"core-building-block/core/model"
 	"image/png"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/pquerna/otp/totp"
 	"github.com/rokwire/core-auth-library-go/authorization"
 	"github.com/rokwire/core-auth-library-go/authutils"
@@ -274,12 +276,24 @@ func (a *Auth) AddMFA(accountID string, accountAuthTypeID string, mfaType string
 		}
 		qrCode := buf.String()
 
-		accountAuthType, err := a.storage.FindAccountAuthType(accountID, accountAuthTypeID)
+		mfa, err := a.storage.FindMFA(accountID, mfaType)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFA, nil, err)
 		}
-		if accountAuthType.ActiveMFA == nil {
-			accountAuthType.ActiveMFA = make(map[string]interface{})
+
+		now := time.Now().UTC()
+		if mfa == nil {
+			mfaID, _ := uuid.NewUUID()
+			params := map[string]interface{}{
+				"secret": key.Secret(),
+			}
+			newMfa := model.MFA{ID: mfaID.String(), Type: mfaType, AccountID: accountID, Verified: false, Params: params, DateCreated: now}
+			err := a.storage.InsertMFA(&newMfa)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeMFA, nil, err)
+			}
+		} else {
+
 		}
 		accountAuthType.ActiveMFA["totp"] = "unverified:" + key.Secret()
 
