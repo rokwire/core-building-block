@@ -125,10 +125,22 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceID st
 //			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //			Params (interface{}): authType-specific set of parameters passed back to client
 func (a *Auth) Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, error) {
-	//TODO - work with the logins sessions
-	//loginSession := model.LoginSession{AccessToken: "access token value", RefreshToken: "refresh token value", Params: nil}
-	//return &loginSession, nil
-	return nil, nil
+	var loginSession *model.LoginSession
+
+	//find the login session for the refresh token
+	loginSession, err := a.storage.FindLoginSession(refreshToken)
+	if err != nil {
+		l.Infof("error finding session by refresh token - %s", refreshToken)
+		return nil, errors.WrapErrorAction("error finding session by refresh token", "", nil, err)
+	}
+	if loginSession == nil {
+		l.Infof("there is no a session for refresh token - %s", refreshToken)
+		return nil, nil
+	}
+
+	//TODO
+
+	return loginSession, nil
 	/*
 		refresh, err := a.storage.FindRefreshToken(refreshToken)
 		if err != nil {

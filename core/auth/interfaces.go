@@ -168,6 +168,7 @@ type Storage interface {
 
 	//LoginsSessions
 	InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error)
+	FindLoginSession(refreshToken string) (*model.LoginSession, error)
 
 	//Accounts
 	FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)

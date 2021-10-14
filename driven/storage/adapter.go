@@ -242,6 +242,24 @@ func (sa *Adapter) InsertLoginSession(loginSession model.LoginSession) (*model.L
 	return &loginSession, nil
 }
 
+//FindLoginSession finds login session by refresh token
+func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, error) {
+	filter := bson.D{primitive.E{Key: "refresh_token", Value: refreshToken}}
+	var loginsSessions []loginSession
+	err := sa.db.loginsSessions.Find(filter, &loginsSessions, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+	}
+	if len(loginsSessions) == 0 {
+		//not found
+		return nil, nil
+	}
+	loginSession := loginsSessions[0]
+
+	modelLoginSession := loginSessionFromStorage(loginSession)
+	return &modelLoginSession, nil
+}
+
 //FindAccount finds an account for app, org, auth type and account auth type identifier
 func (sa *Adapter) FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
