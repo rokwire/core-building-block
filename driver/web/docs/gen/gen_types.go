@@ -682,7 +682,7 @@ type ResLoginResponse struct {
 
 // ResRefreshResponse defines model for _res_refresh_Response.
 type ResRefreshResponse struct {
-	Params *interface{}           `json:"params,omitempty"`
+	Params *interface{}           `json:"params"`
 	Token  *ResSharedRokwireToken `json:"token,omitempty"`
 }
 

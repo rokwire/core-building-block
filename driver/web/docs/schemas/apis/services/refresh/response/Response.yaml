@@ -4,6 +4,8 @@ properties:
     $ref: "../../../shared/responses/RokwireToken.yaml"
   params:
     type: object
+    nullable: true
     anyOf:
       - $ref: "../../../shared/responses/ParamsOIDC.yaml"
-      - $ref: "../../../shared/responses/ParamsNone.yaml"
+      - $ref: "../../../shared/responses/ParamsAPIKey.yaml"
+      - $ref: "../../../shared/responses/ParamsNone.yaml" 

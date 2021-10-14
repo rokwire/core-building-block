@@ -2193,8 +2193,10 @@ components:
           $ref: '#/components/schemas/_res_shared_RokwireToken'
         params:
           type: object
+          nullable: true
           anyOf:
             - $ref: '#/components/schemas/_res_shared_ParamsOIDC'
+            - $ref: '#/components/schemas/_res_shared_ParamsAPIKey'
             - $ref: '#/components/schemas/_res_shared_ParamsNone'
     _req_authorize-service_Request:
       required:
