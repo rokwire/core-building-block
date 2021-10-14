@@ -452,12 +452,7 @@ func (h AdminApisHandler) createPermission(l *logs.Log, r *http.Request, claims 
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
 	}
 
-	if requestData.ServiceIds != nil {
-		_, err = h.coreAPIs.Administration.AdmCreatePermission(requestData.Name, *requestData.ServiceIds)
-	} else {
-		_, err = h.coreAPIs.Administration.AdmCreatePermission(requestData.Name, nil)
-	}
-
+	_, err = h.coreAPIs.Administration.AdmCreatePermission(requestData.Name, requestData.ServiceIds, requestData.Assigners)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
@@ -478,7 +473,7 @@ func (h AdminApisHandler) updatePermission(l *logs.Log, r *http.Request, claims 
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
 	}
 
-	_, err = h.coreAPIs.Administration.AdmUpdatePermission(requestData.Name, requestData.ServiceIds)
+	_, err = h.coreAPIs.Administration.AdmUpdatePermission(requestData.Name, requestData.ServiceIds, requestData.Assigners)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
@@ -520,7 +515,7 @@ func (h AdminApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, 
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.Administration.AdmGrantAccountPermissions(requestData.AccountId, requestData.Permissions)
+	err = h.coreAPIs.Administration.AdmGrantAccountPermissions(requestData.AccountId, requestData.Permissions, claims.Permissions)
 	if err != nil {
 		return l.HttpResponseErrorAction(actionGrant, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}

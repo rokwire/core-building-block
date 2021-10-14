@@ -9,3 +9,8 @@ properties:
     description: services that use the permission
     items:
       type: string
+  assigners:
+    type: array
+    description: permissions that could assign current permission to accounts
+    items:
+      type: string

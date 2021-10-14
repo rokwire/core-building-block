@@ -37,12 +37,12 @@ type Administration interface {
 	AdmGetApplication(ID string) (*model.Application, error)
 	AdmGetApplications() ([]model.Application, error)
 
-	AdmCreatePermission(name string, serviceIDs []string) (*model.Permission, error)
-	AdmUpdatePermission(name string, serviceIDs *[]string) (*model.Permission, error)
+	AdmCreatePermission(name string, serviceIDs *[]string, assigners *[]string) (*model.Permission, error)
+	AdmUpdatePermission(name string, serviceIDs *[]string, assigners *[]string) (*model.Permission, error)
 
 	AdmCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error)
 
-	AdmGrantAccountPermissions(accountID string, permissionNames []string) error
+	AdmGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions string) error
 	AdmGrantAccountRoles(accountID string, appID string, roleIDs []string) error
 }
 

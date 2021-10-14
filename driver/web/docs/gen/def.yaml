@@ -958,7 +958,7 @@ paths:
       security:
         - bearerAuth: []
       requestBody:
-        description: Application permission
+        description: Permission
         content:
           application/json:
             schema:
@@ -989,7 +989,7 @@ paths:
       security:
         - bearerAuth: []
       requestBody:
-        description: Application permission
+        description: Permission
         content:
           application/json:
             schema:
@@ -2395,7 +2395,12 @@ components:
           type: string
         service_ids:
           type: array
-          description: services that are granted the permission
+          description: services that use the permission
+          items:
+            type: string
+        assigners:
+          type: array
+          description: permissions that could assign current permission to accounts
           items:
             type: string
     _req_application-roles_Request:

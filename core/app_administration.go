@@ -2,6 +2,7 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -281,10 +282,10 @@ func (app *application) admGetApplications() ([]model.Application, error) {
 	return getApplications, nil
 }
 
-func (app *application) admCreatePermission(name string, serviceIDs []string) (*model.Permission, error) {
+func (app *application) admCreatePermission(name string, serviceIDs *[]string, assigners *[]string) (*model.Permission, error) {
 	id, _ := uuid.NewUUID()
 	now := time.Now()
-	permission := model.Permission{ID: id.String(), Name: name, DateCreated: now, ServiceIDs: serviceIDs}
+	permission := model.Permission{ID: id.String(), Name: name, DateCreated: now, ServiceIDs: *serviceIDs, Assigners: *assigners}
 
 	err := app.storage.InsertPermission(permission)
 
@@ -294,7 +295,7 @@ func (app *application) admCreatePermission(name string, serviceIDs []string) (*
 	return &permission, nil
 }
 
-func (app *application) admUpdatePermission(name string, serviceIDs *[]string) (*model.Permission, error) {
+func (app *application) admUpdatePermission(name string, serviceIDs *[]string, assigners *[]string) (*model.Permission, error) {
 	permissionNames := []string{name}
 	permissions, err := app.storage.FindPermissionsByName(permissionNames)
 	if err != nil {
@@ -307,6 +308,9 @@ func (app *application) admUpdatePermission(name string, serviceIDs *[]string) (
 	permission := permissions[0]
 	if serviceIDs != nil {
 		permission.ServiceIDs = *serviceIDs
+	}
+	if assigners != nil {
+		permission.Assigners = *assigners
 	}
 	err = app.storage.UpdatePermission(permission)
 	if err != nil {
@@ -332,7 +336,11 @@ func (app *application) admCreateApplicationRole(name string, appID string, desc
 	return &role, nil
 }
 
-func (app *application) admGrantAccountPermissions(accountID string, permissionNames []string) error {
+func (app *application) admGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions string) error {
+	if assignerPermissions == "" {
+		return errors.New("no permissions from admin assigner")
+	}
+
 	permissions, err := app.storage.FindPermissionsByName(permissionNames)
 	if err != nil {
 		return err
@@ -342,7 +350,20 @@ func (app *application) admGrantAccountPermissions(accountID string, permissionN
 		return errors.Newf("no permissions found for names: %v", permissionNames)
 	}
 
-	err = app.storage.InsertAccountPermissions(accountID, permissions)
+	var authorizedPermissions []model.Permission
+	for _, permission := range permissions {
+		authorizedAssigners := permission.Assigners
+		for _, authorizedAssigner := range authorizedAssigners {
+			if strings.Contains(assignerPermissions, authorizedAssigner) {
+				authorizedPermissions = append(authorizedPermissions, permission)
+			}
+		}
+	}
+	if authorizedPermissions == nil {
+		return errors.Newf("Assigner is not authorized to assign permissions for names: %v", permissionNames)
+	}
+
+	err = app.storage.InsertAccountPermissions(accountID, authorizedPermissions)
 	if err != nil {
 		return err
 	}

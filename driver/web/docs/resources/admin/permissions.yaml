@@ -9,7 +9,7 @@ post:
   security:
     - bearerAuth: []
   requestBody:
-    description: Application permission
+    description: Permission
     content:
       application/json:
         schema:
@@ -40,7 +40,7 @@ put:
   security:
     - bearerAuth: []
   requestBody:
-    description: Application permission
+    description: Permission
     content:
       application/json:
         schema:

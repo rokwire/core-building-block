@@ -547,9 +547,11 @@ type ReqLoginRequestAuthType string
 
 // ReqPermissionsRequest defines model for _req_permissions_Request.
 type ReqPermissionsRequest struct {
-	Name string `json:"name"`
+	// permissions that could assign current permission to accounts
+	Assigners *[]string `json:"assigners,omitempty"`
+	Name      string    `json:"name"`
 
-	// services that are granted the permission
+	// services that use the permission
 	ServiceIds *[]string `json:"service_ids,omitempty"`
 }
 
