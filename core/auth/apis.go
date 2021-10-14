@@ -276,6 +276,15 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 }
 
 //ResetPasswordClient updates the value in the credential with new password
+//	Input:
+//		accountID: id of the associated account to reset
+//		authTypeID (string): ID of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		identifier: identifier of the account auth type
+//		password: old password
+//		newPassword: new password to reset to
+//		confirmPassword: new password to reset to
+//	Returns:
+//		error: if any
 //TODO: Clear login sessions using old creds
 // Handle refresh tokens when applicable
 func (a *Auth) ResetPasswordClient(accountID string, authTypeID string, identifier string, password string, newPassword string, confirmPassword string, l *logs.Log) error {
@@ -322,6 +331,15 @@ func (a *Auth) ResetPasswordClient(accountID string, authTypeID string, identifi
 }
 
 //ResetPasswordLink updates the value in the credential with new password
+//	Input:
+//		credsID: id of the credential object
+//		authTypeID (string): ID of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		identifier: identifier of the account auth type
+//		resetCode: code from the reset link
+//		newPassword: new password to reset to
+//		confirmPassword: new password to reset to
+//	Returns:
+//		error: if any
 //TODO: Clear login sessions using old creds
 // Handle refresh tokens when applicable
 func (a *Auth) ResetPasswordLink(credsID string, authTypeID string, identifier string, resetCode string, newPassword string, confirmPassword string, l *logs.Log) error {
@@ -357,6 +375,14 @@ func (a *Auth) ResetPasswordLink(credsID string, authTypeID string, identifier s
 	return nil
 }
 
+//ForgotPassword generates a reset link with code and expiry and sends it to the given identifier
+//	Input:
+//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		identifier: identifier of the account auth type
+//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
+//		orgID (string): ID of the organization that the user is logging in
+//	Returns:
+//		error: if any
 func (a *Auth) ForgotPassword(authenticationType string, appTypeIdentifier string, orgID string, identifier string, l *logs.Log) error {
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, _, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
