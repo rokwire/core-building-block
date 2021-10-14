@@ -34,7 +34,7 @@ func (a *firebaseAuthImpl) checkCredentials(accountAuthType model.AccountAuthTyp
 	return "", nil, nil
 }
 
-func (a *firebaseAuthImpl) resetPassword(credential *model.Credential, password string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
+func (a *firebaseAuthImpl) resetPassword(credential *model.Credential, resetCode *string, password *string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, nil
 }
 

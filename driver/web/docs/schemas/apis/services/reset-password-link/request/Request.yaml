@@ -1,18 +1,19 @@
 required:
+  - creds_id
   - auth_type_id
   - identifier
-  - password
+  - reset_code
   - new_password
   - confirm_password
 type: object
 properties:
+  creds_id:
+    type: string
   auth_type_id:
     type: string
   identifier:
     type: string
   reset_code:
-    type: string
-  password:
     type: string
   new_password:
     type: string

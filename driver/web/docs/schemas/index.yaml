@@ -124,8 +124,10 @@ _res_refresh_Response:
   $ref: "./apis/services/refresh/response/Response.yaml"
 
 ### reset-password API
-_req_reset-password_Request:
-  $ref: "./apis/services/reset-password/request/Request.yaml"
+_req_reset-password-client_Request:
+  $ref: "./apis/services/reset-password-client/request/Request.yaml"
+_req_reset-password-link_Request:
+  $ref: "./apis/services/reset-password-link/request/Request.yaml"
 
 ### forgot-password API
 _req_forgot-password_Request:

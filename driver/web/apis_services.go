@@ -312,45 +312,46 @@ func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request, claims *to
 	return l.HttpResponseSuccessMessage("Code verified!")
 }
 
-//Handler for reset password endpoint
-func (h ServicesApisHandler) resetPassword(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+//Handler for reset password endpoint from client application
+func (h ServicesApisHandler) resetPasswordClient(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	accountID := claims.Subject
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqResetPasswordRequest
+	var requestData Def.ReqResetPasswordClientRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password request"), nil, err, http.StatusBadRequest, true)
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password client request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.ResetPassword(accountID, requestData.AuthTypeId, requestData.Identifier, requestData.Password, requestData.NewPassword, requestData.ConfirmPassword, l); err != nil {
+	if err := h.coreAPIs.Auth.ResetPasswordClient(accountID, requestData.AuthTypeId, requestData.Identifier, requestData.Password, requestData.NewPassword, requestData.ConfirmPassword, l); err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HttpResponseSuccessMessage("Reset Password Successfully")
+	return l.HttpResponseSuccessMessage("Reset Password from client successfully")
 }
 
-// //Handler for forgot password endpoint
-// func (h ServicesApisHandler) forgotPassword(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-// 	id := r.URL.Query().Get("id")
-// 	if id == "" {
-// 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
-// 	}
+//Handler for reset password endpoint from reset link
+func (h ServicesApisHandler) resetPasswordLink(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
 
-// 	code := r.URL.Query().Get("code")
-// 	if code == "" {
-// 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("code"), nil, http.StatusBadRequest, false)
-// 	}
+	var requestData Def.ReqResetPasswordLinkRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password link request"), nil, err, http.StatusBadRequest, true)
+	}
 
-// 	if err := h.coreAPIs.Auth.Verify(id, code, l); err != nil {
-// 		return l.HttpResponseErrorAction(logutils.ActionValidate, "code", nil, err, http.StatusInternalServerError, false)
-// 	}
+	if err := h.coreAPIs.Auth.ResetPasswordLink(requestData.CredsId, requestData.AuthTypeId, requestData.Identifier, requestData.ResetCode, requestData.NewPassword, requestData.ConfirmPassword, l); err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+	}
 
-// 	return l.HttpResponseSuccessMessage("Code verified!")
-// }
+	return l.HttpResponseSuccessMessage("Reset Password from link successfully")
+}
 
 //Handler for forgot password endpoint
 func (h ServicesApisHandler) forgotPassword(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {

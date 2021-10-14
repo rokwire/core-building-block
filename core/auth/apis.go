@@ -275,10 +275,10 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 	return nil
 }
 
-//ResetPassword updates the value in the credential with new password
+//ResetPasswordClient updates the value in the credential with new password
 //TODO: Clear login sessions using old creds
 // Handle refresh tokens when applicable
-func (a *Auth) ResetPassword(accountID string, authTypeID string, identifier string, password string, newPassword string, confirmPassword string, l *logs.Log) error {
+func (a *Auth) ResetPasswordClient(accountID string, authTypeID string, identifier string, password string, newPassword string, confirmPassword string, l *logs.Log) error {
 	//Get the user credential from account auth type in accounts collection
 	account, err := a.storage.FindAccountByID(accountID)
 	if err != nil {
@@ -308,7 +308,43 @@ func (a *Auth) ResetPassword(accountID string, authTypeID string, identifier str
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	authTypeCreds, err := authImpl.resetPassword(credential, password, newPassword, confirmPassword, l)
+	authTypeCreds, err := authImpl.resetPassword(credential, nil, &password, newPassword, confirmPassword, l)
+	if err != nil || authTypeCreds == nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "reset password", nil, err)
+	}
+	//Update the credential with new password
+	credential.Value = authTypeCreds
+	if err = a.storage.UpdateCredential(credential); err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
+
+	return nil
+}
+
+//ResetPasswordLink updates the value in the credential with new password
+//TODO: Clear login sessions using old creds
+// Handle refresh tokens when applicable
+func (a *Auth) ResetPasswordLink(credsID string, authTypeID string, identifier string, resetCode string, newPassword string, confirmPassword string, l *logs.Log) error {
+	credential, err := a.storage.FindCredential(credsID)
+	if err != nil || credential == nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+	}
+
+	//Determine the auth type for resetPassword
+	authType, err := a.getCachedAuthType(credential.AuthType.ID)
+	if err != nil || authType == nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
+	}
+	if authType.IsExternal {
+		return errors.WrapErrorAction("invalid auth type for verify", model.TypeAuthType, nil, err)
+	}
+
+	authImpl, err := a.getAuthTypeImpl(*authType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	authTypeCreds, err := authImpl.resetPassword(credential, &resetCode, nil, newPassword, confirmPassword, l)
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "reset password", nil, err)
 	}

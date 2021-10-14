@@ -574,14 +574,23 @@ type ReqLoginRequest struct {
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
 type ReqLoginRequestAuthType string
 
-// ReqResetPasswordRequest defines model for _req_reset-password_Request.
-type ReqResetPasswordRequest struct {
-	AuthTypeId      string  `json:"auth_type_id"`
-	ConfirmPassword string  `json:"confirm_password"`
-	Identifier      string  `json:"identifier"`
-	NewPassword     string  `json:"new_password"`
-	Password        string  `json:"password"`
-	ResetCode       *string `json:"reset_code,omitempty"`
+// ReqResetPasswordClientRequest defines model for _req_reset-password-client_Request.
+type ReqResetPasswordClientRequest struct {
+	AuthTypeId      string `json:"auth_type_id"`
+	ConfirmPassword string `json:"confirm_password"`
+	Identifier      string `json:"identifier"`
+	NewPassword     string `json:"new_password"`
+	Password        string `json:"password"`
+}
+
+// ReqResetPasswordLinkRequest defines model for _req_reset-password-link_Request.
+type ReqResetPasswordLinkRequest struct {
+	AuthTypeId      string `json:"auth_type_id"`
+	ConfirmPassword string `json:"confirm_password"`
+	CredsId         string `json:"creds_id"`
+	Identifier      string `json:"identifier"`
+	NewPassword     string `json:"new_password"`
+	ResetCode       string `json:"reset_code"`
 }
 
 // ReqUpdateOrganizationRequest defines model for _req_update_Organization_Request.
@@ -782,8 +791,11 @@ type PostServicesAuthLoginJSONBody ReqLoginRequest
 // PostServicesAuthLoginUrlJSONBody defines parameters for PostServicesAuthLoginUrl.
 type PostServicesAuthLoginUrlJSONBody ReqLoginUrlRequest
 
-// PostServicesAuthResetPasswordJSONBody defines parameters for PostServicesAuthResetPassword.
-type PostServicesAuthResetPasswordJSONBody ReqResetPasswordRequest
+// PostServicesAuthResetPasswordClientJSONBody defines parameters for PostServicesAuthResetPasswordClient.
+type PostServicesAuthResetPasswordClientJSONBody ReqResetPasswordClientRequest
+
+// PostServicesAuthResetPasswordLinkJSONBody defines parameters for PostServicesAuthResetPasswordLink.
+type PostServicesAuthResetPasswordLinkJSONBody ReqResetPasswordLinkRequest
 
 // GetServicesAuthServiceRegsParams defines parameters for GetServicesAuthServiceRegs.
 type GetServicesAuthServiceRegsParams struct {
@@ -863,8 +875,11 @@ type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 // PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
 type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
 
-// PostServicesAuthResetPasswordJSONRequestBody defines body for PostServicesAuthResetPassword for application/json ContentType.
-type PostServicesAuthResetPasswordJSONRequestBody PostServicesAuthResetPasswordJSONBody
+// PostServicesAuthResetPasswordClientJSONRequestBody defines body for PostServicesAuthResetPasswordClient for application/json ContentType.
+type PostServicesAuthResetPasswordClientJSONRequestBody PostServicesAuthResetPasswordClientJSONBody
+
+// PostServicesAuthResetPasswordLinkJSONRequestBody defines body for PostServicesAuthResetPasswordLink for application/json ContentType.
+type PostServicesAuthResetPasswordLinkJSONRequestBody PostServicesAuthResetPasswordLinkJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found

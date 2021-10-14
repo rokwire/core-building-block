@@ -256,18 +256,44 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/auth/reset-password:
+  /services/auth/reset-password-link:
     post:
       tags:
         - Services
-      summary: Reset the login password
+      summary: Reset the login password from reset link
       description: |
         Updates the credential with new password
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_reset-password_Request'
+              $ref: '#/components/schemas/_req_reset-password-link_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/reset-password-client:
+    post:
+      tags:
+        - Services
+      summary: Reset the login password from client application
+      description: |
+        Updates the credential with new password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_reset-password-client_Request'
         required: true
       responses:
         '200':
@@ -2103,7 +2129,7 @@ components:
           anyOf:
             - $ref: '#/components/schemas/_res_shared_ParamsOIDC'
             - $ref: '#/components/schemas/_res_shared_ParamsNone'
-    _req_reset-password_Request:
+    _req_reset-password-client_Request:
       required:
         - auth_type_id
         - identifier
@@ -2116,9 +2142,29 @@ components:
           type: string
         identifier:
           type: string
-        reset_code:
-          type: string
         password:
+          type: string
+        new_password:
+          type: string
+        confirm_password:
+          type: string
+    _req_reset-password-link_Request:
+      required:
+        - creds_id
+        - auth_type_id
+        - identifier
+        - reset_code
+        - new_password
+        - confirm_password
+      type: object
+      properties:
+        creds_id:
+          type: string
+        auth_type_id:
+          type: string
+        identifier:
+          type: string
+        reset_code:
           type: string
         new_password:
           type: string

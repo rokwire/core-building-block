@@ -33,8 +33,10 @@ paths:
     $ref: "./resources/services/auth/login-url.yaml"
   /services/auth/verify:
     $ref: "./resources/services/auth/verify.yaml"
-  /services/auth/reset-password:
-    $ref: "./resources/services/auth/reset-password.yaml"
+  /services/auth/reset-password-link:
+    $ref: "./resources/services/auth/reset-password-link.yaml"
+  /services/auth/reset-password-client:
+    $ref: "./resources/services/auth/reset-password-client.yaml"
   /services/auth/forgot-password:
     $ref: "./resources/services/auth/forgot-password.yaml"
   /services/auth/authorize-service:

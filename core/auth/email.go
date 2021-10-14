@@ -161,7 +161,7 @@ func (a *emailAuthImpl) verify(credential *model.Credential, verification string
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
 	}
-	err = a.compareVerifyCode(creds.VerificationCode, verification, creds.VerificationExpiry, l)
+	err = a.compareCode(creds.VerificationCode, verification, creds.VerificationExpiry, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, &logutils.FieldArgs{"verification_code": verification}, errors.New("invalid verification code"))
 	}
@@ -177,19 +177,19 @@ func (a *emailAuthImpl) verify(credential *model.Credential, verification string
 	return credsMap, nil
 }
 
-func (a *emailAuthImpl) compareVerifyCode(credCode string, requestCode string, expiryTime time.Time, l *logs.Log) error {
+func (a *emailAuthImpl) compareCode(credCode string, requestCode string, expiryTime time.Time, l *logs.Log) error {
 	if expiryTime.Before(time.Now()) {
-		return errors.WrapErrorAction(logutils.ActionValidate, typeTime, nil, errors.New("verification code has expired"))
+		return errors.WrapErrorAction(logutils.ActionValidate, typeTime, nil, errors.New("Code has expired"))
 	}
 
 	if credCode != requestCode {
-		return errors.WrapErrorAction(logutils.ActionValidate, typeTime, nil, errors.New("Invalid verification code"))
+		return errors.WrapErrorAction(logutils.ActionValidate, typeTime, nil, errors.New("Invalid code"))
 	}
 	return nil
 
 }
 
-func (a *emailAuthImpl) resetPassword(credential *model.Credential, password string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
+func (a *emailAuthImpl) resetPassword(credential *model.Credential, resetCode *string, password *string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
 	if len(newPassword) == 0 {
 		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, logutils.StringArgs("new_password"))
 	}
@@ -199,6 +199,9 @@ func (a *emailAuthImpl) resetPassword(credential *model.Credential, password str
 	//check if the password matches with the confirm password one
 	if newPassword != confirmPassword {
 		return nil, errors.New("passwords fields do not match")
+	}
+	if resetCode == nil && password == nil {
+		return nil, errors.New("Missing both resetCode and old password")
 	}
 	credBytes, err := json.Marshal(credential.Value)
 	if err != nil {
@@ -210,10 +213,22 @@ func (a *emailAuthImpl) resetPassword(credential *model.Credential, password str
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
 	}
-	//validate old password
-	err = bcrypt.CompareHashAndPassword([]byte(creds.Password), []byte(password))
-	if err != nil {
-		return nil, errors.WrapErrorAction("bad credentials", "", nil, err)
+	//reset password from client app
+	if password != nil {
+		//validate old password
+		err = bcrypt.CompareHashAndPassword([]byte(creds.Password), []byte(*password))
+		if err != nil {
+			return nil, errors.WrapErrorAction("bad credentials", "", nil, err)
+		}
+		//reset password from link
+	} else {
+		err = a.compareCode(creds.ResetCode, *resetCode, creds.ResetExpiry, l)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, &logutils.FieldArgs{"reset_code": *resetCode}, errors.New("invalid reset code"))
+		}
+		//Update verification data
+		creds.ResetCode = ""
+		creds.ResetExpiry = time.Time{}
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
