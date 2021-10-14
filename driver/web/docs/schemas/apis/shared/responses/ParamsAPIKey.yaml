@@ -1,4 +1,0 @@
-type: object
-properties:
-  anonymous_id:
-    type: string

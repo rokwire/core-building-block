@@ -674,33 +674,16 @@ type ResLoginAccount struct {
 
 // ResLoginResponse defines model for _res_login_Response.
 type ResLoginResponse struct {
-	Account *ResLoginAccount       `json:"account,omitempty"`
-	Message *string                `json:"message,omitempty"`
-	Params  *interface{}           `json:"params"`
-	Token   *ResSharedRokwireToken `json:"token,omitempty"`
+	Account *ResLoginAccount        `json:"account,omitempty"`
+	Message *string                 `json:"message,omitempty"`
+	Params  *map[string]interface{} `json:"params"`
+	Token   *ResSharedRokwireToken  `json:"token,omitempty"`
 }
 
 // ResRefreshResponse defines model for _res_refresh_Response.
 type ResRefreshResponse struct {
-	Params *interface{}           `json:"params"`
-	Token  *ResSharedRokwireToken `json:"token,omitempty"`
-}
-
-// ResSharedParamsAPIKey defines model for _res_shared_ParamsAPIKey.
-type ResSharedParamsAPIKey struct {
-	AnonymousId *string `json:"anonymous_id,omitempty"`
-}
-
-// Auth login response params for unlisted auth_types (None)
-type ResSharedParamsNone map[string]interface{}
-
-// ResSharedParamsOIDC defines model for _res_shared_ParamsOIDC.
-type ResSharedParamsOIDC struct {
-	OidcToken *struct {
-		AccessToken *string `json:"access_token,omitempty"`
-		IdToken     *string `json:"id_token,omitempty"`
-		TokenType   *string `json:"token_type,omitempty"`
-	} `json:"oidc_token,omitempty"`
+	Params *map[string]interface{} `json:"params"`
+	Token  *ResSharedRokwireToken  `json:"token,omitempty"`
 }
 
 // ResSharedRokwireToken defines model for _res_shared_RokwireToken.

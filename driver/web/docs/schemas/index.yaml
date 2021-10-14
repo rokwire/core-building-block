@@ -92,12 +92,6 @@ _req_shared_ProfileNullable:
   $ref: "../schemas/apis/shared/requests/ProfileNullable.yaml"
 _res_shared_RokwireToken:
   $ref: "../schemas/apis/shared/responses/RokwireToken.yaml"
-_res_shared_ParamsOIDC:
-  $ref: "../schemas/apis/shared/responses/ParamsOIDC.yaml"
-_res_shared_ParamsNone:
-  $ref: "../schemas/apis/shared/responses/ParamsNone.yaml"
-_res_shared_ParamsAPIKey:
-  $ref: "../schemas/apis/shared/responses/ParamsAPIKey.yaml"
 
 ### login API
 _req_login_Request:

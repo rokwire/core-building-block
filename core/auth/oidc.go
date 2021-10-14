@@ -60,16 +60,6 @@ type oidcLoginParams struct {
 	RedirectURI  string `json:"redirect_uri" validate:"required"`
 }
 
-type oidcResponseParams struct {
-	OIDCToken oidcTokenResponseParams `json:"oidc_token" bson:"oidc_token"`
-}
-
-type oidcTokenResponseParams struct {
-	IDToken     string `json:"id_token" bson:"id_token"`
-	AccessToken string `json:"access_token" bson:"access_token"`
-	TokenType   string `json:"token_type" bson:"token_type"`
-}
-
 type oidcToken struct {
 	IDToken      string `json:"id_token" validate:"required"`
 	AccessToken  string `json:"access_token" validate:"required"`
@@ -145,7 +135,7 @@ func oidcRefreshParamsFromMap(val map[string]interface{}) (*oidcRefreshParams, e
 	return &oidcRefreshParams{RefreshToken: refreshToken, RedirectURI: redirectURI}, nil
 }
 
-func (a *oidcAuthImpl) externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, interface{}, error) {
+func (a *oidcAuthImpl) externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
 	var loginParams oidcLoginParams
 	err := json.Unmarshal([]byte(params), &loginParams)
 	if err != nil {
@@ -298,7 +288,7 @@ func (a *oidcAuthImpl) checkToken(idToken string, authType model.AuthType, appTy
 	return sub, nil
 }
 
-func (a *oidcAuthImpl) newToken(code string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, params *oidcLoginParams, oidcConfig *oidcAuthConfig, l *logs.Log) (*model.ExternalSystemUser, interface{}, error) {
+func (a *oidcAuthImpl) newToken(code string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, params *oidcLoginParams, oidcConfig *oidcAuthConfig, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
 	bodyData := map[string]string{
 		"code":         code,
 		"grant_type":   "authorization_code",
@@ -329,7 +319,7 @@ func (a *oidcAuthImpl) refreshToken(orgID string, appID string, params *oidcRefr
 }
 
 func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcConfig *oidcAuthConfig, authType model.AuthType, appType model.ApplicationType,
-	appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (*model.ExternalSystemUser, interface{}, error) {
+	appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
 	token, err := a.loadOidcTokenWithParams(bodyData, oidcConfig)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcToken, nil, err)
@@ -393,8 +383,13 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	externalUser := model.ExternalSystemUser{Identifier: identifier, FirstName: firstName, MiddleName: middleName, LastName: lastName,
 		Email: email, Groups: groups, SystemSpecific: systemSpecific}
 
-	params := oidcResponseParams{oidcTokenResponseParams{IDToken: token.IDToken, AccessToken: token.AccessToken, TokenType: token.TokenType}}
+	oidcParams := map[string]interface{}{}
+	oidcParams["id_token"] = token.IDToken
+	oidcParams["access_token"] = token.AccessToken
+	oidcParams["token_type"] = token.TokenType
 
+	params := map[string]interface{}{}
+	params["oidc_token"] = oidcParams
 	return &externalUser, params, nil
 }
 

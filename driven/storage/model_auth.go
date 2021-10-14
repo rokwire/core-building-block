@@ -12,10 +12,10 @@ type loginSession struct {
 
 	DeviceID string `bson:"device_id"`
 
-	IP           string      `bson:"ip"`
-	AccessToken  string      `bson:"access_token"`
-	RefreshToken string      `bson:"refresh_token"`
-	Params       interface{} `bson:"params"`
+	IP           string                 `bson:"ip"`
+	AccessToken  string                 `bson:"access_token"`
+	RefreshToken string                 `bson:"refresh_token"`
+	Params       map[string]interface{} `bson:"params"`
 
 	Expires time.Time `bson:"expires"`
 

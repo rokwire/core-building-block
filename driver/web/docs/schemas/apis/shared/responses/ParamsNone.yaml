@@ -1,3 +1,0 @@
-type: object
-description: Auth login response params for unlisted auth_types (None)
-nullable: true

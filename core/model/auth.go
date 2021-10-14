@@ -66,7 +66,7 @@ type LoginSession struct {
 	IP           string
 	AccessToken  string
 	RefreshToken string
-	Params       interface{} //authType-specific set of parameters passed back to client
+	Params       map[string]interface{} //authType-specific set of parameters passed back to client
 
 	Expires time.Time
 

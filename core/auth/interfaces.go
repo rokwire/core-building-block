@@ -40,7 +40,7 @@ type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 	//externalLogin logins in the external system and provides the authenticated user
-	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, interface{}, error)
+	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 	//userExist checks if the user exists
 	userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error)
 
@@ -51,7 +51,7 @@ type externalAuthType interface {
 type anonymousAuthType interface {
 	//checkCredentials checks the credentials for the provided app and organization
 	//	Returns anonymous profile identifier
-	checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, interface{}, error)
+	checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, map[string]interface{}, error)
 }
 
 //APIs is the interface which defines the APIs provided by the auth package

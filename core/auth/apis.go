@@ -66,7 +66,7 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceID st
 	uid := ""
 
 	var accountAuthType *model.AccountAuthType
-	var responseParams interface{}
+	var responseParams map[string]interface{}
 
 	//get the auth type implementation for the auth type
 	if authType.IsAnonymous {

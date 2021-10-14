@@ -176,11 +176,11 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 }
 
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
-	creds string, params string, regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (*model.AccountAuthType, interface{}, error) {
+	creds string, params string, regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (*model.AccountAuthType, map[string]interface{}, error) {
 	var accountAuthType *model.AccountAuthType
 	var profile *model.Profile
 	var preferences map[string]interface{}
-	var extParams interface{}
+	var extParams map[string]interface{}
 
 	//external auth type
 	authImpl, err := a.getExternalAuthTypeImpl(authType)
@@ -255,7 +255,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	return accountAuthType, extParams, nil
 }
 
-func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (string, interface{}, error) { //auth type
+func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (string, map[string]interface{}, error) { //auth type
 	authImpl, err := a.getAnonymousAuthTypeImpl(authType)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAnonymousAuthType, nil, err)
@@ -403,7 +403,7 @@ func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthT
 
 func (a *Auth) applyLogin(anonymous bool, sub string, uid string, authType model.AuthType, appOrg model.ApplicationOrganization,
 	accountAuthType *model.AccountAuthType, appType model.ApplicationType,
-	IP string, deviceType string, deviceOS *string, deviceID string, params interface{}, l *logs.Log) (*model.LoginSession, error) {
+	IP string, deviceType string, deviceOS *string, deviceID string, params map[string]interface{}, l *logs.Log) (*model.LoginSession, error) {
 
 	//TODO - check what should go in one transaction
 
@@ -427,7 +427,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, uid string, authType model
 
 func (a *Auth) createLoginSession(anonymous bool, sub string, uid string, authType model.AuthType,
 	appOrg model.ApplicationOrganization, accountAuthType *model.AccountAuthType, appType model.ApplicationType,
-	IP string, params interface{}, device model.Device, l *logs.Log) (*model.LoginSession, error) {
+	IP string, params map[string]interface{}, device model.Device, l *logs.Log) (*model.LoginSession, error) {
 
 	//id
 	idUUID, _ := uuid.NewUUID()
