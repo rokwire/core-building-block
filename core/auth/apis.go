@@ -120,12 +120,15 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceID st
 //		refreshToken (string): Refresh token
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
-//		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
-//		Refresh token (string): Refresh token that can be sent to refresh the access token once it expires
-//		Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Refresh(refreshToken string, l *logs.Log) (string, string, interface{}, error) {
+//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
+//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+//			Params (interface{}): authType-specific set of parameters passed back to client
+func (a *Auth) Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, error) {
 	//TODO - work with the logins sessions
-	return "access token value", "refresh token value", nil, nil
+	//loginSession := model.LoginSession{AccessToken: "access token value", RefreshToken: "refresh token value", Params: nil}
+	//return &loginSession, nil
+	return nil, nil
 	/*
 		refresh, err := a.storage.FindRefreshToken(refreshToken)
 		if err != nil {

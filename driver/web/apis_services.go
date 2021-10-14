@@ -122,10 +122,20 @@ func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request, claims *t
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	accessToken, refreshToken, params, err := h.coreAPIs.Auth.Refresh(string(requestData), l)
+	reqToken := string(requestData)
+	loginSession, err := h.coreAPIs.Auth.Refresh(reqToken, l)
 	if err != nil {
 		return l.HttpResponseError("Error refreshing token", err, http.StatusInternalServerError, true)
 	}
+	if loginSession == nil {
+		//if login session is nul then unauthorized
+		l.Infof("trying to refresh - %s", reqToken)
+		return l.HttpResponseError(http.StatusText(http.StatusUnauthorized), nil, http.StatusUnauthorized, true)
+	}
+
+	accessToken := loginSession.AccessToken
+	refreshToken := loginSession.RefreshToken
+	params := loginSession.Params
 
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}

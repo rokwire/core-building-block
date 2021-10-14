@@ -93,10 +93,11 @@ type APIs interface {
 	//		refreshToken (string): Refresh token
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
-	//		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
-	//		Refresh token (string): Refresh token that can be sent to refresh the access token once it expires
-	//		Params (interface{}): authType-specific set of parameters passed back to client
-	Refresh(refreshToken string, l *logs.Log) (string, string, interface{}, error)
+	//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
+	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+	//			Params (interface{}): authType-specific set of parameters passed back to client
+	Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, error)
 
 	//Verify checks the verification code in the credentials collection
 	Verify(id string, verification string, l *logs.Log) error
