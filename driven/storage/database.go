@@ -261,6 +261,12 @@ func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
 
 func (m *database) applyLoginsSessionsChecks(refreshTokens *collectionWrapper) error {
 	m.logger.Info("apply logins sessions checks.....")
+
+	err := refreshTokens.AddIndex(bson.D{primitive.E{Key: "refresh_token", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
 	//TODO - indexes
 	/*
 		err := refreshTokens.AddIndex(bson.D{primitive.E{Key: "current_token", Value: 1}}, false)
