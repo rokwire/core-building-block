@@ -273,7 +273,11 @@ func (a *Auth) AddMFA(accountID string, accountAuthTypeID string, mfaType string
 			return nil, errors.WrapErrorAction(logutils.ActionEncode, "TOTP image", nil, err)
 		}
 		qrCode := buf.String()
+
 		accountAuthType, err := a.storage.FindAccountAuthType(accountID, accountAuthTypeID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+		}
 		if accountAuthType.ActiveMFA == nil {
 			accountAuthType.ActiveMFA = make(map[string]interface{})
 		}
@@ -288,6 +292,26 @@ func (a *Auth) AddMFA(accountID string, accountAuthTypeID string, mfaType string
 	default:
 		return nil, nil
 	}
+}
+
+//RemoveMFA adds a form of multi factor authentication to an account
+//	Input:
+//		accountID (string): Account ID to add MFA
+//		accountAuthTypeID (string): Account auth type identifier to add MFA
+//		mfaType (string): Type of MFA to be added
+func (a *Auth) RemoveMFA(accountID string, accountAuthTypeID string, mfaType string) error {
+	accountAuthType, err := a.storage.FindAccountAuthType(accountID, accountAuthTypeID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+	}
+	delete(accountAuthType.ActiveMFA, "totp")
+
+	err = a.storage.UpdateAccountAuthType(*accountAuthType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
+	}
+
+	return nil
 }
 
 //Verify checks the verification code generated on signup

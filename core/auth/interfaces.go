@@ -115,6 +115,13 @@ type APIs interface {
 	//		TOTP QR Code (*string): QR code user needs to enroll in TOTP MFA (if applicable)
 	AddMFA(accountID string, accountAuthTypeID string, mfaType string) (*string, error)
 
+	//RemoveMFA removes a form of multi factor authentication tfrom an account
+	//	Input:
+	//		accountID (string): Account ID to add MFA
+	//		accountAuthTypeID (string): Account auth type identifier to add MFA
+	//		mfaType (string): Type of MFA to be added
+	RemoveMFA(accountID string, accountAuthTypeID string, mfaType string) error
+
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
 	//	return a scoped access token which reflects this change.
