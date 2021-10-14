@@ -29,7 +29,7 @@ type authType interface {
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
 	resetPassword(credential *model.Credential, resetCode *string, password *string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error)
-
+	// generates a reset password link with code and expiry and sends it to given identifier
 	forgotPassword(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error)
 
 	//userExist checks if the user exists for application and organizations
@@ -102,9 +102,11 @@ type APIs interface {
 	//Verify checks the verification code in the credentials collection
 	Verify(id string, verification string, l *logs.Log) error
 
-	//ResetPasswordClient updates the credential object with the new password
+	//ResetPasswordClient updates the credential object with the new password from client app
 	ResetPasswordClient(accountID string, authTypeID string, identifier string, password string, newPassword string, confirmPassword string, l *logs.Log) error
+	//ResetPasswordClient updates the credential object with the new password from client app
 	ResetPasswordLink(credsID string, authTypeID string, identifier string, resetCode string, newPassword string, confirmPassword string, l *logs.Log) error
+	// ForgotPassword generates a reset link and sends to the given identifier
 	ForgotPassword(authenticationType string, appTypeIdentifier string, orgID string, identifier string, l *logs.Log) error
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers

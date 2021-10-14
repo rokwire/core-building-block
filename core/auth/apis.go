@@ -300,7 +300,7 @@ func (a *Auth) ResetPasswordClient(accountID string, authTypeID string, identifi
 	//Determine the auth type for resetPassword
 	authType := accountAuthType.AuthType
 	if authType.IsExternal {
-		return errors.WrapErrorAction("invalid auth type for reset password", model.TypeAuthType, nil, err)
+		return errors.WrapErrorAction("invalid auth type for reset password client", model.TypeAuthType, nil, err)
 	}
 
 	authImpl, err := a.getAuthTypeImpl(authType)
@@ -336,7 +336,7 @@ func (a *Auth) ResetPasswordLink(credsID string, authTypeID string, identifier s
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
 	}
 	if authType.IsExternal {
-		return errors.WrapErrorAction("invalid auth type for verify", model.TypeAuthType, nil, err)
+		return errors.WrapErrorAction("invalid auth type for reset password link", model.TypeAuthType, nil, err)
 	}
 
 	authImpl, err := a.getAuthTypeImpl(*authType)
