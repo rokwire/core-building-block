@@ -4,12 +4,12 @@ import (
 	"core-building-block/core"
 	"net/http"
 
-	"github.com/rokmetro/auth-library/authorization"
-	"github.com/rokmetro/auth-library/authservice"
-	"github.com/rokmetro/auth-library/tokenauth"
-	"github.com/rokmetro/logging-library/errors"
-	"github.com/rokmetro/logging-library/logs"
-	"github.com/rokmetro/logging-library/logutils"
+	"github.com/rokwire/core-auth-library-go/authorization"
+	"github.com/rokwire/core-auth-library-go/authservice"
+	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/logutils"
 )
 
 const (
@@ -158,7 +158,7 @@ func (auth *AdminAuth) check(req *http.Request) (int, *tokenauth.Claims, error) 
 }
 
 func newAdminAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) (*AdminAuth, error) {
-	adminPermissionAuth := authorization.NewCasbinAuthorization("driver/web/permission_authorization_policy_admin_auth.csv")
+	adminPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/permission_authorization_policy_admin_auth.csv")
 	adminTokenAuth, err := tokenauth.NewTokenAuth(true, authService, adminPermissionAuth, nil)
 
 	if err != nil {

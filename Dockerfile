@@ -22,6 +22,9 @@ COPY --from=builder /core-app/driver/web/authorization_policy.csv /driver/web/au
 COPY --from=builder /core-app/driver/web/scope_authorization_policy_services_auth.csv /driver/web/scope_authorization_policy_services_auth.csv
 COPY --from=builder /core-app/driver/web/permission_authorization_policy_admin_auth.csv /driver/web/permission_authorization_policy_admin_auth.csv
 
+COPY --from=builder /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_scope.conf /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_scope.conf
+COPY --from=builder /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_string.conf /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_string.conf
+
 COPY --from=builder /etc/passwd /etc/passwd
 
 #we need timezone database

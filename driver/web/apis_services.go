@@ -8,12 +8,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"time"
 
-	"github.com/google/uuid"
-	"github.com/rokmetro/auth-library/tokenauth"
-	"github.com/rokmetro/logging-library/logs"
-	"github.com/rokmetro/logging-library/logutils"
+	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/logutils"
 )
 
 //ServicesApisHandler handles the rest APIs implementation
@@ -51,11 +49,6 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 
 	//profile ////
 	profile := profileFromDefNullable(requestData.Profile)
-	//generate ID
-	profileID, _ := uuid.NewUUID()
-	profile.ID = profileID.String()
-	//set date created
-	profile.DateCreated = time.Now()
 
 	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, profile, preferences, l)
 	if err != nil {
