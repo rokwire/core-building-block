@@ -157,7 +157,7 @@ func (s *administrationImpl) AdmCreateApplicationRole(name string, appID string,
 	return s.app.admCreateApplicationRole(name, appID, description, permissionNames)
 }
 
-func (s *administrationImpl) AdmGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions string) error {
+func (s *administrationImpl) AdmGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
 	return s.app.admGrantAccountPermissions(accountID, permissionNames, assignerPermissions)
 }
 

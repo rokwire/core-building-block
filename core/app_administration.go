@@ -2,10 +2,10 @@ package core
 
 import (
 	"core-building-block/core/model"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rokmetro/auth-library/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -336,8 +336,8 @@ func (app *application) admCreateApplicationRole(name string, appID string, desc
 	return &role, nil
 }
 
-func (app *application) admGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions string) error {
-	if assignerPermissions == "" {
+func (app *application) admGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
+	if assignerPermissions == nil {
 		return errors.New("no permissions from admin assigner")
 	}
 
@@ -354,7 +354,7 @@ func (app *application) admGrantAccountPermissions(accountID string, permissionN
 	for _, permission := range permissions {
 		authorizedAssigners := permission.Assigners
 		for _, authorizedAssigner := range authorizedAssigners {
-			if strings.Contains(assignerPermissions, authorizedAssigner) {
+			if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
 				authorizedPermissions = append(authorizedPermissions, permission)
 			}
 		}

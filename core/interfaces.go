@@ -42,7 +42,7 @@ type Administration interface {
 
 	AdmCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error)
 
-	AdmGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions string) error
+	AdmGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
 	AdmGrantAccountRoles(accountID string, appID string, roleIDs []string) error
 }
 
