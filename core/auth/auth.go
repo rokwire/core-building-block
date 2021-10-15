@@ -462,11 +462,15 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 
 	///profile and preferences
 	//get profile BB data
-	gotProfile, gotPreferences, err := a.getProfileBBData(authType, identifier, l)
+	/*gotProfile, gotPreferences, err := a.getProfileBBData(authType, identifier, l)
 	if err != nil {
 		args := &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}
 		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "error getting profile BB data", args, err)
-	}
+	} */
+	//TODO - revert
+	var gotProfile *model.Profile
+	var gotPreferences map[string]interface{}
+
 	readyProfile := profile
 	//if there is profile bb data
 	if gotProfile != nil {
