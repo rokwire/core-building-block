@@ -10,7 +10,9 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/services/login/request/Request.yaml"
+          anyOf:
+            - $ref: "../../../schemas/apis/services/login/request/Request.yaml"
+            - $ref: "../../../schemas/apis/services/login/request/MFAVerify.yaml"
         examples:
           email-sign_in:
             summary: Email - sign in
@@ -21,9 +23,7 @@ post:
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                 "creds": {
                   "email": "test@test.com", 
-                  "password": "test12345",
-                  "mfa_code": "123456",
-                  "mfa_type": "totp"
+                  "password": "test12345"
                 }
               }
           email-sign_up:

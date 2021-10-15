@@ -1,9 +1,34 @@
 get:
   tags:
   - Services
-  summary: Enroll in MFA
+  summary: Get account MFA types
   description: |
-    Add MFA to an account
+    Get MFA types set up for an account
+
+    **Auth:** Requires user auth token
+  security:
+    - bearerAuth: []
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "../../../schemas/apis/shared/responses/Mfa.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
+post:
+  tags:
+  - Services
+  summary: Enroll in MFA type
+  description: |
+    Add MFA type to an account
 
     **Auth:** Requires user auth token
   security:

@@ -246,19 +246,32 @@ func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, 
 	return loginURL, params, nil
 }
 
-//AddMFA adds a form of multi factor authentication to an account
+//GetMFATypes gets all MFA types set up for an account
+//	Input:
+//		accountID (string): Account ID to find MFA types
+//	Returns:
+//		MFA Types ([]model.MFAType): MFA information for all enrolled types
+func (a *Auth) GetMFATypes(accountID string) ([]model.MFAType, error) {
+	mfa, err := a.storage.FindMFATypes(accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, nil, err)
+	}
+
+	return mfa, nil
+}
+
+//AddMFAType adds a form of MFA to an account
 //	Input:
 //		accountID (string): Account ID to add MFA
-//		accountAuthTypeID (string): Account auth type identifier to add MFA
 //		mfaType (string): Type of MFA to be added
 //	Returns:
-//		TOTP QR Code (*string): QR code user needs to enroll in TOTP MFA (if applicable)
-func (a *Auth) AddMFA(accountID string, accountAuthTypeID string, mfaType string) (*string, error) {
+//		MFA Type (*model.MFAType): MFA information for the specified type
+func (a *Auth) AddMFAType(accountID string, mfaType string) (*model.MFAType, error) {
 	switch mfaType {
 	case "totp":
 		totpOpts := totp.GenerateOpts{
 			Issuer:      a.host,
-			AccountName: accountAuthTypeID,
+			AccountName: accountID, //TODO: should use some more readable string instead (email, phone, username, etc.)
 		}
 		key, err := totp.Generate(totpOpts)
 		if err != nil {
@@ -276,53 +289,32 @@ func (a *Auth) AddMFA(accountID string, accountAuthTypeID string, mfaType string
 		}
 		qrCode := buf.String()
 
-		mfa, err := a.storage.FindMFA(accountID, mfaType)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFA, nil, err)
-		}
-
 		now := time.Now().UTC()
-		if mfa == nil {
-			mfaID, _ := uuid.NewUUID()
-			params := map[string]interface{}{
-				"secret": key.Secret(),
-			}
-			newMfa := model.MFA{ID: mfaID.String(), Type: mfaType, AccountID: accountID, Verified: false, Params: params, DateCreated: now}
-			err := a.storage.InsertMFA(&newMfa)
-			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeMFA, nil, err)
-			}
-		} else {
-
+		mfaID, _ := uuid.NewUUID()
+		params := map[string]interface{}{
+			"secret": key.Secret(),
 		}
-		accountAuthType.ActiveMFA["totp"] = "unverified:" + key.Secret()
-
-		err = a.storage.UpdateAccountAuthType(*accountAuthType)
+		newMfa := model.MFAType{ID: mfaID.String(), Type: mfaType, AccountID: accountID, Verified: false, Params: params, DateCreated: now}
+		err = a.storage.InsertMFAType(&newMfa)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
+			return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeMFAType, nil, err)
 		}
 
-		return &qrCode, nil
+		newMfa.Params["qr_code"] = qrCode
+		return &newMfa, nil
 	default:
 		return nil, nil
 	}
 }
 
-//RemoveMFA adds a form of multi factor authentication to an account
+//RemoveMFAType removes a form of MFA from an account
 //	Input:
-//		accountID (string): Account ID to add MFA
-//		accountAuthTypeID (string): Account auth type identifier to add MFA
-//		mfaType (string): Type of MFA to be added
-func (a *Auth) RemoveMFA(accountID string, accountAuthTypeID string, mfaType string) error {
-	accountAuthType, err := a.storage.FindAccountAuthType(accountID, accountAuthTypeID)
+//		accountID (string): Account ID to remove MFA
+//		mfaType (string): Type of MFA to remove
+func (a *Auth) RemoveMFAType(accountID string, mfaType string) error {
+	err := a.storage.DeleteMFAType(accountID, mfaType)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
-	}
-	delete(accountAuthType.ActiveMFA, "totp")
-
-	err = a.storage.UpdateAccountAuthType(*accountAuthType)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, nil, err)
 	}
 
 	return nil

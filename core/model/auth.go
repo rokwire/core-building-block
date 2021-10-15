@@ -65,6 +65,7 @@ type AuthType struct {
 	Description string                 `bson:"description"`
 	IsExternal  bool                   `bson:"is_external"`  //says if the users source is external - identity providers
 	IsAnonymous bool                   `bson:"is_anonymous"` //says if the auth type results in anonymous users
+	IgnoreMFA   bool                   `bson:"ignore_mfa"`   //says if login using this auth type may bypass account MFA
 	Params      map[string]interface{} `bson:"params"`
 }
 

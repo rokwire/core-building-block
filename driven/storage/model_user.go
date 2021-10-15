@@ -35,7 +35,6 @@ type accountAuthType struct {
 	Params       map[string]interface{} `bson:"params"`
 	CredentialID *string                `bson:"credential_id"`
 	Active       bool                   `bson:"active"`
-	ActiveMFA    map[string]interface{} `bson:"active_mfa"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -104,15 +103,14 @@ type credential struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-type mfa struct {
-	ID string `bson:"_id"`
+// type mfaType struct {
+// 	ID string `bson:"_id"`
 
-	Type      string `bson:"auth_type_id"`
-	AccountID string `bson:"account_id"`
-	// AccountAuthTypeIdentifiers []string               `bson:"account_auth_types_identifiers"`
-	Verified bool                   `bson:"verified"`
-	Params   map[string]interface{} `bson:"params"`
+// 	Type      string                 `bson:"type"`
+// 	AccountID string                 `bson:"account_id"`
+// 	Verified  bool                   `bson:"verified"`
+// 	Params    map[string]interface{} `bson:"params"`
 
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
+// 	DateCreated time.Time  `bson:"date_created"`
+// 	DateUpdated *time.Time `bson:"date_updated"`
+// }

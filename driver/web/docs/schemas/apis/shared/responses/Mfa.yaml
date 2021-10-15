@@ -1,6 +1,10 @@
 type: object
 properties:
-  totp_key:
-    description: The user's TOTP key
+  type:
     type: string
-    nullable: true
+  account_id:
+    type: string
+  verified:
+    type: boolean
+  params:
+    type: object

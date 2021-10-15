@@ -209,36 +209,52 @@ func (h ServicesApisHandler) deleteAccount(l *logs.Log, r *http.Request, claims 
 	return l.HttpResponseSuccess()
 }
 
-func (h ServicesApisHandler) addMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h ServicesApisHandler) getMFATypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	mfaDataList, err := h.coreAPIs.Auth.GetMFATypes(claims.Subject)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeMFAType, nil, err, http.StatusInternalServerError, true)
+	}
+
+	mfaResp := mfaDataListToDef(mfaDataList)
+
+	data, err := json.Marshal(mfaResp)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeMFAType, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h ServicesApisHandler) addMFAType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	mfaType := r.URL.Query().Get("type")
 	if mfaType == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("type"), nil, http.StatusBadRequest, false)
 	}
 
-	mfaData, err := h.coreAPIs.Auth.AddMFA(claims.Subject, claims.UID, mfaType)
+	mfaData, err := h.coreAPIs.Auth.AddMFAType(claims.Subject, mfaType)
 	if err != nil {
-		return l.HttpResponseErrorAction("adding", "mfa type", nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionInsert, model.TypeMFAType, nil, err, http.StatusInternalServerError, true)
 	}
 
 	mfaResp := mfaDataToDef(mfaData)
 
 	data, err := json.Marshal(mfaResp)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, "mfa data", nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeMFAType, nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h ServicesApisHandler) removeMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h ServicesApisHandler) removeMFAType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	mfaType := r.URL.Query().Get("type")
 	if mfaType == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("type"), nil, http.StatusBadRequest, false)
 	}
 
-	err := h.coreAPIs.Auth.RemoveMFA(claims.Subject, claims.UID, mfaType)
+	err := h.coreAPIs.Auth.RemoveMFAType(claims.Subject, mfaType)
 	if err != nil {
-		return l.HttpResponseErrorAction("removing", "mfa type", nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeMFAType, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()

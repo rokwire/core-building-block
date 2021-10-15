@@ -12,6 +12,3 @@ properties:
     nullable: true
   active:
     type: boolean
-  active_mfa:
-    type: object
-    nullable: true

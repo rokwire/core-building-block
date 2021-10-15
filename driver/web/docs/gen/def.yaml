@@ -37,7 +37,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_login_Request'
+              anyOf:
+                - $ref: '#/components/schemas/_req_login_Request'
+                - $ref: '#/components/schemas/_req_login_MFAVerify'
             examples:
               email-sign_in:
                 summary: Email - sign in
@@ -48,9 +50,7 @@ paths:
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "creds": {
                       "email": "test@test.com", 
-                      "password": "test12345",
-                      "mfa_code": "123456",
-                      "mfa_type": "totp"
+                      "password": "test12345"
                     }
                   }
               email-sign_up:
@@ -388,9 +388,34 @@ paths:
     get:
       tags:
         - Services
-      summary: Enroll in MFA
+      summary: Get account MFA types
       description: |
-        Add MFA to an account
+        Get MFA types set up for an account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/_res_shared_Mfa'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      tags:
+        - Services
+      summary: Enroll in MFA type
+      description: |
+        Add MFA type to an account
 
         **Auth:** Requires user auth token
       security:
@@ -1610,6 +1635,8 @@ components:
           type: string
         is_external:
           type: boolean
+        ignore_mfa:
+          type: boolean
         params:
           type: object
           additionalProperties: true
@@ -1873,9 +1900,6 @@ components:
           nullable: true
         active:
           type: boolean
-        active_mfa:
-          type: object
-          nullable: true
     Device:
       type: object
       properties:
@@ -2036,10 +2060,14 @@ components:
     _res_shared_Mfa:
       type: object
       properties:
-        totp_key:
-          description: The user's TOTP key
+        type:
           type: string
-          nullable: true
+        account_id:
+          type: string
+        verified:
+          type: boolean
+        params:
+          type: object
     _req_login_Request:
       required:
         - auth_type
@@ -2076,6 +2104,23 @@ components:
         preferences:
           type: object
           nullable: true
+    _req_login_MFAVerify:
+      required:
+        - mfa_type
+        - mfa_code
+        - login_state
+      type: object
+      properties:
+        mfa_type:
+          type: string
+          enum:
+            - email
+            - phone
+            - totp
+        mfa_code:
+          type: string
+        login_state:
+          type: string
     _req_login_CredsEmail:
       required:
         - email

@@ -106,21 +106,26 @@ type APIs interface {
 	//		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
 	GetLoginURL(authType string, appTypeIdentifier string, orgID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 
-	//AddMFA adds a form of multi factor authentication to an account
+	//GetMFATypes gets all MFA types set up for an account
+	//	Input:
+	//		accountID (string): Account ID to find MFA types
+	//	Returns:
+	//		MFA Types ([]model.MFAType): MFA information for all enrolled types
+	GetMFATypes(accountID string) ([]model.MFAType, error)
+
+	//AddMFAType adds a form of MFA to an account
 	//	Input:
 	//		accountID (string): Account ID to add MFA
-	//		accountAuthTypeID (string): Account auth type identifier to add MFA
 	//		mfaType (string): Type of MFA to be added
 	//	Returns:
-	//		TOTP QR Code (*string): QR code user needs to enroll in TOTP MFA (if applicable)
-	AddMFA(accountID string, accountAuthTypeID string, mfaType string) (*string, error)
+	//		MFA Type (*model.MFAType): MFA information for the specified type
+	AddMFAType(accountID string, mfaType string) (*model.MFAType, error)
 
-	//RemoveMFA removes a form of multi factor authentication tfrom an account
+	//RemoveMFAType removes a form of MFA from an account
 	//	Input:
-	//		accountID (string): Account ID to add MFA
-	//		accountAuthTypeID (string): Account auth type identifier to add MFA
-	//		mfaType (string): Type of MFA to be added
-	RemoveMFA(accountID string, accountAuthTypeID string, mfaType string) error
+	//		accountID (string): Account ID to remove MFA
+	//		mfaType (string): Type of MFA to remove
+	RemoveMFAType(accountID string, mfaType string) error
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
@@ -195,6 +200,11 @@ type Storage interface {
 	FindCredential(ID string) (*model.Credential, error)
 	UpdateCredential(creds *model.Credential) error
 	InsertCredential(creds *model.Credential, context mongo.SessionContext) error
+
+	//MFA
+	FindMFATypes(accountID string) ([]model.MFAType, error)
+	InsertMFAType(mfa *model.MFAType) error
+	DeleteMFAType(accountID string, mfaType string) error
 
 	//RefreshTokens
 	FindRefreshToken(token string) (*model.AuthRefresh, error)

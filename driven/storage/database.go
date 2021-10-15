@@ -270,7 +270,7 @@ func (m *database) applyMFAChecks(mfa *collectionWrapper) error {
 	m.logger.Info("apply mfa checks.....")
 
 	// Add account_id index
-	err := mfa.AddIndex(bson.D{primitive.E{Key: "account_id", Value: 1}}, true)
+	err := mfa.AddIndex(bson.D{primitive.E{Key: "account_id", Value: 1}, primitive.E{Key: "type", Value: 1}}, true)
 	if err != nil {
 		return err
 	}

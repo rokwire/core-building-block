@@ -100,6 +100,8 @@ _res_shared_Mfa:
 ### login API
 _req_login_Request:
   $ref: "./apis/services/login/request/Request.yaml"
+_req_login_MFAVerify:
+  $ref: "./apis/services/login/request/MFAVerify.yaml"
 _req_login_CredsEmail:
   $ref: "./apis/services/login/request/CredsEmail.yaml"
 _req_login_CredsTwilioPhone:

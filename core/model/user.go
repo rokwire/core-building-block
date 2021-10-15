@@ -18,8 +18,8 @@ const (
 	TypeAccountPermissions logutils.MessageDataType = "account permissions"
 	//TypeAccountRoles account roles
 	TypeAccountRoles logutils.MessageDataType = "account roles"
-	//TypeMFA mfa
-	TypeMFA logutils.MessageDataType = "mfa"
+	//TypeMFAType mfa type
+	TypeMFAType logutils.MessageDataType = "mfa type"
 	//TypeProfile profile
 	TypeProfile logutils.MessageDataType = "profile"
 	//TypeDevice device
@@ -123,7 +123,6 @@ type AccountAuthType struct {
 	Params     map[string]interface{}
 
 	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
-	MFA        *MFA        //nil if user has not enrolled in MFA
 
 	Active bool
 
@@ -144,18 +143,17 @@ type Credential struct {
 	DateUpdated *time.Time
 }
 
-//MFA represents a MFA type for account auth type/s
-type MFA struct {
-	ID string
+//MFAType represents a MFA type used by an account
+type MFAType struct {
+	ID string `bson:"_id"`
 
-	Type      string
-	AccountID string
-	// AccountAuthTypeIdentifiers []string //one mfa type can be used for more than one account auth type
-	Verified bool
-	Params   map[string]interface{} //mfa type params
+	Type      string                 `bson:"type"`
+	AccountID string                 `bson:"account_id"`
+	Verified  bool                   `bson:"verified"`
+	Params    map[string]interface{} `bson:"params"` //mfa type params
 
-	DateCreated time.Time
-	DateUpdated *time.Time
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 //Profile represents profile entity

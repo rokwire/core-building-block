@@ -1,0 +1,16 @@
+required:
+  - mfa_type
+  - mfa_code
+  - login_state
+type: object
+properties:
+  mfa_type:
+    type: string
+    enum:
+      - email
+      - phone
+      - totp
+  mfa_code:
+    type: string
+  login_state:
+    type: string

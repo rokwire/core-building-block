@@ -71,6 +71,15 @@ const (
 	ReqLoginUrlRequestAuthTypeIllinoisOidc ReqLoginUrlRequestAuthType = "illinois_oidc"
 )
 
+// Defines values for ReqLoginMFAVerifyMfaType.
+const (
+	ReqLoginMFAVerifyMfaTypeEmail ReqLoginMFAVerifyMfaType = "email"
+
+	ReqLoginMFAVerifyMfaTypePhone ReqLoginMFAVerifyMfaType = "phone"
+
+	ReqLoginMFAVerifyMfaTypeTotp ReqLoginMFAVerifyMfaType = "totp"
+)
+
 // Defines values for ReqLoginRequestAuthType.
 const (
 	ReqLoginRequestAuthTypeApiKey ReqLoginRequestAuthType = "api_key"
@@ -152,7 +161,6 @@ type AccountAuthType struct {
 // AccountAuthTypeFields defines model for AccountAuthTypeFields.
 type AccountAuthTypeFields struct {
 	Active     *bool                         `json:"active,omitempty"`
-	ActiveMfa  *map[string]interface{}       `json:"active_mfa"`
 	Code       *string                       `json:"code,omitempty"`
 	Id         *string                       `json:"id,omitempty"`
 	Identifier *string                       `json:"identifier,omitempty"`
@@ -260,6 +268,7 @@ type AuthTypeFields struct {
 	Code        *string                `json:"code,omitempty"`
 	Description *string                `json:"description,omitempty"`
 	Id          *string                `json:"id,omitempty"`
+	IgnoreMfa   *bool                  `json:"ignore_mfa,omitempty"`
 	IsExternal  *bool                  `json:"is_external,omitempty"`
 	Params      *AuthTypeFields_Params `json:"params,omitempty"`
 }
@@ -527,6 +536,16 @@ type ReqLoginCredsTwilioPhone struct {
 	Phone string  `json:"phone"`
 }
 
+// ReqLoginMFAVerify defines model for _req_login_MFAVerify.
+type ReqLoginMFAVerify struct {
+	LoginState string                   `json:"login_state"`
+	MfaCode    string                   `json:"mfa_code"`
+	MfaType    ReqLoginMFAVerifyMfaType `json:"mfa_type"`
+}
+
+// ReqLoginMFAVerifyMfaType defines model for ReqLoginMFAVerify.MfaType.
+type ReqLoginMFAVerifyMfaType string
+
 // Auth login params for auth_type="email"
 type ReqLoginParamsEmail struct {
 
@@ -667,9 +686,10 @@ type ResRefreshResponse struct {
 
 // ResSharedMfa defines model for _res_shared_Mfa.
 type ResSharedMfa struct {
-
-	// The user's TOTP key
-	TotpKey *string `json:"totp_key"`
+	AccountId *string                 `json:"account_id,omitempty"`
+	Params    *map[string]interface{} `json:"params,omitempty"`
+	Type      *string                 `json:"type,omitempty"`
+	Verified  *bool                   `json:"verified,omitempty"`
 }
 
 // Auth login response params for unlisted auth_types (None)
@@ -787,8 +807,8 @@ type DeleteServicesAccountMfaParams struct {
 	Type string `json:"type"`
 }
 
-// GetServicesAccountMfaParams defines parameters for GetServicesAccountMfa.
-type GetServicesAccountMfaParams struct {
+// PostServicesAccountMfaParams defines parameters for PostServicesAccountMfa.
+type PostServicesAccountMfaParams struct {
 
 	// MFA type
 	Type string `json:"type"`
@@ -804,7 +824,7 @@ type PutServicesAccountProfileJSONBody ReqSharedProfile
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
 // PostServicesAuthLoginJSONBody defines parameters for PostServicesAuthLogin.
-type PostServicesAuthLoginJSONBody ReqLoginRequest
+type PostServicesAuthLoginJSONBody interface{}
 
 // PostServicesAuthLoginUrlJSONBody defines parameters for PostServicesAuthLoginUrl.
 type PostServicesAuthLoginUrlJSONBody ReqLoginUrlRequest

@@ -38,7 +38,7 @@ func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthTypeFields 
 	params := &Def.AccountAuthTypeFields_Params{}
 	params.AdditionalProperties = item.Params
 
-	return Def.AccountAuthTypeFields{Id: &item.ID, Code: &item.AuthType.Code, Identifier: &item.Identifier, Active: &item.Active, ActiveMfa: &item.ActiveMFA, Params: params}
+	return Def.AccountAuthTypeFields{Id: &item.ID, Code: &item.AuthType.Code, Identifier: &item.Identifier, Active: &item.Active, Params: params}
 }
 
 func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeFields {
@@ -100,8 +100,21 @@ func profileFromDef(item *Def.ReqSharedProfile) model.Profile {
 		State: state, Country: country}
 }
 
-func mfaDataToDef(item *string) *Def.ResSharedMfa {
-	return &Def.ResSharedMfa{TotpKey: item}
+func mfaDataListToDef(items []model.MFAType) []Def.ResSharedMfa {
+	out := make([]Def.ResSharedMfa, len(items))
+	for i, item := range items {
+		defItem := mfaDataToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.ResSharedMfa{}
+		}
+	}
+	return out
+}
+
+func mfaDataToDef(item *model.MFAType) *Def.ResSharedMfa {
+	return &Def.ResSharedMfa{Type: &item.Type, AccountId: &item.AccountID, Verified: &item.Verified, Params: &item.Params}
 }
 
 func profileToDef(item *model.Profile) *Def.ProfileFields {

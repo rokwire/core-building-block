@@ -666,6 +666,44 @@ func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
 	return nil
 }
 
+//FindMFATypes finds all MFA types for an account
+func (sa *Adapter) FindMFATypes(accountID string) ([]model.MFAType, error) {
+	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
+
+	var mfaList []model.MFAType
+	err := sa.db.mfa.Find(filter, &mfaList, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, nil, err)
+	}
+
+	return mfaList, nil
+}
+
+//InsertMFAType inserts a MFA type
+func (sa *Adapter) InsertMFAType(mfa *model.MFAType) error {
+	_, err := sa.db.mfa.InsertOne(mfa)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeMFAType, nil, err)
+	}
+
+	return nil
+}
+
+//DeleteMFAType deletes a MFA type
+func (sa *Adapter) DeleteMFAType(accountID string, mfaType string) error {
+	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}, primitive.E{Key: "type", Value: mfaType}}
+
+	res, err := sa.db.mfa.DeleteOne(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, nil, err)
+	}
+	if res.DeletedCount != 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeMFAType, logutils.StringArgs("unexpected deleted count"))
+	}
+
+	return nil
+}
+
 // //FindCredentialsByID finds a set of credentials by ID
 // func (sa *Adapter) FindCredentialsByID(ID string) (*model.AuthCreds, error) {
 // 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
