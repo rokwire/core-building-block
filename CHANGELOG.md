@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.5.0] - 2021-10-15
+### Fixed
+- Permission authorization failing on all endpoints in Docker[#239](https://github.com/rokwire/core-building-block/issues/239)
 ### Changed
 - Switch to ROKWIRE open source libraries [#232](https://github.com/rokwire/core-building-block/issues/232)
 
@@ -98,7 +102,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/rokwire/core-building-block/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/rokwire/core-building-block/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/rokwire/core-building-block/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/rokwire/core-building-block/compare/v1.1.0...v1.2.0
