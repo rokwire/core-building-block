@@ -3,12 +3,13 @@ package storage
 import "core-building-block/core/model"
 
 //LoginSession
-func loginSessionFromStorage(item loginSession, account *model.Account, app model.Application, org model.Organization) model.LoginSession {
+func loginSessionFromStorage(item loginSession, authType model.AuthType, account *model.Account,
+	app model.Application, org model.Organization) model.LoginSession {
 	id := item.ID
 
 	appOrg := model.ApplicationOrganization{Application: app, Organization: org}
 
-	authType := model.AuthType{ID: item.AuthTypeID, Code: item.AuthTypeCode}
+	appType := model.ApplicationType{ID: item.AppTypeID, Identifier: item.AppTypeIdentifier}
 
 	anonymous := item.Anonymous
 	identifier := item.Identifier
@@ -28,9 +29,9 @@ func loginSessionFromStorage(item loginSession, account *model.Account, app mode
 	dateUpdated := item.DateUpdated
 	dateCreated := item.DateCreated
 
-	return model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType, Anonymous: anonymous,
-		Identifier: identifier, AccountAuthType: accountAuthType, Device: device, IP: IP,
-		AccessToken: accessToken, RefreshToken: refreshToken, Params: params,
+	return model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType, AppType: appType,
+		Anonymous: anonymous, Identifier: identifier, AccountAuthType: accountAuthType,
+		Device: device, IP: IP, AccessToken: accessToken, RefreshToken: refreshToken, Params: params,
 		Expires: expires, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
 
@@ -40,8 +41,10 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 	appID := item.AppOrg.Application.ID
 	orgID := item.AppOrg.Organization.ID
 
-	authTypeID := item.AuthType.ID
 	authTypeCode := item.AuthType.Code
+
+	appTypeID := item.AppType.ID
+	appTypeIdentifier := item.AppType.Identifier
 
 	anonymous := item.Anonymous
 	identifier := item.Identifier
@@ -60,9 +63,10 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 	dateUpdated := item.DateUpdated
 	dateCreated := item.DateCreated
 
-	return &loginSession{ID: id, AppID: appID, OrgID: orgID, AuthTypeID: authTypeID,
-		AuthTypeCode: authTypeCode, Anonymous: anonymous, Identifier: identifier,
-		AccountAuthTypeID: accountAuthTypeID, AccountAuthTypeIdentifier: accountAuthTypeIdentifier, DeviceID: deviceID,
-		IP: IP, AccessToken: accessToken, RefreshToken: refreshToken, Params: params, Expires: expires,
+	return &loginSession{ID: id, AppID: appID, OrgID: orgID, AuthTypeCode: authTypeCode,
+		AppTypeID: appTypeID, AppTypeIdentifier: appTypeIdentifier, Anonymous: anonymous,
+		Identifier: identifier, AccountAuthTypeID: accountAuthTypeID,
+		AccountAuthTypeIdentifier: accountAuthTypeIdentifier, DeviceID: deviceID, IP: IP,
+		AccessToken: accessToken, RefreshToken: refreshToken, Params: params, Expires: expires,
 		DateUpdated: dateUpdated, DateCreated: dateCreated}
 }

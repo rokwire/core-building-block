@@ -58,6 +58,7 @@ type LoginSession struct {
 
 	AppOrg   ApplicationOrganization
 	AuthType AuthType
+	AppType  ApplicationType
 
 	Anonymous bool
 

@@ -43,9 +43,8 @@ type externalAuthType interface {
 	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 	//userExist checks if the user exists
 	userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error)
-
-	//TODO refresh
-	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, l *logs.Log) (map[string]interface{}, error)
+	//refresh refreshes tokens
+	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (map[string]interface{}, error)
 }
 
 //anonymousAuthType is the interface for authentication for auth types which are anonymous
@@ -166,6 +165,7 @@ type Storage interface {
 
 	//AuthTypes
 	LoadAuthTypes() ([]model.AuthType, error)
+	FindAuthType(codeOrId string) (*model.AuthType, error)
 
 	//LoginsSessions
 	InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error)

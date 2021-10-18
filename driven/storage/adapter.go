@@ -29,6 +29,9 @@ type Adapter struct {
 
 	cachedApplications *syncmap.Map
 	applicationsLock   *sync.RWMutex
+
+	cachedAuthTypes *syncmap.Map
+	authTypesLock   *sync.RWMutex
 }
 
 //Start starts the storage
@@ -53,6 +56,12 @@ func (sa *Adapter) Start() error {
 	err = sa.cacheApplications()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeApplication, nil, err)
+	}
+
+	//cache the auth types
+	err = sa.cacheAuthTypes()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionCache, model.TypeAuthType, nil, err)
 	}
 
 	return err
@@ -215,6 +224,56 @@ func (sa *Adapter) getCachedApplicationTypeByIdentifier(appTypeIdentifier string
 	return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, &logutils.FieldArgs{"identifier": appTypeIdentifier})
 }
 
+//cacheAuthTypes caches the auth types
+func (sa *Adapter) cacheAuthTypes() error {
+	sa.logger.Info("cacheAuthTypes..")
+
+	authTypes, err := sa.LoadAuthTypes()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
+	}
+
+	sa.setCachedAuthTypes(authTypes)
+
+	return nil
+}
+
+func (sa *Adapter) setCachedAuthTypes(authProviders []model.AuthType) {
+	sa.authTypesLock.Lock()
+	defer sa.authTypesLock.Unlock()
+
+	sa.cachedAuthTypes = &syncmap.Map{}
+	validate := validator.New()
+
+	for _, authType := range authProviders {
+		err := validate.Struct(authType)
+		if err == nil {
+			//we will get it by id and code as well
+			sa.cachedAuthTypes.Store(authType.ID, authType)
+			sa.cachedAuthTypes.Store(authType.Code, authType)
+		} else {
+			sa.logger.Errorf("failed to validate and cache auth type with code %s: %s", authType.Code, err.Error())
+		}
+	}
+}
+
+func (sa *Adapter) getCachedAuthType(key string) (*model.AuthType, error) {
+	sa.authTypesLock.RLock()
+	defer sa.authTypesLock.RUnlock()
+
+	errArgs := &logutils.FieldArgs{"code or id": key}
+
+	item, _ := sa.cachedAuthTypes.Load(key)
+	if item != nil {
+		authType, ok := item.(model.AuthType)
+		if !ok {
+			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeAuthType, errArgs)
+		}
+		return &authType, nil
+	}
+	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, errArgs)
+}
+
 //LoadAuthTypes loads all auth types
 func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
 	filter := bson.D{}
@@ -228,6 +287,11 @@ func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
 	}
 
 	return result, nil
+}
+
+//FindAuthType finds auth type by id or code
+func (sa *Adapter) FindAuthType(codeOrId string) (*model.AuthType, error) {
+	return sa.getCachedAuthType(codeOrId)
 }
 
 //InsertLoginSession inserts login session
@@ -266,6 +330,12 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 		}
 	}
 
+	//auth type - from cache
+	authType, err := sa.getCachedAuthType(loginSession.AuthTypeCode)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
+	}
+
 	//application - from cache
 	application, err := sa.getCachedApplication(loginSession.AppID)
 	if err != nil {
@@ -278,7 +348,7 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
 
-	modelLoginSession := loginSessionFromStorage(loginSession, account, *application, *organization)
+	modelLoginSession := loginSessionFromStorage(loginSession, *authType, account, *application, *organization)
 	return &modelLoginSession, nil
 }
 
@@ -1631,14 +1701,22 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	cachedApplications := &syncmap.Map{}
 	applicationsLock := &sync.RWMutex{}
 
+	cachedAuthTypes := &syncmap.Map{}
+	authTypesLock := &sync.RWMutex{}
+
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout, logger: logger}
 	return &Adapter{db: db, logger: logger, cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock,
-		cachedApplications: cachedApplications, applicationsLock: applicationsLock}
+		cachedApplications: cachedApplications, applicationsLock: applicationsLock,
+		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock}
 }
 
 type storageListener struct {
 	adapter *Adapter
 	DefaultListenerImpl
+}
+
+func (sl *storageListener) OnAuthTypesUpdated() {
+	sl.adapter.cacheAuthTypes()
 }
 
 func (sl *storageListener) OnOrganizationsUpdated() {

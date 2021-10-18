@@ -190,7 +190,21 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, e
 	// - update the expired field
 	loginSession.Expires = *expires
 	// - generate new params(if external auth type)
-	//TODO
+	if loginSession.AuthType.IsExternal {
+		extAuthType, err := a.getExternalAuthTypeImpl(loginSession.AuthType)
+		if err != nil {
+			l.Infof("error getting external auth type on refresh - %s", refreshToken)
+			return nil, errors.WrapErrorAction("error getting external auth type on refresh", "", nil, err)
+		}
+
+		refreshedData, err := extAuthType.refresh(loginSession.Params, loginSession.AuthType, loginSession.AppType, loginSession.AppOrg, l)
+		if err != nil {
+			l.Infof("error refreshing external auth type on refresh - %s", refreshToken)
+			return nil, errors.WrapErrorAction("error refreshing external auth type on refresh", "", nil, err)
+		}
+
+		loginSession.Params = refreshedData //assing the refreshed data
+	}
 
 	//store the updated session
 	now := time.Now()
@@ -203,98 +217,6 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, e
 
 	//return the updated session
 	return loginSession, nil
-	/*
-		refresh, err := a.storage.FindRefreshToken(refreshToken)
-		if err != nil {
-			return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
-		}
-
-		credentials, err := a.storage.FindCredentialsByID(refresh.CredsID)
-		if err != nil {
-			return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
-		}
-		if credentials == nil {
-			return "", "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthCred, nil)
-		}
-
-		validate := validator.New()
-		err = validate.Struct(refresh)
-		if err != nil {
-			return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthRefreshParams, nil, err)
-		}
-
-		if !refresh.Expires.After(time.Now().UTC()) {
-			err = a.storage.DeleteRefreshToken(refresh.CurrentToken)
-			if err != nil {
-				return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh expiration", nil, err)
-			}
-			return "", "", nil, errors.ErrorAction(logutils.ActionValidate, "refresh expiration", nil)
-		}
-
-		if refreshToken == refresh.PreviousToken {
-			err = a.storage.DeleteRefreshToken(refresh.CurrentToken)
-			if err != nil {
-				return "", "", nil, errors.WrapErrorAction(logutils.ActionValidate, "refresh reuse", nil, err)
-			}
-			return "", "", nil, errors.ErrorAction(logutils.ActionValidate, "refresh reuse", nil)
-		}
-		if refreshToken != refresh.CurrentToken {
-			return "", "", nil, errors.ErrorAction(logutils.ActionValidate, model.TypeRefreshToken, nil)
-		}
-
-		auth, err := a.getAuthType(credentials.AuthType)
-		if err != nil {
-			return "", "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
-		}
-
-		userAuth, err := auth.refresh(refresh.Params, refresh.OrgID, refresh.AppID, l)
-		if err != nil {
-			return "", "", nil, errors.WrapErrorAction("refreshing", logutils.TypeToken, nil, err)
-		}
-
-		if userAuth == nil {
-			return "", "", nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeUserAuth, nil, err)
-		}
-
-		user, err := a.storage.FindUserByAccountID(credentials.AccountID)
-		if err != nil {
-			return "", "", nil, err
-		}
-
-		user, update, _ := a.needsUserUpdate(userAuth, user)
-		if update {
-			_, err = a.updateAccount(user, "", nil)
-			if err != nil {
-				return "", "", nil, err
-			}
-		}
-
-		claims := a.getStandardClaims(user.ID, userAuth.UserID, user.Account.Email, user.Account.Phone, "rokwire", refresh.OrgID, refresh.AppID, userAuth.Exp)
-		token, err := a.buildAccessToken(claims, "", authorization.ScopeGlobal)
-		if err != nil {
-			return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
-		}
-
-		newRefreshToken := ""
-		if userAuth.RefreshParams != nil {
-			var expireTime *time.Time
-			newRefreshToken, expireTime, err = a.buildRefreshToken()
-			if err != nil {
-				return "", "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeRefreshToken, nil, err)
-			}
-
-			now := time.Now().UTC()
-			updatedRefresh := model.AuthRefresh{CurrentToken: newRefreshToken, PreviousToken: refreshToken, Expires: expireTime,
-				Params: userAuth.RefreshParams, DateUpdated: &now}
-
-			err = a.storage.UpdateRefreshToken(refreshToken, &updatedRefresh)
-			if err != nil {
-				return "", "", nil, err
-			}
-		}
-
-		return token, newRefreshToken, userAuth.ResponseParams, nil
-	*/
 }
 
 //GetLoginURL returns a pre-formatted login url for SSO providers
@@ -341,7 +263,7 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 	}
 
 	//get the auth type
-	authType, err := a.getCachedAuthType(credential.AuthType.ID)
+	authType, err := a.storage.FindAuthType(credential.AuthType.ID)
 	if err != nil || authType == nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
 	}

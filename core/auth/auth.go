@@ -67,10 +67,8 @@ type Auth struct {
 
 	profileBB ProfileBuildingBlock
 
-	emailFrom       string
-	emailDialer     *gomail.Dialer
-	cachedAuthTypes *syncmap.Map //cache auth types
-	authTypesLock   *sync.RWMutex
+	emailFrom   string
+	emailDialer *gomail.Dialer
 
 	cachedIdentityProviders *syncmap.Map //cache identityProviders
 	identityProvidersLock   *sync.RWMutex
@@ -105,9 +103,6 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	externalAuthTypes := map[string]externalAuthType{}
 	anonymousAuthTypes := map[string]anonymousAuthType{}
 
-	cachedAuthTypes := &syncmap.Map{}
-	authTypesLock := &sync.RWMutex{}
-
 	cachedIdentityProviders := &syncmap.Map{}
 	identityProvidersLock := &sync.RWMutex{}
 
@@ -122,7 +117,6 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		authPrivKey: authPrivKey, AuthService: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
 		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
-		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
 		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock,
 		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
@@ -150,11 +144,6 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	initOidcAuth(auth)
 	initSamlAuth(auth)
-
-	err = auth.cacheAuthTypes()
-	if err != nil {
-		logger.Warnf("NewAuth() failed to cache auth types: %v", err)
-	}
 
 	err = auth.cacheIdentityProviders()
 	if err != nil {
@@ -464,9 +453,9 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
-	loginSession := model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType, Anonymous: anonymous,
-		Identifier: sub, AccountAuthType: accountAuthType, Device: device, IP: IP,
-		AccessToken: accessToken, RefreshToken: refreshToken, Params: params, Expires: *expires, DateCreated: time.Now()}
+	loginSession := model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType,
+		AppType: appType, Anonymous: anonymous, Identifier: sub, AccountAuthType: accountAuthType,
+		Device: device, IP: IP, AccessToken: accessToken, RefreshToken: refreshToken, Params: params, Expires: *expires, DateCreated: time.Now()}
 
 	return &loginSession, nil
 }
@@ -630,7 +619,7 @@ func (a *Auth) registerAnonymousAuthType(name string, auth anonymousAuthType) er
 
 func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier string, orgID string) (*model.AuthType, *model.ApplicationType, *model.ApplicationOrganization, error) {
 	//get the auth type
-	authType, err := a.getCachedAuthType(authenticationType)
+	authType, err := a.storage.FindAuthType(authenticationType)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, logutils.StringArgs(authenticationType), err)
 	}
@@ -781,56 +770,6 @@ func (a *Auth) storeReg() error {
 	}
 
 	return nil
-}
-
-//cacheAuthTypes caches the auth types
-func (a *Auth) cacheAuthTypes() error {
-	a.logger.Info("cacheAuthTypes..")
-
-	authTypes, err := a.storage.LoadAuthTypes()
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
-	}
-
-	a.setCachedAuthTypes(authTypes)
-
-	return nil
-}
-
-func (a *Auth) setCachedAuthTypes(authProviders []model.AuthType) {
-	a.authTypesLock.Lock()
-	defer a.authTypesLock.Unlock()
-
-	a.cachedAuthTypes = &syncmap.Map{}
-	validate := validator.New()
-
-	for _, authType := range authProviders {
-		err := validate.Struct(authType)
-		if err == nil {
-			//we will get it by id and code as well
-			a.cachedAuthTypes.Store(authType.ID, authType)
-			a.cachedAuthTypes.Store(authType.Code, authType)
-		} else {
-			a.logger.Errorf("failed to validate and cache auth type with code %s: %s", authType.Code, err.Error())
-		}
-	}
-}
-
-func (a *Auth) getCachedAuthType(key string) (*model.AuthType, error) {
-	a.authTypesLock.RLock()
-	defer a.authTypesLock.RUnlock()
-
-	errArgs := &logutils.FieldArgs{"code or id": key}
-
-	item, _ := a.cachedAuthTypes.Load(key)
-	if item != nil {
-		authType, ok := item.(model.AuthType)
-		if !ok {
-			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeAuthType, errArgs)
-		}
-		return &authType, nil
-	}
-	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, errArgs)
 }
 
 //cacheIdentityProviders caches the identity providers
@@ -1049,11 +988,6 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 type StorageListener struct {
 	auth *Auth
 	storage.DefaultListenerImpl
-}
-
-//OnAuthTypesUpdated notifies that auth types have been has been updated
-func (al *StorageListener) OnAuthTypesUpdated() {
-	al.auth.cacheAuthTypes()
 }
 
 //OnIdentityProvidersUpdated notifies that identity providers have been updated
