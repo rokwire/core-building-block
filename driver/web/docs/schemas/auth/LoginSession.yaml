@@ -6,6 +6,8 @@ properties:
     $ref: "../application/ApplicationOrganization.yaml"
   auth_type:
     $ref: "./AuthType.yaml"
+  app_type:
+    $ref: "../application/ApplicationType.yaml"
   account_auth_type:
     $ref: "../user/AccountAuthType.yaml"
     nullable: true

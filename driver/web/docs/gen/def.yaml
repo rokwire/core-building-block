@@ -1565,6 +1565,8 @@ components:
           $ref: '#/components/schemas/ApplicationOrganization'
         auth_type:
           $ref: '#/components/schemas/AuthType'
+        app_type:
+          $ref: '#/components/schemas/ApplicationType'
         account_auth_type:
           $ref: '#/components/schemas/AccountAuthType'
           nullable: true
