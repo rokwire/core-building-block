@@ -1561,6 +1561,8 @@ components:
       properties:
         fields:
           $ref: '#/components/schemas/LoginSessionFields'
+        app_org:
+          $ref: '#/components/schemas/ApplicationOrganization'
         account_auth_type:
           $ref: '#/components/schemas/AccountAuthType'
           nullable: true

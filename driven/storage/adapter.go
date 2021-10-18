@@ -256,7 +256,19 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 	}
 	loginSession := loginsSessions[0]
 
-	modelLoginSession := loginSessionFromStorage(loginSession)
+	//application - from cache
+	application, err := sa.getCachedApplication(loginSession.AppID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+	}
+
+	//organization - from cache
+	organization, err := sa.getCachedOrganization(loginSession.OrgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
+	}
+
+	modelLoginSession := loginSessionFromStorage(loginSession, *application, *organization)
 	return &modelLoginSession, nil
 }
 

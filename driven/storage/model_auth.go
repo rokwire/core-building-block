@@ -5,6 +5,9 @@ import "time"
 type loginSession struct {
 	ID string `bson:"_id"`
 
+	AppID string `bson:"app_id"`
+	OrgID string `bson:"org_id"`
+
 	Anonymous bool `bson:"anonymous"`
 
 	Identifier        string  `bson:"identifier"`

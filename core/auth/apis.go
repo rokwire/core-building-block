@@ -150,6 +150,45 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, e
 		return nil, nil
 	}
 
+	///now:
+	// - generate new access token
+	sub := loginSession.Identifier
+	uid := ""
+	orgID := loginSession.AppOrg.Organization.ID
+	appID := loginSession.AppOrg.Application.ID
+	anonymous := loginSession.Anonymous
+	if !anonymous {
+		accountAuthType := loginSession.AccountAuthType
+		if accountAuthType == nil {
+			l.Infof("for some reasons account auth type is null for not anonymous login - %s", loginSession.ID)
+			return nil, errors.ErrorAction("for some reasons account auth type is null for not anonymous login", "", nil)
+		}
+		uid = accountAuthType.Identifier
+	}
+	/*orgID := appOrg.Organization.ID
+	appID := appOrg.Application.ID
+	email := ""
+	phone := ""
+	permissions := []string{}
+	if !anonymous {
+		email = accountAuthType.Account.Profile.Email
+		phone = accountAuthType.Account.Profile.Phone
+		permissions = accountAuthType.Account.GetPermissionNames()
+	} */
+	claims := a.getStandardClaims(sub, uid, "TODO", "TODO", "rokwire", orgID, appID, "TODO", nil, anonymous)
+	//claims := a.getStandardClaims(sub, uid, email, phone, "rokwire", orgID, appID, authType.Code, nil, anonymous)
+
+	//TODO permissions
+	permissions := []string{}
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
+	if err != nil {
+		l.Infof("error gnerating acccess token on refresh - %s", refreshToken)
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+	}
+	loginSession.AccessToken = accessToken //set the generated token
+	// - generate new refresh token
+	// - update the expired field
+	// - generate new params(if external auth type)
 	//TODO
 
 	return loginSession, nil

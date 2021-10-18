@@ -56,10 +56,12 @@ const (
 type LoginSession struct {
 	ID string
 
+	AppOrg ApplicationOrganization
+
 	Anonymous bool
 
-	Identifier      string //this is the account id(anonymous id for anonymous logins)
-	AccountAuthType *AccountAuthType
+	Identifier      string           //it is the account id(anonymous id for anonymous logins)
+	AccountAuthType *AccountAuthType //it is nil for anonymous logins
 
 	Device Device
 

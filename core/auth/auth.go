@@ -462,7 +462,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, uid string, authTy
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
-	loginSession := model.LoginSession{ID: id, Anonymous: anonymous, Identifier: sub, AccountAuthType: accountAuthType,
+	loginSession := model.LoginSession{ID: id, AppOrg: appOrg, Anonymous: anonymous, Identifier: sub, AccountAuthType: accountAuthType,
 		Device: device, IP: IP, AccessToken: accessToken, RefreshToken: refreshToken, Params: params, Expires: *expires, DateCreated: time.Now()}
 
 	return &loginSession, nil
