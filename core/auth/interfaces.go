@@ -169,6 +169,7 @@ type Storage interface {
 	//LoginsSessions
 	InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error)
 	FindLoginSession(refreshToken string) (*model.LoginSession, error)
+	UpdateLoginSession(loginSession model.LoginSession) error
 	DeleteLoginSession(id string) error
 
 	//Accounts

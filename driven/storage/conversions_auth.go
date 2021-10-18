@@ -34,7 +34,7 @@ func loginSessionFromStorage(item loginSession, account *model.Account, app mode
 		Expires: expires, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
 
-func loginSessionToStorage(item *model.LoginSession) *loginSession {
+func loginSessionToStorage(item model.LoginSession) *loginSession {
 	id := item.ID
 
 	appID := item.AppOrg.Application.ID

@@ -3,6 +3,7 @@ package auth
 import (
 	"core-building-block/core/model"
 	"strings"
+	"time"
 
 	"github.com/rokwire/core-auth-library-go/authorization"
 	"github.com/rokwire/core-auth-library-go/authutils"
@@ -175,15 +176,32 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, e
 	claims := a.getStandardClaims(sub, uid, email, phone, "rokwire", orgID, appID, authType, nil, anonymous)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
-		l.Infof("error gnerating acccess token on refresh - %s", refreshToken)
+		l.Infof("error generating acccess token on refresh - %s", refreshToken)
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 	loginSession.AccessToken = accessToken //set the generated token
 	// - generate new refresh token
+	refreshToken, expires, err := a.buildRefreshToken()
+	if err != nil {
+		l.Infof("error generating refresh token on refresh - %s", refreshToken)
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+	}
+	loginSession.RefreshToken = refreshToken //set the generated token
 	// - update the expired field
+	loginSession.Expires = *expires
 	// - generate new params(if external auth type)
 	//TODO
 
+	//store the updated session
+	now := time.Now()
+	loginSession.DateUpdated = &now
+	err = a.storage.UpdateLoginSession(*loginSession)
+	if err != nil {
+		l.Infof("error updating login session on refresh - %s", refreshToken)
+		return nil, errors.WrapErrorAction("error updating login session on refresh", "", nil, err)
+	}
+
+	//return the updated session
 	return loginSession, nil
 	/*
 		refresh, err := a.storage.FindRefreshToken(refreshToken)

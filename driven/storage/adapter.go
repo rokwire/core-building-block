@@ -232,7 +232,7 @@ func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
 
 //InsertLoginSession inserts login session
 func (sa *Adapter) InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error) {
-	storageLoginSession := loginSessionToStorage(&loginSession)
+	storageLoginSession := loginSessionToStorage(loginSession)
 
 	_, err := sa.db.loginsSessions.InsertOne(storageLoginSession)
 	if err != nil {
@@ -280,6 +280,19 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 
 	modelLoginSession := loginSessionFromStorage(loginSession, account, *application, *organization)
 	return &modelLoginSession, nil
+}
+
+//UpdateLoginSession updates login session
+func (sa *Adapter) UpdateLoginSession(loginSession model.LoginSession) error {
+	storageLoganSession := loginSessionToStorage(loginSession)
+
+	filter := bson.D{primitive.E{Key: "_id", Value: storageLoganSession.ID}}
+	err := sa.db.loginsSessions.ReplaceOne(filter, storageLoganSession, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"_id": storageLoganSession.ID}, err)
+	}
+
+	return nil
 }
 
 //DeleteLoginSession deletes login session
