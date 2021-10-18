@@ -118,6 +118,8 @@ _req_login_ParamsNone:
   $ref: "./apis/services/login/request/ParamsNone.yaml"
 _res_login_Response:
   $ref: "./apis/services/login/response/Response.yaml"
+_res_login_MFAVerify:
+  $ref: "./apis/services/login/response/MFAVerify.yaml"
 _res_login_Account:
   $ref: "./apis/services/login/response/Account.yaml"
 

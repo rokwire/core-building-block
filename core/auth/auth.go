@@ -43,6 +43,8 @@ const (
 	refreshTokenExpiry       int = 7 * 24 * 60
 	refreshTokenDeletePeriod int = 2
 	refreshTokenLimit        int = 3
+
+	loginStateLength int = 128
 )
 
 //Auth represents the auth functionality unit
@@ -176,7 +178,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 }
 
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
-	creds string, params string, regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (*model.Account, *model.AccountAuthType, interface{}, error) {
+	creds string, params string, regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (*model.Account, *model.AccountAuthType, interface{}, []model.MFAType, string, error) {
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
 	var profile *model.Profile
@@ -186,20 +188,20 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	//external auth type
 	authImpl, err := a.getExternalAuthTypeImpl(authType)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+		return nil, nil, nil, nil, "", errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
 	}
 
 	//1. get the user from the external system
 	var externalUser *model.ExternalSystemUser
 	externalUser, extParams, err = authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction("logging in", "external user", nil, err)
+		return nil, nil, nil, nil, "", errors.WrapErrorAction("logging in", "external user", nil, err)
 	}
 
 	//2. check if the user exists
 	account, err = authImpl.userExist(externalUser.Identifier, authType, appType, appOrg, l)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorData(logutils.StatusMissing, "external user", nil, err)
+		return nil, nil, nil, nil, "", errors.WrapErrorData(logutils.StatusMissing, "external user", nil, err)
 	}
 	if account != nil {
 		//user exists, just check if need to update it
@@ -207,17 +209,17 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		//get the current external user
 		accountAuthType, err = a.findAccountAuthType(account, &authType, externalUser.Identifier)
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, nil, nil, nil, "", err
 		}
 		currentDataMap := accountAuthType.Params["user"]
 		currentDataJSON, err := utils.ConvertToJSON(currentDataMap)
 		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionMarshal, "external user", nil, err)
+			return nil, nil, nil, nil, "", errors.WrapErrorAction(logutils.ActionMarshal, "external user", nil, err)
 		}
 		var currentData *model.ExternalSystemUser
 		err = json.Unmarshal(currentDataJSON, &currentData)
 		if err != nil {
-			return nil, nil, nil, errors.ErrorAction(logutils.ActionUnmarshal, "external user", nil)
+			return nil, nil, nil, nil, "", errors.ErrorAction(logutils.ActionUnmarshal, "external user", nil)
 		}
 
 		newData := *externalUser
@@ -228,7 +230,26 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 			accountAuthType.Params["user"] = newData
 			err = a.storage.UpdateAccountAuthType(*accountAuthType)
 			if err != nil {
-				return nil, nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
+				return nil, nil, nil, nil, "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
+			}
+		}
+
+		if !authType.IgnoreMFA {
+			mfaTypes, err := a.storage.FindMFATypes(account.ID)
+			if err != nil {
+				return nil, nil, nil, nil, "", errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, nil, err)
+			}
+			//check if account is enrolled in MFA
+			if len(mfaTypes) > 0 {
+				state, err := utils.GenerateRandomString(loginStateLength)
+				if err != nil {
+					return nil, nil, nil, nil, "", errors.WrapErrorAction("generate", "login state", nil, err)
+				}
+
+				//TODO: update MFA documents with state variable
+
+				//TODO: need to return accountID
+				return nil, nil, extParams, nil, state, nil
 			}
 		}
 	} else {
@@ -244,16 +265,17 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		accountAuthType, _, profile, preferences, err = a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, nil, nil, regProfile, regPreferences, l)
 
 		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
+			return nil, nil, nil, nil, "", errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
 
 		account, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, *profile, preferences, l)
 		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+			return nil, nil, nil, nil, "", errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
 	}
 
-	return account, accountAuthType, extParams, nil
+	//TODO: make sure we do not return any refresh tokens in extParams
+	return account, accountAuthType, extParams, nil, "", nil
 }
 
 func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (string, interface{}, error) { //auth type
@@ -272,7 +294,7 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.App
 }
 
 func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
-	creds string, params string, regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (string, *model.Account, *model.AccountAuthType, error) {
+	creds string, params string, regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (string, *model.Account, *model.AccountAuthType, []model.MFAType, string, error) {
 	var message string
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
@@ -283,13 +305,13 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(authType)
 	if err != nil {
-		return "", nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+		return "", nil, nil, nil, "", errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
 	//check if the user exists check
 	account, accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
 	if err != nil {
-		return "", nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return "", nil, nil, nil, "", errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
 	accountExists := (account != nil && accountAuthType != nil)
@@ -297,11 +319,11 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	//check if it is sign in or sign up
 	isSignUp, err := a.isSignUp(accountExists, params, l)
 	if err != nil {
-		return "", nil, nil, errors.WrapErrorAction("error checking is sign up", "", nil, err)
+		return "", nil, nil, nil, "", errors.WrapErrorAction("error checking is sign up", "", nil, err)
 	}
 	if isSignUp {
 		if accountExists {
-			return "", nil, nil, errors.New("account already exists")
+			return "", nil, nil, nil, "", errors.New("account already exists")
 		}
 
 		//TODO: use shared profile
@@ -313,37 +335,56 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		//apply sign up
 		message, identifier, credentialValue, err := authImpl.signUp(authType, appType, appOrg, creds, params, credentialID.String(), l)
 		if err != nil {
-			return "", nil, nil, errors.Wrap("error signing up", err)
+			return "", nil, nil, nil, "", errors.Wrap("error signing up", err)
 		}
 
 		accountAuthType, credential, profile, preferences, err = a.prepareRegistrationData(authType, *identifier, nil, &credID, credentialValue, regProfile, regPreferences, l)
 		if err != nil {
-			return "", nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
+			return "", nil, nil, nil, "", errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
 
 		account, err = a.registerUser(appOrg, *accountAuthType, credential, useSharedProfile, *profile, preferences, l)
 		if err != nil {
-			return "", nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+			return "", nil, nil, nil, "", errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
 
-		return message, account, accountAuthType, nil
+		return message, account, accountAuthType, nil, "", nil
 	}
 
 	//apply sign in
 	if !accountExists {
-		return "", nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+		return "", nil, nil, nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+	}
+
+	if !authType.IgnoreMFA {
+		mfaTypes, err := a.storage.FindMFATypes(account.ID)
+		if err != nil {
+			return "", nil, nil, nil, "", errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, nil, err)
+		}
+		// check if account is enrolled in MFA
+		if len(mfaTypes) > 0 {
+			state, err := utils.GenerateRandomString(loginStateLength)
+			if err != nil {
+				return "", nil, nil, nil, "", errors.WrapErrorAction("generate", "login state", nil, err)
+			}
+
+			//TODO: update MFA documents with state variable
+
+			//TODO: need to return accountID
+			return "", nil, nil, nil, state, nil
+		}
 	}
 
 	//2. it seems the user exist, now check the credentials
 	message, validCredentials, err := authImpl.checkCredentials(*accountAuthType, creds, l)
 	if err != nil {
-		return "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
+		return "", nil, nil, nil, "", errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
 	}
 	if !*validCredentials {
-		return "", nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeCredential, nil)
+		return "", nil, nil, nil, "", errors.ErrorData(logutils.StatusInvalid, model.TypeCredential, nil)
 	}
 
-	return message, account, accountAuthType, nil
+	return message, account, accountAuthType, nil, "", nil
 }
 
 //isSignUp checks if the operation is sign in or sign up

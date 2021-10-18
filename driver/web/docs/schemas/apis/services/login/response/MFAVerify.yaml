@@ -1,0 +1,18 @@
+required:
+  - enrolled
+  - state
+type: object
+properties:
+  enrolled:
+    type: array
+    items:
+      $ref: "../../../shared/responses/Mfa.yaml"
+  state:
+    type: string
+  params:
+    type: object
+    nullable: true
+    anyOf:
+      - $ref: "../../../shared/responses/ParamsOIDC.yaml"
+      - $ref: "./ParamsAPIKey.yaml"
+      - $ref: "../../../shared/responses/ParamsNone.yaml"  

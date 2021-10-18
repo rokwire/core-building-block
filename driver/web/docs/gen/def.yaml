@@ -31,6 +31,15 @@ paths:
       summary: Login
       description: |
         Login using credentials to retrieve access token, refresh token, and user data
+      parameters:
+        - name: state
+          in: query
+          description: Login state
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
       requestBody:
         description: |
           User credential details and parameters
@@ -160,7 +169,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_login_Response'
+                anyOf:
+                  - $ref: '#/components/schemas/_res_login_MFAVerify'
+                  - $ref: '#/components/schemas/_res_login_Response'
         '400':
           description: Bad request
         '401':
@@ -2106,11 +2117,13 @@ components:
           nullable: true
     _req_login_MFAVerify:
       required:
+        - account_id
         - mfa_type
         - mfa_code
-        - login_state
       type: object
       properties:
+        account_id:
+          type: string
         mfa_type:
           type: string
           enum:
@@ -2118,8 +2131,6 @@ components:
             - phone
             - totp
         mfa_code:
-          type: string
-        login_state:
           type: string
     _req_login_CredsEmail:
       required:
@@ -2202,6 +2213,25 @@ components:
             - $ref: '#/components/schemas/_res_shared_ParamsNone'
         message:
           type: string
+    _res_login_MFAVerify:
+      required:
+        - enrolled
+        - state
+      type: object
+      properties:
+        enrolled:
+          type: array
+          items:
+            $ref: '#/components/schemas/_res_shared_Mfa'
+        state:
+          type: string
+        params:
+          type: object
+          nullable: true
+          anyOf:
+            - $ref: '#/components/schemas/_res_shared_ParamsOIDC'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/1'
+            - $ref: '#/components/schemas/_res_shared_ParamsNone'
     _res_login_Account:
       required:
         - id

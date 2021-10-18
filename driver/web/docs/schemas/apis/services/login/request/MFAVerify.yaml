@@ -1,9 +1,11 @@
 required:
+  - account_id
   - mfa_type
   - mfa_code
-  - login_state
 type: object
 properties:
+  account_id:
+    type: string
   mfa_type:
     type: string
     enum:
@@ -11,6 +13,4 @@ properties:
       - phone
       - totp
   mfa_code:
-    type: string
-  login_state:
     type: string

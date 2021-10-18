@@ -20,39 +20,71 @@ type ServicesApisHandler struct {
 }
 
 func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	loginState := r.URL.Query().Get("state")
+
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqLoginRequest
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login request"), nil, err, http.StatusBadRequest, true)
+	var message string
+	var accessToken string
+	var refreshToken string
+	var account *model.Account
+	var params interface{}
+	var mfaTypes []model.MFAType
+	var state string
+	if loginState != "" {
+		var mfaData Def.ReqLoginMFAVerify
+		err = json.Unmarshal(data, &mfaData)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("mfa verify request"), nil, err, http.StatusBadRequest, true)
+		}
+
+		message, accessToken, refreshToken, account, err = h.coreAPIs.Auth.MFAVerify(mfaData.AccountId, string(mfaData.MfaType), mfaData.MfaCode, loginState)
+		if err != nil {
+			return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
+		}
+	} else {
+		var requestData Def.ReqLoginRequest
+		err = json.Unmarshal(data, &requestData)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login request"), nil, err, http.StatusBadRequest, true)
+		}
+
+		requestCreds, err := interfaceToJSON(requestData.Creds)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+		}
+
+		requestParams, err := interfaceToJSON(requestData.Params)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
+		}
+
+		//preferences
+		var preferences map[string]interface{}
+		if requestData.Preferences != nil {
+			preferences = *requestData.Preferences
+		}
+
+		//profile ////
+		profile := profileFromDefNullable(requestData.Profile)
+
+		message, accessToken, refreshToken, account, params, mfaTypes, state, err = h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, profile, preferences, l)
+		if err != nil {
+			return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
+		}
 	}
 
-	requestCreds, err := interfaceToJSON(requestData.Creds)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
-	}
-
-	requestParams, err := interfaceToJSON(requestData.Params)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
-	}
-
-	//preferences
-	var preferences map[string]interface{}
-	if requestData.Preferences != nil {
-		preferences = *requestData.Preferences
-	}
-
-	//profile ////
-	profile := profileFromDefNullable(requestData.Profile)
-
-	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, profile, preferences, l)
-	if err != nil {
-		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
+	if state != "" {
+		mfaResp := mfaDataListToDef(mfaTypes)
+		responseData := &Def.ResLoginMFAVerify{Enrolled: mfaResp, Params: &params, State: state}
+		respData, err := json.Marshal(responseData)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
+		}
+		return l.HttpResponseSuccessJSON(respData)
 	}
 
 	if message != "" {

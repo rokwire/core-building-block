@@ -4,6 +4,15 @@ post:
   summary: Login
   description: |
     Login using credentials to retrieve access token, refresh token, and user data
+  parameters:
+    - name: state
+      in: query
+      description: Login state
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
   requestBody:
     description: |
       User credential details and parameters
@@ -133,7 +142,9 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/apis/services/login/response/Response.yaml"
+            anyOf:
+              - $ref: "../../../schemas/apis/services/login/response/MFAVerify.yaml"
+              - $ref: "../../../schemas/apis/services/login/response/Response.yaml"
     400:
       description: Bad request
     401:

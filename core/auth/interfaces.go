@@ -79,7 +79,9 @@ type APIs interface {
 	//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//		Account (Account): Account object for authenticated user
 	//		Params (interface{}): authType-specific set of parameters passed back to client
-	Login(authType string, creds string, appTypeIdentifier string, orgID string, params string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (string, string, string, *model.Account, interface{}, error)
+	//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
+	//		State (string): login state used if account is enrolled in MFA
+	Login(authType string, creds string, appTypeIdentifier string, orgID string, params string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (string, string, string, *model.Account, interface{}, []model.MFAType, string, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
@@ -112,6 +114,19 @@ type APIs interface {
 	//	Returns:
 	//		MFA Types ([]model.MFAType): MFA information for all enrolled types
 	GetMFATypes(accountID string) ([]model.MFAType, error)
+
+	//MFAVerify verifies a code sent by a user as a final login step for enrolled accounts.
+	//The MFA type must be one of the supported for the application.
+	//	Input:
+	//		accountID (string): ID of account user is trying to access
+	//		mfaType (string): Type of MFA code sent
+	//		mfaCode (string): Code that must be verified
+	//		state (string): Variable used to verify user has already passed credentials check
+	//	Returns:
+	//		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+	//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+	//		Account (Account): Account object for authenticated user
+	MFAVerify(accountID string, mfaType string, mfaCode string, state string) (string, string, string, *model.Account, error)
 
 	//AddMFAType adds a form of MFA to an account
 	//	Input:

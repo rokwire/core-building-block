@@ -47,66 +47,74 @@ func (a *Auth) GetHost() string {
 //		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //		Account (Account): Account object for authenticated user
 //		Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Login(authenticationType string, creds string, appTypeIdentifier string, orgID string, params string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (string, string, string, *model.Account, interface{}, error) {
+//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
+//		State (string): login state used if account is enrolled in MFA
+func (a *Auth) Login(authenticationType string, creds string, appTypeIdentifier string, orgID string, params string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (string, string, string, *model.Account, interface{}, []model.MFAType, string, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
-		return "", "", "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+		return "", "", "", nil, nil, nil, "", errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
 	var account *model.Account
 	var accountAuthType *model.AccountAuthType
 	var message string
 	var responseParams interface{}
+	var mfaTypes []model.MFAType
+	var state string
 
 	//get the auth type implementation for the auth type
 	if authType.IsAnonymous {
 		anonymousID := ""
 		anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return "", "", "", nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
+			return "", "", "", nil, nil, nil, "", errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
 		}
 
 		accessToken, err := a.applyAnonymousLogin(authType, anonymousID, orgID, *appType, params, l)
 		if err != nil {
-			return "", "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+			return "", "", "", nil, nil, nil, "", errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 		}
 
-		return "", *accessToken, "", nil, responseParams, nil
+		return "", *accessToken, "", nil, responseParams, nil, "", nil
 
 	} else if authType.IsExternal {
-		account, accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+		account, accountAuthType, responseParams, mfaTypes, state, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
-			return "", "", "", nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
+			return "", "", "", nil, nil, nil, "", errors.WrapErrorAction("apply external auth type", "user", nil, err)
 		}
 
 		//TODO groups mapping
 	} else {
-		message, account, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+		message, account, accountAuthType, mfaTypes, state, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
-			return "", "", "", nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
+			return "", "", "", nil, nil, nil, "", errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
 		if message != "" {
-			return message, "", "", nil, nil, nil
+			return message, "", "", nil, nil, nil, "", nil
 		}
 
 		//the credentials are valid
 	}
 
-	//now we are ready to apply login for the user
-	accessToken, refreshToken, err := a.applyLogin(*account, *accountAuthType, *appType, responseParams, l)
-	if err != nil {
-		return "", "", "", nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+	if state == "" {
+		//now we are ready to apply login for the user
+		accessToken, refreshToken, err := a.applyLogin(*account, *accountAuthType, *appType, responseParams, l)
+		if err != nil {
+			return "", "", "", nil, nil, nil, "", errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+		}
+
+		//Only return auth type used for login
+		if account != nil && accountAuthType != nil {
+			account.AuthTypes = []model.AccountAuthType{*accountAuthType}
+		}
+
+		return "", *accessToken, *refreshToken, account, responseParams, nil, "", nil
 	}
 
-	//Only return auth type used for login
-	if account != nil && accountAuthType != nil {
-		account.AuthTypes = []model.AccountAuthType{*accountAuthType}
-	}
-
-	return "", *accessToken, *refreshToken, account, responseParams, nil
+	return "", "", "", &model.Account{ID: account.ID}, responseParams, mfaTypes, state, nil
 }
 
 //Refresh refreshes an access token using a refresh token
@@ -258,6 +266,21 @@ func (a *Auth) GetMFATypes(accountID string) ([]model.MFAType, error) {
 	}
 
 	return mfa, nil
+}
+
+//MFAVerify verifies a code sent by a user as a final login step for enrolled accounts.
+//The MFA type must be one of the supported for the application.
+//	Input:
+//		accountID (string): ID of account user is trying to access
+//		mfaType (string): Type of MFA code sent
+//		mfaCode (string): Code that must be verified
+//		state (string): Variable used to verify user has already passed credentials check
+//	Returns:
+//		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+//		Account (Account): Account object for authenticated user
+func (a *Auth) MFAVerify(accountID string, mfaType string, mfaCode string, state string) (string, string, string, *model.Account, error) {
+	return "", "", "", nil, nil
 }
 
 //AddMFAType adds a form of MFA to an account

@@ -538,9 +538,9 @@ type ReqLoginCredsTwilioPhone struct {
 
 // ReqLoginMFAVerify defines model for _req_login_MFAVerify.
 type ReqLoginMFAVerify struct {
-	LoginState string                   `json:"login_state"`
-	MfaCode    string                   `json:"mfa_code"`
-	MfaType    ReqLoginMFAVerifyMfaType `json:"mfa_type"`
+	AccountId string                   `json:"account_id"`
+	MfaCode   string                   `json:"mfa_code"`
+	MfaType   ReqLoginMFAVerifyMfaType `json:"mfa_type"`
 }
 
 // ReqLoginMFAVerifyMfaType defines model for ReqLoginMFAVerify.MfaType.
@@ -668,6 +668,13 @@ type ResLoginAccount struct {
 	Preferences *map[string]interface{}        `json:"preferences"`
 	Profile     *ProfileFields                 `json:"profile,omitempty"`
 	Roles       *[]ApplicationRoleFields       `json:"roles,omitempty"`
+}
+
+// ResLoginMFAVerify defines model for _res_login_MFAVerify.
+type ResLoginMFAVerify struct {
+	Enrolled []ResSharedMfa `json:"enrolled"`
+	Params   *interface{}   `json:"params"`
+	State    string         `json:"state"`
 }
 
 // ResLoginResponse defines model for _res_login_Response.
@@ -825,6 +832,13 @@ type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
 // PostServicesAuthLoginJSONBody defines parameters for PostServicesAuthLogin.
 type PostServicesAuthLoginJSONBody interface{}
+
+// PostServicesAuthLoginParams defines parameters for PostServicesAuthLogin.
+type PostServicesAuthLoginParams struct {
+
+	// Login state
+	State *string `json:"state,omitempty"`
+}
 
 // PostServicesAuthLoginUrlJSONBody defines parameters for PostServicesAuthLoginUrl.
 type PostServicesAuthLoginUrlJSONBody ReqLoginUrlRequest
