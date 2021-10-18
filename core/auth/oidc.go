@@ -183,7 +183,8 @@ func (a *oidcAuthImpl) userExist(externalUserIdentifier string, authType model.A
 }
 
 //refresh must be implemented for OIDC auth
-func (a *oidcAuthImpl) refresh(params map[string]interface{}, orgID string, appID string, l *logs.Log) (*model.UserAuth, error) {
+func (a *oidcAuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, l *logs.Log) (map[string]interface{}, error) {
+
 	return nil, nil
 	/*refreshParams, err := oidcRefreshParamsFromMap(params)
 	if err != nil {
@@ -387,6 +388,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	oidcParams["id_token"] = token.IDToken
 	oidcParams["access_token"] = token.AccessToken
 	oidcParams["token_type"] = token.TokenType
+	oidcParams["redirect_uri"] = redirectURI
 
 	params := map[string]interface{}{}
 	params["oidc_token"] = oidcParams

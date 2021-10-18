@@ -45,6 +45,7 @@ type externalAuthType interface {
 	userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error)
 
 	//TODO refresh
+	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, l *logs.Log) (map[string]interface{}, error)
 }
 
 //anonymousAuthType is the interface for authentication for auth types which are anonymous
