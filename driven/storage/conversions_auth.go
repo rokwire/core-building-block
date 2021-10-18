@@ -3,7 +3,7 @@ package storage
 import "core-building-block/core/model"
 
 //LoginSession
-func loginSessionFromStorage(item loginSession, app model.Application, org model.Organization) model.LoginSession {
+func loginSessionFromStorage(item loginSession, account *model.Account, app model.Application, org model.Organization) model.LoginSession {
 	id := item.ID
 
 	appOrg := model.ApplicationOrganization{Application: app, Organization: org}
@@ -14,7 +14,10 @@ func loginSessionFromStorage(item loginSession, app model.Application, org model
 	identifier := item.Identifier
 	var accountAuthType *model.AccountAuthType
 	if item.AccountAuthTypeID != nil {
-		accountAuthType = &model.AccountAuthType{ID: *item.AccountAuthTypeID, Identifier: *item.AccountAuthTypeIdentifier}
+		aatID := *item.AccountAuthTypeID
+		aatIdentifier := *item.AccountAuthTypeIdentifier
+		aatAccount := *account
+		accountAuthType = &model.AccountAuthType{ID: aatID, Identifier: aatIdentifier, Account: aatAccount}
 	}
 	device := model.Device{ID: item.DeviceID}
 	IP := item.IP

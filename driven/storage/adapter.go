@@ -244,6 +244,7 @@ func (sa *Adapter) InsertLoginSession(loginSession model.LoginSession) (*model.L
 
 //FindLoginSession finds login session by refresh token
 func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, error) {
+	//find loggin session
 	filter := bson.D{primitive.E{Key: "refresh_token", Value: refreshToken}}
 	var loginsSessions []loginSession
 	err := sa.db.loginsSessions.Find(filter, &loginsSessions, nil)
@@ -255,6 +256,15 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 		return nil, nil
 	}
 	loginSession := loginsSessions[0]
+
+	//account - from storage
+	var account *model.Account
+	if loginSession.AccountAuthTypeID != nil {
+		account, err = sa.FindAccountByID(loginSession.Identifier)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+	}
 
 	//application - from cache
 	application, err := sa.getCachedApplication(loginSession.AppID)
@@ -268,7 +278,7 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
 
-	modelLoginSession := loginSessionFromStorage(loginSession, *application, *organization)
+	modelLoginSession := loginSessionFromStorage(loginSession, account, *application, *organization)
 	return &modelLoginSession, nil
 }
 
