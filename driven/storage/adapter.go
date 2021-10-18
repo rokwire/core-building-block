@@ -260,6 +260,19 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 	return &modelLoginSession, nil
 }
 
+//DeleteLoginSession deletes login session
+func (sa *Adapter) DeleteLoginSession(id string) error {
+	filter := bson.M{"_id": id}
+	res, err := sa.db.loginsSessions.DeleteOne(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
+	}
+	if res.DeletedCount != 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("unexpected deleted count"))
+	}
+	return nil
+}
+
 //FindAccount finds an account for app, org, auth type and account auth type identifier
 func (sa *Adapter) FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},

@@ -138,6 +138,18 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, e
 		return nil, nil
 	}
 
+	//check if the session is expired
+	if loginSession.IsExpired() {
+		//remove the session
+		err = a.storage.DeleteLoginSession(loginSession.ID)
+		if err != nil {
+			return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err)
+		}
+
+		//return nul
+		return nil, nil
+	}
+
 	//TODO
 
 	return loginSession, nil

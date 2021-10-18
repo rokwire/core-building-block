@@ -74,6 +74,11 @@ type LoginSession struct {
 	DateCreated time.Time
 }
 
+//IsExpired says if the sessions is expired
+func (ls LoginSession) IsExpired() bool {
+	return ls.Expires.Before(time.Now())
+}
+
 //APIKey represents an API key entity
 type APIKey struct {
 	OrgID string `json:"org_id" bson:"org_id" validate:"required"`
