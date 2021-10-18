@@ -8,10 +8,15 @@ type loginSession struct {
 	AppID string `bson:"app_id"`
 	OrgID string `bson:"org_id"`
 
+	AuthTypeID   string `bson:"auth_type_id"`
+	AuthTypeCode string `bson:"auth_type_code"`
+
 	Anonymous bool `bson:"anonymous"`
 
-	Identifier        string  `bson:"identifier"`
-	AccountAuthTypeID *string `bson:"account_auth_type_id"`
+	Identifier string `bson:"identifier"`
+
+	AccountAuthTypeID         *string `bson:"account_auth_type_id"`
+	AccountAuthTypeIdentifier *string `bson:"account_auth_type_identifier"`
 
 	DeviceID string `bson:"device_id"`
 

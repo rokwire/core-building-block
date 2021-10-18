@@ -56,7 +56,8 @@ const (
 type LoginSession struct {
 	ID string
 
-	AppOrg ApplicationOrganization
+	AppOrg   ApplicationOrganization
+	AuthType AuthType
 
 	Anonymous bool
 

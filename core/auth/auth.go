@@ -401,9 +401,9 @@ func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthT
 	return accountAuthType, nil
 }
 
-func (a *Auth) applyLogin(anonymous bool, sub string, uid string, authType model.AuthType, appOrg model.ApplicationOrganization,
-	accountAuthType *model.AccountAuthType, appType model.ApplicationType,
-	IP string, deviceType string, deviceOS *string, deviceID string, params map[string]interface{}, l *logs.Log) (*model.LoginSession, error) {
+func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, appOrg model.ApplicationOrganization,
+	accountAuthType *model.AccountAuthType, appType model.ApplicationType, IP string, deviceType string,
+	deviceOS *string, deviceID string, params map[string]interface{}, l *logs.Log) (*model.LoginSession, error) {
 
 	//TODO - check what should go in one transaction
 
@@ -411,7 +411,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, uid string, authType model
 	device := model.Device{ID: "1234", Type: "mobile"}
 
 	//create login session entity
-	loginSession, err := a.createLoginSession(anonymous, sub, uid, authType, appOrg, accountAuthType, appType, IP, params, device, l)
+	loginSession, err := a.createLoginSession(anonymous, sub, authType, appOrg, accountAuthType, appType, IP, params, device, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error creating a session", "", nil, err)
 	}
@@ -425,7 +425,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, uid string, authType model
 	return loginSession, nil
 }
 
-func (a *Auth) createLoginSession(anonymous bool, sub string, uid string, authType model.AuthType,
+func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.AuthType,
 	appOrg model.ApplicationOrganization, accountAuthType *model.AccountAuthType, appType model.ApplicationType,
 	IP string, params map[string]interface{}, device model.Device, l *logs.Log) (*model.LoginSession, error) {
 
@@ -442,10 +442,12 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, uid string, authTy
 	//access token
 	orgID := appOrg.Organization.ID
 	appID := appOrg.Application.ID
+	uid := ""
 	email := ""
 	phone := ""
 	permissions := []string{}
 	if !anonymous {
+		uid = accountAuthType.Identifier
 		email = accountAuthType.Account.Profile.Email
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
@@ -462,8 +464,9 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, uid string, authTy
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
-	loginSession := model.LoginSession{ID: id, AppOrg: appOrg, Anonymous: anonymous, Identifier: sub, AccountAuthType: accountAuthType,
-		Device: device, IP: IP, AccessToken: accessToken, RefreshToken: refreshToken, Params: params, Expires: *expires, DateCreated: time.Now()}
+	loginSession := model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType, Anonymous: anonymous,
+		Identifier: sub, AccountAuthType: accountAuthType, Device: device, IP: IP,
+		AccessToken: accessToken, RefreshToken: refreshToken, Params: params, Expires: *expires, DateCreated: time.Now()}
 
 	return &loginSession, nil
 }

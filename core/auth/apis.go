@@ -63,7 +63,6 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceID st
 
 	anonymous := false
 	sub := ""
-	uid := ""
 
 	var accountAuthType *model.AccountAuthType
 	var responseParams map[string]interface{}
@@ -87,7 +86,6 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceID st
 		}
 
 		sub = accountAuthType.Account.ID
-		uid = accountAuthType.Identifier
 
 		//TODO groups mapping
 	} else {
@@ -101,13 +99,12 @@ func (a *Auth) Login(IP string, deviceType string, deviceOS *string, deviceID st
 		}
 
 		sub = accountAuthType.Account.ID
-		uid = accountAuthType.Identifier
 
 		//the credentials are valid
 	}
 
 	//now we are ready to apply login for the user or anonymous
-	loginSession, err := a.applyLogin(anonymous, sub, uid, *authType, *appOrg, accountAuthType, *appType, IP, deviceType, deviceOS, deviceID, responseParams, l)
+	loginSession, err := a.applyLogin(anonymous, sub, *authType, *appOrg, accountAuthType, *appType, IP, deviceType, deviceOS, deviceID, responseParams, l)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}
@@ -156,6 +153,7 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, e
 	uid := ""
 	orgID := loginSession.AppOrg.Organization.ID
 	appID := loginSession.AppOrg.Application.ID
+	authType := loginSession.AuthType.Code
 	anonymous := loginSession.Anonymous
 	if !anonymous {
 		accountAuthType := loginSession.AccountAuthType
@@ -165,17 +163,16 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, e
 		}
 		uid = accountAuthType.Identifier
 	}
-	/*orgID := appOrg.Organization.ID
-	appID := appOrg.Application.ID
-	email := ""
-	phone := ""
-	permissions := []string{}
-	if !anonymous {
-		email = accountAuthType.Account.Profile.Email
-		phone = accountAuthType.Account.Profile.Phone
-		permissions = accountAuthType.Account.GetPermissionNames()
-	} */
-	claims := a.getStandardClaims(sub, uid, "TODO", "TODO", "rokwire", orgID, appID, "TODO", nil, anonymous)
+	/*
+		email := ""
+		phone := ""
+		permissions := []string{}
+		if !anonymous {
+			email = accountAuthType.Account.Profile.Email
+			phone = accountAuthType.Account.Profile.Phone
+			permissions = accountAuthType.Account.GetPermissionNames()
+		} */
+	claims := a.getStandardClaims(sub, uid, "TODO", "TODO", "rokwire", orgID, appID, authType, nil, anonymous)
 	//claims := a.getStandardClaims(sub, uid, email, phone, "rokwire", orgID, appID, authType.Code, nil, anonymous)
 
 	//TODO permissions
