@@ -5,3 +5,7 @@ properties:
   params:
     type: object
     nullable: true
+    anyOf:
+      - $ref: "../../../shared/responses/ParamsOIDC.yaml"
+      - $ref: "../../../shared/responses/ParamsAPIKey.yaml"
+      - $ref: "../../../shared/responses/ParamsNone.yaml"  
