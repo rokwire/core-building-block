@@ -122,15 +122,13 @@ func (o *oidcRefreshParams) toMap() map[string]interface{} {
 }
 
 func oidcRefreshParamsFromMap(val map[string]interface{}) (*oidcRefreshParams, error) {
-	refreshToken, ok := val["refresh_token"].(string)
+	oidcToken, ok := val["oidc_token"].(map[string]interface{})
 	if !ok {
 		return nil, errors.ErrorData(logutils.StatusMissing, "refresh token", nil)
 	}
 
-	redirectURI, ok := val["redirect_uri"].(string)
-	if !ok {
-		return nil, errors.ErrorData(logutils.StatusMissing, "redirect uri", nil)
-	}
+	refreshToken := oidcToken["refresh_token"].(string)
+	redirectURI := oidcToken["redirect_uri"].(string)
 
 	return &oidcRefreshParams{RefreshToken: refreshToken, RedirectURI: redirectURI}, nil
 }

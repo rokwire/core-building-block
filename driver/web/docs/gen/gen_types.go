@@ -682,16 +682,16 @@ type ResLoginAccount struct {
 
 // ResLoginResponse defines model for _res_login_Response.
 type ResLoginResponse struct {
-	Account *ResLoginAccount        `json:"account,omitempty"`
-	Message *string                 `json:"message,omitempty"`
-	Params  *map[string]interface{} `json:"params"`
-	Token   *ResSharedRokwireToken  `json:"token,omitempty"`
+	Account *ResLoginAccount       `json:"account,omitempty"`
+	Message *string                `json:"message,omitempty"`
+	Params  *interface{}           `json:"params"`
+	Token   *ResSharedRokwireToken `json:"token,omitempty"`
 }
 
 // ResRefreshResponse defines model for _res_refresh_Response.
 type ResRefreshResponse struct {
-	Params *map[string]interface{} `json:"params"`
-	Token  *ResSharedRokwireToken  `json:"token,omitempty"`
+	Params *interface{}           `json:"params"`
+	Token  *ResSharedRokwireToken `json:"token,omitempty"`
 }
 
 // ResSharedRokwireToken defines model for _res_shared_RokwireToken.

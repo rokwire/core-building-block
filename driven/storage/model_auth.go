@@ -22,7 +22,7 @@ type loginSession struct {
 
 	DeviceID string `bson:"device_id"`
 
-	IP           string                 `bson:"ip"`
+	IPAddress    string                 `bson:"ip_address"`
 	AccessToken  string                 `bson:"access_token"`
 	RefreshToken string                 `bson:"refresh_token"`
 	Params       map[string]interface{} `bson:"params"`

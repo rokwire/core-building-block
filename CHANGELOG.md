@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Implement logins sessions [#172](https://github.com/rokwire/core-building-block/issues/172) 
 
+## [1.6.0] - 2021-10-19
+### Added
+- Implement logins sessions [#172](https://github.com/rokwire/core-building-block/issues/172) 
+
 ## [1.5.0] - 2021-10-15
 ### Fixed
 - Permission authorization failing on all endpoints in Docker[#239](https://github.com/rokwire/core-building-block/issues/239)
@@ -104,7 +108,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/rokwire/core-building-block/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/rokwire/core-building-block/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/rokwire/core-building-block/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/rokwire/core-building-block/compare/v1.2.0...v1.3.0

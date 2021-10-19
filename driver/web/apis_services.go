@@ -105,9 +105,12 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 	}
 
 	//params
-	params := loginSession.Params
+	var paramsRes interface{}
+	if loginSession.Params != nil {
+		paramsRes = loginSession.Params
+	}
 
-	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: accountData, Params: &params}
+	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: accountData, Params: &paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
@@ -135,11 +138,14 @@ func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request, claims *t
 
 	accessToken := loginSession.AccessToken
 	refreshToken := loginSession.RefreshToken
-	params := loginSession.Params
+	var paramsRes interface{}
+	if loginSession.Params != nil {
+		paramsRes = loginSession.Params
+	}
 
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
-	responseData := &Def.ResRefreshResponse{Token: &rokwireToken, Params: &params}
+	responseData := &Def.ResRefreshResponse{Token: &rokwireToken, Params: &paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth refresh response"), nil, err, http.StatusInternalServerError, false)

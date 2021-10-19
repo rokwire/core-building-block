@@ -65,7 +65,7 @@ type APIs interface {
 	//Login logs a user in a specific application using the specified credentials and authentication method.
 	//The authentication method must be one of the supported for the application.
 	//	Input:
-	//		IP (string): Client's IP address
+	//		ipAddress (string): Client's IP address
 	//		deviceType (string): "mobile" or "web" or "desktop" etc
 	//		deviceOS (*string): Device OS
 	//		deviceID (string): Device ID
@@ -84,7 +84,7 @@ type APIs interface {
 	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
 	//			Params (interface{}): authType-specific set of parameters passed back to client
-	Login(IP string, deviceType string, deviceOS *string, deviceID string,
+	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
 		authenticationType string, creds string, appTypeIdentifier string, orgID string, params string,
 		profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, error)
 
@@ -165,7 +165,7 @@ type Storage interface {
 
 	//AuthTypes
 	LoadAuthTypes() ([]model.AuthType, error)
-	FindAuthType(codeOrId string) (*model.AuthType, error)
+	FindAuthType(codeOrID string) (*model.AuthType, error)
 
 	//LoginsSessions
 	InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error)
@@ -231,6 +231,7 @@ type Storage interface {
 
 	//ApplicationsOrganizations
 	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
+	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
 }
 
 //ProfileBuildingBlock is used by auth to communicate with the profile building block.

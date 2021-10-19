@@ -7,7 +7,6 @@ import (
 	"core-building-block/utils"
 	"crypto/rsa"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -73,9 +72,6 @@ type Auth struct {
 	cachedIdentityProviders *syncmap.Map //cache identityProviders
 	identityProvidersLock   *sync.RWMutex
 
-	cachedApplicationsOrganizations *syncmap.Map //cache applications organizations
-	applicationsOrganizationsLock   *sync.RWMutex
-
 	apiKeys     *syncmap.Map //cache api keys / api_key (string) -> APIKey
 	apiKeysLock *sync.RWMutex
 
@@ -106,9 +102,6 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	cachedIdentityProviders := &syncmap.Map{}
 	identityProvidersLock := &sync.RWMutex{}
 
-	cachedApplicationsOrganizations := &syncmap.Map{}
-	applicationsOrganizationsLock := &sync.RWMutex{}
-
 	apiKeys := &syncmap.Map{}
 	apiKeysLock := &sync.RWMutex{}
 
@@ -117,7 +110,6 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		authPrivKey: authPrivKey, AuthService: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
 		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
-		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock,
 		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
 	err := auth.storeReg()
@@ -148,11 +140,6 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	err = auth.cacheIdentityProviders()
 	if err != nil {
 		logger.Warnf("NewAuth() failed to cache identity providers: %v", err)
-	}
-
-	err = auth.cacheApplicationsOrganizations()
-	if err != nil {
-		logger.Warnf("NewAuth() failed to cache applications organizations: %v", err)
 	}
 
 	err = auth.cacheAPIKeys()
@@ -391,7 +378,7 @@ func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthT
 }
 
 func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, appOrg model.ApplicationOrganization,
-	accountAuthType *model.AccountAuthType, appType model.ApplicationType, IP string, deviceType string,
+	accountAuthType *model.AccountAuthType, appType model.ApplicationType, ipAddress string, deviceType string,
 	deviceOS *string, deviceID string, params map[string]interface{}, l *logs.Log) (*model.LoginSession, error) {
 
 	//TODO - check what should go in one transaction
@@ -400,7 +387,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 	device := model.Device{ID: "1234", Type: "mobile"}
 
 	//create login session entity
-	loginSession, err := a.createLoginSession(anonymous, sub, authType, appOrg, accountAuthType, appType, IP, params, device, l)
+	loginSession, err := a.createLoginSession(anonymous, sub, authType, appOrg, accountAuthType, appType, ipAddress, params, device, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error creating a session", "", nil, err)
 	}
@@ -416,7 +403,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 
 func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.AuthType,
 	appOrg model.ApplicationOrganization, accountAuthType *model.AccountAuthType, appType model.ApplicationType,
-	IP string, params map[string]interface{}, device model.Device, l *logs.Log) (*model.LoginSession, error) {
+	ipAddress string, params map[string]interface{}, device model.Device, l *logs.Log) (*model.LoginSession, error) {
 
 	//id
 	idUUID, _ := uuid.NewUUID()
@@ -455,7 +442,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 
 	loginSession := model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType,
 		AppType: appType, Anonymous: anonymous, Identifier: sub, AccountAuthType: accountAuthType,
-		Device: device, IP: IP, AccessToken: accessToken, RefreshToken: refreshToken, Params: params, Expires: *expires, DateCreated: time.Now()}
+		Device: device, IPAddress: ipAddress, AccessToken: accessToken, RefreshToken: refreshToken, Params: params, Expires: *expires, DateCreated: time.Now()}
 
 	return &loginSession, nil
 }
@@ -636,7 +623,7 @@ func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier str
 
 	//get the app org
 	applicationID := applicationType.Application.ID
-	appOrg, err := a.getCachedApplicationOrganization(applicationID, orgID)
+	appOrg, err := a.storage.FindApplicationOrganizations(applicationID, orgID)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, logutils.StringArgs(orgID), err)
 	}
@@ -859,57 +846,6 @@ func (a *Auth) getCachedAPIKey(key string) (*model.APIKey, error) {
 	return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeAPIKey, nil)
 }
 
-//cacheApplicationsOrganizations caches the applications organizations
-func (a *Auth) cacheApplicationsOrganizations() error {
-	a.logger.Info("cacheApplicationsOrganizations..")
-
-	applicationsOrganizations, err := a.storage.LoadApplicationsOrganizations()
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
-	}
-
-	a.setCachedApplicationsOrganizations(applicationsOrganizations)
-
-	return nil
-}
-
-func (a *Auth) setCachedApplicationsOrganizations(applicationsOrganization []model.ApplicationOrganization) {
-	a.applicationsOrganizationsLock.Lock()
-	defer a.applicationsOrganizationsLock.Unlock()
-
-	a.cachedApplicationsOrganizations = &syncmap.Map{}
-	validate := validator.New()
-
-	for _, appOrg := range applicationsOrganization {
-		err := validate.Struct(appOrg)
-		if err == nil {
-			key := fmt.Sprintf("%s_%s", appOrg.Application.ID, appOrg.Organization.ID)
-			a.cachedApplicationsOrganizations.Store(key, appOrg)
-		} else {
-			a.logger.Errorf("failed to validate and cache applications organizations with ids %s-%s: %s",
-				appOrg.Application.ID, appOrg.Organization.ID, err.Error())
-		}
-	}
-}
-
-func (a *Auth) getCachedApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
-	a.applicationsOrganizationsLock.RLock()
-	defer a.applicationsOrganizationsLock.RUnlock()
-
-	key := fmt.Sprintf("%s_%s", appID, orgID)
-	errArgs := &logutils.FieldArgs{"key": key}
-
-	item, _ := a.cachedApplicationsOrganizations.Load(key)
-	if item != nil {
-		appOrg, ok := item.(model.ApplicationOrganization)
-		if !ok {
-			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplicationOrganization, errArgs)
-		}
-		return &appOrg, nil
-	}
-	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, errArgs)
-}
-
 func (a *Auth) checkRefreshTokenLimit(orgID string, appID string, credsID string) error {
 	tokens, err := a.storage.LoadRefreshTokens(orgID, appID, credsID)
 	if err != nil {
@@ -998,11 +934,6 @@ func (al *StorageListener) OnIdentityProvidersUpdated() {
 //OnAPIKeysUpdated notifies api keys have been updated
 func (al *StorageListener) OnAPIKeysUpdated() {
 	al.auth.cacheAPIKeys()
-}
-
-//OnApplicationsOrganizationsUpdated notifies that applications organizations have been updated
-func (al *StorageListener) OnApplicationsOrganizationsUpdated() {
-	al.auth.cacheApplicationsOrganizations()
 }
 
 //OnServiceRegsUpdated notifies that a service registration has been updated

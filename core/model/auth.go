@@ -67,7 +67,7 @@ type LoginSession struct {
 
 	Device Device
 
-	IP           string
+	IPAddress    string
 	AccessToken  string
 	RefreshToken string
 	Params       map[string]interface{} //authType-specific set of parameters passed back to client
