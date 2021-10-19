@@ -36,6 +36,7 @@ func (a *Auth) GetHost() string {
 //		deviceID (string): Device ID
 //		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
+//		apiKey (string): API key to validate the specified app
 //		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
 //		params (string): JSON encoded params defined by specified auth type
@@ -50,7 +51,7 @@ func (a *Auth) GetHost() string {
 //			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
 //			Params (interface{}): authType-specific set of parameters passed back to client
 func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
-	authenticationType string, creds string, appTypeIdentifier string, orgID string, params string,
+	authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
 	profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, error) {
 	//TODO - analyse what should go in one transaction
 
@@ -58,6 +59,12 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
+	err = a.validateAPIKey(apiKey, appType.Application.ID)
+	if err != nil {
+		return nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
 
 	var message string
@@ -116,13 +123,14 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 //Refresh refreshes an access token using a refresh token
 //	Input:
 //		refreshToken (string): Refresh token
+//		apiKey (string): API key to validate the specified app
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
 //			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //			Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, error) {
+func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.LoginSession, error) {
 	var loginSession *model.LoginSession
 
 	//find the login session for the refresh token
@@ -148,6 +156,12 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, e
 
 		//return nul
 		return nil, nil
+	}
+
+	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
+	err = a.validateAPIKey(apiKey, loginSession.AppOrg.Application.ID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
 
 	///now:
@@ -225,15 +239,22 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, e
 //		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
 //		redirectURI (string): Registered redirect URI where client will receive response
+//		apiKey (string): API key to validate the specified app
 //		l (*loglib.Log): Log object pointer for request
 //	Returns:
 //		Login URL (string): SSO provider login URL to be launched in a browser
 //		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
-func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, orgID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, orgID string, redirectURI string, apiKey string, l *logs.Log) (string, map[string]interface{}, error) {
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
+	err = a.validateAPIKey(apiKey, appType.Application.ID)
+	if err != nil {
+		return "", nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
 
 	//get the auth type implementation for the auth type

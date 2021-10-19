@@ -1,5 +1,5 @@
 type: object
-description: Auth login response params for "oidc" auth_type
+description: Auth login response params for auth_type="oidc" (or variants)
 properties:
   oidc_token:
     type: object

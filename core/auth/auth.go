@@ -320,6 +320,16 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	return message, accountAuthType, nil
 }
 
+//validateAPIKey checks if the given API key is valid for the given app ID
+func (a *Auth) validateAPIKey(apiKey string, appID string) error {
+	validApiKey, err := a.getCachedAPIKey(apiKey)
+	if err != nil || validApiKey == nil || validApiKey.AppID != appID {
+		return errors.Newf("incorrect key for app_id=%v", appID)
+	}
+
+	return nil
+}
+
 //isSignUp checks if the operation is sign in or sign up
 // 	first check if the client has set sign_up field
 //	if sign_up field has not been sent then check if the user exists

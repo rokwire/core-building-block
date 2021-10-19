@@ -8,7 +8,6 @@ import (
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 const (
@@ -25,7 +24,6 @@ type apiKeyAuthImpl struct {
 }
 
 type apiKeyCreds struct {
-	APIKey      string `json:"api_key" validate:"required"`
 	AnonymousID string `json:"anonymous_id"`
 }
 
@@ -34,21 +32,6 @@ func (a *apiKeyAuthImpl) checkCredentials(authType model.AuthType, appType model
 	err := json.Unmarshal([]byte(creds), &keyCreds)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeAPIKeyCreds, nil, err)
-	}
-
-	validate := validator.New()
-	err = validate.Struct(keyCreds)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAPIKeyCreds, nil, err)
-	}
-
-	apiKey, err := a.auth.getCachedAPIKey(keyCreds.APIKey)
-	if err != nil || apiKey == nil {
-		return "", nil, errors.Newf("incorrect key for org_id=%v, app_id=%v", appOrg.Organization.ID, appOrg.Application.ID)
-	}
-
-	if apiKey.AppID != appOrg.Application.ID || apiKey.OrgID != appOrg.Organization.ID {
-		return "", nil, errors.Newf("incorrect key for org_id=%v, app_id=%v", appOrg.Organization.ID, appOrg.Application.ID)
 	}
 
 	anonymousID := keyCreds.AnonymousID

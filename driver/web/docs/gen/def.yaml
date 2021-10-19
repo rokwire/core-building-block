@@ -2051,16 +2051,12 @@ components:
     _req_login_CredsOIDC:
       type: string
       description: |
-        Auth login creds for auth_type="oidc"
+        Auth login creds for auth_type="oidc" (or variants)
           - full redirect URI received from OIDC provider
     _req_login_CredsAPIKey:
-      required:
-        - api_key
       type: object
       description: Auth login creds for auth_type="api_key"
       properties:
-        api_key:
-          type: string
         anonymous_id:
           type: string
     _req_login_ParamsEmail:
@@ -2075,7 +2071,7 @@ components:
           default: false
     _req_login_ParamsOIDC:
       type: object
-      description: Auth login params for auth_type="oidc"
+      description: Auth login params for auth_type="oidc" (or variants)
       properties:
         redirect_uri:
           type: string
@@ -2114,7 +2110,7 @@ components:
           nullable: true
           anyOf:
             - type: object
-              description: Auth login response params for "oidc" auth_type
+              description: Auth login response params for auth_type="oidc" (or variants)
               properties:
                 oidc_token:
                   type: object
@@ -2130,7 +2126,7 @@ components:
                     redirect_uri:
                       type: string
             - type: object
-              description: Auth login response params for "api_key" auth_type
+              description: Auth login response params for auth_type="api_key"
               properties:
                 anonymous_id:
                   type: string

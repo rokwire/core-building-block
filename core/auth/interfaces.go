@@ -71,6 +71,7 @@ type APIs interface {
 	//		deviceID (string): Device ID
 	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
+	//		apiKey (string): API key to validate the specified app
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
 	//		params (string): JSON encoded params defined by specified auth type
@@ -85,19 +86,20 @@ type APIs interface {
 	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
 	//			Params (interface{}): authType-specific set of parameters passed back to client
 	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
-		authenticationType string, creds string, appTypeIdentifier string, orgID string, params string,
+		authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
 		profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
 	//		refreshToken (string): Refresh token
+	//		apiKey (string): API key to validate the specified app
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
 	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//			Params (interface{}): authType-specific set of parameters passed back to client
-	Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, error)
+	Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.LoginSession, error)
 
 	//Verify checks the verification code in the credentials collection
 	Verify(id string, verification string, l *logs.Log) error
@@ -108,11 +110,12 @@ type APIs interface {
 	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
 	//		redirectURI (string): Registered redirect URI where client will receive response
+	//		apiKey (string): API key to validate the specified app
 	//		l (*loglib.Log): Log object pointer for request
 	//	Returns:
 	//		Login URL (string): SSO provider login URL to be launched in a browser
 	//		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
-	GetLoginURL(authType string, appTypeIdentifier string, orgID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
+	GetLoginURL(authType string, appTypeIdentifier string, orgID string, redirectURI string, apiKey string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and

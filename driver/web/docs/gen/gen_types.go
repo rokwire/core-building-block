@@ -517,7 +517,6 @@ type ReqLoginUrlRequestAuthType string
 // Auth login creds for auth_type="api_key"
 type ReqLoginCredsAPIKey struct {
 	AnonymousId *string `json:"anonymous_id,omitempty"`
-	ApiKey      string  `json:"api_key"`
 }
 
 // Auth login creds for auth_type="email"
@@ -526,7 +525,7 @@ type ReqLoginCredsEmail struct {
 	Password string `json:"password"`
 }
 
-// Auth login creds for auth_type="oidc"
+// Auth login creds for auth_type="oidc" (or variants)
 //   - full redirect URI received from OIDC provider
 type ReqLoginCredsOIDC string
 
@@ -557,7 +556,7 @@ type ReqLoginParamsEmail struct {
 // Auth login request params for unlisted auth_types (None)
 type ReqLoginParamsNone map[string]interface{}
 
-// Auth login params for auth_type="oidc"
+// Auth login params for auth_type="oidc" (or variants)
 type ReqLoginParamsOIDC struct {
 	PkceVerifier *string `json:"pkce_verifier,omitempty"`
 	RedirectUri  *string `json:"redirect_uri,omitempty"`
