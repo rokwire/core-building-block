@@ -86,24 +86,24 @@ DeviceFields:
 ##### APIs requests and responses - they are at bottom
 
 #### shared requests and responses
+_req_shared_CredsEmail:
+  $ref: "./apis/shared/requests/CredsEmail.yaml"
+_req_shared_CredsTwilioPhone:
+  $ref: "./apis/shared/requests/CredsTwilioPhone.yaml"
+_req_shared_CredsOIDC:
+  $ref: "./apis/shared/requests/CredsOIDC.yaml"
+_req_shared_CredsAPIKey:
+  $ref: "./apis/shared/requests/CredsAPIKey.yaml"
 _req_shared_Profile:
-  $ref: "../schemas/apis/shared/requests/Profile.yaml"
+  $ref: "./apis/shared/requests/Profile.yaml"
 _req_shared_ProfileNullable:
-  $ref: "../schemas/apis/shared/requests/ProfileNullable.yaml"
+  $ref: "./apis/shared/requests/ProfileNullable.yaml"
 _res_shared_RokwireToken:
-  $ref: "../schemas/apis/shared/responses/RokwireToken.yaml"
+  $ref: "./apis/shared/responses/RokwireToken.yaml"
 
 ### login API
 _req_login_Request:
   $ref: "./apis/services/login/request/Request.yaml"
-_req_login_CredsEmail:
-  $ref: "./apis/services/login/request/CredsEmail.yaml"
-_req_login_CredsTwilioPhone:
-  $ref: "./apis/services/login/request/CredsTwilioPhone.yaml"
-_req_login_CredsOIDC:
-  $ref: "./apis/services/login/request/CredsOIDC.yaml"
-_req_login_CredsAPIKey:
-  $ref: "./apis/services/login/request/CredsAPIKey.yaml"
 _req_login_ParamsEmail:
   $ref: "./apis/services/login/request/ParamsEmail.yaml"
 _req_login_ParamsOIDC:
@@ -132,6 +132,12 @@ _req_authorize-service_Request:
   $ref: "./apis/services/authorize-service/request/Request.yaml"
 _res_authorize-service_Response:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
+
+### link-creds API
+_req_link-creds_Request:
+  $ref: "./apis/services/link-creds/request/Request.yaml"
+_res_link-creds_Response:
+  $ref: "./apis/services/link-creds/response/Response.yaml"
 
 ### organization API
 _req_create-Organization_Request:

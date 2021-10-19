@@ -6,14 +6,12 @@ properties:
   auth_type:
     type: string
     enum:
-      - username
       - email
       - twilio_phone
       - illinois_oidc
-      - api_key
+      - username
   creds:
     anyOf:
       - $ref: "../../../shared/requests/CredsEmail.yaml"
       - $ref: "../../../shared/requests/CredsTwilioPhone.yaml"
       - $ref: "../../../shared/requests/CredsOIDC.yaml"
-      - $ref: "../../../shared/requests/CredsAPIKey.yaml"

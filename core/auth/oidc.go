@@ -387,10 +387,10 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	oidcParams["access_token"] = token.AccessToken
 	oidcParams["refresh_token"] = token.RefreshToken
 	oidcParams["token_type"] = token.TokenType
-	oidcParams["redirect_uri"] = redirectURI
 
 	params := map[string]interface{}{}
 	params["oidc_token"] = oidcParams
+	params["redirect_uri"] = redirectURI
 	return &externalUser, params, nil
 }
 

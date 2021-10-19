@@ -66,6 +66,17 @@ const (
 	ReqCreateOrganizationRequestTypeSmall ReqCreateOrganizationRequestType = "small"
 )
 
+// Defines values for ReqLinkCredsRequestAuthType.
+const (
+	ReqLinkCredsRequestAuthTypeEmail ReqLinkCredsRequestAuthType = "email"
+
+	ReqLinkCredsRequestAuthTypeIllinoisOidc ReqLinkCredsRequestAuthType = "illinois_oidc"
+
+	ReqLinkCredsRequestAuthTypeTwilioPhone ReqLinkCredsRequestAuthType = "twilio_phone"
+
+	ReqLinkCredsRequestAuthTypeUsername ReqLinkCredsRequestAuthType = "username"
+)
+
 // Defines values for ReqLoginUrlRequestAuthType.
 const (
 	ReqLoginUrlRequestAuthTypeIllinoisOidc ReqLoginUrlRequestAuthType = "illinois_oidc"
@@ -502,6 +513,15 @@ type ReqGetOrganizationRequest struct {
 	Id string `json:"id"`
 }
 
+// ReqLinkCredsRequest defines model for _req_link-creds_Request.
+type ReqLinkCredsRequest struct {
+	AuthType ReqLinkCredsRequestAuthType `json:"auth_type"`
+	Creds    interface{}                 `json:"creds"`
+}
+
+// ReqLinkCredsRequestAuthType defines model for ReqLinkCredsRequest.AuthType.
+type ReqLinkCredsRequestAuthType string
+
 // ReqLoginUrlRequest defines model for _req_login-url_Request.
 type ReqLoginUrlRequest struct {
 	AppTypeIdentifier string                     `json:"app_type_identifier"`
@@ -512,28 +532,6 @@ type ReqLoginUrlRequest struct {
 
 // ReqLoginUrlRequestAuthType defines model for ReqLoginUrlRequest.AuthType.
 type ReqLoginUrlRequestAuthType string
-
-// Auth login creds for auth_type="api_key"
-type ReqLoginCredsAPIKey struct {
-	AnonymousId *string `json:"anonymous_id,omitempty"`
-	ApiKey      string  `json:"api_key"`
-}
-
-// Auth login creds for auth_type="email"
-type ReqLoginCredsEmail struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-// Auth login creds for auth_type="oidc"
-//   - full redirect URI received from OIDC provider
-type ReqLoginCredsOIDC string
-
-// Auth login creds for auth_type="twilio_phone"
-type ReqLoginCredsTwilioPhone struct {
-	Code  *string `json:"code,omitempty"`
-	Phone string  `json:"phone"`
-}
 
 // Client device
 type ReqLoginDevice struct {
@@ -578,6 +576,22 @@ type ReqLoginRequest struct {
 
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
 type ReqLoginRequestAuthType string
+
+// Auth login creds for auth_type="email"
+type ReqSharedCredsEmail struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// Auth login creds for auth_type="oidc"
+//   - full redirect URI received from OIDC provider
+type ReqSharedCredsOIDC string
+
+// Auth login creds for auth_type="twilio_phone"
+type ReqSharedCredsTwilioPhone struct {
+	Code  *string `json:"code,omitempty"`
+	Phone string  `json:"phone"`
+}
 
 // ReqSharedProfile defines model for _req_shared_Profile.
 type ReqSharedProfile struct {
@@ -652,6 +666,12 @@ type ResGetOrganizationsResponse struct {
 
 // ResGetOrganizationsResponseType defines model for ResGetOrganizationsResponse.Type.
 type ResGetOrganizationsResponseType string
+
+// ResLinkCredsResponse defines model for _res_link-creds_Response.
+type ResLinkCredsResponse struct {
+	Message *string      `json:"message,omitempty"`
+	Params  *interface{} `json:"params"`
+}
 
 // ResLoginUrlResponse defines model for _res_login-url_Response.
 type ResLoginUrlResponse struct {
@@ -791,6 +811,9 @@ type PutServicesAccountProfileJSONBody ReqSharedProfile
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
+// PostServicesAuthLinkCredsJSONBody defines parameters for PostServicesAuthLinkCreds.
+type PostServicesAuthLinkCredsJSONBody ReqLinkCredsRequest
+
 // PostServicesAuthLoginJSONBody defines parameters for PostServicesAuthLogin.
 type PostServicesAuthLoginJSONBody ReqLoginRequest
 
@@ -868,6 +891,9 @@ type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
 
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody
+
+// PostServicesAuthLinkCredsJSONRequestBody defines body for PostServicesAuthLinkCreds for application/json ContentType.
+type PostServicesAuthLinkCredsJSONRequestBody PostServicesAuthLinkCredsJSONBody
 
 // PostServicesAuthLoginJSONRequestBody defines body for PostServicesAuthLogin for application/json ContentType.
 type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody

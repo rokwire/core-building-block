@@ -347,6 +347,32 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/auth/link-creds:
+    post:
+      tags:
+        - Services
+      summary: Link credentials
+      description: |
+        Link credentials to an existing account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_link-creds_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_link-creds_Response'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/auth/service-regs:
     get:
       tags:
@@ -1594,7 +1620,7 @@ components:
           type: string
         date_updated:
           type: string
-          nulable: true
+          nullable: true
         date_created:
           type: string
     AuthType:
@@ -1904,6 +1930,42 @@ components:
             - other
         os:
           type: string
+    _req_shared_CredsEmail:
+      required:
+        - email
+        - password
+      type: object
+      description: Auth login creds for auth_type="email"
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    _req_shared_CredsTwilioPhone:
+      type: object
+      description: Auth login creds for auth_type="twilio_phone"
+      required:
+        - phone
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+    _req_shared_CredsOIDC:
+      type: string
+      description: |
+        Auth login creds for auth_type="oidc"
+          - full redirect URI received from OIDC provider
+    _req_shared_CredsAPIKey:
+      required:
+        - api_key
+      type: object
+      description: Auth login creds for auth_type="api_key"
+      properties:
+        api_key:
+          type: string
+        anonymous_id:
+          type: string
     _req_shared_Profile:
       type: object
       properties:
@@ -1996,21 +2058,32 @@ components:
         auth_type:
           type: string
           enum:
-            - username
             - email
             - twilio_phone
             - illinois_oidc
             - api_key
+            - username
         app_type_identifier:
           type: string
         org_id:
           type: string
         creds:
           anyOf:
-            - $ref: '#/components/schemas/_req_login_CredsEmail'
-            - $ref: '#/components/schemas/_req_login_CredsTwilioPhone'
-            - $ref: '#/components/schemas/_req_login_CredsOIDC'
-            - $ref: '#/components/schemas/_req_login_CredsAPIKey'
+            - $ref: '#/components/schemas/_req_shared_CredsEmail'
+            - $ref: '#/components/schemas/_req_shared_CredsTwilioPhone'
+            - type: string
+              description: |
+                Auth login creds for auth_type="oidc"
+                  - full redirect URI received from OIDC provider
+            - required:
+                - api_key
+              type: object
+              description: Auth login creds for auth_type="api_key"
+              properties:
+                api_key:
+                  type: string
+                anonymous_id:
+                  type: string
         params:
           type: object
           anyOf:
@@ -2024,42 +2097,6 @@ components:
         preferences:
           type: object
           nullable: true
-    _req_login_CredsEmail:
-      required:
-        - email
-        - password
-      type: object
-      description: Auth login creds for auth_type="email"
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-    _req_login_CredsTwilioPhone:
-      type: object
-      description: Auth login creds for auth_type="twilio_phone"
-      required:
-        - phone
-      properties:
-        phone:
-          type: string
-        code:
-          type: string
-    _req_login_CredsOIDC:
-      type: string
-      description: |
-        Auth login creds for auth_type="oidc"
-          - full redirect URI received from OIDC provider
-    _req_login_CredsAPIKey:
-      required:
-        - api_key
-      type: object
-      description: Auth login creds for auth_type="api_key"
-      properties:
-        api_key:
-          type: string
-        anonymous_id:
-          type: string
     _req_login_ParamsEmail:
       type: object
       description: Auth login params for auth_type="email"
@@ -2123,8 +2160,8 @@ components:
                       type: string
                     token_type:
                       type: string
-                    redirect_uri:
-                      type: string
+                redirect_uri:
+                  type: string
             - type: object
               properties:
                 anonymous_id:
@@ -2230,6 +2267,36 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
+    _req_link-creds_Request:
+      required:
+        - auth_type
+        - creds
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - email
+            - twilio_phone
+            - illinois_oidc
+            - username
+        creds:
+          anyOf:
+            - $ref: '#/components/schemas/_req_shared_CredsEmail'
+            - $ref: '#/components/schemas/_req_shared_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_req_shared_CredsOIDC'
+    _res_link-creds_Response:
+      type: object
+      properties:
+        params:
+          type: object
+          nullable: true
+          anyOf:
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/0'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/1'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/2'
+        message:
+          type: string
     _req_create-Organization_Request:
       required:
         - name
