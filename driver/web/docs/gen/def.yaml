@@ -1581,7 +1581,7 @@ components:
           type: boolean
         identifier:
           type: string
-        IP:
+        id_address:
           type: string
         access_token:
           type: string
