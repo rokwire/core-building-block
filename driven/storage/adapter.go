@@ -290,8 +290,8 @@ func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
 }
 
 //FindAuthType finds auth type by id or code
-func (sa *Adapter) FindAuthType(codeOrId string) (*model.AuthType, error) {
-	return sa.getCachedAuthType(codeOrId)
+func (sa *Adapter) FindAuthType(codeOrID string) (*model.AuthType, error) {
+	return sa.getCachedAuthType(codeOrID)
 }
 
 //InsertLoginSession inserts login session
