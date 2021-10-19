@@ -1,14 +1,11 @@
 required:
-  - auth_type_id
-  - identifier
+  - account_auth_type_id
   - password
   - new_password
   - confirm_password
 type: object
 properties:
-  auth_type_id:
-    type: string
-  identifier:
+  account_auth_type_id:
     type: string
   password:
     type: string

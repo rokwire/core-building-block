@@ -278,8 +278,7 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 //ResetPasswordClient updates the value in the credential with new password
 //	Input:
 //		accountID: id of the associated account to reset
-//		authTypeID (string): ID of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
-//		identifier: identifier of the account auth type
+//		accountAuthTypeID (string): id of the AccountAuthType
 //		password: old password
 //		newPassword: new password to reset to
 //		confirmPassword: new password to reset to
@@ -287,14 +286,14 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 //		error: if any
 //TODO: Clear login sessions using old creds
 // Handle refresh tokens when applicable
-func (a *Auth) ResetPasswordClient(accountID string, authTypeID string, identifier string, password string, newPassword string, confirmPassword string, l *logs.Log) error {
+func (a *Auth) ResetPasswordClient(accountID string, accountAuthTypeID string, password string, newPassword string, confirmPassword string, l *logs.Log) error {
 	//Get the user credential from account auth type in accounts collection
 	account, err := a.storage.FindAccountByID(accountID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	accountAuthType := account.GetAccountAuthType(authTypeID, identifier)
+	accountAuthType := account.GetAccountAuthTypeByID(accountAuthTypeID)
 	if accountAuthType == nil {
 		return errors.New("for some reasons the account auth type is nil")
 	}
@@ -308,7 +307,7 @@ func (a *Auth) ResetPasswordClient(accountID string, authTypeID string, identifi
 
 	//Determine the auth type for resetPassword
 	authType := accountAuthType.AuthType
-	if authType.IsExternal {
+	if authType.IsExternal || authType.IsAnonymous {
 		return errors.WrapErrorAction("invalid auth type for reset password client", model.TypeAuthType, nil, err)
 	}
 
@@ -333,8 +332,6 @@ func (a *Auth) ResetPasswordClient(accountID string, authTypeID string, identifi
 //ResetPasswordLink updates the value in the credential with new password
 //	Input:
 //		credsID: id of the credential object
-//		authTypeID (string): ID of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
-//		identifier: identifier of the account auth type
 //		resetCode: code from the reset link
 //		newPassword: new password to reset to
 //		confirmPassword: new password to reset to
@@ -342,7 +339,7 @@ func (a *Auth) ResetPasswordClient(accountID string, authTypeID string, identifi
 //		error: if any
 //TODO: Clear login sessions using old creds
 // Handle refresh tokens when applicable
-func (a *Auth) ResetPasswordLink(credsID string, authTypeID string, identifier string, resetCode string, newPassword string, confirmPassword string, l *logs.Log) error {
+func (a *Auth) ResetPasswordLink(credsID string, resetCode string, newPassword string, confirmPassword string, l *logs.Log) error {
 	credential, err := a.storage.FindCredential(credsID)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)

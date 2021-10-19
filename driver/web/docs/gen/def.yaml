@@ -288,7 +288,7 @@ paths:
         - Services
       summary: Reset the login password from client application
       description: |
-        Updates the credential with new password
+        Updates the credential with new password. Needs user auth token for authorization
       requestBody:
         content:
           application/json:
@@ -2131,16 +2131,13 @@ components:
             - $ref: '#/components/schemas/_res_shared_ParamsNone'
     _req_reset-password-client_Request:
       required:
-        - auth_type_id
-        - identifier
+        - account_auth_type_id
         - password
         - new_password
         - confirm_password
       type: object
       properties:
-        auth_type_id:
-          type: string
-        identifier:
+        account_auth_type_id:
           type: string
         password:
           type: string
@@ -2151,18 +2148,12 @@ components:
     _req_reset-password-link_Request:
       required:
         - creds_id
-        - auth_type_id
-        - identifier
         - reset_code
         - new_password
         - confirm_password
       type: object
       properties:
         creds_id:
-          type: string
-        auth_type_id:
-          type: string
-        identifier:
           type: string
         reset_code:
           type: string

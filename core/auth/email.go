@@ -200,9 +200,7 @@ func (a *emailAuthImpl) resetPassword(credential *model.Credential, resetCode *s
 	if newPassword != confirmPassword {
 		return nil, errors.New("passwords fields do not match")
 	}
-	if resetCode == nil && password == nil {
-		return nil, errors.New("Missing both resetCode and old password")
-	}
+
 	credBytes, err := json.Marshal(credential.Value)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
@@ -221,7 +219,7 @@ func (a *emailAuthImpl) resetPassword(credential *model.Credential, resetCode *s
 			return nil, errors.WrapErrorAction("bad credentials", "", nil, err)
 		}
 		//reset password from link
-	} else {
+	} else if resetCode != nil {
 		err = a.compareCode(creds.ResetCode, *resetCode, creds.ResetExpiry, l)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, &logutils.FieldArgs{"reset_code": *resetCode}, errors.New("invalid reset code"))
@@ -229,6 +227,8 @@ func (a *emailAuthImpl) resetPassword(credential *model.Credential, resetCode *s
 		//Update verification data
 		creds.ResetCode = ""
 		creds.ResetExpiry = time.Time{}
+	} else {
+		return nil, errors.New("Missing both resetCode and old password")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)

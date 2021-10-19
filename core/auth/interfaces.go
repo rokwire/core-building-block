@@ -103,9 +103,9 @@ type APIs interface {
 	Verify(id string, verification string, l *logs.Log) error
 
 	//ResetPasswordClient updates the credential object with the new password from client app
-	ResetPasswordClient(accountID string, authTypeID string, identifier string, password string, newPassword string, confirmPassword string, l *logs.Log) error
-	//ResetPasswordClient updates the credential object with the new password from client app
-	ResetPasswordLink(credsID string, authTypeID string, identifier string, resetCode string, newPassword string, confirmPassword string, l *logs.Log) error
+	ResetPasswordClient(accountID string, accountAuthTypeID string, password string, newPassword string, confirmPassword string, l *logs.Log) error
+	//ResetPasswordLink updates the credential object with the new password from reset link
+	ResetPasswordLink(credsID string, resetCode string, newPassword string, confirmPassword string, l *logs.Log) error
 	// ForgotPassword generates a reset link and sends to the given identifier
 	ForgotPassword(authenticationType string, appTypeIdentifier string, orgID string, identifier string, l *logs.Log) error
 
