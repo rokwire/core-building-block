@@ -149,17 +149,20 @@ type APIs interface {
 	//DeregisterService deletes an existing service registration
 	DeregisterService(serviceID string) error
 
-	//GetAPIKey finds and returns the API key for the provided org and app
-	GetAPIKey(orgID string, appID string) (*model.APIKey, error)
+	//GetApplicationAPIKeys finds and returns the API keys for an application
+	GetApplicationAPIKeys(appID string) ([]model.APIKey, error)
 
-	//CreateAPIKey creates a new API key for the provided org and app
-	CreateAPIKey(apiKey *model.APIKey) error
+	//GetAPIKey finds and returns an API key
+	GetAPIKey(ID string) (*model.APIKey, error)
+
+	//CreateAPIKey creates a new API key
+	CreateAPIKey(apiKey model.APIKey) (*model.APIKey, error)
 
 	//UpdateAPIKey updates an existing API key
-	UpdateAPIKey(apiKey *model.APIKey) error
+	UpdateAPIKey(apiKey model.APIKey) error
 
-	//DeleteAPIKey deletes an existing API key
-	DeleteAPIKey(orgID string, appID string) error
+	//DeleteAPIKey deletes an API key
+	DeleteAPIKey(ID string) error
 }
 
 //Storage interface to communicate with the storage
@@ -223,11 +226,11 @@ type Storage interface {
 
 	//APIKeys
 	LoadAPIKeys() ([]model.APIKey, error)
-	FindAPIKey(orgID string, appID string) (*model.APIKey, error)
-	FindAPIKeys(orgID string) ([]model.APIKey, error)
-	InsertAPIKey(apiKey *model.APIKey) error
-	UpdateAPIKey(apiKey *model.APIKey) error
-	DeleteAPIKey(orgID string, appID string) error
+	FindApplicationAPIKeys(appID string) ([]model.APIKey, error)
+	FindAPIKey(ID string) (*model.APIKey, error)
+	InsertAPIKey(apiKey model.APIKey) (*model.APIKey, error)
+	UpdateAPIKey(apiKey model.APIKey) error
+	DeleteAPIKey(ID string) error
 
 	//ApplicationTypes
 	FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error)

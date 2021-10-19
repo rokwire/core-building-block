@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokwire/core-auth-library-go/authorization"
 	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
@@ -430,22 +431,32 @@ func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
 	return &model.JSONWebKeySet{Keys: []model.JSONWebKey{*jwk}}, nil
 }
 
-//GetAPIKey finds and returns the API key for the provided org and app
-func (a *Auth) GetAPIKey(orgID string, appID string) (*model.APIKey, error) {
-	return a.storage.FindAPIKey(orgID, appID)
+//GetApplicationAPIKeys finds and returns the API keys for the provided app
+func (a *Auth) GetApplicationAPIKeys(appID string) ([]model.APIKey, error) {
+	return a.storage.FindApplicationAPIKeys(appID)
 }
 
-//CreateAPIKey creates a new API key for the provided org and app
-func (a *Auth) CreateAPIKey(apiKey *model.APIKey) error {
+//GetAPIKey finds and returns an API key
+func (a *Auth) GetAPIKey(ID string) (*model.APIKey, error) {
+	return a.storage.FindAPIKey(ID)
+}
+
+//CreateAPIKey creates a new API key
+func (a *Auth) CreateAPIKey(apiKey model.APIKey) (*model.APIKey, error) {
+	id, _ := uuid.NewUUID()
+	apiKey.ID = id.String()
 	return a.storage.InsertAPIKey(apiKey)
 }
 
 //UpdateAPIKey updates an existing API key
-func (a *Auth) UpdateAPIKey(apiKey *model.APIKey) error {
+func (a *Auth) UpdateAPIKey(apiKey model.APIKey) error {
+	if len(apiKey.ID) == 0 {
+		return errors.Newf("id cannot be empty")
+	}
 	return a.storage.UpdateAPIKey(apiKey)
 }
 
-//DeleteAPIKey deletes an existing API key
-func (a *Auth) DeleteAPIKey(orgID string, appID string) error {
-	return a.storage.DeleteAPIKey(orgID, appID)
+//DeleteAPIKey deletes an API key
+func (a *Auth) DeleteAPIKey(ID string) error {
+	return a.storage.DeleteAPIKey(ID)
 }

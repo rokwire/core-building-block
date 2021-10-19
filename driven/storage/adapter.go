@@ -1195,63 +1195,61 @@ func (sa *Adapter) LoadAPIKeys() ([]model.APIKey, error) {
 	return result, nil
 }
 
-//FindAPIKey finds the api key document from DB by orgID and appID
-func (sa *Adapter) FindAPIKey(orgID string, appID string) (*model.APIKey, error) {
-	errFields := &logutils.FieldArgs{"org_id": orgID, "app_id": appID}
-	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID}}
-	var result *model.APIKey
-	err := sa.db.apiKeys.FindOne(filter, &result, nil)
+//FindApplicationAPIKeys finds the api key documents from storage for an appID
+func (sa *Adapter) FindApplicationAPIKeys(appID string) ([]model.APIKey, error) {
+	filter := bson.D{primitive.E{Key: "app_id", Value: appID}}
+	var result []model.APIKey
+	err := sa.db.apiKeys.Find(filter, &result, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, errFields, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, &logutils.FieldArgs{"app_id": appID}, err)
 	}
 	return result, nil
 }
 
-//FindAPIKeys finds the api key documents from DB for an orgID
-func (sa *Adapter) FindAPIKeys(orgID string) ([]model.APIKey, error) {
-	errFields := &logutils.FieldArgs{"org_id": orgID}
-	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}}
-	var result []model.APIKey
-	err := sa.db.apiKeys.Find(filter, &result, nil)
+//FindAPIKeys finds the api key documents from storage
+func (sa *Adapter) FindAPIKey(ID string) (*model.APIKey, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	var result *model.APIKey
+	err := sa.db.apiKeys.FindOne(filter, &result, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, errFields, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, &logutils.FieldArgs{"_id": ID}, err)
 	}
 	return result, nil
 }
 
 //InsertAPIKey inserts an API key
-func (sa *Adapter) InsertAPIKey(apiKey *model.APIKey) error {
+func (sa *Adapter) InsertAPIKey(apiKey model.APIKey) (*model.APIKey, error) {
 	_, err := sa.db.apiKeys.InsertOne(apiKey)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAPIKey, &logutils.FieldArgs{"org_id": apiKey.OrgID, "app_id": apiKey.AppID}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAPIKey, &logutils.FieldArgs{"_id": apiKey.ID}, err)
 	}
-	return nil
+	return &apiKey, nil
 }
 
 //UpdateAPIKey updates the API key in storage
-func (sa *Adapter) UpdateAPIKey(apiKey *model.APIKey) error {
-	filter := bson.M{"org_id": apiKey.OrgID, "app_id": apiKey.AppID}
+func (sa *Adapter) UpdateAPIKey(apiKey model.APIKey) error {
+	filter := bson.M{"_id": apiKey.ID}
 	err := sa.db.apiKeys.ReplaceOne(filter, apiKey, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAPIKey, &logutils.FieldArgs{"org_id": apiKey.OrgID, "app_id": apiKey.AppID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAPIKey, &logutils.FieldArgs{"_id": apiKey.ID}, err)
 	}
 
 	return nil
 }
 
 //DeleteAPIKey deletes the API key from storage
-func (sa *Adapter) DeleteAPIKey(orgID string, appID string) error {
-	filter := bson.M{"org_id": orgID, "app_id": appID}
+func (sa *Adapter) DeleteAPIKey(ID string) error {
+	filter := bson.M{"_id": ID}
 	result, err := sa.db.apiKeys.DeleteOne(filter, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAPIKey, &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAPIKey, &logutils.FieldArgs{"_id": ID}, err)
 	}
 	if result == nil {
-		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
+		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"_id": ID}, err)
 	}
 	deletedCount := result.DeletedCount
 	if deletedCount == 0 {
-		return errors.WrapErrorData(logutils.StatusMissing, model.TypeAPIKey, &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeAPIKey, &logutils.FieldArgs{"_id": ID}, err)
 	}
 
 	return nil

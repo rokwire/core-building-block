@@ -133,9 +133,9 @@ const (
 
 // API key record
 type APIKey struct {
-	AppId string `json:"app_id"`
-	Key   string `json:"key"`
-	OrgId string `json:"org_id"`
+	AppId string  `json:"app_id"`
+	Id    *string `json:"id,omitempty"`
+	Key   string  `json:"key"`
 }
 
 // Account defines model for Account.
@@ -718,21 +718,15 @@ type PutAdminAccountRolesJSONBody ReqAccountRolesRequest
 // DeleteAdminApiKeysParams defines parameters for DeleteAdminApiKeys.
 type DeleteAdminApiKeysParams struct {
 
-	// The org ID of the API key to delete
-	OrgId string `json:"org_id"`
-
-	// The app ID of the API key to delete
-	AppId string `json:"app_id"`
+	// The ID of the API key to delete
+	Id string `json:"id"`
 }
 
 // GetAdminApiKeysParams defines parameters for GetAdminApiKeys.
 type GetAdminApiKeysParams struct {
 
-	// The org ID of the API key to return
-	OrgId string `json:"org_id"`
-
-	// The app ID of the API key to return
-	AppId string `json:"app_id"`
+	// The ID of the API key to return
+	Id string `json:"id"`
 }
 
 // PostAdminApiKeysJSONBody defines parameters for PostAdminApiKeys.
@@ -740,6 +734,13 @@ type PostAdminApiKeysJSONBody APIKey
 
 // PutAdminApiKeysJSONBody defines parameters for PutAdminApiKeys.
 type PutAdminApiKeysJSONBody APIKey
+
+// GetAdminApplicationApiKeysParams defines parameters for GetAdminApplicationApiKeys.
+type GetAdminApplicationApiKeysParams struct {
+
+	// The app ID of the API keys to return
+	AppId string `json:"app_id"`
+}
 
 // PostAdminApplicationPermissionsJSONBody defines parameters for PostAdminApplicationPermissions.
 type PostAdminApplicationPermissionsJSONBody ReqApplicationPermissionsRequest

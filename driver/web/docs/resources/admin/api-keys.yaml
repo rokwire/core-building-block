@@ -5,21 +5,13 @@ get:
   description: |
     Returns API key record
 
-    **Auth:** Requires auth token with `auth_admin` permission
+    **Auth:** Requires auth token with `get_api-keys` permission
   security:
     - bearerAuth: []
   parameters:
-    - name: org_id
+    - name: id
       in: query
-      description: The org ID of the API key to return
-      required: true
-      style: form
-      explode: false
-      schema:
-        type: string
-    - name: app_id
-      in: query
-      description: The app ID of the API key to return
+      description: The ID of the API key to return
       required: true
       style: form
       explode: false
@@ -45,9 +37,7 @@ post:
   description: |
     Creates a new API key record
 
-    The "org_id" and "app_id" of the record must not match an existing registration  
-
-    **Auth:** Requires auth token with `auth_admin` permission
+    **Auth:** Requires auth token with `update_api-keys` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -78,9 +68,9 @@ put:
   description: |
     Update an existing API key record
 
-    The "org_id" and "app_id" of the record must match an existing registration  
+    Must include the "id" field to identify which key is to be udpated
 
-    **Auth:** Requires auth token with `auth_admin` permission
+    **Auth:** Requires auth token with `update_api-keys` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -111,21 +101,13 @@ delete:
   description: |
     Deletes an existing API key record
 
-    **Auth:** Requires auth token with `auth_admin` permission
+    **Auth:** Requires auth token with `update_api-keys` permission
   security:
     - bearerAuth: []
   parameters:
-    - name: org_id
+    - name: id
       in: query
-      description: The org ID of the API key to delete
-      required: true
-      style: form
-      explode: false
-      schema:
-        type: string
-    - name: app_id
-      in: query
-      description: The app ID of the API key to delete
+      description: The ID of the API key to delete
       required: true
       style: form
       explode: false
