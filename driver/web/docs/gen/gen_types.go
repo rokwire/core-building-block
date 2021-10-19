@@ -71,6 +71,17 @@ const (
 	ReqLoginUrlRequestAuthTypeIllinoisOidc ReqLoginUrlRequestAuthType = "illinois_oidc"
 )
 
+// Defines values for ReqLoginDeviceType.
+const (
+	ReqLoginDeviceTypeDesktop ReqLoginDeviceType = "desktop"
+
+	ReqLoginDeviceTypeMobile ReqLoginDeviceType = "mobile"
+
+	ReqLoginDeviceTypeOther ReqLoginDeviceType = "other"
+
+	ReqLoginDeviceTypeWeb ReqLoginDeviceType = "web"
+)
+
 // Defines values for ReqLoginRequestAuthType.
 const (
 	ReqLoginRequestAuthTypeApiKey ReqLoginRequestAuthType = "api_key"
@@ -289,10 +300,9 @@ type Device struct {
 
 // DeviceFields defines model for DeviceFields.
 type DeviceFields struct {
-	Id         string           `json:"id"`
-	MacAddress *string          `json:"mac_address,omitempty"`
-	Os         *string          `json:"os,omitempty"`
-	Type       DeviceFieldsType `json:"type"`
+	Id   string           `json:"id"`
+	Os   *string          `json:"os,omitempty"`
+	Type DeviceFieldsType `json:"type"`
 }
 
 // DeviceFieldsType defines model for DeviceFields.Type.
@@ -525,6 +535,16 @@ type ReqLoginCredsTwilioPhone struct {
 	Phone string  `json:"phone"`
 }
 
+// Client device
+type ReqLoginDevice struct {
+	DeviceId *string            `json:"device_id,omitempty"`
+	Os       *string            `json:"os,omitempty"`
+	Type     ReqLoginDeviceType `json:"type"`
+}
+
+// ReqLoginDeviceType defines model for ReqLoginDevice.Type.
+type ReqLoginDeviceType string
+
 // Auth login params for auth_type="email"
 type ReqLoginParamsEmail struct {
 
@@ -544,13 +564,16 @@ type ReqLoginParamsOIDC struct {
 
 // ReqLoginRequest defines model for _req_login_Request.
 type ReqLoginRequest struct {
-	AppTypeIdentifier string                    `json:"app_type_identifier"`
-	AuthType          ReqLoginRequestAuthType   `json:"auth_type"`
-	Creds             *interface{}              `json:"creds,omitempty"`
-	OrgId             string                    `json:"org_id"`
-	Params            *interface{}              `json:"params,omitempty"`
-	Preferences       *map[string]interface{}   `json:"preferences"`
-	Profile           *ReqSharedProfileNullable `json:"profile"`
+	AppTypeIdentifier string                  `json:"app_type_identifier"`
+	AuthType          ReqLoginRequestAuthType `json:"auth_type"`
+	Creds             *interface{}            `json:"creds,omitempty"`
+
+	// Client device
+	Device      ReqLoginDevice            `json:"device"`
+	OrgId       string                    `json:"org_id"`
+	Params      *interface{}              `json:"params,omitempty"`
+	Preferences *map[string]interface{}   `json:"preferences"`
+	Profile     *ReqSharedProfileNullable `json:"profile"`
 }
 
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
@@ -659,20 +682,8 @@ type ResLoginResponse struct {
 
 // ResRefreshResponse defines model for _res_refresh_Response.
 type ResRefreshResponse struct {
-	Params *interface{}           `json:"params,omitempty"`
+	Params *interface{}           `json:"params"`
 	Token  *ResSharedRokwireToken `json:"token,omitempty"`
-}
-
-// Auth login response params for unlisted auth_types (None)
-type ResSharedParamsNone map[string]interface{}
-
-// ResSharedParamsOIDC defines model for _res_shared_ParamsOIDC.
-type ResSharedParamsOIDC struct {
-	OidcToken *struct {
-		AccessToken *string `json:"access_token,omitempty"`
-		IdToken     *string `json:"id_token,omitempty"`
-		TokenType   *string `json:"token_type,omitempty"`
-	} `json:"oidc_token,omitempty"`
 }
 
 // ResSharedRokwireToken defines model for _res_shared_RokwireToken.

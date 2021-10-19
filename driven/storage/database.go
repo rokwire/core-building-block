@@ -27,7 +27,7 @@ type database struct {
 	accounts                  *collectionWrapper
 	devices                   *collectionWrapper
 	credentials               *collectionWrapper
-	refreshTokens             *collectionWrapper
+	loginsSessions            *collectionWrapper
 	globalConfig              *collectionWrapper
 	serviceRegs               *collectionWrapper
 	serviceAuthorizations     *collectionWrapper
@@ -94,26 +94,26 @@ func (m *database) start() error {
 		return err
 	}
 
-	refreshTokens := &collectionWrapper{database: m, coll: db.Collection("refresh_tokens")}
-	err = m.applyRefreshTokenChecks(refreshTokens)
-	if err != nil {
-		return err
-	}
-
-	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
-	err = m.applyGlobalConfigChecks(globalConfig)
-	if err != nil {
-		return err
-	}
-
 	serviceRegs := &collectionWrapper{database: m, coll: db.Collection("service_regs")}
 	err = m.applyServiceRegsChecks(serviceRegs)
 	if err != nil {
 		return err
 	}
 
+	loginsSessions := &collectionWrapper{database: m, coll: db.Collection("logins_sessions")}
+	err = m.applyLoginsSessionsChecks(loginsSessions)
+	if err != nil {
+		return err
+	}
+
 	serviceAuthorizations := &collectionWrapper{database: m, coll: db.Collection("service_authorizations")}
 	err = m.applyServiceAuthorizationsChecks(serviceAuthorizations)
+	if err != nil {
+		return err
+	}
+
+	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
+	err = m.applyGlobalConfigChecks(globalConfig)
 	if err != nil {
 		return err
 	}
@@ -169,7 +169,7 @@ func (m *database) start() error {
 	m.accounts = accounts
 	m.devices = devices
 	m.credentials = credentials
-	m.refreshTokens = refreshTokens
+	m.loginsSessions = loginsSessions
 	m.globalConfig = globalConfig
 	m.apiKeys = apiKeys
 	m.serviceRegs = serviceRegs
@@ -259,29 +259,36 @@ func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
 	return nil
 }
 
-func (m *database) applyRefreshTokenChecks(refreshTokens *collectionWrapper) error {
-	m.logger.Info("apply refresh tokens checks.....")
+func (m *database) applyLoginsSessionsChecks(refreshTokens *collectionWrapper) error {
+	m.logger.Info("apply logins sessions checks.....")
 
-	err := refreshTokens.AddIndex(bson.D{primitive.E{Key: "current_token", Value: 1}}, false)
+	err := refreshTokens.AddIndex(bson.D{primitive.E{Key: "refresh_token", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
-	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "previous_token", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
+	//TODO - indexes
+	/*
+		err := refreshTokens.AddIndex(bson.D{primitive.E{Key: "current_token", Value: 1}}, false)
+		if err != nil {
+			return err
+		}
 
-	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "exp", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
+		err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "previous_token", Value: 1}}, false)
+		if err != nil {
+			return err
+		}
 
-	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "creds_id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-	m.logger.Info("refresh tokens check passed")
+		err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "exp", Value: 1}}, false)
+		if err != nil {
+			return err
+		}
+
+		err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "creds_id", Value: 1}}, false)
+		if err != nil {
+			return err
+		} */
+	m.logger.Info("logins sessions check passed")
 	return nil
 }
 

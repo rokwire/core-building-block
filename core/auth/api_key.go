@@ -29,11 +29,7 @@ type apiKeyCreds struct {
 	AnonymousID string `json:"anonymous_id"`
 }
 
-type apiKeyResponseParams struct {
-	AnonymousID string `json:"anonymous_id"`
-}
-
-func (a *apiKeyAuthImpl) checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, interface{}, error) {
+func (a *apiKeyAuthImpl) checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, map[string]interface{}, error) {
 	var keyCreds apiKeyCreds
 	err := json.Unmarshal([]byte(creds), &keyCreds)
 	if err != nil {
@@ -61,7 +57,9 @@ func (a *apiKeyAuthImpl) checkCredentials(authType model.AuthType, appType model
 		anonymousID = anonymousUUID.String()
 	}
 
-	return anonymousID, apiKeyResponseParams{anonymousID}, nil
+	params := map[string]interface{}{}
+	params["anonymous_id"] = anonymousID
+	return anonymousID, params, nil
 }
 
 //initAPIKeyAuth initializes and registers a new API key auth instance
