@@ -3,6 +3,7 @@ package auth
 import (
 	"bytes"
 	"core-building-block/core/model"
+	"core-building-block/utils"
 	"image/png"
 	"strings"
 	"time"
@@ -87,7 +88,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		sub = anonymousID
 
 	} else if authType.IsExternal {
-		accountAuthType, responseParams, mfaTypes, state, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+		accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
 			return nil, nil, nil, "", errors.WrapErrorAction("apply external auth type", "user", nil, err)
 
@@ -97,7 +98,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 
 		//TODO groups mapping
 	} else {
-		message, accountAuthType, mfaTypes, state, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+		message, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
 			return nil, nil, nil, "", errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
@@ -111,17 +112,36 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		//the credentials are valid
 	}
 
-	if state == "" {
-		//now we are ready to apply login for the user or anonymous
-		loginSession, err := a.applyLogin(anonymous, sub, *authType, *appOrg, accountAuthType, *appType, ipAddress, deviceType, deviceOS, deviceID, responseParams, l)
-		if err != nil {
-			return nil, nil, nil, "", errors.WrapErrorAction("error apply login auth type", "user", nil, err)
-		}
+	//now we are ready to apply login for the user or anonymous
+	loginSession, err := a.applyLogin(anonymous, sub, *authType, *appOrg, accountAuthType, *appType, ipAddress, deviceType, deviceOS, deviceID, responseParams, l)
+	if err != nil {
+		return nil, nil, nil, "", errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+	}
 
+	if !authType.IgnoreMFA && accountAuthType != nil {
+		mfaTypes, err := a.storage.FindMFATypes(sub)
+		if err != nil {
+			return nil, nil, nil, "", errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, nil, err)
+		}
+		//check if account is enrolled in MFA
+		if len(mfaTypes) > 0 {
+			state, err = utils.GenerateRandomString(loginStateLength)
+			if err != nil {
+				return nil, nil, nil, "", errors.WrapErrorAction("generate", "login state", nil, err)
+			}
+
+			err = a.storage.UpdateMFATypes(sub, state)
+			if err != nil {
+				return nil, nil, nil, "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, nil, err)
+			}
+		}
+	}
+
+	if state == "" {
 		return nil, loginSession, nil, "", nil
 	}
 
-	return nil, &model.LoginSession{Params: responseParams}, mfaTypes, state, nil
+	return nil, &model.LoginSession{ID: loginSession.ID, Params: responseParams}, mfaTypes, state, nil
 }
 
 //Refresh refreshes an access token using a refresh token
@@ -137,7 +157,7 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, e
 	var loginSession *model.LoginSession
 
 	//find the login session for the refresh token
-	loginSession, err := a.storage.FindLoginSession(refreshToken)
+	loginSession, err := a.storage.FindLoginSessionByToken(refreshToken)
 	if err != nil {
 		l.Infof("error finding session by refresh token - %s", refreshToken)
 		return nil, errors.WrapErrorAction("error finding session by refresh token", "", nil, err)
@@ -280,15 +300,79 @@ func (a *Auth) GetMFATypes(accountID string) ([]model.MFAType, error) {
 //The MFA type must be one of the supported for the application.
 //	Input:
 //		accountID (string): ID of account user is trying to access
+//		sessionID (string): ID of login session generated during login
 //		mfaType (string): Type of MFA code sent
 //		mfaCode (string): Code that must be verified
 //		state (string): Variable used to verify user has already passed credentials check
+//		l (*logs.Log): Log object pointer for request
 //	Returns:
-//		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
-//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
-//		Account (Account): Account object for authenticated user
-func (a *Auth) MFAVerify(accountID string, mfaType string, mfaCode string, state string) (string, string, string, *model.Account, error) {
-	return "", "", "", nil, nil
+//		Message (*string): message
+//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
+//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
+func (a *Auth) MFAVerify(accountID string, sessionID string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error) {
+	var message string
+	mfa, err := a.storage.FindMFAType(accountID, mfaType)
+	if err != nil {
+		a.deleteLoginSession(sessionID, l)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, nil, err)
+	}
+	if mfa.ID == "" {
+		message = "account not enrolled"
+		a.deleteLoginSession(sessionID, l)
+		return &message, nil, errors.ErrorData(logutils.StatusMissing, model.TypeMFAType, nil)
+	}
+
+	if mfa.Params == nil {
+		a.deleteLoginSession(sessionID, l)
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, "mfa params", nil)
+	}
+
+	storedState, ok := mfa.Params["state"].(string)
+	if !ok {
+		a.deleteLoginSession(sessionID, l)
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "stored login state", nil)
+	}
+	if state != storedState {
+		message = "invalid login state"
+		a.deleteLoginSession(sessionID, l)
+		return &message, nil, errors.ErrorData(logutils.StatusInvalid, "login state", nil)
+	}
+
+	if mfa.Type != "totp" {
+		storedCode, ok := mfa.Params["code"].(string)
+		if !ok {
+			a.deleteLoginSession(sessionID, l)
+			return nil, nil, errors.ErrorData(logutils.StatusInvalid, "stored mfa code", nil)
+		}
+		if mfaCode != storedCode {
+			message = "invalid code"
+			a.deleteLoginSession(sessionID, l)
+			return &message, nil, errors.ErrorData(logutils.StatusInvalid, "mfa code", nil)
+		}
+	} else {
+		secret, ok := mfa.Params["secret"].(string)
+		if !ok {
+			a.deleteLoginSession(sessionID, l)
+			return nil, nil, errors.ErrorData(logutils.StatusInvalid, "stored totp secret", nil)
+		}
+		if !totp.Validate(mfaCode, secret) {
+			message = "invalid code"
+			a.deleteLoginSession(sessionID, l)
+			return &message, nil, errors.ErrorData(logutils.StatusInvalid, "mfa code", nil)
+		}
+	}
+
+	//TODO: mark MFA as verified in storage
+
+	loginSession, err := a.storage.FindLoginSessionByID(sessionID)
+	if err != nil {
+		a.deleteLoginSession(sessionID, l)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+	}
+
+	return nil, loginSession, nil
 }
 
 //AddMFAType adds a form of MFA to an account
@@ -298,6 +382,7 @@ func (a *Auth) MFAVerify(accountID string, mfaType string, mfaCode string, state
 //	Returns:
 //		MFA Type (*model.MFAType): MFA information for the specified type
 func (a *Auth) AddMFAType(accountID string, mfaType string) (*model.MFAType, error) {
+	//TODO: eventually implement phone, email, etc.
 	switch mfaType {
 	case "totp":
 		totpOpts := totp.GenerateOpts{
@@ -334,7 +419,7 @@ func (a *Auth) AddMFAType(accountID string, mfaType string) (*model.MFAType, err
 		newMfa.Params["qr_code"] = qrCode
 		return &newMfa, nil
 	default:
-		return nil, nil
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeMFAType, nil)
 	}
 }
 

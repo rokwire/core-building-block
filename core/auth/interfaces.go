@@ -127,14 +127,17 @@ type APIs interface {
 	//The MFA type must be one of the supported for the application.
 	//	Input:
 	//		accountID (string): ID of account user is trying to access
+	//		sessionID (string): ID of login session generated during login
 	//		mfaType (string): Type of MFA code sent
 	//		mfaCode (string): Code that must be verified
 	//		state (string): Variable used to verify user has already passed credentials check
+	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
-	//		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
-	//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
-	//		Account (Account): Account object for authenticated user
-	MFAVerify(accountID string, mfaType string, mfaCode string, state string) (string, string, string, *model.Account, error)
+	//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
+	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
+	MFAVerify(accountID string, sessionID string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
 
 	//AddMFAType adds a form of MFA to an account
 	//	Input:
@@ -205,7 +208,8 @@ type Storage interface {
 
 	//LoginsSessions
 	InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error)
-	FindLoginSession(refreshToken string) (*model.LoginSession, error)
+	FindLoginSessionByToken(refreshToken string) (*model.LoginSession, error)
+	FindLoginSessionByID(id string) (*model.LoginSession, error)
 	UpdateLoginSession(loginSession model.LoginSession) error
 	DeleteLoginSession(id string) error
 
@@ -232,8 +236,10 @@ type Storage interface {
 	InsertCredential(creds *model.Credential, context mongo.SessionContext) error
 
 	//MFA
+	FindMFAType(accountID string, mfaType string) (*model.MFAType, error)
 	FindMFATypes(accountID string) ([]model.MFAType, error)
 	InsertMFAType(mfa *model.MFAType) error
+	UpdateMFATypes(accountID string, state string) error
 	DeleteMFAType(accountID string, mfaType string) error
 
 	//RefreshTokens

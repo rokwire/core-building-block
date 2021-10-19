@@ -1,10 +1,13 @@
 required:
   - account_id
+  - session_id
   - mfa_type
   - mfa_code
 type: object
 properties:
   account_id:
+    type: string
+  session_id:
     type: string
   mfa_type:
     type: string

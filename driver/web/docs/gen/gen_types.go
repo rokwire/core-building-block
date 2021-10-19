@@ -561,6 +561,7 @@ type ReqLoginMFAVerify struct {
 	AccountId string                   `json:"account_id"`
 	MfaCode   string                   `json:"mfa_code"`
 	MfaType   ReqLoginMFAVerifyMfaType `json:"mfa_type"`
+	SessionId string                   `json:"session_id"`
 }
 
 // ReqLoginMFAVerifyMfaType defines model for ReqLoginMFAVerify.MfaType.
@@ -695,9 +696,10 @@ type ResLoginAccount struct {
 
 // ResLoginMFAVerify defines model for _res_login_MFAVerify.
 type ResLoginMFAVerify struct {
-	Enrolled []ResSharedMfa `json:"enrolled"`
-	Params   *interface{}   `json:"params"`
-	State    string         `json:"state"`
+	Enrolled  []ResSharedMfa `json:"enrolled"`
+	Params    *interface{}   `json:"params"`
+	SessionId string         `json:"session_id"`
+	State     string         `json:"state"`
 }
 
 // ResLoginResponse defines model for _res_login_Response.

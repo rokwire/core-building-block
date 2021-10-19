@@ -41,7 +41,10 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 			return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("mfa verify request"), nil, err, http.StatusBadRequest, true)
 		}
 
-		message, loginSession, err = h.coreAPIs.Auth.MFAVerify(mfaData.AccountId, string(mfaData.MfaType), mfaData.MfaCode, loginState)
+		message, loginSession, err = h.coreAPIs.Auth.MFAVerify(mfaData.AccountId, mfaData.SessionId, string(mfaData.MfaType), mfaData.MfaCode, loginState, l)
+		if message != nil {
+			return l.HttpResponseError(*message, err, http.StatusUnauthorized, true)
+		}
 		if err != nil {
 			return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 		}
@@ -91,7 +94,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		}
 
 		mfaResp := mfaDataListToDef(mfaTypes)
-		responseData := &Def.ResLoginMFAVerify{Enrolled: mfaResp, Params: &paramsRes, State: state}
+		responseData := &Def.ResLoginMFAVerify{Enrolled: mfaResp, Params: &paramsRes, SessionId: loginSession.ID, State: state}
 		respData, err := json.Marshal(responseData)
 		if err != nil {
 			return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
