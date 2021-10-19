@@ -14,6 +14,8 @@ import (
 )
 
 const (
+	//TypeLoginSession auth type type
+	TypeLoginSession logutils.MessageDataType = "login session"
 	//TypeAuthType auth type type
 	TypeAuthType logutils.MessageDataType = "auth type"
 	//TypeIdentityProvider identity provider type
@@ -49,6 +51,37 @@ const (
 	//TypeCreds cred type
 	TypeCreds logutils.MessageDataType = "creds"
 )
+
+//LoginSession represents login session entity
+type LoginSession struct {
+	ID string
+
+	AppOrg   ApplicationOrganization
+	AuthType AuthType
+	AppType  ApplicationType
+
+	Anonymous bool
+
+	Identifier      string           //it is the account id(anonymous id for anonymous logins)
+	AccountAuthType *AccountAuthType //it is nil for anonymous logins
+
+	Device Device
+
+	IPAddress    string
+	AccessToken  string
+	RefreshToken string
+	Params       map[string]interface{} //authType-specific set of parameters passed back to client
+
+	Expires time.Time
+
+	DateUpdated *time.Time
+	DateCreated time.Time
+}
+
+//IsExpired says if the sessions is expired
+func (ls LoginSession) IsExpired() bool {
+	return ls.Expires.Before(time.Now())
+}
 
 //APIKey represents an API key entity
 type APIKey struct {
@@ -118,6 +151,7 @@ type AuthCreds struct {
 }
 
 //AuthRefresh represents refresh token info used by auth
+//TODO remove
 type AuthRefresh struct {
 	PreviousToken string                 `bson:"previous_token"`
 	CurrentToken  string                 `bson:"current_token" validate:"required"`

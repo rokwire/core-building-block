@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.5.0
+  version: 1.6.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -60,6 +60,11 @@ paths:
                     "creds": {
                       "email": "test@test.com", 
                       "password": "test12345"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
                     }
                   }
               email-sign_up:
@@ -92,6 +97,11 @@ paths:
                       "photo_url": "photo url",
                       "state": "state",
                       "zip_code": "zip code"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
                     }
                   }
               phone:
@@ -120,6 +130,11 @@ paths:
                       "photo_url": "photo url",
                       "state": "state",
                       "zip_code": "zip code"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
                     }
                   }
               illinois_oidc:
@@ -149,6 +164,11 @@ paths:
                       "photo_url": "photo url",
                       "state": "state",
                       "zip_code": "zip code"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
                     }
                   }
               api_key:
@@ -160,6 +180,11 @@ paths:
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "creds": {
                       "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
                     }
                   }
         required: true
@@ -1630,6 +1655,47 @@ components:
           description: organization domains
           items:
             type: string
+    LoginSession:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/LoginSessionFields'
+        app_org:
+          $ref: '#/components/schemas/ApplicationOrganization'
+        auth_type:
+          $ref: '#/components/schemas/AuthType'
+        app_type:
+          $ref: '#/components/schemas/ApplicationType'
+        account_auth_type:
+          $ref: '#/components/schemas/AccountAuthType'
+          nullable: true
+        device:
+          $ref: '#/components/schemas/Device'
+    LoginSessionFields:
+      type: object
+      properties:
+        id:
+          type: string
+        anonymous:
+          type: boolean
+        identifier:
+          type: string
+        id_address:
+          type: string
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        params:
+          type: object
+          additionalProperties: true
+        expires:
+          type: string
+        date_updated:
+          type: string
+          nulable: true
+        date_created:
+          type: string
     AuthType:
       type: object
       properties:
@@ -1920,38 +1986,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Account'
-    AnonymousProfile:
-      required:
-        - id
-      type: object
-      description: Anonymous data of user profile
-      properties:
-        id:
-          type: string
-        interests:
-          type: array
-          items:
-            type: string
-        favorites:
-          type: array
-          items:
-            type: string
-        over_13:
-          type: boolean
-        positive_interest_tags:
-          type: array
-          items:
-            type: string
-        negative_interest_tags:
-          type: array
-          items:
-            type: string
-        creation_date:
-          type: string
-        last_modified_date:
-          type: string
-        privacy_settings:
-          type: string
     DeviceFields:
       required:
         - id
@@ -1968,8 +2002,6 @@ components:
             - desktop
             - other
         os:
-          type: string
-        mac_address:
           type: string
     _req_shared_Profile:
       type: object
@@ -2052,22 +2084,6 @@ components:
           type: string
           enum:
             - Bearer
-    _res_shared_ParamsOIDC:
-      type: object
-      properties:
-        oidc_token:
-          type: object
-          properties:
-            id_token:
-              type: string
-            access_token:
-              type: string
-            token_type:
-              type: string
-    _res_shared_ParamsNone:
-      type: object
-      description: Auth login response params for unlisted auth_types (None)
-      nullable: true
     _res_shared_Mfa:
       type: object
       properties:
@@ -2084,6 +2100,7 @@ components:
         - auth_type
         - app_type_identifier
         - org_id
+        - device
       type: object
       properties:
         auth_type:
@@ -2110,6 +2127,8 @@ components:
             - $ref: '#/components/schemas/_req_login_ParamsEmail'
             - $ref: '#/components/schemas/_req_login_ParamsOIDC'
             - $ref: '#/components/schemas/_req_login_ParamsNone'
+        device:
+          $ref: '#/components/schemas/_req_login_Device'
         profile:
           $ref: '#/components/schemas/_req_shared_ProfileNullable'
         preferences:
@@ -2194,6 +2213,23 @@ components:
       type: object
       description: Auth login request params for unlisted auth_types (None)
       nullable: true
+    _req_login_Device:
+      required:
+        - type
+      type: object
+      description: Client device
+      properties:
+        device_id:
+          type: string
+        type:
+          type: string
+          enum:
+            - mobile
+            - web
+            - desktop
+            - other
+        os:
+          type: string
     _res_login_Response:
       type: object
       properties:
@@ -2205,12 +2241,28 @@ components:
           type: object
           nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_res_shared_ParamsOIDC'
+            - type: object
+              properties:
+                oidc_token:
+                  type: object
+                  properties:
+                    id_token:
+                      type: string
+                    access_token:
+                      type: string
+                    refresh_token:
+                      type: string
+                    token_type:
+                      type: string
+                    redirect_uri:
+                      type: string
             - type: object
               properties:
                 anonymous_id:
                   type: string
-            - $ref: '#/components/schemas/_res_shared_ParamsNone'
+            - type: object
+              description: Auth login response params for unlisted auth_types (None)
+              nullable: true
         message:
           type: string
     _res_login_MFAVerify:
@@ -2229,9 +2281,9 @@ components:
           type: object
           nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_res_shared_ParamsOIDC'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/0'
             - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/1'
-            - $ref: '#/components/schemas/_res_shared_ParamsNone'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/2'
     _res_login_Account:
       required:
         - id
@@ -2295,9 +2347,11 @@ components:
           $ref: '#/components/schemas/_res_shared_RokwireToken'
         params:
           type: object
+          nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_res_shared_ParamsOIDC'
-            - $ref: '#/components/schemas/_res_shared_ParamsNone'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/0'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/1'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/2'
     _req_authorize-service_Request:
       required:
         - service_id

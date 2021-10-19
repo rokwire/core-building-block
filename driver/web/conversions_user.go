@@ -179,7 +179,7 @@ func deviceFromDef(item *Def.DeviceFields) *model.Device {
 	if item == nil {
 		return nil
 	}
-	return &model.Device{ID: item.Id, Type: string(item.Type), OS: defString(item.Os), MacAddress: defString(item.MacAddress)}
+	return &model.Device{ID: item.Id, Type: string(item.Type), OS: defString(item.Os)}
 }
 
 func deviceToDef(item *model.Device) *Def.DeviceFields {
@@ -187,7 +187,7 @@ func deviceToDef(item *model.Device) *Def.DeviceFields {
 		return nil
 	}
 
-	return &Def.DeviceFields{Id: item.ID, Type: Def.DeviceFieldsType(item.Type), Os: &item.OS, MacAddress: &item.MacAddress}
+	return &Def.DeviceFields{Id: item.ID, Type: Def.DeviceFieldsType(item.Type), Os: &item.OS}
 }
 
 func deviceListToDef(items []model.Device) []Def.DeviceFields {

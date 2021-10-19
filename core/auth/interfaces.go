@@ -27,9 +27,8 @@ type authType interface {
 
 	//userExist checks if the user exists for application and organizations
 	// Returns:
-	//	account (*model.Account): User account
 	//	accountAuthType (*model.AccountAuthType): User account auth type
-	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error)
+	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.AccountAuthType, error)
 
 	//checkCredentials checks if the account credentials are valid for the account auth type
 	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error)
@@ -41,18 +40,18 @@ type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 	//externalLogin logins in the external system and provides the authenticated user
-	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, interface{}, error)
+	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 	//userExist checks if the user exists
 	userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error)
-
-	//TODO refresh
+	//refresh refreshes tokens
+	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (map[string]interface{}, error)
 }
 
 //anonymousAuthType is the interface for authentication for auth types which are anonymous
 type anonymousAuthType interface {
 	//checkCredentials checks the credentials for the provided app and organization
 	//	Returns anonymous profile identifier
-	checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, interface{}, error)
+	checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, map[string]interface{}, error)
 }
 
 //APIs is the interface which defines the APIs provided by the auth package
@@ -66,7 +65,11 @@ type APIs interface {
 	//Login logs a user in a specific application using the specified credentials and authentication method.
 	//The authentication method must be one of the supported for the application.
 	//	Input:
-	//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		ipAddress (string): Client's IP address
+	//		deviceType (string): "mobile" or "web" or "desktop" etc
+	//		deviceOS (*string): Device OS
+	//		deviceID (string): Device ID
+	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
@@ -75,23 +78,28 @@ type APIs interface {
 	//		preferences (map): Account preferences
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
-	//		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
-	//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
-	//		Account (Account): Account object for authenticated user
-	//		Params (interface{}): authType-specific set of parameters passed back to client
+	//		Message (*string): message
+	//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
+	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
+	//			Params (interface{}): authType-specific set of parameters passed back to client
 	//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
 	//		State (string): login state used if account is enrolled in MFA
-	Login(authType string, creds string, appTypeIdentifier string, orgID string, params string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (string, string, string, *model.Account, interface{}, []model.MFAType, string, error)
+	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
+		authenticationType string, creds string, appTypeIdentifier string, orgID string, params string,
+		profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, string, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
 	//		refreshToken (string): Refresh token
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
-	//		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
-	//		Refresh token (string): Refresh token that can be sent to refresh the access token once it expires
-	//		Params (interface{}): authType-specific set of parameters passed back to client
-	Refresh(refreshToken string, l *logs.Log) (string, string, interface{}, error)
+	//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
+	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+	//			Params (interface{}): authType-specific set of parameters passed back to client
+	Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, error)
 
 	//Verify checks the verification code in the credentials collection
 	Verify(id string, verification string, l *logs.Log) error
@@ -193,6 +201,13 @@ type Storage interface {
 
 	//AuthTypes
 	LoadAuthTypes() ([]model.AuthType, error)
+	FindAuthType(codeOrID string) (*model.AuthType, error)
+
+	//LoginsSessions
+	InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error)
+	FindLoginSession(refreshToken string) (*model.LoginSession, error)
+	UpdateLoginSession(loginSession model.LoginSession) error
+	DeleteLoginSession(id string) error
 
 	//Accounts
 	FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
@@ -258,6 +273,7 @@ type Storage interface {
 
 	//ApplicationsOrganizations
 	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
+	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
 }
 
 //ProfileBuildingBlock is used by auth to communicate with the profile building block.
