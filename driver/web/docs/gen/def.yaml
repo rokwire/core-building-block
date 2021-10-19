@@ -201,9 +201,9 @@ paths:
         description: |
           Refresh token
         content:
-          text/plain:
+          application/json:
             schema:
-              type: string
+              $ref: '#/components/schemas/_req_refresh_Request'
         required: true
       responses:
         '200':
@@ -1990,6 +1990,7 @@ components:
         - auth_type
         - app_type_identifier
         - org_id
+        - api_key
         - device
       type: object
       properties:
@@ -2004,6 +2005,8 @@ components:
         app_type_identifier:
           type: string
         org_id:
+          type: string
+        api_key:
           type: string
         creds:
           anyOf:
@@ -2144,6 +2147,7 @@ components:
         - auth_type
         - app_type_identifier
         - org_id
+        - api_key
         - redirect_uri
       type: object
       properties:
@@ -2154,6 +2158,8 @@ components:
         app_type_identifier:
           type: string
         org_id:
+          type: string
+        api_key:
           type: string
         redirect_uri:
           type: string
@@ -2167,6 +2173,16 @@ components:
         params:
           type: object
           description: Params to be submitted with 'login' request (if necessary)
+    _req_refresh_Request:
+      required:
+        - api_key
+        - refresh_token
+      type: object
+      properties:
+        api_key:
+          type: string
+        refresh_token:
+          type: string
     _res_refresh_Response:
       type: object
       properties:

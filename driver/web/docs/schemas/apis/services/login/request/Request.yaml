@@ -2,6 +2,7 @@ required:
   - auth_type
   - app_type_identifier
   - org_id
+  - api_key
   - device
 type: object
 properties:
@@ -16,6 +17,8 @@ properties:
   app_type_identifier:
     type: string
   org_id:
+    type: string
+  api_key:
     type: string
   creds:
     anyOf:

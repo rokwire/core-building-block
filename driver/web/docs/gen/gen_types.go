@@ -504,6 +504,7 @@ type ReqGetOrganizationRequest struct {
 
 // ReqLoginUrlRequest defines model for _req_login-url_Request.
 type ReqLoginUrlRequest struct {
+	ApiKey            string                     `json:"api_key"`
 	AppTypeIdentifier string                     `json:"app_type_identifier"`
 	AuthType          ReqLoginUrlRequestAuthType `json:"auth_type"`
 	OrgId             string                     `json:"org_id"`
@@ -564,6 +565,7 @@ type ReqLoginParamsOIDC struct {
 
 // ReqLoginRequest defines model for _req_login_Request.
 type ReqLoginRequest struct {
+	ApiKey            string                  `json:"api_key"`
 	AppTypeIdentifier string                  `json:"app_type_identifier"`
 	AuthType          ReqLoginRequestAuthType `json:"auth_type"`
 	Creds             *interface{}            `json:"creds,omitempty"`
@@ -578,6 +580,12 @@ type ReqLoginRequest struct {
 
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
 type ReqLoginRequestAuthType string
+
+// ReqRefreshRequest defines model for _req_refresh_Request.
+type ReqRefreshRequest struct {
+	ApiKey       string `json:"api_key"`
+	RefreshToken string `json:"refresh_token"`
+}
 
 // ReqSharedProfile defines model for _req_shared_Profile.
 type ReqSharedProfile struct {
@@ -797,6 +805,9 @@ type PostServicesAuthLoginJSONBody ReqLoginRequest
 // PostServicesAuthLoginUrlJSONBody defines parameters for PostServicesAuthLoginUrl.
 type PostServicesAuthLoginUrlJSONBody ReqLoginUrlRequest
 
+// PostServicesAuthRefreshJSONBody defines parameters for PostServicesAuthRefresh.
+type PostServicesAuthRefreshJSONBody ReqRefreshRequest
+
 // GetServicesAuthServiceRegsParams defines parameters for GetServicesAuthServiceRegs.
 type GetServicesAuthServiceRegsParams struct {
 
@@ -874,6 +885,9 @@ type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 
 // PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
 type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
+
+// PostServicesAuthRefreshJSONRequestBody defines body for PostServicesAuthRefresh for application/json ContentType.
+type PostServicesAuthRefreshJSONRequestBody PostServicesAuthRefreshJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found
