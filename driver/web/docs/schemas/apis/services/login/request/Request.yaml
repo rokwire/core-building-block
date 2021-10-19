@@ -19,10 +19,10 @@ properties:
     type: string
   creds:
     anyOf:
-      - $ref: "./CredsEmail.yaml"
-      - $ref: "./CredsTwilioPhone.yaml"
-      - $ref: "./CredsOIDC.yaml"
-      - $ref: "./CredsAPIKey.yaml"
+      - $ref: "../../../shared/requests/CredsEmail.yaml"
+      - $ref: "../../../shared/requests/CredsTwilioPhone.yaml"
+      - $ref: "../../../shared/requests//CredsOIDC.yaml"
+      - $ref: "../../../shared/requests//CredsAPIKey.yaml"
   params:
     type: object
     anyOf:
