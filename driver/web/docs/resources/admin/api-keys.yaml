@@ -46,6 +46,11 @@ post:
       application/json:
         schema:
           $ref: '../../schemas/auth/APIKey.yaml'
+        example: |
+          {
+            "app_id": "string",
+            "key": "string"
+          }
     required: true
   responses:
     200:

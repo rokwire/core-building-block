@@ -1,9 +1,9 @@
 get:
   tags:
   - Admin
-  summary: Get application API key
+  summary: Get application API keys
   description: |
-    Returns all API key records for a given app iD
+    Returns all API key records for a given app ID
 
     **Auth:** Requires auth token with `get_api-keys` permission
   security:
