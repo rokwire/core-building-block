@@ -2114,6 +2114,7 @@ components:
           nullable: true
           anyOf:
             - type: object
+              description: Auth login response params for "oidc" auth_type
               properties:
                 oidc_token:
                   type: object
@@ -2129,6 +2130,7 @@ components:
                     redirect_uri:
                       type: string
             - type: object
+              description: Auth login response params for "api_key" auth_type
               properties:
                 anonymous_id:
                   type: string

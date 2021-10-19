@@ -1,4 +1,5 @@
 type: object
+description: Auth login response params for "api_key" auth_type
 properties:
   anonymous_id:
     type: string 
