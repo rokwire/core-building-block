@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"core-building-block/core/model"
+	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -32,6 +33,9 @@ type Adapter struct {
 
 	cachedAuthTypes *syncmap.Map
 	authTypesLock   *sync.RWMutex
+
+	cachedApplicationsOrganizations *syncmap.Map //cache applications organizations
+	applicationsOrganizationsLock   *sync.RWMutex
 }
 
 //Start starts the storage
@@ -62,6 +66,12 @@ func (sa *Adapter) Start() error {
 	err = sa.cacheAuthTypes()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeAuthType, nil, err)
+	}
+
+	//cache the application organization
+	err = sa.cacheApplicationsOrganizations()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionCache, model.TypeApplicationOrganization, nil, err)
 	}
 
 	return err
@@ -274,6 +284,57 @@ func (sa *Adapter) getCachedAuthType(key string) (*model.AuthType, error) {
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, errArgs)
 }
 
+//cacheApplicationsOrganizations caches the applications organizations
+func (sa *Adapter) cacheApplicationsOrganizations() error {
+	sa.logger.Info("cacheApplicationsOrganizations..")
+
+	applicationsOrganizations, err := sa.LoadApplicationsOrganizations()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
+
+	sa.setCachedApplicationsOrganizations(applicationsOrganizations)
+
+	return nil
+}
+
+func (sa *Adapter) setCachedApplicationsOrganizations(applicationsOrganization []model.ApplicationOrganization) {
+	sa.applicationsOrganizationsLock.Lock()
+	defer sa.applicationsOrganizationsLock.Unlock()
+
+	sa.cachedApplicationsOrganizations = &syncmap.Map{}
+	validate := validator.New()
+
+	for _, appOrg := range applicationsOrganization {
+		err := validate.Struct(appOrg)
+		if err == nil {
+			key := fmt.Sprintf("%s_%s", appOrg.Application.ID, appOrg.Organization.ID)
+			sa.cachedApplicationsOrganizations.Store(key, appOrg)
+		} else {
+			sa.logger.Errorf("failed to validate and cache applications organizations with ids %s-%s: %s",
+				appOrg.Application.ID, appOrg.Organization.ID, err.Error())
+		}
+	}
+}
+
+func (sa *Adapter) getCachedApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
+	sa.applicationsOrganizationsLock.RLock()
+	defer sa.applicationsOrganizationsLock.RUnlock()
+
+	key := fmt.Sprintf("%s_%s", appID, orgID)
+	errArgs := &logutils.FieldArgs{"key": key}
+
+	item, _ := sa.cachedApplicationsOrganizations.Load(key)
+	if item != nil {
+		appOrg, ok := item.(model.ApplicationOrganization)
+		if !ok {
+			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplicationOrganization, errArgs)
+		}
+		return &appOrg, nil
+	}
+	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, errArgs)
+}
+
 //LoadAuthTypes loads all auth types
 func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
 	filter := bson.D{}
@@ -336,19 +397,13 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 	}
 
-	//application - from cache
-	application, err := sa.getCachedApplication(loginSession.AppID)
+	//application organization - from cache
+	appOrg, err := sa.getCachedApplicationOrganization(loginSession.AppID, loginSession.OrgID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 	}
 
-	//organization - from cache
-	organization, err := sa.getCachedOrganization(loginSession.OrgID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
-	}
-
-	modelLoginSession := loginSessionFromStorage(loginSession, *authType, account, *application, *organization)
+	modelLoginSession := loginSessionFromStorage(loginSession, *authType, account, *appOrg)
 	return &modelLoginSession, nil
 }
 
@@ -1522,6 +1577,11 @@ func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganizat
 	return result, nil
 }
 
+//FindApplicationOrganizations finds application organization
+func (sa *Adapter) FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error) {
+	return sa.getCachedApplicationOrganization(appID, orgID)
+}
+
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records
@@ -1704,10 +1764,14 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	cachedAuthTypes := &syncmap.Map{}
 	authTypesLock := &sync.RWMutex{}
 
+	cachedApplicationsOrganizations := &syncmap.Map{}
+	applicationsOrganizationsLock := &sync.RWMutex{}
+
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout, logger: logger}
 	return &Adapter{db: db, logger: logger, cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock,
 		cachedApplications: cachedApplications, applicationsLock: applicationsLock,
-		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock}
+		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
+		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock}
 }
 
 type storageListener struct {
@@ -1731,6 +1795,7 @@ func (sl *storageListener) OnApplicationsUpdated() {
 func (sl *storageListener) OnApplicationsOrganizationsUpdated() {
 	sl.adapter.cacheApplications()
 	sl.adapter.cacheOrganizations()
+	sl.adapter.cacheApplicationsOrganizations()
 }
 
 //Listener represents storage listener

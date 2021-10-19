@@ -4,10 +4,8 @@ import "core-building-block/core/model"
 
 //LoginSession
 func loginSessionFromStorage(item loginSession, authType model.AuthType, account *model.Account,
-	app model.Application, org model.Organization) model.LoginSession {
+	appOrg model.ApplicationOrganization) model.LoginSession {
 	id := item.ID
-
-	appOrg := model.ApplicationOrganization{Application: app, Organization: org}
 
 	appType := model.ApplicationType{ID: item.AppTypeID, Identifier: item.AppTypeIdentifier}
 
