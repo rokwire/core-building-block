@@ -322,8 +322,8 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 
 //validateAPIKey checks if the given API key is valid for the given app ID
 func (a *Auth) validateAPIKey(apiKey string, appID string) error {
-	validApiKey, err := a.getCachedAPIKey(apiKey)
-	if err != nil || validApiKey == nil || validApiKey.AppID != appID {
+	validAPIKey, err := a.getCachedAPIKey(apiKey)
+	if err != nil || validAPIKey == nil || validAPIKey.AppID != appID {
 		return errors.Newf("incorrect key for app_id=%v", appID)
 	}
 

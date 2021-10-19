@@ -1206,7 +1206,7 @@ func (sa *Adapter) FindApplicationAPIKeys(appID string) ([]model.APIKey, error) 
 	return result, nil
 }
 
-//FindAPIKeys finds the api key documents from storage
+//FindAPIKey finds the api key documents from storage
 func (sa *Adapter) FindAPIKey(ID string) (*model.APIKey, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	var result *model.APIKey
