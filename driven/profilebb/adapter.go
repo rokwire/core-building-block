@@ -20,11 +20,11 @@ type Adapter struct {
 }
 
 type profileBBData struct {
-	PII    *profileBBPii          `json:"pii"`
-	NonPII map[string]interface{} `json:"non_pii"`
+	PII    *profileBBPII    `json:"pii"`
+	NonPII *profileBBNonPII `json:"non_pii"`
 }
 
-type profileBBPii struct {
+type profileBBPII struct {
 	LastName  string `json:"lastname"`
 	FirstName string `json:"firstname"`
 	Phone     string `json:"phone"`
@@ -36,6 +36,61 @@ type profileBBPii struct {
 	Country   string `json:"country"`
 
 	DateCreated string `json:"creationDate"`
+}
+
+type profileBBNonPII struct {
+	Over13               bool                `json:"over13"`
+	PrivacySettings      privacySettings     `json:"privacySettings"`
+	Roles                []string            `json:"roles"`
+	Interests            []interest          `json:"interests"`
+	PositiveInterestTags []string            `json:"positiveInterestTags"`
+	NegativeInterestTags []string            `json:"negativeInterestTags"`
+	Favorites            map[string][]string `json:"favorites"`
+	RegisteredVoter      bool                `json:"registered_voter"`
+	VotePlace            string              `json:"vote_place"`
+	VoterByMail          bool                `json:"voter_by_mail"`
+	Voted                bool                `json:"voted"`
+	CreationDate         string              `json:"creationDate"`
+	LastModifiedDate     string              `json:"lastModifiedDate"`
+}
+
+func (p *profileBBNonPII) convertInterests() map[string][]string {
+	interestMap := map[string][]string{}
+	for _, val := range p.Interests {
+		if len(val.Category) > 0 {
+			interestMap[val.Category] = val.Subcategories
+		}
+	}
+	return interestMap
+}
+
+func (p *profileBBNonPII) convertTags() map[string]bool {
+	tagsMap := map[string]bool{}
+	for _, val := range p.PositiveInterestTags {
+		tagsMap[val] = true
+	}
+	for _, val := range p.NegativeInterestTags {
+		tagsMap[val] = false
+	}
+	return tagsMap
+}
+
+func (p *profileBBNonPII) convertVoter() map[string]interface{} {
+	return map[string]interface{}{
+		"registered_voter": p.RegisteredVoter,
+		"vote_place":       p.VotePlace,
+		"voter_by_mail":    p.VoterByMail,
+		"voted":            p.Voted,
+	}
+}
+
+type privacySettings struct {
+	Level int `json:"level"`
+}
+
+type interest struct {
+	Category      string   `json:"category"`
+	Subcategories []string `json:"subcategories"`
 }
 
 //GetProfileBBData gets profile data by queryParams
@@ -93,28 +148,51 @@ func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (
 		Address: profileData.PII.Address, ZipCode: profileData.PII.ZipCode, State: profileData.PII.State,
 		Country: profileData.PII.Country, DateCreated: dateCreated}
 
-	if profileData.NonPII != nil {
-		if creationDate, ok := profileData.NonPII["creationDate"].(string); ok {
-			dateCreated, err := time.Parse("2006-01-02T15:04:05.000Z", creationDate)
-			if err != nil {
-				l.WarnAction(logutils.ActionParse, logutils.TypeString, err)
-			} else {
-				profileData.NonPII["date_created"] = dateCreated
-				delete(profileData.NonPII, "creationDate")
-			}
-		}
-		if lastModifiedDate, ok := profileData.NonPII["lastModifiedDate"].(string); ok {
-			dateUpdated, err := time.Parse("2006-01-02T15:04:05.000Z", lastModifiedDate)
-			if err != nil {
-				l.WarnAction(logutils.ActionParse, logutils.TypeString, err)
-			} else {
-				profileData.NonPII["date_updated"] = dateUpdated
-				delete(profileData.NonPII, "lastModifiedDate")
-			}
-		}
+	preferences := a.reformatPreferences(profileData.NonPII, l)
+
+	return &existingProfile, preferences, nil
+}
+
+func (a *Adapter) reformatPreferences(nonPII *profileBBNonPII, l *logs.Log) map[string]interface{} {
+	if nonPII == nil {
+		return nil
 	}
 
-	return &existingProfile, profileData.NonPII, nil
+	preferences := map[string]interface{}{
+		"privacy_level": nonPII.PrivacySettings.Level,
+		"roles":         nonPII.Roles,
+		"favorites":     nonPII.Favorites,
+		"interests":     nonPII.convertInterests(),
+		"tags":          nonPII.convertTags(),
+		"voter":         nonPII.convertVoter(),
+		"over13":        nonPII.Over13,
+	}
+
+	dateCreated, err := parseTime(nonPII.CreationDate)
+	if err != nil {
+		l.WarnAction(logutils.ActionParse, "date created", err)
+		preferences["date_created"] = time.Now()
+	} else {
+		preferences["date_created"] = dateCreated
+	}
+
+	dateUpdated, err := parseTime(nonPII.LastModifiedDate)
+	if err != nil {
+		l.WarnAction(logutils.ActionParse, "date updated", err)
+		preferences["date_updated"] = time.Now()
+	} else {
+		preferences["date_updated"] = dateUpdated
+	}
+
+	return preferences
+}
+
+func parseTime(timeString string) (*time.Time, error) {
+	parsedTime, err := time.Parse("2006-01-02T15:04:05.000Z", timeString)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionParse, "date", nil, err)
+	}
+	return &parsedTime, nil
 }
 
 //NewProfileBBAdapter creates a new profile building block adapter instance
