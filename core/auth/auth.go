@@ -38,10 +38,11 @@ const (
 	typeAuth              logutils.MessageDataType = "auth"
 	typeAuthRefreshParams logutils.MessageDataType = "auth refresh params"
 
-	refreshTokenLength       int = 256
-	refreshTokenExpiry       int = 7 * 24 * 60
-	refreshTokenDeletePeriod int = 2
-	refreshTokenLimit        int = 3
+	refreshTokenLength int = 256
+
+	sessionExpiry       int = 7 * 24 * 60 //1 week
+	sessionDeletePeriod int = 2
+	sessionLimit        int = 3
 )
 
 //Auth represents the auth functionality unit
@@ -687,7 +688,7 @@ func (a *Auth) buildRefreshToken() (string, *time.Time, error) {
 		return "", nil, errors.WrapErrorAction(logutils.ActionCompute, logutils.TypeToken, nil, err)
 	}
 
-	expireTime := time.Now().UTC().Add(time.Minute * time.Duration(refreshTokenExpiry))
+	expireTime := time.Now().UTC().Add(time.Minute * time.Duration(sessionExpiry))
 	return newToken, &expireTime, nil
 }
 
@@ -851,7 +852,7 @@ func (a *Auth) checkRefreshTokenLimit(orgID string, appID string, credsID string
 	if err != nil {
 		return errors.WrapErrorAction("limit checking", model.TypeAuthRefresh, nil, err)
 	}
-	if len(tokens) >= refreshTokenLimit {
+	if len(tokens) >= sessionLimit {
 		err = a.storage.DeleteRefreshToken(tokens[0].CurrentToken)
 		if err != nil {
 			return errors.WrapErrorAction("limit checking", model.TypeAuthRefresh, nil, err)
@@ -877,7 +878,7 @@ func (a *Auth) deleteExpiredRefreshTokens() {
 		a.logger.Error(err.Error())
 	}
 
-	duration := time.Hour * time.Duration(refreshTokenDeletePeriod)
+	duration := time.Hour * time.Duration(sessionDeletePeriod)
 	a.deleteRefreshTimer = time.NewTimer(duration)
 	select {
 	case <-a.deleteRefreshTimer.C:
