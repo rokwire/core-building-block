@@ -19,7 +19,7 @@ func (a *Auth) Start() {
 	storageListener := StorageListener{auth: a}
 	a.storage.RegisterStorageListener(&storageListener)
 
-	go a.setupDeleteRefreshTimer()
+	go a.setupDeleteSessionsTimer()
 }
 
 //GetHost returns the host/issuer of the auth service

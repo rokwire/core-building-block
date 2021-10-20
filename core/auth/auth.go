@@ -77,8 +77,8 @@ type Auth struct {
 	apiKeysLock *sync.RWMutex
 
 	//delete refresh tokens timer
-	deleteRefreshTimer *time.Timer
-	timerDone          chan bool
+	deleteSessionsTimer *time.Timer
+	timerDone           chan bool
 }
 
 //NewAuth creates a new auth instance
@@ -861,17 +861,21 @@ func (a *Auth) checkRefreshTokenLimit(orgID string, appID string, credsID string
 	return nil
 }
 
-func (a *Auth) setupDeleteRefreshTimer() {
+func (a *Auth) setupDeleteSessionsTimer() {
+	a.logger.Info("setupDeleteSessionsTimer")
+
 	//cancel if active
-	if a.deleteRefreshTimer != nil {
+	if a.deleteSessionsTimer != nil {
 		a.timerDone <- true
-		a.deleteRefreshTimer.Stop()
+		a.deleteSessionsTimer.Stop()
 	}
 
-	a.deleteExpiredRefreshTokens()
+	a.deleteExpiredSessions()
 }
 
-func (a *Auth) deleteExpiredRefreshTokens() {
+func (a *Auth) deleteExpiredSessions() {
+	a.logger.Info("deleteExpiredSessions")
+
 	now := time.Now().UTC()
 	err := a.storage.DeleteExpiredRefreshTokens(&now)
 	if err != nil {
@@ -879,16 +883,16 @@ func (a *Auth) deleteExpiredRefreshTokens() {
 	}
 
 	duration := time.Hour * time.Duration(sessionDeletePeriod)
-	a.deleteRefreshTimer = time.NewTimer(duration)
+	a.deleteSessionsTimer = time.NewTimer(duration)
 	select {
-	case <-a.deleteRefreshTimer.C:
+	case <-a.deleteSessionsTimer.C:
 		// timer expired
-		a.deleteRefreshTimer = nil
+		a.deleteSessionsTimer = nil
 
-		a.deleteExpiredRefreshTokens()
+		a.deleteExpiredSessions()
 	case <-a.timerDone:
 		// timer aborted
-		a.deleteRefreshTimer = nil
+		a.deleteSessionsTimer = nil
 	}
 }
 
