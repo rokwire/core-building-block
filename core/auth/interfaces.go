@@ -172,6 +172,7 @@ type Storage interface {
 	FindLoginSession(refreshToken string) (*model.LoginSession, error)
 	UpdateLoginSession(loginSession model.LoginSession) error
 	DeleteLoginSession(id string) error
+	DeleteExpiredSessions(now *time.Time) error
 
 	//Accounts
 	FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
@@ -193,14 +194,6 @@ type Storage interface {
 	FindCredential(ID string) (*model.Credential, error)
 	UpdateCredential(creds *model.Credential) error
 	InsertCredential(creds *model.Credential, context mongo.SessionContext) error
-
-	//RefreshTokens
-	FindRefreshToken(token string) (*model.AuthRefresh, error)
-	LoadRefreshTokens(orgID string, appID string, credsID string) ([]model.AuthRefresh, error)
-	InsertRefreshToken(refresh *model.AuthRefresh) error
-	UpdateRefreshToken(token string, refresh *model.AuthRefresh) error
-	DeleteRefreshToken(token string) error
-	DeleteExpiredRefreshTokens(now *time.Time) error
 
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)

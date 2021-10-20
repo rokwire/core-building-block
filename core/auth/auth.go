@@ -847,20 +847,6 @@ func (a *Auth) getCachedAPIKey(key string) (*model.APIKey, error) {
 	return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeAPIKey, nil)
 }
 
-func (a *Auth) checkRefreshTokenLimit(orgID string, appID string, credsID string) error {
-	tokens, err := a.storage.LoadRefreshTokens(orgID, appID, credsID)
-	if err != nil {
-		return errors.WrapErrorAction("limit checking", model.TypeAuthRefresh, nil, err)
-	}
-	if len(tokens) >= sessionLimit {
-		err = a.storage.DeleteRefreshToken(tokens[0].CurrentToken)
-		if err != nil {
-			return errors.WrapErrorAction("limit checking", model.TypeAuthRefresh, nil, err)
-		}
-	}
-	return nil
-}
-
 func (a *Auth) setupDeleteSessionsTimer() {
 	a.logger.Info("setupDeleteSessionsTimer")
 
@@ -877,7 +863,7 @@ func (a *Auth) deleteExpiredSessions() {
 	a.logger.Info("deleteExpiredSessions")
 
 	now := time.Now().UTC()
-	err := a.storage.DeleteExpiredRefreshTokens(&now)
+	err := a.storage.DeleteExpiredSessions(&now)
 	if err != nil {
 		a.logger.Error(err.Error())
 	}
