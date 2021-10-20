@@ -16,10 +16,12 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
+	github.com/julienschmidt/httprouter v1.3.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/cachecontrol v0.1.0 // indirect
 	github.com/rokwire/core-auth-library-go v1.0.0
 	github.com/rokwire/logging-library-go v1.0.0
+	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966 // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/swaggo/http-swagger v1.0.0
 	go.mongodb.org/mongo-driver v1.7.1
