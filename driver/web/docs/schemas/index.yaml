@@ -35,6 +35,10 @@ OrganizationConfigFields:
   $ref: "./application/OrganizationConfigFields.yaml"
 
 # auth
+LoginSession:
+  $ref: "./auth/LoginSession.yaml"
+LoginSessionFields:
+  $ref: "./auth/LoginSessionFields.yaml"
 AuthType:
   $ref: "./auth/AuthType.yaml"
 AuthTypeFields:
@@ -76,8 +80,6 @@ AccountAuthTypeFields:
   $ref: "./user/AccountAuthTypeFields.yaml"
 Device:
   $ref: "./user/Device.yaml"
-AnonymousProfile:
-  $ref: "./user/AnonymousProfile.yaml"
 DeviceFields:
   $ref: "./user/DeviceFields.yaml"
 
@@ -90,10 +92,6 @@ _req_shared_ProfileNullable:
   $ref: "../schemas/apis/shared/requests/ProfileNullable.yaml"
 _res_shared_RokwireToken:
   $ref: "../schemas/apis/shared/responses/RokwireToken.yaml"
-_res_shared_ParamsOIDC:
-  $ref: "../schemas/apis/shared/responses/ParamsOIDC.yaml"
-_res_shared_ParamsNone:
-  $ref: "../schemas/apis/shared/responses/ParamsNone.yaml"
 
 ### login API
 _req_login_Request:
@@ -112,6 +110,8 @@ _req_login_ParamsOIDC:
   $ref: "./apis/services/login/request/ParamsOIDC.yaml"
 _req_login_ParamsNone:
   $ref: "./apis/services/login/request/ParamsNone.yaml"
+_req_login_Device:
+  $ref: "./apis/services/login/request/Device.yaml"
 _res_login_Response:
   $ref: "./apis/services/login/response/Response.yaml"
 _res_login_Account:

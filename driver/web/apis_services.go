@@ -25,38 +25,51 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
+	//get ip
+	//TODO - most probably it will be needed to be taken more preciselly
+	ip := r.RemoteAddr
+
 	var requestData Def.ReqLoginRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login request"), nil, err, http.StatusBadRequest, true)
 	}
 
+	//creds
 	requestCreds, err := interfaceToJSON(requestData.Creds)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
 	}
 
+	//params
 	requestParams, err := interfaceToJSON(requestData.Params)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
 	//preferences
-	var preferences map[string]interface{}
+	var requestPreferences map[string]interface{}
 	if requestData.Preferences != nil {
-		preferences = *requestData.Preferences
+		requestPreferences = *requestData.Preferences
 	}
 
 	//profile ////
-	profile := profileFromDefNullable(requestData.Profile)
+	requestProfile := profileFromDefNullable(requestData.Profile)
 
-	message, accessToken, refreshToken, account, params, err := h.coreAPIs.Auth.Login(string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, profile, preferences, l)
+	//device
+	requestDevice := requestData.Device
+
+	message, loginSession, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId,
+		string(requestData.AuthType), requestCreds, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, requestProfile, requestPreferences, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
 
-	if message != "" {
-		responseData := &Def.ResLoginResponse{Message: &message}
+	///prepare response
+
+	//message
+	if message != nil {
+		responseData := &Def.ResLoginResponse{Message: message}
 		respData, err := json.Marshal(responseData)
 		if err != nil {
 			return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
@@ -64,12 +77,18 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		return l.HttpResponseSuccessJSON(respData)
 	}
 
+	//token
+	accessToken := loginSession.AccessToken
+	refreshToken := loginSession.RefreshToken
+
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
+	//account
 	var accountData *Def.ResLoginAccount
-	if account != nil {
-		///prepare response
+	if !loginSession.Anonymous {
+		account := loginSession.AccountAuthType.Account
+
 		//profile
 		profile := profileToDef(&account.Profile)
 		//preferences
@@ -85,7 +104,13 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 	}
 
-	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: accountData, Params: &params}
+	//params
+	var paramsRes interface{}
+	if loginSession.Params != nil {
+		paramsRes = loginSession.Params
+	}
+
+	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: accountData, Params: &paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
@@ -100,14 +125,27 @@ func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request, claims *t
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	accessToken, refreshToken, params, err := h.coreAPIs.Auth.Refresh(string(requestData), l)
+	reqToken := string(requestData)
+	loginSession, err := h.coreAPIs.Auth.Refresh(reqToken, l)
 	if err != nil {
 		return l.HttpResponseError("Error refreshing token", err, http.StatusInternalServerError, true)
+	}
+	if loginSession == nil {
+		//if login session is null then unauthorized
+		l.Infof("trying to refresh - %s", reqToken)
+		return l.HttpResponseError(http.StatusText(http.StatusUnauthorized), nil, http.StatusUnauthorized, true)
+	}
+
+	accessToken := loginSession.AccessToken
+	refreshToken := loginSession.RefreshToken
+	var paramsRes interface{}
+	if loginSession.Params != nil {
+		paramsRes = loginSession.Params
 	}
 
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
-	responseData := &Def.ResRefreshResponse{Token: &rokwireToken, Params: &params}
+	responseData := &Def.ResRefreshResponse{Token: &rokwireToken, Params: &paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth refresh response"), nil, err, http.StatusInternalServerError, false)
