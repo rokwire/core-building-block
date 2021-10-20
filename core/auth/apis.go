@@ -351,6 +351,17 @@ func (a *Auth) MFAVerify(accountID string, sessionID string, mfaType string, mfa
 			a.deleteLoginSession(sessionID, l)
 			return &message, nil, errors.ErrorData(logutils.StatusInvalid, "mfa code", nil)
 		}
+
+		expiry, ok := mfa.Params["expires"].(time.Time)
+		if !ok {
+			a.deleteLoginSession(sessionID, l)
+			return nil, nil, errors.ErrorData(logutils.StatusInvalid, "stored expiry", nil)
+		}
+		if time.Now().UTC().After(expiry) {
+			message = "expired code"
+			a.deleteLoginSession(sessionID, l)
+			return &message, nil, errors.ErrorData(logutils.StatusInvalid, "expired code", nil)
+		}
 	} else {
 		secret, ok := mfa.Params["secret"].(string)
 		if !ok {

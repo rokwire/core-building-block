@@ -153,6 +153,7 @@ type MFAType struct {
 	Type      string                 `bson:"type"`
 	AccountID string                 `bson:"account_id"`
 	Verified  bool                   `bson:"verified"`
+	Recipient string                 `bson:"recipient"`
 	Params    map[string]interface{} `bson:"params"` //mfa type params
 
 	DateCreated time.Time  `bson:"date_created"`
