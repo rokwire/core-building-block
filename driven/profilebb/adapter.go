@@ -39,17 +39,17 @@ type profileBBPII struct {
 }
 
 type profileBBNonPII struct {
-	Over13               bool                `json:"over13"`
+	Over13               *bool               `json:"over13"`
 	PrivacySettings      privacySettings     `json:"privacySettings"`
 	Roles                []string            `json:"roles"`
 	Interests            []interest          `json:"interests"`
 	PositiveInterestTags []string            `json:"positiveInterestTags"`
 	NegativeInterestTags []string            `json:"negativeInterestTags"`
 	Favorites            map[string][]string `json:"favorites"`
-	RegisteredVoter      bool                `json:"registered_voter"`
+	RegisteredVoter      *bool               `json:"registered_voter"`
 	VotePlace            string              `json:"vote_place"`
-	VoterByMail          bool                `json:"voter_by_mail"`
-	Voted                bool                `json:"voted"`
+	VoterByMail          *bool               `json:"voter_by_mail"`
+	Voted                *bool               `json:"voted"`
 	CreationDate         string              `json:"creationDate"`
 	LastModifiedDate     string              `json:"lastModifiedDate"`
 }
@@ -76,12 +76,23 @@ func (p *profileBBNonPII) convertTags() map[string]bool {
 }
 
 func (p *profileBBNonPII) convertVoter() map[string]interface{} {
-	return map[string]interface{}{
-		"registered_voter": p.RegisteredVoter,
-		"vote_place":       p.VotePlace,
-		"voter_by_mail":    p.VoterByMail,
-		"voted":            p.Voted,
+	voter := map[string]interface{}{
+		"vote_place": p.VotePlace,
 	}
+
+	if p.RegisteredVoter != nil {
+		voter["registered_voter"] = *p.RegisteredVoter
+	}
+
+	if p.VoterByMail != nil {
+		voter["voter_by_mail"] = *p.VoterByMail
+	}
+
+	if p.Voted != nil {
+		voter["voted"] = *p.Voted
+	}
+
+	return voter
 }
 
 type privacySettings struct {
