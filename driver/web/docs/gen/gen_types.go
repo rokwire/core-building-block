@@ -84,7 +84,7 @@ const (
 
 // Defines values for ReqLoginRequestAuthType.
 const (
-	ReqLoginRequestAuthTypeApiKey ReqLoginRequestAuthType = "api_key"
+	ReqLoginRequestAuthTypeAnonymous ReqLoginRequestAuthType = "anonymous"
 
 	ReqLoginRequestAuthTypeEmail ReqLoginRequestAuthType = "email"
 
@@ -514,7 +514,7 @@ type ReqLoginUrlRequest struct {
 // ReqLoginUrlRequestAuthType defines model for ReqLoginUrlRequest.AuthType.
 type ReqLoginUrlRequestAuthType string
 
-// Auth login creds for auth_type="api_key"
+// Auth login creds for auth_type="anonymous"
 type ReqLoginCredsAPIKey struct {
 	AnonymousId *string `json:"anonymous_id,omitempty"`
 }

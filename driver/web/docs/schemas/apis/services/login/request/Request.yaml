@@ -13,7 +13,7 @@ properties:
       - email
       - twilio_phone
       - illinois_oidc
-      - api_key
+      - anonymous
   app_type_identifier:
     type: string
   org_id:

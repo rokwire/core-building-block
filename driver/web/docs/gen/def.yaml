@@ -164,11 +164,11 @@ paths:
                       "os": "Android"
                     }
                   }
-              api_key:
-                summary: API key login (Anonymous)
+              anonymous:
+                summary: Anonymous login
                 value: |
                   {
-                    "auth_type": "api_key",
+                    "auth_type": "anonymous",
                     "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
@@ -1192,7 +1192,7 @@ paths:
             example: |
               {
                 "app_id": "string",
-                "key" "string"
+                "key": "string"
               }
         required: true
       responses:
@@ -1621,7 +1621,7 @@ components:
           type: string
         date_updated:
           type: string
-          nulable: true
+          nullable: true
         date_created:
           type: string
     AuthType:
@@ -2027,7 +2027,7 @@ components:
             - email
             - twilio_phone
             - illinois_oidc
-            - api_key
+            - anonymous
         app_type_identifier:
           type: string
         org_id:
@@ -2081,7 +2081,7 @@ components:
           - full redirect URI received from OIDC provider
     _req_login_CredsAPIKey:
       type: object
-      description: Auth login creds for auth_type="api_key"
+      description: Auth login creds for auth_type="anonymous"
       properties:
         anonymous_id:
           type: string
@@ -2152,7 +2152,7 @@ components:
                     redirect_uri:
                       type: string
             - type: object
-              description: Auth login response params for auth_type="api_key"
+              description: Auth login response params for auth_type="anonymous"
               properties:
                 anonymous_id:
                   type: string

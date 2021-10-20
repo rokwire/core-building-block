@@ -131,7 +131,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initEmailAuth(auth)
 	initPhoneAuth(auth, twilioAccountSID, twilioToken, twilioServiceSID)
 	initFirebaseAuth(auth)
-	initAPIKeyAuth(auth)
+	initAnonymousAuth(auth)
 	initSignatureAuth(auth)
 
 	initOidcAuth(auth)

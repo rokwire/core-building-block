@@ -1,5 +1,5 @@
 type: object
-description: Auth login creds for auth_type="api_key"
+description: Auth login creds for auth_type="anonymous"
 properties:
   anonymous_id:
     type: string
