@@ -181,13 +181,13 @@ func (m *database) start() error {
 	m.applicationsRoles = applicationsRoles
 	m.applicationsPermissions = applicationsPermissions
 
-	go m.apiKeys.Watch(nil)
-	go m.authTypes.Watch(nil)
-	go m.identityProviders.Watch(nil)
-	go m.serviceRegs.Watch(nil)
-	go m.organizations.Watch(nil)
-	go m.applications.Watch(nil)
-	go m.applicationsOrganizations.Watch(nil)
+	go m.apiKeys.Watch(nil, m.logger)
+	go m.authTypes.Watch(nil, m.logger)
+	go m.identityProviders.Watch(nil, m.logger)
+	go m.serviceRegs.Watch(nil, m.logger)
+	go m.organizations.Watch(nil, m.logger)
+	go m.applications.Watch(nil, m.logger)
+	go m.applicationsOrganizations.Watch(nil, m.logger)
 
 	m.listeners = []Listener{}
 

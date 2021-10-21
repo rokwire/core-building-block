@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Implement logins sessions [#172](https://github.com/rokwire/core-building-block/issues/172) 
 
+### Fixed
+- MongoDB ChangeStream Watch() does not recover [#259](https://github.com/rokwire/core-building-block/issues/259)
+
 ## [1.6.0] - 2021-10-19
 ### Added
 - Implement logins sessions - almost completed [#172](https://github.com/rokwire/core-building-block/issues/172) 
