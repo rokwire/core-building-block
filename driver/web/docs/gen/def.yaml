@@ -530,6 +530,32 @@ paths:
               schema:
                 type: string
                 example: Echooo
+  /admin/login-url:
+    post:
+      tags:
+        - Services
+      summary: Get SSO login url
+      description: |
+        Retrieve a pre-formatted SSO login URL
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_login-url_admin_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_login-url_admin_Response'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /admin/global-config:
     get:
       tags:
@@ -2181,6 +2207,34 @@ components:
         redirect_uri:
           type: string
     _res_login-url_Response:
+      required:
+        - login_url
+      type: object
+      properties:
+        login_url:
+          type: string
+        params:
+          type: object
+          description: Params to be submitted with 'login' request (if necessary)
+    _req_login-url_admin_Request:
+      required:
+        - auth_type
+        - app_type_identifier
+        - org_id
+        - redirect_uri
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - illinois_oidc
+        app_type_identifier:
+          type: string
+        org_id:
+          type: string
+        redirect_uri:
+          type: string
+    _res_login-url_admin_Response:
       required:
         - login_url
       type: object

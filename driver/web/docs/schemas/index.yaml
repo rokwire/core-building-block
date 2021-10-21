@@ -123,6 +123,12 @@ _req_login-url_Request:
 _res_login-url_Response:
   $ref: "./apis/services/login-url/response/Response.yaml"
 
+### login-url admin API 
+_req_login-url_admin_Request:
+  $ref: "./apis/admin/login-url/request/Request.yaml"
+_res_login-url_admin_Response:
+  $ref: "./apis/admin/login-url/response/Response.yaml"
+
 ### refresh API
 _res_refresh_Response:
   $ref: "./apis/services/refresh/response/Response.yaml"
