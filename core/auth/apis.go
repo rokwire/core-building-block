@@ -24,7 +24,7 @@ func (a *Auth) Start() {
 	storageListener := StorageListener{auth: a}
 	a.storage.RegisterStorageListener(&storageListener)
 
-	go a.setupDeleteRefreshTimer()
+	go a.setupDeleteSessionsTimer()
 }
 
 //GetHost returns the host/issuer of the auth service
@@ -41,6 +41,7 @@ func (a *Auth) GetHost() string {
 //		deviceID (string): Device ID
 //		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
+//		apiKey (string): API key to validate the specified app
 //		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
 //		params (string): JSON encoded params defined by specified auth type
@@ -57,7 +58,7 @@ func (a *Auth) GetHost() string {
 //			State (string): login state used if account is enrolled in MFA
 //		MFA types ([]model.MFAType): list of MFA types account is enrolled in
 func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
-	authenticationType string, creds string, appTypeIdentifier string, orgID string, params string,
+	authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
 	profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error) {
 	//TODO - analyse what should go in one transaction
 
@@ -65,6 +66,12 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
+	err = a.validateAPIKey(apiKey, appType.Application.ID)
+	if err != nil {
+		return nil, nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
 
 	anonymous := false
@@ -142,13 +149,14 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 //Refresh refreshes an access token using a refresh token
 //	Input:
 //		refreshToken (string): Refresh token
+//		apiKey (string): API key to validate the specified app
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
 //			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //			Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, error) {
+func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.LoginSession, error) {
 	var loginSession *model.LoginSession
 
 	//find the login session for the refresh token
@@ -174,6 +182,12 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, e
 
 		//return nul
 		return nil, nil
+	}
+
+	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
+	err = a.validateAPIKey(apiKey, loginSession.AppOrg.Application.ID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
 
 	///now:
@@ -251,15 +265,22 @@ func (a *Auth) Refresh(refreshToken string, l *logs.Log) (*model.LoginSession, e
 //		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
 //		redirectURI (string): Registered redirect URI where client will receive response
+//		apiKey (string): API key to validate the specified app
 //		l (*loglib.Log): Log object pointer for request
 //	Returns:
 //		Login URL (string): SSO provider login URL to be launched in a browser
 //		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
-func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, orgID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, orgID string, redirectURI string, apiKey string, l *logs.Log) (string, map[string]interface{}, error) {
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
+	err = a.validateAPIKey(apiKey, appType.Application.ID)
+	if err != nil {
+		return "", nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
 
 	//get the auth type implementation for the auth type
@@ -603,22 +624,32 @@ func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
 	return &model.JSONWebKeySet{Keys: []model.JSONWebKey{*jwk}}, nil
 }
 
-//GetAPIKey finds and returns the API key for the provided org and app
-func (a *Auth) GetAPIKey(orgID string, appID string) (*model.APIKey, error) {
-	return a.storage.FindAPIKey(orgID, appID)
+//GetApplicationAPIKeys finds and returns the API keys for the provided app
+func (a *Auth) GetApplicationAPIKeys(appID string) ([]model.APIKey, error) {
+	return a.storage.FindApplicationAPIKeys(appID)
 }
 
-//CreateAPIKey creates a new API key for the provided org and app
-func (a *Auth) CreateAPIKey(apiKey *model.APIKey) error {
+//GetAPIKey finds and returns an API key
+func (a *Auth) GetAPIKey(ID string) (*model.APIKey, error) {
+	return a.storage.FindAPIKey(ID)
+}
+
+//CreateAPIKey creates a new API key
+func (a *Auth) CreateAPIKey(apiKey model.APIKey) (*model.APIKey, error) {
+	id, _ := uuid.NewUUID()
+	apiKey.ID = id.String()
 	return a.storage.InsertAPIKey(apiKey)
 }
 
 //UpdateAPIKey updates an existing API key
-func (a *Auth) UpdateAPIKey(apiKey *model.APIKey) error {
+func (a *Auth) UpdateAPIKey(apiKey model.APIKey) error {
+	if len(apiKey.ID) == 0 {
+		return errors.Newf("id cannot be empty")
+	}
 	return a.storage.UpdateAPIKey(apiKey)
 }
 
-//DeleteAPIKey deletes an existing API key
-func (a *Auth) DeleteAPIKey(orgID string, appID string) error {
-	return a.storage.DeleteAPIKey(orgID, appID)
+//DeleteAPIKey deletes an API key
+func (a *Auth) DeleteAPIKey(ID string) error {
+	return a.storage.DeleteAPIKey(ID)
 }

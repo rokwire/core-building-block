@@ -38,10 +38,11 @@ const (
 	typeAuth              logutils.MessageDataType = "auth"
 	typeAuthRefreshParams logutils.MessageDataType = "auth refresh params"
 
-	refreshTokenLength       int = 256
-	refreshTokenExpiry       int = 7 * 24 * 60
-	refreshTokenDeletePeriod int = 2
-	refreshTokenLimit        int = 3
+	refreshTokenLength int = 256
+
+	sessionExpiry       int = 7 * 24 * 60 //1 week
+	sessionDeletePeriod int = 2
+	sessionLimit        int = 3
 
 	loginStateLength int = 128
 )
@@ -78,8 +79,8 @@ type Auth struct {
 	apiKeysLock *sync.RWMutex
 
 	//delete refresh tokens timer
-	deleteRefreshTimer *time.Timer
-	timerDone          chan bool
+	deleteSessionsTimer *time.Timer
+	timerDone           chan bool
 }
 
 //NewAuth creates a new auth instance
@@ -133,7 +134,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initEmailAuth(auth)
 	initPhoneAuth(auth, twilioAccountSID, twilioToken, twilioServiceSID)
 	initFirebaseAuth(auth)
-	initAPIKeyAuth(auth)
+	initAnonymousAuth(auth)
 	initSignatureAuth(auth)
 
 	initOidcAuth(auth)
@@ -321,6 +322,16 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 
 	return message, accountAuthType, nil
+}
+
+//validateAPIKey checks if the given API key is valid for the given app ID
+func (a *Auth) validateAPIKey(apiKey string, appID string) error {
+	validAPIKey, err := a.getCachedAPIKey(apiKey)
+	if err != nil || validAPIKey == nil || validAPIKey.AppID != appID {
+		return errors.Newf("incorrect key for app_id=%v", appID)
+	}
+
+	return nil
 }
 
 //isSignUp checks if the operation is sign in or sign up
@@ -697,7 +708,7 @@ func (a *Auth) buildRefreshToken() (string, *time.Time, error) {
 		return "", nil, errors.WrapErrorAction(logutils.ActionCompute, logutils.TypeToken, nil, err)
 	}
 
-	expireTime := time.Now().UTC().Add(time.Minute * time.Duration(refreshTokenExpiry))
+	expireTime := time.Now().UTC().Add(time.Minute * time.Duration(sessionExpiry))
 	return newToken, &expireTime, nil
 }
 
@@ -856,48 +867,38 @@ func (a *Auth) getCachedAPIKey(key string) (*model.APIKey, error) {
 	return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeAPIKey, nil)
 }
 
-func (a *Auth) checkRefreshTokenLimit(orgID string, appID string, credsID string) error {
-	tokens, err := a.storage.LoadRefreshTokens(orgID, appID, credsID)
-	if err != nil {
-		return errors.WrapErrorAction("limit checking", model.TypeAuthRefresh, nil, err)
-	}
-	if len(tokens) >= refreshTokenLimit {
-		err = a.storage.DeleteRefreshToken(tokens[0].CurrentToken)
-		if err != nil {
-			return errors.WrapErrorAction("limit checking", model.TypeAuthRefresh, nil, err)
-		}
-	}
-	return nil
-}
+func (a *Auth) setupDeleteSessionsTimer() {
+	a.logger.Info("setupDeleteSessionsTimer")
 
-func (a *Auth) setupDeleteRefreshTimer() {
 	//cancel if active
-	if a.deleteRefreshTimer != nil {
+	if a.deleteSessionsTimer != nil {
 		a.timerDone <- true
-		a.deleteRefreshTimer.Stop()
+		a.deleteSessionsTimer.Stop()
 	}
 
-	a.deleteExpiredRefreshTokens()
+	a.deleteExpiredSessions()
 }
 
-func (a *Auth) deleteExpiredRefreshTokens() {
+func (a *Auth) deleteExpiredSessions() {
+	a.logger.Info("deleteExpiredSessions")
+
 	now := time.Now().UTC()
-	err := a.storage.DeleteExpiredRefreshTokens(&now)
+	err := a.storage.DeleteExpiredSessions(&now)
 	if err != nil {
 		a.logger.Error(err.Error())
 	}
 
-	duration := time.Hour * time.Duration(refreshTokenDeletePeriod)
-	a.deleteRefreshTimer = time.NewTimer(duration)
+	duration := time.Hour * time.Duration(sessionDeletePeriod)
+	a.deleteSessionsTimer = time.NewTimer(duration)
 	select {
-	case <-a.deleteRefreshTimer.C:
+	case <-a.deleteSessionsTimer.C:
 		// timer expired
-		a.deleteRefreshTimer = nil
+		a.deleteSessionsTimer = nil
 
-		a.deleteExpiredRefreshTokens()
+		a.deleteExpiredSessions()
 	case <-a.timerDone:
 		// timer aborted
-		a.deleteRefreshTimer = nil
+		a.deleteSessionsTimer = nil
 	}
 }
 

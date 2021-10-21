@@ -65,6 +65,8 @@ paths:
     $ref: "./resources/admin/application-permissions.yaml"
   /admin/application-roles:
     $ref: "./resources/admin/application-roles.yaml"
+  /admin/application-api-keys:
+    $ref: "./resources/admin/application-api-keys.yaml"
 
   /admin/account/permissions:
     $ref: "./resources/admin/account/permissions.yaml"

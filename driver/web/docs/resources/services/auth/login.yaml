@@ -30,6 +30,7 @@ post:
                 "auth_type": "email",
                 "app_type_identifier": "edu.illinois.rokwire.safercommunity",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                 "creds": {
                   "email": "test@test.com", 
                   "password": "test12345"
@@ -47,6 +48,7 @@ post:
                 "auth_type": "email",
                 "app_type_identifier": "edu.illinois.rokwire.safercommunity",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                 "creds": {
                   "email": "test@test.com", 
                   "password": "test12345"
@@ -84,6 +86,7 @@ post:
                 "auth_type": "twilio_phone",
                 "app_type_identifier": "edu.illinois.rokwire",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                 "creds": {
                   "phone": "+12223334444", 
                   "code": "123456"
@@ -117,6 +120,7 @@ post:
                 "auth_type": "illinois_oidc",
                 "app_type_identifier": "edu.illinois.rokwire",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                 "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
                 "params": {
                   "redirect_uri": "https://redirect.example.com",
@@ -144,15 +148,16 @@ post:
                   "os": "Android"
                 }
               }
-          api_key:
-            summary: API key login (Anonymous)
+          anonymous:
+            summary: Anonymous login
             value: |
               {
-                "auth_type": "api_key",
+                "auth_type": "anonymous",
                 "app_type_identifier": "edu.illinois.rokwire",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                 "creds": {
-                  "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738"
+                  "anonymous_id": "dbb5ea5d-6c6c-44b8-9952-7ebf0e844beb"
                 },
                 "device": {
                   "type": "mobile",

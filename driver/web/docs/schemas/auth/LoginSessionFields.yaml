@@ -19,6 +19,6 @@ properties:
     type: string
   date_updated:
     type: string
-    nulable: true
+    nullable: true
   date_created:
     type: string

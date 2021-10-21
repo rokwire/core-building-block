@@ -86,7 +86,7 @@ func (ls LoginSession) IsExpired() bool {
 
 //APIKey represents an API key entity
 type APIKey struct {
-	OrgID string `json:"org_id" bson:"org_id" validate:"required"`
+	ID    string `json:"id" bson:"_id"`
 	AppID string `json:"app_id" bson:"app_id" validate:"required"`
 	Key   string `json:"key" bson:"key"`
 }
