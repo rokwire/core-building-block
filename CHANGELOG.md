@@ -8,10 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Handle API key validation for non-anonymous users [#244](https://github.com/rokwire/core-building-block/issues/244)
+- Implement logins sessions [#172](https://github.com/rokwire/core-building-block/issues/172) 
 
 ## [1.6.0] - 2021-10-19
 ### Added
-- Implement logins sessions [#172](https://github.com/rokwire/core-building-block/issues/172) 
+- Implement logins sessions - almost completed [#172](https://github.com/rokwire/core-building-block/issues/172) 
 
 ## [1.5.0] - 2021-10-15
 ### Fixed

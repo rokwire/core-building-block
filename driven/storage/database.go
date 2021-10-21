@@ -267,27 +267,11 @@ func (m *database) applyLoginsSessionsChecks(refreshTokens *collectionWrapper) e
 		return err
 	}
 
-	//TODO - indexes
-	/*
-		err := refreshTokens.AddIndex(bson.D{primitive.E{Key: "current_token", Value: 1}}, false)
-		if err != nil {
-			return err
-		}
+	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "expires", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
 
-		err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "previous_token", Value: 1}}, false)
-		if err != nil {
-			return err
-		}
-
-		err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "exp", Value: 1}}, false)
-		if err != nil {
-			return err
-		}
-
-		err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "creds_id", Value: 1}}, false)
-		if err != nil {
-			return err
-		} */
 	m.logger.Info("logins sessions check passed")
 	return nil
 }
