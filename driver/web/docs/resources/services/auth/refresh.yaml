@@ -8,9 +8,9 @@ post:
     description: |
       Refresh token
     content:
-      text/plain:
+      application/json:
         schema:
-          type: string
+          $ref: "../../../schemas/apis/services/refresh/request/Request.yaml"
     required: true
   responses:
     200:
