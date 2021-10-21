@@ -367,19 +367,10 @@ func (sa *Adapter) InsertLoginSession(loginSession model.LoginSession) (*model.L
 	return &loginSession, nil
 }
 
-//FindLoginSessionByToken finds login session by refresh token
-func (sa *Adapter) FindLoginSessionByToken(refreshToken string) (*model.LoginSession, error) {
-	return sa.findLoginSession("refresh_token", refreshToken)
-}
-
-//FindLoginSessionByID finds login session by ID
-func (sa *Adapter) FindLoginSessionByID(id string) (*model.LoginSession, error) {
-	return sa.findLoginSession("_id", id)
-}
-
-func (sa *Adapter) findLoginSession(key string, value string) (*model.LoginSession, error) {
+//FindLoginSession finds a login session
+func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, error) {
 	//find loggin session
-	filter := bson.D{primitive.E{Key: "key", Value: value}}
+	filter := bson.D{primitive.E{Key: "refresh_token", Value: refreshToken}}
 	var loginsSessions []loginSession
 	err := sa.db.loginsSessions.Find(filter, &loginsSessions, nil)
 	if err != nil {
@@ -391,28 +382,51 @@ func (sa *Adapter) findLoginSession(key string, value string) (*model.LoginSessi
 	}
 	loginSession := loginsSessions[0]
 
+	return sa.buildLoginSession(&loginSession)
+}
+
+//FindAndUpdateLoginSession finds and updates a login session
+func (sa *Adapter) FindAndUpdateLoginSession(id string) (*model.LoginSession, error) {
+	//find loggin session
+	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "state", Value: ""},
+		}},
+	}
+	var loginSession loginSession
+	err := sa.db.loginsSessions.FindOneAndUpdate(filter, update, &loginSession, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+	}
+
+	return sa.buildLoginSession(&loginSession)
+}
+
+func (sa *Adapter) buildLoginSession(ls *loginSession) (*model.LoginSession, error) {
 	//account - from storage
 	var account *model.Account
-	if loginSession.AccountAuthTypeID != nil {
-		account, err = sa.FindAccountByID(loginSession.Identifier)
+	var err error
+	if ls.AccountAuthTypeID != nil {
+		account, err = sa.FindAccountByID(ls.Identifier)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
 	}
 
 	//auth type - from cache
-	authType, err := sa.getCachedAuthType(loginSession.AuthTypeCode)
+	authType, err := sa.getCachedAuthType(ls.AuthTypeCode)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 	}
 
 	//application organization - from cache
-	appOrg, err := sa.getCachedApplicationOrganization(loginSession.AppID, loginSession.OrgID)
+	appOrg, err := sa.getCachedApplicationOrganization(ls.AppID, ls.OrgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 	}
 
-	modelLoginSession := loginSessionFromStorage(loginSession, *authType, account, *appOrg)
+	modelLoginSession := loginSessionFromStorage(*ls, *authType, account, *appOrg)
 	return &modelLoginSession, nil
 }
 
@@ -914,26 +928,49 @@ func (sa *Adapter) InsertMFAType(mfa *model.MFAType) error {
 	return nil
 }
 
-//UpdateMFATypes updates a set of MFA types
-func (sa *Adapter) UpdateMFATypes(accountID string, state string) error {
-	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
+//UpdateMFAType updates one MFA type
+func (sa *Adapter) UpdateMFAType(mfa *model.MFAType) error {
+	filter := bson.D{primitive.E{Key: "account_id", Value: mfa.AccountID}, primitive.E{Key: "type", Value: mfa.Type}}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "params.state", Value: state},
+			primitive.E{Key: "verified", Value: mfa.Verified},
+			primitive.E{Key: "recipient", Value: mfa.Recipient},
+			primitive.E{Key: "params", Value: mfa.Params},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
-	res, err := sa.db.mfa.UpdateMany(filter, update, nil)
+	res, err := sa.db.mfa.UpdateOne(filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, nil, err)
 	}
-	if res.MatchedCount != res.ModifiedCount {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeMFAType, logutils.StringArgs("mismatching matched and modified counts"))
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeMFAType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return nil
 }
+
+//UpdateMFATypes updates a set of MFA types
+// func (sa *Adapter) UpdateMFATypes(accountID string, state string) error {
+// 	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
+// 	update := bson.D{
+// 		primitive.E{Key: "$set", Value: bson.D{
+// 			primitive.E{Key: "params.state", Value: state},
+// 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+// 		}},
+// 	}
+
+// 	res, err := sa.db.mfa.UpdateMany(filter, update, nil)
+// 	if err != nil {
+// 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, nil, err)
+// 	}
+// 	if res.MatchedCount != res.ModifiedCount {
+// 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeMFAType, logutils.StringArgs("mismatching matched and modified counts"))
+// 	}
+
+// 	return nil
+// }
 
 //DeleteMFAType deletes a MFA type
 func (sa *Adapter) DeleteMFAType(accountID string, mfaType string) error {

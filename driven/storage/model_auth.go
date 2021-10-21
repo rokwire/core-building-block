@@ -27,6 +27,7 @@ type loginSession struct {
 	RefreshToken string                 `bson:"refresh_token"`
 	Params       map[string]interface{} `bson:"params"`
 
+	State   string    `bson:"state"`
 	Expires time.Time `bson:"expires"`
 
 	DateUpdated *time.Time `bson:"date_updated"`

@@ -114,7 +114,8 @@ func mfaDataListToDef(items []model.MFAType) []Def.ResSharedMfa {
 }
 
 func mfaDataToDef(item *model.MFAType) *Def.ResSharedMfa {
-	return &Def.ResSharedMfa{Type: &item.Type, AccountId: &item.AccountID, Verified: &item.Verified, Params: &item.Params}
+	//TODO: mask recipient (if necessary) before returning
+	return &Def.ResSharedMfa{Type: &item.Type, AccountId: &item.AccountID, Verified: &item.Verified, QrCode: &item.QRCode, Recipient: &item.Recipient}
 }
 
 func profileToDef(item *model.Profile) *Def.ProfileFields {

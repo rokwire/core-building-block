@@ -84,11 +84,11 @@ type APIs interface {
 	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
 	//			Params (interface{}): authType-specific set of parameters passed back to client
+	//			State (string): login state used if account is enrolled in MFA
 	//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
-	//		State (string): login state used if account is enrolled in MFA
 	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
 		authenticationType string, creds string, appTypeIdentifier string, orgID string, params string,
-		profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, string, error)
+		profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
@@ -208,8 +208,8 @@ type Storage interface {
 
 	//LoginsSessions
 	InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error)
-	FindLoginSessionByToken(refreshToken string) (*model.LoginSession, error)
-	FindLoginSessionByID(id string) (*model.LoginSession, error)
+	FindLoginSession(refreshToken string) (*model.LoginSession, error)
+	FindAndUpdateLoginSession(id string) (*model.LoginSession, error)
 	UpdateLoginSession(loginSession model.LoginSession) error
 	DeleteLoginSession(id string) error
 
@@ -239,7 +239,8 @@ type Storage interface {
 	FindMFAType(accountID string, mfaType string) (*model.MFAType, error)
 	FindMFATypes(accountID string) ([]model.MFAType, error)
 	InsertMFAType(mfa *model.MFAType) error
-	UpdateMFATypes(accountID string, state string) error
+	UpdateMFAType(mfa *model.MFAType) error
+	// UpdateMFATypes(accountID string, state string) error
 	DeleteMFAType(accountID string, mfaType string) error
 
 	//RefreshTokens

@@ -718,10 +718,11 @@ type ResRefreshResponse struct {
 
 // ResSharedMfa defines model for _res_shared_Mfa.
 type ResSharedMfa struct {
-	AccountId *string                 `json:"account_id,omitempty"`
-	Params    *map[string]interface{} `json:"params,omitempty"`
-	Type      *string                 `json:"type,omitempty"`
-	Verified  *bool                   `json:"verified,omitempty"`
+	AccountId *string `json:"account_id,omitempty"`
+	QrCode    *string `json:"qr_code,omitempty"`
+	Recipient *string `json:"recipient,omitempty"`
+	Type      *string `json:"type,omitempty"`
+	Verified  *bool   `json:"verified,omitempty"`
 }
 
 // ResSharedRokwireToken defines model for _res_shared_RokwireToken.

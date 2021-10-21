@@ -2093,8 +2093,10 @@ components:
           type: string
         verified:
           type: boolean
-        params:
-          type: object
+        qr_code:
+          type: string
+        recipient:
+          type: string
     _req_login_Request:
       required:
         - auth_type

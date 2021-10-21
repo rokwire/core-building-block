@@ -382,7 +382,7 @@ func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthT
 
 func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, appOrg model.ApplicationOrganization,
 	accountAuthType *model.AccountAuthType, appType model.ApplicationType, ipAddress string, deviceType string,
-	deviceOS *string, deviceID string, params map[string]interface{}, l *logs.Log) (*model.LoginSession, error) {
+	deviceOS *string, deviceID string, params map[string]interface{}, state string, l *logs.Log) (*model.LoginSession, error) {
 
 	//TODO - check what should go in one transaction
 
@@ -390,7 +390,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 	device := model.Device{ID: "1234", Type: "mobile"}
 
 	//create login session entity
-	loginSession, err := a.createLoginSession(anonymous, sub, authType, appOrg, accountAuthType, appType, ipAddress, params, device, l)
+	loginSession, err := a.createLoginSession(anonymous, sub, authType, appOrg, accountAuthType, appType, ipAddress, params, state, device, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error creating a session", "", nil, err)
 	}
@@ -406,7 +406,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 
 func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.AuthType,
 	appOrg model.ApplicationOrganization, accountAuthType *model.AccountAuthType, appType model.ApplicationType,
-	ipAddress string, params map[string]interface{}, device model.Device, l *logs.Log) (*model.LoginSession, error) {
+	ipAddress string, params map[string]interface{}, state string, device model.Device, l *logs.Log) (*model.LoginSession, error) {
 
 	//id
 	idUUID, _ := uuid.NewUUID()
@@ -445,7 +445,8 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 
 	loginSession := model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType,
 		AppType: appType, Anonymous: anonymous, Identifier: sub, AccountAuthType: accountAuthType,
-		Device: device, IPAddress: ipAddress, AccessToken: accessToken, RefreshToken: refreshToken, Params: params, Expires: *expires, DateCreated: time.Now()}
+		Device: device, IPAddress: ipAddress, AccessToken: accessToken, RefreshToken: refreshToken, Params: params,
+		State: state, Expires: *expires, DateCreated: time.Now()}
 
 	return &loginSession, nil
 }

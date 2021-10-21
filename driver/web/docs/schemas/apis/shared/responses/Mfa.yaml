@@ -6,5 +6,7 @@ properties:
     type: string
   verified:
     type: boolean
-  params:
-    type: object
+  qr_code:
+    type: string
+  recipient:
+    type: string
