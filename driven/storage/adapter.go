@@ -963,27 +963,6 @@ func (sa *Adapter) UpdateMFAType(mfa *model.MFAType) error {
 	return nil
 }
 
-//UpdateMFATypes updates a set of MFA types
-// func (sa *Adapter) UpdateMFATypes(accountID string, state string) error {
-// 	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
-// 	update := bson.D{
-// 		primitive.E{Key: "$set", Value: bson.D{
-// 			primitive.E{Key: "params.state", Value: state},
-// 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
-// 		}},
-// 	}
-
-// 	res, err := sa.db.mfa.UpdateMany(filter, update, nil)
-// 	if err != nil {
-// 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, nil, err)
-// 	}
-// 	if res.MatchedCount != res.ModifiedCount {
-// 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeMFAType, logutils.StringArgs("mismatching matched and modified counts"))
-// 	}
-
-// 	return nil
-// }
-
 //DeleteMFAType deletes a MFA type
 func (sa *Adapter) DeleteMFAType(accountID string, mfaType string) error {
 	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}, primitive.E{Key: "type", Value: mfaType}}
