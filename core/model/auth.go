@@ -67,10 +67,10 @@ type LoginSession struct {
 
 	Device Device
 
-	IPAddress    string
-	AccessToken  string
-	RefreshToken string
-	Params       map[string]interface{} //authType-specific set of parameters passed back to client
+	IPAddress     string
+	AccessToken   string
+	RefreshTokens []string
+	Params        map[string]interface{} //authType-specific set of parameters passed back to client
 
 	Expires time.Time
 

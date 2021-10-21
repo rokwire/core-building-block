@@ -201,7 +201,10 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		l.Infof("error generating refresh token on refresh - %s", refreshToken)
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
-	loginSession.RefreshToken = refreshToken //set the generated token
+	if loginSession.RefreshTokens == nil {
+		loginSession.RefreshTokens = make([]string, 0)
+	}
+	loginSession.RefreshTokens = append(loginSession.RefreshTokens, refreshToken) //set the generated token
 	// - update the expired field
 	loginSession.Expires = *expires
 	// - generate new params(if external auth type)
