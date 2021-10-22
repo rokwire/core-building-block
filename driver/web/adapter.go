@@ -114,6 +114,8 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.createAPIKey, we.auth.adminAuth)).Methods("POST")
 	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.updateAPIKey, we.auth.adminAuth)).Methods("PUT")
 	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.deleteAPIKey, we.auth.adminAuth)).Methods("DELETE")
+
+	adminSubrouter.HandleFunc("/login-url", we.wrapFunc(we.adminApisHandler.adminLoginURL, nil)).Methods("POST")
 	///
 
 	///enc ///
@@ -155,7 +157,7 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization Authorization) htt
 
 		logObj.RequestReceived()
 
-		var err error
+		//var err error
 
 		//1. validate request
 		requestValidationInput, err := we.validateRequest(req)
