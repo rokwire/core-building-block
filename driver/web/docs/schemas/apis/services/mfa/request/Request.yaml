@@ -1,6 +1,5 @@
 required:
   - account_id
-  - session_id
   - mfa_type
   - mfa_code
 type: object
