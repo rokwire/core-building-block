@@ -442,7 +442,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, email, phone, "rokwire", orgID, appID, authType.Code, nil, anonymous)
+	claims := a.getStandardClaims(sub, uid, email, phone, "rokwire", orgID, appID, authType.Code, nil, anonymous, true)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -712,7 +712,8 @@ func (a *Auth) buildRefreshToken() (string, *time.Time, error) {
 	return newToken, &expireTime, nil
 }
 
-func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string, authType string, exp *int64, anonymous bool) tokenauth.Claims {
+func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string,
+	authType string, exp *int64, anonymous bool, authenticated bool) tokenauth.Claims {
 	return tokenauth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			Audience:  aud,
@@ -720,7 +721,7 @@ func (a *Auth) getStandardClaims(sub string, uid string, email string, phone str
 			ExpiresAt: a.getExp(exp),
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    a.host,
-		}, OrgID: orgID, AppID: appID, AuthType: authType, UID: uid, Email: email, Phone: phone, Anonymous: anonymous,
+		}, OrgID: orgID, AppID: appID, AuthType: authType, UID: uid, Email: email, Phone: phone, Anonymous: anonymous, Authenticated: authenticated,
 	}
 }
 

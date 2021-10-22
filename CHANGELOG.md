@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Add multi-factor authentication support [#19](https://github.com/rokwire/core-building-block/issues/19)
+- Add authentication required auth wrapper [#250](https://github.com/rokwire/core-building-block/issues/250)
 - Handle API key validation for non-anonymous users [#244](https://github.com/rokwire/core-building-block/issues/244)
 - Implement logins sessions [#172](https://github.com/rokwire/core-building-block/issues/172) 
 
