@@ -83,6 +83,16 @@ func (ls LoginSession) IsExpired() bool {
 	return ls.Expires.Before(time.Now())
 }
 
+//IsPreviousRefreshToken says if the given refresh token is one previously used in the session
+func (ls LoginSession) IsPreviousRefreshToken(refreshToken string) bool {
+	for i := len(ls.RefreshTokens) - 2; i >= 0; i-- {
+		if refreshToken == ls.RefreshTokens[i] {
+			return true
+		}
+	}
+	return false
+}
+
 //APIKey represents an API key entity
 type APIKey struct {
 	ID    string `json:"id" bson:"_id"`

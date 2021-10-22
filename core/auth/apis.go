@@ -159,6 +159,19 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		return nil, nil
 	}
 
+	//check if a previous refresh token is being used
+	if loginSession.IsPreviousRefreshToken(refreshToken) {
+		l.Infof("previous refresh token being used, so delete login session and return null - %s", refreshToken)
+
+		//remove the session
+		err = a.storage.DeleteLoginSession(loginSession.ID)
+		if err != nil {
+			return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err)
+		}
+
+		return nil, nil
+	}
+
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
 	err = a.validateAPIKey(apiKey, loginSession.AppOrg.Application.ID)
 	if err != nil {
