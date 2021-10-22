@@ -2580,6 +2580,18 @@ components:
             - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/0'
             - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/1'
             - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/2'
+    _res_refresh_admin_Response:
+      type: object
+      properties:
+        token:
+          $ref: '#/components/schemas/_res_shared_RokwireToken'
+        params:
+          type: object
+          nullable: true
+          anyOf:
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/0'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/1'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/2'
     _req_authorize-service_Request:
       required:
         - service_id

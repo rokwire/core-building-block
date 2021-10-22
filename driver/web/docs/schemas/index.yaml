@@ -157,6 +157,10 @@ _res_login-url_admin_Response:
 _res_refresh_Response:
   $ref: "./apis/services/refresh/response/Response.yaml"
 
+### refresh admin API
+_res_refresh_admin_Response:
+  $ref: "./apis/admin/refresh/response/Response.yaml"
+
 ### authorize-service API
 _req_authorize-service_Request:
   $ref: "./apis/services/authorize-service/request/Request.yaml"
