@@ -433,6 +433,18 @@ func (sa *Adapter) DeleteLoginSession(id string) error {
 	return nil
 }
 
+//DeleteExpiredSessions deletes expired sessions
+func (sa *Adapter) DeleteExpiredSessions(now *time.Time) error {
+	filter := bson.M{"expires": bson.M{"$lte": now}}
+
+	_, err := sa.db.loginsSessions.DeleteMany(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, &logutils.FieldArgs{"expires": now}, err)
+	}
+
+	return nil
+}
+
 //FindAccount finds an account for app, org, auth type and account auth type identifier
 func (sa *Adapter) FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
@@ -923,99 +935,6 @@ func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
 // 	return nil
 // }
 
-//FindRefreshToken finds a refresh token
-func (sa *Adapter) FindRefreshToken(token string) (*model.AuthRefresh, error) {
-	conditions := []bson.M{{"current_token": token}, {"previous_token": token}}
-	filter := bson.M{"$or": conditions}
-
-	var refresh model.AuthRefresh
-	err := sa.db.loginsSessions.FindOne(filter, &refresh, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
-	}
-
-	return &refresh, nil
-}
-
-//LoadRefreshTokens loads refresh tokens by an ID triple
-func (sa *Adapter) LoadRefreshTokens(orgID string, appID string, credsID string) ([]model.AuthRefresh, error) {
-	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "creds_id", Value: credsID}}
-	opts := options.Find().SetSort(bson.D{primitive.E{Key: "exp", Value: 1}})
-
-	var refresh []model.AuthRefresh
-	err := sa.db.loginsSessions.Find(filter, &refresh, opts)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
-	}
-
-	return refresh, nil
-}
-
-//InsertRefreshToken inserts a refresh token
-func (sa *Adapter) InsertRefreshToken(refresh *model.AuthRefresh) error {
-	if refresh == nil {
-		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthRefresh, nil)
-	}
-
-	_, err := sa.db.loginsSessions.InsertOne(refresh)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthRefresh, nil, err)
-	}
-
-	return nil
-}
-
-//UpdateRefreshToken updates a refresh token
-func (sa *Adapter) UpdateRefreshToken(token string, refresh *model.AuthRefresh) error {
-	filter := bson.D{primitive.E{Key: "current_token", Value: token}}
-	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "previous_token", Value: refresh.PreviousToken},
-			primitive.E{Key: "current_token", Value: refresh.CurrentToken},
-			primitive.E{Key: "exp", Value: refresh.Expires},
-			primitive.E{Key: "params", Value: refresh.Params},
-			primitive.E{Key: "date_updated", Value: refresh.DateUpdated},
-		}},
-	}
-
-	res, err := sa.db.loginsSessions.UpdateOne(filter, update, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthRefresh, nil, err)
-	}
-	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAuthRefresh, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
-	}
-
-	return nil
-}
-
-//DeleteRefreshToken updates a refresh token
-func (sa *Adapter) DeleteRefreshToken(token string) error {
-	filter := bson.D{primitive.E{Key: "current_token", Value: token}}
-
-	res, err := sa.db.loginsSessions.DeleteOne(filter, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAuthRefresh, nil, err)
-	}
-	if res.DeletedCount != 1 {
-		return errors.ErrorAction(logutils.ActionDelete, model.TypeAuthRefresh, logutils.StringArgs("unexpected deleted count"))
-	}
-
-	return nil
-}
-
-//DeleteExpiredRefreshTokens deletes expired refresh tokens
-func (sa *Adapter) DeleteExpiredRefreshTokens(now *time.Time) error {
-	filter := bson.M{"exp": bson.M{"$lte": now}}
-
-	_, err := sa.db.loginsSessions.DeleteMany(filter, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAuthRefresh, &logutils.FieldArgs{"exp": now}, err)
-	}
-
-	return nil
-}
-
 //FindApplicationPermissions finds a set of application permissions
 func (sa *Adapter) FindApplicationPermissions(ids []string, appID string) ([]model.ApplicationPermission, error) {
 	permissionsFilter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
@@ -1195,63 +1114,61 @@ func (sa *Adapter) LoadAPIKeys() ([]model.APIKey, error) {
 	return result, nil
 }
 
-//FindAPIKey finds the api key document from DB by orgID and appID
-func (sa *Adapter) FindAPIKey(orgID string, appID string) (*model.APIKey, error) {
-	errFields := &logutils.FieldArgs{"org_id": orgID, "app_id": appID}
-	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID}}
-	var result *model.APIKey
-	err := sa.db.apiKeys.FindOne(filter, &result, nil)
+//FindApplicationAPIKeys finds the api key documents from storage for an appID
+func (sa *Adapter) FindApplicationAPIKeys(appID string) ([]model.APIKey, error) {
+	filter := bson.D{primitive.E{Key: "app_id", Value: appID}}
+	var result []model.APIKey
+	err := sa.db.apiKeys.Find(filter, &result, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, errFields, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, &logutils.FieldArgs{"app_id": appID}, err)
 	}
 	return result, nil
 }
 
-//FindAPIKeys finds the api key documents from DB for an orgID
-func (sa *Adapter) FindAPIKeys(orgID string) ([]model.APIKey, error) {
-	errFields := &logutils.FieldArgs{"org_id": orgID}
-	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}}
-	var result []model.APIKey
-	err := sa.db.apiKeys.Find(filter, &result, nil)
+//FindAPIKey finds the api key documents from storage
+func (sa *Adapter) FindAPIKey(ID string) (*model.APIKey, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	var result *model.APIKey
+	err := sa.db.apiKeys.FindOne(filter, &result, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, errFields, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, &logutils.FieldArgs{"_id": ID}, err)
 	}
 	return result, nil
 }
 
 //InsertAPIKey inserts an API key
-func (sa *Adapter) InsertAPIKey(apiKey *model.APIKey) error {
+func (sa *Adapter) InsertAPIKey(apiKey model.APIKey) (*model.APIKey, error) {
 	_, err := sa.db.apiKeys.InsertOne(apiKey)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAPIKey, &logutils.FieldArgs{"org_id": apiKey.OrgID, "app_id": apiKey.AppID}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAPIKey, &logutils.FieldArgs{"_id": apiKey.ID}, err)
 	}
-	return nil
+	return &apiKey, nil
 }
 
 //UpdateAPIKey updates the API key in storage
-func (sa *Adapter) UpdateAPIKey(apiKey *model.APIKey) error {
-	filter := bson.M{"org_id": apiKey.OrgID, "app_id": apiKey.AppID}
+func (sa *Adapter) UpdateAPIKey(apiKey model.APIKey) error {
+	filter := bson.M{"_id": apiKey.ID}
 	err := sa.db.apiKeys.ReplaceOne(filter, apiKey, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAPIKey, &logutils.FieldArgs{"org_id": apiKey.OrgID, "app_id": apiKey.AppID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAPIKey, &logutils.FieldArgs{"_id": apiKey.ID}, err)
 	}
 
 	return nil
 }
 
 //DeleteAPIKey deletes the API key from storage
-func (sa *Adapter) DeleteAPIKey(orgID string, appID string) error {
-	filter := bson.M{"org_id": orgID, "app_id": appID}
+func (sa *Adapter) DeleteAPIKey(ID string) error {
+	filter := bson.M{"_id": ID}
 	result, err := sa.db.apiKeys.DeleteOne(filter, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAPIKey, &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAPIKey, &logutils.FieldArgs{"_id": ID}, err)
 	}
 	if result == nil {
-		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
+		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"_id": ID}, err)
 	}
 	deletedCount := result.DeletedCount
 	if deletedCount == 0 {
-		return errors.WrapErrorData(logutils.StatusMissing, model.TypeAPIKey, &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeAPIKey, &logutils.FieldArgs{"_id": ID}, err)
 	}
 
 	return nil
