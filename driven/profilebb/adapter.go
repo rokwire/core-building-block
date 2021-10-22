@@ -121,7 +121,7 @@ func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (
 		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
 	}
 
-	req.Header.Set("ROKWIRE-CBB-API-KEY", a.apiKey)
+	req.Header.Set("ROKWIRE-CORE-BB-API-KEY", a.apiKey)
 
 	resp, err := client.Do(req)
 	if err != nil {
