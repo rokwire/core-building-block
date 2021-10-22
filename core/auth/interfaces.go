@@ -39,7 +39,7 @@ type authType interface {
 	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error)
 
 	//checkCredentials checks if the account credentials are valid for the account auth type
-	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error)
+	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, map[string]interface{}, error)
 }
 
 //externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).

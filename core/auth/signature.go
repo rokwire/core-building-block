@@ -30,8 +30,8 @@ func (a *signatureAuthImpl) userExist(authType model.AuthType, appType model.App
 func (a *signatureAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
-func (a *signatureAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error) {
-	return "", nil, nil
+func (a *signatureAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, map[string]interface{}, error) {
+	return "", nil, nil, nil
 }
 
 func (a *signatureAuthImpl) resetPassword(credential *model.Credential, resetCode *string, password *string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {

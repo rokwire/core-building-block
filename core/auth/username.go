@@ -30,8 +30,8 @@ func (a *usernameAuthImpl) verify(credential *model.Credential, verification str
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *usernameAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error) {
-	return "", nil, nil
+func (a *usernameAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, map[string]interface{}, error) {
+	return "", nil, nil, nil
 }
 
 func (a *usernameAuthImpl) resetPassword(credential *model.Credential, resetCode *string, password *string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {

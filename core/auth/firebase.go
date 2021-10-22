@@ -30,8 +30,8 @@ func (a *firebaseAuthImpl) userExist(authType model.AuthType, appType model.Appl
 func (a *firebaseAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
-func (a *firebaseAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error) {
-	return "", nil, nil
+func (a *firebaseAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, map[string]interface{}, error) {
+	return "", nil, nil, nil
 }
 
 func (a *firebaseAuthImpl) resetPassword(credential *model.Credential, resetCode *string, password *string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {

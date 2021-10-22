@@ -358,12 +358,23 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 
 	//2. it seems the user exist, now check the credentials
-	message, validCredentials, err := authImpl.checkCredentials(*accountAuthType, creds, l)
+	message, validCredentials, authTypeCreds, err := authImpl.checkCredentials(*accountAuthType, creds, l)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
 	}
-	if !*validCredentials {
+	if validCredentials != nil && !*validCredentials {
 		return "", nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeCredential, nil)
+	}
+	//Check if we need to update credentials value
+	if authTypeCreds != nil {
+		credential, err := a.storage.FindCredential(accountAuthType.Credential.ID)
+		if err != nil || credential == nil {
+			return "", nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+		}
+		credential.Value = authTypeCreds
+		if err = a.storage.UpdateCredential(credential); err != nil {
+			return "", nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+		}
 	}
 
 	return message, account, accountAuthType, nil

@@ -112,20 +112,20 @@ func (a *twilioPhoneAuthImpl) signUp(authType model.AuthType, appType model.Appl
 	return message, &requestCreds.Phone, nil, nil
 }
 
-func (a *twilioPhoneAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error) {
+func (a *twilioPhoneAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, map[string]interface{}, error) {
 	requestCreds, err := a.checkRequestCreds(creds)
 	if err != nil {
-		return "", nil, err
+		return "", nil, nil, err
 	}
 
 	// existing user
 	message, err := a.handlePhoneVerify(requestCreds.Phone, *requestCreds, l)
 	if err != nil {
-		return "", nil, err
+		return "", nil, nil, err
 	}
 
 	valid := true
-	return message, &valid, nil
+	return message, &valid, nil, nil
 }
 
 func (a *twilioPhoneAuthImpl) handlePhoneVerify(phone string, verificationCreds twilioPhoneCreds, l *logs.Log) (string, error) {
