@@ -533,7 +533,7 @@ paths:
   /admin/login:
     post:
       tags:
-        - Services
+        - admin
       summary: Login
       description: |
         Login using credentials to retrieve access token, refresh token, and user data
@@ -543,7 +543,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_login_Request'
+              $ref: '#/components/schemas/_req_login_admin_Request'
             examples:
               email-sign_in:
                 summary: Email - sign in
@@ -689,7 +689,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_login_Response'
+                $ref: '#/components/schemas/_res_login_admin_Response'
         '400':
           description: Bad request
         '401':

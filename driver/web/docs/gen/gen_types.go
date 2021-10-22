@@ -100,6 +100,30 @@ const (
 	ReqLoginRequestAuthTypeUsername ReqLoginRequestAuthType = "username"
 )
 
+// Defines values for ReqLoginAdminDeviceType.
+const (
+	ReqLoginAdminDeviceTypeDesktop ReqLoginAdminDeviceType = "desktop"
+
+	ReqLoginAdminDeviceTypeMobile ReqLoginAdminDeviceType = "mobile"
+
+	ReqLoginAdminDeviceTypeOther ReqLoginAdminDeviceType = "other"
+
+	ReqLoginAdminDeviceTypeWeb ReqLoginAdminDeviceType = "web"
+)
+
+// Defines values for ReqLoginAdminRequestAuthType.
+const (
+	ReqLoginAdminRequestAuthTypeApiKey ReqLoginAdminRequestAuthType = "api_key"
+
+	ReqLoginAdminRequestAuthTypeEmail ReqLoginAdminRequestAuthType = "email"
+
+	ReqLoginAdminRequestAuthTypeIllinoisOidc ReqLoginAdminRequestAuthType = "illinois_oidc"
+
+	ReqLoginAdminRequestAuthTypeTwilioPhone ReqLoginAdminRequestAuthType = "twilio_phone"
+
+	ReqLoginAdminRequestAuthTypeUsername ReqLoginAdminRequestAuthType = "username"
+)
+
 // Defines values for ReqUpdateOrganizationRequestType.
 const (
 	ReqUpdateOrganizationRequestTypeHuge ReqUpdateOrganizationRequestType = "huge"
@@ -590,6 +614,71 @@ type ReqLoginRequest struct {
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
 type ReqLoginRequestAuthType string
 
+// Auth login creds for auth_type="api_key"
+type ReqLoginAdminCredsAPIKey struct {
+	AnonymousId *string `json:"anonymous_id,omitempty"`
+	ApiKey      string  `json:"api_key"`
+}
+
+// Auth login creds for auth_type="email"
+type ReqLoginAdminCredsEmail struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// Auth login creds for auth_type="oidc"
+//   - full redirect URI received from OIDC provider
+type ReqLoginAdminCredsOIDC string
+
+// Auth login creds for auth_type="twilio_phone"
+type ReqLoginAdminCredsTwilioPhone struct {
+	Code  *string `json:"code,omitempty"`
+	Phone string  `json:"phone"`
+}
+
+// Client device
+type ReqLoginAdminDevice struct {
+	DeviceId *string                 `json:"device_id,omitempty"`
+	Os       *string                 `json:"os,omitempty"`
+	Type     ReqLoginAdminDeviceType `json:"type"`
+}
+
+// ReqLoginAdminDeviceType defines model for ReqLoginAdminDevice.Type.
+type ReqLoginAdminDeviceType string
+
+// Auth login params for auth_type="email"
+type ReqLoginAdminParamsEmail struct {
+	// This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+	ConfirmPassword *string `json:"confirm_password,omitempty"`
+	SignUp          *bool   `json:"sign_up,omitempty"`
+}
+
+// Auth login request params for unlisted auth_types (None)
+type ReqLoginAdminParamsNone map[string]interface{}
+
+// Auth login params for auth_type="oidc"
+type ReqLoginAdminParamsOIDC struct {
+	PkceVerifier *string `json:"pkce_verifier,omitempty"`
+	RedirectUri  *string `json:"redirect_uri,omitempty"`
+}
+
+// ReqLoginAdminRequest defines model for _req_login_admin_Request.
+type ReqLoginAdminRequest struct {
+	AppTypeIdentifier string                       `json:"app_type_identifier"`
+	AuthType          ReqLoginAdminRequestAuthType `json:"auth_type"`
+	Creds             *interface{}                 `json:"creds,omitempty"`
+
+	// Client device
+	Device      ReqLoginAdminDevice       `json:"device"`
+	OrgId       string                    `json:"org_id"`
+	Params      *interface{}              `json:"params,omitempty"`
+	Preferences *map[string]interface{}   `json:"preferences"`
+	Profile     *ReqSharedProfileNullable `json:"profile"`
+}
+
+// ReqLoginAdminRequestAuthType defines model for ReqLoginAdminRequest.AuthType.
+type ReqLoginAdminRequestAuthType string
+
 // ReqSharedProfile defines model for _req_shared_Profile.
 type ReqSharedProfile struct {
 	Address   *string `json:"address"`
@@ -699,6 +788,25 @@ type ResLoginResponse struct {
 	Token   *ResSharedRokwireToken `json:"token,omitempty"`
 }
 
+// ResLoginAdminAccount defines model for _res_login_admin_Account.
+type ResLoginAdminAccount struct {
+	AuthTypes   *[]AccountAuthTypeFields       `json:"auth_types,omitempty"`
+	Groups      *[]ApplicationGroupFields      `json:"groups,omitempty"`
+	Id          string                         `json:"id"`
+	Permissions *[]ApplicationPermissionFields `json:"permissions,omitempty"`
+	Preferences *map[string]interface{}        `json:"preferences"`
+	Profile     *ProfileFields                 `json:"profile,omitempty"`
+	Roles       *[]ApplicationRoleFields       `json:"roles,omitempty"`
+}
+
+// ResLoginAdminResponse defines model for _res_login_admin_Response.
+type ResLoginAdminResponse struct {
+	Account *ResLoginAdminAccount  `json:"account,omitempty"`
+	Message *string                `json:"message,omitempty"`
+	Params  *interface{}           `json:"params"`
+	Token   *ResSharedRokwireToken `json:"token,omitempty"`
+}
+
 // ResRefreshResponse defines model for _res_refresh_Response.
 type ResRefreshResponse struct {
 	Params *interface{}           `json:"params"`
@@ -766,7 +874,7 @@ type PostAdminGlobalConfigJSONBody GlobalConfig
 type PutAdminGlobalConfigJSONBody GlobalConfig
 
 // PostAdminLoginJSONBody defines parameters for PostAdminLogin.
-type PostAdminLoginJSONBody ReqLoginRequest
+type PostAdminLoginJSONBody ReqLoginAdminRequest
 
 // PostAdminLoginUrlJSONBody defines parameters for PostAdminLoginUrl.
 type PostAdminLoginUrlJSONBody ReqLoginUrlAdminRequest
