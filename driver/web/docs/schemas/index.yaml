@@ -117,6 +117,30 @@ _res_login_Response:
 _res_login_Account:
   $ref: "./apis/services/login/response/Account.yaml"
 
+  ### admin login API
+_req_login_admin_Request:
+  $ref: "./apis/admin/login/request/Request.yaml"
+_req_login_admin_CredsEmail:
+  $ref: "./apis/admin/login/request/CredsEmail.yaml"
+_req_login_admin_CredsTwilioPhone:
+  $ref: "./apis/admin/login/request/CredsTwilioPhone.yaml"
+_req_login_admin_CredsOIDC:
+  $ref: "./apis/admin/login/request/CredsOIDC.yaml"
+_req_login_admin_CredsAPIKey:
+  $ref: "./apis/admin/login/request/CredsAPIKey.yaml"
+_req_login_admin_ParamsEmail:
+  $ref: "./apis/admin/login/request/ParamsEmail.yaml"
+_req_login_admin_ParamsOIDC:
+  $ref: "./apis/admin/login/request/ParamsOIDC.yaml"
+_req_login_admin_ParamsNone:
+  $ref: "./apis/admin/login/request/ParamsNone.yaml"
+_req_login_admin_Device:
+  $ref: "./apis/admin/login/request/Device.yaml"
+_res_login_admin_Response:
+  $ref: "./apis/admin/login/response/Response.yaml"
+_res_login_admin_Account:
+  $ref: "./apis/admin/login/response/Account.yaml"
+
 ### login-url API
 _req_login-url_Request:
   $ref: "./apis/services/login-url/request/Request.yaml"

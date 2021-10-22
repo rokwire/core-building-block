@@ -530,6 +530,172 @@ paths:
               schema:
                 type: string
                 example: Echooo
+  /admin/login:
+    post:
+      tags:
+        - Services
+      summary: Login
+      description: |
+        Login using credentials to retrieve access token, refresh token, and user data
+      requestBody:
+        description: |
+          User credential details and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_login_Request'
+            examples:
+              email-sign_in:
+                summary: Email - sign in
+                value: |
+                  {
+                    "auth_type": "email",
+                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "creds": {
+                      "email": "test@test.com", 
+                      "password": "test12345"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
+                    }
+                  }
+              email-sign_up:
+                summary: Email - sign up
+                value: |
+                  {
+                    "auth_type": "email",
+                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "creds": {
+                      "email": "test@test.com", 
+                      "password": "test12345"
+                    },
+                    "params":{
+                        "sign_up":true,
+                        "confirm_password": "test12345"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
+                    }
+                  }
+              phone:
+                summary: Phone - sign in OR sign up
+                value: |
+                  {
+                    "auth_type": "twilio_phone",
+                    "app_type_identifier": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "creds": {
+                      "phone": "+12223334444", 
+                      "code": "123456"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
+                    }
+                  }
+              illinois_oidc:
+                summary: Illinois OIDC login
+                value: |
+                  {
+                    "auth_type": "illinois_oidc",
+                    "app_type_identifier": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
+                    "params": {
+                      "redirect_uri": "https://redirect.example.com",
+                      "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
+                    }
+                  }
+              api_key:
+                summary: API key login (Anonymous)
+                value: |
+                  {
+                    "auth_type": "api_key",
+                    "app_type_identifier": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "creds": {
+                      "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
+                    }
+                  }
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_login_Response'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /admin/login-url:
     post:
       tags:
@@ -2161,6 +2327,164 @@ components:
         message:
           type: string
     _res_login_Account:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        profile:
+          $ref: '#/components/schemas/ProfileFields'
+        preferences:
+          type: object
+          nullable: true
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationPermissionFields'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationRoleFields'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationGroupFields'
+        auth_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountAuthTypeFields'
+    _req_login_admin_Request:
+      required:
+        - auth_type
+        - app_type_identifier
+        - org_id
+        - device
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - username
+            - email
+            - twilio_phone
+            - illinois_oidc
+            - api_key
+        app_type_identifier:
+          type: string
+        org_id:
+          type: string
+        creds:
+          anyOf:
+            - $ref: '#/components/schemas/_req_login_admin_CredsEmail'
+            - $ref: '#/components/schemas/_req_login_admin_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_req_login_admin_CredsOIDC'
+            - $ref: '#/components/schemas/_req_login_admin_CredsAPIKey'
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/_req_login_admin_ParamsEmail'
+            - $ref: '#/components/schemas/_req_login_admin_ParamsOIDC'
+            - $ref: '#/components/schemas/_req_login_admin_ParamsNone'
+        device:
+          $ref: '#/components/schemas/_req_login_admin_Device'
+        profile:
+          $ref: '#/components/schemas/_req_shared_ProfileNullable'
+        preferences:
+          type: object
+          nullable: true
+    _req_login_admin_CredsEmail:
+      required:
+        - email
+        - password
+      type: object
+      description: Auth login creds for auth_type="email"
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    _req_login_admin_CredsTwilioPhone:
+      type: object
+      description: Auth login creds for auth_type="twilio_phone"
+      required:
+        - phone
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+    _req_login_admin_CredsOIDC:
+      type: string
+      description: |
+        Auth login creds for auth_type="oidc"
+          - full redirect URI received from OIDC provider
+    _req_login_admin_CredsAPIKey:
+      required:
+        - api_key
+      type: object
+      description: Auth login creds for auth_type="api_key"
+      properties:
+        api_key:
+          type: string
+        anonymous_id:
+          type: string
+    _req_login_admin_ParamsEmail:
+      type: object
+      description: Auth login params for auth_type="email"
+      properties:
+        confirm_password:
+          type: string
+          description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+        sign_up:
+          type: boolean
+          default: false
+    _req_login_admin_ParamsOIDC:
+      type: object
+      description: Auth login params for auth_type="oidc"
+      properties:
+        redirect_uri:
+          type: string
+        pkce_verifier:
+          type: string
+    _req_login_admin_ParamsNone:
+      type: object
+      description: Auth login request params for unlisted auth_types (None)
+      nullable: true
+    _req_login_admin_Device:
+      required:
+        - type
+      type: object
+      description: Client device
+      properties:
+        device_id:
+          type: string
+        type:
+          type: string
+          enum:
+            - mobile
+            - web
+            - desktop
+            - other
+        os:
+          type: string
+    _res_login_admin_Response:
+      type: object
+      properties:
+        token:
+          $ref: '#/components/schemas/_res_shared_RokwireToken'
+        account:
+          $ref: '#/components/schemas/_res_login_admin_Account'
+        params:
+          type: object
+          nullable: true
+          anyOf:
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/0'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/1'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/2'
+        message:
+          type: string
+    _res_login_admin_Account:
       required:
         - id
       type: object

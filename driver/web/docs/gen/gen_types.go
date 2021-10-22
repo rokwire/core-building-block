@@ -765,6 +765,9 @@ type PostAdminGlobalConfigJSONBody GlobalConfig
 // PutAdminGlobalConfigJSONBody defines parameters for PutAdminGlobalConfig.
 type PutAdminGlobalConfigJSONBody GlobalConfig
 
+// PostAdminLoginJSONBody defines parameters for PostAdminLogin.
+type PostAdminLoginJSONBody ReqLoginRequest
+
 // PostAdminLoginUrlJSONBody defines parameters for PostAdminLoginUrl.
 type PostAdminLoginUrlJSONBody ReqLoginUrlAdminRequest
 
@@ -860,6 +863,9 @@ type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody
 
 // PutAdminGlobalConfigJSONRequestBody defines body for PutAdminGlobalConfig for application/json ContentType.
 type PutAdminGlobalConfigJSONRequestBody PutAdminGlobalConfigJSONBody
+
+// PostAdminLoginJSONRequestBody defines body for PostAdminLogin for application/json ContentType.
+type PostAdminLoginJSONRequestBody PostAdminLoginJSONBody
 
 // PostAdminLoginUrlJSONRequestBody defines body for PostAdminLoginUrl for application/json ContentType.
 type PostAdminLoginUrlJSONRequestBody PostAdminLoginUrlJSONBody

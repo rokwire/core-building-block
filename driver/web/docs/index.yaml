@@ -47,6 +47,8 @@ paths:
     $ref: "./resources/services/test.yaml"
 
   #admin
+  /admin/login:
+    $ref: "./resources/admin/login.yaml"
   /admin/login-url:
     $ref: "./resources/admin/login-url.yaml"
   /admin/global-config:
