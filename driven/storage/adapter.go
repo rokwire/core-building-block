@@ -394,8 +394,11 @@ func (sa *Adapter) FindAndUpdateLoginSession(id string) (*model.LoginSession, er
 			primitive.E{Key: "state", Value: ""},
 		}},
 	}
+	opts := options.FindOneAndUpdateOptions{}
+	opts.SetReturnDocument(options.Before)
+
 	var loginSession loginSession
-	err := sa.db.loginsSessions.FindOneAndUpdate(filter, update, &loginSession, nil)
+	err := sa.db.loginsSessions.FindOneAndUpdate(filter, update, &loginSession, &opts)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 	}
@@ -763,24 +766,6 @@ func (sa *Adapter) InsertAccountRoles(accountID string, appID string, roles []mo
 	}
 
 	return nil
-}
-
-//FindAccountAuthType finds an account auth type
-func (sa *Adapter) FindAccountAuthType(accountID string, identifier string) (*model.AccountAuthType, error) {
-	findFilter := bson.M{"_id": accountID}
-	var account account
-	err := sa.db.accounts.FindOne(findFilter, &account, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"account id": accountID}, err)
-	}
-
-	var aat model.AccountAuthType
-	for _, accountAuthType := range account.AuthTypes {
-		if accountAuthType.Identifier == identifier {
-			aat = accountAuthTypeFromStorage(accountAuthType)
-		}
-	}
-	return &aat, nil
 }
 
 //UpdateAccountAuthType updates account auth type
