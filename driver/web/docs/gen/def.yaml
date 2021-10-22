@@ -533,7 +533,7 @@ paths:
   /admin/login:
     post:
       tags:
-        - admin
+        - Admin
       summary: Login
       description: |
         Login using credentials to retrieve access token, refresh token, and user data
@@ -699,7 +699,7 @@ paths:
   /admin/login-url:
     post:
       tags:
-        - Services
+        - Admin
       summary: Get SSO login url
       description: |
         Retrieve a pre-formatted SSO login URL

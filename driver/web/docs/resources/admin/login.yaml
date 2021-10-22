@@ -1,6 +1,6 @@
 post:
   tags:
-  - admin
+  - Admin
   summary: Login
   description: |
     Login using credentials to retrieve access token, refresh token, and user data

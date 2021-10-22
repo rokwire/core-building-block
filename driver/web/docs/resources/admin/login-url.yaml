@@ -1,6 +1,6 @@
 post:
   tags:
-  - Services
+  - Admin
   summary: Get SSO login url
   description: |
     Retrieve a pre-formatted SSO login URL
