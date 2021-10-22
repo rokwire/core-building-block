@@ -31,12 +31,13 @@ const (
 	authKeyAlg     string = "RS256"
 	rokwireKeyword string = "ROKWIRE"
 
-	typeMail              logutils.MessageDataType = "mail"
-	typeAuthType          logutils.MessageDataType = "auth type"
-	typeExternalAuthType  logutils.MessageDataType = "external auth type"
-	typeAnonymousAuthType logutils.MessageDataType = "anonymous auth type"
-	typeAuth              logutils.MessageDataType = "auth"
-	typeAuthRefreshParams logutils.MessageDataType = "auth refresh params"
+	typeMail               logutils.MessageDataType = "mail"
+	typeAuthType           logutils.MessageDataType = "auth type"
+	typeExternalAuthType   logutils.MessageDataType = "external auth type"
+	typeAnonymousAuthType  logutils.MessageDataType = "anonymous auth type"
+	typeAuth               logutils.MessageDataType = "auth"
+	typeAuthRefreshParams  logutils.MessageDataType = "auth refresh params"
+	typeAdminRefreshParams logutils.MessageDataType = "admin refresh params"
 
 	refreshTokenLength int = 256
 

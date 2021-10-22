@@ -30,6 +30,8 @@ const (
 	TypeCredential logutils.MessageDataType = "credential"
 	//TypeAuthRefresh auth refresh type
 	TypeAuthRefresh logutils.MessageDataType = "auth refresh"
+	//TypeAuthRefresh auth refresh type
+	TypeAdminRefresh logutils.MessageDataType = "admin refresh"
 	//TypeRefreshToken refresh token type
 	TypeRefreshToken logutils.MessageDataType = "refresh token"
 	//TypeServiceReg service reg type

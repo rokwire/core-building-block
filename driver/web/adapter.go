@@ -116,6 +116,8 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.adminApisHandler.deleteAPIKey, we.auth.adminAuth)).Methods("DELETE")
 
 	adminSubrouter.HandleFunc("/login-url", we.wrapFunc(we.adminApisHandler.adminLoginURL, nil)).Methods("POST")
+	//	adminSubrouter.HandleFunc("/login", we.wrapFunc(we.adminApisHandler.adminLogin, nil)).Methods("POST")
+	adminSubrouter.HandleFunc("/refresh", we.wrapFunc(we.adminApisHandler.adminRefresh, nil)).Methods("POST")
 	///
 
 	///enc ///
