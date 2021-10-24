@@ -89,6 +89,19 @@ type APIs interface {
 		authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
 		profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, error)
 
+	//AccountExists checks if a user is already registered
+	//The authentication method must be one of the supported for the application.
+	//	Input:
+	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
+	//		apiKey (string): API key to validate the specified app
+	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
+	//		orgID (string): ID of the organization that the user is logging in
+	//		l (*logs.Log): Log object pointer for request
+	//	Returns:
+	//		accountExisted (bool): valid when error is nil
+	AccountExists(authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, l *logs.Log) (bool, error)
+
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
 	//		refreshToken (string): Refresh token
