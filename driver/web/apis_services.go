@@ -79,7 +79,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 
 	//token
 	accessToken := loginSession.AccessToken
-	refreshToken := loginSession.RefreshTokens[len(loginSession.RefreshTokens)-1]
+	refreshToken := loginSession.CurrentRefreshToken()
 
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
@@ -142,7 +142,7 @@ func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request, claims *t
 	}
 
 	accessToken := loginSession.AccessToken
-	refreshToken := loginSession.RefreshTokens[len(loginSession.RefreshTokens)-1]
+	refreshToken := loginSession.CurrentRefreshToken()
 	var paramsRes interface{}
 	if loginSession.Params != nil {
 		paramsRes = loginSession.Params
