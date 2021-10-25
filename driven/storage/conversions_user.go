@@ -47,7 +47,7 @@ func accountDevicesFromStorage(item account) []model.Device {
 }
 
 func accountDeviceFromStorage(item userDevice) model.Device {
-	return model.Device{ID: item.ID, Type: item.Type, OS: item.OS, MacAddress: item.MacAddress,
+	return model.Device{ID: item.ID, Type: item.Type, OS: item.OS,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
@@ -61,7 +61,7 @@ func accountDevicesToStorage(item *model.Account) []userDevice {
 }
 
 func accountDeviceToStorage(item model.Device) userDevice {
-	return userDevice{ID: item.ID, Type: item.Type, OS: item.OS, MacAddress: item.MacAddress,
+	return userDevice{ID: item.ID, Type: item.Type, OS: item.OS,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
@@ -138,7 +138,7 @@ func deviceToStorage(item *model.Device) *device {
 		accounts[i] = account.ID
 	}
 
-	return &device{ID: item.ID, Type: item.Type, OS: item.OS, MacAddress: item.MacAddress,
+	return &device{ID: item.ID, Type: item.Type, OS: item.OS,
 		Accounts: accounts, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 

@@ -27,7 +27,7 @@ type database struct {
 	accounts                  *collectionWrapper
 	devices                   *collectionWrapper
 	credentials               *collectionWrapper
-	refreshTokens             *collectionWrapper
+	loginsSessions            *collectionWrapper
 	globalConfig              *collectionWrapper
 	serviceRegs               *collectionWrapper
 	serviceAuthorizations     *collectionWrapper
@@ -94,26 +94,26 @@ func (m *database) start() error {
 		return err
 	}
 
-	refreshTokens := &collectionWrapper{database: m, coll: db.Collection("refresh_tokens")}
-	err = m.applyRefreshTokenChecks(refreshTokens)
-	if err != nil {
-		return err
-	}
-
-	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
-	err = m.applyGlobalConfigChecks(globalConfig)
-	if err != nil {
-		return err
-	}
-
 	serviceRegs := &collectionWrapper{database: m, coll: db.Collection("service_regs")}
 	err = m.applyServiceRegsChecks(serviceRegs)
 	if err != nil {
 		return err
 	}
 
+	loginsSessions := &collectionWrapper{database: m, coll: db.Collection("logins_sessions")}
+	err = m.applyLoginsSessionsChecks(loginsSessions)
+	if err != nil {
+		return err
+	}
+
 	serviceAuthorizations := &collectionWrapper{database: m, coll: db.Collection("service_authorizations")}
 	err = m.applyServiceAuthorizationsChecks(serviceAuthorizations)
+	if err != nil {
+		return err
+	}
+
+	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
+	err = m.applyGlobalConfigChecks(globalConfig)
 	if err != nil {
 		return err
 	}
@@ -169,7 +169,7 @@ func (m *database) start() error {
 	m.accounts = accounts
 	m.devices = devices
 	m.credentials = credentials
-	m.refreshTokens = refreshTokens
+	m.loginsSessions = loginsSessions
 	m.globalConfig = globalConfig
 	m.apiKeys = apiKeys
 	m.serviceRegs = serviceRegs
@@ -181,13 +181,13 @@ func (m *database) start() error {
 	m.applicationsRoles = applicationsRoles
 	m.permissions = permissions
 
-	go m.apiKeys.Watch(nil)
-	go m.authTypes.Watch(nil)
-	go m.identityProviders.Watch(nil)
-	go m.serviceRegs.Watch(nil)
-	go m.organizations.Watch(nil)
-	go m.applications.Watch(nil)
-	go m.applicationsOrganizations.Watch(nil)
+	go m.apiKeys.Watch(nil, m.logger)
+	go m.authTypes.Watch(nil, m.logger)
+	go m.identityProviders.Watch(nil, m.logger)
+	go m.serviceRegs.Watch(nil, m.logger)
+	go m.organizations.Watch(nil, m.logger)
+	go m.applications.Watch(nil, m.logger)
+	go m.applicationsOrganizations.Watch(nil, m.logger)
 
 	m.listeners = []Listener{}
 
@@ -259,37 +259,28 @@ func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
 	return nil
 }
 
-func (m *database) applyRefreshTokenChecks(refreshTokens *collectionWrapper) error {
-	m.logger.Info("apply refresh tokens checks.....")
+func (m *database) applyLoginsSessionsChecks(refreshTokens *collectionWrapper) error {
+	m.logger.Info("apply logins sessions checks.....")
 
-	err := refreshTokens.AddIndex(bson.D{primitive.E{Key: "current_token", Value: 1}}, false)
+	err := refreshTokens.AddIndex(bson.D{primitive.E{Key: "refresh_token", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
-	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "previous_token", Value: 1}}, false)
+	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "expires", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
-	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "exp", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "creds_id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-	m.logger.Info("refresh tokens check passed")
+	m.logger.Info("logins sessions check passed")
 	return nil
 }
 
 func (m *database) applyAPIKeysChecks(apiKeys *collectionWrapper) error {
 	m.logger.Info("apply api keys checks.....")
 
-	// Add org_id, app_id compound index - unique
-	err := apiKeys.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}}, true)
+	// Add app_id index
+	err := apiKeys.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}

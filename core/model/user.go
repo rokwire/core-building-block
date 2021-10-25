@@ -54,12 +54,15 @@ type Account struct {
 
 //GetAccountAuthType finds account auth type
 func (a Account) GetAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
+	var result AccountAuthType
 	for _, aat := range a.AuthTypes {
 		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {
-			return &aat
+			result = aat
 		}
 	}
-	return nil
+	//assign account
+	result.Account = a
+	return &result
 }
 
 //GetPermissions returns all permissions granted to this account
@@ -170,11 +173,7 @@ type Profile struct {
 type Device struct {
 	ID   string
 	Type string //mobile, web, desktop, other
-
-	//TODO - other fields when they are clear
-	OS         string //?
-	MacAddress string //?
-	///
+	OS   string
 
 	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
 	Accounts []Account

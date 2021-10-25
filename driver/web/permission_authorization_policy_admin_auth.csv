@@ -1,19 +1,34 @@
 p, all_core, /core/admin/*, (GET)|(POST)|(DELETE)|(PUT)
+
 p, all_test, /core/admin/test, (GET)|(POST)|(DELETE)|(PUT)
 p, get_test, /core/admin/test, (GET)
+
 p, get_test-model, /core/admin/test-model, (GET)
+
 p, all_global-config, /core/admin/global-config, (GET)|(POST)|(DELETE)|(PUT)
 p, get_global-config, /core/admin/global-config, (GET)
 p, update_global-config, /core/admin/global-config, (PUT)|(POST)
+
 p, all_organizations, /core/admin/organizations, (GET)|(POST)|(DELETE)|(PUT)
 p, get_organizations, /core/admin/organizations, (GET)
 p, update_organizations, /core/admin/organizations, (PUT)|(POST)
+
 p, all_applications, /core/admin/applications, (GET)|(POST)|(DELETE)|(PUT)
 p, get_applications, /core/admin/applications, (GET)
 p, update_applications, /core/admin/applications, (POST)
-p, all_service-regs, /core/admin/service-regs, (GET)|(POST)|(DELETE)|(PUT)
+
 p, all_api-keys, /core/admin/api-keys, (GET)|(POST)|(DELETE)|(PUT)
+p, all_api-keys, /core/admin/application-api-keys, (GET)
+p, get_api-keys, /core/admin/api-keys, (GET)
+p, get_api-keys, /core/admin/application-api-keys, (GET)
+p, update_api-keys, /core/admin/api-keys, (POST)|(DELETE)|(PUT)
+
+p, all_service-regs, /core/admin/service-regs, (GET)|(POST)|(DELETE)|(PUT)
+
 p, all_permissions, /core/admin/permissions, (GET)|(POST)|(DELETE)|(PUT)
+
 p, all_application-roles, /core/admin/application-roles, (GET)|(POST)|(DELETE)|(PUT)
+
 p, all_account-permissions, /core/admin/account/permissions, (GET)|(POST)|(DELETE)|(PUT)
+
 p, all_account-roles, /core/admin/account/roles, (GET)|(POST)|(DELETE)|(PUT)

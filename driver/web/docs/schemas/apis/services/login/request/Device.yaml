@@ -1,9 +1,9 @@
 required:
-  - id
   - type
 type: object
+description: Client device
 properties:
-  id:
+  device_id:
     type: string
   type:
     type: string
@@ -14,3 +14,4 @@ properties:
       - other
   os:
     type: string
+  
