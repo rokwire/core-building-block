@@ -83,6 +83,15 @@ func (ls LoginSession) IsExpired() bool {
 	return ls.Expires.Before(time.Now())
 }
 
+//CurrentRefreshToken returns the current refresh token (last element of RefreshTokens)
+func (ls LoginSession) CurrentRefreshToken() string {
+	numTokens := len(ls.RefreshTokens)
+	if numTokens <= 0 {
+		return ""
+	}
+	return ls.RefreshTokens[numTokens-1]
+}
+
 //APIKey represents an API key entity
 type APIKey struct {
 	ID    string `json:"id" bson:"_id"`
