@@ -160,7 +160,8 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 	}
 
 	//check if a previous refresh token is being used
-	if loginSession.IsPreviousRefreshToken(refreshToken) {
+	//the session must contain the token since the session was returned by Mongo, so the token is old if not equal to the last token in the list
+	if refreshToken != loginSession.RefreshTokens[len(loginSession.RefreshTokens)-1] {
 		l.Infof("previous refresh token being used, so delete login session and return null - %s", refreshToken)
 
 		//remove the session
