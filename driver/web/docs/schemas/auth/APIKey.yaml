@@ -1,11 +1,10 @@
 required:
-  - org_id
   - app_id
   - key
 type: object
 description: API key record
 properties:
-  org_id:
+  id:
     type: string
   app_id:
     type: string
