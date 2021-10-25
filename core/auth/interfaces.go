@@ -54,6 +54,13 @@ type anonymousAuthType interface {
 	checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, map[string]interface{}, error)
 }
 
+//mfaType is the interface for multi-factor authentication
+type mfaType interface {
+	verify(code string)
+	enroll()
+	remove()
+}
+
 //APIs is the interface which defines the APIs provided by the auth package
 type APIs interface {
 	//Start starts the auth service
