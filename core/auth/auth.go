@@ -260,10 +260,7 @@ func (a *Auth) checkAccountExists(authType model.AuthType, appType model.Applica
 		return false, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	if accountAuthType == nil {
-		return false, nil
-	}
-	return false, nil
+	return accountAuthType != nil, nil
 }
 
 func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
