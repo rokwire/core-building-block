@@ -5,7 +5,9 @@ import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"strings"
 
@@ -26,8 +28,26 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 	}
 
 	//get ip
-	//TODO - most probably it will be needed to be taken more preciselly
-	ip := r.RemoteAddr
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		fmt.Errorf("userip: %q is not IP:port", r.RemoteAddr)
+
+	}
+
+	userIP := net.ParseIP(ip)
+	if userIP == nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeLoginSession, nil, err, http.StatusBadRequest, true)
+	}
+
+	forward := r.Header.Get("X-Forwarded-For")
+
+	if forward != "" {
+		// Got X-Forwarded-For
+		ip = forward
+	}
+
+	fmt.Printf("<p>IP: %s</p>", ip)
+	fmt.Printf("<p>Forwarded for: %s</p>", forward)
 
 	var requestData Def.ReqLoginRequest
 	err = json.Unmarshal(data, &requestData)
