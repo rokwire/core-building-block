@@ -5,9 +5,7 @@ import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"strings"
 
@@ -46,26 +44,8 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 	}
 
 	//get ip
-	ip, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		fmt.Errorf("userip: %q is not IP:port", r.RemoteAddr)
-
-	}
-
-	userIP := net.ParseIP(ip)
-	if userIP == nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeLoginSession, nil, err, http.StatusBadRequest, true)
-	}
-
-	forward := r.Header.Get("X-Forwarded-For")
-
-	if forward != "" {
-		// Got X-Forwarded-For
-		ip = forward
-	}
-
-	fmt.Printf("<p>IP: %s</p>", ip)
-	fmt.Printf("<p>Forwarded for: %s</p>", forward)
+	//TODO
+	ip := r.RemoteAddr
 
 	var requestData Def.ReqLoginAdminRequest
 	err = json.Unmarshal(data, &requestData)
