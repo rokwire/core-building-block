@@ -46,9 +46,11 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 
 	anonymous := item.Anonymous
 	identifier := item.Identifier
+	var accountID *string
 	var accountAuthTypeID *string
 	var accountAuthTypeIdentifier *string
 	if item.AccountAuthType != nil {
+		accountID = &item.AccountAuthType.Account.ID
 		accountAuthTypeID = &item.AccountAuthType.ID
 		accountAuthTypeIdentifier = &item.AccountAuthType.Identifier
 	}
@@ -63,7 +65,7 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 
 	return &loginSession{ID: id, AppID: appID, OrgID: orgID, AuthTypeCode: authTypeCode,
 		AppTypeID: appTypeID, AppTypeIdentifier: appTypeIdentifier, Anonymous: anonymous,
-		Identifier: identifier, AccountAuthTypeID: accountAuthTypeID,
+		Identifier: identifier, AccountID: accountID, AccountAuthTypeID: accountAuthTypeID,
 		AccountAuthTypeIdentifier: accountAuthTypeIdentifier, DeviceID: deviceID, IPAddress: ipAddress,
 		AccessToken: accessToken, RefreshToken: refreshToken, Params: params, Expires: expires,
 		DateUpdated: dateUpdated, DateCreated: dateCreated}

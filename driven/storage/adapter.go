@@ -356,12 +356,42 @@ func (sa *Adapter) FindAuthType(codeOrID string) (*model.AuthType, error) {
 }
 
 //InsertLoginSession inserts login session
-func (sa *Adapter) InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error) {
+func (sa *Adapter) InsertLoginSession(loginSession model.LoginSession, limit int) (*model.LoginSession, error) {
 	storageLoginSession := loginSessionToStorage(loginSession)
 
-	_, err := sa.db.loginsSessions.InsertOne(storageLoginSession)
+	// transaction
+	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+		err := sessionContext.StartTransaction()
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
+		}
+
+		if loginSession.AccountAuthType != nil {
+			filter := bson.D{primitive.E{Key: "account_id", Value: loginSession.AccountAuthType.Account.ID}}
+			count, err := sa.db.loginsSessions.CountDocumentsWithContext(sessionContext, filter)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionCount, model.TypeLoginSession, nil, err)
+			}
+			if count >= int64(limit) {
+				return errors.ErrorData(logutils.StatusInvalid, model.TypeLoginSession, logutils.StringArgs("login session limit reached"))
+			}
+		}
+
+		_, err = sa.db.loginsSessions.InsertOneWithContext(sessionContext, storageLoginSession)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
+		}
+
+		err = sessionContext.CommitTransaction(sessionContext)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
+		}
+		return nil
+	})
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
+		return nil, err
 	}
 
 	return &loginSession, nil

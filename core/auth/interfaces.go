@@ -174,7 +174,7 @@ type Storage interface {
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
 	//LoginsSessions
-	InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error)
+	InsertLoginSession(loginSession model.LoginSession, limit int) (*model.LoginSession, error)
 	FindLoginSession(refreshToken string) (*model.LoginSession, error)
 	UpdateLoginSession(loginSession model.LoginSession) error
 	DeleteLoginSession(id string) error

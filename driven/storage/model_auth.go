@@ -17,6 +17,7 @@ type loginSession struct {
 
 	Identifier string `bson:"identifier"`
 
+	AccountID                 *string `bson:"account_id"`
 	AccountAuthTypeID         *string `bson:"account_auth_type_id"`
 	AccountAuthTypeIdentifier *string `bson:"account_auth_type_identifier"`
 

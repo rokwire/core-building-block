@@ -404,7 +404,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 	}
 
 	//store it
-	_, err = a.storage.InsertLoginSession(*loginSession)
+	_, err = a.storage.InsertLoginSession(*loginSession, sessionLimit)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
 	}
