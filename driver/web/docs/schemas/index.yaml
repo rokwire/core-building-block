@@ -85,7 +85,9 @@ DeviceFields:
 
 ##### APIs requests and responses - they are at bottom
 
-#### shared requests and responses
+### shared requests and responses
+
+#### requests
 _req_shared_Login:
   $ref: "../schemas/apis/shared/requests/login/Request.yaml"
 _req_shared_Login_CredsEmail:
@@ -110,7 +112,8 @@ _req_shared_Profile:
   $ref: "../schemas/apis/shared/requests/Profile.yaml"
 _req_shared_ProfileNullable:
   $ref: "../schemas/apis/shared/requests/ProfileNullable.yaml"
-
+  
+#### responses
 _res_shared_LoginUrl:
   $ref: "../schemas/apis/shared/responses/login-url/Response.yaml"
 _res_shared_Login:
@@ -119,6 +122,7 @@ _res_shared_Login_Account:
   $ref: "../schemas/apis/shared/responses/login/Account.yaml"
 _res_shared_RokwireToken:
   $ref: "../schemas/apis/shared/responses/RokwireToken.yaml"
+### end - shared requests and responses
 
 ### refresh API
 _req_refresh_Request:
