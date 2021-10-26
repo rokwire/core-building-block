@@ -49,6 +49,8 @@ paths:
   #admin
   /admin/auth/login:
     $ref: "./resources/admin/auth/login.yaml"
+  /admin/auth/refresh:
+    $ref: "./resources/admin/auth/refresh.yaml"
   /admin/auth/login-url:
     $ref: "./resources/admin/auth/login-url.yaml"
   /admin/global-config:

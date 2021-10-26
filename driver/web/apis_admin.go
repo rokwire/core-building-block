@@ -165,8 +165,43 @@ func (h AdminApisHandler) adminLoginURL(l *logs.Log, r *http.Request, claims *to
 }
 
 func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	//TODO
-	return l.HttpResponseSuccess()
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqSharedRefresh
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth refresh request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	loginSession, err := h.coreAPIs.Auth.Refresh(requestData.RefreshToken, requestData.ApiKey, l)
+	if err != nil {
+		return l.HttpResponseError("Error refreshing token", err, http.StatusInternalServerError, true)
+	}
+	if loginSession == nil {
+		//if login session is null then unauthorized
+		l.Infof("trying to refresh - %s", requestData.RefreshToken)
+		return l.HttpResponseError(http.StatusText(http.StatusUnauthorized), nil, http.StatusUnauthorized, true)
+	}
+
+	accessToken := loginSession.AccessToken
+	refreshToken := loginSession.RefreshToken
+	var paramsRes interface{}
+	if loginSession.Params != nil {
+		paramsRes = loginSession.Params
+	}
+
+	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
+	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
+	responseData := &Def.ResSharedRefresh{Token: &rokwireToken, Params: &paramsRes}
+	respData, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth refresh response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
 }
 
 //createGlobalConfig creates a global config

@@ -757,6 +757,9 @@ type PostAdminAuthLoginJSONBody ReqSharedLogin
 // PostAdminAuthLoginUrlJSONBody defines parameters for PostAdminAuthLoginUrl.
 type PostAdminAuthLoginUrlJSONBody ReqSharedLoginUrl
 
+// PostAdminAuthRefreshJSONBody defines parameters for PostAdminAuthRefresh.
+type PostAdminAuthRefreshJSONBody ReqSharedRefresh
+
 // PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
 type PostAdminGlobalConfigJSONBody GlobalConfig
 
@@ -864,6 +867,9 @@ type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody
 
 // PostAdminAuthLoginUrlJSONRequestBody defines body for PostAdminAuthLoginUrl for application/json ContentType.
 type PostAdminAuthLoginUrlJSONRequestBody PostAdminAuthLoginUrlJSONBody
+
+// PostAdminAuthRefreshJSONRequestBody defines body for PostAdminAuthRefresh for application/json ContentType.
+type PostAdminAuthRefreshJSONRequestBody PostAdminAuthRefreshJSONBody
 
 // PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
 type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody
