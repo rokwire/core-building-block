@@ -208,7 +208,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_refresh_Request'
+              $ref: '#/components/schemas/_req_shared_Refresh'
         required: true
       responses:
         '200':
@@ -216,7 +216,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_refresh_Response'
+                $ref: '#/components/schemas/_res_shared_Refresh'
         '400':
           description: Bad request
         '401':
@@ -2261,6 +2261,16 @@ components:
           type: string
         redirect_uri:
           type: string
+    _req_shared_Refresh:
+      required:
+        - api_key
+        - refresh_token
+      type: object
+      properties:
+        api_key:
+          type: string
+        refresh_token:
+          type: string
     _req_shared_Profile:
       type: object
       properties:
@@ -2403,6 +2413,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
+    _res_shared_Refresh:
+      type: object
+      properties:
+        token:
+          $ref: '#/components/schemas/_res_shared_RokwireToken'
+        params:
+          type: object
+          nullable: true
+          anyOf:
+            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/0'
+            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/1'
+            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/2'
     _res_shared_RokwireToken:
       type: object
       properties:
@@ -2417,28 +2439,6 @@ components:
           type: string
           enum:
             - Bearer
-    _req_refresh_Request:
-      required:
-        - api_key
-        - refresh_token
-      type: object
-      properties:
-        api_key:
-          type: string
-        refresh_token:
-          type: string
-    _res_refresh_Response:
-      type: object
-      properties:
-        token:
-          $ref: '#/components/schemas/_res_shared_RokwireToken'
-        params:
-          type: object
-          nullable: true
-          anyOf:
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/0'
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/1'
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/2'
     _req_authorize-service_Request:
       required:
         - service_id

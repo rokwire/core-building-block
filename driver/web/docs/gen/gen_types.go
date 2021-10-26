@@ -502,12 +502,6 @@ type ReqGetOrganizationRequest struct {
 	Id string `json:"id"`
 }
 
-// ReqRefreshRequest defines model for _req_refresh_Request.
-type ReqRefreshRequest struct {
-	ApiKey       string `json:"api_key"`
-	RefreshToken string `json:"refresh_token"`
-}
-
 // ReqSharedLogin defines model for _req_shared_Login.
 type ReqSharedLogin struct {
 	ApiKey            string                 `json:"api_key"`
@@ -614,6 +608,12 @@ type ReqSharedProfileNullable struct {
 	ZipCode   *string `json:"zip_code"`
 }
 
+// ReqSharedRefresh defines model for _req_shared_Refresh.
+type ReqSharedRefresh struct {
+	ApiKey       string `json:"api_key"`
+	RefreshToken string `json:"refresh_token"`
+}
+
 // ReqUpdateOrganizationRequest defines model for _req_update_Organization_Request.
 type ReqUpdateOrganizationRequest struct {
 	Config *OrganizationConfigFields        `json:"config,omitempty"`
@@ -660,12 +660,6 @@ type ResGetOrganizationsResponse struct {
 // ResGetOrganizationsResponseType defines model for ResGetOrganizationsResponse.Type.
 type ResGetOrganizationsResponseType string
 
-// ResRefreshResponse defines model for _res_refresh_Response.
-type ResRefreshResponse struct {
-	Params *interface{}           `json:"params"`
-	Token  *ResSharedRokwireToken `json:"token,omitempty"`
-}
-
 // ResSharedLogin defines model for _res_shared_Login.
 type ResSharedLogin struct {
 	Account *ResSharedLoginAccount `json:"account,omitempty"`
@@ -691,6 +685,12 @@ type ResSharedLoginAccount struct {
 	Preferences *map[string]interface{}        `json:"preferences"`
 	Profile     *ProfileFields                 `json:"profile,omitempty"`
 	Roles       *[]ApplicationRoleFields       `json:"roles,omitempty"`
+}
+
+// ResSharedRefresh defines model for _res_shared_Refresh.
+type ResSharedRefresh struct {
+	Params *interface{}           `json:"params"`
+	Token  *ResSharedRokwireToken `json:"token,omitempty"`
 }
 
 // ResSharedRokwireToken defines model for _res_shared_RokwireToken.
@@ -812,7 +812,7 @@ type PostServicesAuthLoginJSONBody ReqSharedLogin
 type PostServicesAuthLoginUrlJSONBody ReqSharedLoginUrl
 
 // PostServicesAuthRefreshJSONBody defines parameters for PostServicesAuthRefresh.
-type PostServicesAuthRefreshJSONBody ReqRefreshRequest
+type PostServicesAuthRefreshJSONBody ReqSharedRefresh
 
 // GetServicesAuthServiceRegsParams defines parameters for GetServicesAuthServiceRegs.
 type GetServicesAuthServiceRegsParams struct {

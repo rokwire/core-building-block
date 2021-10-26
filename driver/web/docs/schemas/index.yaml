@@ -108,11 +108,13 @@ _req_shared_Login_Device:
   $ref: "../schemas/apis/shared/requests/login/Device.yaml"
 _req_shared_LoginUrl:
   $ref: "../schemas/apis/shared/requests/login-url/Request.yaml"
+_req_shared_Refresh:
+  $ref: "../schemas/apis/shared/requests/refresh/Request.yaml"
 _req_shared_Profile:
   $ref: "../schemas/apis/shared/requests/Profile.yaml"
 _req_shared_ProfileNullable:
   $ref: "../schemas/apis/shared/requests/ProfileNullable.yaml"
-  
+
 #### responses
 _res_shared_LoginUrl:
   $ref: "../schemas/apis/shared/responses/login-url/Response.yaml"
@@ -120,15 +122,11 @@ _res_shared_Login:
   $ref: "../schemas/apis/shared/responses/login/Response.yaml"
 _res_shared_Login_Account:
   $ref: "../schemas/apis/shared/responses/login/Account.yaml"
+_res_shared_Refresh:
+  $ref: "../schemas/apis/shared/responses/refresh/Response.yaml"
 _res_shared_RokwireToken:
   $ref: "../schemas/apis/shared/responses/RokwireToken.yaml"
 ### end - shared requests and responses
-
-### refresh API
-_req_refresh_Request:
-  $ref: "./apis/services/refresh/request/Request.yaml"
-_res_refresh_Response:
-  $ref: "./apis/services/refresh/response/Response.yaml"
 
 ### authorize-service API
 _req_authorize-service_Request:
