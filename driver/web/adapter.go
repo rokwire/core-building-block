@@ -73,7 +73,7 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/auth/verify", we.wrapFunc(we.servicesApisHandler.verifyCode, nil)).Methods("GET")
 	servicesSubRouter.HandleFunc("/auth/forgot-password", we.wrapFunc(we.servicesApisHandler.forgotPassword, nil)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/reset-password-link", we.wrapFunc(we.servicesApisHandler.resetPasswordLink, nil)).Methods("POST")
-	servicesSubRouter.HandleFunc("/auth/reset-password-client", we.wrapFunc(we.servicesApisHandler.resetPasswordClient, we.auth.servicesUserAuth)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/reset-password-client", we.wrapFunc(we.servicesApisHandler.resetPasswordClient, we.auth.servicesAuthenticatedAuth)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService, we.auth.servicesUserAuth)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations, we.auth.servicesAuth)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.deleteAccount, we.auth.servicesUserAuth)).Methods("DELETE")

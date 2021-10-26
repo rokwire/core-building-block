@@ -316,14 +316,13 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 //	Input:
 //		accountID: id of the associated account to reset
 //		accountAuthTypeID (string): id of the AccountAuthType
-//		password: old password
 //		newPassword: new password to reset to
 //		confirmPassword: new password to reset to
 //	Returns:
 //		error: if any
 //TODO: Clear login sessions using old creds
 // Handle refresh tokens when applicable
-func (a *Auth) ResetPasswordClient(accountID string, accountAuthTypeID string, password string, newPassword string, confirmPassword string, l *logs.Log) error {
+func (a *Auth) ResetPasswordClient(accountID string, accountAuthTypeID string, newPassword string, confirmPassword string, l *logs.Log) error {
 	//Get the user credential from account auth type in accounts collection
 	account, err := a.storage.FindAccountByID(accountID)
 	if err != nil {
@@ -353,7 +352,7 @@ func (a *Auth) ResetPasswordClient(accountID string, accountAuthTypeID string, p
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	authTypeCreds, err := authImpl.resetPassword(credential, nil, &password, newPassword, confirmPassword, l)
+	authTypeCreds, err := authImpl.resetPassword(credential, nil, newPassword, confirmPassword, l)
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "reset password", nil, err)
 	}
@@ -396,7 +395,7 @@ func (a *Auth) ResetPasswordLink(credsID string, resetCode string, newPassword s
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	authTypeCreds, err := authImpl.resetPassword(credential, &resetCode, nil, newPassword, confirmPassword, l)
+	authTypeCreds, err := authImpl.resetPassword(credential, &resetCode, newPassword, confirmPassword, l)
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "reset password", nil, err)
 	}

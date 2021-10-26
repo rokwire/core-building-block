@@ -599,12 +599,17 @@ type ReqLoginRequest struct {
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
 type ReqLoginRequestAuthType string
 
+// ReqRefreshRequest defines model for _req_refresh_Request.
+type ReqRefreshRequest struct {
+	ApiKey       string `json:"api_key"`
+	RefreshToken string `json:"refresh_token"`
+}
+
 // ReqResetPasswordClientRequest defines model for _req_reset-password-client_Request.
 type ReqResetPasswordClientRequest struct {
 	AccountAuthTypeId string `json:"account_auth_type_id"`
 	ConfirmPassword   string `json:"confirm_password"`
 	NewPassword       string `json:"new_password"`
-	Password          string `json:"password"`
 }
 
 // ReqResetPasswordLinkRequest defines model for _req_reset-password-link_Request.
@@ -613,12 +618,6 @@ type ReqResetPasswordLinkRequest struct {
 	CredsId         string `json:"creds_id"`
 	NewPassword     string `json:"new_password"`
 	ResetCode       string `json:"reset_code"`
-}
-
-// ReqRefreshRequest defines model for _req_refresh_Request.
-type ReqRefreshRequest struct {
-	ApiKey       string `json:"api_key"`
-	RefreshToken string `json:"refresh_token"`
 }
 
 // ReqSharedProfile defines model for _req_shared_Profile.
@@ -751,14 +750,12 @@ type PutAdminAccountRolesJSONBody ReqAccountRolesRequest
 
 // DeleteAdminApiKeysParams defines parameters for DeleteAdminApiKeys.
 type DeleteAdminApiKeysParams struct {
-
 	// The ID of the API key to delete
 	Id string `json:"id"`
 }
 
 // GetAdminApiKeysParams defines parameters for GetAdminApiKeys.
 type GetAdminApiKeysParams struct {
-
 	// The ID of the API key to return
 	Id string `json:"id"`
 }
@@ -771,7 +768,6 @@ type PutAdminApiKeysJSONBody APIKey
 
 // GetAdminApplicationApiKeysParams defines parameters for GetAdminApplicationApiKeys.
 type GetAdminApplicationApiKeysParams struct {
-
 	// The app ID of the API keys to return
 	AppId string `json:"app_id"`
 }
@@ -839,14 +835,14 @@ type PostServicesAuthLoginJSONBody ReqLoginRequest
 // PostServicesAuthLoginUrlJSONBody defines parameters for PostServicesAuthLoginUrl.
 type PostServicesAuthLoginUrlJSONBody ReqLoginUrlRequest
 
+// PostServicesAuthRefreshJSONBody defines parameters for PostServicesAuthRefresh.
+type PostServicesAuthRefreshJSONBody ReqRefreshRequest
+
 // PostServicesAuthResetPasswordClientJSONBody defines parameters for PostServicesAuthResetPasswordClient.
 type PostServicesAuthResetPasswordClientJSONBody ReqResetPasswordClientRequest
 
 // PostServicesAuthResetPasswordLinkJSONBody defines parameters for PostServicesAuthResetPasswordLink.
 type PostServicesAuthResetPasswordLinkJSONBody ReqResetPasswordLinkRequest
-
-// PostServicesAuthRefreshJSONBody defines parameters for PostServicesAuthRefresh.
-type PostServicesAuthRefreshJSONBody ReqRefreshRequest
 
 // GetServicesAuthServiceRegsParams defines parameters for GetServicesAuthServiceRegs.
 type GetServicesAuthServiceRegsParams struct {
@@ -926,14 +922,14 @@ type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 // PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
 type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
 
+// PostServicesAuthRefreshJSONRequestBody defines body for PostServicesAuthRefresh for application/json ContentType.
+type PostServicesAuthRefreshJSONRequestBody PostServicesAuthRefreshJSONBody
+
 // PostServicesAuthResetPasswordClientJSONRequestBody defines body for PostServicesAuthResetPasswordClient for application/json ContentType.
 type PostServicesAuthResetPasswordClientJSONRequestBody PostServicesAuthResetPasswordClientJSONBody
 
 // PostServicesAuthResetPasswordLinkJSONRequestBody defines body for PostServicesAuthResetPasswordLink for application/json ContentType.
 type PostServicesAuthResetPasswordLinkJSONRequestBody PostServicesAuthResetPasswordLinkJSONBody
-
-// PostServicesAuthRefreshJSONRequestBody defines body for PostServicesAuthRefresh for application/json ContentType.
-type PostServicesAuthRefreshJSONRequestBody PostServicesAuthRefreshJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found

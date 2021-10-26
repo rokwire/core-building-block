@@ -28,7 +28,7 @@ type authType interface {
 	//updates the value of the credential object with new password
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
-	resetPassword(credential *model.Credential, resetCode *string, password *string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error)
+	resetPassword(credential *model.Credential, resetCode *string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error)
 	// generates a reset password link with code and expiry and sends it to given identifier
 	forgotPassword(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error)
 
@@ -112,7 +112,7 @@ type APIs interface {
 	Verify(id string, verification string, l *logs.Log) error
 
 	//ResetPasswordClient updates the credential object with the new password from client app
-	ResetPasswordClient(accountID string, accountAuthTypeID string, password string, newPassword string, confirmPassword string, l *logs.Log) error
+	ResetPasswordClient(accountID string, accountAuthTypeID string, newPassword string, confirmPassword string, l *logs.Log) error
 	//ResetPasswordLink updates the credential object with the new password from reset link
 	ResetPasswordLink(credsID string, resetCode string, newPassword string, confirmPassword string, l *logs.Log) error
 	// ForgotPassword generates a reset link and sends to the given identifier

@@ -2323,14 +2323,11 @@ components:
     _req_reset-password-client_Request:
       required:
         - account_auth_type_id
-        - password
         - new_password
         - confirm_password
       type: object
       properties:
         account_auth_type_id:
-          type: string
-        password:
           type: string
         new_password:
           type: string

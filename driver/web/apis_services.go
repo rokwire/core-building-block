@@ -366,7 +366,7 @@ func (h ServicesApisHandler) resetPasswordClient(l *logs.Log, r *http.Request, c
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password client request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.ResetPasswordClient(accountID, requestData.AccountAuthTypeId, requestData.Password, requestData.NewPassword, requestData.ConfirmPassword, l); err != nil {
+	if err := h.coreAPIs.Auth.ResetPasswordClient(accountID, requestData.AccountAuthTypeId, requestData.NewPassword, requestData.ConfirmPassword, l); err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
 	}
 

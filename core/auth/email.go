@@ -209,7 +209,7 @@ func (a *emailAuthImpl) compareCode(credCode string, requestCode string, expiryT
 
 }
 
-func (a *emailAuthImpl) resetPassword(credential *model.Credential, resetCode *string, password *string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
+func (a *emailAuthImpl) resetPassword(credential *model.Credential, resetCode *string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
 	if len(newPassword) == 0 {
 		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, logutils.StringArgs("new_password"))
 	}
@@ -231,15 +231,8 @@ func (a *emailAuthImpl) resetPassword(credential *model.Credential, resetCode *s
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
 	}
-	//reset password from client app
-	if password != nil {
-		//validate old password
-		err = bcrypt.CompareHashAndPassword([]byte(creds.Password), []byte(*password))
-		if err != nil {
-			return nil, errors.WrapErrorAction("bad credentials", "", nil, err)
-		}
-		//reset password from link
-	} else if resetCode != nil {
+	//reset password from link
+	if resetCode != nil {
 		err = a.compareCode(creds.ResetCode, *resetCode, creds.ResetExpiry, l)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, &logutils.FieldArgs{"reset_code": *resetCode}, errors.New("invalid reset code"))
@@ -247,8 +240,6 @@ func (a *emailAuthImpl) resetPassword(credential *model.Credential, resetCode *s
 		//Update verification data
 		creds.ResetCode = ""
 		creds.ResetExpiry = time.Time{}
-	} else {
-		return nil, errors.New("Missing both resetCode and old password")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
