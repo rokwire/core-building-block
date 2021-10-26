@@ -5,22 +5,22 @@ properties:
   id:
     type: string
   profile:
-    $ref: "../../../../user/ProfileFields.yaml"
+    $ref: "../../../user/ProfileFields.yaml"
   permissions:
     type: array
     items:
-      $ref: "../../../../application/ApplicationPermissionFields.yaml"
+      $ref: "../../../application/ApplicationPermissionFields.yaml"
   roles:
     type: array
     items:
-      $ref: "../../../../application/ApplicationRoleFields.yaml"
+      $ref: "../../../application/ApplicationRoleFields.yaml"
   groups:
     type: array
     items:
-      $ref: "../../../../application/ApplicationGroupFields.yaml"
+      $ref: "../../../application/ApplicationGroupFields.yaml"
   auth_types:
     type: array
     items:
-      $ref: "../../../../user/AccountAuthTypeFields.yaml"
+      $ref: "../../../user/AccountAuthTypeFields.yaml"
 
 

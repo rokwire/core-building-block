@@ -397,8 +397,30 @@ paths:
           content:
             application/json:
               schema:
-                type: string
-                example: Success
+                required:
+                  - id
+                type: object
+                properties:
+                  id:
+                    type: string
+                  profile:
+                    $ref: '#/components/schemas/ProfileFields'
+                  permissions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApplicationPermissionFields'
+                  roles:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApplicationRoleFields'
+                  groups:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApplicationGroupFields'
+                  auth_types:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AccountAuthTypeFields'
         '400':
           description: Bad request
         '401':

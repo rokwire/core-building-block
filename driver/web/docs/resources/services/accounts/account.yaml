@@ -38,8 +38,7 @@ get:
       content:
         application/json:
           schema:
-            type: string
-            example: Success
+            $ref: "../../../schemas/apis/shared/responses/Account.yaml" 
     400:
       description: Bad request
     401:
