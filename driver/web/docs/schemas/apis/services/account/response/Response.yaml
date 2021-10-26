@@ -3,5 +3,5 @@ properties:
   token:
     $ref: "../../../shared/responses/RokwireToken.yaml"
   account:
-    $ref: "./Account.yaml"
+    $ref: - $ref: "../../../shared/responses/Account.yaml"  
 
