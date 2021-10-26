@@ -22,8 +22,12 @@ func (a *usernameAuthImpl) signUp(authType model.AuthType, appType model.Applica
 	return "", nil, nil, nil
 }
 
-func (a *usernameAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.AccountAuthType, error) {
+func (a *usernameAuthImpl) userExist(userIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AccountAuthType, error) {
 	return nil, nil
+}
+
+func (a *usernameAuthImpl) getUserIdentifier(creds string) (string, error) {
+	return "", nil
 }
 
 func (a *usernameAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {

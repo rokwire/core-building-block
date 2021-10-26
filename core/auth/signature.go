@@ -23,8 +23,12 @@ func (a *signatureAuthImpl) signUp(authType model.AuthType, appType model.Applic
 	return "", nil, nil, nil
 }
 
-func (a *signatureAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.AccountAuthType, error) {
+func (a *signatureAuthImpl) userExist(userIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AccountAuthType, error) {
 	return nil, nil
+}
+
+func (a *signatureAuthImpl) getUserIdentifier(creds string) (string, error) {
+	return "", nil
 }
 
 func (a *signatureAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {

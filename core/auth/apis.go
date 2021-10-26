@@ -125,14 +125,14 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 //The authentication method must be one of the supported for the application.
 //	Input:
 //		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
-//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
+//		userIdentifier (string): User identifier for the specified auth type
 //		apiKey (string): API key to validate the specified app
 //		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		accountExisted (bool): valid when error is nil
-func (a *Auth) AccountExists(authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, l *logs.Log) (bool, error) {
+func (a *Auth) AccountExists(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string, l *logs.Log) (bool, error) {
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
@@ -145,7 +145,7 @@ func (a *Auth) AccountExists(authenticationType string, creds string, apiKey str
 		return false, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
 
-	exists, err := a.checkAccountExists(*authType, *appType, *appOrg, creds, l)
+	exists, err := a.checkAccountExists(userIdentifier, *authType, *appType, *appOrg, l)
 	if err != nil {
 		return false, err
 	}

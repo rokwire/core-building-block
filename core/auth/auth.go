@@ -247,7 +247,7 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.App
 	return anonymousID, anonymousParams, nil
 }
 
-func (a *Auth) checkAccountExists(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (bool, error) {
+func (a *Auth) checkAccountExists(userIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (bool, error) {
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(authType)
 	if err != nil {
@@ -255,7 +255,7 @@ func (a *Auth) checkAccountExists(authType model.AuthType, appType model.Applica
 	}
 
 	//check if the user exists check
-	accountAuthType, err := authImpl.userExist(authType, appType, appOrg, creds, l)
+	accountAuthType, err := authImpl.userExist(userIdentifier, authType, appType, appOrg, l)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -278,7 +278,11 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 
 	//check if the user exists check
-	accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
+	userIdentifier, err := authImpl.getUserIdentifier(creds)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
+	}
+	accountAuthType, err = authImpl.userExist(userIdentifier, authType, appType, appOrg, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}

@@ -28,7 +28,12 @@ type authType interface {
 	//userExist checks if the user exists for application and organizations
 	// Returns:
 	//	accountAuthType (*model.AccountAuthType): User account auth type
-	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.AccountAuthType, error)
+	userExist(userIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AccountAuthType, error)
+
+	//getUserIdentifier parses the credentials and returns the user identifier
+	// Returns:
+	//	userIdentifier (string): User identifier
+	getUserIdentifier(creds string) (string, error)
 
 	//checkCredentials checks if the account credentials are valid for the account auth type
 	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error)
@@ -93,14 +98,14 @@ type APIs interface {
 	//The authentication method must be one of the supported for the application.
 	//	Input:
 	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
-	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
+	//		userIdentifier (string): User identifier for the specified auth type
 	//		apiKey (string): API key to validate the specified app
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		accountExisted (bool): valid when error is nil
-	AccountExists(authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, l *logs.Log) (bool, error)
+	AccountExists(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string, l *logs.Log) (bool, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:

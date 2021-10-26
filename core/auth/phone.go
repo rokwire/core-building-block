@@ -253,18 +253,12 @@ func basicAuth(username, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
-func (a *twilioPhoneAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.AccountAuthType, error) {
+func (a *twilioPhoneAuthImpl) userExist(userIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AccountAuthType, error) {
 	appID := appOrg.Application.ID
 	orgID := appOrg.Organization.ID
 	authTypeID := authType.ID
 
-	var requestCreds twilioPhoneCreds
-	err := json.Unmarshal([]byte(creds), &requestCreds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneCreds, logutils.StringArgs("request"), err)
-	}
-
-	account, err := a.auth.storage.FindAccount(appID, orgID, authTypeID, requestCreds.Phone)
+	account, err := a.auth.storage.FindAccount(appID, orgID, authTypeID, userIdentifier)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
@@ -273,12 +267,22 @@ func (a *twilioPhoneAuthImpl) userExist(authType model.AuthType, appType model.A
 		return nil, nil
 	}
 
-	accountAuthType, err := a.auth.findAccountAuthType(account, &authType, requestCreds.Phone)
+	accountAuthType, err := a.auth.findAccountAuthType(account, &authType, userIdentifier)
 	if accountAuthType == nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err) //TODO add args..
 	}
 
 	return accountAuthType, nil
+}
+
+func (a *twilioPhoneAuthImpl) getUserIdentifier(creds string) (string, error) {
+	var requestCreds twilioPhoneCreds
+	err := json.Unmarshal([]byte(creds), &requestCreds)
+	if err != nil {
+		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneCreds, nil, err)
+	}
+
+	return requestCreds.Phone, nil
 }
 
 func (a *twilioPhoneAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {

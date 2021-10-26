@@ -184,18 +184,12 @@ func (a *emailAuthImpl) compareVerifyCode(credCode string, requestCode string, e
 	return nil
 
 }
-func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.AccountAuthType, error) {
+func (a *emailAuthImpl) userExist(userIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AccountAuthType, error) {
 	appID := appOrg.Application.ID
 	orgID := appOrg.Organization.ID
 	authTypeID := authType.ID
 
-	var requestCreds emailCreds
-	err := json.Unmarshal([]byte(creds), &requestCreds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, logutils.StringArgs("request"), err)
-	}
-
-	account, err := a.auth.storage.FindAccount(appID, orgID, authTypeID, requestCreds.Email)
+	account, err := a.auth.storage.FindAccount(appID, orgID, authTypeID, userIdentifier)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
@@ -204,12 +198,22 @@ func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.Applica
 		return nil, nil
 	}
 
-	accountAuthType, err := a.auth.findAccountAuthType(account, &authType, requestCreds.Email)
+	accountAuthType, err := a.auth.findAccountAuthType(account, &authType, userIdentifier)
 	if accountAuthType == nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err) //TODO add args..
 	}
 
 	return accountAuthType, nil
+}
+
+func (a *emailAuthImpl) getUserIdentifier(creds string) (string, error) {
+	var requestCreds emailCreds
+	err := json.Unmarshal([]byte(creds), &requestCreds)
+	if err != nil {
+		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
+	}
+
+	return requestCreds.Email, nil
 }
 
 func emailCredsToMap(creds *emailCreds) (map[string]interface{}, error) {

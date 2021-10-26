@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Expose does account exist services API [#255](https://github.com/rokwire/core-building-block/issues/255)
 - Handle API key validation for non-anonymous users [#244](https://github.com/rokwire/core-building-block/issues/244)
 - Implement logins sessions [#172](https://github.com/rokwire/core-building-block/issues/172) 
-- Added is account exists service API [#255](https://github.com/rokwire/core-building-block/issues/255)
 
 ## [1.6.0] - 2021-10-19
 ### Added
