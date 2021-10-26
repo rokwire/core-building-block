@@ -4,6 +4,10 @@ post:
   summary: Link credentials
   description: |
     Link credentials to an existing account
+
+    **Auth:** Requires "authenticated" auth token
+  security:
+    - bearerAuth: []
   requestBody:
     content:
       application/json:

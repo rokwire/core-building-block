@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Handle multiple authentication methods linking to one account [#64](https://github.com/rokwire/core-building-block/issues/64)
 - Add authentication required auth wrapper [#250](https://github.com/rokwire/core-building-block/issues/250)
 
 ## [1.6.0] - 2021-10-19
