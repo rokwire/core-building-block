@@ -8,7 +8,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/shared/requests/LoginUrl.yaml"
+          $ref: "../../../schemas/apis/shared/requests/login-url/Request.yaml"
     required: true
   responses:
     200:
@@ -16,7 +16,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/apis/shared/responses/LoginUrl.yaml"
+            $ref: "../../../schemas/apis/shared/responses/login-url/Response.yaml"
     400:
       description: Bad request
     401:

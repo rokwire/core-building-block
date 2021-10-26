@@ -105,14 +105,14 @@ _req_shared_Login_ParamsNone:
 _req_shared_Login_Device:
   $ref: "../schemas/apis/shared/requests/login/Device.yaml"
 _req_shared_LoginUrl:
-  $ref: "../schemas/apis/shared/requests/LoginUrl.yaml"
+  $ref: "../schemas/apis/shared/requests/login-url/Request.yaml"
 _req_shared_Profile:
   $ref: "../schemas/apis/shared/requests/Profile.yaml"
 _req_shared_ProfileNullable:
   $ref: "../schemas/apis/shared/requests/ProfileNullable.yaml"
 
 _res_shared_LoginUrl:
-  $ref: "../schemas/apis/shared/responses/LoginUrl.yaml"
+  $ref: "../schemas/apis/shared/responses/login-url/Response.yaml"
 _res_shared_Login:
   $ref: "../schemas/apis/shared/responses/login/Response.yaml"
 _res_shared_Login_Account:
