@@ -461,24 +461,8 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier string, accountAuthTypeParams map[string]interface{},
 	credentialID *string, credentialValue map[string]interface{},
 	profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*model.AccountAuthType, *model.Credential, *model.Profile, map[string]interface{}, error) {
-	now := time.Now()
 
-	//account auth type
-	accountAuthTypeID, _ := uuid.NewUUID()
-	active := true
-	active2FA := false
-	accountAuthType := &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: authType,
-		Identifier: identifier, Params: accountAuthTypeParams, Credential: nil, Active: active, Active2FA: active2FA, DateCreated: now}
-
-	//credential
-	var credential *model.Credential
-	if credentialID != nil && credentialValue != nil {
-		//there is a credential
-		credential = &model.Credential{ID: *credentialID, AccountsAuthTypes: []model.AccountAuthType{*accountAuthType}, Value: credentialValue, Verified: false,
-			AuthType: authType, DateCreated: now, DateUpdated: &now}
-
-		accountAuthType.Credential = credential
-	}
+	accountAuthType, credential := a.prepareAccountAuthType(authType, identifier, accountAuthTypeParams, credentialID, credentialValue)
 
 	///profile and preferences
 	//get profile BB data
@@ -510,6 +494,30 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 	///
 
 	return accountAuthType, credential, &readyProfile, readyPreferences, nil
+}
+
+func (a *Auth) prepareAccountAuthType(authType model.AuthType, identifier string, accountAuthTypeParams map[string]interface{},
+	credentialID *string, credentialValue map[string]interface{}) (*model.AccountAuthType, *model.Credential, error) {
+	now := time.Now()
+
+	//account auth type
+	accountAuthTypeID, _ := uuid.NewUUID()
+	active := true
+	active2FA := false
+	accountAuthType := &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: authType,
+		Identifier: identifier, Params: accountAuthTypeParams, Credential: nil, Active: active, Active2FA: active2FA, DateCreated: now}
+
+	//credential
+	var credential *model.Credential
+	if credentialID != nil && credentialValue != nil {
+		//there is a credential
+		credential = &model.Credential{ID: *credentialID, AccountsAuthTypes: []model.AccountAuthType{*accountAuthType}, Value: credentialValue, Verified: false,
+			AuthType: authType, DateCreated: now, DateUpdated: &now}
+
+		accountAuthType.Credential = credential
+	}
+
+	return accountAuthType, credential, nil
 }
 
 func (a *Auth) prepareProfile(clientData model.Profile, profileBBData model.Profile, l *logs.Log) model.Profile {
@@ -583,6 +591,71 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 	accountAuthType.Account = *insertedAccount
 
 	return &accountAuthType, nil
+}
+
+func (a *Auth) linkCreds(account model.Account, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (string, *model.AccountAuthType, error) {
+	var message string
+	var accountAuthType *model.AccountAuthType
+	var credential *model.Credential
+	var profile *model.Profile
+	var preferences map[string]interface{}
+
+	//auth type
+	authImpl, err := a.getAuthTypeImpl(authType)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	//check if the user exists check
+	accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	accountExists := (accountAuthType != nil)
+	// Cannot link creds if an account already exists for new creds
+	if accountExists {
+		return "", nil, errors.New("an account already exists for the provided credentials")
+	}
+
+	credentialID, _ := uuid.NewUUID()
+	credID := credentialID.String()
+
+	//apply sign up
+	message, identifier, credentialValue, err := authImpl.signUp(authType, appType, appOrg, creds, params, credentialID.String(), l)
+	if err != nil {
+		return "", nil, errors.Wrap("error signing up", err)
+	}
+
+	accountAuthType, credential, err = a.prepareAccountAuthType(authType, *identifier, nil, &credID, credentialValue)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
+	}
+	accountAuthType.Account = account
+
+	accountAuthType, err = a.registerAccountAuthType(accountAuthType, credential, l)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccountAuthType, nil, err)
+	}
+
+	return message, accountAuthType, nil
+}
+
+func (a *Auth) registerAccountAuthType(accountAuthType *model.AccountAuthType, credential *model.Credential, l *logs.Log) (*model.AccountAuthType, error) {
+	var err error
+	if credential != nil {
+		//TODO - in one transaction
+		if err = a.storage.InsertCredential(credential, nil); err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
+		}
+	}
+
+	insertedAccountAuthType, err := a.storage.InsertAccountAuthType(accountAuthType)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
+	}
+
+	return &insertedAccountAuthType, nil
 }
 
 func (a *Auth) registerAuthType(name string, auth authType) error {

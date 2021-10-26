@@ -383,14 +383,27 @@ func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 //	Input:
 //		accountID (string): ID of the account to link the creds to
 //		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 //		params (string): JSON encoded params defined by specified auth type
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		Message (*string): message
 //		Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) LinkCreds(accountID string, authenticationType string, creds string, params string, l *logs.Log) (*string, interface{}, error) {
+func (a *Auth) LinkCreds(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, interface{}, error) {
 	message := ""
+
+	account, err := a.storage.FindAccountByID(accountID)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	//validate if the provided auth type is supported by the provided application and organization
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, account.Organization.ID)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
 	message = "Creds successfully linked"
 	return &message, nil, nil
 }

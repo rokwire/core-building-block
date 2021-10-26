@@ -194,12 +194,14 @@ type Storage interface {
 	DeleteExpiredSessions(now *time.Time) error
 
 	//Accounts
+	FindAccountByID(id string) (*model.Account, error)
 	FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
 	InsertAccount(account model.Account) (*model.Account, error)
 	UpdateAccount(account *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
 	DeleteAccount(id string) error
 
 	//AccountAuthTypes
+	InsertAccountAuthType(item model.AccountAuthType) (*model.AccountAuthType, error)
 	UpdateAccountAuthType(item model.AccountAuthType) error
 
 	//Organizations
