@@ -132,7 +132,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initEmailAuth(auth)
 	initPhoneAuth(auth, twilioAccountSID, twilioToken, twilioServiceSID)
 	initFirebaseAuth(auth)
-	initAPIKeyAuth(auth)
+	initAnonymousAuth(auth)
 	initSignatureAuth(auth)
 
 	initOidcAuth(auth)
@@ -319,6 +319,16 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 
 	return message, accountAuthType, nil
+}
+
+//validateAPIKey checks if the given API key is valid for the given app ID
+func (a *Auth) validateAPIKey(apiKey string, appID string) error {
+	validAPIKey, err := a.getCachedAPIKey(apiKey)
+	if err != nil || validAPIKey == nil || validAPIKey.AppID != appID {
+		return errors.Newf("incorrect key for app_id=%v", appID)
+	}
+
+	return nil
 }
 
 //isSignUp checks if the operation is sign in or sign up

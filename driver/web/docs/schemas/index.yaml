@@ -154,6 +154,8 @@ _res_login-url_admin_Response:
   $ref: "./apis/admin/login-url/response/Response.yaml"
 
 ### refresh API
+_req_refresh_Request:
+  $ref: "./apis/services/refresh/request/Request.yaml"
 _res_refresh_Response:
   $ref: "./apis/services/refresh/response/Response.yaml"
 

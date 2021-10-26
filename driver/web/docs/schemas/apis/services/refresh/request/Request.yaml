@@ -1,0 +1,9 @@
+required:
+  - api_key
+  - refresh_token
+type: object
+properties:
+  api_key:
+    type: string
+  refresh_token:
+    type: string

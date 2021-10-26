@@ -1,9 +1,5 @@
-required:
-  - api_key
 type: object
-description: Auth login creds for auth_type="api_key"
+description: Auth login creds for auth_type="anonymous"
 properties:
-  api_key:
-    type: string
   anonymous_id:
     type: string
