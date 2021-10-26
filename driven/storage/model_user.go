@@ -72,8 +72,7 @@ type userDevice struct {
 	ID   string `bson:"_id"`
 	Type string `bson:"type"`
 
-	OS         string `bson:"os"`
-	MacAddress string `bson:"mac_address"`
+	OS string `bson:"os"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -83,8 +82,7 @@ type device struct {
 	ID   string `bson:"_id"`
 	Type string `bson:"type"`
 
-	OS         string `bson:"os"`
-	MacAddress string `bson:"mac_address"`
+	OS string `bson:"os"`
 
 	Accounts []string `bson:"accounts"`
 

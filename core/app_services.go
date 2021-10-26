@@ -3,9 +3,9 @@ package core
 import (
 	"core-building-block/core/model"
 
-	"github.com/rokmetro/logging-library/errors"
-	"github.com/rokmetro/logging-library/logs"
-	"github.com/rokmetro/logging-library/logutils"
+	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/logutils"
 )
 
 func (app *application) serGetProfile(accountID string) (*model.Profile, error) {
@@ -18,6 +18,17 @@ func (app *application) serGetProfile(accountID string) (*model.Profile, error) 
 	//get the profile for the account
 	profile := account.Profile
 	return &profile, nil
+}
+
+func (app *application) serGetPreferences(accountID string) (map[string]interface{}, error) {
+	//find the account
+	account, err := app.storage.FindAccountByID(accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountPreferences, nil, err)
+	}
+
+	preferences := account.Preferences
+	return preferences, nil
 }
 
 func (app *application) serUpdateProfile(accountID string, profile *model.Profile) error {

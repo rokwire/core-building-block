@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rokmetro/logging-library/errors"
-	"github.com/rokmetro/logging-library/logs"
-	"github.com/rokmetro/logging-library/logutils"
+	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/logutils"
 	"gopkg.in/go-playground/validator.v9"
 )
 
@@ -253,7 +253,7 @@ func basicAuth(username, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
-func (a *twilioPhoneAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
+func (a *twilioPhoneAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.AccountAuthType, error) {
 	appID := appOrg.Application.ID
 	orgID := appOrg.Organization.ID
 	authTypeID := authType.ID
@@ -261,24 +261,24 @@ func (a *twilioPhoneAuthImpl) userExist(authType model.AuthType, appType model.A
 	var requestCreds twilioPhoneCreds
 	err := json.Unmarshal([]byte(creds), &requestCreds)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneCreds, logutils.StringArgs("request"), err)
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneCreds, logutils.StringArgs("request"), err)
 	}
 
 	account, err := a.auth.storage.FindAccount(appID, orgID, authTypeID, requestCreds.Phone)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 
 	if account == nil {
-		return nil, nil, nil
+		return nil, nil
 	}
 
 	accountAuthType, err := a.auth.findAccountAuthType(account, &authType, requestCreds.Phone)
 	if accountAuthType == nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err) //TODO add args..
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err) //TODO add args..
 	}
 
-	return account, accountAuthType, nil
+	return accountAuthType, nil
 }
 
 func (a *twilioPhoneAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {

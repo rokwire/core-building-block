@@ -84,9 +84,20 @@ const (
 	ReqLoginUrlRequestAuthTypeIllinoisOidc ReqLoginUrlRequestAuthType = "illinois_oidc"
 )
 
+// Defines values for ReqLoginDeviceType.
+const (
+	ReqLoginDeviceTypeDesktop ReqLoginDeviceType = "desktop"
+
+	ReqLoginDeviceTypeMobile ReqLoginDeviceType = "mobile"
+
+	ReqLoginDeviceTypeOther ReqLoginDeviceType = "other"
+
+	ReqLoginDeviceTypeWeb ReqLoginDeviceType = "web"
+)
+
 // Defines values for ReqLoginRequestAuthType.
 const (
-	ReqLoginRequestAuthTypeApiKey ReqLoginRequestAuthType = "api_key"
+	ReqLoginRequestAuthTypeAnonymous ReqLoginRequestAuthType = "anonymous"
 
 	ReqLoginRequestAuthTypeEmail ReqLoginRequestAuthType = "email"
 
@@ -135,9 +146,9 @@ const (
 
 // API key record
 type APIKey struct {
-	AppId string `json:"app_id"`
-	Key   string `json:"key"`
-	OrgId string `json:"org_id"`
+	AppId string  `json:"app_id"`
+	Id    *string `json:"id,omitempty"`
+	Key   string  `json:"key"`
 }
 
 // Account defines model for Account.
@@ -166,6 +177,7 @@ type AccountAuthType struct {
 type AccountAuthTypeFields struct {
 	Active     *bool                         `json:"active,omitempty"`
 	Active2fa  *bool                         `json:"active_2fa,omitempty"`
+	Code       *string                       `json:"code,omitempty"`
 	Id         *string                       `json:"id,omitempty"`
 	Identifier *string                       `json:"identifier,omitempty"`
 	Params     *AccountAuthTypeFields_Params `json:"params"`
@@ -301,10 +313,9 @@ type Device struct {
 
 // DeviceFields defines model for DeviceFields.
 type DeviceFields struct {
-	Id         string           `json:"id"`
-	MacAddress *string          `json:"mac_address,omitempty"`
-	Os         *string          `json:"os,omitempty"`
-	Type       DeviceFieldsType `json:"type"`
+	Id   string           `json:"id"`
+	Os   *string          `json:"os,omitempty"`
+	Type DeviceFieldsType `json:"type"`
 }
 
 // DeviceFieldsType defines model for DeviceFields.Type.
@@ -513,6 +524,7 @@ type ReqGetOrganizationRequest struct {
 
 // ReqLoginUrlRequest defines model for _req_login-url_Request.
 type ReqLoginUrlRequest struct {
+	ApiKey            string                     `json:"api_key"`
 	AppTypeIdentifier string                     `json:"app_type_identifier"`
 	AuthType          ReqLoginUrlRequestAuthType `json:"auth_type"`
 	OrgId             string                     `json:"org_id"`
@@ -522,9 +534,9 @@ type ReqLoginUrlRequest struct {
 // ReqLoginUrlRequestAuthType defines model for ReqLoginUrlRequest.AuthType.
 type ReqLoginUrlRequestAuthType string
 
-// Auth login creds for auth_type="api_key"
+// Auth login creds for auth_type="anonymous"
 type ReqLoginCredsAPIKey struct {
-	ApiKey string `json:"api_key"`
+	AnonymousId *string `json:"anonymous_id,omitempty"`
 }
 
 // Auth login creds for auth_type="email"
@@ -533,7 +545,7 @@ type ReqLoginCredsEmail struct {
 	Password string `json:"password"`
 }
 
-// Auth login creds for auth_type="oidc"
+// Auth login creds for auth_type="oidc" (or variants)
 //   - full redirect URI received from OIDC provider
 type ReqLoginCredsOIDC string
 
@@ -542,6 +554,16 @@ type ReqLoginCredsTwilioPhone struct {
 	Code  *string `json:"code,omitempty"`
 	Phone string  `json:"phone"`
 }
+
+// Client device
+type ReqLoginDevice struct {
+	DeviceId *string            `json:"device_id,omitempty"`
+	Os       *string            `json:"os,omitempty"`
+	Type     ReqLoginDeviceType `json:"type"`
+}
+
+// ReqLoginDeviceType defines model for ReqLoginDevice.Type.
+type ReqLoginDeviceType string
 
 // Auth login params for auth_type="email"
 type ReqLoginParamsEmail struct {
@@ -553,7 +575,7 @@ type ReqLoginParamsEmail struct {
 // Auth login request params for unlisted auth_types (None)
 type ReqLoginParamsNone map[string]interface{}
 
-// Auth login params for auth_type="oidc"
+// Auth login params for auth_type="oidc" (or variants)
 type ReqLoginParamsOIDC struct {
 	PkceVerifier *string `json:"pkce_verifier,omitempty"`
 	RedirectUri  *string `json:"redirect_uri,omitempty"`
@@ -561,14 +583,17 @@ type ReqLoginParamsOIDC struct {
 
 // ReqLoginRequest defines model for _req_login_Request.
 type ReqLoginRequest struct {
-	AnonymousId       *string                 `json:"anonymous_id,omitempty"`
+	ApiKey            string                  `json:"api_key"`
 	AppTypeIdentifier string                  `json:"app_type_identifier"`
 	AuthType          ReqLoginRequestAuthType `json:"auth_type"`
 	Creds             *interface{}            `json:"creds,omitempty"`
-	OrgId             string                  `json:"org_id"`
-	Params            *interface{}            `json:"params,omitempty"`
-	Preferences       *map[string]interface{} `json:"preferences,omitempty"`
-	Profile           *ProfileFields          `json:"profile,omitempty"`
+
+	// Client device
+	Device      ReqLoginDevice            `json:"device"`
+	OrgId       string                    `json:"org_id"`
+	Params      *interface{}              `json:"params,omitempty"`
+	Preferences *map[string]interface{}   `json:"preferences"`
+	Profile     *ReqSharedProfileNullable `json:"profile"`
 }
 
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
@@ -588,6 +613,40 @@ type ReqResetPasswordLinkRequest struct {
 	CredsId         string `json:"creds_id"`
 	NewPassword     string `json:"new_password"`
 	ResetCode       string `json:"reset_code"`
+}
+
+// ReqRefreshRequest defines model for _req_refresh_Request.
+type ReqRefreshRequest struct {
+	ApiKey       string `json:"api_key"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+// ReqSharedProfile defines model for _req_shared_Profile.
+type ReqSharedProfile struct {
+	Address   *string `json:"address"`
+	BirthYear *int    `json:"birth_year"`
+	Country   *string `json:"country"`
+	Email     *string `json:"email"`
+	FirstName *string `json:"first_name"`
+	LastName  *string `json:"last_name"`
+	Phone     *string `json:"phone"`
+	PhotoUrl  *string `json:"photo_url"`
+	State     *string `json:"state"`
+	ZipCode   *string `json:"zip_code"`
+}
+
+// ReqSharedProfileNullable defines model for _req_shared_ProfileNullable.
+type ReqSharedProfileNullable struct {
+	Address   *string `json:"address"`
+	BirthYear *int    `json:"birth_year"`
+	Country   *string `json:"country"`
+	Email     *string `json:"email"`
+	FirstName *string `json:"first_name"`
+	LastName  *string `json:"last_name"`
+	Phone     *string `json:"phone"`
+	PhotoUrl  *string `json:"photo_url"`
+	State     *string `json:"state"`
+	ZipCode   *string `json:"zip_code"`
 }
 
 // ReqUpdateOrganizationRequest defines model for _req_update_Organization_Request.
@@ -650,6 +709,7 @@ type ResLoginAccount struct {
 	Groups      *[]ApplicationGroupFields      `json:"groups,omitempty"`
 	Id          string                         `json:"id"`
 	Permissions *[]ApplicationPermissionFields `json:"permissions,omitempty"`
+	Preferences *map[string]interface{}        `json:"preferences"`
 	Profile     *ProfileFields                 `json:"profile,omitempty"`
 	Roles       *[]ApplicationRoleFields       `json:"roles,omitempty"`
 }
@@ -664,20 +724,8 @@ type ResLoginResponse struct {
 
 // ResRefreshResponse defines model for _res_refresh_Response.
 type ResRefreshResponse struct {
-	Params *interface{}           `json:"params,omitempty"`
+	Params *interface{}           `json:"params"`
 	Token  *ResSharedRokwireToken `json:"token,omitempty"`
-}
-
-// Auth login response params for unlisted auth_types (None)
-type ResSharedParamsNone map[string]interface{}
-
-// ResSharedParamsOIDC defines model for _res_shared_ParamsOIDC.
-type ResSharedParamsOIDC struct {
-	OidcToken *struct {
-		AccessToken *string `json:"access_token,omitempty"`
-		IdToken     *string `json:"id_token,omitempty"`
-		TokenType   *string `json:"token_type,omitempty"`
-	} `json:"oidc_token,omitempty"`
 }
 
 // ResSharedRokwireToken defines model for _res_shared_RokwireToken.
@@ -703,20 +751,16 @@ type PutAdminAccountRolesJSONBody ReqAccountRolesRequest
 
 // DeleteAdminApiKeysParams defines parameters for DeleteAdminApiKeys.
 type DeleteAdminApiKeysParams struct {
-	// The org ID of the API key to delete
-	OrgId string `json:"org_id"`
 
-	// The app ID of the API key to delete
-	AppId string `json:"app_id"`
+	// The ID of the API key to delete
+	Id string `json:"id"`
 }
 
 // GetAdminApiKeysParams defines parameters for GetAdminApiKeys.
 type GetAdminApiKeysParams struct {
-	// The org ID of the API key to return
-	OrgId string `json:"org_id"`
 
-	// The app ID of the API key to return
-	AppId string `json:"app_id"`
+	// The ID of the API key to return
+	Id string `json:"id"`
 }
 
 // PostAdminApiKeysJSONBody defines parameters for PostAdminApiKeys.
@@ -724,6 +768,13 @@ type PostAdminApiKeysJSONBody APIKey
 
 // PutAdminApiKeysJSONBody defines parameters for PutAdminApiKeys.
 type PutAdminApiKeysJSONBody APIKey
+
+// GetAdminApplicationApiKeysParams defines parameters for GetAdminApplicationApiKeys.
+type GetAdminApplicationApiKeysParams struct {
+
+	// The app ID of the API keys to return
+	AppId string `json:"app_id"`
+}
 
 // PostAdminApplicationPermissionsJSONBody defines parameters for PostAdminApplicationPermissions.
 type PostAdminApplicationPermissionsJSONBody ReqApplicationPermissionsRequest
@@ -774,7 +825,7 @@ type GetBbsServiceRegsParams struct {
 type PutServicesAccountPreferencesJSONBody map[string]interface{}
 
 // PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
-type PutServicesAccountProfileJSONBody ProfileFields
+type PutServicesAccountProfileJSONBody ReqSharedProfile
 
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
@@ -793,6 +844,9 @@ type PostServicesAuthResetPasswordClientJSONBody ReqResetPasswordClientRequest
 
 // PostServicesAuthResetPasswordLinkJSONBody defines parameters for PostServicesAuthResetPasswordLink.
 type PostServicesAuthResetPasswordLinkJSONBody ReqResetPasswordLinkRequest
+
+// PostServicesAuthRefreshJSONBody defines parameters for PostServicesAuthRefresh.
+type PostServicesAuthRefreshJSONBody ReqRefreshRequest
 
 // GetServicesAuthServiceRegsParams defines parameters for GetServicesAuthServiceRegs.
 type GetServicesAuthServiceRegsParams struct {
@@ -877,6 +931,9 @@ type PostServicesAuthResetPasswordClientJSONRequestBody PostServicesAuthResetPas
 
 // PostServicesAuthResetPasswordLinkJSONRequestBody defines body for PostServicesAuthResetPasswordLink for application/json ContentType.
 type PostServicesAuthResetPasswordLinkJSONRequestBody PostServicesAuthResetPasswordLinkJSONBody
+
+// PostServicesAuthRefreshJSONRequestBody defines body for PostServicesAuthRefresh for application/json ContentType.
+type PostServicesAuthRefreshJSONRequestBody PostServicesAuthRefreshJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found

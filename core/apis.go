@@ -4,7 +4,7 @@ import (
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
 
-	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokwire/logging-library-go/logs"
 )
 
 //APIs exposes to the drivers adapters access to the core functionality
@@ -67,6 +67,10 @@ func (s *servicesImpl) SerDeleteAccount(id string) error {
 
 func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, error) {
 	return s.app.serGetProfile(accountID)
+}
+
+func (s *servicesImpl) SerGetPreferences(accountID string) (map[string]interface{}, error) {
+	return s.app.serGetPreferences(accountID)
 }
 
 func (s *servicesImpl) SerUpdateProfile(accountID string, profile *model.Profile) error {

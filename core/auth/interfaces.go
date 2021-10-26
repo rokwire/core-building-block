@@ -5,9 +5,9 @@ import (
 	"core-building-block/driven/storage"
 	"time"
 
-	"github.com/rokmetro/auth-library/authorization"
-	"github.com/rokmetro/auth-library/tokenauth"
-	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokwire/core-auth-library-go/authorization"
+	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/logging-library-go/logs"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -34,9 +34,8 @@ type authType interface {
 
 	//userExist checks if the user exists for application and organizations
 	// Returns:
-	//	account (*model.Account): User account
 	//	accountAuthType (*model.AccountAuthType): User account auth type
-	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error)
+	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.AccountAuthType, error)
 
 	//checkCredentials checks if the account credentials are valid for the account auth type
 	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, map[string]interface{}, error)
@@ -48,18 +47,18 @@ type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 	//externalLogin logins in the external system and provides the authenticated user
-	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, interface{}, error)
+	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 	//userExist checks if the user exists
 	userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error)
-
-	//TODO refresh
+	//refresh refreshes tokens
+	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (map[string]interface{}, error)
 }
 
 //anonymousAuthType is the interface for authentication for auth types which are anonymous
 type anonymousAuthType interface {
 	//checkCredentials checks the credentials for the provided app and organization
 	//	Returns anonymous profile identifier
-	checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, anonymousID string, l *logs.Log) (string, interface{}, error)
+	checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, map[string]interface{}, error)
 }
 
 //APIs is the interface which defines the APIs provided by the auth package
@@ -73,31 +72,41 @@ type APIs interface {
 	//Login logs a user in a specific application using the specified credentials and authentication method.
 	//The authentication method must be one of the supported for the application.
 	//	Input:
-	//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		ipAddress (string): Client's IP address
+	//		deviceType (string): "mobile" or "web" or "desktop" etc
+	//		deviceOS (*string): Device OS
+	//		deviceID (string): Device ID
+	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
+	//		apiKey (string): API key to validate the specified app
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
 	//		params (string): JSON encoded params defined by specified auth type
-	//		anonymousID (string): An anonymous ID to be used in an anonymous token or converted to a new account
 	//		profile (Profile): Account profile
 	//		preferences (map): Account preferences
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
-	//		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
-	//		Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
-	//		Account (Account): Account object for authenticated user
-	//		Params (interface{}): authType-specific set of parameters passed back to client
-	Login(authType string, creds string, appTypeIdentifier string, orgID string, params string, anonymousID string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (string, string, string, *model.Account, interface{}, error)
+	//		Message (*string): message
+	//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
+	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
+	//			Params (interface{}): authType-specific set of parameters passed back to client
+	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
+		authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
+		profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
 	//		refreshToken (string): Refresh token
+	//		apiKey (string): API key to validate the specified app
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
-	//		Access token (string): Signed ROKWIRE access token to be used to authorize future requests
-	//		Refresh token (string): Refresh token that can be sent to refresh the access token once it expires
-	//		Params (interface{}): authType-specific set of parameters passed back to client
-	Refresh(refreshToken string, l *logs.Log) (string, string, interface{}, error)
+	//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
+	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+	//			Params (interface{}): authType-specific set of parameters passed back to client
+	Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.LoginSession, error)
 
 	//Verify checks the verification code in the credentials collection
 	Verify(id string, verification string, l *logs.Log) error
@@ -115,11 +124,12 @@ type APIs interface {
 	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
 	//		redirectURI (string): Registered redirect URI where client will receive response
+	//		apiKey (string): API key to validate the specified app
 	//		l (*loglib.Log): Log object pointer for request
 	//	Returns:
 	//		Login URL (string): SSO provider login URL to be launched in a browser
 	//		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
-	GetLoginURL(authType string, appTypeIdentifier string, orgID string, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
+	GetLoginURL(authType string, appTypeIdentifier string, orgID string, redirectURI string, apiKey string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
@@ -153,17 +163,20 @@ type APIs interface {
 	//DeregisterService deletes an existing service registration
 	DeregisterService(serviceID string) error
 
-	//GetAPIKey finds and returns the API key for the provided org and app
-	GetAPIKey(orgID string, appID string) (*model.APIKey, error)
+	//GetApplicationAPIKeys finds and returns the API keys for an application
+	GetApplicationAPIKeys(appID string) ([]model.APIKey, error)
 
-	//CreateAPIKey creates a new API key for the provided org and app
-	CreateAPIKey(apiKey *model.APIKey) error
+	//GetAPIKey finds and returns an API key
+	GetAPIKey(ID string) (*model.APIKey, error)
+
+	//CreateAPIKey creates a new API key
+	CreateAPIKey(apiKey model.APIKey) (*model.APIKey, error)
 
 	//UpdateAPIKey updates an existing API key
-	UpdateAPIKey(apiKey *model.APIKey) error
+	UpdateAPIKey(apiKey model.APIKey) error
 
-	//DeleteAPIKey deletes an existing API key
-	DeleteAPIKey(orgID string, appID string) error
+	//DeleteAPIKey deletes an API key
+	DeleteAPIKey(ID string) error
 }
 
 //Storage interface to communicate with the storage
@@ -172,6 +185,14 @@ type Storage interface {
 
 	//AuthTypes
 	LoadAuthTypes() ([]model.AuthType, error)
+	FindAuthType(codeOrID string) (*model.AuthType, error)
+
+	//LoginsSessions
+	InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error)
+	FindLoginSession(refreshToken string) (*model.LoginSession, error)
+	UpdateLoginSession(loginSession model.LoginSession) error
+	DeleteLoginSession(id string) error
+	DeleteExpiredSessions(now *time.Time) error
 
 	//Accounts
 	FindAccountByID(id string) (*model.Account, error)
@@ -195,14 +216,6 @@ type Storage interface {
 	UpdateCredential(creds *model.Credential) error
 	InsertCredential(creds *model.Credential, context mongo.SessionContext) error
 
-	//RefreshTokens
-	FindRefreshToken(token string) (*model.AuthRefresh, error)
-	LoadRefreshTokens(orgID string, appID string, credsID string) ([]model.AuthRefresh, error)
-	InsertRefreshToken(refresh *model.AuthRefresh) error
-	UpdateRefreshToken(token string, refresh *model.AuthRefresh) error
-	DeleteRefreshToken(token string) error
-	DeleteExpiredRefreshTokens(now *time.Time) error
-
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)
 	FindServiceReg(serviceID string) (*model.ServiceReg, error)
@@ -221,15 +234,26 @@ type Storage interface {
 
 	//APIKeys
 	LoadAPIKeys() ([]model.APIKey, error)
-	FindAPIKey(orgID string, appID string) (*model.APIKey, error)
-	FindAPIKeys(orgID string) ([]model.APIKey, error)
-	InsertAPIKey(apiKey *model.APIKey) error
-	UpdateAPIKey(apiKey *model.APIKey) error
-	DeleteAPIKey(orgID string, appID string) error
+	FindApplicationAPIKeys(appID string) ([]model.APIKey, error)
+	FindAPIKey(ID string) (*model.APIKey, error)
+	InsertAPIKey(apiKey model.APIKey) (*model.APIKey, error)
+	UpdateAPIKey(apiKey model.APIKey) error
+	DeleteAPIKey(ID string) error
 
 	//ApplicationTypes
 	FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error)
 
 	//ApplicationsOrganizations
 	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
+	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
+}
+
+//ProfileBuildingBlock is used by auth to communicate with the profile building block.
+type ProfileBuildingBlock interface {
+	GetProfileBBData(queryParams map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error)
+}
+
+//Emailer is used by core to send emails
+type Emailer interface {
+	Send(toEmail string, subject string, body string, attachmentFilename *string) error
 }

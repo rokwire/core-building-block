@@ -3,9 +3,9 @@ package auth
 import (
 	"core-building-block/core/model"
 
-	"github.com/rokmetro/logging-library/errors"
-	"github.com/rokmetro/logging-library/logs"
-	"github.com/rokmetro/logging-library/logutils"
+	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/logutils"
 )
 
 const (
@@ -23,8 +23,8 @@ func (a *firebaseAuthImpl) signUp(authType model.AuthType, appType model.Applica
 	return "", nil, nil, nil
 }
 
-func (a *firebaseAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.Account, *model.AccountAuthType, error) {
-	return nil, nil, nil
+func (a *firebaseAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.AccountAuthType, error) {
+	return nil, nil
 }
 
 func (a *firebaseAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {

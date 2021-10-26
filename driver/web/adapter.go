@@ -10,13 +10,13 @@ import (
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
-	"github.com/rokmetro/logging-library/logs"
-	"github.com/rokmetro/logging-library/logutils"
+	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/logutils"
 
 	"github.com/gorilla/mux"
 
-	"github.com/rokmetro/auth-library/authservice"
-	"github.com/rokmetro/auth-library/tokenauth"
+	"github.com/rokwire/core-auth-library-go/authservice"
+	"github.com/rokwire/core-auth-library-go/tokenauth"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -57,12 +57,12 @@ func (we Adapter) Start() {
 	subRouter := router.PathPrefix("/core").Subrouter()
 
 	// handle apis
-	subRouter.PathPrefix("/doc/ui").Handler(we.serveDocUI())
-	subRouter.HandleFunc("/doc", we.serveDoc)
+	subRouter.PathPrefix("/doc/ui").Handler(we.serveDocUI()) //Public
+	subRouter.HandleFunc("/doc", we.serveDoc)                //Public
 
 	///default ///
-	subRouter.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion, nil)).Methods("GET")
-	subRouter.HandleFunc("/.well-known/openid-configuration", we.wrapFunc(we.defaultApisHandler.getOpenIDConfiguration, nil)).Methods("GET")
+	subRouter.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion, nil)).Methods("GET")                                      //Public
+	subRouter.HandleFunc("/.well-known/openid-configuration", we.wrapFunc(we.defaultApisHandler.getOpenIDConfiguration, nil)).Methods("GET") //Public
 	///
 
 	///services ///
@@ -78,9 +78,10 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations, we.auth.servicesAuth)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.deleteAccount, we.auth.servicesUserAuth)).Methods("DELETE")
 	servicesSubRouter.HandleFunc("/account/preferences", we.wrapFunc(we.servicesApisHandler.updateAccountPreferences, we.auth.servicesUserAuth)).Methods("PUT")
+	servicesSubRouter.HandleFunc("/account/preferences", we.wrapFunc(we.servicesApisHandler.getPreferences, we.auth.servicesUserAuth)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.getProfile, we.auth.servicesUserAuth)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.updateProfile, we.auth.servicesUserAuth)).Methods("PUT")
-	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest, nil)).Methods("GET")
+	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest, nil)).Methods("GET") //Public
 	///
 
 	///admin ///
@@ -103,6 +104,7 @@ func (we Adapter) Start() {
 
 	adminSubrouter.HandleFunc("/application-permissions", we.wrapFunc(we.adminApisHandler.createApplicationPermission, we.auth.adminAuth)).Methods("POST")
 	adminSubrouter.HandleFunc("/application-roles", we.wrapFunc(we.adminApisHandler.createApplicationRole, we.auth.adminAuth)).Methods("POST")
+	adminSubrouter.HandleFunc("/application-api-keys", we.wrapFunc(we.adminApisHandler.getApplicationAPIKeys, we.auth.adminAuth)).Methods("GET")
 
 	adminSubrouter.HandleFunc("/account/permissions", we.wrapFunc(we.adminApisHandler.grantAccountPermissions, we.auth.adminAuth)).Methods("PUT")
 	adminSubrouter.HandleFunc("/account/roles", we.wrapFunc(we.adminApisHandler.grantAccountRoles, we.auth.adminAuth)).Methods("PUT")
@@ -120,19 +122,19 @@ func (we Adapter) Start() {
 
 	///enc ///
 	encSubrouter := subRouter.PathPrefix("/enc").Subrouter()
-	encSubrouter.HandleFunc("/test", we.wrapFunc(we.encApisHandler.getTest, nil)).Methods("GET")
+	encSubrouter.HandleFunc("/test", we.wrapFunc(we.encApisHandler.getTest, nil)).Methods("GET") //Public
 	///
 
 	///bbs ///
 	bbsSubrouter := subRouter.PathPrefix("/bbs").Subrouter()
-	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.getTest, nil)).Methods("GET")
-	bbsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.bbsApisHandler.getServiceRegistrations, nil)).Methods("GET")
+	bbsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.bbsApisHandler.getServiceRegistrations, nil)).Methods("GET") //Public
+	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.getTest, nil)).Methods("GET")                         //Public
 	///
 
 	///third-party services ///
 	tpsSubrouter := subRouter.PathPrefix("/tps").Subrouter()
-	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations, nil)).Methods("GET")
-	tpsSubrouter.HandleFunc("/auth-keys", we.wrapFunc(we.tpsApisHandler.getAuthKeys, nil)).Methods("GET")
+	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations, nil)).Methods("GET") //Public
+	tpsSubrouter.HandleFunc("/auth-keys", we.wrapFunc(we.tpsApisHandler.getAuthKeys, nil)).Methods("GET")                //Public
 	///
 
 	err := http.ListenAndServe(":"+we.port, router)

@@ -6,6 +6,9 @@ properties:
     type: string
   profile:
     $ref: "../../../../user/ProfileFields.yaml"
+  preferences:
+    type: object
+    nullable: true
   permissions:
     type: array
     items:
@@ -22,5 +25,4 @@ properties:
     type: array
     items:
       $ref: "../../../../user/AccountAuthTypeFields.yaml"
-
 

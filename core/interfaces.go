@@ -4,13 +4,14 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
-	"github.com/rokmetro/logging-library/logs"
+	"github.com/rokwire/logging-library-go/logs"
 )
 
 //Services exposes APIs for the driver adapters
 type Services interface {
 	SerDeleteAccount(id string) error
 	SerGetProfile(accountID string) (*model.Profile, error)
+	SerGetPreferences(accountID string) (map[string]interface{}, error)
 	SerUpdateProfile(accountID string, profile *model.Profile) error
 	SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error
 

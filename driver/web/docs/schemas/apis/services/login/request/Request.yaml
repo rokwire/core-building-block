@@ -2,6 +2,8 @@ required:
   - auth_type
   - app_type_identifier
   - org_id
+  - api_key
+  - device
 type: object
 properties:
   auth_type:
@@ -11,10 +13,12 @@ properties:
       - email
       - twilio_phone
       - illinois_oidc
-      - api_key
+      - anonymous
   app_type_identifier:
     type: string
   org_id:
+    type: string
+  api_key:
     type: string
   creds:
     anyOf:
@@ -28,10 +32,10 @@ properties:
       - $ref: "./ParamsEmail.yaml"
       - $ref: "./ParamsOIDC.yaml"
       - $ref: "./ParamsNone.yaml"
+  device:
+    $ref: "./Device.yaml"
   profile:
-    $ref:  "../../../../user/ProfileFields.yaml"  
+    $ref:  "../../../shared/requests/ProfileNullable.yaml"  
   preferences:
     type: object
-  anonymous_id:
-    type: string
-       
+    nullable: true
