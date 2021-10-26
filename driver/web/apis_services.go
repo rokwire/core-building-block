@@ -165,7 +165,7 @@ func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request, claims *
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqLoginUrlRequest
+	var requestData Def.ReqSharedLoginUrl
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "auth login url request", nil, err, http.StatusBadRequest, true)
@@ -176,7 +176,7 @@ func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request, claims *
 		return l.HttpResponseErrorAction(logutils.ActionGet, "login url", nil, err, http.StatusInternalServerError, true)
 	}
 
-	responseData := &Def.ResLoginUrlResponse{LoginUrl: loginURL, Params: &params}
+	responseData := &Def.ResSharedLoginUrl{LoginUrl: loginURL, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "auth login url response", nil, err, http.StatusInternalServerError, false)

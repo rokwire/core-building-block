@@ -234,7 +234,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_login-url_Request'
+              $ref: '#/components/schemas/_req_shared_LoginUrl'
         required: true
       responses:
         '200':
@@ -242,7 +242,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_login-url_Response'
+                $ref: '#/components/schemas/_res_shared_LoginUrl'
         '400':
           description: Bad request
         '401':
@@ -535,6 +535,32 @@ paths:
               schema:
                 type: string
                 example: Echooo
+  /admin/auth/login-url:
+    post:
+      tags:
+        - Admin
+      summary: Get SSO login url
+      description: |
+        Retrieve a pre-formatted SSO login URL
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_shared_LoginUrl'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_shared_LoginUrl'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /admin/global-config:
     get:
       tags:
@@ -1930,6 +1956,27 @@ components:
             - other
         os:
           type: string
+    _req_shared_LoginUrl:
+      required:
+        - auth_type
+        - app_type_identifier
+        - org_id
+        - api_key
+        - redirect_uri
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - illinois_oidc
+        app_type_identifier:
+          type: string
+        org_id:
+          type: string
+        api_key:
+          type: string
+        redirect_uri:
+          type: string
     _req_shared_Profile:
       type: object
       properties:
@@ -1997,6 +2044,16 @@ components:
         country:
           type: string
           nullable: true
+    _res_shared_LoginUrl:
+      required:
+        - login_url
+      type: object
+      properties:
+        login_url:
+          type: string
+        params:
+          type: object
+          description: Params to be submitted with 'login' request (if necessary)
     _res_shared_RokwireToken:
       type: object
       properties:
@@ -2189,37 +2246,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
-    _req_login-url_Request:
-      required:
-        - auth_type
-        - app_type_identifier
-        - org_id
-        - api_key
-        - redirect_uri
-      type: object
-      properties:
-        auth_type:
-          type: string
-          enum:
-            - illinois_oidc
-        app_type_identifier:
-          type: string
-        org_id:
-          type: string
-        api_key:
-          type: string
-        redirect_uri:
-          type: string
-    _res_login-url_Response:
-      required:
-        - login_url
-      type: object
-      properties:
-        login_url:
-          type: string
-        params:
-          type: object
-          description: Params to be submitted with 'login' request (if necessary)
     _req_refresh_Request:
       required:
         - api_key

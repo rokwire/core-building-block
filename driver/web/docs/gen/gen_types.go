@@ -66,11 +66,6 @@ const (
 	ReqCreateOrganizationRequestTypeSmall ReqCreateOrganizationRequestType = "small"
 )
 
-// Defines values for ReqLoginUrlRequestAuthType.
-const (
-	ReqLoginUrlRequestAuthTypeIllinoisOidc ReqLoginUrlRequestAuthType = "illinois_oidc"
-)
-
 // Defines values for ReqLoginDeviceType.
 const (
 	ReqLoginDeviceTypeDesktop ReqLoginDeviceType = "desktop"
@@ -93,6 +88,11 @@ const (
 	ReqLoginRequestAuthTypeTwilioPhone ReqLoginRequestAuthType = "twilio_phone"
 
 	ReqLoginRequestAuthTypeUsername ReqLoginRequestAuthType = "username"
+)
+
+// Defines values for ReqSharedLoginUrlAuthType.
+const (
+	ReqSharedLoginUrlAuthTypeIllinoisOidc ReqSharedLoginUrlAuthType = "illinois_oidc"
 )
 
 // Defines values for ReqUpdateOrganizationRequestType.
@@ -502,18 +502,6 @@ type ReqGetOrganizationRequest struct {
 	Id string `json:"id"`
 }
 
-// ReqLoginUrlRequest defines model for _req_login-url_Request.
-type ReqLoginUrlRequest struct {
-	ApiKey            string                     `json:"api_key"`
-	AppTypeIdentifier string                     `json:"app_type_identifier"`
-	AuthType          ReqLoginUrlRequestAuthType `json:"auth_type"`
-	OrgId             string                     `json:"org_id"`
-	RedirectUri       string                     `json:"redirect_uri"`
-}
-
-// ReqLoginUrlRequestAuthType defines model for ReqLoginUrlRequest.AuthType.
-type ReqLoginUrlRequestAuthType string
-
 // Auth login creds for auth_type="anonymous"
 type ReqLoginCredsAPIKey struct {
 	AnonymousId *string `json:"anonymous_id,omitempty"`
@@ -585,6 +573,18 @@ type ReqRefreshRequest struct {
 	ApiKey       string `json:"api_key"`
 	RefreshToken string `json:"refresh_token"`
 }
+
+// ReqSharedLoginUrl defines model for _req_shared_LoginUrl.
+type ReqSharedLoginUrl struct {
+	ApiKey            string                    `json:"api_key"`
+	AppTypeIdentifier string                    `json:"app_type_identifier"`
+	AuthType          ReqSharedLoginUrlAuthType `json:"auth_type"`
+	OrgId             string                    `json:"org_id"`
+	RedirectUri       string                    `json:"redirect_uri"`
+}
+
+// ReqSharedLoginUrlAuthType defines model for ReqSharedLoginUrl.AuthType.
+type ReqSharedLoginUrlAuthType string
 
 // ReqSharedProfile defines model for _req_shared_Profile.
 type ReqSharedProfile struct {
@@ -660,14 +660,6 @@ type ResGetOrganizationsResponse struct {
 // ResGetOrganizationsResponseType defines model for ResGetOrganizationsResponse.Type.
 type ResGetOrganizationsResponseType string
 
-// ResLoginUrlResponse defines model for _res_login-url_Response.
-type ResLoginUrlResponse struct {
-	LoginUrl string `json:"login_url"`
-
-	// Params to be submitted with 'login' request (if necessary)
-	Params *map[string]interface{} `json:"params,omitempty"`
-}
-
 // ResLoginAccount defines model for _res_login_Account.
 type ResLoginAccount struct {
 	AuthTypes   *[]AccountAuthTypeFields       `json:"auth_types,omitempty"`
@@ -691,6 +683,14 @@ type ResLoginResponse struct {
 type ResRefreshResponse struct {
 	Params *interface{}           `json:"params"`
 	Token  *ResSharedRokwireToken `json:"token,omitempty"`
+}
+
+// ResSharedLoginUrl defines model for _res_shared_LoginUrl.
+type ResSharedLoginUrl struct {
+	LoginUrl string `json:"login_url"`
+
+	// Params to be submitted with 'login' request (if necessary)
+	Params *map[string]interface{} `json:"params,omitempty"`
 }
 
 // ResSharedRokwireToken defines model for _res_shared_RokwireToken.
@@ -751,6 +751,9 @@ type PostAdminApplicationRolesJSONBody ReqApplicationRolesRequest
 // PostAdminApplicationsJSONBody defines parameters for PostAdminApplications.
 type PostAdminApplicationsJSONBody ReqCreateApplicationRequest
 
+// PostAdminAuthLoginUrlJSONBody defines parameters for PostAdminAuthLoginUrl.
+type PostAdminAuthLoginUrlJSONBody ReqSharedLoginUrl
+
 // PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
 type PostAdminGlobalConfigJSONBody GlobalConfig
 
@@ -803,7 +806,7 @@ type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 type PostServicesAuthLoginJSONBody ReqLoginRequest
 
 // PostServicesAuthLoginUrlJSONBody defines parameters for PostServicesAuthLoginUrl.
-type PostServicesAuthLoginUrlJSONBody ReqLoginUrlRequest
+type PostServicesAuthLoginUrlJSONBody ReqSharedLoginUrl
 
 // PostServicesAuthRefreshJSONBody defines parameters for PostServicesAuthRefresh.
 type PostServicesAuthRefreshJSONBody ReqRefreshRequest
@@ -852,6 +855,9 @@ type PostAdminApplicationRolesJSONRequestBody PostAdminApplicationRolesJSONBody
 
 // PostAdminApplicationsJSONRequestBody defines body for PostAdminApplications for application/json ContentType.
 type PostAdminApplicationsJSONRequestBody PostAdminApplicationsJSONBody
+
+// PostAdminAuthLoginUrlJSONRequestBody defines body for PostAdminAuthLoginUrl for application/json ContentType.
+type PostAdminAuthLoginUrlJSONRequestBody PostAdminAuthLoginUrlJSONBody
 
 // PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
 type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody
