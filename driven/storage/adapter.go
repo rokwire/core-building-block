@@ -742,6 +742,29 @@ func (sa *Adapter) InsertAccountRoles(accountID string, appID string, roles []mo
 	return nil
 }
 
+//InsertAccountAuthType inserts am account auth type
+func (sa *Adapter) InsertAccountAuthType(item model.AccountAuthType) error {
+	storageItem := accountAuthTypeToStorage(item)
+
+	//3. first find the account record
+	filter := bson.M{"_id": item.Account.ID}
+	update := bson.D{
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "auth_types", Value: storageItem},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountAuthType, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
 //UpdateAccountAuthType updates account auth type
 func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	// transaction

@@ -201,7 +201,7 @@ type Storage interface {
 	DeleteAccount(id string) error
 
 	//AccountAuthTypes
-	InsertAccountAuthType(item model.AccountAuthType) (*model.AccountAuthType, error)
+	InsertAccountAuthType(item model.AccountAuthType) error
 	UpdateAccountAuthType(item model.AccountAuthType) error
 
 	//Organizations

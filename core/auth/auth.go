@@ -462,8 +462,10 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 	credentialID *string, credentialValue map[string]interface{},
 	profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*model.AccountAuthType, *model.Credential, *model.Profile, map[string]interface{}, error) {
 
-	accountAuthType, credential := a.prepareAccountAuthType(authType, identifier, accountAuthTypeParams, credentialID, credentialValue)
-
+	accountAuthType, credential, err := a.prepareAccountAuthType(authType, identifier, accountAuthTypeParams, credentialID, credentialValue)
+	if err != nil {
+		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
+	}
 	///profile and preferences
 	//get profile BB data
 	/*gotProfile, gotPreferences, err := a.getProfileBBData(authType, identifier, l)
@@ -597,8 +599,6 @@ func (a *Auth) linkCreds(account model.Account, authType model.AuthType, appType
 	var message string
 	var accountAuthType *model.AccountAuthType
 	var credential *model.Credential
-	var profile *model.Profile
-	var preferences map[string]interface{}
 
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(authType)
@@ -633,7 +633,7 @@ func (a *Auth) linkCreds(account model.Account, authType model.AuthType, appType
 	}
 	accountAuthType.Account = account
 
-	accountAuthType, err = a.registerAccountAuthType(accountAuthType, credential, l)
+	err = a.registerAccountAuthType(*accountAuthType, credential, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccountAuthType, nil, err)
 	}
@@ -641,21 +641,21 @@ func (a *Auth) linkCreds(account model.Account, authType model.AuthType, appType
 	return message, accountAuthType, nil
 }
 
-func (a *Auth) registerAccountAuthType(accountAuthType *model.AccountAuthType, credential *model.Credential, l *logs.Log) (*model.AccountAuthType, error) {
+func (a *Auth) registerAccountAuthType(accountAuthType model.AccountAuthType, credential *model.Credential, l *logs.Log) error {
 	var err error
 	if credential != nil {
 		//TODO - in one transaction
 		if err = a.storage.InsertCredential(credential, nil); err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 		}
 	}
 
-	insertedAccountAuthType, err := a.storage.InsertAccountAuthType(accountAuthType)
+	err = a.storage.InsertAccountAuthType(accountAuthType)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
 	}
 
-	return &insertedAccountAuthType, nil
+	return nil
 }
 
 func (a *Auth) registerAuthType(name string, auth authType) error {

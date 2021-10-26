@@ -404,7 +404,11 @@ func (a *Auth) LinkCreds(accountID string, authenticationType string, appTypeIde
 		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
-	message = "Creds successfully linked"
+	message, _, err = a.linkCreds(*account, *authType, *appType, *appOrg, creds, params, l)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
+	}
+
 	return &message, nil, nil
 }
 
