@@ -16,9 +16,8 @@ type authType interface {
 	//signUp applies sign up operation
 	// Returns:
 	//	message (string): Success message if verification is required. If verification is not required, return ""
-	//	identifier (*string): The unique identifier
 	//	credentialValue (map): Credential value
-	signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, *string, map[string]interface{}, error)
+	signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//checks the verification code generated on email signup
 	// Returns:
