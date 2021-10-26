@@ -98,6 +98,8 @@ _res_shared_Mfa:
 ### login API
 _req_login_Request:
   $ref: "./apis/services/login/request/Request.yaml"
+_req_login_MfaRequest:
+  $ref: "./apis/services/login/request/MfaRequest.yaml"
 _req_login_CredsEmail:
   $ref: "./apis/services/login/request/CredsEmail.yaml"
 _req_login_CredsTwilioPhone:
@@ -116,6 +118,8 @@ _req_login_Device:
   $ref: "./apis/services/login/request/Device.yaml"
 _res_login_Response:
   $ref: "./apis/services/login/response/Response.yaml"
+_res_login_MfaResponse:
+  $ref: "./apis/services/login/response/MfaResponse.yaml"
 _res_login_Account:
   $ref: "./apis/services/login/response/Account.yaml"
 
@@ -133,9 +137,7 @@ _res_refresh_Response:
 
 ### mfa API
 _req_mfa_Request:
-  $ref: "./apis/services/mfa/request/Request.yaml"
-_res_mfa_Response:
-  $ref: "./apis/services/mfa/response/Response.yaml"
+  $ref: "./apis/services/mfa/Request.yaml"
 
 ### authorize-service API
 _req_authorize-service_Request:

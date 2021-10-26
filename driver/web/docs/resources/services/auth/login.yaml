@@ -162,7 +162,7 @@ post:
         application/json:
           schema:
             anyOf:
-              - $ref: "../../../schemas/apis/services/mfa/response/Response.yaml"
+              - $ref: "../../../schemas/apis/services/login/response/MfaResponse.yaml"
               - $ref: "../../../schemas/apis/services/login/response/Response.yaml"
     400:
       description: Bad request

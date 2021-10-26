@@ -903,8 +903,11 @@ func (sa *Adapter) FindMFAType(accountID string, mfaType string) (*model.MFAType
 }
 
 //FindMFATypes finds all MFA types for an account
-func (sa *Adapter) FindMFATypes(accountID string) ([]model.MFAType, error) {
+func (sa *Adapter) FindMFATypes(accountID string, onlyVerified bool) ([]model.MFAType, error) {
 	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
+	if onlyVerified {
+		filter = append(filter, primitive.E{Key: "verified", Value: true})
+	}
 
 	var mfaList []model.MFAType
 	err := sa.db.mfa.Find(filter, &mfaList, nil)
@@ -926,8 +929,8 @@ func (sa *Adapter) InsertMFAType(mfa *model.MFAType) error {
 }
 
 //UpdateMFAType updates one MFA type
-func (sa *Adapter) UpdateMFAType(mfa *model.MFAType) error {
-	filter := bson.D{primitive.E{Key: "account_id", Value: mfa.AccountID}, primitive.E{Key: "type", Value: mfa.Type}}
+func (sa *Adapter) UpdateMFAType(accountID string, mfa *model.MFAType) error {
+	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}, primitive.E{Key: "type", Value: mfa.Type}}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "verified", Value: mfa.Verified},

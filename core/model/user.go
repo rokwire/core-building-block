@@ -43,6 +43,9 @@ type Account struct {
 
 	AuthTypes []AccountAuthType
 
+	MFATypes         []MFAType
+	MFARecoveryCodes []string
+
 	Preferences map[string]interface{}
 	Profile     Profile //one account has one profile, one profile can be shared between many accounts
 
@@ -148,17 +151,14 @@ type Credential struct {
 
 //MFAType represents a MFA type used by an account
 type MFAType struct {
-	ID string `bson:"_id"`
+	Type      string
+	Verified  bool
+	QRCode    string
+	Recipient string                 //email or phone
+	Params    map[string]interface{} //mfa type params
 
-	Type      string                 `bson:"type"`
-	AccountID string                 `bson:"account_id"`
-	Verified  bool                   `bson:"verified"`
-	QRCode    string                 `bson:"-"`
-	Recipient string                 `bson:"recipient"` //email or phone
-	Params    map[string]interface{} `bson:"params"`    //mfa type params
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 //Profile represents profile entity

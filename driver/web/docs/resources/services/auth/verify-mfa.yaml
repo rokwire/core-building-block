@@ -3,23 +3,14 @@ post:
   - Services
   summary: MFA
   description: |
-    Verify multi-factor authentication credentials to complete login
-  parameters:
-    - name: state
-      in: query
-      description: Login state
-      required: false
-      style: form
-      explode: false
-      schema:
-        type: string
+    Verify multi-factor authentication credentials to complete MFA registration
   requestBody:
     description: |
       MFA credentials and parameters
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/services/login/request/MfaRequest.yaml"
+          $ref: "../../../schemas/apis/services/mfa/Request.yaml"
     required: true
   responses:
     200:
@@ -27,7 +18,9 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/apis/services/login/response/Response.yaml"
+            type: array
+            items: 
+              type: string
     400:
       description: Bad request
     401:

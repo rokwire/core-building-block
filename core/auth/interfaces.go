@@ -56,9 +56,9 @@ type anonymousAuthType interface {
 
 //mfaType is the interface for multi-factor authentication
 type mfaType interface {
-	verify(code string)
-	enroll()
-	remove()
+	verify(accountID string, code string) (*model.MFAType, error)
+	enroll(accountID string) (*model.MFAType, error)
+	sendCode(accountID string) (string, error)
 }
 
 //APIs is the interface which defines the APIs provided by the auth package
@@ -110,9 +110,6 @@ type APIs interface {
 	//			Params (interface{}): authType-specific set of parameters passed back to client
 	Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.LoginSession, error)
 
-	//Verify checks the verification code in the credentials collection
-	Verify(id string, verification string, l *logs.Log) error
-
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:
 	//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
@@ -126,14 +123,7 @@ type APIs interface {
 	//		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
 	GetLoginURL(authType string, appTypeIdentifier string, orgID string, redirectURI string, apiKey string, l *logs.Log) (string, map[string]interface{}, error)
 
-	//GetMFATypes gets all MFA types set up for an account
-	//	Input:
-	//		accountID (string): Account ID to find MFA types
-	//	Returns:
-	//		MFA Types ([]model.MFAType): MFA information for all enrolled types
-	GetMFATypes(accountID string) ([]model.MFAType, error)
-
-	//MFAVerify verifies a code sent by a user as a final login step for enrolled accounts.
+	//LoginMFA verifies a code sent by a user as a final login step for enrolled accounts.
 	//The MFA type must be one of the supported for the application.
 	//	Input:
 	//		accountID (string): ID of account user is trying to access
@@ -147,7 +137,14 @@ type APIs interface {
 	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
-	MFAVerify(accountID string, sessionID string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
+	LoginMFA(accountID string, sessionID string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
+
+	//GetMFATypes gets all MFA types set up for an account
+	//	Input:
+	//		accountID (string): Account ID to find MFA types
+	//	Returns:
+	//		MFA Types ([]model.MFAType): MFA information for all enrolled types
+	GetMFATypes(accountID string) ([]model.MFAType, error)
 
 	//AddMFAType adds a form of MFA to an account
 	//	Input:
@@ -162,6 +159,21 @@ type APIs interface {
 	//		accountID (string): Account ID to remove MFA
 	//		mfaType (string): Type of MFA to remove
 	RemoveMFAType(accountID string, mfaType string) error
+
+	//Verify checks the verification code in the credentials collection
+	Verify(id string, verification string, l *logs.Log) error
+
+	//VerifyMFA verifies a code sent by a user as a final MFA enrollment step.
+	//The MFA type must be one of the supported for the application.
+	//	Input:
+	//		accountID (string): ID of account for which user is trying to verify MFA
+	//		mfaType (string): Type of MFA code sent
+	//		mfaCode (string): Code that must be verified
+	//		l (*logs.Log): Log object pointer for request
+	//	Returns:
+	//		Verified (bool): Says if MFA enrollment was verified
+	//		Recovery codes ([]string): List of account recovery codes returned if enrolling in MFA for first time
+	VerifyMFA(accountID string, mfaType string, mfaCode string, l *logs.Log) (bool, []string, error)
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
@@ -250,9 +262,9 @@ type Storage interface {
 
 	//MFA
 	FindMFAType(accountID string, mfaType string) (*model.MFAType, error)
-	FindMFATypes(accountID string) ([]model.MFAType, error)
+	FindMFATypes(accountID string, onlyVerified bool) ([]model.MFAType, error)
 	InsertMFAType(mfa *model.MFAType) error
-	UpdateMFAType(mfa *model.MFAType) error
+	UpdateMFAType(accountID string, mfa *model.MFAType) error
 	DeleteMFAType(accountID string, mfaType string) error
 
 	//ServiceRegs

@@ -189,8 +189,45 @@ paths:
             application/json:
               schema:
                 anyOf:
-                  - $ref: '#/components/schemas/_res_mfa_Response'
+                  - $ref: '#/components/schemas/_res_login_MfaResponse'
                   - $ref: '#/components/schemas/_res_login_Response'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/mfa:
+    post:
+      tags:
+        - Services
+      summary: MFA
+      description: |
+        Verify multi-factor authentication credentials to complete login
+      parameters:
+        - name: state
+          in: query
+          description: Login state
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: |
+          MFA credentials and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_login_MfaRequest'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_login_Response'
         '400':
           description: Bad request
         '401':
@@ -289,22 +326,13 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/auth/mfa:
+  /services/auth/verify-mfa:
     post:
       tags:
         - Services
       summary: MFA
       description: |
-        Verify multi-factor authentication credentials to complete login or MFA registration
-      parameters:
-        - name: state
-          in: query
-          description: Login state
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: string
+        Verify multi-factor authentication credentials to complete MFA registration
       requestBody:
         description: |
           MFA credentials and parameters
@@ -319,7 +347,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_login_Response'
+                type: array
+                items:
+                  type: string
         '400':
           description: Bad request
         '401':
@@ -2191,6 +2221,29 @@ components:
         preferences:
           type: object
           nullable: true
+    _req_login_MfaRequest:
+      required:
+        - account_id
+        - session_id
+        - state
+        - mfa_type
+        - mfa_code
+      type: object
+      properties:
+        account_id:
+          type: string
+        session_id:
+          type: string
+        state:
+          type: string
+        mfa_type:
+          type: string
+          enum:
+            - email
+            - phone
+            - totp
+        mfa_code:
+          type: string
     _req_login_CredsEmail:
       required:
         - email
@@ -2277,11 +2330,54 @@ components:
           type: object
           nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_res_mfa_Response/properties/params/anyOf/0'
-            - $ref: '#/components/schemas/_res_mfa_Response/properties/params/anyOf/1'
-            - $ref: '#/components/schemas/_res_mfa_Response/properties/params/anyOf/2'
+            - type: object
+              description: Auth login response params for auth_type="oidc" (or variants)
+              properties:
+                oidc_token:
+                  type: object
+                  properties:
+                    id_token:
+                      type: string
+                    access_token:
+                      type: string
+                    refresh_token:
+                      type: string
+                    token_type:
+                      type: string
+                    redirect_uri:
+                      type: string
+            - type: object
+              description: Auth login response params for auth_type="anonymous"
+              properties:
+                anonymous_id:
+                  type: string
+            - type: object
+              description: Auth login response params for unlisted auth_types (None)
+              nullable: true
         message:
           type: string
+    _res_login_MfaResponse:
+      required:
+        - enrolled
+        - session_id
+        - state
+      type: object
+      properties:
+        enrolled:
+          type: array
+          items:
+            $ref: '#/components/schemas/_res_shared_Mfa'
+        session_id:
+          type: string
+        state:
+          type: string
+        params:
+          type: object
+          nullable: true
+          anyOf:
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/0'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/1'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/2'
     _res_login_Account:
       required:
         - id
@@ -2360,9 +2456,9 @@ components:
           type: object
           nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_res_mfa_Response/properties/params/anyOf/0'
-            - $ref: '#/components/schemas/_res_mfa_Response/properties/params/anyOf/1'
-            - $ref: '#/components/schemas/_res_mfa_Response/properties/params/anyOf/2'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/0'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/1'
+            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/2'
     _req_mfa_Request:
       required:
         - account_id
@@ -2372,8 +2468,6 @@ components:
       properties:
         account_id:
           type: string
-        session_id:
-          type: string
         mfa_type:
           type: string
           enum:
@@ -2382,49 +2476,6 @@ components:
             - totp
         mfa_code:
           type: string
-    _res_mfa_Response:
-      required:
-        - enrolled
-        - session_id
-        - state
-      type: object
-      properties:
-        enrolled:
-          type: array
-          items:
-            $ref: '#/components/schemas/_res_shared_Mfa'
-        session_id:
-          type: string
-        state:
-          type: string
-        params:
-          type: object
-          nullable: true
-          anyOf:
-            - type: object
-              description: Auth login response params for auth_type="oidc" (or variants)
-              properties:
-                oidc_token:
-                  type: object
-                  properties:
-                    id_token:
-                      type: string
-                    access_token:
-                      type: string
-                    refresh_token:
-                      type: string
-                    token_type:
-                      type: string
-                    redirect_uri:
-                      type: string
-            - type: object
-              description: Auth login response params for auth_type="anonymous"
-              properties:
-                anonymous_id:
-                  type: string
-            - type: object
-              description: Auth login response params for unlisted auth_types (None)
-              nullable: true
     _req_authorize-service_Request:
       required:
         - service_id

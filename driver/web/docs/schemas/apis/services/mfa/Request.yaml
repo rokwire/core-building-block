@@ -1,0 +1,16 @@
+required:
+  - account_id
+  - mfa_type
+  - mfa_code
+type: object
+properties:
+  account_id:
+    type: string
+  mfa_type:
+    type: string
+    enum:
+      - email
+      - phone
+      - totp
+  mfa_code:
+    type: string

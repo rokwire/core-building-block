@@ -67,10 +67,12 @@ func (we Adapter) Start() {
 
 	///services ///
 	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
-	servicesSubRouter.HandleFunc("/auth/login", we.wrapFunc(we.servicesApisHandler.authLogin, nil)).Methods("POST")        //Requires API key in request
+	servicesSubRouter.HandleFunc("/auth/login", we.wrapFunc(we.servicesApisHandler.authLogin, nil)).Methods("POST") //Requires API key in request
+	servicesSubRouter.HandleFunc("/auth/mfa", we.wrapFunc(we.servicesApisHandler.authLoginMFA, nil)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL, nil)).Methods("POST") //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh, nil)).Methods("POST")    //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/verify", we.wrapFunc(we.servicesApisHandler.verifyCode, nil)).Methods("GET")       //Public (validates code)
+	servicesSubRouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.servicesApisHandler.verifyMFA, nil)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService, we.auth.servicesUserAuth)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations, we.auth.servicesAuth)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.deleteAccount, we.auth.servicesUserAuth)).Methods("DELETE")

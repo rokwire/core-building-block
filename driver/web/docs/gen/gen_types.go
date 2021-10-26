@@ -82,6 +82,15 @@ const (
 	ReqLoginDeviceTypeWeb ReqLoginDeviceType = "web"
 )
 
+// Defines values for ReqLoginMfaRequestMfaType.
+const (
+	ReqLoginMfaRequestMfaTypeEmail ReqLoginMfaRequestMfaType = "email"
+
+	ReqLoginMfaRequestMfaTypePhone ReqLoginMfaRequestMfaType = "phone"
+
+	ReqLoginMfaRequestMfaTypeTotp ReqLoginMfaRequestMfaType = "totp"
+)
+
 // Defines values for ReqLoginRequestAuthType.
 const (
 	ReqLoginRequestAuthTypeAnonymous ReqLoginRequestAuthType = "anonymous"
@@ -556,6 +565,18 @@ type ReqLoginDevice struct {
 // ReqLoginDeviceType defines model for ReqLoginDevice.Type.
 type ReqLoginDeviceType string
 
+// ReqLoginMfaRequest defines model for _req_login_MfaRequest.
+type ReqLoginMfaRequest struct {
+	AccountId string                    `json:"account_id"`
+	MfaCode   string                    `json:"mfa_code"`
+	MfaType   ReqLoginMfaRequestMfaType `json:"mfa_type"`
+	SessionId string                    `json:"session_id"`
+	State     string                    `json:"state"`
+}
+
+// ReqLoginMfaRequestMfaType defines model for ReqLoginMfaRequest.MfaType.
+type ReqLoginMfaRequestMfaType string
+
 // Auth login params for auth_type="email"
 type ReqLoginParamsEmail struct {
 
@@ -596,7 +617,6 @@ type ReqMfaRequest struct {
 	AccountId string               `json:"account_id"`
 	MfaCode   string               `json:"mfa_code"`
 	MfaType   ReqMfaRequestMfaType `json:"mfa_type"`
-	SessionId *string              `json:"session_id,omitempty"`
 }
 
 // ReqMfaRequestMfaType defines model for ReqMfaRequest.MfaType.
@@ -701,20 +721,20 @@ type ResLoginAccount struct {
 	Roles       *[]ApplicationRoleFields       `json:"roles,omitempty"`
 }
 
+// ResLoginMfaResponse defines model for _res_login_MfaResponse.
+type ResLoginMfaResponse struct {
+	Enrolled  []ResSharedMfa `json:"enrolled"`
+	Params    *interface{}   `json:"params"`
+	SessionId string         `json:"session_id"`
+	State     string         `json:"state"`
+}
+
 // ResLoginResponse defines model for _res_login_Response.
 type ResLoginResponse struct {
 	Account *ResLoginAccount       `json:"account,omitempty"`
 	Message *string                `json:"message,omitempty"`
 	Params  *interface{}           `json:"params"`
 	Token   *ResSharedRokwireToken `json:"token,omitempty"`
-}
-
-// ResMfaResponse defines model for _res_mfa_Response.
-type ResMfaResponse struct {
-	Enrolled  []ResSharedMfa `json:"enrolled"`
-	Params    *interface{}   `json:"params"`
-	SessionId string         `json:"session_id"`
-	State     string         `json:"state"`
 }
 
 // ResRefreshResponse defines model for _res_refresh_Response.
@@ -859,7 +879,7 @@ type PostServicesAuthLoginJSONBody ReqLoginRequest
 type PostServicesAuthLoginUrlJSONBody ReqLoginUrlRequest
 
 // PostServicesAuthMfaJSONBody defines parameters for PostServicesAuthMfa.
-type PostServicesAuthMfaJSONBody ReqMfaRequest
+type PostServicesAuthMfaJSONBody ReqLoginMfaRequest
 
 // PostServicesAuthMfaParams defines parameters for PostServicesAuthMfa.
 type PostServicesAuthMfaParams struct {
@@ -887,6 +907,9 @@ type GetServicesAuthVerifyParams struct {
 	// Verification code
 	Code string `json:"code"`
 }
+
+// PostServicesAuthVerifyMfaJSONBody defines parameters for PostServicesAuthVerifyMfa.
+type PostServicesAuthVerifyMfaJSONBody ReqMfaRequest
 
 // GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
 type GetTpsServiceRegsParams struct {
@@ -954,6 +977,9 @@ type PostServicesAuthMfaJSONRequestBody PostServicesAuthMfaJSONBody
 
 // PostServicesAuthRefreshJSONRequestBody defines body for PostServicesAuthRefresh for application/json ContentType.
 type PostServicesAuthRefreshJSONRequestBody PostServicesAuthRefreshJSONBody
+
+// PostServicesAuthVerifyMfaJSONRequestBody defines body for PostServicesAuthVerifyMfa for application/json ContentType.
+type PostServicesAuthVerifyMfaJSONRequestBody PostServicesAuthVerifyMfaJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found

@@ -16,6 +16,9 @@ type account struct {
 
 	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
 
+	MFATypes         []mfaType `bson:"mfa_types,omitempty"`
+	MFARecoveryCodes []string  `bson:"mfa_recovery_codes,omitempty"`
+
 	Preferences map[string]interface{} `bson:"preferences"`
 	Profile     profile                `bson:"profile"`
 
@@ -96,6 +99,16 @@ type credential struct {
 	AccountsAuthTypes []string               `bson:"account_auth_types"`
 	Verified          bool                   `bson:"verified"`
 	Value             map[string]interface{} `bson:"value"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type mfaType struct {
+	Type      string                 `bson:"type"`
+	Verified  bool                   `bson:"verified"`
+	Recipient string                 `bson:"recipient"` //email or phone
+	Params    map[string]interface{} `bson:"params"`    //mfa type params
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

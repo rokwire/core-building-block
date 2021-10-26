@@ -1,10 +1,8 @@
 package auth
 
 import (
-	"bytes"
 	"core-building-block/core/model"
 	"core-building-block/utils"
-	"image/png"
 	"strings"
 	"time"
 
@@ -120,7 +118,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	}
 
 	if !authType.IgnoreMFA && accountAuthType != nil {
-		mfaTypes, err := a.storage.FindMFATypes(sub)
+		mfaTypes, err := a.storage.FindMFATypes(sub, true)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, nil, err)
 		}
@@ -298,21 +296,7 @@ func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, 
 	return loginURL, params, nil
 }
 
-//GetMFATypes gets all MFA types set up for an account
-//	Input:
-//		accountID (string): Account ID to find MFA types
-//	Returns:
-//		MFA Types ([]model.MFAType): MFA information for all enrolled types
-func (a *Auth) GetMFATypes(accountID string) ([]model.MFAType, error) {
-	mfa, err := a.storage.FindMFATypes(accountID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, nil, err)
-	}
-
-	return mfa, nil
-}
-
-//MFAVerify verifies a code sent by a user as a final login step for enrolled accounts.
+//LoginMFA verifies a code sent by a user as a final login step for enrolled accounts.
 //The MFA type must be one of the supported for the application.
 //	Input:
 //		accountID (string): ID of account user is trying to access
@@ -327,7 +311,7 @@ func (a *Auth) GetMFATypes(accountID string) ([]model.MFAType, error) {
 //			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
-func (a *Auth) MFAVerify(accountID string, sessionID string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error) {
+func (a *Auth) LoginMFA(accountID string, sessionID string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error) {
 	loginSession, err := a.storage.FindAndUpdateLoginSession(sessionID)
 	if err != nil {
 		a.deleteLoginSession(sessionID, l)
@@ -340,8 +324,13 @@ func (a *Auth) MFAVerify(accountID string, sessionID string, mfaType string, mfa
 		a.deleteLoginSession(sessionID, l)
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, nil, err)
 	}
-	if mfa.ID == "" {
+	if mfa == nil {
 		message = "account not enrolled"
+		a.deleteLoginSession(sessionID, l)
+		return &message, nil, errors.ErrorData(logutils.StatusMissing, model.TypeMFAType, nil)
+	}
+	if !mfa.Verified {
+		message = "mfa type not verified"
 		a.deleteLoginSession(sessionID, l)
 		return &message, nil, errors.ErrorData(logutils.StatusMissing, model.TypeMFAType, nil)
 	}
@@ -392,15 +381,21 @@ func (a *Auth) MFAVerify(accountID string, sessionID string, mfaType string, mfa
 		}
 	}
 
-	if !mfa.Verified {
-		mfa.Verified = true
-		err = a.storage.UpdateMFAType(mfa)
-		if err != nil {
-			l.WarnAction(logutils.ActionUpdate, model.TypeMFAType, err)
-		}
+	return nil, loginSession, nil
+}
+
+//GetMFATypes gets all MFA types set up for an account
+//	Input:
+//		accountID (string): Account ID to find MFA types
+//	Returns:
+//		MFA Types ([]model.MFAType): MFA information for all enrolled types
+func (a *Auth) GetMFATypes(accountID string) ([]model.MFAType, error) {
+	mfa, err := a.storage.FindMFATypes(accountID, false)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, nil, err)
 	}
 
-	return nil, loginSession, nil
+	return mfa, nil
 }
 
 //AddMFAType adds a form of MFA to an account
@@ -410,47 +405,22 @@ func (a *Auth) MFAVerify(accountID string, sessionID string, mfaType string, mfa
 //	Returns:
 //		MFA Type (*model.MFAType): MFA information for the specified type
 func (a *Auth) AddMFAType(accountID string, mfaType string) (*model.MFAType, error) {
-	//TODO: eventually implement phone, email, etc.
-	switch mfaType {
-	case "totp":
-		totpOpts := totp.GenerateOpts{
-			Issuer:      a.host,
-			AccountName: accountID, //TODO: should use some more readable string instead (email, phone, username, etc.)
-		}
-		key, err := totp.Generate(totpOpts)
-		if err != nil {
-			return nil, errors.WrapErrorAction("generate", "TOTP key", nil, err)
-		}
-
-		var buf bytes.Buffer
-		image, err := key.Image(256, 256)
-		if err != nil {
-			return nil, errors.WrapErrorAction("generate", "TOTP image", nil, err)
-		}
-		err = png.Encode(&buf, image)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionEncode, "TOTP image", nil, err)
-		}
-		qrCode := buf.String()
-
-		now := time.Now().UTC()
-		mfaID, _ := uuid.NewUUID()
-		params := map[string]interface{}{
-			"secret": key.Secret(),
-		}
-
-		//Recipient is empty for totp
-		newMfa := model.MFAType{ID: mfaID.String(), Type: mfaType, AccountID: accountID, Verified: false,
-			QRCode: qrCode, Params: params, DateCreated: now}
-		err = a.storage.InsertMFAType(&newMfa)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeMFAType, nil, err)
-		}
-
-		return &newMfa, nil
-	default:
-		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeMFAType, nil)
+	mfaImpl, err := a.getMfaTypeImpl(mfaType)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeMfaType, nil, err)
 	}
+
+	newMfa, err := mfaImpl.enroll(accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction("enrolling", typeMfaType, nil, err)
+	}
+
+	err = a.storage.InsertMFAType(newMfa)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, typeMfaType, nil, err)
+	}
+
+	return newMfa, nil
 }
 
 //RemoveMFAType removes a form of MFA from an account
@@ -503,6 +473,46 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 	}
 
 	return nil
+}
+
+//VerifyMFA verifies a code sent by a user as a final MFA enrollment step.
+//The MFA type must be one of the supported for the application.
+//	Input:
+//		accountID (string): ID of account for which user is trying to verify MFA
+//		mfaType (string): Type of MFA code sent
+//		mfaCode (string): Code that must be verified
+//		l (*logs.Log): Log object pointer for request
+//	Returns:
+//		Verified (bool): Says if MFA enrollment was verified
+func (a *Auth) VerifyMFA(accountID string, mfaType string, mfaCode string, l *logs.Log) (bool, []string, error) {
+	mfaImpl, err := a.getMfaTypeImpl(mfaType)
+	if err != nil {
+		return false, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeMfaType, nil, err)
+	}
+
+	mfa, err := mfaImpl.verify(accountID, mfaCode)
+	if err != nil {
+		return false, nil, errors.WrapErrorAction(logutils.ActionValidate, typeMfaType, nil, err)
+	}
+
+	if mfa.Verified {
+		count, err := a.storage.UpdateMFAType(accountID, mfa)
+		if err != nil {
+			return false, nil, errors.WrapErrorAction("updating and counting", model.TypeMFAType, nil, err)
+		}
+
+		var recoveryCodes []string
+		if count == 1 {
+			recoveryCodes, err = a.generateRecoveryCodesIfNeeded(accountID)
+			if err != nil {
+				return false, nil, errors.WrapErrorAction("generating", "mfa recovery codes", nil, err)
+			}
+		}
+
+		return true, recoveryCodes, nil
+	}
+
+	return false, nil, nil
 }
 
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
