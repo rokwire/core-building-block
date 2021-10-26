@@ -300,7 +300,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_res_account-exists_Response'
+              $ref: '#/components/schemas/_req_account-exists_Request'
         required: true
       responses:
         '200':

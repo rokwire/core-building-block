@@ -10,7 +10,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/services/account-exists/response/Response.yaml"
+          $ref: "../../../schemas/apis/services/account-exists/request/Request.yaml"
     required: true
   responses:
     200:

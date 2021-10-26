@@ -53,6 +53,19 @@ const (
 	OrganizationFieldsTypeSmall OrganizationFieldsType = "small"
 )
 
+// Defines values for ReqAccountExistsRequestAuthType.
+const (
+	ReqAccountExistsRequestAuthTypeAnonymous ReqAccountExistsRequestAuthType = "anonymous"
+
+	ReqAccountExistsRequestAuthTypeEmail ReqAccountExistsRequestAuthType = "email"
+
+	ReqAccountExistsRequestAuthTypeIllinoisOidc ReqAccountExistsRequestAuthType = "illinois_oidc"
+
+	ReqAccountExistsRequestAuthTypeTwilioPhone ReqAccountExistsRequestAuthType = "twilio_phone"
+
+	ReqAccountExistsRequestAuthTypeUsername ReqAccountExistsRequestAuthType = "username"
+)
+
 // Defines values for ReqCreateOrganizationRequestType.
 const (
 	ReqCreateOrganizationRequestTypeHuge ReqCreateOrganizationRequestType = "huge"
@@ -435,6 +448,18 @@ type ServiceScope struct {
 	Scope       string  `json:"scope"`
 }
 
+// ReqAccountExistsRequest defines model for _req_account-exists_Request.
+type ReqAccountExistsRequest struct {
+	ApiKey            string                          `json:"api_key"`
+	AppTypeIdentifier string                          `json:"app_type_identifier"`
+	AuthType          ReqAccountExistsRequestAuthType `json:"auth_type"`
+	OrgId             string                          `json:"org_id"`
+	UserIdentifier    string                          `json:"user_identifier"`
+}
+
+// ReqAccountExistsRequestAuthType defines model for ReqAccountExistsRequest.AuthType.
+type ReqAccountExistsRequestAuthType string
+
 // ReqAccountPermissionsRequest defines model for _req_account-permissions_Request.
 type ReqAccountPermissionsRequest struct {
 	AccountId   string   `json:"account_id"`
@@ -803,7 +828,7 @@ type PutServicesAccountPreferencesJSONBody map[string]interface{}
 type PutServicesAccountProfileJSONBody ReqSharedProfile
 
 // PostServicesAuthAccountExistsJSONBody defines parameters for PostServicesAuthAccountExists.
-type PostServicesAuthAccountExistsJSONBody ResAccountExistsResponse
+type PostServicesAuthAccountExistsJSONBody ReqAccountExistsRequest
 
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
