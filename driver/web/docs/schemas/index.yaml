@@ -86,40 +86,39 @@ DeviceFields:
 ##### APIs requests and responses - they are at bottom
 
 #### shared requests and responses
+_req_shared_Login:
+  $ref: "../schemas/apis/shared/requests/login/Request.yaml"
+_req_shared_Login_CredsEmail:
+  $ref: "../schemas/apis/shared/requests/login/CredsEmail.yaml"
+_req_shared_Login_CredsTwilioPhone:
+  $ref: "../schemas/apis/shared/requests/login/CredsTwilioPhone.yaml"
+_req_shared_Login_CredsOIDC:
+  $ref: "../schemas/apis/shared/requests/login/CredsOIDC.yaml"
+_req_shared_Login_CredsAPIKey:
+  $ref: "../schemas/apis/shared/requests/login/CredsAPIKey.yaml"
+_req_shared_Login_ParamsEmail:
+  $ref: "../schemas/apis/shared/requests/login/ParamsEmail.yaml"
+_req_shared_Login_ParamsOIDC:
+  $ref: "../schemas/apis/shared/requests/login/ParamsOIDC.yaml"
+_req_shared_Login_ParamsNone:
+  $ref: "../schemas/apis/shared/requests/login/ParamsNone.yaml"
+_req_shared_Login_Device:
+  $ref: "../schemas/apis/shared/requests/login/Device.yaml"
 _req_shared_LoginUrl:
   $ref: "../schemas/apis/shared/requests/LoginUrl.yaml"
 _req_shared_Profile:
   $ref: "../schemas/apis/shared/requests/Profile.yaml"
 _req_shared_ProfileNullable:
   $ref: "../schemas/apis/shared/requests/ProfileNullable.yaml"
+
 _res_shared_LoginUrl:
   $ref: "../schemas/apis/shared/responses/LoginUrl.yaml"
+_res_shared_Login:
+  $ref: "../schemas/apis/shared/responses/login/Response.yaml"
+_res_shared_Login_Account:
+  $ref: "../schemas/apis/shared/responses/login/Account.yaml"
 _res_shared_RokwireToken:
   $ref: "../schemas/apis/shared/responses/RokwireToken.yaml"
-
-### login API
-_req_login_Request:
-  $ref: "./apis/services/login/request/Request.yaml"
-_req_login_CredsEmail:
-  $ref: "./apis/services/login/request/CredsEmail.yaml"
-_req_login_CredsTwilioPhone:
-  $ref: "./apis/services/login/request/CredsTwilioPhone.yaml"
-_req_login_CredsOIDC:
-  $ref: "./apis/services/login/request/CredsOIDC.yaml"
-_req_login_CredsAPIKey:
-  $ref: "./apis/services/login/request/CredsAPIKey.yaml"
-_req_login_ParamsEmail:
-  $ref: "./apis/services/login/request/ParamsEmail.yaml"
-_req_login_ParamsOIDC:
-  $ref: "./apis/services/login/request/ParamsOIDC.yaml"
-_req_login_ParamsNone:
-  $ref: "./apis/services/login/request/ParamsNone.yaml"
-_req_login_Device:
-  $ref: "./apis/services/login/request/Device.yaml"
-_res_login_Response:
-  $ref: "./apis/services/login/response/Response.yaml"
-_res_login_Account:
-  $ref: "./apis/services/login/response/Account.yaml"
 
 ### refresh API
 _req_refresh_Request:

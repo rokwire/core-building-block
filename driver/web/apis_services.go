@@ -29,7 +29,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 	//TODO - most probably it will be needed to be taken more preciselly
 	ip := r.RemoteAddr
 
-	var requestData Def.ReqLoginRequest
+	var requestData Def.ReqSharedLogin
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login request"), nil, err, http.StatusBadRequest, true)
@@ -69,7 +69,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 
 	//message
 	if message != nil {
-		responseData := &Def.ResLoginResponse{Message: message}
+		responseData := &Def.ResSharedLogin{Message: message}
 		respData, err := json.Marshal(responseData)
 		if err != nil {
 			return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
@@ -85,7 +85,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
 	//account
-	var accountData *Def.ResLoginAccount
+	var accountData *Def.ResSharedLoginAccount
 	if !loginSession.Anonymous {
 		account := loginSession.AccountAuthType.Account
 
@@ -101,7 +101,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		groups := applicationGroupsToDef(account.Groups)
 		//account auth types
 		authTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
+		accountData = &Def.ResSharedLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 	}
 
 	//params
@@ -110,7 +110,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		paramsRes = loginSession.Params
 	}
 
-	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: accountData, Params: &paramsRes}
+	responseData := &Def.ResSharedLogin{Token: &rokwireToken, Account: accountData, Params: &paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
