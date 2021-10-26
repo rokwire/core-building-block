@@ -37,6 +37,7 @@ func (h AdminApisHandler) getTestModel(l *logs.Log, r *http.Request, claims *tok
 
 	return l.HttpResponseSuccessMessage(res)
 }
+
 func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	//TODO
 	return l.HttpResponseSuccess()
