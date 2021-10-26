@@ -160,7 +160,7 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization Authorization) htt
 
 		logObj.RequestReceived()
 
-		//var err error
+		var err error
 
 		//1. validate request
 		requestValidationInput, err := we.validateRequest(req)
