@@ -181,13 +181,13 @@ func (m *database) start() error {
 	m.applicationsRoles = applicationsRoles
 	m.applicationsPermissions = applicationsPermissions
 
-	go m.apiKeys.Watch(nil)
-	go m.authTypes.Watch(nil)
-	go m.identityProviders.Watch(nil)
-	go m.serviceRegs.Watch(nil)
-	go m.organizations.Watch(nil)
-	go m.applications.Watch(nil)
-	go m.applicationsOrganizations.Watch(nil)
+	go m.apiKeys.Watch(nil, m.logger)
+	go m.authTypes.Watch(nil, m.logger)
+	go m.identityProviders.Watch(nil, m.logger)
+	go m.serviceRegs.Watch(nil, m.logger)
+	go m.organizations.Watch(nil, m.logger)
+	go m.applications.Watch(nil, m.logger)
+	go m.applicationsOrganizations.Watch(nil, m.logger)
 
 	m.listeners = []Listener{}
 
@@ -267,27 +267,11 @@ func (m *database) applyLoginsSessionsChecks(refreshTokens *collectionWrapper) e
 		return err
 	}
 
-	//TODO - indexes
-	/*
-		err := refreshTokens.AddIndex(bson.D{primitive.E{Key: "current_token", Value: 1}}, false)
-		if err != nil {
-			return err
-		}
+	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "expires", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
 
-		err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "previous_token", Value: 1}}, false)
-		if err != nil {
-			return err
-		}
-
-		err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "exp", Value: 1}}, false)
-		if err != nil {
-			return err
-		}
-
-		err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "creds_id", Value: 1}}, false)
-		if err != nil {
-			return err
-		} */
 	m.logger.Info("logins sessions check passed")
 	return nil
 }
@@ -295,8 +279,8 @@ func (m *database) applyLoginsSessionsChecks(refreshTokens *collectionWrapper) e
 func (m *database) applyAPIKeysChecks(apiKeys *collectionWrapper) error {
 	m.logger.Info("apply api keys checks.....")
 
-	// Add org_id, app_id compound index - unique
-	err := apiKeys.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}}, true)
+	// Add app_id index
+	err := apiKeys.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}

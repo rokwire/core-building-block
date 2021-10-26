@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.6.0
+  version: 1.7.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -46,6 +46,7 @@ paths:
                     "auth_type": "email",
                     "app_type_identifier": "edu.illinois.rokwire.safercommunity",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
                       "email": "test@test.com", 
                       "password": "test12345"
@@ -63,6 +64,7 @@ paths:
                     "auth_type": "email",
                     "app_type_identifier": "edu.illinois.rokwire.safercommunity",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
                       "email": "test@test.com", 
                       "password": "test12345"
@@ -100,6 +102,7 @@ paths:
                     "auth_type": "twilio_phone",
                     "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
                       "phone": "+12223334444", 
                       "code": "123456"
@@ -133,6 +136,7 @@ paths:
                     "auth_type": "illinois_oidc",
                     "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
                     "params": {
                       "redirect_uri": "https://redirect.example.com",
@@ -160,15 +164,16 @@ paths:
                       "os": "Android"
                     }
                   }
-              api_key:
-                summary: API key login (Anonymous)
+              anonymous:
+                summary: Anonymous login
                 value: |
                   {
-                    "auth_type": "api_key",
+                    "auth_type": "anonymous",
                     "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
-                      "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738"
+                      "anonymous_id": "dbb5ea5d-6c6c-44b8-9952-7ebf0e844beb"
                     },
                     "device": {
                       "type": "mobile",
@@ -201,9 +206,9 @@ paths:
         description: |
           Refresh token
         content:
-          text/plain:
+          application/json:
             schema:
-              type: string
+              $ref: '#/components/schemas/_req_refresh_Request'
         required: true
       responses:
         '200':
@@ -354,6 +359,10 @@ paths:
       summary: Link credentials
       description: |
         Link credentials to an existing account
+
+        **Auth:** Requires "authenticated" auth token
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -1062,6 +1071,41 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /admin/application-api-keys:
+    get:
+      tags:
+        - Admin
+      summary: Get application API keys
+      description: |
+        Returns all API key records for a given app ID
+
+        **Auth:** Requires auth token with `get_api-keys` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: app_id
+          in: query
+          description: The app ID of the API keys to return
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/APIKey'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /admin/account/permissions:
     put:
       tags:
@@ -1134,21 +1178,13 @@ paths:
       description: |
         Returns API key record
 
-        **Auth:** Requires auth token with `auth_admin` permission
+        **Auth:** Requires auth token with `get_api-keys` permission
       security:
         - bearerAuth: []
       parameters:
-        - name: org_id
+        - name: id
           in: query
-          description: The org ID of the API key to return
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
-        - name: app_id
-          in: query
-          description: The app ID of the API key to return
+          description: The ID of the API key to return
           required: true
           style: form
           explode: false
@@ -1174,9 +1210,7 @@ paths:
       description: |
         Creates a new API key record
 
-        The "org_id" and "app_id" of the record must not match an existing registration  
-
-        **Auth:** Requires auth token with `auth_admin` permission
+        **Auth:** Requires auth token with `update_api-keys` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -1185,6 +1219,11 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/APIKey'
+            example: |
+              {
+                "app_id": "string",
+                "key": "string"
+              }
         required: true
       responses:
         '200':
@@ -1207,9 +1246,9 @@ paths:
       description: |
         Update an existing API key record
 
-        The "org_id" and "app_id" of the record must match an existing registration  
+        Must include the "id" field to identify which key is to be udpated
 
-        **Auth:** Requires auth token with `auth_admin` permission
+        **Auth:** Requires auth token with `update_api-keys` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -1240,21 +1279,13 @@ paths:
       description: |
         Deletes an existing API key record
 
-        **Auth:** Requires auth token with `auth_admin` permission
+        **Auth:** Requires auth token with `update_api-keys` permission
       security:
         - bearerAuth: []
       parameters:
-        - name: org_id
+        - name: id
           in: query
-          description: The org ID of the API key to delete
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
-        - name: app_id
-          in: query
-          description: The app ID of the API key to delete
+          description: The ID of the API key to delete
           required: true
           style: form
           explode: false
@@ -1727,13 +1758,12 @@ components:
           type: string
     APIKey:
       required:
-        - org_id
         - app_id
         - key
       type: object
       description: API key record
       properties:
-        org_id:
+        id:
           type: string
         app_id:
           type: string
@@ -1954,16 +1984,12 @@ components:
     _req_shared_CredsOIDC:
       type: string
       description: |
-        Auth login creds for auth_type="oidc"
+        Auth login creds for auth_type="oidc" (or variants)
           - full redirect URI received from OIDC provider
     _req_shared_CredsAPIKey:
-      required:
-        - api_key
       type: object
-      description: Auth login creds for auth_type="api_key"
+      description: Auth login creds for auth_type="anonymous"
       properties:
-        api_key:
-          type: string
         anonymous_id:
           type: string
     _req_shared_Profile:
@@ -2052,6 +2078,7 @@ components:
         - auth_type
         - app_type_identifier
         - org_id
+        - api_key
         - device
       type: object
       properties:
@@ -2061,11 +2088,12 @@ components:
             - email
             - twilio_phone
             - illinois_oidc
-            - api_key
-            - username
+            - anonymous
         app_type_identifier:
           type: string
         org_id:
+          type: string
+        api_key:
           type: string
         creds:
           anyOf:
@@ -2073,15 +2101,11 @@ components:
             - $ref: '#/components/schemas/_req_shared_CredsTwilioPhone'
             - type: string
               description: |
-                Auth login creds for auth_type="oidc"
+                Auth login creds for auth_type="oidc" (or variants)
                   - full redirect URI received from OIDC provider
-            - required:
-                - api_key
-              type: object
-              description: Auth login creds for auth_type="api_key"
+            - type: object
+              description: Auth login creds for auth_type="anonymous"
               properties:
-                api_key:
-                  type: string
                 anonymous_id:
                   type: string
         params:
@@ -2109,7 +2133,7 @@ components:
           default: false
     _req_login_ParamsOIDC:
       type: object
-      description: Auth login params for auth_type="oidc"
+      description: Auth login params for auth_type="oidc" (or variants)
       properties:
         redirect_uri:
           type: string
@@ -2148,6 +2172,7 @@ components:
           nullable: true
           anyOf:
             - type: object
+              description: Auth login response params for auth_type="oidc" (or variants)
               properties:
                 oidc_token:
                   type: object
@@ -2163,6 +2188,7 @@ components:
                 redirect_uri:
                   type: string
             - type: object
+              description: Auth login response params for auth_type="anonymous"
               properties:
                 anonymous_id:
                   type: string
@@ -2204,6 +2230,7 @@ components:
         - auth_type
         - app_type_identifier
         - org_id
+        - api_key
         - redirect_uri
       type: object
       properties:
@@ -2214,6 +2241,8 @@ components:
         app_type_identifier:
           type: string
         org_id:
+          type: string
+        api_key:
           type: string
         redirect_uri:
           type: string
@@ -2227,6 +2256,16 @@ components:
         params:
           type: object
           description: Params to be submitted with 'login' request (if necessary)
+    _req_refresh_Request:
+      required:
+        - api_key
+        - refresh_token
+      type: object
+      properties:
+        api_key:
+          type: string
+        refresh_token:
+          type: string
     _res_refresh_Response:
       type: object
       properties:

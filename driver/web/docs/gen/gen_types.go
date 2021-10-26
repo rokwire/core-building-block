@@ -95,15 +95,13 @@ const (
 
 // Defines values for ReqLoginRequestAuthType.
 const (
-	ReqLoginRequestAuthTypeApiKey ReqLoginRequestAuthType = "api_key"
+	ReqLoginRequestAuthTypeAnonymous ReqLoginRequestAuthType = "anonymous"
 
 	ReqLoginRequestAuthTypeEmail ReqLoginRequestAuthType = "email"
 
 	ReqLoginRequestAuthTypeIllinoisOidc ReqLoginRequestAuthType = "illinois_oidc"
 
 	ReqLoginRequestAuthTypeTwilioPhone ReqLoginRequestAuthType = "twilio_phone"
-
-	ReqLoginRequestAuthTypeUsername ReqLoginRequestAuthType = "username"
 )
 
 // Defines values for ReqUpdateOrganizationRequestType.
@@ -144,9 +142,9 @@ const (
 
 // API key record
 type APIKey struct {
-	AppId string `json:"app_id"`
-	Key   string `json:"key"`
-	OrgId string `json:"org_id"`
+	AppId string  `json:"app_id"`
+	Id    *string `json:"id,omitempty"`
+	Key   string  `json:"key"`
 }
 
 // Account defines model for Account.
@@ -524,6 +522,7 @@ type ReqLinkCredsRequestAuthType string
 
 // ReqLoginUrlRequest defines model for _req_login-url_Request.
 type ReqLoginUrlRequest struct {
+	ApiKey            string                     `json:"api_key"`
 	AppTypeIdentifier string                     `json:"app_type_identifier"`
 	AuthType          ReqLoginUrlRequestAuthType `json:"auth_type"`
 	OrgId             string                     `json:"org_id"`
@@ -554,7 +553,7 @@ type ReqLoginParamsEmail struct {
 // Auth login request params for unlisted auth_types (None)
 type ReqLoginParamsNone map[string]interface{}
 
-// Auth login params for auth_type="oidc"
+// Auth login params for auth_type="oidc" (or variants)
 type ReqLoginParamsOIDC struct {
 	PkceVerifier *string `json:"pkce_verifier,omitempty"`
 	RedirectUri  *string `json:"redirect_uri,omitempty"`
@@ -562,6 +561,7 @@ type ReqLoginParamsOIDC struct {
 
 // ReqLoginRequest defines model for _req_login_Request.
 type ReqLoginRequest struct {
+	ApiKey            string                  `json:"api_key"`
 	AppTypeIdentifier string                  `json:"app_type_identifier"`
 	AuthType          ReqLoginRequestAuthType `json:"auth_type"`
 	Creds             *interface{}            `json:"creds,omitempty"`
@@ -577,13 +577,19 @@ type ReqLoginRequest struct {
 // ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
 type ReqLoginRequestAuthType string
 
+// ReqRefreshRequest defines model for _req_refresh_Request.
+type ReqRefreshRequest struct {
+	ApiKey       string `json:"api_key"`
+	RefreshToken string `json:"refresh_token"`
+}
+
 // Auth login creds for auth_type="email"
 type ReqSharedCredsEmail struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-// Auth login creds for auth_type="oidc"
+// Auth login creds for auth_type="oidc" (or variants)
 //   - full redirect URI received from OIDC provider
 type ReqSharedCredsOIDC string
 
@@ -731,21 +737,15 @@ type PutAdminAccountRolesJSONBody ReqAccountRolesRequest
 // DeleteAdminApiKeysParams defines parameters for DeleteAdminApiKeys.
 type DeleteAdminApiKeysParams struct {
 
-	// The org ID of the API key to delete
-	OrgId string `json:"org_id"`
-
-	// The app ID of the API key to delete
-	AppId string `json:"app_id"`
+	// The ID of the API key to delete
+	Id string `json:"id"`
 }
 
 // GetAdminApiKeysParams defines parameters for GetAdminApiKeys.
 type GetAdminApiKeysParams struct {
 
-	// The org ID of the API key to return
-	OrgId string `json:"org_id"`
-
-	// The app ID of the API key to return
-	AppId string `json:"app_id"`
+	// The ID of the API key to return
+	Id string `json:"id"`
 }
 
 // PostAdminApiKeysJSONBody defines parameters for PostAdminApiKeys.
@@ -753,6 +753,13 @@ type PostAdminApiKeysJSONBody APIKey
 
 // PutAdminApiKeysJSONBody defines parameters for PutAdminApiKeys.
 type PutAdminApiKeysJSONBody APIKey
+
+// GetAdminApplicationApiKeysParams defines parameters for GetAdminApplicationApiKeys.
+type GetAdminApplicationApiKeysParams struct {
+
+	// The app ID of the API keys to return
+	AppId string `json:"app_id"`
+}
 
 // PostAdminApplicationPermissionsJSONBody defines parameters for PostAdminApplicationPermissions.
 type PostAdminApplicationPermissionsJSONBody ReqApplicationPermissionsRequest
@@ -819,6 +826,9 @@ type PostServicesAuthLoginJSONBody ReqLoginRequest
 
 // PostServicesAuthLoginUrlJSONBody defines parameters for PostServicesAuthLoginUrl.
 type PostServicesAuthLoginUrlJSONBody ReqLoginUrlRequest
+
+// PostServicesAuthRefreshJSONBody defines parameters for PostServicesAuthRefresh.
+type PostServicesAuthRefreshJSONBody ReqRefreshRequest
 
 // GetServicesAuthServiceRegsParams defines parameters for GetServicesAuthServiceRegs.
 type GetServicesAuthServiceRegsParams struct {
@@ -900,6 +910,9 @@ type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 
 // PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
 type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
+
+// PostServicesAuthRefreshJSONRequestBody defines body for PostServicesAuthRefresh for application/json ContentType.
+type PostServicesAuthRefreshJSONRequestBody PostServicesAuthRefreshJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found
