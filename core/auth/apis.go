@@ -145,12 +145,13 @@ func (a *Auth) AccountExists(authenticationType string, userIdentifier string, a
 		return false, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
 
-	exists, err := a.checkAccountExists(userIdentifier, *authType, *appType, *appOrg, l)
+	//check if the account exists check
+	account, err := a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, userIdentifier)
 	if err != nil {
-		return false, err
+		return false, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	return exists, nil
+	return account != nil, nil
 }
 
 //Refresh refreshes an access token using a refresh token

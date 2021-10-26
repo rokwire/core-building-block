@@ -2296,12 +2296,7 @@ components:
         user_identifier:
           type: string
     _res_account-exists_Response:
-      type: object
-      properties:
-        exists:
-          type: boolean
-        message:
-          type: string
+      type: boolean
     _req_authorize-service_Request:
       required:
         - service_id

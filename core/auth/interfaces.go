@@ -25,11 +25,6 @@ type authType interface {
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
 	verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error)
 
-	//userExist checks if the user exists for application and organizations
-	// Returns:
-	//	accountAuthType (*model.AccountAuthType): User account auth type
-	userExist(userIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AccountAuthType, error)
-
 	//getUserIdentifier parses the credentials and returns the user identifier
 	// Returns:
 	//	userIdentifier (string): User identifier
@@ -46,8 +41,6 @@ type externalAuthType interface {
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 	//externalLogin logins in the external system and provides the authenticated user
 	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
-	//userExist checks if the user exists
-	userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error)
 	//refresh refreshes tokens
 	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (map[string]interface{}, error)
 }

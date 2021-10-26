@@ -253,28 +253,6 @@ func basicAuth(username, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
-func (a *twilioPhoneAuthImpl) userExist(userIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AccountAuthType, error) {
-	appID := appOrg.Application.ID
-	orgID := appOrg.Organization.ID
-	authTypeID := authType.ID
-
-	account, err := a.auth.storage.FindAccount(appID, orgID, authTypeID, userIdentifier)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
-	}
-
-	if account == nil {
-		return nil, nil
-	}
-
-	accountAuthType, err := a.auth.findAccountAuthType(account, &authType, userIdentifier)
-	if accountAuthType == nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err) //TODO add args..
-	}
-
-	return accountAuthType, nil
-}
-
 func (a *twilioPhoneAuthImpl) getUserIdentifier(creds string) (string, error) {
 	var requestCreds twilioPhoneCreds
 	err := json.Unmarshal([]byte(creds), &requestCreds)

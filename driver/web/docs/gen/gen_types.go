@@ -651,10 +651,7 @@ type ReqUpdateOrganizationRequest struct {
 type ReqUpdateOrganizationRequestType string
 
 // ResAccountExistsResponse defines model for _res_account-exists_Response.
-type ResAccountExistsResponse struct {
-	Exists  *bool   `json:"exists,omitempty"`
-	Message *string `json:"message,omitempty"`
-}
+type ResAccountExistsResponse bool
 
 // ResAuthorizeServiceResponse defines model for _res_authorize-service_Response.
 type ResAuthorizeServiceResponse struct {

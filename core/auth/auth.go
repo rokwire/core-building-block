@@ -173,9 +173,9 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	}
 
 	//2. check if the user exists
-	account, err := authImpl.userExist(externalUser.Identifier, authType, appType, appOrg, l)
+	account, err := a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, externalUser.Identifier)
 	if err != nil {
-		return nil, nil, errors.WrapErrorData(logutils.StatusMissing, "external user", nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if account != nil {
 		//user exists, just check if need to update it
@@ -247,25 +247,10 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.App
 	return anonymousID, anonymousParams, nil
 }
 
-func (a *Auth) checkAccountExists(userIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (bool, error) {
-	//auth type
-	authImpl, err := a.getAuthTypeImpl(authType)
-	if err != nil {
-		return false, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
-	}
-
-	//check if the user exists check
-	accountAuthType, err := authImpl.userExist(userIdentifier, authType, appType, appOrg, l)
-	if err != nil {
-		return false, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-
-	return accountAuthType != nil, nil
-}
-
 func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
 	creds string, params string, regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (string, *model.AccountAuthType, error) {
 	var message string
+	var account *model.Account
 	var accountAuthType *model.AccountAuthType
 	var credential *model.Credential
 	var profile *model.Profile
@@ -282,12 +267,12 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
 	}
-	accountAuthType, err = authImpl.userExist(userIdentifier, authType, appType, appOrg, l)
+	account, err = a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, userIdentifier)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 
-	accountExists := (accountAuthType != nil)
+	accountExists := (account != nil)
 
 	//check if it is sign in or sign up
 	isSignUp, err := a.isSignUp(accountExists, params, l)
@@ -327,6 +312,11 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	//apply sign in
 	if !accountExists {
 		return "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+	}
+
+	accountAuthType, err = a.findAccountAuthType(account, &authType, userIdentifier)
+	if accountAuthType == nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
 
 	//2. it seems the user exist, now check the credentials

@@ -1,6 +1,1 @@
-type: object
-properties:
-  exists:
-    type: boolean
-  message:
-    type: string
+type: boolean

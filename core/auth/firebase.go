@@ -23,10 +23,6 @@ func (a *firebaseAuthImpl) signUp(authType model.AuthType, appType model.Applica
 	return "", nil, nil, nil
 }
 
-func (a *firebaseAuthImpl) userExist(userIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.AccountAuthType, error) {
-	return nil, nil
-}
-
 func (a *firebaseAuthImpl) getUserIdentifier(creds string) (string, error) {
 	return "", nil
 }
