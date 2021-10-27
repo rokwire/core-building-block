@@ -98,18 +98,18 @@ func (a *twilioPhoneAuthImpl) checkRequestCreds(creds string) (*twilioPhoneCreds
 	return &requestCreds, nil
 }
 
-func (a *twilioPhoneAuthImpl) signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, *string, map[string]interface{}, error) {
+func (a *twilioPhoneAuthImpl) signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	requestCreds, err := a.checkRequestCreds(creds)
 	if err != nil {
-		return "", nil, nil, err
+		return "", nil, err
 	}
 
 	message, err := a.handlePhoneVerify(requestCreds.Phone, *requestCreds, l)
 	if err != nil {
-		return "", nil, nil, err
+		return "", nil, err
 	}
 
-	return message, &requestCreds.Phone, nil, nil
+	return message, nil, nil
 }
 
 func (a *twilioPhoneAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error) {
@@ -253,32 +253,14 @@ func basicAuth(username, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
-func (a *twilioPhoneAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.AccountAuthType, error) {
-	appID := appOrg.Application.ID
-	orgID := appOrg.Organization.ID
-	authTypeID := authType.ID
-
+func (a *twilioPhoneAuthImpl) getUserIdentifier(creds string) (string, error) {
 	var requestCreds twilioPhoneCreds
 	err := json.Unmarshal([]byte(creds), &requestCreds)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneCreds, logutils.StringArgs("request"), err)
+		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneCreds, nil, err)
 	}
 
-	account, err := a.auth.storage.FindAccount(appID, orgID, authTypeID, requestCreds.Phone)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
-	}
-
-	if account == nil {
-		return nil, nil
-	}
-
-	accountAuthType, err := a.auth.findAccountAuthType(account, &authType, requestCreds.Phone)
-	if accountAuthType == nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err) //TODO add args..
-	}
-
-	return accountAuthType, nil
+	return requestCreds.Phone, nil
 }
 
 func (a *twilioPhoneAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
