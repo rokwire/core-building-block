@@ -53,6 +53,19 @@ const (
 	OrganizationFieldsTypeSmall OrganizationFieldsType = "small"
 )
 
+// Defines values for ReqAccountExistsRequestAuthType.
+const (
+	ReqAccountExistsRequestAuthTypeAnonymous ReqAccountExistsRequestAuthType = "anonymous"
+
+	ReqAccountExistsRequestAuthTypeEmail ReqAccountExistsRequestAuthType = "email"
+
+	ReqAccountExistsRequestAuthTypeIllinoisOidc ReqAccountExistsRequestAuthType = "illinois_oidc"
+
+	ReqAccountExistsRequestAuthTypeTwilioPhone ReqAccountExistsRequestAuthType = "twilio_phone"
+
+	ReqAccountExistsRequestAuthTypeUsername ReqAccountExistsRequestAuthType = "username"
+)
+
 // Defines values for ReqCreateOrganizationRequestType.
 const (
 	ReqCreateOrganizationRequestTypeHuge ReqCreateOrganizationRequestType = "huge"
@@ -66,33 +79,33 @@ const (
 	ReqCreateOrganizationRequestTypeSmall ReqCreateOrganizationRequestType = "small"
 )
 
-// Defines values for ReqLoginUrlRequestAuthType.
+// Defines values for ReqSharedLoginAuthType.
 const (
-	ReqLoginUrlRequestAuthTypeIllinoisOidc ReqLoginUrlRequestAuthType = "illinois_oidc"
+	ReqSharedLoginAuthTypeAnonymous ReqSharedLoginAuthType = "anonymous"
+
+	ReqSharedLoginAuthTypeEmail ReqSharedLoginAuthType = "email"
+
+	ReqSharedLoginAuthTypeIllinoisOidc ReqSharedLoginAuthType = "illinois_oidc"
+
+	ReqSharedLoginAuthTypeTwilioPhone ReqSharedLoginAuthType = "twilio_phone"
+
+	ReqSharedLoginAuthTypeUsername ReqSharedLoginAuthType = "username"
 )
 
-// Defines values for ReqLoginDeviceType.
+// Defines values for ReqSharedLoginUrlAuthType.
 const (
-	ReqLoginDeviceTypeDesktop ReqLoginDeviceType = "desktop"
-
-	ReqLoginDeviceTypeMobile ReqLoginDeviceType = "mobile"
-
-	ReqLoginDeviceTypeOther ReqLoginDeviceType = "other"
-
-	ReqLoginDeviceTypeWeb ReqLoginDeviceType = "web"
+	ReqSharedLoginUrlAuthTypeIllinoisOidc ReqSharedLoginUrlAuthType = "illinois_oidc"
 )
 
-// Defines values for ReqLoginRequestAuthType.
+// Defines values for ReqSharedLoginDeviceType.
 const (
-	ReqLoginRequestAuthTypeAnonymous ReqLoginRequestAuthType = "anonymous"
+	ReqSharedLoginDeviceTypeDesktop ReqSharedLoginDeviceType = "desktop"
 
-	ReqLoginRequestAuthTypeEmail ReqLoginRequestAuthType = "email"
+	ReqSharedLoginDeviceTypeMobile ReqSharedLoginDeviceType = "mobile"
 
-	ReqLoginRequestAuthTypeIllinoisOidc ReqLoginRequestAuthType = "illinois_oidc"
+	ReqSharedLoginDeviceTypeOther ReqSharedLoginDeviceType = "other"
 
-	ReqLoginRequestAuthTypeTwilioPhone ReqLoginRequestAuthType = "twilio_phone"
-
-	ReqLoginRequestAuthTypeUsername ReqLoginRequestAuthType = "username"
+	ReqSharedLoginDeviceTypeWeb ReqSharedLoginDeviceType = "web"
 )
 
 // Defines values for ReqUpdateOrganizationRequestType.
@@ -435,6 +448,18 @@ type ServiceScope struct {
 	Scope       string  `json:"scope"`
 }
 
+// ReqAccountExistsRequest defines model for _req_account-exists_Request.
+type ReqAccountExistsRequest struct {
+	ApiKey            string                          `json:"api_key"`
+	AppTypeIdentifier string                          `json:"app_type_identifier"`
+	AuthType          ReqAccountExistsRequestAuthType `json:"auth_type"`
+	OrgId             string                          `json:"org_id"`
+	UserIdentifier    string                          `json:"user_identifier"`
+}
+
+// ReqAccountExistsRequestAuthType defines model for ReqAccountExistsRequest.AuthType.
+type ReqAccountExistsRequestAuthType string
+
 // ReqAccountPermissionsRequest defines model for _req_account-permissions_Request.
 type ReqAccountPermissionsRequest struct {
 	AccountId   string   `json:"account_id"`
@@ -502,51 +527,69 @@ type ReqGetOrganizationRequest struct {
 	Id string `json:"id"`
 }
 
-// ReqLoginUrlRequest defines model for _req_login-url_Request.
-type ReqLoginUrlRequest struct {
-	ApiKey            string                     `json:"api_key"`
-	AppTypeIdentifier string                     `json:"app_type_identifier"`
-	AuthType          ReqLoginUrlRequestAuthType `json:"auth_type"`
-	OrgId             string                     `json:"org_id"`
-	RedirectUri       string                     `json:"redirect_uri"`
+// ReqSharedLogin defines model for _req_shared_Login.
+type ReqSharedLogin struct {
+	ApiKey            string                 `json:"api_key"`
+	AppTypeIdentifier string                 `json:"app_type_identifier"`
+	AuthType          ReqSharedLoginAuthType `json:"auth_type"`
+	Creds             *interface{}           `json:"creds,omitempty"`
+
+	// Client device
+	Device      ReqSharedLoginDevice      `json:"device"`
+	OrgId       string                    `json:"org_id"`
+	Params      *interface{}              `json:"params,omitempty"`
+	Preferences *map[string]interface{}   `json:"preferences"`
+	Profile     *ReqSharedProfileNullable `json:"profile"`
 }
 
-// ReqLoginUrlRequestAuthType defines model for ReqLoginUrlRequest.AuthType.
-type ReqLoginUrlRequestAuthType string
+// ReqSharedLoginAuthType defines model for ReqSharedLogin.AuthType.
+type ReqSharedLoginAuthType string
+
+// ReqSharedLoginUrl defines model for _req_shared_LoginUrl.
+type ReqSharedLoginUrl struct {
+	ApiKey            string                    `json:"api_key"`
+	AppTypeIdentifier string                    `json:"app_type_identifier"`
+	AuthType          ReqSharedLoginUrlAuthType `json:"auth_type"`
+	OrgId             string                    `json:"org_id"`
+	RedirectUri       string                    `json:"redirect_uri"`
+}
+
+// ReqSharedLoginUrlAuthType defines model for ReqSharedLoginUrl.AuthType.
+type ReqSharedLoginUrlAuthType string
 
 // Auth login creds for auth_type="anonymous"
-type ReqLoginCredsAPIKey struct {
+type ReqSharedLoginCredsAPIKey struct {
 	AnonymousId *string `json:"anonymous_id,omitempty"`
 }
 
 // Auth login creds for auth_type="email"
-type ReqLoginCredsEmail struct {
+type ReqSharedLoginCredsEmail struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
 // Auth login creds for auth_type="oidc" (or variants)
 //   - full redirect URI received from OIDC provider
-type ReqLoginCredsOIDC string
+type ReqSharedLoginCredsOIDC string
 
 // Auth login creds for auth_type="twilio_phone"
-type ReqLoginCredsTwilioPhone struct {
+type ReqSharedLoginCredsTwilioPhone struct {
 	Code  *string `json:"code,omitempty"`
 	Phone string  `json:"phone"`
 }
 
 // Client device
-type ReqLoginDevice struct {
-	DeviceId *string            `json:"device_id,omitempty"`
-	Os       *string            `json:"os,omitempty"`
-	Type     ReqLoginDeviceType `json:"type"`
+type ReqSharedLoginDevice struct {
+	DeviceId *string                  `json:"device_id,omitempty"`
+	Os       *string                  `json:"os,omitempty"`
+	Type     ReqSharedLoginDeviceType `json:"type"`
 }
 
-// ReqLoginDeviceType defines model for ReqLoginDevice.Type.
-type ReqLoginDeviceType string
+// ReqSharedLoginDeviceType defines model for ReqSharedLoginDevice.Type.
+type ReqSharedLoginDeviceType string
 
 // Auth login params for auth_type="email"
-type ReqLoginParamsEmail struct {
+type ReqSharedLoginParamsEmail struct {
 
 	// This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
 	ConfirmPassword *string `json:"confirm_password,omitempty"`
@@ -554,36 +597,12 @@ type ReqLoginParamsEmail struct {
 }
 
 // Auth login request params for unlisted auth_types (None)
-type ReqLoginParamsNone map[string]interface{}
+type ReqSharedLoginParamsNone map[string]interface{}
 
 // Auth login params for auth_type="oidc" (or variants)
-type ReqLoginParamsOIDC struct {
+type ReqSharedLoginParamsOIDC struct {
 	PkceVerifier *string `json:"pkce_verifier,omitempty"`
 	RedirectUri  *string `json:"redirect_uri,omitempty"`
-}
-
-// ReqLoginRequest defines model for _req_login_Request.
-type ReqLoginRequest struct {
-	ApiKey            string                  `json:"api_key"`
-	AppTypeIdentifier string                  `json:"app_type_identifier"`
-	AuthType          ReqLoginRequestAuthType `json:"auth_type"`
-	Creds             *interface{}            `json:"creds,omitempty"`
-
-	// Client device
-	Device      ReqLoginDevice            `json:"device"`
-	OrgId       string                    `json:"org_id"`
-	Params      *interface{}              `json:"params,omitempty"`
-	Preferences *map[string]interface{}   `json:"preferences"`
-	Profile     *ReqSharedProfileNullable `json:"profile"`
-}
-
-// ReqLoginRequestAuthType defines model for ReqLoginRequest.AuthType.
-type ReqLoginRequestAuthType string
-
-// ReqRefreshRequest defines model for _req_refresh_Request.
-type ReqRefreshRequest struct {
-	ApiKey       string `json:"api_key"`
-	RefreshToken string `json:"refresh_token"`
 }
 
 // ReqSharedProfile defines model for _req_shared_Profile.
@@ -614,6 +633,12 @@ type ReqSharedProfileNullable struct {
 	ZipCode   *string `json:"zip_code"`
 }
 
+// ReqSharedRefresh defines model for _req_shared_Refresh.
+type ReqSharedRefresh struct {
+	ApiKey       string `json:"api_key"`
+	RefreshToken string `json:"refresh_token"`
+}
+
 // ReqUpdateOrganizationRequest defines model for _req_update_Organization_Request.
 type ReqUpdateOrganizationRequest struct {
 	Config *OrganizationConfigFields        `json:"config,omitempty"`
@@ -624,6 +649,9 @@ type ReqUpdateOrganizationRequest struct {
 
 // ReqUpdateOrganizationRequestType defines model for ReqUpdateOrganizationRequest.Type.
 type ReqUpdateOrganizationRequestType string
+
+// ResAccountExistsResponse defines model for _res_account-exists_Response.
+type ResAccountExistsResponse bool
 
 // ResAuthorizeServiceResponse defines model for _res_authorize-service_Response.
 type ResAuthorizeServiceResponse struct {
@@ -660,16 +688,24 @@ type ResGetOrganizationsResponse struct {
 // ResGetOrganizationsResponseType defines model for ResGetOrganizationsResponse.Type.
 type ResGetOrganizationsResponseType string
 
-// ResLoginUrlResponse defines model for _res_login-url_Response.
-type ResLoginUrlResponse struct {
+// ResSharedLogin defines model for _res_shared_Login.
+type ResSharedLogin struct {
+	Account *ResSharedLoginAccount `json:"account,omitempty"`
+	Message *string                `json:"message,omitempty"`
+	Params  *interface{}           `json:"params"`
+	Token   *ResSharedRokwireToken `json:"token,omitempty"`
+}
+
+// ResSharedLoginUrl defines model for _res_shared_LoginUrl.
+type ResSharedLoginUrl struct {
 	LoginUrl string `json:"login_url"`
 
 	// Params to be submitted with 'login' request (if necessary)
 	Params *map[string]interface{} `json:"params,omitempty"`
 }
 
-// ResLoginAccount defines model for _res_login_Account.
-type ResLoginAccount struct {
+// ResSharedLoginAccount defines model for _res_shared_Login_Account.
+type ResSharedLoginAccount struct {
 	AuthTypes   *[]AccountAuthTypeFields       `json:"auth_types,omitempty"`
 	Groups      *[]ApplicationGroupFields      `json:"groups,omitempty"`
 	Id          string                         `json:"id"`
@@ -679,16 +715,8 @@ type ResLoginAccount struct {
 	Roles       *[]ApplicationRoleFields       `json:"roles,omitempty"`
 }
 
-// ResLoginResponse defines model for _res_login_Response.
-type ResLoginResponse struct {
-	Account *ResLoginAccount       `json:"account,omitempty"`
-	Message *string                `json:"message,omitempty"`
-	Params  *interface{}           `json:"params"`
-	Token   *ResSharedRokwireToken `json:"token,omitempty"`
-}
-
-// ResRefreshResponse defines model for _res_refresh_Response.
-type ResRefreshResponse struct {
+// ResSharedRefresh defines model for _res_shared_Refresh.
+type ResSharedRefresh struct {
 	Params *interface{}           `json:"params"`
 	Token  *ResSharedRokwireToken `json:"token,omitempty"`
 }
@@ -751,6 +779,15 @@ type PostAdminApplicationRolesJSONBody ReqApplicationRolesRequest
 // PostAdminApplicationsJSONBody defines parameters for PostAdminApplications.
 type PostAdminApplicationsJSONBody ReqCreateApplicationRequest
 
+// PostAdminAuthLoginJSONBody defines parameters for PostAdminAuthLogin.
+type PostAdminAuthLoginJSONBody ReqSharedLogin
+
+// PostAdminAuthLoginUrlJSONBody defines parameters for PostAdminAuthLoginUrl.
+type PostAdminAuthLoginUrlJSONBody ReqSharedLoginUrl
+
+// PostAdminAuthRefreshJSONBody defines parameters for PostAdminAuthRefresh.
+type PostAdminAuthRefreshJSONBody ReqSharedRefresh
+
 // PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
 type PostAdminGlobalConfigJSONBody GlobalConfig
 
@@ -796,17 +833,20 @@ type PutServicesAccountPreferencesJSONBody map[string]interface{}
 // PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
 type PutServicesAccountProfileJSONBody ReqSharedProfile
 
+// PostServicesAuthAccountExistsJSONBody defines parameters for PostServicesAuthAccountExists.
+type PostServicesAuthAccountExistsJSONBody ReqAccountExistsRequest
+
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
 // PostServicesAuthLoginJSONBody defines parameters for PostServicesAuthLogin.
-type PostServicesAuthLoginJSONBody ReqLoginRequest
+type PostServicesAuthLoginJSONBody ReqSharedLogin
 
 // PostServicesAuthLoginUrlJSONBody defines parameters for PostServicesAuthLoginUrl.
-type PostServicesAuthLoginUrlJSONBody ReqLoginUrlRequest
+type PostServicesAuthLoginUrlJSONBody ReqSharedLoginUrl
 
 // PostServicesAuthRefreshJSONBody defines parameters for PostServicesAuthRefresh.
-type PostServicesAuthRefreshJSONBody ReqRefreshRequest
+type PostServicesAuthRefreshJSONBody ReqSharedRefresh
 
 // GetServicesAuthServiceRegsParams defines parameters for GetServicesAuthServiceRegs.
 type GetServicesAuthServiceRegsParams struct {
@@ -853,6 +893,15 @@ type PostAdminApplicationRolesJSONRequestBody PostAdminApplicationRolesJSONBody
 // PostAdminApplicationsJSONRequestBody defines body for PostAdminApplications for application/json ContentType.
 type PostAdminApplicationsJSONRequestBody PostAdminApplicationsJSONBody
 
+// PostAdminAuthLoginJSONRequestBody defines body for PostAdminAuthLogin for application/json ContentType.
+type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody
+
+// PostAdminAuthLoginUrlJSONRequestBody defines body for PostAdminAuthLoginUrl for application/json ContentType.
+type PostAdminAuthLoginUrlJSONRequestBody PostAdminAuthLoginUrlJSONBody
+
+// PostAdminAuthRefreshJSONRequestBody defines body for PostAdminAuthRefresh for application/json ContentType.
+type PostAdminAuthRefreshJSONRequestBody PostAdminAuthRefreshJSONBody
+
 // PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
 type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody
 
@@ -876,6 +925,9 @@ type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJ
 
 // PutServicesAccountProfileJSONRequestBody defines body for PutServicesAccountProfile for application/json ContentType.
 type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
+
+// PostServicesAuthAccountExistsJSONRequestBody defines body for PostServicesAuthAccountExists for application/json ContentType.
+type PostServicesAuthAccountExistsJSONRequestBody PostServicesAuthAccountExistsJSONBody
 
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody
