@@ -151,7 +151,9 @@ type Credential struct {
 
 //MFAType represents a MFA type used by an account
 type MFAType struct {
+	AccountID string
 	Type      string
+
 	Verified  bool
 	QRCode    string
 	Recipient string                 //email or phone

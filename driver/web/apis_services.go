@@ -415,7 +415,7 @@ func (h ServicesApisHandler) verifyMFA(l *logs.Log, r *http.Request, claims *tok
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("verify mfa request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	verified, err := h.coreAPIs.Auth.VerifyMFA(mfaData.AccountId, string(mfaData.MfaType), mfaData.MfaCode, l)
+	verified, recoveryCodes, err := h.coreAPIs.Auth.VerifyMFA(mfaData.AccountId, string(mfaData.MfaType), mfaData.MfaCode, l)
 	if err != nil {
 		return l.HttpResponseError("Error verifying MFA", err, http.StatusInternalServerError, true)
 	}
@@ -423,7 +423,16 @@ func (h ServicesApisHandler) verifyMFA(l *logs.Log, r *http.Request, claims *tok
 		return l.HttpResponseError("Invalid code", nil, http.StatusBadRequest, true)
 	}
 
-	return l.HttpResponseSuccess()
+	if recoveryCodes == nil {
+		recoveryCodes = []string{}
+	}
+
+	response, err := json.Marshal(recoveryCodes)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "mfa recovery codes", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(response)
 }
 
 //Helper for authLogin and authLoginMFA

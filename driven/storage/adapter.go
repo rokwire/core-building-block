@@ -929,26 +929,43 @@ func (sa *Adapter) InsertMFAType(mfa *model.MFAType) error {
 }
 
 //UpdateMFAType updates one MFA type
-func (sa *Adapter) UpdateMFAType(accountID string, mfa *model.MFAType) error {
-	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}, primitive.E{Key: "type", Value: mfa.Type}}
-	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "verified", Value: mfa.Verified},
-			primitive.E{Key: "recipient", Value: mfa.Recipient},
-			primitive.E{Key: "params", Value: mfa.Params},
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
-		}},
-	}
+func (sa *Adapter) UpdateMFAType(accountID string, mfa *model.MFAType) (int, error) {
+	// transaction
+	mfaCount := -1
+	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+		err := sessionContext.StartTransaction()
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
+		}
 
-	res, err := sa.db.mfa.UpdateOne(filter, update, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, nil, err)
-	}
-	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeMFAType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
-	}
+		filter := bson.D{primitive.E{Key: "account_id", Value: accountID}, primitive.E{Key: "type", Value: mfa.Type}}
+		update := bson.D{
+			primitive.E{Key: "$set", Value: bson.D{
+				primitive.E{Key: "verified", Value: mfa.Verified},
+				primitive.E{Key: "recipient", Value: mfa.Recipient},
+				primitive.E{Key: "params", Value: mfa.Params},
+				primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+			}},
+		}
 
-	return nil
+		res, err := sa.db.mfa.UpdateOneWithContext(sessionContext, filter, update, nil)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, nil, err)
+		}
+		if res.ModifiedCount != 1 {
+			return errors.ErrorAction(logutils.ActionUpdate, model.TypeMFAType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		}
+
+		//TODO: set mfaCount by langth of list in account
+
+		err = sessionContext.CommitTransaction(sessionContext)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
+		}
+		return nil
+	})
+	return mfaCount, err
 }
 
 //DeleteMFAType deletes a MFA type

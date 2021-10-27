@@ -503,7 +503,7 @@ func (a *Auth) VerifyMFA(accountID string, mfaType string, mfaCode string, l *lo
 
 		var recoveryCodes []string
 		if count == 1 {
-			recoveryCodes, err = a.generateRecoveryCodesIfNeeded(accountID)
+			recoveryCodes, err = a.generateRecoveryCodes(accountID)
 			if err != nil {
 				return false, nil, errors.WrapErrorAction("generating", "mfa recovery codes", nil, err)
 			}

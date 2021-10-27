@@ -264,7 +264,7 @@ type Storage interface {
 	FindMFAType(accountID string, mfaType string) (*model.MFAType, error)
 	FindMFATypes(accountID string, onlyVerified bool) ([]model.MFAType, error)
 	InsertMFAType(mfa *model.MFAType) error
-	UpdateMFAType(accountID string, mfa *model.MFAType) error
+	UpdateMFAType(accountID string, mfa *model.MFAType) (int, error)
 	DeleteMFAType(accountID string, mfaType string) error
 
 	//ServiceRegs

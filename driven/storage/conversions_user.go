@@ -164,3 +164,22 @@ func credentialToStorage(item *model.Credential) *credential {
 	return &credential{ID: item.ID, AuthTypeID: item.AuthType.ID, AccountsAuthTypes: accountAuthTypes, Verified: item.Verified,
 		Value: item.Value, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
+
+//MFA
+func mfaListFromStorage(items []mfaType, accountID string) []model.MFAType {
+	res := make([]model.MFAType, len(items))
+	for i, mfa := range items {
+		res[i] = mfaFromStorage(mfa, accountID)
+	}
+	return res
+}
+
+func mfaFromStorage(item mfaType, accountID string) model.MFAType {
+	return model.MFAType{AccountID: accountID, Type: item.Type, Verified: item.Verified, Recipient: item.Recipient,
+		Params: item.Params, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func mfaToStorage(item *model.MFAType) *mfaType {
+	return &mfaType{Type: item.Type, Verified: item.Verified, Recipient: item.Recipient, Params: item.Params,
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
