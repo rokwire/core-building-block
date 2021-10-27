@@ -10,13 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Handle multiple authentication methods linking to one account [#64](https://github.com/rokwire/core-building-block/issues/64)
 - Add authentication required auth wrapper [#250](https://github.com/rokwire/core-building-block/issues/250)
 
+## [1.8.0] - 2021-10-27
+### Added
+- Prepare Core for Admin app integration [#247](https://github.com/rokwire/core-building-block/issues/247)
+- Expose does account exist services API [#255](https://github.com/rokwire/core-building-block/issues/255)
+
+### Fixed
+- MongoDB ChangeStream Watch() does not recover [#259](https://github.com/rokwire/core-building-block/issues/259)
+
 ## [1.7.0] - 2021-10-25
 ### Added
 - Handle API key validation for non-anonymous users [#244](https://github.com/rokwire/core-building-block/issues/244)
 - Implement logins sessions [#172](https://github.com/rokwire/core-building-block/issues/172) 
-
-### Fixed
-- MongoDB ChangeStream Watch() does not recover [#259](https://github.com/rokwire/core-building-block/issues/259)
 
 ## [1.6.0] - 2021-10-19
 ### Added
@@ -117,7 +122,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/rokwire/core-building-block/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/rokwire/core-building-block/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/rokwire/core-building-block/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/rokwire/core-building-block/compare/v1.4.0...v1.5.0
