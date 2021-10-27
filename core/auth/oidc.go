@@ -166,19 +166,6 @@ func (a *oidcAuthImpl) externalLogin(authType model.AuthType, appType model.Appl
 func (a *oidcAuthImpl) verify(id string, verification string, l *logs.Log) error {
 	return errors.New(logutils.Unimplemented)
 }
-func (a *oidcAuthImpl) userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error) {
-	appID := appOrg.Application.ID
-	orgID := appOrg.Organization.ID
-	authTypeID := authType.ID
-	identifier := externalUserIdentifier
-
-	//FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
-	account, err := a.auth.storage.FindAccount(appID, orgID, authTypeID, identifier)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
-	}
-	return account, nil
-}
 
 //refresh must be implemented for OIDC auth
 func (a *oidcAuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (map[string]interface{}, error) {

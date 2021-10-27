@@ -53,6 +53,19 @@ const (
 	OrganizationFieldsTypeSmall OrganizationFieldsType = "small"
 )
 
+// Defines values for ReqAccountExistsRequestAuthType.
+const (
+	ReqAccountExistsRequestAuthTypeAnonymous ReqAccountExistsRequestAuthType = "anonymous"
+
+	ReqAccountExistsRequestAuthTypeEmail ReqAccountExistsRequestAuthType = "email"
+
+	ReqAccountExistsRequestAuthTypeIllinoisOidc ReqAccountExistsRequestAuthType = "illinois_oidc"
+
+	ReqAccountExistsRequestAuthTypeTwilioPhone ReqAccountExistsRequestAuthType = "twilio_phone"
+
+	ReqAccountExistsRequestAuthTypeUsername ReqAccountExistsRequestAuthType = "username"
+)
+
 // Defines values for ReqCreateOrganizationRequestType.
 const (
 	ReqCreateOrganizationRequestTypeHuge ReqCreateOrganizationRequestType = "huge"
@@ -435,6 +448,18 @@ type ServiceScope struct {
 	Scope       string  `json:"scope"`
 }
 
+// ReqAccountExistsRequest defines model for _req_account-exists_Request.
+type ReqAccountExistsRequest struct {
+	ApiKey            string                          `json:"api_key"`
+	AppTypeIdentifier string                          `json:"app_type_identifier"`
+	AuthType          ReqAccountExistsRequestAuthType `json:"auth_type"`
+	OrgId             string                          `json:"org_id"`
+	UserIdentifier    string                          `json:"user_identifier"`
+}
+
+// ReqAccountExistsRequestAuthType defines model for ReqAccountExistsRequest.AuthType.
+type ReqAccountExistsRequestAuthType string
+
 // ReqAccountPermissionsRequest defines model for _req_account-permissions_Request.
 type ReqAccountPermissionsRequest struct {
 	AccountId   string   `json:"account_id"`
@@ -625,6 +650,9 @@ type ReqUpdateOrganizationRequest struct {
 // ReqUpdateOrganizationRequestType defines model for ReqUpdateOrganizationRequest.Type.
 type ReqUpdateOrganizationRequestType string
 
+// ResAccountExistsResponse defines model for _res_account-exists_Response.
+type ResAccountExistsResponse bool
+
 // ResAuthorizeServiceResponse defines model for _res_authorize-service_Response.
 type ResAuthorizeServiceResponse struct {
 	AccessToken    *string   `json:"access_token,omitempty"`
@@ -805,6 +833,9 @@ type PutServicesAccountPreferencesJSONBody map[string]interface{}
 // PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
 type PutServicesAccountProfileJSONBody ReqSharedProfile
 
+// PostServicesAuthAccountExistsJSONBody defines parameters for PostServicesAuthAccountExists.
+type PostServicesAuthAccountExistsJSONBody ReqAccountExistsRequest
+
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
@@ -894,6 +925,9 @@ type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJ
 
 // PutServicesAccountProfileJSONRequestBody defines body for PutServicesAccountProfile for application/json ContentType.
 type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
+
+// PostServicesAuthAccountExistsJSONRequestBody defines body for PostServicesAuthAccountExists for application/json ContentType.
+type PostServicesAuthAccountExistsJSONRequestBody PostServicesAuthAccountExistsJSONBody
 
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody
