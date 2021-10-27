@@ -632,7 +632,7 @@ func (a *Auth) linkCreds(account model.Account, authType model.AuthType, appType
 	credID := credentialID.String()
 
 	//apply sign up
-	message, identifier, credentialValue, err := authImpl.signUp(authType, appType, appOrg, creds, params, credentialID.String(), l)
+	message, credentialValue, err := authImpl.signUp(authType, appType, appOrg, creds, params, credentialID.String(), l)
 	if err != nil {
 		return "", nil, errors.Wrap("error signing up", err)
 	}

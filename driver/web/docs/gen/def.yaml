@@ -2237,34 +2237,10 @@ components:
           type: string
         creds:
           anyOf:
-            - required:
-                - email
-                - password
-              type: object
-              description: Auth login creds for auth_type="email"
-              properties:
-                email:
-                  type: string
-                password:
-                  type: string
-            - type: object
-              description: Auth login creds for auth_type="twilio_phone"
-              required:
-                - phone
-              properties:
-                phone:
-                  type: string
-                code:
-                  type: string
-            - type: string
-              description: |
-                Auth login creds for auth_type="oidc" (or variants)
-                  - full redirect URI received from OIDC provider
-            - type: object
-              description: Auth login creds for auth_type="anonymous"
-              properties:
-                anonymous_id:
-                  type: string
+            - $ref: '#/components/schemas/_req_shared_CredsEmail'
+            - $ref: '#/components/schemas/_req_shared_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_req_shared_CredsOIDC'
+            - $ref: '#/components/schemas/_req_shared_CredsAPIKey'
         params:
           type: object
           anyOf:
@@ -2278,38 +2254,6 @@ components:
         preferences:
           type: object
           nullable: true
-    _req_shared_Login_CredsEmail:
-      required:
-        - email
-        - password
-      type: object
-      description: Auth login creds for auth_type="email"
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-    _req_shared_Login_CredsTwilioPhone:
-      type: object
-      description: Auth login creds for auth_type="twilio_phone"
-      required:
-        - phone
-      properties:
-        phone:
-          type: string
-        code:
-          type: string
-    _req_shared_Login_CredsOIDC:
-      type: string
-      description: |
-        Auth login creds for auth_type="oidc" (or variants)
-          - full redirect URI received from OIDC provider
-    _req_shared_Login_CredsAPIKey:
-      type: object
-      description: Auth login creds for auth_type="anonymous"
-      properties:
-        anonymous_id:
-          type: string
     _req_shared_Login_ParamsEmail:
       type: object
       description: Auth login params for auth_type="email"
@@ -2379,6 +2323,38 @@ components:
         api_key:
           type: string
         refresh_token:
+          type: string
+    _req_shared_CredsEmail:
+      required:
+        - email
+        - password
+      type: object
+      description: Auth login creds for auth_type="email"
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    _req_shared_CredsTwilioPhone:
+      type: object
+      description: Auth login creds for auth_type="twilio_phone"
+      required:
+        - phone
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+    _req_shared_CredsOIDC:
+      type: string
+      description: |
+        Auth login creds for auth_type="oidc" (or variants)
+          - full redirect URI received from OIDC provider
+    _req_shared_CredsAPIKey:
+      type: object
+      description: Auth login creds for auth_type="anonymous"
+      properties:
+        anonymous_id:
           type: string
     _req_shared_Profile:
       type: object
@@ -2606,6 +2582,7 @@ components:
     _req_link-creds_Request:
       required:
         - auth_type
+        - app_type_identifier
         - creds
       type: object
       properties:
@@ -2616,14 +2593,13 @@ components:
             - twilio_phone
             - illinois_oidc
             - username
+        app_type_identifier:
+          type: string
         creds:
           anyOf:
-            - $ref: '#/components/schemas/_req_shared_Login/properties/creds/anyOf/0'
-            - $ref: '#/components/schemas/_req_shared_Login/properties/creds/anyOf/1'
-            - type: string
-              description: |
-                Auth login creds for auth_type="oidc" (or variants)
-                  - full redirect URI received from OIDC provider
+            - $ref: '#/components/schemas/_req_shared_CredsEmail'
+            - $ref: '#/components/schemas/_req_shared_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_req_shared_CredsOIDC'
     _res_link-creds_Response:
       type: object
       properties:

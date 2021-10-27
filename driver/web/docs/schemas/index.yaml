@@ -89,43 +89,44 @@ DeviceFields:
 
 #### requests
 _req_shared_Login:
-  $ref: "../schemas/apis/shared/requests/login/Request.yaml"
-_req_shared_Login_CredsEmail:
-  $ref: "../schemas/apis/shared/requests/login/CredsEmail.yaml"
-_req_shared_Login_CredsTwilioPhone:
-  $ref: "../schemas/apis/shared/requests/login/CredsTwilioPhone.yaml"
-_req_shared_Login_CredsOIDC:
-  $ref: "../schemas/apis/shared/requests/login/CredsOIDC.yaml"
-_req_shared_Login_CredsAPIKey:
-  $ref: "../schemas/apis/shared/requests/login/CredsAPIKey.yaml"
+  $ref: "./apis/shared/requests/login/Request.yaml"
 _req_shared_Login_ParamsEmail:
-  $ref: "../schemas/apis/shared/requests/login/ParamsEmail.yaml"
+  $ref: "./apis/shared/requests/login/ParamsEmail.yaml"
 _req_shared_Login_ParamsOIDC:
-  $ref: "../schemas/apis/shared/requests/login/ParamsOIDC.yaml"
+  $ref: "./apis/shared/requests/login/ParamsOIDC.yaml"
 _req_shared_Login_ParamsNone:
-  $ref: "../schemas/apis/shared/requests/login/ParamsNone.yaml"
+  $ref: "./apis/shared/requests/login/ParamsNone.yaml"
 _req_shared_Login_Device:
-  $ref: "../schemas/apis/shared/requests/login/Device.yaml"
+  $ref: "./apis/shared/requests/login/Device.yaml"
 _req_shared_LoginUrl:
-  $ref: "../schemas/apis/shared/requests/login-url/Request.yaml"
+  $ref: "./apis/shared/requests/login-url/Request.yaml"
 _req_shared_Refresh:
-  $ref: "../schemas/apis/shared/requests/refresh/Request.yaml"
+  $ref: "./apis/shared/requests/refresh/Request.yaml"
+
+_req_shared_CredsEmail:
+  $ref: "./apis/shared/requests/CredsEmail.yaml"
+_req_shared_CredsTwilioPhone:
+  $ref: "./apis/shared/requests/CredsTwilioPhone.yaml"
+_req_shared_CredsOIDC:
+  $ref: "./apis/shared/requests/CredsOIDC.yaml"
+_req_shared_CredsAPIKey:
+  $ref: "./apis/shared/requests/CredsAPIKey.yaml"
 _req_shared_Profile:
   $ref: "./apis/shared/requests/Profile.yaml"
 _req_shared_ProfileNullable:
-  $ref: "../schemas/apis/shared/requests/ProfileNullable.yaml"
+  $ref: "./apis/shared/requests/ProfileNullable.yaml"
 
 #### responses
 _res_shared_LoginUrl:
-  $ref: "../schemas/apis/shared/responses/login-url/Response.yaml"
+  $ref: "./apis/shared/responses/login-url/Response.yaml"
 _res_shared_Login:
-  $ref: "../schemas/apis/shared/responses/login/Response.yaml"
+  $ref: "./apis/shared/responses/login/Response.yaml"
 _res_shared_Login_Account:
-  $ref: "../schemas/apis/shared/responses/login/Account.yaml"
+  $ref: "./apis/shared/responses/login/Account.yaml"
 _res_shared_Refresh:
-  $ref: "../schemas/apis/shared/responses/refresh/Response.yaml"
+  $ref: "./apis/shared/responses/refresh/Response.yaml"
 _res_shared_RokwireToken:
-  $ref: "../schemas/apis/shared/responses/RokwireToken.yaml"
+  $ref: "./apis/shared/responses/RokwireToken.yaml"
 ### end - shared requests and responses
 
 ### account-exists API

@@ -1,5 +1,6 @@
 required:
   - auth_type
+  - app_type_identifier
   - creds
 type: object
 properties:
@@ -10,6 +11,8 @@ properties:
       - twilio_phone
       - illinois_oidc
       - username
+  app_type_identifier:
+    type: string
   creds:
     anyOf:
       - $ref: "../../../shared/requests/CredsEmail.yaml"

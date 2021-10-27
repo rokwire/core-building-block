@@ -538,12 +538,34 @@ type ReqGetOrganizationRequest struct {
 
 // ReqLinkCredsRequest defines model for _req_link-creds_Request.
 type ReqLinkCredsRequest struct {
-	AuthType ReqLinkCredsRequestAuthType `json:"auth_type"`
-	Creds    interface{}                 `json:"creds"`
+	AppTypeIdentifier string                      `json:"app_type_identifier"`
+	AuthType          ReqLinkCredsRequestAuthType `json:"auth_type"`
+	Creds             interface{}                 `json:"creds"`
 }
 
 // ReqLinkCredsRequestAuthType defines model for ReqLinkCredsRequest.AuthType.
 type ReqLinkCredsRequestAuthType string
+
+// Auth login creds for auth_type="anonymous"
+type ReqSharedCredsAPIKey struct {
+	AnonymousId *string `json:"anonymous_id,omitempty"`
+}
+
+// Auth login creds for auth_type="email"
+type ReqSharedCredsEmail struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// Auth login creds for auth_type="oidc" (or variants)
+//   - full redirect URI received from OIDC provider
+type ReqSharedCredsOIDC string
+
+// Auth login creds for auth_type="twilio_phone"
+type ReqSharedCredsTwilioPhone struct {
+	Code  *string `json:"code,omitempty"`
+	Phone string  `json:"phone"`
+}
 
 // ReqSharedLogin defines model for _req_shared_Login.
 type ReqSharedLogin struct {

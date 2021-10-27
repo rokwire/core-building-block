@@ -21,10 +21,10 @@ properties:
     type: string
   creds:
     anyOf:
-      - $ref: "../../../shared/requests/CredsEmail.yaml"
-      - $ref: "../../../shared/requests/CredsTwilioPhone.yaml"
-      - $ref: "../../../shared/requests//CredsOIDC.yaml"
-      - $ref: "../../../shared/requests//CredsAPIKey.yaml"
+      - $ref: "../CredsEmail.yaml"
+      - $ref: "../CredsTwilioPhone.yaml"
+      - $ref: "../CredsOIDC.yaml"
+      - $ref: "../CredsAPIKey.yaml"
   params:
     type: object
     anyOf:
