@@ -129,6 +129,12 @@ _req_refresh_Request:
 _res_refresh_Response:
   $ref: "./apis/services/refresh/response/Response.yaml"
 
+### account-exists API
+_req_account-exists_Request:
+  $ref: "./apis/services/account-exists/request/Request.yaml"
+_res_account-exists_Response:
+  $ref: "./apis/services/account-exists/response/Response.yaml"
+
 ### authorize-service API
 _req_authorize-service_Request:
   $ref: "./apis/services/authorize-service/request/Request.yaml"
