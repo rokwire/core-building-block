@@ -57,6 +57,8 @@ paths:
     $ref: "./resources/admin/auth/login-url.yaml"
   /admin/global-config:
     $ref: "./resources/admin/global-config.yaml"
+  /admin/account:
+    $ref: "./resources/admin/auth/account-exists.yaml"
   /admin/organizations/{id}:
     $ref: "./resources/admin/organizationsId.yaml"
   /admin/organizations:

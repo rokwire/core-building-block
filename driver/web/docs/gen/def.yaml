@@ -872,6 +872,57 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /admin/account:
+    post:
+      tags:
+        - Admin
+      summary: Check if an account already exists
+      description: |
+        Account exists checks if an account exists for the provided user identifier and auth type
+      requestBody:
+        description: |
+          Account information to be checked
+        content:
+          application/json:
+            schema:
+              required:
+                - auth_type
+                - app_type_identifier
+                - org_id
+                - api_key
+                - user_identifier
+              type: object
+              properties:
+                auth_type:
+                  type: string
+                  enum:
+                    - username
+                    - email
+                    - twilio_phone
+                    - illinois_oidc
+                    - anonymous
+                app_type_identifier:
+                  type: string
+                org_id:
+                  type: string
+                api_key:
+                  type: string
+                user_identifier:
+                  type: string
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: boolean
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   '/admin/organizations/{id}':
     put:
       tags:
