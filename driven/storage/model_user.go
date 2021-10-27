@@ -16,8 +16,8 @@ type account struct {
 
 	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
 
-	MFATypes         []mfaType `bson:"mfa_types,omitempty"`
-	MFARecoveryCodes []string  `bson:"mfa_recovery_codes,omitempty"`
+	MFATypes      []mfaType `bson:"mfa_types,omitempty"`
+	RecoveryCodes []string  `bson:"recovery_codes,omitempty"`
 
 	Preferences map[string]interface{} `bson:"preferences"`
 	Profile     profile                `bson:"profile"`

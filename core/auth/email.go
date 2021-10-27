@@ -184,7 +184,7 @@ func (a *emailAuthImpl) compareVerifyCode(credCode string, requestCode string, e
 	return nil
 
 }
-func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.AccountAuthType, error) {
+func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.AccountAuthType, []model.MFAType, error) {
 	appID := appOrg.Application.ID
 	orgID := appOrg.Organization.ID
 	authTypeID := authType.ID
@@ -192,24 +192,24 @@ func (a *emailAuthImpl) userExist(authType model.AuthType, appType model.Applica
 	var requestCreds emailCreds
 	err := json.Unmarshal([]byte(creds), &requestCreds)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, logutils.StringArgs("request"), err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, logutils.StringArgs("request"), err)
 	}
 
 	account, err := a.auth.storage.FindAccount(appID, orgID, authTypeID, requestCreds.Email)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 
 	if account == nil {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	accountAuthType, err := a.auth.findAccountAuthType(account, &authType, requestCreds.Email)
 	if accountAuthType == nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err) //TODO add args..
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err) //TODO add args..
 	}
 
-	return accountAuthType, nil
+	return accountAuthType, account.GetVerifiedMFATypes(), nil
 }
 
 func emailCredsToMap(creds *emailCreds) (map[string]interface{}, error) {
@@ -245,6 +245,57 @@ func initEmailAuth(auth *Auth) (*emailAuthImpl, error) {
 	err := auth.registerAuthType(email.authType, email)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+	}
+
+	return email, nil
+}
+
+// Email implementation of mfaType
+type emailMfaImpl struct {
+	auth    *Auth
+	mfaType string
+}
+
+func (m *emailMfaImpl) verify(params map[string]interface{}, code string) (*string, error) {
+	var message string
+
+	storedCode, ok := params["code"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "stored mfa code", nil)
+	}
+	if code != storedCode {
+		message = "invalid code"
+		return &message, errors.ErrorData(logutils.StatusInvalid, "mfa code", nil)
+	}
+
+	expiry, ok := params["expires"].(time.Time)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "stored expiry", nil)
+	}
+	if time.Now().UTC().After(expiry) {
+		message = "expired code"
+		return &message, errors.ErrorData(logutils.StatusInvalid, "expired code", nil)
+	}
+
+	return nil, nil
+}
+
+func (m *emailMfaImpl) enroll(accountID string) (*model.MFAType, error) {
+	return nil, errors.New(logutils.Unimplemented)
+}
+
+//sendCode not used for TOTP
+func (m *emailMfaImpl) sendCode(accountID string) (string, error) {
+	return "", nil
+}
+
+//initEmailMfa initializes and registers a new email mfa instance
+func initEmailMfa(auth *Auth) (*emailMfaImpl, error) {
+	email := &emailMfaImpl{auth: auth, mfaType: MfaTypeTotp}
+
+	err := auth.registerMfaType(email.mfaType, email)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeMfaType, nil, err)
 	}
 
 	return email, nil

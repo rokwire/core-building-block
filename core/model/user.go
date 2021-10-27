@@ -43,8 +43,8 @@ type Account struct {
 
 	AuthTypes []AccountAuthType
 
-	MFATypes         []MFAType
-	MFARecoveryCodes []string
+	MFATypes      []MFAType
+	RecoveryCodes []string
 
 	Preferences map[string]interface{}
 	Profile     Profile //one account has one profile, one profile can be shared between many accounts
@@ -116,6 +116,17 @@ func (a Account) GetPermissionsMap() map[string]ApplicationPermission {
 		}
 	}
 	return permissionsMap
+}
+
+//GetVerifiedMFATypes returns a list of only verified MFA types for this account
+func (a Account) GetVerifiedMFATypes() []MFAType {
+	mfaTypes := make([]MFAType, 0)
+	for _, mfa := range a.MFATypes {
+		if mfa.Verified {
+			mfaTypes = append(mfaTypes, mfa)
+		}
+	}
+	return mfaTypes
 }
 
 //AccountAuthType represents account auth type

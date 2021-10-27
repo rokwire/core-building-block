@@ -22,7 +22,18 @@ type totpMfaImpl struct {
 	mfaType string
 }
 
-func (m *totpMfaImpl) verify(accountID string, code string) (*model.MFAType, error) {
+func (m *totpMfaImpl) verify(params map[string]interface{}, code string) (*string, error) {
+	var message string
+
+	secret, ok := params["secret"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "stored totp secret", nil)
+	}
+	if !totp.Validate(code, secret) {
+		message = "invalid code"
+		return &message, errors.ErrorData(logutils.StatusInvalid, "mfa code", nil)
+	}
+
 	return nil, nil
 }
 
@@ -53,7 +64,7 @@ func (m *totpMfaImpl) enroll(accountID string) (*model.MFAType, error) {
 	}
 
 	//Recipient is empty for totp
-	return &model.MFAType{Type: MfaTypeTotp, Verified: false, QRCode: qrCode, Params: params, DateCreated: now}, nil
+	return &model.MFAType{AccountID: accountID, Type: MfaTypeTotp, Verified: false, QRCode: qrCode, Params: params, DateCreated: now}, nil
 }
 
 //sendCode not used for TOTP
@@ -67,7 +78,7 @@ func initTotpMfa(auth *Auth) (*totpMfaImpl, error) {
 
 	err := auth.registerMfaType(totp.mfaType, totp)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeMfaType, nil, err)
 	}
 
 	return totp, nil

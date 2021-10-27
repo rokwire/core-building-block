@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pquerna/otp/totp"
 	"github.com/rokwire/core-auth-library-go/authorization"
 	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
@@ -93,7 +92,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		sub = anonymousID
 
 	} else if authType.IsExternal {
-		accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+		accountAuthType, responseParams, mfaTypes, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 
@@ -103,7 +102,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 
 		//TODO groups mapping
 	} else {
-		message, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+		message, accountAuthType, mfaTypes, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
@@ -117,11 +116,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		//the credentials are valid
 	}
 
-	if !authType.IgnoreMFA && accountAuthType != nil {
-		mfaTypes, err := a.storage.FindMFATypes(sub, true)
-		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, nil, err)
-		}
+	if !authType.IgnoreMFA {
 		//check if account is enrolled in MFA
 		if len(mfaTypes) > 0 {
 			state, err = utils.GenerateRandomString(loginStateLength)
@@ -315,70 +310,47 @@ func (a *Auth) LoginMFA(accountID string, sessionID string, mfaType string, mfaC
 	loginSession, err := a.storage.FindAndUpdateLoginSession(sessionID)
 	if err != nil {
 		a.deleteLoginSession(sessionID, l)
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"session_id": sessionID}, err)
 	}
 
 	var message string
+	errFields := &logutils.FieldArgs{"account_id": accountID, "type": mfaType}
 	mfa, err := a.storage.FindMFAType(accountID, mfaType)
 	if err != nil {
 		a.deleteLoginSession(sessionID, l)
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, errFields, err)
 	}
 	if mfa == nil {
 		message = "account not enrolled"
 		a.deleteLoginSession(sessionID, l)
-		return &message, nil, errors.ErrorData(logutils.StatusMissing, model.TypeMFAType, nil)
+		return &message, nil, errors.ErrorData(logutils.StatusMissing, model.TypeMFAType, errFields)
 	}
 	if !mfa.Verified {
 		message = "mfa type not verified"
 		a.deleteLoginSession(sessionID, l)
-		return &message, nil, errors.ErrorData(logutils.StatusMissing, model.TypeMFAType, nil)
+		return &message, nil, errors.ErrorData(logutils.StatusMissing, model.TypeMFAType, errFields)
 	}
 
 	if mfa.Params == nil {
 		a.deleteLoginSession(sessionID, l)
-		return nil, nil, errors.ErrorData(logutils.StatusMissing, "mfa params", nil)
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, "mfa params", errFields)
 	}
 
 	if state != loginSession.State {
 		message = "invalid login state"
 		a.deleteLoginSession(sessionID, l)
-		return &message, nil, errors.ErrorData(logutils.StatusInvalid, "login state", nil)
+		return &message, nil, errors.ErrorData(logutils.StatusInvalid, "login state", errFields)
 	}
 
-	if mfa.Type != "totp" {
-		storedCode, ok := mfa.Params["code"].(string)
-		if !ok {
-			a.deleteLoginSession(sessionID, l)
-			return nil, nil, errors.ErrorData(logutils.StatusInvalid, "stored mfa code", nil)
-		}
-		if mfaCode != storedCode {
-			message = "invalid code"
-			a.deleteLoginSession(sessionID, l)
-			return &message, nil, errors.ErrorData(logutils.StatusInvalid, "mfa code", nil)
-		}
-
-		expiry, ok := mfa.Params["expires"].(time.Time)
-		if !ok {
-			a.deleteLoginSession(sessionID, l)
-			return nil, nil, errors.ErrorData(logutils.StatusInvalid, "stored expiry", nil)
-		}
-		if time.Now().UTC().After(expiry) {
-			message = "expired code"
-			a.deleteLoginSession(sessionID, l)
-			return &message, nil, errors.ErrorData(logutils.StatusInvalid, "expired code", nil)
-		}
-	} else {
-		secret, ok := mfa.Params["secret"].(string)
-		if !ok {
-			a.deleteLoginSession(sessionID, l)
-			return nil, nil, errors.ErrorData(logutils.StatusInvalid, "stored totp secret", nil)
-		}
-		if !totp.Validate(mfaCode, secret) {
-			message = "invalid code"
-			a.deleteLoginSession(sessionID, l)
-			return &message, nil, errors.ErrorData(logutils.StatusInvalid, "mfa code", nil)
-		}
+	mfaImpl, err := a.getMfaTypeImpl(mfaType)
+	if err != nil {
+		a.deleteLoginSession(sessionID, l)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeMfaType, nil, err)
+	}
+	verifyMsg, err := mfaImpl.verify(mfa.Params, mfaCode)
+	if err != nil {
+		a.deleteLoginSession(sessionID, l)
+		return verifyMsg, nil, errors.WrapErrorAction("verifying", "mfa code", errFields, err)
 	}
 
 	return nil, loginSession, nil
@@ -390,7 +362,7 @@ func (a *Auth) LoginMFA(accountID string, sessionID string, mfaType string, mfaC
 //	Returns:
 //		MFA Types ([]model.MFAType): MFA information for all enrolled types
 func (a *Auth) GetMFATypes(accountID string) ([]model.MFAType, error) {
-	mfa, err := a.storage.FindMFATypes(accountID, false)
+	mfa, err := a.storage.FindMFATypes(accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, nil, err)
 	}
@@ -417,7 +389,7 @@ func (a *Auth) AddMFAType(accountID string, mfaType string) (*model.MFAType, err
 
 	err = a.storage.InsertMFAType(newMfa)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, typeMfaType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, typeMfaType, &logutils.FieldArgs{"account_id": accountID, "type": mfaType}, err)
 	}
 
 	return newMfa, nil
@@ -430,7 +402,7 @@ func (a *Auth) AddMFAType(accountID string, mfaType string) (*model.MFAType, err
 func (a *Auth) RemoveMFAType(accountID string, mfaType string) error {
 	err := a.storage.DeleteMFAType(accountID, mfaType)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, nil, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "type": mfaType}, err)
 	}
 
 	return nil
@@ -485,34 +457,45 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 //	Returns:
 //		Verified (bool): Says if MFA enrollment was verified
 func (a *Auth) VerifyMFA(accountID string, mfaType string, mfaCode string, l *logs.Log) (bool, []string, error) {
+	errFields := &logutils.FieldArgs{"account_id": accountID, "type": mfaType}
+	mfa, err := a.storage.FindMFAType(accountID, mfaType)
+	if err != nil {
+		return false, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, errFields, err)
+	}
+	if mfa == nil {
+		return false, nil, errors.ErrorData(logutils.StatusMissing, model.TypeMFAType, errFields)
+	}
+
+	if mfa.Verified {
+		return false, nil, errors.New("mfa type already verified")
+	}
+	if mfa.Params == nil {
+		return false, nil, errors.ErrorData(logutils.StatusMissing, "mfa params", errFields)
+	}
+
 	mfaImpl, err := a.getMfaTypeImpl(mfaType)
 	if err != nil {
 		return false, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeMfaType, nil, err)
 	}
-
-	mfa, err := mfaImpl.verify(accountID, mfaCode)
+	message, err := mfaImpl.verify(mfa.Params, mfaCode)
 	if err != nil {
-		return false, nil, errors.WrapErrorAction(logutils.ActionValidate, typeMfaType, nil, err)
+		return false, nil, errors.WrapErrorAction(logutils.ActionValidate, typeMfaType, errFields, err)
+	}
+	if message != nil {
+		return false, nil, errors.New(*message)
 	}
 
-	if mfa.Verified {
-		count, err := a.storage.UpdateMFAType(accountID, mfa)
-		if err != nil {
-			return false, nil, errors.WrapErrorAction("updating and counting", model.TypeMFAType, nil, err)
-		}
-
-		var recoveryCodes []string
-		if count == 1 {
-			recoveryCodes, err = a.generateRecoveryCodes(accountID)
-			if err != nil {
-				return false, nil, errors.WrapErrorAction("generating", "mfa recovery codes", nil, err)
-			}
-		}
-
-		return true, recoveryCodes, nil
+	recoveryCodes, err := a.generateRecoveryCodes(accountID)
+	if err != nil {
+		return false, nil, errors.WrapErrorAction("generating", "mfa recovery codes", errFields, err)
 	}
 
-	return false, nil, nil
+	err = a.storage.UpdateMFAType(mfa, recoveryCodes)
+	if err != nil {
+		return false, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, errFields, err)
+	}
+
+	return true, recoveryCodes, nil
 }
 
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or

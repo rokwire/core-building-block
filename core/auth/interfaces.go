@@ -28,7 +28,7 @@ type authType interface {
 	//userExist checks if the user exists for application and organizations
 	// Returns:
 	//	accountAuthType (*model.AccountAuthType): User account auth type
-	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.AccountAuthType, error)
+	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.AccountAuthType, []model.MFAType, error)
 
 	//checkCredentials checks if the account credentials are valid for the account auth type
 	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error)
@@ -56,7 +56,7 @@ type anonymousAuthType interface {
 
 //mfaType is the interface for multi-factor authentication
 type mfaType interface {
-	verify(accountID string, code string) (*model.MFAType, error)
+	verify(params map[string]interface{}, code string) (*string, error)
 	enroll(accountID string) (*model.MFAType, error)
 	sendCode(accountID string) (string, error)
 }
@@ -262,9 +262,9 @@ type Storage interface {
 
 	//MFA
 	FindMFAType(accountID string, mfaType string) (*model.MFAType, error)
-	FindMFATypes(accountID string, onlyVerified bool) ([]model.MFAType, error)
+	FindMFATypes(accountID string) ([]model.MFAType, error)
 	InsertMFAType(mfa *model.MFAType) error
-	UpdateMFAType(accountID string, mfa *model.MFAType) (int, error)
+	UpdateMFAType(mfa *model.MFAType, recoveryCodes []string) error
 	DeleteMFAType(accountID string, mfaType string) error
 
 	//ServiceRegs

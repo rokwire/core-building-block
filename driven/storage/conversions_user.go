@@ -11,12 +11,13 @@ func accountFromStorage(item account, sa *Adapter, application model.Application
 	roles := applicationRolesFromStorage(item.Roles, application)
 	groups := applicationGroupsFromStorage(item.Groups, application)
 	authTypes := accountAuthTypesFromStorage(item.AuthTypes)
+	mfaTypes := mfaTypesFromStorage(item.MFATypes, id)
 	profile := profileFromStorage(item.Profile)
 	devices := accountDevicesFromStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 	return model.Account{ID: id, Application: application, Organization: organization, Permissions: permissions,
-		Roles: roles, Groups: groups, AuthTypes: authTypes, Preferences: item.Preferences, Profile: profile,
+		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile,
 		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated} // Anonymous: item.Anonymous
 }
 
@@ -28,13 +29,14 @@ func accountToStorage(item *model.Account) *account {
 	roles := applicationRolesToStorage(item.Roles)
 	groups := applicationGroupsToStorage(item.Groups)
 	authTypes := accountAuthTypesToStorage(item.AuthTypes)
+	mfaTypes := mfaTypesToStorage(item.MFATypes)
 	profile := profileToStorage(item.Profile)
 	devices := accountDevicesToStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
 	return &account{ID: id, AppID: appID, OrgID: orgID, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
-		Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated} //Anonymous: item.Anonymous
+		MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated} //Anonymous: item.Anonymous
 }
 
 func accountDevicesFromStorage(item account) []model.Device {
@@ -166,20 +168,28 @@ func credentialToStorage(item *model.Credential) *credential {
 }
 
 //MFA
-func mfaListFromStorage(items []mfaType, accountID string) []model.MFAType {
+func mfaTypesFromStorage(items []mfaType, accountID string) []model.MFAType {
 	res := make([]model.MFAType, len(items))
 	for i, mfa := range items {
-		res[i] = mfaFromStorage(mfa, accountID)
+		res[i] = mfaTypeFromStorage(mfa, accountID)
 	}
 	return res
 }
 
-func mfaFromStorage(item mfaType, accountID string) model.MFAType {
+func mfaTypeFromStorage(item mfaType, accountID string) model.MFAType {
 	return model.MFAType{AccountID: accountID, Type: item.Type, Verified: item.Verified, Recipient: item.Recipient,
 		Params: item.Params, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-func mfaToStorage(item *model.MFAType) *mfaType {
-	return &mfaType{Type: item.Type, Verified: item.Verified, Recipient: item.Recipient, Params: item.Params,
+func mfaTypesToStorage(items []model.MFAType) []mfaType {
+	res := make([]mfaType, len(items))
+	for i, mfa := range items {
+		res[i] = mfaTypeToStorage(&mfa)
+	}
+	return res
+}
+
+func mfaTypeToStorage(item *model.MFAType) mfaType {
+	return mfaType{Type: item.Type, Verified: item.Verified, Recipient: item.Recipient, Params: item.Params,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
