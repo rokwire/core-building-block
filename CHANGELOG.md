@@ -12,13 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prepare Core for Admin app integration [#247](https://github.com/rokwire/core-building-block/issues/247)
 - Expose does account exist services API [#255](https://github.com/rokwire/core-building-block/issues/255)
 
+### Fixed
+- MongoDB ChangeStream Watch() does not recover [#259](https://github.com/rokwire/core-building-block/issues/259)
+
 ## [1.7.0] - 2021-10-25
 ### Added
 - Handle API key validation for non-anonymous users [#244](https://github.com/rokwire/core-building-block/issues/244)
 - Implement logins sessions [#172](https://github.com/rokwire/core-building-block/issues/172) 
-
-### Fixed
-- MongoDB ChangeStream Watch() does not recover [#259](https://github.com/rokwire/core-building-block/issues/259)
 
 ## [1.6.0] - 2021-10-19
 ### Added
