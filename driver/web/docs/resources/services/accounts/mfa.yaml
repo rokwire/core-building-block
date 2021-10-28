@@ -16,7 +16,7 @@ get:
           schema:
             type: array
             items:
-              $ref: "../../../schemas/apis/shared/responses/Mfa.yaml"
+              $ref: "../../../schemas/apis/shared/responses/mfa/Response.yaml"
     400:
       description: Bad request
     401:
@@ -48,7 +48,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/apis/shared/responses/Mfa.yaml"
+            $ref: "../../../schemas/apis/shared/responses/mfa/Response.yaml"
     400:
       description: Bad request
     401:

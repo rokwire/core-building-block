@@ -1,16 +1,16 @@
 post:
   tags:
   - Services
-  summary: MFA
+  summary: Check if an account already exists
   description: |
-    Verify multi-factor authentication credentials to complete MFA registration
+    Account exists checks if an account exists for the provided user identifier and auth type
   requestBody:
     description: |
-      MFA credentials and parameters
+      Account information to be checked
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/shared/requests/mfa/Request.yaml"
+          $ref: "../../../schemas/apis/services/account-exists/request/Request.yaml"
     required: true
   responses:
     200:
@@ -18,9 +18,7 @@ post:
       content:
         application/json:
           schema:
-            type: array
-            items: 
-              type: string
+            $ref: "../../../schemas/apis/services/account-exists/response/Response.yaml"
     400:
       description: Bad request
     401:

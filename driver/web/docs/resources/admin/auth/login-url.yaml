@@ -1,16 +1,14 @@
 post:
   tags:
-  - Services
-  summary: MFA
+  - Admin
+  summary: Get SSO login url
   description: |
-    Verify multi-factor authentication credentials to complete MFA registration
+    Retrieve a pre-formatted SSO login URL
   requestBody:
-    description: |
-      MFA credentials and parameters
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/shared/requests/mfa/Request.yaml"
+          $ref: "../../../schemas/apis/shared/requests/login-url/Request.yaml"
     required: true
   responses:
     200:
@@ -18,9 +16,7 @@ post:
       content:
         application/json:
           schema:
-            type: array
-            items: 
-              type: string
+            $ref: "../../../schemas/apis/shared/responses/login-url/Response.yaml"
     400:
       description: Bad request
     401:

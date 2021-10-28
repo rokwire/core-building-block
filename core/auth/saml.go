@@ -26,9 +26,6 @@ func (a *samlAuthImpl) externalLogin(authType model.AuthType, appType model.Appl
 func (a *samlAuthImpl) verify(id string, verification string, l *logs.Log) error {
 	return errors.New(logutils.Unimplemented)
 }
-func (a *samlAuthImpl) userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error) {
-	return nil, nil
-}
 
 func (a *samlAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)

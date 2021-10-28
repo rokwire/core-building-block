@@ -19,7 +19,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/services/login/request/MfaRequest.yaml"
+          $ref: "../../../schemas/apis/shared/requests/login/MfaRequest.yaml"
     required: true
   responses:
     200:
@@ -27,7 +27,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/apis/services/login/response/Response.yaml"
+            $ref: "../../../schemas/apis/shared/responses/login/Response.yaml"
     400:
       description: Bad request
     401:

@@ -1,6 +1,6 @@
 post:
   tags:
-  - Services
+  - Admin
   summary: Login
   description: |
     Login using credentials to retrieve access token, refresh token, and user data
@@ -161,9 +161,7 @@ post:
       content:
         application/json:
           schema:
-            anyOf:
-              - $ref: "../../../schemas/apis/shared/responses/login/MfaResponse.yaml"
-              - $ref: "../../../schemas/apis/shared/responses/login/Response.yaml"
+            $ref: "../../../schemas/apis/shared/responses/login/Response.yaml"
     400:
       description: Bad request
     401:

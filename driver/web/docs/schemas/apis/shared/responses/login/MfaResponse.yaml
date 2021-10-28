@@ -7,7 +7,7 @@ properties:
   enrolled:
     type: array
     items:
-      $ref: "../../../shared/responses/Mfa.yaml"
+      $ref: "../../../shared/responses/mfa/Response.yaml"
   session_id:
     type: string
   state:

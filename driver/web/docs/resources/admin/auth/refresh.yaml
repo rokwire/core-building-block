@@ -1,16 +1,16 @@
 post:
   tags:
-  - Services
-  summary: MFA
+  - Admin
+  summary: Refresh
   description: |
-    Verify multi-factor authentication credentials to complete MFA registration
+    Refresh access token using a refresh token
   requestBody:
     description: |
-      MFA credentials and parameters
+      Refresh token
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/shared/requests/mfa/Request.yaml"
+          $ref: "../../../schemas/apis/shared/requests/refresh/Request.yaml"
     required: true
   responses:
     200:
@@ -18,9 +18,7 @@ post:
       content:
         application/json:
           schema:
-            type: array
-            items: 
-              type: string
+            $ref: "../../../schemas/apis/shared/responses/refresh/Response.yaml"
     400:
       description: Bad request
     401:
