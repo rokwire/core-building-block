@@ -91,6 +91,8 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/auth/login-url", we.wrapFunc(we.adminApisHandler.adminLoginURL, nil)).Methods("POST")
 	adminSubrouter.HandleFunc("/auth/refresh", we.wrapFunc(we.adminApisHandler.adminRefresh, nil)).Methods("POST")
 
+	adminSubrouter.HandleFunc("/auth/account-exists", we.wrapFunc(we.adminApisHandler.accountExists, nil)).Methods("POST")
+
 	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.createGlobalConfig, we.auth.adminAuth)).Methods("POST")
 	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.getGlobalConfig, we.auth.adminAuth)).Methods("GET")
 	adminSubrouter.HandleFunc("/global-config", we.wrapFunc(we.adminApisHandler.updateGlobalConfig, we.auth.adminAuth)).Methods("PUT")
