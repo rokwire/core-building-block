@@ -28,9 +28,9 @@ properties:
   params:
     type: object
     anyOf:
-      - $ref: "./ParamsEmail.yaml"
-      - $ref: "./ParamsOIDC.yaml"
-      - $ref: "./ParamsNone.yaml"
+      - $ref: "../ParamsEmail.yaml"
+      - $ref: "../ParamsOIDC.yaml"
+      - $ref: "../ParamsNone.yaml"
   device:
     $ref: "./Device.yaml"
   profile:

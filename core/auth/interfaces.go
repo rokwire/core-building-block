@@ -146,13 +146,13 @@ type APIs interface {
 	//	Input:
 	//		accountID (string): ID of the account to link the creds to
 	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 	//		params (string): JSON encoded params defined by specified auth type
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		Message (*string): message
-	//		Params (interface{}): authType-specific set of parameters passed back to client
-	LinkCreds(accountID string, authenticationType string, creds string, params string, l *logs.Log) (*string, interface{}, error)
+	LinkCreds(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, error)
 
 	//GetScopedAccessToken returns a scoped access token with the requested scopes
 	GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scopes []authorization.Scope) (string, error)

@@ -396,14 +396,58 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/_req_link-creds_Request'
+            examples:
+              email-sign_up:
+                summary: Email
+                value: |
+                  {
+                    "auth_type": "email",
+                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": {
+                      "email": "test@test.com", 
+                      "password": "test12345"
+                    },
+                    "params":{
+                        "confirm_password": "test12345"
+                    }
+                  }
+              phone:
+                summary: Phone
+                value: |
+                  {
+                    "auth_type": "twilio_phone",
+                    "app_type_identifier": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": {
+                      "phone": "+12223334444"
+                    }
+                  }
+              illinois_oidc:
+                summary: Illinois OIDC
+                value: |
+                  {
+                    "auth_type": "illinois_oidc",
+                    "app_type_identifier": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
+                    "params": {
+                      "redirect_uri": "https://redirect.example.com",
+                      "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                    }
+                  }
         required: true
       responses:
         '200':
           description: Success
           content:
-            application/json:
+            text/plain:
               schema:
-                $ref: '#/components/schemas/_res_link-creds_Response'
+                type: string
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -2244,9 +2288,9 @@ components:
         params:
           type: object
           anyOf:
-            - $ref: '#/components/schemas/_req_shared_Login_ParamsEmail'
-            - $ref: '#/components/schemas/_req_shared_Login_ParamsOIDC'
-            - $ref: '#/components/schemas/_req_shared_Login_ParamsNone'
+            - $ref: '#/components/schemas/_req_shared_ParamsEmail'
+            - $ref: '#/components/schemas/_req_shared_ParamsOIDC'
+            - $ref: '#/components/schemas/_req_shared_ParamsNone'
         device:
           $ref: '#/components/schemas/_req_shared_Login_Device'
         profile:
@@ -2254,28 +2298,6 @@ components:
         preferences:
           type: object
           nullable: true
-    _req_shared_Login_ParamsEmail:
-      type: object
-      description: Auth login params for auth_type="email"
-      properties:
-        confirm_password:
-          type: string
-          description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
-        sign_up:
-          type: boolean
-          default: false
-    _req_shared_Login_ParamsOIDC:
-      type: object
-      description: Auth login params for auth_type="oidc" (or variants)
-      properties:
-        redirect_uri:
-          type: string
-        pkce_verifier:
-          type: string
-    _req_shared_Login_ParamsNone:
-      type: object
-      description: Auth login request params for unlisted auth_types (None)
-      nullable: true
     _req_shared_Login_Device:
       required:
         - type
@@ -2356,6 +2378,28 @@ components:
       properties:
         anonymous_id:
           type: string
+    _req_shared_ParamsEmail:
+      type: object
+      description: Auth login params for auth_type="email"
+      properties:
+        confirm_password:
+          type: string
+          description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+        sign_up:
+          type: boolean
+          default: false
+    _req_shared_ParamsOIDC:
+      type: object
+      description: Auth login params for auth_type="oidc" (or variants)
+      properties:
+        redirect_uri:
+          type: string
+        pkce_verifier:
+          type: string
+    _req_shared_ParamsNone:
+      type: object
+      description: Auth login request params for unlisted auth_types (None)
+      nullable: true
     _req_shared_Profile:
       type: object
       properties:
@@ -2600,18 +2644,12 @@ components:
             - $ref: '#/components/schemas/_req_shared_CredsEmail'
             - $ref: '#/components/schemas/_req_shared_CredsTwilioPhone'
             - $ref: '#/components/schemas/_req_shared_CredsOIDC'
-    _res_link-creds_Response:
-      type: object
-      properties:
         params:
           type: object
-          nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/0'
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/1'
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/2'
-        message:
-          type: string
+            - $ref: '#/components/schemas/_req_shared_ParamsEmail'
+            - $ref: '#/components/schemas/_req_shared_ParamsOIDC'
+            - $ref: '#/components/schemas/_req_shared_ParamsNone'
     _req_create-Organization_Request:
       required:
         - name

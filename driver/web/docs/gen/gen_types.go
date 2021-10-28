@@ -541,6 +541,7 @@ type ReqLinkCredsRequest struct {
 	AppTypeIdentifier string                      `json:"app_type_identifier"`
 	AuthType          ReqLinkCredsRequestAuthType `json:"auth_type"`
 	Creds             interface{}                 `json:"creds"`
+	Params            *interface{}                `json:"params,omitempty"`
 }
 
 // ReqLinkCredsRequestAuthType defines model for ReqLinkCredsRequest.AuthType.
@@ -608,7 +609,7 @@ type ReqSharedLoginDevice struct {
 type ReqSharedLoginDeviceType string
 
 // Auth login params for auth_type="email"
-type ReqSharedLoginParamsEmail struct {
+type ReqSharedParamsEmail struct {
 
 	// This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
 	ConfirmPassword *string `json:"confirm_password,omitempty"`
@@ -616,10 +617,10 @@ type ReqSharedLoginParamsEmail struct {
 }
 
 // Auth login request params for unlisted auth_types (None)
-type ReqSharedLoginParamsNone map[string]interface{}
+type ReqSharedParamsNone map[string]interface{}
 
 // Auth login params for auth_type="oidc" (or variants)
-type ReqSharedLoginParamsOIDC struct {
+type ReqSharedParamsOIDC struct {
 	PkceVerifier *string `json:"pkce_verifier,omitempty"`
 	RedirectUri  *string `json:"redirect_uri,omitempty"`
 }
@@ -706,12 +707,6 @@ type ResGetOrganizationsResponse struct {
 
 // ResGetOrganizationsResponseType defines model for ResGetOrganizationsResponse.Type.
 type ResGetOrganizationsResponseType string
-
-// ResLinkCredsResponse defines model for _res_link-creds_Response.
-type ResLinkCredsResponse struct {
-	Message *string      `json:"message,omitempty"`
-	Params  *interface{} `json:"params"`
-}
 
 // ResSharedLogin defines model for _res_shared_Login.
 type ResSharedLogin struct {

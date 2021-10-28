@@ -90,12 +90,6 @@ DeviceFields:
 #### requests
 _req_shared_Login:
   $ref: "./apis/shared/requests/login/Request.yaml"
-_req_shared_Login_ParamsEmail:
-  $ref: "./apis/shared/requests/login/ParamsEmail.yaml"
-_req_shared_Login_ParamsOIDC:
-  $ref: "./apis/shared/requests/login/ParamsOIDC.yaml"
-_req_shared_Login_ParamsNone:
-  $ref: "./apis/shared/requests/login/ParamsNone.yaml"
 _req_shared_Login_Device:
   $ref: "./apis/shared/requests/login/Device.yaml"
 _req_shared_LoginUrl:
@@ -111,6 +105,12 @@ _req_shared_CredsOIDC:
   $ref: "./apis/shared/requests/CredsOIDC.yaml"
 _req_shared_CredsAPIKey:
   $ref: "./apis/shared/requests/CredsAPIKey.yaml"
+_req_shared_ParamsEmail:
+  $ref: "./apis/shared/requests/ParamsEmail.yaml"
+_req_shared_ParamsOIDC:
+  $ref: "./apis/shared/requests/ParamsOIDC.yaml"
+_req_shared_ParamsNone:
+  $ref: "./apis/shared/requests/ParamsNone.yaml"
 _req_shared_Profile:
   $ref: "./apis/shared/requests/Profile.yaml"
 _req_shared_ProfileNullable:
@@ -144,8 +144,6 @@ _res_authorize-service_Response:
 ### link-creds API
 _req_link-creds_Request:
   $ref: "./apis/services/link-creds/request/Request.yaml"
-_res_link-creds_Response:
-  $ref: "./apis/services/link-creds/response/Response.yaml"
 
 ### organization API
 _req_create-Organization_Request:
