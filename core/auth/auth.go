@@ -218,7 +218,6 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		accountAuthTypeParams["user"] = externalUser
 
 		accountAuthType, _, profile, preferences, err = a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, nil, nil, regProfile, regPreferences, l)
-
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
@@ -605,26 +604,25 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 	return &accountAuthType, nil
 }
 
-func (a *Auth) linkCreds(account model.Account, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (string, *model.AccountAuthType, error) {
-	var message string
-	var accountAuthType *model.AccountAuthType
-	var credential *model.Credential
-
-	//auth type
+func (a *Auth) linkCredsAuthType(account model.Account, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
+	creds string, params string, l *logs.Log) (string, *model.AccountAuthType, error) {
 	authImpl, err := a.getAuthTypeImpl(authType)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	//check if the user exists check
-	accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
+	userIdentifier, err := authImpl.getUserIdentifier(creds)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
+	}
+
+	//2. check if the user exists
+	newCredsAccount, err := a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, userIdentifier)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
-
-	accountExists := (accountAuthType != nil)
-	// Cannot link creds if an account already exists for new creds
-	if accountExists {
+	//cannot link creds if an account already exists for new creds
+	if newCredsAccount != nil {
 		return "", nil, errors.New("an account already exists for the provided credentials")
 	}
 
@@ -637,7 +635,7 @@ func (a *Auth) linkCreds(account model.Account, authType model.AuthType, appType
 		return "", nil, errors.Wrap("error signing up", err)
 	}
 
-	accountAuthType, credential, err = a.prepareAccountAuthType(authType, *identifier, nil, &credID, credentialValue)
+	accountAuthType, credential, err := a.prepareAccountAuthType(authType, userIdentifier, nil, &credID, credentialValue)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
 	}
@@ -649,6 +647,45 @@ func (a *Auth) linkCreds(account model.Account, authType model.AuthType, appType
 	}
 
 	return message, accountAuthType, nil
+}
+
+func (a *Auth) linkCredsExternalAuthType(account model.Account, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
+	creds string, params string, l *logs.Log) (*model.AccountAuthType, error) {
+	authImpl, err := a.getExternalAuthTypeImpl(authType)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	externalUser, _, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction("logging in", "external user", nil, err)
+	}
+
+	//2. check if the user exists
+	newCredsAccount, err := a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, externalUser.Identifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	//cannot link creds if an account already exists for new creds
+	if newCredsAccount != nil {
+		return nil, errors.New("an account already exists for the provided credentials")
+	}
+
+	accountAuthTypeParams := map[string]interface{}{}
+	accountAuthTypeParams["user"] = externalUser
+
+	accountAuthType, credential, err := a.prepareAccountAuthType(authType, externalUser.Identifier, accountAuthTypeParams, nil, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
+	}
+	accountAuthType.Account = account
+
+	err = a.registerAccountAuthType(*accountAuthType, credential, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccountAuthType, nil, err)
+	}
+
+	return accountAuthType, nil
 }
 
 func (a *Auth) registerAccountAuthType(accountAuthType model.AccountAuthType, credential *model.Credential, l *logs.Log) error {

@@ -437,9 +437,18 @@ func (a *Auth) LinkCreds(accountID string, authenticationType string, appTypeIde
 		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
-	message, _, err = a.linkCreds(*account, *authType, *appType, *appOrg, creds, params, l)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
+	if authType.IsAnonymous {
+		return nil, nil, errors.New("cannot link anonymous auth type to an account")
+	} else if authType.IsExternal {
+		_, err = a.linkCredsExternalAuthType(*account, *authType, *appType, *appOrg, creds, params, l)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
+		}
+	} else {
+		message, _, err = a.linkCredsAuthType(*account, *authType, *appType, *appOrg, creds, params, l)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
+		}
 	}
 
 	return &message, nil, nil
