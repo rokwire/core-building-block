@@ -48,53 +48,14 @@ func applicationTypesFromStorage(itemsList []applicationType) []model.Applicatio
 	return items
 }
 
-//ApplicationPermission
-func applicationPermissionFromStorage(item *applicationPermission, application model.Application) model.ApplicationPermission {
-	if item == nil {
-		return model.ApplicationPermission{}
-	}
-
-	return model.ApplicationPermission{ID: item.ID, Name: item.Name, Application: application,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
-}
-
-func applicationPermissionsFromStorage(items []applicationPermission, application model.Application) []model.ApplicationPermission {
-	if len(items) == 0 {
-		return make([]model.ApplicationPermission, 0)
-	}
-
-	res := make([]model.ApplicationPermission, len(items))
-	for i, org := range items {
-		res[i] = applicationPermissionFromStorage(&org, application)
-	}
-	return res
-}
-
-func applicationPermissionToStorage(item model.ApplicationPermission) applicationPermission {
-	return applicationPermission{ID: item.ID, Name: item.Name, AppID: item.Application.ID, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
-}
-
-func applicationPermissionsToStorage(items []model.ApplicationPermission) []applicationPermission {
-	if len(items) == 0 {
-		return make([]applicationPermission, 0)
-	}
-
-	res := make([]applicationPermission, len(items))
-	for i, permission := range items {
-		res[i] = applicationPermissionToStorage(permission)
-	}
-	return res
-}
-
 //ApplicationRole
 func applicationRoleFromStorage(item *applicationRole, application model.Application) model.ApplicationRole {
 	if item == nil {
 		return model.ApplicationRole{}
 	}
 
-	permissions := applicationPermissionsFromStorage(item.Permissions, application)
 	return model.ApplicationRole{ID: item.ID, Name: item.Name, Description: item.Description,
-		Permissions: permissions, Application: application,
+		Permissions: item.Permissions, Application: application,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
@@ -111,9 +72,8 @@ func applicationRolesFromStorage(items []applicationRole, application model.Appl
 }
 
 func applicationRoleToStorage(item model.ApplicationRole) applicationRole {
-	permissions := applicationPermissionsToStorage(item.Permissions)
 	return applicationRole{ID: item.ID, Name: item.Name, Description: item.Description,
-		AppID: item.Application.ID, Permissions: permissions,
+		AppID: item.Application.ID, Permissions: item.Permissions,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
@@ -135,9 +95,8 @@ func applicationGroupFromStorage(item *applicationGroup, application model.Appli
 		return model.ApplicationGroup{}
 	}
 
-	permissions := applicationPermissionsFromStorage(item.Permissions, application)
 	roles := applicationRolesFromStorage(item.Roles, application)
-	return model.ApplicationGroup{ID: item.ID, Name: item.Name, Permissions: permissions, Roles: roles,
+	return model.ApplicationGroup{ID: item.ID, Name: item.Name, Permissions: item.Permissions, Roles: roles,
 		Application: application, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
@@ -154,10 +113,9 @@ func applicationGroupsFromStorage(items []applicationGroup, application model.Ap
 }
 
 func applicationGroupToStorage(item model.ApplicationGroup) applicationGroup {
-	permissions := applicationPermissionsToStorage(item.Permissions)
 	roles := applicationRolesToStorage(item.Roles)
 	return applicationGroup{ID: item.ID, Name: item.Name, AppID: item.Application.ID,
-		Permissions: permissions, Roles: roles, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Permissions: item.Permissions, Roles: roles, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func applicationGroupsToStorage(items []model.ApplicationGroup) []applicationGroup {
