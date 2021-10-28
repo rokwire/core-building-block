@@ -731,18 +731,6 @@ type ResSharedRokwireToken struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResSharedRokwireTokenTokenType string
 
-// PostAdminAccountJSONBody defines parameters for PostAdminAccount.
-type PostAdminAccountJSONBody struct {
-	ApiKey            string                           `json:"api_key"`
-	AppTypeIdentifier string                           `json:"app_type_identifier"`
-	AuthType          PostAdminAccountJSONBodyAuthType `json:"auth_type"`
-	OrgId             string                           `json:"org_id"`
-	UserIdentifier    string                           `json:"user_identifier"`
-}
-
-// PostAdminAccountJSONBodyAuthType defines parameters for PostAdminAccount.
-type PostAdminAccountJSONBodyAuthType string
-
 // PutAdminAccountPermissionsJSONBody defines parameters for PutAdminAccountPermissions.
 type PutAdminAccountPermissionsJSONBody ReqAccountPermissionsRequest
 
@@ -781,6 +769,9 @@ type PostAdminApplicationRolesJSONBody ReqApplicationRolesRequest
 
 // PostAdminApplicationsJSONBody defines parameters for PostAdminApplications.
 type PostAdminApplicationsJSONBody ReqCreateApplicationRequest
+
+// PostAdminAuthAccountExistsJSONBody defines parameters for PostAdminAuthAccountExists.
+type PostAdminAuthAccountExistsJSONBody ReqAccountExistsRequest
 
 // PostAdminAuthLoginJSONBody defines parameters for PostAdminAuthLogin.
 type PostAdminAuthLoginJSONBody ReqSharedLogin
@@ -833,8 +824,8 @@ type PutServicesAccountPreferencesJSONBody map[string]interface{}
 // PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
 type PutServicesAccountProfileJSONBody ReqSharedProfile
 
-// PostServicesAuthAccountExistsJSONBody defines parameters for PostServicesAuthAccountExists.
-type PostServicesAuthAccountExistsJSONBody ReqAccountExistsRequest
+// PostAdminAuthAccountExistsJSONBody defines parameters for PostAdminAuthAccountExists.
+type PostAdminAuthAccountExistsJSONBody ReqAccountExistsRequest
 
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
@@ -869,9 +860,6 @@ type GetTpsServiceRegsParams struct {
 	Ids string `json:"ids"`
 }
 
-// PostAdminAccountJSONRequestBody defines body for PostAdminAccount for application/json ContentType.
-type PostAdminAccountJSONRequestBody PostAdminAccountJSONBody
-
 // PutAdminAccountPermissionsJSONRequestBody defines body for PutAdminAccountPermissions for application/json ContentType.
 type PutAdminAccountPermissionsJSONRequestBody PutAdminAccountPermissionsJSONBody
 
@@ -892,6 +880,9 @@ type PostAdminApplicationRolesJSONRequestBody PostAdminApplicationRolesJSONBody
 
 // PostAdminApplicationsJSONRequestBody defines body for PostAdminApplications for application/json ContentType.
 type PostAdminApplicationsJSONRequestBody PostAdminApplicationsJSONBody
+
+// PostAdminAuthAccountExistsJSONRequestBody defines body for PostAdminAuthAccountExists for application/json ContentType.
+type PostAdminAuthAccountExistsJSONRequestBody PostAdminAuthAccountExistsJSONBody
 
 // PostAdminAuthLoginJSONRequestBody defines body for PostAdminAuthLogin for application/json ContentType.
 type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody
@@ -926,8 +917,8 @@ type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJ
 // PutServicesAccountProfileJSONRequestBody defines body for PutServicesAccountProfile for application/json ContentType.
 type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
 
-// PostServicesAuthAccountExistsJSONRequestBody defines body for PostServicesAuthAccountExists for application/json ContentType.
-type PostServicesAuthAccountExistsJSONRequestBody PostServicesAuthAccountExistsJSONBody
+// PostAdminAuthAccountExistsJSONRequestBody defines body for PostAdminAuthAccountExists for application/json ContentType.
+type PostAdminAuthAccountExistsJSONRequestBody PostAdminAuthAccountExistsJSONBody
 
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody

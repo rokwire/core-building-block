@@ -114,6 +114,8 @@ _req_shared_Profile:
   $ref: "../schemas/apis/shared/requests/Profile.yaml"
 _req_shared_ProfileNullable:
   $ref: "../schemas/apis/shared/requests/ProfileNullable.yaml"
+_req_account-exists_Request:
+  $ref: "../schemas/apis/shared/requests/account-exists/Request.yaml"
 
 #### responses
 _res_shared_LoginUrl:
@@ -126,13 +128,9 @@ _res_shared_Refresh:
   $ref: "../schemas/apis/shared/responses/refresh/Response.yaml"
 _res_shared_RokwireToken:
   $ref: "../schemas/apis/shared/responses/RokwireToken.yaml"
-### end - shared requests and responses
-
-### account-exists API
-_req_account-exists_Request:
-  $ref: "./apis/services/account-exists/request/Request.yaml"
 _res_account-exists_Response:
-  $ref: "./apis/services/account-exists/response/Response.yaml"
+  $ref: "../schemas/apis/shared/responses/account-exists/Response.yaml"
+### end - shared requests and responses
 
 ### authorize-service API
 _req_authorize-service_Request:
