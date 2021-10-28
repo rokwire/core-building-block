@@ -44,6 +44,8 @@ type Administration interface {
 
 	AdmGrantAccountPermissions(accountID string, appID string, permissionNames []string) error
 	AdmGrantAccountRoles(accountID string, appID string, roleIDs []string) error
+
+	AdmGetAccount(accountID string) (*model.Account, error)
 }
 
 //Encryption exposes APIs for the Encryption building block

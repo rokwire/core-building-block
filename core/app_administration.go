@@ -342,3 +342,12 @@ func (app *application) admGrantAccountRoles(accountID string, appID string, rol
 	}
 	return nil
 }
+
+func (app *application) admGetAccount(accountID string) (*model.Account, error) {
+	//find the account
+	account, err := app.storage.FindAccountByID(accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	return account, nil
+}

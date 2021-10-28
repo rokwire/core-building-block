@@ -165,6 +165,10 @@ func (s *administrationImpl) AdmGrantAccountRoles(accountID string, appID string
 	return s.app.admGrantAccountRoles(accountID, appID, roleIDs)
 }
 
+func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
+	return s.app.admGetAccount(accountID)
+}
+
 ///
 
 //encryptionImpl
