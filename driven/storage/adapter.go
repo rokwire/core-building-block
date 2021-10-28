@@ -356,8 +356,8 @@ func (sa *Adapter) FindAuthType(codeOrID string) (*model.AuthType, error) {
 }
 
 //InsertLoginSession inserts login session
-func (sa *Adapter) InsertLoginSession(loginSession model.LoginSession, limit int) (*model.LoginSession, error) {
-	storageLoginSession := loginSessionToStorage(loginSession)
+func (sa *Adapter) InsertLoginSession(session model.LoginSession, limit int) (*model.LoginSession, error) {
+	storageLoginSession := loginSessionToStorage(session)
 
 	// transaction
 	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
@@ -367,20 +367,29 @@ func (sa *Adapter) InsertLoginSession(loginSession model.LoginSession, limit int
 			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
 		}
 
-		if loginSession.AccountAuthType != nil {
-			filter := bson.D{primitive.E{Key: "account_id", Value: loginSession.AccountAuthType.Account.ID}}
-			count, err := sa.db.loginsSessions.CountDocumentsWithContext(sessionContext, filter)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionCount, model.TypeLoginSession, nil, err)
-			}
-			if count >= int64(limit) {
-				return errors.ErrorData(logutils.StatusInvalid, model.TypeLoginSession, logutils.StringArgs("login session limit reached"))
-			}
-		}
-
 		_, err = sa.db.loginsSessions.InsertOneWithContext(sessionContext, storageLoginSession)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
+		}
+
+		if session.AccountAuthType != nil && limit > 0 {
+			filter := bson.D{primitive.E{Key: "account_id", Value: session.AccountAuthType.Account.ID}}
+			opts := options.Find()
+			opts.SetSort(bson.D{primitive.E{Key: "expires", Value: 1}})
+
+			var loginSessions []loginSession
+			err = sa.db.loginsSessions.FindWithContext(sessionContext, filter, &loginSessions, opts)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"account_id": session.AccountAuthType.Account.ID}, err)
+			}
+
+			if len(loginSessions) > limit {
+				filter = bson.D{primitive.E{Key: "_id", Value: loginSessions[0].ID}}
+				_, err = sa.db.loginsSessions.DeleteOneWithContext(sessionContext, filter, nil)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, &logutils.FieldArgs{"_id": loginSessions[0].ID}, err)
+				}
+			}
 		}
 
 		err = sessionContext.CommitTransaction(sessionContext)
@@ -394,7 +403,7 @@ func (sa *Adapter) InsertLoginSession(loginSession model.LoginSession, limit int
 		return nil, err
 	}
 
-	return &loginSession, nil
+	return &session, nil
 }
 
 //FindLoginSession finds login session by refresh token
