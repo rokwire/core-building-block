@@ -1,6 +1,6 @@
 post:
   tags:
-  - Services
+  - Admin
   summary: Refresh
   description: |
     Refresh access token using a refresh token
