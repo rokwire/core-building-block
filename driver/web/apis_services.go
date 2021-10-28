@@ -93,7 +93,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		return l.HttpResponseSuccessJSON(respData)
 	}
 
-	return h.authBuildLoginResponse(l, loginSession)
+	return authBuildLoginResponse(l, loginSession)
 }
 
 func (h ServicesApisHandler) authLoginMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
@@ -116,7 +116,7 @@ func (h ServicesApisHandler) authLoginMFA(l *logs.Log, r *http.Request, claims *
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
 
-	return h.authBuildLoginResponse(l, loginSession)
+	return authBuildLoginResponse(l, loginSession)
 }
 
 func (h ServicesApisHandler) accountExists(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
@@ -458,50 +458,6 @@ func (h ServicesApisHandler) verifyMFA(l *logs.Log, r *http.Request, claims *tok
 	}
 
 	return l.HttpResponseSuccessJSON(response)
-}
-
-//Helper for authLogin and authLoginMFA
-func (h ServicesApisHandler) authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.HttpResponse {
-	//token
-	accessToken := loginSession.AccessToken
-	refreshToken := loginSession.RefreshToken
-
-	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
-	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
-
-	//account
-	var accountData *Def.ResSharedLoginAccount
-	if !loginSession.Anonymous {
-		account := loginSession.AccountAuthType.Account
-
-		//profile
-		profile := profileToDef(&account.Profile)
-		//preferences
-		preferences := &account.Preferences
-		//permissions
-		permissions := applicationPermissionsToDef(account.Permissions)
-		//roles
-		roles := applicationRolesToDef(account.Roles)
-		//groups
-		groups := applicationGroupsToDef(account.Groups)
-		//account auth types
-		authTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResSharedLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
-	}
-
-	//params
-	var paramsRes interface{}
-	if loginSession.Params != nil {
-		paramsRes = loginSession.Params
-	}
-
-	responseData := &Def.ResSharedLogin{Token: &rokwireToken, Account: accountData, Params: &paramsRes}
-	respData, err := json.Marshal(responseData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
-	}
-
-	return l.HttpResponseSuccessJSON(respData)
 }
 
 //NewServicesApisHandler creates new rest services Handler instance

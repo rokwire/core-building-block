@@ -78,10 +78,26 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 	//device
 	requestDevice := requestData.Device
 
-	message, loginSession, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId,
+	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId,
 		string(requestData.AuthType), requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, requestProfile, requestPreferences, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
+	}
+
+	if loginSession.State != "" {
+		//params
+		var paramsRes interface{}
+		if loginSession.Params != nil {
+			paramsRes = loginSession.Params
+		}
+
+		mfaResp := mfaDataListToDef(mfaTypes)
+		responseData := &Def.ResSharedLoginMfa{Enrolled: mfaResp, Params: &paramsRes, SessionId: loginSession.ID, State: loginSession.State}
+		respData, err := json.Marshal(responseData)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
+		}
+		return l.HttpResponseSuccessJSON(respData)
 	}
 
 	///prepare response
@@ -96,46 +112,7 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 		return l.HttpResponseSuccessJSON(respData)
 	}
 
-	//token
-	accessToken := loginSession.AccessToken
-	refreshToken := loginSession.RefreshToken
-
-	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
-	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
-
-	//account
-	var accountData *Def.ResSharedLoginAccount
-	if !loginSession.Anonymous {
-		account := loginSession.AccountAuthType.Account
-
-		//profile
-		profile := profileToDef(&account.Profile)
-		//preferences
-		preferences := &account.Preferences
-		//permissions
-		permissions := applicationPermissionsToDef(account.Permissions)
-		//roles
-		roles := applicationRolesToDef(account.Roles)
-		//groups
-		groups := applicationGroupsToDef(account.Groups)
-		//account auth types
-		authTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResSharedLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
-	}
-
-	//params
-	var paramsRes interface{}
-	if loginSession.Params != nil {
-		paramsRes = loginSession.Params
-	}
-
-	responseData := &Def.ResSharedLogin{Token: &rokwireToken, Account: accountData, Params: &paramsRes}
-	respData, err := json.Marshal(responseData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
-	}
-
-	return l.HttpResponseSuccessJSON(respData)
+	return authBuildLoginResponse(l, loginSession)
 }
 
 func (h AdminApisHandler) adminLoginURL(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
