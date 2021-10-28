@@ -173,9 +173,9 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	}
 
 	//2. check if the user exists
-	account, err := authImpl.userExist(externalUser.Identifier, authType, appType, appOrg, l)
+	account, err := a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, externalUser.Identifier)
 	if err != nil {
-		return nil, nil, errors.WrapErrorData(logutils.StatusMissing, "external user", nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if account != nil {
 		//user exists, just check if need to update it
@@ -250,6 +250,7 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.App
 func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
 	creds string, params string, regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (string, *model.AccountAuthType, error) {
 	var message string
+	var account *model.Account
 	var accountAuthType *model.AccountAuthType
 	var credential *model.Credential
 	var profile *model.Profile
@@ -262,12 +263,16 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 
 	//check if the user exists check
-	accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
+	userIdentifier, err := authImpl.getUserIdentifier(creds)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
+	}
+	account, err = a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, userIdentifier)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 
-	accountExists := (accountAuthType != nil)
+	accountExists := (account != nil)
 
 	//check if it is sign in or sign up
 	isSignUp, err := a.isSignUp(accountExists, params, l)
@@ -286,12 +291,12 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		credID := credentialID.String()
 
 		//apply sign up
-		message, identifier, credentialValue, err := authImpl.signUp(authType, appType, appOrg, creds, params, credentialID.String(), l)
+		message, credentialValue, err := authImpl.signUp(authType, appType, appOrg, creds, params, credentialID.String(), l)
 		if err != nil {
 			return "", nil, errors.Wrap("error signing up", err)
 		}
 
-		accountAuthType, credential, profile, preferences, err = a.prepareRegistrationData(authType, *identifier, nil, &credID, credentialValue, regProfile, regPreferences, l)
+		accountAuthType, credential, profile, preferences, err = a.prepareRegistrationData(authType, userIdentifier, nil, &credID, credentialValue, regProfile, regPreferences, l)
 		if err != nil {
 			return "", nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
@@ -307,6 +312,11 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	//apply sign in
 	if !accountExists {
 		return "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+	}
+
+	accountAuthType, err = a.findAccountAuthType(account, &authType, userIdentifier)
+	if accountAuthType == nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
 
 	//2. it seems the user exist, now check the credentials

@@ -967,6 +967,12 @@ func (sa *Adapter) InsertPermission(permission model.Permission) error {
 
 //UpdatePermission updates permission
 func (sa *Adapter) UpdatePermission(item model.Permission) error {
+	//TODO
+	//This will be slow operation as we keep a copy of the entity in the users collection without index.
+	//Maybe we need to up the transaction timeout for this operation because of this.
+	//TODO
+	//Update the permission in all collection where there is a copy of it - accounts, application_roles, application_groups
+
 	// Update serviceIDs
 	filter := bson.D{primitive.E{Key: "name", Value: item.Name}}
 
@@ -989,10 +995,6 @@ func (sa *Adapter) UpdatePermission(item model.Permission) error {
 	}
 
 	return nil
-	//TODO
-	//This will be slow operation as we keep a copy of the entity in the users collection without index.
-	//Maybe we need to up the transaction timeout for this operation because of this.
-	// return errors.New(logutils.Unimplemented)
 }
 
 //DeletePermission deletes permission
