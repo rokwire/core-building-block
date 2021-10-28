@@ -481,6 +481,35 @@ func (h AdminApisHandler) createApplicationRole(l *logs.Log, r *http.Request, cl
 	return l.HttpResponseSuccess()
 }
 
+//getAccount gets the account
+func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	account, err := h.coreAPIs.Administration.AdmGetAccount(claims.Subject)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	var accountData *Def.ResLoginAccount
+	if account != nil {
+		profile := profileToDef(&account.Profile)
+		//permissions
+		permissions := applicationPermissionsToDef(account.Permissions)
+		//roles
+		roles := applicationRolesToDef(account.Roles)
+		//groups
+		groups := applicationGroupsToDef(account.Groups)
+		//account auth types
+		authTypes := accountAuthTypesToDef(account.AuthTypes)
+		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
+	}
+
+	data, err := json.Marshal(accountData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
 //grantAccountPermissions grants an account the given permissions
 func (h AdminApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
