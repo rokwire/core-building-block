@@ -824,9 +824,6 @@ type PutServicesAccountPreferencesJSONBody map[string]interface{}
 // PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
 type PutServicesAccountProfileJSONBody ReqSharedProfile
 
-// PostAdminAuthAccountExistsJSONBody defines parameters for PostAdminAuthAccountExists.
-type PostAdminAuthAccountExistsJSONBody ReqAccountExistsRequest
-
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
@@ -916,9 +913,6 @@ type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJ
 
 // PutServicesAccountProfileJSONRequestBody defines body for PutServicesAccountProfile for application/json ContentType.
 type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
-
-// PostAdminAuthAccountExistsJSONRequestBody defines body for PostAdminAuthAccountExists for application/json ContentType.
-type PostAdminAuthAccountExistsJSONRequestBody PostAdminAuthAccountExistsJSONBody
 
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody
