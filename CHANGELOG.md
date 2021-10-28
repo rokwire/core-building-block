@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Dissociate permissions from applications [#207](https://github.com/rokwire/core-building-block/issues/207)
 
+### Added
+- Set up permission groups [#25](https://github.com/rokwire/core-building-block/issues/25)
+
 ## [1.8.0] - 2021-10-27
 ### Added
 - Prepare Core for Admin app integration [#247](https://github.com/rokwire/core-building-block/issues/247)
@@ -52,8 +55,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
-- Set up permission groups [#25](https://github.com/rokwire/core-building-block/issues/25)
-- Dissociate permissions from applications [#207](https://github.com/rokwire/core-building-block/issues/207)
 - Populate profile data automatically from ROKWIRE 2.0 Profile BB [#185](https://github.com/rokwire/core-building-block/issues/185)
 - Add phone authentication support [#24](https://github.com/rokwire/core-building-block/issues/24)
 - Handle anonymous ID conversion [#204](https://github.com/rokwire/core-building-block/issues/204)
