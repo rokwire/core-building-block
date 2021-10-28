@@ -36,7 +36,7 @@ type database struct {
 	applicationsOrganizations *collectionWrapper
 	applicationsGroups        *collectionWrapper
 	applicationsRoles         *collectionWrapper
-	applicationsPermissions   *collectionWrapper
+	permissions               *collectionWrapper
 
 	listeners []Listener
 }
@@ -154,8 +154,8 @@ func (m *database) start() error {
 		return err
 	}
 
-	applicationsPermissions := &collectionWrapper{database: m, coll: db.Collection("applications_permissions")}
-	err = m.applyApplicationsPermissionsChecks(applicationsPermissions)
+	permissions := &collectionWrapper{database: m, coll: db.Collection("permissions")}
+	err = m.applyPermissionsChecks(permissions)
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func (m *database) start() error {
 	m.applicationsOrganizations = applicationsOrganziations
 	m.applicationsGroups = applicationsGroups
 	m.applicationsRoles = applicationsRoles
-	m.applicationsPermissions = applicationsPermissions
+	m.permissions = permissions
 
 	go m.apiKeys.Watch(nil, m.logger)
 	go m.authTypes.Watch(nil, m.logger)
@@ -433,11 +433,11 @@ func (m *database) applyApplicationsRolesChecks(applicationsRoles *collectionWra
 	return nil
 }
 
-func (m *database) applyApplicationsPermissionsChecks(applicationsPermissions *collectionWrapper) error {
+func (m *database) applyPermissionsChecks(permissions *collectionWrapper) error {
 	m.logger.Info("apply applications permissions checks.....")
 
-	//add application index
-	err := applicationsPermissions.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "name", Value: 1}}, true)
+	//add permissions index
+	err := permissions.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}}, true)
 	if err != nil {
 		return err
 	}

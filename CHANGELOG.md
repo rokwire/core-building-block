@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Handle multiple authentication methods linking to one account [#64](https://github.com/rokwire/core-building-block/issues/64)
 - Add authentication required auth wrapper [#250](https://github.com/rokwire/core-building-block/issues/250)
 
+### Changed
+- Dissociate permissions from applications [#207](https://github.com/rokwire/core-building-block/issues/207)
+
 ## [1.8.0] - 2021-10-27
 ### Added
 - Prepare Core for Admin app integration [#247](https://github.com/rokwire/core-building-block/issues/247)

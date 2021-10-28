@@ -8,3 +8,4 @@ env.list
 *.exe
 *.DS_Store
 .idea/
+mockery
