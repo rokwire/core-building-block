@@ -12,3 +12,5 @@ properties:
     type: boolean
   requires_own_users:
     type: boolean
+  max_login_session_duration:
+    type: integer

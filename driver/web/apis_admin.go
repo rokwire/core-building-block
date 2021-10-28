@@ -583,11 +583,12 @@ func (h AdminApisHandler) createApplication(l *logs.Log, r *http.Request, claims
 	name := requestData.Name
 	multiTenant := requestData.MultiTenant
 	requiresOwnUsers := requestData.RequiresOwnUsers
+	maxLoginSessionDuration := requestData.MaxLoginSessionDuration
 
 	var appType Def.ApplicationTypeFields
 	applicationType := []string{}
 	applicationType = append(applicationType, appType.Identifier, *appType.Name)
-	_, err = h.coreAPIs.Administration.AdmCreateApplication(name, multiTenant, requiresOwnUsers, appType.Identifier, *appType.Name, *appType.Versions)
+	_, err = h.coreAPIs.Administration.AdmCreateApplication(name, multiTenant, requiresOwnUsers, maxLoginSessionDuration, appType.Identifier, *appType.Name, *appType.Versions)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}

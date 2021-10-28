@@ -461,9 +461,17 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
+	now := time.Now().UTC()
+	var forceExpires *time.Time
+	if appType.Application.MaxLoginSessionDuration != nil {
+		forceLogoutTime := now.Add(time.Duration(*appType.Application.MaxLoginSessionDuration) * (time.Nanosecond / time.Second))
+		forceExpires = &forceLogoutTime
+	}
+
 	loginSession := model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType,
 		AppType: appType, Anonymous: anonymous, Identifier: sub, AccountAuthType: accountAuthType,
-		Device: device, IPAddress: ipAddress, AccessToken: accessToken, RefreshToken: refreshToken, Params: params, Expires: *expires, DateCreated: time.Now()}
+		Device: device, IPAddress: ipAddress, AccessToken: accessToken, RefreshToken: refreshToken, Params: params,
+		Expires: *expires, ForceExpires: forceExpires, DateCreated: now}
 
 	return &loginSession, nil
 }

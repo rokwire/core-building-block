@@ -1730,6 +1730,8 @@ components:
           type: boolean
         requires_own_users:
           type: boolean
+        max_login_session_duration:
+          type: integer
     ApplicationType:
       type: object
       properties:
@@ -2738,6 +2740,8 @@ components:
           type: boolean
         requires_own_users:
           type: boolean
+        max_login_session_duration:
+          type: integer
         application_types:
           type: array
           items:
@@ -2776,6 +2780,8 @@ components:
           type: boolean
         requires_own_users:
           type: boolean
+        max_login_session_duration:
+          type: integer
         organization:
           $ref: '#/components/schemas/ApplicationOrganization'
         applicationType:
@@ -2797,6 +2803,8 @@ components:
           type: boolean
         requires_own_users:
           type: boolean
+        max_login_session_duration:
+          type: integer
         application_types:
           $ref: '#/components/schemas/ApplicationTypeFields'
     _req_permissions_Request:

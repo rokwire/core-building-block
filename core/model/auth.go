@@ -72,7 +72,8 @@ type LoginSession struct {
 	RefreshToken string
 	Params       map[string]interface{} //authType-specific set of parameters passed back to client
 
-	Expires time.Time
+	Expires      time.Time
+	ForceExpires *time.Time
 
 	DateUpdated *time.Time
 	DateCreated time.Time
@@ -80,7 +81,8 @@ type LoginSession struct {
 
 //IsExpired says if the sessions is expired
 func (ls LoginSession) IsExpired() bool {
-	return ls.Expires.Before(time.Now())
+	now := time.Now()
+	return ls.Expires.Before(now) || ls.ForceExpires.Before(now)
 }
 
 //APIKey represents an API key entity
