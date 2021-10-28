@@ -970,7 +970,7 @@ func (sa *Adapter) UpdateMFAType(mfa *model.MFAType, recoveryCodes []string) err
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("updating mfa type"), err)
 		}
 		if res.ModifiedCount != 1 {
-			return errors.ErrorAction(logutils.ActionUpdate, model.TypeMFAType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+			return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 		}
 
 		//check if account recovery codes exist, if not then set them, do nothing if they exist
@@ -988,7 +988,7 @@ func (sa *Adapter) UpdateMFAType(mfa *model.MFAType, recoveryCodes []string) err
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("setting recovery codes"), err)
 			}
 			if res.ModifiedCount != 1 {
-				return errors.ErrorAction(logutils.ActionUpdate, model.TypeMFAType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+				return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 			}
 		}
 
@@ -1008,22 +1008,61 @@ func (sa *Adapter) UpdateMFAType(mfa *model.MFAType, recoveryCodes []string) err
 
 //DeleteMFAType deletes a MFA type
 func (sa *Adapter) DeleteMFAType(accountID string, mfaType string) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
-	update := bson.D{
-		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "mfa_types.type", Value: mfaType},
-		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
-		}},
-	}
+	// transaction
+	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+		err := sessionContext.StartTransaction()
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
+		}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+		filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+		update := bson.D{
+			primitive.E{Key: "$pull", Value: bson.D{
+				primitive.E{Key: "mfa_types", Value: bson.M{"type": mfaType}},
+			}},
+			primitive.E{Key: "$set", Value: bson.D{
+				primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+			}},
+		}
+
+		res, err := sa.db.accounts.UpdateOneWithContext(sessionContext, filter, update, nil)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("deleting mfa type"), err)
+		}
+		if res.ModifiedCount != 1 {
+			return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		}
+
+		//check if account recovery codes exist and mfa_types is empty
+		//remove recovery codes if this is the case (will be regenerated if MFA is re-enabled)
+		filter = bson.D{
+			primitive.E{Key: "_id", Value: accountID},
+			primitive.E{Key: "recovery_codes", Value: bson.M{"$exists": true}},
+			primitive.E{Key: "mfa_types", Value: bson.M{"$size": 0}},
+		}
+		update = bson.D{
+			primitive.E{Key: "$unset", Value: bson.D{
+				primitive.E{Key: "recovery_codes", Value: ""},
+			}},
+		}
+
+		res, err = sa.db.accounts.UpdateOneWithContext(sessionContext, filter, update, nil)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("clearing recovery codes"), err)
+		}
+		if res.ModifiedCount != 1 {
+			return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		}
+
+		err = sessionContext.CommitTransaction(sessionContext)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
+		}
+		return nil
+	})
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("deleting mfa type"), err)
-	}
-	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		return err
 	}
 
 	return nil
