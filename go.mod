@@ -18,7 +18,6 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/cachecontrol v0.1.0 // indirect
-	github.com/rokmetro/auth-library v0.1.20
 	github.com/rokwire/core-auth-library-go v1.0.0
 	github.com/rokwire/logging-library-go v1.0.0
 	github.com/stretchr/testify v1.6.1
