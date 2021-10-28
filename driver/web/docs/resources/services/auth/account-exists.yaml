@@ -1,16 +1,16 @@
 post:
   tags:
   - Services
-  summary: Refresh
+  summary: Check if an account already exists
   description: |
-    Refresh access token using a refresh token
+    Account exists checks if an account exists for the provided user identifier and auth type
   requestBody:
     description: |
-      Refresh token
+      Account information to be checked
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/shared/requests/refresh/Request.yaml"
+          $ref: "../../../schemas/apis/services/account-exists/request/Request.yaml"
     required: true
   responses:
     200:
@@ -18,7 +18,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/apis/shared/responses/refresh/Response.yaml"
+            $ref: "../../../schemas/apis/services/account-exists/response/Response.yaml"
     400:
       description: Bad request
     401:
