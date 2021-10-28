@@ -168,9 +168,9 @@ _res_get_Application_Response:
 _res_get_Applications_Response:
  $ref: "./apis/admin/get-applications/response/Response.yaml"
  
-### application-permissions API
-_req_application-permissions_Request:
-  $ref: "./apis/admin/application-permissions/request/Request.yaml"
+### permissions API
+_req_permissions_Request:
+  $ref: "./apis/admin/permissions/request/Request.yaml"
   
 ### application-roles API
 _req_application-roles_Request:
