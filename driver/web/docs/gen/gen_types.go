@@ -799,6 +799,20 @@ type ResSharedRokwireToken struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResSharedRokwireTokenTokenType string
 
+// DeleteAdminAccountMfaParams defines parameters for DeleteAdminAccountMfa.
+type DeleteAdminAccountMfaParams struct {
+
+	// MFA type
+	Type string `json:"type"`
+}
+
+// PostAdminAccountMfaParams defines parameters for PostAdminAccountMfa.
+type PostAdminAccountMfaParams struct {
+
+	// MFA type
+	Type string `json:"type"`
+}
+
 // PutAdminAccountPermissionsJSONBody defines parameters for PutAdminAccountPermissions.
 type PutAdminAccountPermissionsJSONBody ReqAccountPermissionsRequest
 
@@ -807,6 +821,7 @@ type PutAdminAccountRolesJSONBody ReqAccountRolesRequest
 
 // DeleteAdminApiKeysParams defines parameters for DeleteAdminApiKeys.
 type DeleteAdminApiKeysParams struct {
+
 	// The ID of the API key to delete
 	Id string `json:"id"`
 }
@@ -843,8 +858,21 @@ type PostAdminAuthLoginJSONBody ReqSharedLogin
 // PostAdminAuthLoginUrlJSONBody defines parameters for PostAdminAuthLoginUrl.
 type PostAdminAuthLoginUrlJSONBody ReqSharedLoginUrl
 
+// PostAdminAuthMfaJSONBody defines parameters for PostAdminAuthMfa.
+type PostAdminAuthMfaJSONBody ReqSharedLoginMfa
+
+// PostAdminAuthMfaParams defines parameters for PostAdminAuthMfa.
+type PostAdminAuthMfaParams struct {
+
+	// Login state
+	State *string `json:"state,omitempty"`
+}
+
 // PostAdminAuthRefreshJSONBody defines parameters for PostAdminAuthRefresh.
 type PostAdminAuthRefreshJSONBody ReqSharedRefresh
+
+// PostAdminAuthVerifyMfaJSONBody defines parameters for PostAdminAuthVerifyMfa.
+type PostAdminAuthVerifyMfaJSONBody ReqSharedMfa
 
 // PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
 type PostAdminGlobalConfigJSONBody GlobalConfig
@@ -987,8 +1015,14 @@ type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody
 // PostAdminAuthLoginUrlJSONRequestBody defines body for PostAdminAuthLoginUrl for application/json ContentType.
 type PostAdminAuthLoginUrlJSONRequestBody PostAdminAuthLoginUrlJSONBody
 
+// PostAdminAuthMfaJSONRequestBody defines body for PostAdminAuthMfa for application/json ContentType.
+type PostAdminAuthMfaJSONRequestBody PostAdminAuthMfaJSONBody
+
 // PostAdminAuthRefreshJSONRequestBody defines body for PostAdminAuthRefresh for application/json ContentType.
 type PostAdminAuthRefreshJSONRequestBody PostAdminAuthRefreshJSONBody
+
+// PostAdminAuthVerifyMfaJSONRequestBody defines body for PostAdminAuthVerifyMfa for application/json ContentType.
+type PostAdminAuthVerifyMfaJSONRequestBody PostAdminAuthVerifyMfaJSONBody
 
 // PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
 type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody

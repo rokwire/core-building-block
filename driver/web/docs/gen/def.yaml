@@ -882,6 +882,45 @@ paths:
           content:
             application/json:
               schema:
+                anyOf:
+                  - $ref: '#/components/schemas/_res_shared_Login_Mfa'
+                  - $ref: '#/components/schemas/_res_shared_Login'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/auth/mfa:
+    post:
+      tags:
+        - Services
+      summary: MFA
+      description: |
+        Verify multi-factor authentication credentials to complete login
+      parameters:
+        - name: state
+          in: query
+          description: Login state
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: |
+          MFA credentials and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_shared_Login_Mfa'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
                 $ref: '#/components/schemas/_res_shared_Login'
         '400':
           description: Bad request
@@ -937,6 +976,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/_res_shared_LoginUrl'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/auth/verify-mfa:
+    post:
+      tags:
+        - Services
+      summary: MFA
+      description: |
+        Verify multi-factor authentication credentials to complete MFA registration
+      requestBody:
+        description: |
+          MFA credentials and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_shared_Mfa'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
         '400':
           description: Bad request
         '401':
@@ -1509,6 +1578,92 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/APIKey'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/account/mfa:
+    get:
+      tags:
+        - Services
+      summary: Get account MFA types
+      description: |
+        Get MFA types set up for an account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/_res_shared_Mfa'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      tags:
+        - Services
+      summary: Enroll in MFA type
+      description: |
+        Add MFA type to an account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: MFA type
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_shared_Mfa'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      tags:
+        - Services
+      summary: Remove MFA type
+      description: |
+        Remove MFA type from an account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: MFA type
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
         '400':
           description: Bad request
         '401':

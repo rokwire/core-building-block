@@ -115,6 +115,29 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 	return authBuildLoginResponse(l, loginSession)
 }
 
+func (h AdminApisHandler) adminLoginMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var mfaData Def.ReqSharedLoginMfa
+	err = json.Unmarshal(data, &mfaData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("login mfa request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	message, loginSession, err := h.coreAPIs.Auth.LoginMFA(mfaData.AccountId, mfaData.SessionId, string(mfaData.MfaType), mfaData.MfaCode, mfaData.State, l)
+	if message != nil {
+		return l.HttpResponseError(*message, err, http.StatusUnauthorized, true)
+	}
+	if err != nil {
+		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
+	}
+
+	return authBuildLoginResponse(l, loginSession)
+}
+
 func (h AdminApisHandler) adminLoginURL(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -179,6 +202,38 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 	}
 
 	return l.HttpResponseSuccessJSON(respData)
+}
+
+func (h AdminApisHandler) adminVerifyMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var mfaData Def.ReqSharedMfa
+	err = json.Unmarshal(data, &mfaData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("verify mfa request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	verified, recoveryCodes, err := h.coreAPIs.Auth.VerifyMFA(mfaData.AccountId, string(mfaData.MfaType), mfaData.MfaCode, l)
+	if err != nil {
+		return l.HttpResponseError("Error verifying MFA", err, http.StatusInternalServerError, true)
+	}
+	if !verified {
+		return l.HttpResponseError("Invalid code", nil, http.StatusBadRequest, true)
+	}
+
+	if recoveryCodes == nil {
+		recoveryCodes = []string{}
+	}
+
+	response, err := json.Marshal(recoveryCodes)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "mfa recovery codes", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(response)
 }
 
 //createGlobalConfig creates a global config
