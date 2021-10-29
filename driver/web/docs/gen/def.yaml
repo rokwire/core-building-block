@@ -14,15 +14,17 @@ servers:
     description: Local server
 tags:
   - name: Services
-    description: End users applications APIs.
+    description: Clients applications APIs.
   - name: Admin
-    description: Administration applications APIs.
+    description: Clients administration applications APIs.
   - name: Enc
     description: APIs consumed by the Encryption building block.
   - name: BBs
     description: APIs consumed by the platform building blocks.
   - name: Third-Party Services
     description: APIs consumed by third-party services.
+  - name: System
+    description: System APIs.
 paths:
   /services/auth/login:
     post:
