@@ -82,7 +82,7 @@ type LoginSession struct {
 //IsExpired says if the sessions is expired
 func (ls LoginSession) IsExpired() bool {
 	now := time.Now()
-	return ls.Expires.Before(now) || ls.ForceExpires.Before(now)
+	return ls.Expires.Before(now) || (ls.ForceExpires != nil && ls.ForceExpires.Before(now))
 }
 
 //APIKey represents an API key entity
