@@ -95,7 +95,7 @@ func (auth *ServicesAuth) check(req *http.Request) (int, *tokenauth.Claims, erro
 }
 
 func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, serviceID string, logger *logs.Logger) (*ServicesAuth, error) {
-	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/scope_authorization_policy_services_auth.csv", serviceID)
+	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/authorization_services_policy.csv", serviceID)
 
 	servicesTokenAuth, err := tokenauth.NewTokenAuth(true, authService, nil, servicesScopeAuth)
 
@@ -158,7 +158,7 @@ func (auth *AdminAuth) check(req *http.Request) (int, *tokenauth.Claims, error) 
 }
 
 func newAdminAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) (*AdminAuth, error) {
-	adminPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/permission_authorization_policy_admin_auth.csv")
+	adminPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_admin_policy.csv")
 	adminTokenAuth, err := tokenauth.NewTokenAuth(true, authService, adminPermissionAuth, nil)
 
 	if err != nil {
