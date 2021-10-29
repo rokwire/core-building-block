@@ -1,4 +1,5 @@
  get:
+  deprecated: true
   tags:
   - System
   summary: Get organizations
@@ -24,6 +25,7 @@
       500:
         description: Internal error
  post:
+  deprecated: true
   tags:
   - System
   summary: Create organization

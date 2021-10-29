@@ -1,4 +1,5 @@
 get:
+  deprecated: true
   tags:
   - System
   summary: Get global config
@@ -22,6 +23,7 @@ get:
       500:
         description: Internal error
 post:
+  deprecated: true
   tags:
   - System
   summary: Create global config
@@ -52,6 +54,7 @@ post:
       500:
         description: Internal error
 put:
+  deprecated: true
   tags:
   - System
   summary: Update global config
