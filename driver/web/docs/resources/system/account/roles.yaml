@@ -1,19 +1,19 @@
-post:
+put:
   tags:
-  - Admin
-  summary: Create application role
+  - System
+  summary: Grant account roles
   description: |
-    Creates application role
-
+    Grant account roles
+  
     **Auth:** Requires auth token with `auth_admin` permission
   security:
     - bearerAuth: []
   requestBody:
-    description: Application role
+    description: Roles
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/admin/application-roles/request/Request.yaml"
+          $ref: "../../../schemas/apis/system/account/roles/request/Request.yaml"
     required: true
   responses:
     200:

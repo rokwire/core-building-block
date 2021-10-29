@@ -1,6 +1,6 @@
 put:
   tags:
-  - Admin
+  - System
   summary: Update organization
   description: |
     Updates organization
@@ -22,7 +22,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/admin/update-organization/request/Request.yaml"
+          $ref: "../../schemas/apis/system/update-organization/request/Request.yaml"
     required: true
   responses:
     200:
@@ -40,7 +40,7 @@ put:
       description: Internal error
 get:
   tags:
-  - Admin
+  - System
   summary: Get organization
   description: |
     Gets organization
@@ -63,7 +63,7 @@ get:
       content:
         application/json:
             schema:
-              $ref: "../../schemas/apis/admin/get-organization/request/Request.yaml"
+              $ref: "../../schemas/apis/system/get-organization/request/Request.yaml"
     400:
       description: Bad request
     401:

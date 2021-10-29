@@ -1,11 +1,11 @@
  get:
   tags:
-  - Admin
-  summary: Get organizations
+  - System
+  summary: Get applications
   description: |
-    Gets organizations
-
-    **Auth:** Requires auth token with `org_admin` permission
+    Gets applications
+  
+    **Auth:** Requires auth token with `app_admin` permission
   security:
     - bearerAuth: []
   responses:
@@ -16,7 +16,7 @@
             schema:
               type: array
               items:
-                $ref: "../../schemas/apis/admin/get-organizations/response/Response.yaml"
+                $ref: "../../schemas/apis/system/get-applications/response/Response.yaml"
       400:
         description: Bad request
       401:
@@ -25,20 +25,20 @@
         description: Internal error
  post:
   tags:
-  - Admin
-  summary: Create organization
+  - System
+  summary: Create application
   description: |
-    Creates organization
+    Creates application
 
-    **Auth:** Requires auth token with `org_admin` permission
+    **Auth:** Requires auth token with `app_admin` permission
   security:
     - bearerAuth: []
   requestBody:
-    description: creates one organization
+    description: creates one application
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/admin/create-organization/request/Request.yaml"
+         $ref: "../../schemas/apis/system/create-application/request/Request.yaml"
     required: true
   responses:
     200:

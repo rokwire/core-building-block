@@ -1,6 +1,6 @@
 get:
   tags:
-  - Admin
+  - System
   summary: Get API key
   description: |
     Returns API key record
@@ -32,7 +32,7 @@ get:
       description: Internal error
 post:
   tags:
-  - Admin
+  - System
   summary: Create API key
   description: |
     Creates a new API key record
@@ -68,7 +68,7 @@ post:
       description: Internal error
 put:
   tags:
-  - Admin
+  - System
   summary: Update API key
   description: |
     Update an existing API key record
@@ -101,7 +101,7 @@ put:
       description: Internal error
 delete:
   tags:
-  - Admin
+  - System
   summary: Delete API key
   description: |
     Deletes an existing API key record

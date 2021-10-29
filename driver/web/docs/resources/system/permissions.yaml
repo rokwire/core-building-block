@@ -1,6 +1,6 @@
 post:
   tags:
-  - Admin
+  - System
   summary: Create permission
   description: |
     Creates permission
@@ -13,7 +13,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/admin/permissions/request/Request.yaml"
+          $ref: "../../schemas/apis/system/permissions/request/Request.yaml"
     required: true
   responses:
     200:
@@ -31,7 +31,7 @@ post:
       description: Internal error
 put:
   tags:
-  - Admin
+  - System
   summary: Updates permission
   description: |
     Updates permission
@@ -44,7 +44,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/admin/permissions/request/Request.yaml"
+          $ref: "../../schemas/apis/system/permissions/request/Request.yaml"
     required: true
   responses:
     200:

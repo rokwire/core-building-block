@@ -743,45 +743,6 @@ type ResSharedRokwireToken struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResSharedRokwireTokenTokenType string
 
-// PutAdminAccountPermissionsJSONBody defines parameters for PutAdminAccountPermissions.
-type PutAdminAccountPermissionsJSONBody ReqAccountPermissionsRequest
-
-// PutAdminAccountRolesJSONBody defines parameters for PutAdminAccountRoles.
-type PutAdminAccountRolesJSONBody ReqAccountRolesRequest
-
-// DeleteAdminApiKeysParams defines parameters for DeleteAdminApiKeys.
-type DeleteAdminApiKeysParams struct {
-
-	// The ID of the API key to delete
-	Id string `json:"id"`
-}
-
-// GetAdminApiKeysParams defines parameters for GetAdminApiKeys.
-type GetAdminApiKeysParams struct {
-
-	// The ID of the API key to return
-	Id string `json:"id"`
-}
-
-// PostAdminApiKeysJSONBody defines parameters for PostAdminApiKeys.
-type PostAdminApiKeysJSONBody APIKey
-
-// PutAdminApiKeysJSONBody defines parameters for PutAdminApiKeys.
-type PutAdminApiKeysJSONBody APIKey
-
-// GetAdminApplicationApiKeysParams defines parameters for GetAdminApplicationApiKeys.
-type GetAdminApplicationApiKeysParams struct {
-
-	// The app ID of the API keys to return
-	AppId string `json:"app_id"`
-}
-
-// PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
-type PostAdminApplicationRolesJSONBody ReqApplicationRolesRequest
-
-// PostAdminApplicationsJSONBody defines parameters for PostAdminApplications.
-type PostAdminApplicationsJSONBody ReqCreateApplicationRequest
-
 // PostAdminAuthLoginJSONBody defines parameters for PostAdminAuthLogin.
 type PostAdminAuthLoginJSONBody ReqSharedLogin
 
@@ -790,38 +751,6 @@ type PostAdminAuthLoginUrlJSONBody ReqSharedLoginUrl
 
 // PostAdminAuthRefreshJSONBody defines parameters for PostAdminAuthRefresh.
 type PostAdminAuthRefreshJSONBody ReqSharedRefresh
-
-// PostAdminOrganizationsJSONBody defines parameters for PostAdminOrganizations.
-type PostAdminOrganizationsJSONBody ReqCreateOrganizationRequest
-
-// PutAdminOrganizationsIdJSONBody defines parameters for PutAdminOrganizationsId.
-type PutAdminOrganizationsIdJSONBody ReqUpdateOrganizationRequest
-
-// PostAdminPermissionsJSONBody defines parameters for PostAdminPermissions.
-type PostAdminPermissionsJSONBody ReqPermissionsRequest
-
-// PutAdminPermissionsJSONBody defines parameters for PutAdminPermissions.
-type PutAdminPermissionsJSONBody ReqPermissionsRequest
-
-// DeleteAdminServiceRegsParams defines parameters for DeleteAdminServiceRegs.
-type DeleteAdminServiceRegsParams struct {
-
-	// The service ID of the registration to delete
-	Id string `json:"id"`
-}
-
-// GetAdminServiceRegsParams defines parameters for GetAdminServiceRegs.
-type GetAdminServiceRegsParams struct {
-
-	// A comma-separated list of service IDs to return registrations for
-	Ids string `json:"ids"`
-}
-
-// PostAdminServiceRegsJSONBody defines parameters for PostAdminServiceRegs.
-type PostAdminServiceRegsJSONBody ServiceReg
-
-// PutAdminServiceRegsJSONBody defines parameters for PutAdminServiceRegs.
-type PutAdminServiceRegsJSONBody ServiceReg
 
 // GetBbsServiceRegsParams defines parameters for GetBbsServiceRegs.
 type GetBbsServiceRegsParams struct {
@@ -868,11 +797,82 @@ type GetServicesAuthVerifyParams struct {
 	Code string `json:"code"`
 }
 
+// PutSystemAccountPermissionsJSONBody defines parameters for PutSystemAccountPermissions.
+type PutSystemAccountPermissionsJSONBody ReqAccountPermissionsRequest
+
+// PutSystemAccountRolesJSONBody defines parameters for PutSystemAccountRoles.
+type PutSystemAccountRolesJSONBody ReqAccountRolesRequest
+
+// DeleteSystemApiKeysParams defines parameters for DeleteSystemApiKeys.
+type DeleteSystemApiKeysParams struct {
+
+	// The ID of the API key to delete
+	Id string `json:"id"`
+}
+
+// GetSystemApiKeysParams defines parameters for GetSystemApiKeys.
+type GetSystemApiKeysParams struct {
+
+	// The ID of the API key to return
+	Id string `json:"id"`
+}
+
+// PostSystemApiKeysJSONBody defines parameters for PostSystemApiKeys.
+type PostSystemApiKeysJSONBody APIKey
+
+// PutSystemApiKeysJSONBody defines parameters for PutSystemApiKeys.
+type PutSystemApiKeysJSONBody APIKey
+
+// GetSystemApplicationApiKeysParams defines parameters for GetSystemApplicationApiKeys.
+type GetSystemApplicationApiKeysParams struct {
+
+	// The app ID of the API keys to return
+	AppId string `json:"app_id"`
+}
+
+// PostSystemApplicationRolesJSONBody defines parameters for PostSystemApplicationRoles.
+type PostSystemApplicationRolesJSONBody ReqApplicationRolesRequest
+
+// PostSystemApplicationsJSONBody defines parameters for PostSystemApplications.
+type PostSystemApplicationsJSONBody ReqCreateApplicationRequest
+
 // PostSystemGlobalConfigJSONBody defines parameters for PostSystemGlobalConfig.
 type PostSystemGlobalConfigJSONBody GlobalConfig
 
 // PutSystemGlobalConfigJSONBody defines parameters for PutSystemGlobalConfig.
 type PutSystemGlobalConfigJSONBody GlobalConfig
+
+// PostSystemOrganizationsJSONBody defines parameters for PostSystemOrganizations.
+type PostSystemOrganizationsJSONBody ReqCreateOrganizationRequest
+
+// PutSystemOrganizationsIdJSONBody defines parameters for PutSystemOrganizationsId.
+type PutSystemOrganizationsIdJSONBody ReqUpdateOrganizationRequest
+
+// PostSystemPermissionsJSONBody defines parameters for PostSystemPermissions.
+type PostSystemPermissionsJSONBody ReqPermissionsRequest
+
+// PutSystemPermissionsJSONBody defines parameters for PutSystemPermissions.
+type PutSystemPermissionsJSONBody ReqPermissionsRequest
+
+// DeleteSystemServiceRegsParams defines parameters for DeleteSystemServiceRegs.
+type DeleteSystemServiceRegsParams struct {
+
+	// The service ID of the registration to delete
+	Id string `json:"id"`
+}
+
+// GetSystemServiceRegsParams defines parameters for GetSystemServiceRegs.
+type GetSystemServiceRegsParams struct {
+
+	// A comma-separated list of service IDs to return registrations for
+	Ids string `json:"ids"`
+}
+
+// PostSystemServiceRegsJSONBody defines parameters for PostSystemServiceRegs.
+type PostSystemServiceRegsJSONBody ServiceReg
+
+// PutSystemServiceRegsJSONBody defines parameters for PutSystemServiceRegs.
+type PutSystemServiceRegsJSONBody ServiceReg
 
 // GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
 type GetTpsServiceRegsParams struct {
@@ -880,24 +880,6 @@ type GetTpsServiceRegsParams struct {
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
-
-// PutAdminAccountPermissionsJSONRequestBody defines body for PutAdminAccountPermissions for application/json ContentType.
-type PutAdminAccountPermissionsJSONRequestBody PutAdminAccountPermissionsJSONBody
-
-// PutAdminAccountRolesJSONRequestBody defines body for PutAdminAccountRoles for application/json ContentType.
-type PutAdminAccountRolesJSONRequestBody PutAdminAccountRolesJSONBody
-
-// PostAdminApiKeysJSONRequestBody defines body for PostAdminApiKeys for application/json ContentType.
-type PostAdminApiKeysJSONRequestBody PostAdminApiKeysJSONBody
-
-// PutAdminApiKeysJSONRequestBody defines body for PutAdminApiKeys for application/json ContentType.
-type PutAdminApiKeysJSONRequestBody PutAdminApiKeysJSONBody
-
-// PostAdminApplicationRolesJSONRequestBody defines body for PostAdminApplicationRoles for application/json ContentType.
-type PostAdminApplicationRolesJSONRequestBody PostAdminApplicationRolesJSONBody
-
-// PostAdminApplicationsJSONRequestBody defines body for PostAdminApplications for application/json ContentType.
-type PostAdminApplicationsJSONRequestBody PostAdminApplicationsJSONBody
 
 // PostAdminAuthLoginJSONRequestBody defines body for PostAdminAuthLogin for application/json ContentType.
 type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody
@@ -907,24 +889,6 @@ type PostAdminAuthLoginUrlJSONRequestBody PostAdminAuthLoginUrlJSONBody
 
 // PostAdminAuthRefreshJSONRequestBody defines body for PostAdminAuthRefresh for application/json ContentType.
 type PostAdminAuthRefreshJSONRequestBody PostAdminAuthRefreshJSONBody
-
-// PostAdminOrganizationsJSONRequestBody defines body for PostAdminOrganizations for application/json ContentType.
-type PostAdminOrganizationsJSONRequestBody PostAdminOrganizationsJSONBody
-
-// PutAdminOrganizationsIdJSONRequestBody defines body for PutAdminOrganizationsId for application/json ContentType.
-type PutAdminOrganizationsIdJSONRequestBody PutAdminOrganizationsIdJSONBody
-
-// PostAdminPermissionsJSONRequestBody defines body for PostAdminPermissions for application/json ContentType.
-type PostAdminPermissionsJSONRequestBody PostAdminPermissionsJSONBody
-
-// PutAdminPermissionsJSONRequestBody defines body for PutAdminPermissions for application/json ContentType.
-type PutAdminPermissionsJSONRequestBody PutAdminPermissionsJSONBody
-
-// PostAdminServiceRegsJSONRequestBody defines body for PostAdminServiceRegs for application/json ContentType.
-type PostAdminServiceRegsJSONRequestBody PostAdminServiceRegsJSONBody
-
-// PutAdminServiceRegsJSONRequestBody defines body for PutAdminServiceRegs for application/json ContentType.
-type PutAdminServiceRegsJSONRequestBody PutAdminServiceRegsJSONBody
 
 // PutServicesAccountPreferencesJSONRequestBody defines body for PutServicesAccountPreferences for application/json ContentType.
 type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJSONBody
@@ -947,11 +911,47 @@ type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
 // PostServicesAuthRefreshJSONRequestBody defines body for PostServicesAuthRefresh for application/json ContentType.
 type PostServicesAuthRefreshJSONRequestBody PostServicesAuthRefreshJSONBody
 
+// PutSystemAccountPermissionsJSONRequestBody defines body for PutSystemAccountPermissions for application/json ContentType.
+type PutSystemAccountPermissionsJSONRequestBody PutSystemAccountPermissionsJSONBody
+
+// PutSystemAccountRolesJSONRequestBody defines body for PutSystemAccountRoles for application/json ContentType.
+type PutSystemAccountRolesJSONRequestBody PutSystemAccountRolesJSONBody
+
+// PostSystemApiKeysJSONRequestBody defines body for PostSystemApiKeys for application/json ContentType.
+type PostSystemApiKeysJSONRequestBody PostSystemApiKeysJSONBody
+
+// PutSystemApiKeysJSONRequestBody defines body for PutSystemApiKeys for application/json ContentType.
+type PutSystemApiKeysJSONRequestBody PutSystemApiKeysJSONBody
+
+// PostSystemApplicationRolesJSONRequestBody defines body for PostSystemApplicationRoles for application/json ContentType.
+type PostSystemApplicationRolesJSONRequestBody PostSystemApplicationRolesJSONBody
+
+// PostSystemApplicationsJSONRequestBody defines body for PostSystemApplications for application/json ContentType.
+type PostSystemApplicationsJSONRequestBody PostSystemApplicationsJSONBody
+
 // PostSystemGlobalConfigJSONRequestBody defines body for PostSystemGlobalConfig for application/json ContentType.
 type PostSystemGlobalConfigJSONRequestBody PostSystemGlobalConfigJSONBody
 
 // PutSystemGlobalConfigJSONRequestBody defines body for PutSystemGlobalConfig for application/json ContentType.
 type PutSystemGlobalConfigJSONRequestBody PutSystemGlobalConfigJSONBody
+
+// PostSystemOrganizationsJSONRequestBody defines body for PostSystemOrganizations for application/json ContentType.
+type PostSystemOrganizationsJSONRequestBody PostSystemOrganizationsJSONBody
+
+// PutSystemOrganizationsIdJSONRequestBody defines body for PutSystemOrganizationsId for application/json ContentType.
+type PutSystemOrganizationsIdJSONRequestBody PutSystemOrganizationsIdJSONBody
+
+// PostSystemPermissionsJSONRequestBody defines body for PostSystemPermissions for application/json ContentType.
+type PostSystemPermissionsJSONRequestBody PostSystemPermissionsJSONBody
+
+// PutSystemPermissionsJSONRequestBody defines body for PutSystemPermissions for application/json ContentType.
+type PutSystemPermissionsJSONRequestBody PutSystemPermissionsJSONBody
+
+// PostSystemServiceRegsJSONRequestBody defines body for PostSystemServiceRegs for application/json ContentType.
+type PostSystemServiceRegsJSONRequestBody PostSystemServiceRegsJSONBody
+
+// PutSystemServiceRegsJSONRequestBody defines body for PutSystemServiceRegs for application/json ContentType.
+type PutSystemServiceRegsJSONRequestBody PutSystemServiceRegsJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found

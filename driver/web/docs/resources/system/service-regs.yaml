@@ -1,6 +1,6 @@
 get:
   tags:
-  - Admin
+  - System
   summary: Get service registrations
   description: |
     Returns service registration records
@@ -34,7 +34,7 @@ get:
       description: Internal error
 post:
   tags:
-  - Admin
+  - System
   summary: Register service
   description: |
     Creates a new service registration
@@ -67,7 +67,7 @@ post:
       description: Internal error
 put:
   tags:
-  - Admin
+  - System
   summary: Update service registration
   description: |
     Update an existing service registration
@@ -100,7 +100,7 @@ put:
       description: Internal error
 delete:
   tags:
-  - Admin
+  - System
   summary: Deregister service
   description: |
     Deletes an existing service registration record

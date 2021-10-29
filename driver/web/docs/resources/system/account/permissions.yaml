@@ -1,6 +1,6 @@
 put:
   tags:
-  - Admin
+  - System
   summary: Grant account permissions
   description: |
     Grant account permissions
@@ -13,7 +13,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/admin/account/permissions/request/Request.yaml"
+          $ref: "../../../schemas/apis/system/account/permissions/request/Request.yaml"
     required: true
   responses:
     200:
