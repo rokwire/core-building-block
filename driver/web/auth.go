@@ -21,7 +21,6 @@ const (
 
 //Auth handler
 type Auth struct {
-	authService      *authservice.AuthService
 	servicesAuth     *ServicesAuth
 	servicesUserAuth *ServicesUserAuth
 	adminAuth        *AdminAuth
