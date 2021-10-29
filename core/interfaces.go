@@ -23,27 +23,6 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-
-	AdmCreateGlobalConfig(setting string) (*model.GlobalConfig, error)
-	AdmGetGlobalConfig() (*model.GlobalConfig, error)
-	AdmUpdateGlobalConfig(setting string) error
-
-	AdmCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error)
-	AdmGetOrganizations() ([]model.Organization, error)
-	AdmGetOrganization(ID string) (*model.Organization, error)
-	AdmUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
-
-	AdmCreateApplication(name string, multiTenant bool, requiresOwnUsers bool, identifier string, nameInType string, versions []string) (*model.Application, error)
-	AdmGetApplication(ID string) (*model.Application, error)
-	AdmGetApplications() ([]model.Application, error)
-
-	AdmCreatePermission(name string, serviceIDs *[]string, assigners *[]string) (*model.Permission, error)
-	AdmUpdatePermission(name string, serviceIDs *[]string, assigners *[]string) (*model.Permission, error)
-
-	AdmCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error)
-
-	AdmGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
-	AdmGrantAccountRoles(accountID string, appID string, roleIDs []string) error
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -54,6 +33,30 @@ type Encryption interface {
 //BBs exposes users related APIs used by the platform building blocks
 type BBs interface {
 	BBsGetTest() string
+}
+
+//System exposes system APIs for the driver adapters
+type System interface {
+	SysCreateGlobalConfig(setting string) (*model.GlobalConfig, error)
+	SysGetGlobalConfig() (*model.GlobalConfig, error)
+	SysUpdateGlobalConfig(setting string) error
+
+	SysCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error)
+	SysGetOrganizations() ([]model.Organization, error)
+	SysGetOrganization(ID string) (*model.Organization, error)
+	SysUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
+
+	SysCreateApplication(name string, multiTenant bool, requiresOwnUsers bool, identifier string, nameInType string, versions []string) (*model.Application, error)
+	SysGetApplication(ID string) (*model.Application, error)
+	SysGetApplications() ([]model.Application, error)
+
+	SysCreatePermission(name string, serviceIDs *[]string, assigners *[]string) (*model.Permission, error)
+	SysUpdatePermission(name string, serviceIDs *[]string, assigners *[]string) (*model.Permission, error)
+
+	SysCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error)
+
+	SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
+	SysGrantAccountRoles(accountID string, appID string, roleIDs []string) error
 }
 
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
