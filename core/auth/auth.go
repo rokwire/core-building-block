@@ -464,7 +464,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 	now := time.Now().UTC()
 	var forceExpires *time.Time
 	if appType.Application.MaxLoginSessionDuration != nil {
-		forceLogoutTime := now.Add(time.Duration(*appType.Application.MaxLoginSessionDuration) * (time.Nanosecond / time.Second))
+		forceLogoutTime := now.Add(time.Duration(*appType.Application.MaxLoginSessionDuration) * (time.Second / time.Nanosecond))
 		forceExpires = &forceLogoutTime
 	}
 
