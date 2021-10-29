@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
+- Assign device to the account on login [#245](https://github.com/rokwire/core-building-block/issues/245)
 - Populate profile data automatically from ROKWIRE 2.0 Profile BB [#185](https://github.com/rokwire/core-building-block/issues/185)
 - Add phone authentication support [#24](https://github.com/rokwire/core-building-block/issues/24)
 - Handle anonymous ID conversion [#204](https://github.com/rokwire/core-building-block/issues/204)
