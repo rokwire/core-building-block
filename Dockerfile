@@ -19,7 +19,8 @@ COPY --from=builder /core-app/driver/web/docs/gen/def.yaml /driver/web/docs/gen/
 COPY --from=builder /core-app/driver/web/authorization_model.conf /driver/web/authorization_model.conf
 
 COPY --from=builder /core-app/driver/web/authorization_services_policy.csv /driver/web/authorization_services_policy.csv
-COPY --from=builder /core-app/driver/web/authorization_admin_policy.csv /driver/web/authorization_admin_policy.csv.csv
+COPY --from=builder /core-app/driver/web/authorization_admin_policy.csv /driver/web/authorization_admin_policy.csv
+COPY --from=builder /core-app/driver/web/authorization_system_policy.csv /driver/web/authorization_system_policy.csv
 
 COPY --from=builder /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_scope.conf /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_scope.conf
 COPY --from=builder /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_string.conf /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_string.conf
