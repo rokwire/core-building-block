@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -130,7 +129,7 @@ func (app *application) sysGetApplications() ([]model.Application, error) {
 func (app *application) sysCreatePermission(name string, serviceIDs *[]string, assigners *[]string) (*model.Permission, error) {
 	id, _ := uuid.NewUUID()
 	now := time.Now()
-	permission := model.Permission{ID: id.String(), Name: name, DateCreated: now, ServiceIDs: *serviceIDs, Assigners: *assigners}
+	permission := model.Permission{ID: id.String(), Name: name, DateCreated: now, ServiceIDs: *serviceIDs}
 
 	err := app.storage.InsertPermission(permission)
 
@@ -154,9 +153,7 @@ func (app *application) sysUpdatePermission(name string, serviceIDs *[]string, a
 	if serviceIDs != nil {
 		permission.ServiceIDs = *serviceIDs
 	}
-	if assigners != nil {
-		permission.Assigners = *assigners
-	}
+
 	err = app.storage.UpdatePermission(permission)
 	if err != nil {
 		return nil, err
@@ -182,7 +179,8 @@ func (app *application) sysCreateApplicationRole(name string, appID string, desc
 }
 
 func (app *application) sysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
-	if assignerPermissions == nil {
+	//TODO - implement it when we have the system accounts done
+	/*if assignerPermissions == nil {
 		return errors.New("no permissions from admin assigner")
 	}
 
@@ -211,7 +209,7 @@ func (app *application) sysGrantAccountPermissions(accountID string, permissionN
 	err = app.storage.InsertAccountPermissions(accountID, authorizedPermissions)
 	if err != nil {
 		return err
-	}
+	} */
 	return nil
 }
 
