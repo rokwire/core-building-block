@@ -1,6 +1,6 @@
 get:
   tags:
-  - Admin
+  - System
   summary: Get global config
   description: |
     Gives the system global config
@@ -23,7 +23,7 @@ get:
         description: Internal error
 post:
   tags:
-  - Admin
+  - System
   summary: Create global config
   description: |
     Creates the system global config
@@ -53,7 +53,7 @@ post:
         description: Internal error
 put:
   tags:
-  - Admin
+  - System
   summary: Update global config
   description: |
     Updates the system global config

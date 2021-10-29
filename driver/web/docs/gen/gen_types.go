@@ -791,12 +791,6 @@ type PostAdminAuthLoginUrlJSONBody ReqSharedLoginUrl
 // PostAdminAuthRefreshJSONBody defines parameters for PostAdminAuthRefresh.
 type PostAdminAuthRefreshJSONBody ReqSharedRefresh
 
-// PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
-type PostAdminGlobalConfigJSONBody GlobalConfig
-
-// PutAdminGlobalConfigJSONBody defines parameters for PutAdminGlobalConfig.
-type PutAdminGlobalConfigJSONBody GlobalConfig
-
 // PostAdminOrganizationsJSONBody defines parameters for PostAdminOrganizations.
 type PostAdminOrganizationsJSONBody ReqCreateOrganizationRequest
 
@@ -874,6 +868,12 @@ type GetServicesAuthVerifyParams struct {
 	Code string `json:"code"`
 }
 
+// PostSystemGlobalConfigJSONBody defines parameters for PostSystemGlobalConfig.
+type PostSystemGlobalConfigJSONBody GlobalConfig
+
+// PutSystemGlobalConfigJSONBody defines parameters for PutSystemGlobalConfig.
+type PutSystemGlobalConfigJSONBody GlobalConfig
+
 // GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
 type GetTpsServiceRegsParams struct {
 
@@ -907,12 +907,6 @@ type PostAdminAuthLoginUrlJSONRequestBody PostAdminAuthLoginUrlJSONBody
 
 // PostAdminAuthRefreshJSONRequestBody defines body for PostAdminAuthRefresh for application/json ContentType.
 type PostAdminAuthRefreshJSONRequestBody PostAdminAuthRefreshJSONBody
-
-// PostAdminGlobalConfigJSONRequestBody defines body for PostAdminGlobalConfig for application/json ContentType.
-type PostAdminGlobalConfigJSONRequestBody PostAdminGlobalConfigJSONBody
-
-// PutAdminGlobalConfigJSONRequestBody defines body for PutAdminGlobalConfig for application/json ContentType.
-type PutAdminGlobalConfigJSONRequestBody PutAdminGlobalConfigJSONBody
 
 // PostAdminOrganizationsJSONRequestBody defines body for PostAdminOrganizations for application/json ContentType.
 type PostAdminOrganizationsJSONRequestBody PostAdminOrganizationsJSONBody
@@ -952,6 +946,12 @@ type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
 
 // PostServicesAuthRefreshJSONRequestBody defines body for PostServicesAuthRefresh for application/json ContentType.
 type PostServicesAuthRefreshJSONRequestBody PostServicesAuthRefreshJSONBody
+
+// PostSystemGlobalConfigJSONRequestBody defines body for PostSystemGlobalConfig for application/json ContentType.
+type PostSystemGlobalConfigJSONRequestBody PostSystemGlobalConfigJSONBody
+
+// PutSystemGlobalConfigJSONRequestBody defines body for PutSystemGlobalConfig for application/json ContentType.
+type PutSystemGlobalConfigJSONRequestBody PutSystemGlobalConfigJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found

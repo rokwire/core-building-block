@@ -57,8 +57,6 @@ paths:
     $ref: "./resources/admin/auth/refresh.yaml"
   /admin/auth/login-url:
     $ref: "./resources/admin/auth/login-url.yaml"
-  /admin/global-config:
-    $ref: "./resources/admin/global-config.yaml"
   /admin/organizations/{id}:
     $ref: "./resources/admin/organizationsId.yaml"
   /admin/organizations:
@@ -99,6 +97,10 @@ paths:
     $ref: "./resources/third-party-services/service-regs.yaml"
   /tps/auth-keys:
     $ref: "./resources/third-party-services/auth-keys.yaml"
+
+  #system
+  /system/global-config:
+    $ref: "./resources/system/global-config.yaml"
 
   #default
   /version:
