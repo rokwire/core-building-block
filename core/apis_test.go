@@ -91,7 +91,8 @@ func TestSysCreateGlobalConfig(t *testing.T) {
 		t.Error("we are expecting error")
 		return
 	}
-	assert.Equal(t, err.Error(), "core-building-block/core.(*application).admCreateGlobalConfig() error inserting global config: error occured", "error is different: "+err.Error())
+	errText := err.Error()
+	assert.Equal(t, errText, "core-building-block/core.(*application).sysCreateGlobalConfig() error inserting global config: error occured", "error is different: "+err.Error())
 }
 
 func TestSysGetOrganization(t *testing.T) {
