@@ -1497,6 +1497,15 @@ func (sa *Adapter) FindApplicationOrganizations(appID string, orgID string) (*mo
 	return sa.getCachedApplicationOrganization(appID, orgID)
 }
 
+//InsertPermission inserts a new  device
+func (sa *Adapter) InsertDevice(device model.Device) error {
+	_, err := sa.db.devices.InsertOne(device)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeDevice, nil, err)
+	}
+	return nil
+}
+
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records
