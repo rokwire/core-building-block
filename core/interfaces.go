@@ -44,8 +44,6 @@ type Administration interface {
 
 	AdmGrantAccountPermissions(accountID string, permissionNames []string) error
 	AdmGrantAccountRoles(accountID string, appID string, roleIDs []string) error
-
-	AdmCreateDevice(Type string, OS string) (*model.Device, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -97,8 +95,6 @@ type Storage interface {
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
-
-	InsertDevice(item model.Device) error
 }
 
 //StorageListener listenes for change data storage events
