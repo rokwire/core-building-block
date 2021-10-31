@@ -165,6 +165,10 @@ func (s *administrationImpl) AdmGrantAccountRoles(accountID string, appID string
 	return s.app.admGrantAccountRoles(accountID, appID, roleIDs)
 }
 
+func (s *administrationImpl) AdmCreateDevice(Type string, OS string) (*model.Device, error) {
+	return s.app.admCreateDevice(Type, OS)
+}
+
 ///
 
 //encryptionImpl
