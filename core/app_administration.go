@@ -365,15 +365,3 @@ func (app *application) admGrantAccountRoles(accountID string, appID string, rol
 	}
 	return nil
 }
-
-func (app *application) admCreateDevice(Type string, OS string) (*model.Device, error) {
-	id, _ := uuid.NewUUID()
-	device := model.Device{ID: id.String(), Type: Type, OS: OS}
-
-	err := app.storage.InsertDevice(device)
-
-	if err != nil {
-		return nil, err
-	}
-	return &device, nil
-}

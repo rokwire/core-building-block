@@ -1497,13 +1497,36 @@ func (sa *Adapter) FindApplicationOrganizations(appID string, orgID string) (*mo
 	return sa.getCachedApplicationOrganization(appID, orgID)
 }
 
-//InsertPermission inserts a new  device
-func (sa *Adapter) InsertDevice(device model.Device) error {
-	_, err := sa.db.devices.InsertOne(device)
+//FindDevice finds a device
+func (sa *Adapter) FindDevice(ID string, Type string, OS string) (*model.Device, error) {
+	filter := bson.D{primitive.E{Key: "device_id", Value: ID},
+		primitive.E{Key: "type", Value: Type},
+		primitive.E{Key: "os", Value: OS}}
+	var devices []device
+	err := sa.db.devices.Find(filter, &devices, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeDevice, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
-	return nil
+	if len(devices) == 0 {
+		//not found
+		return nil, nil
+	}
+	device := devices[0]
+
+	modelDevice := deviceFromStorage(device)
+	return &modelDevice, nil
+}
+
+//InsertDevice inserts a device
+func (sa *Adapter) InsertDevice(device model.Device) (*model.Device, error) {
+	storageDevice := deviceToStorage(&device)
+
+	_, err := sa.db.devices.InsertOne(storageDevice)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeDevice, nil, err)
+	}
+
+	return &device, nil
 }
 
 // ============================== ServiceRegs ==============================

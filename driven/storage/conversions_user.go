@@ -142,6 +142,10 @@ func deviceToStorage(item *model.Device) *device {
 		Accounts: accounts, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
+func deviceFromStorage(item device) model.Device {
+	return model.Device{ID: item.ID, Type: item.Type, OS: item.OS, DateUpdated: item.DateUpdated}
+}
+
 //Credential
 func credentialFromStorage(item credential) model.Credential {
 	accountAuthTypes := make([]model.AccountAuthType, len(item.AccountsAuthTypes))
