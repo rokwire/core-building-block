@@ -1500,19 +1500,18 @@ func (sa *Adapter) FindApplicationOrganizations(appID string, orgID string) (*mo
 //FindDevice finds a device
 func (sa *Adapter) FindDevice(ID string) (*model.Device, error) {
 	filter := bson.D{primitive.E{Key: "device_id", Value: ID}}
-	var devices []device
-	err := sa.db.devices.Find(filter, &devices, nil)
+	var result []model.Device
+	err := sa.db.devices.Find(filter, &result, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)
 	}
-	if len(devices) == 0 {
-		//not found
+	if len(result) == 0 {
+		//no record
 		return nil, nil
 	}
-	device := devices[0]
 
-	modelDevice := deviceFromStorage(device)
-	return &modelDevice, nil
+	deviceRes := result[0]
+	return &deviceRes, nil
 }
 
 //InsertDevice inserts a device

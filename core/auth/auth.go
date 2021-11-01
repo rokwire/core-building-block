@@ -402,12 +402,19 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 	accountAuthType *model.AccountAuthType, appType model.ApplicationType, ipAddress string, deviceType string,
 	deviceOS *string, deviceID string, params map[string]interface{}, l *logs.Log) (*model.LoginSession, error) {
 
-	device := &model.Device{ID: deviceID, Type: deviceType, OS: *deviceOS}
-	insertedDevice, err := a.storage.InsertDevice(*device)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeDevice, nil, err)
+	//device := &model.Device{ID: deviceID, Type: deviceType, OS: *deviceOS}
+	device, err := a.storage.FindDevice(deviceID)
+	if err != nil || device == nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)
 	}
-	device = insertedDevice
+	/* else {
+		insertedDevice, err := a.storage.InsertDevice(device)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeDevice, nil, err)
+		}
+		device = insertedDevice
+	}*/
+	//fmt.Println(findDevice)
 
 	//create login session entity
 	loginSession, err := a.createLoginSession(anonymous, sub, authType, appOrg, accountAuthType, appType, ipAddress, params, *device, l)
