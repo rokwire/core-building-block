@@ -38,10 +38,11 @@ const (
 	typeAuth              logutils.MessageDataType = "auth"
 	typeAuthRefreshParams logutils.MessageDataType = "auth refresh params"
 
-	refreshTokenLength       int = 256
-	refreshTokenExpiry       int = 7 * 24 * 60
-	refreshTokenDeletePeriod int = 2
-	refreshTokenLimit        int = 3
+	refreshTokenLength int = 256
+
+	sessionExpiry       int = 7 * 24 * 60 //1 week
+	sessionDeletePeriod int = 2
+	sessionLimit        int = 3
 )
 
 //Auth represents the auth functionality unit
@@ -76,8 +77,8 @@ type Auth struct {
 	apiKeysLock *sync.RWMutex
 
 	//delete refresh tokens timer
-	deleteRefreshTimer *time.Timer
-	timerDone          chan bool
+	deleteSessionsTimer *time.Timer
+	timerDone           chan bool
 }
 
 //NewAuth creates a new auth instance
@@ -131,7 +132,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initEmailAuth(auth)
 	initPhoneAuth(auth, twilioAccountSID, twilioToken, twilioServiceSID)
 	initFirebaseAuth(auth)
-	initAPIKeyAuth(auth)
+	initAnonymousAuth(auth)
 	initSignatureAuth(auth)
 
 	initOidcAuth(auth)
@@ -172,9 +173,9 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	}
 
 	//2. check if the user exists
-	account, err := authImpl.userExist(externalUser.Identifier, authType, appType, appOrg, l)
+	account, err := a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, externalUser.Identifier)
 	if err != nil {
-		return nil, nil, errors.WrapErrorData(logutils.StatusMissing, "external user", nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if account != nil {
 		//user exists, just check if need to update it
@@ -249,6 +250,7 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.App
 func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
 	creds string, params string, regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (string, *model.AccountAuthType, error) {
 	var message string
+	var account *model.Account
 	var accountAuthType *model.AccountAuthType
 	var credential *model.Credential
 	var profile *model.Profile
@@ -261,12 +263,16 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 
 	//check if the user exists check
-	accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
+	userIdentifier, err := authImpl.getUserIdentifier(creds)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
+	}
+	account, err = a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, userIdentifier)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 
-	accountExists := (accountAuthType != nil)
+	accountExists := (account != nil)
 
 	//check if it is sign in or sign up
 	isSignUp, err := a.isSignUp(accountExists, params, l)
@@ -285,12 +291,12 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		credID := credentialID.String()
 
 		//apply sign up
-		message, identifier, credentialValue, err := authImpl.signUp(authType, appType, appOrg, creds, params, credentialID.String(), l)
+		message, credentialValue, err := authImpl.signUp(authType, appType, appOrg, creds, params, credentialID.String(), l)
 		if err != nil {
 			return "", nil, errors.Wrap("error signing up", err)
 		}
 
-		accountAuthType, credential, profile, preferences, err = a.prepareRegistrationData(authType, *identifier, nil, &credID, credentialValue, regProfile, regPreferences, l)
+		accountAuthType, credential, profile, preferences, err = a.prepareRegistrationData(authType, userIdentifier, nil, &credID, credentialValue, regProfile, regPreferences, l)
 		if err != nil {
 			return "", nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
@@ -308,6 +314,11 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		return "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 	}
 
+	accountAuthType, err = a.findAccountAuthType(account, &authType, userIdentifier)
+	if accountAuthType == nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+	}
+
 	//2. it seems the user exist, now check the credentials
 	message, validCredentials, err := authImpl.checkCredentials(*accountAuthType, creds, l)
 	if err != nil {
@@ -318,6 +329,16 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 
 	return message, accountAuthType, nil
+}
+
+//validateAPIKey checks if the given API key is valid for the given app ID
+func (a *Auth) validateAPIKey(apiKey string, appID string) error {
+	validAPIKey, err := a.getCachedAPIKey(apiKey)
+	if err != nil || validAPIKey == nil || validAPIKey.AppID != appID {
+		return errors.Newf("incorrect key for app_id=%v", appID)
+	}
+
+	return nil
 }
 
 //isSignUp checks if the operation is sign in or sign up
@@ -687,7 +708,7 @@ func (a *Auth) buildRefreshToken() (string, *time.Time, error) {
 		return "", nil, errors.WrapErrorAction(logutils.ActionCompute, logutils.TypeToken, nil, err)
 	}
 
-	expireTime := time.Now().UTC().Add(time.Minute * time.Duration(refreshTokenExpiry))
+	expireTime := time.Now().UTC().Add(time.Minute * time.Duration(sessionExpiry))
 	return newToken, &expireTime, nil
 }
 
@@ -846,48 +867,38 @@ func (a *Auth) getCachedAPIKey(key string) (*model.APIKey, error) {
 	return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeAPIKey, nil)
 }
 
-func (a *Auth) checkRefreshTokenLimit(orgID string, appID string, credsID string) error {
-	tokens, err := a.storage.LoadRefreshTokens(orgID, appID, credsID)
-	if err != nil {
-		return errors.WrapErrorAction("limit checking", model.TypeAuthRefresh, nil, err)
-	}
-	if len(tokens) >= refreshTokenLimit {
-		err = a.storage.DeleteRefreshToken(tokens[0].CurrentToken)
-		if err != nil {
-			return errors.WrapErrorAction("limit checking", model.TypeAuthRefresh, nil, err)
-		}
-	}
-	return nil
-}
+func (a *Auth) setupDeleteSessionsTimer() {
+	a.logger.Info("setupDeleteSessionsTimer")
 
-func (a *Auth) setupDeleteRefreshTimer() {
 	//cancel if active
-	if a.deleteRefreshTimer != nil {
+	if a.deleteSessionsTimer != nil {
 		a.timerDone <- true
-		a.deleteRefreshTimer.Stop()
+		a.deleteSessionsTimer.Stop()
 	}
 
-	a.deleteExpiredRefreshTokens()
+	a.deleteExpiredSessions()
 }
 
-func (a *Auth) deleteExpiredRefreshTokens() {
+func (a *Auth) deleteExpiredSessions() {
+	a.logger.Info("deleteExpiredSessions")
+
 	now := time.Now().UTC()
-	err := a.storage.DeleteExpiredRefreshTokens(&now)
+	err := a.storage.DeleteExpiredSessions(&now)
 	if err != nil {
 		a.logger.Error(err.Error())
 	}
 
-	duration := time.Hour * time.Duration(refreshTokenDeletePeriod)
-	a.deleteRefreshTimer = time.NewTimer(duration)
+	duration := time.Hour * time.Duration(sessionDeletePeriod)
+	a.deleteSessionsTimer = time.NewTimer(duration)
 	select {
-	case <-a.deleteRefreshTimer.C:
+	case <-a.deleteSessionsTimer.C:
 		// timer expired
-		a.deleteRefreshTimer = nil
+		a.deleteSessionsTimer = nil
 
-		a.deleteExpiredRefreshTokens()
+		a.deleteExpiredSessions()
 	case <-a.timerDone:
 		// timer aborted
-		a.deleteRefreshTimer = nil
+		a.deleteSessionsTimer = nil
 	}
 }
 

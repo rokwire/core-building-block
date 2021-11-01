@@ -7,3 +7,7 @@ properties:
     type: string
   name:
     type: string
+  service_ids:
+    type: array
+    items:
+      type: string

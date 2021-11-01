@@ -1,0 +1,11 @@
+required:
+  - name
+type: object
+properties:
+  name:
+    type: string
+  service_ids:
+    type: array
+    description: services that use the permission
+    items:
+      type: string

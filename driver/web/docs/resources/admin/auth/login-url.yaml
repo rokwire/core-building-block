@@ -1,0 +1,25 @@
+post:
+  tags:
+  - Admin
+  summary: Get SSO login url
+  description: |
+    Retrieve a pre-formatted SSO login URL
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schemas/apis/shared/requests/login-url/Request.yaml"
+    required: true
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schemas/apis/shared/responses/login-url/Response.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
