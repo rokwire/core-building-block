@@ -5,6 +5,7 @@ import (
 	"core-building-block/driven/storage"
 
 	"github.com/rokwire/logging-library-go/logs"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 //Services exposes APIs for the driver adapters
@@ -60,13 +61,17 @@ type BBs interface {
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
+	PerformTransaction(func(sessionContext mongo.SessionContext) error) error
+
 	FindAccountByID(id string) (*model.Account, error)
 	UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
-	DeleteAccount(id string) error
+	DeleteAccount(sessionContext mongo.SessionContext, id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appID string, roles []model.ApplicationRole) error
+
+	DeleteDevice(sessionContext mongo.SessionContext, id string) error
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	GetGlobalConfig() (*model.GlobalConfig, error)

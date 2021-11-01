@@ -82,6 +82,36 @@ func (sa *Adapter) RegisterStorageListener(storageListener Listener) {
 	sa.db.listeners = append(sa.db.listeners, storageListener)
 }
 
+//PerformTransaction performs a transaction
+func (sa *Adapter) PerformTransaction(transaction func(sessionContext mongo.SessionContext) error) error {
+	// transaction
+	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+		err := sessionContext.StartTransaction()
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
+		}
+
+		err = transaction(sessionContext)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction("performing", logutils.TypeTransaction, nil, err)
+		}
+
+		err = sessionContext.CommitTransaction(sessionContext)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 //cacheOrganizations caches the organizations from the DB
 func (sa *Adapter) cacheOrganizations() error {
 	sa.logger.Info("cacheOrganizations..")
@@ -604,76 +634,26 @@ func (sa *Adapter) UpdateAccount(updatedUser *model.Account, orgID string, newOr
 }
 
 //DeleteAccount deletes an account
-func (sa *Adapter) DeleteAccount(id string) error {
+func (sa *Adapter) DeleteAccount(sessionContext mongo.SessionContext, id string) error {
 	//TODO - we have to decide what we do on delete user operation - removing all user relations, (or) mark the user disabled etc
 
-	// transaction
-	return sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
-		err := sessionContext.StartTransaction()
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
-		}
+	filter := bson.M{"_id": id}
+	var res *mongo.DeleteResult
+	var err error
+	if sessionContext != nil {
+		res, err = sa.db.accounts.DeleteOneWithContext(sessionContext, filter, nil)
+	} else {
+		res, err = sa.db.accounts.DeleteOne(filter, nil)
+	}
 
-		account, err := sa.FindAccountByID(id)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-		}
-		if account == nil {
-			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
-		}
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+	}
+	if res.DeletedCount != 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeAccount, logutils.StringArgs("unexpected deleted count"))
+	}
 
-		filter := bson.M{"_id": id}
-		res, err := sa.db.accounts.DeleteOneWithContext(sessionContext, filter, nil)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
-		}
-		if res.DeletedCount != 1 {
-			sa.abortTransaction(sessionContext)
-			return errors.ErrorAction(logutils.ActionDelete, model.TypeAccount, logutils.StringArgs("unexpected deleted count"))
-		}
-
-		for _, device := range account.Devices {
-			filter := bson.M{"_id": device.ID}
-			if len(device.Accounts) > 1 {
-				update := bson.D{
-					primitive.E{Key: "$pull", Value: bson.D{
-						primitive.E{Key: "accounts", Value: account.ID},
-					}},
-					primitive.E{Key: "$set", Value: bson.D{
-						primitive.E{Key: "date_updated", Value: time.Now().UTC()},
-					}},
-				}
-				res, err := sa.db.devices.UpdateOneWithContext(sessionContext, filter, update, nil)
-				if err != nil {
-					sa.abortTransaction(sessionContext)
-					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeDevice, nil, err)
-				}
-				if res.ModifiedCount != 1 {
-					sa.abortTransaction(sessionContext)
-					return errors.ErrorAction(logutils.ActionUpdate, model.TypeDevice, logutils.StringArgs("unexpected modified count"))
-				}
-			} else {
-				res, err := sa.db.devices.DeleteOneWithContext(sessionContext, filter, nil)
-				if err != nil {
-					sa.abortTransaction(sessionContext)
-					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeDevice, nil, err)
-				}
-				if res.DeletedCount != 1 {
-					sa.abortTransaction(sessionContext)
-					return errors.ErrorAction(logutils.ActionDelete, model.TypeDevice, logutils.StringArgs("unexpected deleted count"))
-				}
-			}
-		}
-
-		err = sessionContext.CommitTransaction(sessionContext)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
-		}
-		return nil
-	})
+	return nil
 }
 
 //UpdateAccountPreferences updates account preferences
@@ -1649,6 +1629,27 @@ func (sa *Adapter) SaveDevice(device *model.Device, context mongo.SessionContext
 
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSave, "device", &logutils.FieldArgs{"device_id": device.ID}, nil)
+	}
+
+	return nil
+}
+
+//DeleteDevice deletes a device
+func (sa *Adapter) DeleteDevice(sessionContext mongo.SessionContext, id string) error {
+	filter := bson.M{"_id": id}
+	var res *mongo.DeleteResult
+	var err error
+	if sessionContext != nil {
+		res, err = sa.db.devices.DeleteOneWithContext(sessionContext, filter, nil)
+	} else {
+		res, err = sa.db.devices.DeleteOne(filter, nil)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeDevice, nil, err)
+	}
+	if res.DeletedCount != 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeDevice, logutils.StringArgs("unexpected deleted count"))
 	}
 
 	return nil
