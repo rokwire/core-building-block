@@ -1498,10 +1498,8 @@ func (sa *Adapter) FindApplicationOrganizations(appID string, orgID string) (*mo
 }
 
 //FindDevice finds a device
-func (sa *Adapter) FindDevice(ID string, Type string, OS string) (*model.Device, error) {
-	filter := bson.D{primitive.E{Key: "device_id", Value: ID},
-		primitive.E{Key: "type", Value: Type},
-		primitive.E{Key: "os", Value: OS}}
+func (sa *Adapter) FindDevice(ID string) (*model.Device, error) {
+	filter := bson.D{primitive.E{Key: "device_id", Value: ID}}
 	var devices []device
 	err := sa.db.devices.Find(filter, &devices, nil)
 	if err != nil {

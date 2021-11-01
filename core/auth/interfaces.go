@@ -243,7 +243,7 @@ type Storage interface {
 	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
 
 	//Device
-	FindDevice(ID string, Type string, OS string) (*model.Device, error)
+	FindDevice(ID string) (*model.Device, error)
 	InsertDevice(device model.Device) (*model.Device, error)
 }
 
