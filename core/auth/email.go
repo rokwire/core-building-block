@@ -83,11 +83,7 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appType model.Applicatio
 		return "", nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate random string for verify code"))
 	}
 
-	verifyEmail := true
-	verifyEmailParam, ok := authType.Params["verify_email"].(bool)
-	if ok {
-		verifyEmail = verifyEmailParam
-	}
+	verifyEmail := a.getVerifyEmail(authType)
 
 	var emailCredValue emailCreds
 	if verifyEmail {
@@ -112,11 +108,7 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appType model.Applicatio
 }
 
 func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error) {
-	verifyEmail := true
-	verifyEmailParam, ok := accountAuthType.AuthType.Params["verify_email"].(bool)
-	if ok {
-		verifyEmail = verifyEmailParam
-	}
+	verifyEmail := a.getVerifyEmail(accountAuthType.AuthType)
 	if verifyEmail {
 		//check is verified
 		if !accountAuthType.Credential.Verified {
@@ -149,6 +141,15 @@ func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, 
 
 	valid := true
 	return "", &valid, nil
+}
+
+func (a *emailAuthImpl) getVerifyEmail(authType model.AuthType) bool {
+	verifyEmail := true
+	verifyEmailParam, ok := authType.Params["verify_email"].(bool)
+	if ok {
+		verifyEmail = verifyEmailParam
+	}
+	return verifyEmail
 }
 
 func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode string, credentialID string) error {
