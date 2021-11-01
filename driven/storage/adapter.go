@@ -1499,7 +1499,7 @@ func (sa *Adapter) FindApplicationOrganizations(appID string, orgID string) (*mo
 
 //FindDevice finds a device
 func (sa *Adapter) FindDevice(ID string) (*model.Device, error) {
-	filter := bson.D{primitive.E{Key: "device_id", Value: ID}}
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	var result []model.Device
 	err := sa.db.devices.Find(filter, &result, nil)
 	if err != nil {

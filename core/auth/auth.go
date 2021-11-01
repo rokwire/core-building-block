@@ -407,14 +407,12 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 	if err != nil || device == nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)
 	}
-	/* else {
-		insertedDevice, err := a.storage.InsertDevice(device)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeDevice, nil, err)
-		}
-		device = insertedDevice
-	}*/
-	//fmt.Println(findDevice)
+
+	insertedDevice, err := a.storage.InsertDevice(*device)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeDevice, nil, err)
+	}
+	device = insertedDevice
 
 	//create login session entity
 	loginSession, err := a.createLoginSession(anonymous, sub, authType, appOrg, accountAuthType, appType, ipAddress, params, *device, l)
