@@ -349,12 +349,21 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	lastName, _ := userClaims[identityProviderSetting.LastNameField].(string)
 	//email
 	email, _ := userClaims[identityProviderSetting.EmailField].(string)
+	//roles
+	rolesList, _ := userClaims[identityProviderSetting.RolesField].([]interface{})
+	roles := []string{}
+	for _, item := range rolesList {
+		role, _ := item.(string)
+		roleID := identityProviderSetting.Roles[role]
+		roles = append(roles, roleID)
+	}
 	//groups
 	groupsList, _ := userClaims[identityProviderSetting.GroupsField].([]interface{})
 	groups := make([]string, len(groupsList))
-	for i, item := range groupsList {
+	for _, item := range groupsList {
 		group, _ := item.(string)
-		groups[i] = group
+		groupID := identityProviderSetting.Groups[group]
+		groups = append(groups, groupID)
 	}
 	//system specific
 	systemSpecific := map[string]interface{}{}
@@ -367,7 +376,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	}
 
 	externalUser := model.ExternalSystemUser{Identifier: identifier, FirstName: firstName, MiddleName: middleName, LastName: lastName,
-		Email: email, Groups: groups, SystemSpecific: systemSpecific}
+		Email: email, Roles: roles, Groups: groups, SystemSpecific: systemSpecific}
 
 	oidcParams := map[string]interface{}{}
 	oidcParams["id_token"] = token.IDToken

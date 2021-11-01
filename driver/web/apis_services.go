@@ -96,9 +96,9 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		//permissions
 		permissions := applicationPermissionsToDef(account.Permissions)
 		//roles
-		roles := applicationRolesToDef(account.Roles)
+		roles := accountRolesToDef(account.GetActiveRoles())
 		//groups
-		groups := applicationGroupsToDef(account.Groups)
+		groups := accountGroupsToDef(account.GetActiveGroups())
 		//account auth types
 		authTypes := accountAuthTypesToDef(account.AuthTypes)
 		accountData = &Def.ResSharedLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}

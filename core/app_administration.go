@@ -359,7 +359,7 @@ func (app *application) admGrantAccountRoles(accountID string, appID string, rol
 		return errors.Newf("no roles found for IDs: %v", roleIDs)
 	}
 
-	err = app.storage.InsertAccountRoles(accountID, appID, roles)
+	err = app.storage.InsertAccountRoles(accountID, appID, model.AccountRolesFromApplicationRoles(roles, true, true))
 	if err != nil {
 		return err
 	}

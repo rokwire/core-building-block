@@ -8,8 +8,8 @@ import (
 func accountFromStorage(item account, sa *Adapter, application model.Application, organization model.Organization) model.Account {
 	id := item.ID
 	permissions := item.Permissions
-	roles := applicationRolesFromStorage(item.Roles, application)
-	groups := applicationGroupsFromStorage(item.Groups, application)
+	roles := accountRolesFromStorage(item.Roles, application)
+	groups := accountGroupsFromStorage(item.Groups, application)
 	authTypes := accountAuthTypesFromStorage(item.AuthTypes)
 	profile := profileFromStorage(item.Profile)
 	devices := accountDevicesFromStorage(item)
@@ -25,8 +25,8 @@ func accountToStorage(item *model.Account) *account {
 	appID := item.Application.ID
 	orgID := item.Organization.ID
 	permissions := item.Permissions
-	roles := applicationRolesToStorage(item.Roles)
-	groups := applicationGroupsToStorage(item.Groups)
+	roles := accountRolesToStorage(item.Roles)
+	groups := accountGroupsToStorage(item.Groups)
 	authTypes := accountAuthTypesToStorage(item.AuthTypes)
 	profile := profileToStorage(item.Profile)
 	devices := accountDevicesToStorage(item)
@@ -110,6 +110,84 @@ func accountAuthTypesToStorage(items []model.AccountAuthType) []accountAuthType 
 	res := make([]accountAuthType, len(items))
 	for i, aat := range items {
 		res[i] = accountAuthTypeToStorage(aat)
+	}
+	return res
+}
+
+//AccountRole
+func accountRoleFromStorage(item *accountRole, application model.Application) model.AccountRole {
+	if item == nil {
+		return model.AccountRole{}
+	}
+
+	appRole := applicationRoleFromStorage(&item.applicationRole, application)
+	return model.AccountRole{ApplicationRole: appRole, Active: item.Active, AdminSet: item.AdminSet}
+}
+
+func accountRolesFromStorage(items []accountRole, application model.Application) []model.AccountRole {
+	if len(items) == 0 {
+		return make([]model.AccountRole, 0)
+	}
+
+	res := make([]model.AccountRole, len(items))
+	for i, item := range items {
+		res[i] = accountRoleFromStorage(&item, application)
+	}
+	return res
+}
+
+func accountRoleToStorage(item model.AccountRole) accountRole {
+	appRole := applicationRoleToStorage(item.ApplicationRole)
+	return accountRole{applicationRole: appRole, Active: item.Active, AdminSet: item.AdminSet}
+}
+
+func accountRolesToStorage(items []model.AccountRole) []accountRole {
+	if len(items) == 0 {
+		return make([]accountRole, 0)
+	}
+
+	res := make([]accountRole, len(items))
+	for i, item := range items {
+		res[i] = accountRoleToStorage(item)
+	}
+	return res
+}
+
+//ApplicationGroup
+func accountGroupFromStorage(item *accountGroup, application model.Application) model.AccountGroup {
+	if item == nil {
+		return model.AccountGroup{}
+	}
+
+	appGroup := applicationGroupFromStorage(&item.applicationGroup, application)
+	return model.AccountGroup{ApplicationGroup: appGroup, Active: item.Active, AdminSet: item.AdminSet}
+}
+
+func accountGroupsFromStorage(items []accountGroup, application model.Application) []model.AccountGroup {
+	if len(items) == 0 {
+		return make([]model.AccountGroup, 0)
+	}
+
+	res := make([]model.AccountGroup, len(items))
+	for i, item := range items {
+		res[i] = accountGroupFromStorage(&item, application)
+	}
+	return res
+}
+
+func accountGroupToStorage(item model.AccountGroup) accountGroup {
+	appGroup := applicationGroupToStorage(item.ApplicationGroup)
+	return accountGroup{applicationGroup: appGroup, Active: item.Active, AdminSet: item.AdminSet}
+}
+
+func accountGroupsToStorage(items []model.AccountGroup) []accountGroup {
+	if len(items) == 0 {
+		return make([]accountGroup, 0)
+	}
+
+	res := make([]accountGroup, len(items))
+	for i, item := range items {
+		res[i] = accountGroupToStorage(item)
 	}
 	return res
 }

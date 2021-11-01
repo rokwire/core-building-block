@@ -201,10 +201,19 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		//check if external system user needs to be updated
 		if !currentData.Equals(newData) {
 			//there is changes so we need to update it
+			//TODO: Can we do this all in a single storage operation?
 			accountAuthType.Params["user"] = newData
 			err = a.storage.UpdateAccountAuthType(*accountAuthType)
 			if err != nil {
 				return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
+			}
+
+			if !utils.DeepEqual(newData.Roles, currentData.Roles) {
+				a.updateExternalAccountRoles(account, newData.Roles)
+			}
+
+			if !utils.DeepEqual(newData.Groups, currentData.Groups) {
+				a.updateExternalAccountGroups(account, newData.Groups)
 			}
 		}
 	} else {
@@ -218,12 +227,11 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		accountAuthTypeParams["user"] = externalUser
 
 		accountAuthType, _, profile, preferences, err = a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, nil, nil, regProfile, regPreferences, l)
-
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
 
-		accountAuthType, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, *profile, preferences, l)
+		accountAuthType, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, *profile, preferences, externalUser.Roles, externalUser.Groups, l)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
@@ -301,7 +309,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 			return "", nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
 
-		accountAuthType, err = a.registerUser(appOrg, *accountAuthType, credential, useSharedProfile, *profile, preferences, l)
+		accountAuthType, err = a.registerUser(appOrg, *accountAuthType, credential, useSharedProfile, *profile, preferences, nil, nil, l)
 		if err != nil {
 			return "", nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 		}
@@ -565,7 +573,7 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 //	Returns:
 //		Registered account (AccountAuthType): Registered Account object
 func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthType model.AccountAuthType, credential *model.Credential,
-	useSharedProfile bool, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*model.AccountAuthType, error) {
+	useSharedProfile bool, profile model.Profile, preferences map[string]interface{}, roleIDs []string, groupIDs []string, l *logs.Log) (*model.AccountAuthType, error) {
 
 	//TODO - analyse what should go in one transaction
 
@@ -575,8 +583,18 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 	organization := appOrg.Organization
 	authTypes := []model.AccountAuthType{accountAuthType}
 
+	roles, err := a.storage.FindApplicationRoles(roleIDs, appOrg.Application.ID)
+	if err != nil {
+		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeApplicationRole, nil), err)
+	}
+	groups, err := a.storage.FindApplicationGroups(groupIDs, appOrg.Application.ID)
+	if err != nil {
+		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeApplicationGroup, nil), err)
+	}
+
 	account := model.Account{ID: accountID.String(), Application: application, Organization: organization,
-		Permissions: nil, Roles: nil, Groups: nil, AuthTypes: authTypes, Preferences: preferences, Profile: profile, DateCreated: time.Now()} // Anonymous: accountAuthType.AuthType.IsAnonymous
+		Permissions: nil, Roles: model.AccountRolesFromApplicationRoles(roles, true, false), Groups: model.AccountGroupsFromApplicationGroups(groups, true, false),
+		AuthTypes: authTypes, Preferences: preferences, Profile: profile, DateCreated: time.Now()} // Anonymous: accountAuthType.AuthType.IsAnonymous
 
 	insertedAccount, err := a.storage.InsertAccount(account)
 	if err != nil {
@@ -750,6 +768,74 @@ func (a *Auth) getExp(exp *int64) int64 {
 	}
 
 	return *exp
+}
+
+func (a *Auth) updateExternalAccountRoles(account *model.Account, newExternalRoleIDs []string) error {
+	if account == nil {
+		return errors.New("account cannot be nil")
+	}
+
+	newRoles := []model.AccountRole{}
+	//Remove any roles which were not set by an admin and are not in new list
+	for _, role := range account.Roles {
+		if role.AdminSet || authutils.ContainsString(newExternalRoleIDs, role.ID) {
+			newRoles = append(newRoles, role)
+		}
+	}
+
+	addedRoleIDs := []string{}
+	for _, roleID := range newExternalRoleIDs {
+		if account.GetRole(roleID) == nil {
+			addedRoleIDs = append(addedRoleIDs, roleID)
+		}
+	}
+
+	addedRoles, err := a.storage.FindApplicationRoles(addedRoleIDs, account.Application.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountRoles, nil, err)
+	}
+	newRoles = append(newRoles, model.AccountRolesFromApplicationRoles(addedRoles, true, false)...)
+
+	err = a.storage.UpdateAccountRoles(account.ID, newRoles)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountRoles, nil, err)
+	}
+
+	return nil
+}
+
+func (a *Auth) updateExternalAccountGroups(account *model.Account, newExternalGroupIDs []string) error {
+	if account == nil {
+		return errors.New("account cannot be nil")
+	}
+
+	newGroups := []model.AccountGroup{}
+	//Remove any groups which were not set by an admin and are not in new list
+	for _, group := range account.Groups {
+		if group.AdminSet || authutils.ContainsString(newExternalGroupIDs, group.ID) {
+			newGroups = append(newGroups, group)
+		}
+	}
+
+	addedGroupIDs := []string{}
+	for _, groupID := range newExternalGroupIDs {
+		if account.GetGroup(groupID) == nil {
+			addedGroupIDs = append(addedGroupIDs, groupID)
+		}
+	}
+
+	addedGroups, err := a.storage.FindApplicationGroups(addedGroupIDs, account.Application.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountGroups, nil, err)
+	}
+	newGroups = append(newGroups, model.AccountGroupsFromApplicationGroups(addedGroups, true, false)...)
+
+	err = a.storage.UpdateAccountGroups(account.ID, newGroups)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountGroups, nil, err)
+	}
+
+	return nil
 }
 
 //storeReg stores the service registration record

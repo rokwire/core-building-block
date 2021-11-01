@@ -66,7 +66,7 @@ type Storage interface {
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
-	InsertAccountRoles(accountID string, appID string, roles []model.ApplicationRole) error
+	InsertAccountRoles(accountID string, appID string, roles []model.AccountRole) error
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	GetGlobalConfig() (*model.GlobalConfig, error)

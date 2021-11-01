@@ -707,18 +707,18 @@ func (sa *Adapter) InsertAccountPermissions(accountID string, permissions []mode
 
 	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return nil
 }
 
 //InsertAccountRoles inserts account roles
-func (sa *Adapter) InsertAccountRoles(accountID string, appID string, roles []model.ApplicationRole) error {
-	stgRoles := applicationRolesToStorage(roles)
+func (sa *Adapter) InsertAccountRoles(accountID string, appID string, roles []model.AccountRole) error {
+	stgRoles := accountRolesToStorage(roles)
 
 	//appID included in search to prevent accidentally assigning permissions to account from different application
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}}
@@ -730,10 +730,74 @@ func (sa *Adapter) InsertAccountRoles(accountID string, appID string, roles []mo
 
 	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+//UpdateAccountRoles updates the account roles
+func (sa *Adapter) UpdateAccountRoles(accountID string, roles []model.AccountRole) error {
+	stgRoles := accountRolesToStorage(roles)
+
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "roles", Value: stgRoles},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+//DeleteAccountRoles deletes account roles
+func (sa *Adapter) DeleteAccountRoles(accountID string, roleIDs []string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "roles", Value: bson.M{"$each": roleIDs}},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+//UpdateAccountGroups updates the account groups
+func (sa *Adapter) UpdateAccountGroups(accountID string, groups []model.AccountGroup) error {
+	stgGroups := accountGroupsToStorage(groups)
+
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "groups", Value: stgGroups},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return nil
@@ -1006,6 +1070,10 @@ func (sa *Adapter) DeletePermission(id string) error {
 
 //FindApplicationRoles finds a set of application roles
 func (sa *Adapter) FindApplicationRoles(ids []string, appID string) ([]model.ApplicationRole, error) {
+	if len(ids) == 0 {
+		return []model.ApplicationRole{}, nil
+	}
+
 	rolesFilter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var rolesResult []applicationRole
 	err := sa.db.applicationsRoles.Find(rolesFilter, &rolesResult, nil)
@@ -1057,6 +1125,10 @@ func (sa *Adapter) DeleteApplicationRole(id string) error {
 
 //FindApplicationGroups finds a set of application groups
 func (sa *Adapter) FindApplicationGroups(ids []string, appID string) ([]model.ApplicationGroup, error) {
+	if len(ids) == 0 {
+		return []model.ApplicationGroup{}, nil
+	}
+
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var groupsResult []applicationGroup
 	err := sa.db.applicationsGroups.Find(filter, &groupsResult, nil)

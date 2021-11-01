@@ -241,6 +241,16 @@ type Storage interface {
 	//ApplicationsOrganizations
 	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
 	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
+
+	//ApplicationRoles
+	FindApplicationRoles(ids []string, appID string) ([]model.ApplicationRole, error)
+	//AccountRoles
+	UpdateAccountRoles(accountID string, roles []model.AccountRole) error
+
+	//ApplicationGroups
+	FindApplicationGroups(ids []string, appID string) ([]model.ApplicationGroup, error)
+	//AccountGroups
+	UpdateAccountGroups(accountID string, groups []model.AccountGroup) error
 }
 
 //ProfileBuildingBlock is used by auth to communicate with the profile building block.

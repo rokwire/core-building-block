@@ -48,6 +48,32 @@ func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeF
 	return result
 }
 
+//AccountRole
+func accountRoleToDef(item model.AccountRole) Def.ApplicationRoleFields {
+	return Def.ApplicationRoleFields{Id: item.ID, Name: item.Name}
+}
+
+func accountRolesToDef(items []model.AccountRole) []Def.ApplicationRoleFields {
+	result := make([]Def.ApplicationRoleFields, len(items))
+	for i, item := range items {
+		result[i] = accountRoleToDef(item)
+	}
+	return result
+}
+
+//AccountGroup
+func accountGroupToDef(item model.AccountGroup) Def.ApplicationGroupFields {
+	return Def.ApplicationGroupFields{Id: item.ID, Name: item.Name}
+}
+
+func accountGroupsToDef(items []model.AccountGroup) []Def.ApplicationGroupFields {
+	result := make([]Def.ApplicationGroupFields, len(items))
+	for i, item := range items {
+		result[i] = accountGroupToDef(item)
+	}
+	return result
+}
+
 //Profile
 func profileFromDef(item *Def.ReqSharedProfile) model.Profile {
 	if item == nil {

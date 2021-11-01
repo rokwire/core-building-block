@@ -13,8 +13,8 @@ type account struct {
 	OrgID string `bson:"org_id,omitempty"`
 
 	Permissions []model.Permission `bson:"permissions,omitempty"`
-	Roles       []applicationRole  `bson:"roles,omitempty"`
-	Groups      []applicationGroup `bson:"groups,omitempty"`
+	Roles       []accountRole      `bson:"roles,omitempty"`
+	Groups      []accountGroup     `bson:"groups,omitempty"`
 
 	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
 
@@ -27,6 +27,18 @@ type account struct {
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type accountRole struct {
+	applicationRole
+	Active   bool `bson:"active"`
+	AdminSet bool `bson:"admin_set"`
+}
+
+type accountGroup struct {
+	applicationGroup
+	Active   bool `bson:"active"`
+	AdminSet bool `bson:"admin_set"`
 }
 
 type accountAuthType struct {
