@@ -27,7 +27,6 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	//get ip
 	ip, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		fmt.Errorf("userip: %q is not IP:port", r.RemoteAddr)
