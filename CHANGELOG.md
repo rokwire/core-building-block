@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
+- Expose get accounts admin API [#283] (https://github.com/rokwire/core-building-block/issues/283)
 - Expose get account admin API [#270] (https://github.com/rokwire/core-building-block/issues/270)
 - Expose get account services API [#217](https://github.com/rokwire/core-building-block/issues/217)
 - Expose get account preferences services API [#206](https://github.com/rokwire/core-building-block/issues/206) 
