@@ -6,13 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Expose get account services API [#217](https://github.com/rokwire/core-building-block/issues/217)
 
 ## [1.2.0] - 2021-10-07
 ### Security
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
-- Expose get account services API [#217](https://github.com/rokwire/core-building-block/issues/217)
 - Expose get account preferences services API [#206](https://github.com/rokwire/core-building-block/issues/206) 
 - Add phone authentication support [#24](https://github.com/rokwire/core-building-block/issues/24)
 - Handle anonymous ID conversion [#204](https://github.com/rokwire/core-building-block/issues/204)
