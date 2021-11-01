@@ -413,6 +413,26 @@ func (h ServicesApisHandler) forgotPassword(l *logs.Log, r *http.Request, claims
 	return l.HttpResponseSuccessMessage("Sent forgot password link successfully")
 }
 
+//Handler for forgot password endpoint
+func (h ServicesApisHandler) renderResetPasswordForm(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqForgotPasswordRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	if err := h.coreAPIs.Auth.ForgotPassword(string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.OrgId, requestData.Identifier, l); err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessMessage("Sent forgot password link successfully")
+}
+
 //NewServicesApisHandler creates new rest services Handler instance
 func NewServicesApisHandler(coreAPIs *core.APIs) ServicesApisHandler {
 	return ServicesApisHandler{coreAPIs: coreAPIs}

@@ -399,6 +399,38 @@ func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthT
 	return accountAuthType, nil
 }
 
+func (a *Auth) findAccountAuthTypeByID(account *model.Account, accountAuthTypeID string) (*model.AccountAuthType, error) {
+	if account == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+	}
+
+	if accountAuthTypeID == "" {
+		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, nil)
+	}
+
+	accountAuthType := account.GetAccountAuthTypeByID(accountAuthTypeID)
+	if accountAuthType == nil {
+		return nil, errors.New("for some reasons the user auth type is nil")
+	}
+
+	authType, err := a.storage.FindAuthType(accountAuthType.AuthType.ID)
+	if err != nil {
+		return nil, errors.New("Failed to find authType by ID in accountAuthType")
+
+	}
+	accountAuthType.AuthType = *authType
+
+	if accountAuthType.Credential != nil {
+		//populate credentials in accountAuthType
+		credential, err := a.storage.FindCredential(accountAuthType.Credential.ID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+		}
+		accountAuthType.Credential = credential
+	}
+	return accountAuthType, nil
+}
+
 func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, appOrg model.ApplicationOrganization,
 	accountAuthType *model.AccountAuthType, appType model.ApplicationType, ipAddress string, deviceType string,
 	deviceOS *string, deviceID string, params map[string]interface{}, l *logs.Log) (*model.LoginSession, error) {

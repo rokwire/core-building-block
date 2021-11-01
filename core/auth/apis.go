@@ -328,21 +328,19 @@ func (a *Auth) ResetPasswordClient(accountID string, accountAuthTypeID string, n
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
-
-	accountAuthType := account.GetAccountAuthTypeByID(accountAuthTypeID)
-	if accountAuthType == nil {
-		return errors.New("for some reasons the account auth type is nil")
+	l.Infof("AccountAuthTypeID is %v", accountAuthTypeID)
+	accountAuthType, err := a.findAccountAuthTypeByID(account, accountAuthTypeID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 	}
 	if accountAuthType.Credential == nil {
 		return errors.New("Invalid account auth type for reset password")
 	}
-	credential, err := a.storage.FindCredential(accountAuthType.Credential.ID)
-	if err != nil || credential == nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
-	}
 
+	credential := accountAuthType.Credential
 	//Determine the auth type for resetPassword
 	authType := accountAuthType.AuthType
+	a.logger.Infof("AuthType:", authType)
 	if authType.IsExternal || authType.IsAnonymous {
 		return errors.WrapErrorAction("invalid auth type for reset password client", model.TypeAuthType, nil, err)
 	}

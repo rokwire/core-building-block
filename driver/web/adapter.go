@@ -71,6 +71,8 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL, nil)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh, nil)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/verify", we.wrapFunc(we.servicesApisHandler.verifyCode, nil)).Methods("GET")
+	servicesSubRouter.HandleFunc("/auth/reset-password-form", we.renderResetPasswordForm)
+
 	servicesSubRouter.HandleFunc("/auth/forgot-password", we.wrapFunc(we.servicesApisHandler.forgotPassword, nil)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/reset-password-link", we.wrapFunc(we.servicesApisHandler.resetPasswordLink, nil)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/reset-password-client", we.wrapFunc(we.servicesApisHandler.resetPasswordClient, we.auth.servicesAuthenticatedAuth)).Methods("POST")
@@ -146,6 +148,12 @@ func (we Adapter) Start() {
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("access-control-allow-origin", "*")
 	http.ServeFile(w, r, "./driver/web/docs/gen/def.yaml")
+}
+
+func (we Adapter) renderResetPasswordForm(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(r.URL.Path)
+	w.Header().Add("access-control-allow-origin", "*")
+	http.ServeFile(w, r, "templates/reset-password.html")
 }
 
 func (we Adapter) serveDocUI() http.Handler {
