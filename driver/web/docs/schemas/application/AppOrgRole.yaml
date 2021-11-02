@@ -1,7 +1,7 @@
 type: object
 properties:
   fields:
-    $ref: "./ApplicationRoleFields.yaml"
+    $ref: "./AppOrgRoleFields.yaml"
   application:
     $ref: "./Application.yaml"
   permissions:

@@ -157,12 +157,12 @@ type Account struct {
 	AuthTypes    *[]AccountAuthType      `json:"auth_types,omitempty"`
 	Devices      *[]Device               `json:"devices,omitempty"`
 	Fields       *AccountFields          `json:"fields,omitempty"`
-	Groups       *[]ApplicationGroup     `json:"groups,omitempty"`
+	Groups       *[]AppOrgGroup          `json:"groups,omitempty"`
 	Organization *Organization           `json:"organization,omitempty"`
 	Permissions  *[]Permission           `json:"permissions,omitempty"`
 	Preferences  *map[string]interface{} `json:"preferences,omitempty"`
 	Profile      *Profile                `json:"profile,omitempty"`
-	Roles        *[]ApplicationRole      `json:"roles,omitempty"`
+	Roles        *[]AppOrgRole           `json:"roles,omitempty"`
 }
 
 // AccountAuthType defines model for AccountAuthType.
@@ -193,6 +193,33 @@ type AccountFields struct {
 	Id string `json:"id"`
 }
 
+// AppOrgGroup defines model for AppOrgGroup.
+type AppOrgGroup struct {
+	Application *Application       `json:"application,omitempty"`
+	Fields      *AppOrgGroupFields `json:"fields,omitempty"`
+	Permissions *[]Permission      `json:"permissions,omitempty"`
+	Roles       *[]AppOrgRole      `json:"roles,omitempty"`
+}
+
+// AppOrgGroupFields defines model for AppOrgGroupFields.
+type AppOrgGroupFields struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// AppOrgRole defines model for AppOrgRole.
+type AppOrgRole struct {
+	Application *Application      `json:"application,omitempty"`
+	Fields      *AppOrgRoleFields `json:"fields,omitempty"`
+	Permissions *[]Permission     `json:"permissions,omitempty"`
+}
+
+// AppOrgRoleFields defines model for AppOrgRoleFields.
+type AppOrgRoleFields struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
 // Application defines model for Application.
 type Application struct {
 	Fields        *ApplicationFields         `json:"fields,omitempty"`
@@ -208,37 +235,10 @@ type ApplicationFields struct {
 	RequiresOwnUsers *bool  `json:"requires_own_users,omitempty"`
 }
 
-// ApplicationGroup defines model for ApplicationGroup.
-type ApplicationGroup struct {
-	Application *Application            `json:"application,omitempty"`
-	Fields      *ApplicationGroupFields `json:"fields,omitempty"`
-	Permissions *[]Permission           `json:"permissions,omitempty"`
-	Roles       *[]ApplicationRole      `json:"roles,omitempty"`
-}
-
-// ApplicationGroupFields defines model for ApplicationGroupFields.
-type ApplicationGroupFields struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-}
-
 // ApplicationOrganization defines model for ApplicationOrganization.
 type ApplicationOrganization struct {
 	TODO *string `json:"TODO,omitempty"`
 	Id   *string `json:"id,omitempty"`
-}
-
-// ApplicationRole defines model for ApplicationRole.
-type ApplicationRole struct {
-	Application *Application           `json:"application,omitempty"`
-	Fields      *ApplicationRoleFields `json:"fields,omitempty"`
-	Permissions *[]Permission          `json:"permissions,omitempty"`
-}
-
-// ApplicationRoleFields defines model for ApplicationRoleFields.
-type ApplicationRoleFields struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
 }
 
 // ApplicationType defines model for ApplicationType.
@@ -710,13 +710,13 @@ type ResSharedLoginUrl struct {
 
 // ResSharedLoginAccount defines model for _res_shared_Login_Account.
 type ResSharedLoginAccount struct {
-	AuthTypes   *[]AccountAuthTypeFields  `json:"auth_types,omitempty"`
-	Groups      *[]ApplicationGroupFields `json:"groups,omitempty"`
-	Id          string                    `json:"id"`
-	Permissions *[]PermissionFields       `json:"permissions,omitempty"`
-	Preferences *map[string]interface{}   `json:"preferences"`
-	Profile     *ProfileFields            `json:"profile,omitempty"`
-	Roles       *[]ApplicationRoleFields  `json:"roles,omitempty"`
+	AuthTypes   *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
+	Groups      *[]AppOrgGroupFields     `json:"groups,omitempty"`
+	Id          string                   `json:"id"`
+	Permissions *[]PermissionFields      `json:"permissions,omitempty"`
+	Preferences *map[string]interface{}  `json:"preferences"`
+	Profile     *ProfileFields           `json:"profile,omitempty"`
+	Roles       *[]AppOrgRoleFields      `json:"roles,omitempty"`
 }
 
 // ResSharedRefresh defines model for _res_shared_Refresh.

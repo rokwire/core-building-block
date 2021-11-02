@@ -1807,18 +1807,18 @@ components:
           type: array
           items:
             type: string
-    ApplicationRole:
+    AppOrgRole:
       type: object
       properties:
         fields:
-          $ref: '#/components/schemas/ApplicationRoleFields'
+          $ref: '#/components/schemas/AppOrgRoleFields'
         application:
           $ref: '#/components/schemas/Application'
         permissions:
           type: array
           items:
             $ref: '#/components/schemas/Permission'
-    ApplicationRoleFields:
+    AppOrgRoleFields:
       required:
         - id
         - name
@@ -1828,11 +1828,11 @@ components:
           type: string
         name:
           type: string
-    ApplicationGroup:
+    AppOrgGroup:
       type: object
       properties:
         fields:
-          $ref: '#/components/schemas/ApplicationGroupFields'
+          $ref: '#/components/schemas/AppOrgGroupFields'
         application:
           $ref: '#/components/schemas/Application'
         permissions:
@@ -1842,8 +1842,8 @@ components:
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationRole'
-    ApplicationGroupFields:
+            $ref: '#/components/schemas/AppOrgRole'
+    AppOrgGroupFields:
       required:
         - id
         - name
@@ -2125,11 +2125,11 @@ components:
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationRole'
+            $ref: '#/components/schemas/AppOrgRole'
         groups:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationGroup'
+            $ref: '#/components/schemas/AppOrgGroup'
         auth_types:
           type: array
           items:
@@ -2521,11 +2521,11 @@ components:
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationRoleFields'
+            $ref: '#/components/schemas/AppOrgRoleFields'
         groups:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationGroupFields'
+            $ref: '#/components/schemas/AppOrgGroupFields'
         auth_types:
           type: array
           items:

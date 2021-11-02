@@ -13,11 +13,11 @@ properties:
   roles:
     type: array
     items:
-      $ref: "../application/ApplicationRole.yaml"
+      $ref: "../application/AppOrgRole.yaml"
   groups:
     type: array
     items:
-      $ref: "../application/ApplicationGroup.yaml"
+      $ref: "../application/AppOrgGroup.yaml"
   auth_types:
     type: array
     items:

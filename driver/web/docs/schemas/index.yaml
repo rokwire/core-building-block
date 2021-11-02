@@ -17,14 +17,14 @@ Permission:
   $ref: "./application/Permission.yaml"
 PermissionFields:
   $ref: "./application/PermissionFields.yaml"
-ApplicationRole:
-  $ref: "./application/ApplicationRole.yaml"
-ApplicationRoleFields:
-  $ref: "./application/ApplicationRoleFields.yaml"
-ApplicationGroup:
-  $ref: "./application/ApplicationGroup.yaml"
-ApplicationGroupFields:
-  $ref: "./application/ApplicationGroupFields.yaml"
+AppOrgRole:
+  $ref: "./application/AppOrgRole.yaml"
+AppOrgRoleFields:
+  $ref: "./application/AppOrgRoleFields.yaml"
+AppOrgGroup:
+  $ref: "./application/AppOrgGroup.yaml"
+AppOrgGroupFields:
+  $ref: "./application/AppOrgGroupFields.yaml"
 Organization:
   $ref: "./application/Organization.yaml"
 OrganizationFields:
