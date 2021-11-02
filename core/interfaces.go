@@ -53,7 +53,7 @@ type System interface {
 	SysCreatePermission(name string, serviceID string, assigners *[]string) (*model.Permission, error)
 	SysUpdatePermission(name string, serviceID *string, assigners *[]string) (*model.Permission, error)
 
-	SysCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error)
+	SysCreateAppOrgRole(name string, appID string, description string, permissionNames []string) (*model.AppOrgRole, error)
 
 	SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
 	SysGrantAccountRoles(accountID string, appID string, roleIDs []string) error
@@ -69,7 +69,7 @@ type Storage interface {
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
-	InsertAccountRoles(accountID string, appID string, roles []model.ApplicationRole) error
+	InsertAccountRoles(accountID string, appOrgID string, roles []model.AppOrgRole) error
 
 	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	GetGlobalConfig() (*model.GlobalConfig, error)
@@ -80,14 +80,14 @@ type Storage interface {
 	UpdatePermission(item model.Permission) error
 	DeletePermission(id string) error
 
-	FindApplicationRoles(ids []string, appID string) ([]model.ApplicationRole, error)
-	InsertApplicationRole(item model.ApplicationRole) error
-	UpdateApplicationRole(item model.ApplicationRole) error
-	DeleteApplicationRole(id string) error
+	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
+	InsertAppOrgRole(item model.AppOrgRole) error
+	UpdateAppOrgRole(item model.AppOrgRole) error
+	DeleteAppOrgRole(id string) error
 
-	InsertApplicationGroup(item model.ApplicationGroup) error
-	UpdateApplicationGroup(item model.ApplicationGroup) error
-	DeleteApplicationGroup(id string) error
+	InsertAppOrgGroup(item model.AppOrgGroup) error
+	UpdateAppOrgGroup(item model.AppOrgGroup) error
+	DeleteAppOrgGroup(id string) error
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error

@@ -27,28 +27,28 @@ func applicationPermissionsToDef(items []model.Permission) []Def.ApplicationPerm
 	return result
 }
 
-//ApplicationRole
-func applicationRoleToDef(item model.ApplicationRole) Def.ApplicationRoleFields {
+//AppOrgRole
+func appOrgRoleToDef(item model.AppOrgRole) Def.ApplicationRoleFields {
 	return Def.ApplicationRoleFields{Id: item.ID, Name: item.Name}
 }
 
-func applicationRolesToDef(items []model.ApplicationRole) []Def.ApplicationRoleFields {
+func appOrgRolesToDef(items []model.AppOrgRole) []Def.ApplicationRoleFields {
 	result := make([]Def.ApplicationRoleFields, len(items))
 	for i, item := range items {
-		result[i] = applicationRoleToDef(item)
+		result[i] = appOrgRoleToDef(item)
 	}
 	return result
 }
 
-//ApplicationGroup
-func applicationGroupToDef(item model.ApplicationGroup) Def.ApplicationGroupFields {
+//AppOrgGroup
+func appOrgGroupToDef(item model.AppOrgGroup) Def.ApplicationGroupFields {
 	return Def.ApplicationGroupFields{Id: item.ID, Name: item.Name}
 }
 
-func applicationGroupsToDef(items []model.ApplicationGroup) []Def.ApplicationGroupFields {
+func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.ApplicationGroupFields {
 	result := make([]Def.ApplicationGroupFields, len(items))
 	for i, item := range items {
-		result[i] = applicationGroupToDef(item)
+		result[i] = appOrgGroupToDef(item)
 	}
 	return result
 }

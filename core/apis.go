@@ -187,8 +187,8 @@ func (s *systemImpl) SysUpdatePermission(name string, serviceID *string, assigne
 	return s.app.sysUpdatePermission(name, serviceID, assigners)
 }
 
-func (s *systemImpl) SysCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error) {
-	return s.app.sysCreateApplicationRole(name, appID, description, permissionNames)
+func (s *systemImpl) SysCreateAppOrgRole(name string, appOrgID string, description string, permissionNames []string) (*model.AppOrgRole, error) {
+	return s.app.sysCreateAppOrgRole(name, appOrgID, description, permissionNames)
 }
 
 func (s *systemImpl) SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {

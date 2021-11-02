@@ -51,25 +51,25 @@ type applicationOrganization struct {
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
-type applicationGroup struct {
+type appOrgGroup struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 
-	AppID string `bson:"app_id"`
+	AppOrgID string `bson:"app_org_id"`
 
 	Permissions []model.Permission `bson:"permissions"`
-	Roles       []applicationRole  `bson:"roles"`
+	Roles       []appOrgRole       `bson:"roles"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-type applicationRole struct {
+type appOrgRole struct {
 	ID          string `bson:"_id"`
 	Name        string `bson:"name"`
 	Description string `bson:"description"`
 
-	AppID string `bson:"app_id"`
+	AppOrgID string `bson:"app_org_id"`
 
 	Permissions []model.Permission `bson:"permissions"`
 

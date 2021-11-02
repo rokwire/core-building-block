@@ -13,9 +13,9 @@ const (
 	//TypePermission ...
 	TypePermission logutils.MessageDataType = "permission"
 	//TypeApplicationRole ...
-	TypeApplicationRole logutils.MessageDataType = "application role"
+	TypeAppOrgRole logutils.MessageDataType = "application organziation role"
 	//TypeApplicationGroup ...
-	TypeApplicationGroup logutils.MessageDataType = "application group"
+	TypeAppOrgGroup logutils.MessageDataType = "application organization group"
 	//TypeOrganization ...
 	TypeOrganization logutils.MessageDataType = "organization"
 	//TypeApplicationOrganization ...
@@ -42,40 +42,40 @@ func (c Permission) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nServiceID:%s]", c.ID, c.Name, c.ServiceID)
 }
 
-//ApplicationRole represents application role entity. It is a collection of permissions
-type ApplicationRole struct {
+//AppOrgRole represents application organization role entity. It is a collection of permissions
+type AppOrgRole struct {
 	ID          string
 	Name        string
 	Description string
 
 	Permissions []Permission
 
-	Application Application
+	AppOrg ApplicationOrganization
 
 	DateCreated time.Time
 	DateUpdated *time.Time
 }
 
-func (c ApplicationRole) String() string {
-	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s\tApplication:%s]", c.ID, c.Name, c.Permissions, c.Application.Name)
+func (c AppOrgRole) String() string {
+	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s\tAppOrg:%s]", c.ID, c.Name, c.Permissions, c.AppOrg.ID)
 }
 
-//ApplicationGroup represents application group entity. It is a collection of users
-type ApplicationGroup struct {
+//AppOrgGroup represents application organization group entity. It is a collection of users
+type AppOrgGroup struct {
 	ID   string
 	Name string
 
 	Permissions []Permission
-	Roles       []ApplicationRole
+	Roles       []AppOrgRole
 
-	Application Application
+	AppOrg ApplicationOrganization
 
 	DateCreated time.Time
 	DateUpdated *time.Time
 }
 
-func (cg ApplicationGroup) String() string {
-	return fmt.Sprintf("[ID:%s\nName:%s\nApplication:%s]", cg.ID, cg.Name, cg.Application.Name)
+func (cg AppOrgGroup) String() string {
+	return fmt.Sprintf("[ID:%s\nName:%s\nAppOrg:%s]", cg.ID, cg.Name, cg.AppOrg.ID)
 }
 
 //Application represents users application entity - safer community, uuic, etc

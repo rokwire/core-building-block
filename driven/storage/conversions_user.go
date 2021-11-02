@@ -8,15 +8,15 @@ import (
 func accountFromStorage(item account, sa *Adapter, application model.Application, organization model.Organization) model.Account {
 	id := item.ID
 	permissions := item.Permissions
-	roles := applicationRolesFromStorage(item.Roles, application)
-	groups := applicationGroupsFromStorage(item.Groups, application)
+	//roles := appOrgRolesFromStorage(item.Roles, application)
+	//groups := appOrgGroupsFromStorage(item.Groups, application)
 	authTypes := accountAuthTypesFromStorage(item.AuthTypes)
 	profile := profileFromStorage(item.Profile)
 	devices := accountDevicesFromStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 	return model.Account{ID: id, Application: application, Organization: organization, Permissions: permissions,
-		Roles: roles, Groups: groups, AuthTypes: authTypes, Preferences: item.Preferences, Profile: profile,
+		/*Roles: roles, Groups: groups,*/ AuthTypes: authTypes, Preferences: item.Preferences, Profile: profile,
 		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated} // Anonymous: item.Anonymous
 }
 
@@ -25,15 +25,15 @@ func accountToStorage(item *model.Account) *account {
 	appID := item.Application.ID
 	orgID := item.Organization.ID
 	permissions := item.Permissions
-	roles := applicationRolesToStorage(item.Roles)
-	groups := applicationGroupsToStorage(item.Groups)
+	//roles := applicationRolesToStorage(item.Roles)
+	//groups := applicationGroupsToStorage(item.Groups)
 	authTypes := accountAuthTypesToStorage(item.AuthTypes)
 	profile := profileToStorage(item.Profile)
 	devices := accountDevicesToStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
-	return &account{ID: id, AppID: appID, OrgID: orgID, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
+	return &account{ID: id, AppID: appID, OrgID: orgID, Permissions: permissions /* Roles: roles, Groups: groups,*/, AuthTypes: authTypes,
 		Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated} //Anonymous: item.Anonymous
 }
 

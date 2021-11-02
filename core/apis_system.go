@@ -166,7 +166,7 @@ func (app *application) sysUpdatePermission(name string, serviceID *string, assi
 	return &permission, nil
 }
 
-func (app *application) sysCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error) {
+func (app *application) sysCreateAppOrgRole(name string, appOrgID string, description string, permissionNames []string) (*model.AppOrgRole, error) {
 	permissions, err := app.storage.FindPermissionsByName(permissionNames)
 	if err != nil {
 		return nil, err
@@ -174,8 +174,8 @@ func (app *application) sysCreateApplicationRole(name string, appID string, desc
 
 	id, _ := uuid.NewUUID()
 	now := time.Now()
-	role := model.ApplicationRole{ID: id.String(), Name: name, Description: description, Application: model.Application{ID: appID}, Permissions: permissions, DateCreated: now}
-	err = app.storage.InsertApplicationRole(role)
+	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, AppOrg: model.ApplicationOrganization{ID: appOrgID}, Permissions: permissions, DateCreated: now}
+	err = app.storage.InsertAppOrgRole(role)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +217,7 @@ func (app *application) sysGrantAccountPermissions(accountID string, permissionN
 }
 
 func (app *application) sysGrantAccountRoles(accountID string, appID string, roleIDs []string) error {
-	roles, err := app.storage.FindApplicationRoles(roleIDs, appID)
+	roles, err := app.storage.FindAppOrgRoles(roleIDs, appID)
 	if err != nil {
 		return err
 	}

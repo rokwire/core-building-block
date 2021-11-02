@@ -482,12 +482,12 @@ func (h SystemApisHandler) createApplicationRole(l *logs.Log, r *http.Request, c
 	var requestData Def.ReqApplicationRolesRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationRole, nil, err, http.StatusBadRequest, true)
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)
 	}
 
-	_, err = h.coreAPIs.System.SysCreateApplicationRole(requestData.Name, requestData.AppId, requestData.Description, requestData.Permissions)
+	_, err = h.coreAPIs.System.SysCreateAppOrgRole(requestData.Name, requestData.AppId, requestData.Description, requestData.Permissions)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationRole, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()
@@ -525,12 +525,12 @@ func (h SystemApisHandler) grantAccountRoles(l *logs.Log, r *http.Request, claim
 	var requestData Def.ReqAccountRolesRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationRole, nil, err, http.StatusBadRequest, true)
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)
 	}
 
 	err = h.coreAPIs.System.SysGrantAccountRoles(requestData.AccountId, requestData.AppId, requestData.RoleIds)
 	if err != nil {
-		return l.HttpResponseErrorAction(actionGrant, model.TypeApplicationRole, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()

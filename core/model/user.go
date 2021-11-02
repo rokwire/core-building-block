@@ -36,8 +36,8 @@ type Account struct {
 	Organization Organization
 
 	Permissions []Permission
-	Roles       []ApplicationRole
-	Groups      []ApplicationGroup
+	Roles       []AppOrgRole
+	Groups      []AppOrgGroup
 
 	AuthTypes []AccountAuthType
 
