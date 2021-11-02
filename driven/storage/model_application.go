@@ -55,6 +55,8 @@ type appOrgGroup struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 
+	System bool `bson:"system"`
+
 	AppOrgID string `bson:"app_org_id"`
 
 	Permissions []model.Permission `bson:"permissions"`
@@ -68,6 +70,8 @@ type appOrgRole struct {
 	ID          string `bson:"_id"`
 	Name        string `bson:"name"`
 	Description string `bson:"description"`
+
+	System bool `bson:"system"`
 
 	AppOrgID string `bson:"app_org_id"`
 

@@ -203,8 +203,9 @@ type AppOrgGroup struct {
 
 // AppOrgGroupFields defines model for AppOrgGroupFields.
 type AppOrgGroupFields struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id     string `json:"id"`
+	Name   string `json:"name"`
+	System *bool  `json:"system,omitempty"`
 }
 
 // AppOrgRole defines model for AppOrgRole.
@@ -216,8 +217,9 @@ type AppOrgRole struct {
 
 // AppOrgRoleFields defines model for AppOrgRoleFields.
 type AppOrgRoleFields struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id     string `json:"id"`
+	Name   string `json:"name"`
+	System *bool  `json:"system,omitempty"`
 }
 
 // Application defines model for Application.

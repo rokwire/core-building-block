@@ -13,7 +13,7 @@ const (
 	//TypePermission ...
 	TypePermission logutils.MessageDataType = "permission"
 	//TypeAppOrgRole ...
-	TypeAppOrgRole logutils.MessageDataType = "application organziation role"
+	TypeAppOrgRole logutils.MessageDataType = "application organization role"
 	//TypeAppOrgGroup ...
 	TypeAppOrgGroup logutils.MessageDataType = "application organization group"
 	//TypeOrganization ...
@@ -48,6 +48,8 @@ type AppOrgRole struct {
 	Name        string
 	Description string
 
+	System bool
+
 	Permissions []Permission
 
 	AppOrg ApplicationOrganization
@@ -64,6 +66,8 @@ func (c AppOrgRole) String() string {
 type AppOrgGroup struct {
 	ID   string
 	Name string
+
+	System bool
 
 	Permissions []Permission
 	Roles       []AppOrgRole
