@@ -7,14 +7,12 @@ import (
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (app *application) serGetProfile(accountID string) (*model.Profile, error) {
 	//find the account
-	account, err := app.storage.FindAccountByID(accountID)
+	account, err := app.storage.FindAccountByID(nil, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -26,7 +24,7 @@ func (app *application) serGetProfile(accountID string) (*model.Profile, error) 
 
 func (app *application) serGetPreferences(accountID string) (map[string]interface{}, error) {
 	//find the account
-	account, err := app.storage.FindAccountByID(accountID)
+	account, err := app.storage.FindAccountByID(nil, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountPreferences, nil, err)
 	}
@@ -63,40 +61,31 @@ func (app *application) serDeleteAccount(id string) error {
 		}
 
 		for _, device := range account.Devices {
-			filter := bson.M{"_id": device.ID}
 			if len(device.Accounts) > 1 {
-				for _, deviceAccount := range device.Accounts {
-					// if deviceAccount.ID == id {
-					// 	device.Accounts =
-					// }
+				for i, deviceAccount := range device.Accounts {
+					if deviceAccount.ID == id {
+						device.Accounts = append(device.Accounts[:i], device.Accounts[i+1:]...)
+						break
+					}
 				}
-				update := bson.D{
-					primitive.E{Key: "$pull", Value: bson.D{
-						primitive.E{Key: "accounts", Value: account.ID},
-					}},
-					primitive.E{Key: "$set", Value: bson.D{
-						primitive.E{Key: "date_updated", Value: time.Now().UTC()},
-					}},
-				}
-				res, err := app.storage.UpdateOneWithContext(sessionContext, filter, update, nil)
+				*device.DateUpdated = time.Now().UTC()
+
+				err = app.storage.SaveDevice(sessionContext, &device)
 				if err != nil {
-					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeDevice, nil, err)
-				}
-				if res.ModifiedCount != 1 {
-					return errors.ErrorAction(logutils.ActionUpdate, model.TypeDevice, logutils.StringArgs("unexpected modified count"))
+					return errors.WrapErrorAction(logutils.ActionSave, model.TypeDevice, nil, err)
 				}
 			} else {
-				app.storage.DeleteDevice(sessionContext, device.ID)
+				err = app.storage.DeleteDevice(sessionContext, device.ID)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeDevice, nil, err)
 				}
 			}
 		}
+
+		return nil
 	}
 
 	return app.storage.PerformTransaction(transaction)
-
-	// return app.storage.DeleteAccount(id)
 }
 
 func (app *application) serGetAuthTest(l *logs.Log) string {

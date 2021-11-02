@@ -415,7 +415,7 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 	//account - from storage
 	var account *model.Account
 	if loginSession.AccountAuthTypeID != nil {
-		account, err = sa.FindAccountByID(loginSession.Identifier)
+		account, err = sa.FindAccountByID(nil, loginSession.Identifier)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
@@ -509,14 +509,20 @@ func (sa *Adapter) FindAccount(appID string, orgID string, authTypeID string, ac
 }
 
 //FindAccountByID finds an account by id
-func (sa *Adapter) FindAccountByID(id string) (*model.Account, error) {
-	return sa.findAccount("_id", id)
+func (sa *Adapter) FindAccountByID(sessionContext mongo.SessionContext, id string) (*model.Account, error) {
+	return sa.findAccount(sessionContext, "_id", id)
 }
 
-func (sa *Adapter) findAccount(key string, id string) (*model.Account, error) {
+func (sa *Adapter) findAccount(sessionContext mongo.SessionContext, key string, id string) (*model.Account, error) {
 	filter := bson.M{key: id}
 	var accounts []account
-	err := sa.db.accounts.Find(filter, &accounts, nil)
+	var err error
+	if sessionContext != nil {
+		err = sa.db.accounts.FindWithContext(sessionContext, filter, &accounts, nil)
+	} else {
+		err = sa.db.accounts.Find(filter, &accounts, nil)
+	}
+
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1611,7 +1617,7 @@ func (sa *Adapter) DeleteServiceAuthorization(userID string, serviceID string) e
 }
 
 //SaveDevice saves device
-func (sa *Adapter) SaveDevice(device *model.Device, context mongo.SessionContext) error {
+func (sa *Adapter) SaveDevice(sessionContext mongo.SessionContext, device *model.Device) error {
 	if device == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("device"))
 	}
@@ -1621,10 +1627,10 @@ func (sa *Adapter) SaveDevice(device *model.Device, context mongo.SessionContext
 	var err error
 	filter := bson.M{"_id": device.ID}
 	opts := options.Replace().SetUpsert(true)
-	if context == nil {
-		err = sa.db.devices.ReplaceOne(filter, storageDevice, opts)
+	if sessionContext != nil {
+		err = sa.db.devices.ReplaceOneWithContext(sessionContext, filter, storageDevice, opts)
 	} else {
-		err = sa.db.devices.ReplaceOneWithContext(context, filter, storageDevice, opts)
+		err = sa.db.devices.ReplaceOne(filter, storageDevice, opts)
 	}
 
 	if err != nil {
