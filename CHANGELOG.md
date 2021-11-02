@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Add refresh token abuse detection to login sessions [#257](https://github.com/rokwire/core-building-block/issues/257)
+- Merge client and Profile BB profiles and preferences [#228](https://github.com/rokwire/core-building-block/issues/228)
+
+## [1.9.0] - 2021-11-01
+### Added
+- Disable email verification [#280](https://github.com/rokwire/core-building-block/issues/280)
 
 ### Changed
 - Dissociate permissions from applications [#207](https://github.com/rokwire/core-building-block/issues/207)
@@ -31,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.0] - 2021-10-15
 ### Fixed
-- Permission authorization failing on all endpoints in Docker[#239](https://github.com/rokwire/core-building-block/issues/239)
+- Permission authorization failing on all endpoints in Docker [#239](https://github.com/rokwire/core-building-block/issues/239)
 
 ### Changed
 - Switch to ROKWIRE open source libraries [#232](https://github.com/rokwire/core-building-block/issues/232)
@@ -124,7 +129,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/rokwire/core-building-block/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/rokwire/core-building-block/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/rokwire/core-building-block/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/rokwire/core-building-block/compare/v1.5.0...v1.6.0

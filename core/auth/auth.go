@@ -492,44 +492,70 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 
 	///profile and preferences
 	//get profile BB data
-	/*gotProfile, gotPreferences, err := a.getProfileBBData(authType, identifier, l)
+	gotProfile, gotPreferences, err := a.getProfileBBData(authType, identifier, l)
 	if err != nil {
 		args := &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}
 		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "error getting profile BB data", args, err)
-	} */
-	//TODO - revert
-	var gotProfile *model.Profile
-	var gotPreferences map[string]interface{}
+	}
 
 	readyProfile := profile
 	//if there is profile bb data
 	if gotProfile != nil {
-		readyProfile = a.prepareProfile(profile, *gotProfile, l)
+		readyProfile = a.prepareProfile(profile, *gotProfile)
 	}
 	readyPreferences := preferences
 	//if there is preferences bb data
 	if gotPreferences != nil {
-		readyPreferences = a.preparePreferences(preferences, gotPreferences, l)
+		readyPreferences = a.preparePreferences(preferences, gotPreferences)
 	}
 
 	//generate profile ID
 	profileID, _ := uuid.NewUUID()
 	readyProfile.ID = profileID.String()
 	//date created
-	readyProfile.DateCreated = time.Now()
+	if readyProfile.DateCreated.IsZero() {
+		readyProfile.DateCreated = time.Now()
+	}
+	if preferences["date_created"] == nil {
+		preferences["date_created"] = time.Now()
+	} else {
+		preferencesCreated, ok := preferences["date_created"].(time.Time)
+		if !ok || preferencesCreated.IsZero() {
+			preferences["date_created"] = time.Now()
+		}
+	}
 	///
 
 	return accountAuthType, credential, &readyProfile, readyPreferences, nil
 }
 
-func (a *Auth) prepareProfile(clientData model.Profile, profileBBData model.Profile, l *logs.Log) model.Profile {
-	//TODO - merge from both sources
-	return profileBBData
+func (a *Auth) prepareProfile(clientData model.Profile, profileBBData model.Profile) model.Profile {
+	clientData.PhotoURL = utils.SetStringIfEmpty(clientData.PhotoURL, profileBBData.PhotoURL)
+	clientData.FirstName = utils.SetStringIfEmpty(clientData.FirstName, profileBBData.FirstName)
+	clientData.LastName = utils.SetStringIfEmpty(clientData.LastName, profileBBData.LastName)
+	clientData.Email = utils.SetStringIfEmpty(clientData.Email, profileBBData.Email)
+	clientData.Phone = utils.SetStringIfEmpty(clientData.Phone, profileBBData.Phone)
+	clientData.Address = utils.SetStringIfEmpty(clientData.Address, profileBBData.Address)
+	clientData.ZipCode = utils.SetStringIfEmpty(clientData.ZipCode, profileBBData.ZipCode)
+	clientData.State = utils.SetStringIfEmpty(clientData.State, profileBBData.State)
+	clientData.Country = utils.SetStringIfEmpty(clientData.Country, profileBBData.Country)
+
+	if clientData.BirthYear == 0 {
+		clientData.BirthYear = profileBBData.BirthYear
+	}
+
+	return clientData
 }
 
-func (a *Auth) preparePreferences(clientData map[string]interface{}, profileBBData map[string]interface{}, l *logs.Log) map[string]interface{} {
-	//TODO - merge from both sources
-	return profileBBData
+func (a *Auth) preparePreferences(clientData map[string]interface{}, profileBBData map[string]interface{}) map[string]interface{} {
+	mergedData := profileBBData
+	for k, v := range clientData {
+		if profileBBData[k] == nil {
+			mergedData[k] = v
+		}
+	}
+
+	return mergedData
 }
 
 func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *logs.Log) (*model.Profile, map[string]interface{}, error) {
