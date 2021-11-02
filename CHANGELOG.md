@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Merge client and Profile BB profiles and preferences [#228](https://github.com/rokwire/core-building-block/issues/228)
 
+### Changed
+- Expose transaction interface on storage adapter [#285](https://github.com/rokwire/core-building-block/issues/285)
+
 ## [1.9.0] - 2021-11-01
 ### Added
 - Disable email verification [#280](https://github.com/rokwire/core-building-block/issues/280)
