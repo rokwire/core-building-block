@@ -1,20 +1,22 @@
 get:
   tags:
   - Admin
-  summary: Get user account
+  summary: Get accounts
   description: |
-    Get the user account
+    Gets accounts
 
     **Auth:** Requires user auth token
   security:
     - bearerAuth: []
   responses:
     200:
-      description: Success
+      description: Successful operation
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/apis/shared/responses/Account.yaml" 
+             type: array
+             items:
+               $ref: "../../../schemas/apis/shared/responses/Account.yaml"
     400:
       description: Bad request
     401:

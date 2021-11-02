@@ -112,6 +112,10 @@ _res_login_Response:
   $ref: "./apis/services/login/response/Response.yaml"
 _res_login_Account:
   $ref: "./apis/services/login/response/Account.yaml"
+_res_get_Accounts_Response:
+ $ref: "./apis/admin/account/accounts/response/Response.yaml"
+
+
 
 ### login-url API
 _req_login-url_Request:

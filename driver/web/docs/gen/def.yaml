@@ -1080,6 +1080,32 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /admin/accounts:
+    get:
+      tags:
+        - Admin
+      summary: Get accounts
+      description: |
+        Gets accounts
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/paths/~1admin~1account/get/responses/200/content/application~1json/schema'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /admin/account/permissions:
     put:
       tags:
@@ -2106,6 +2132,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
+    _res_get_Accounts_Response:
+      required:
+        - id
+        - type
+      type: object
+      properties:
+        token:
+          $ref: '#/components/schemas/_res_shared_RokwireToken'
+        account:
+          $ref: '#/paths/~1admin~1account/get/responses/200/content/application~1json/schema'
     _req_login-url_Request:
       required:
         - auth_type
