@@ -1786,14 +1786,12 @@ components:
           type: string
         TODO:
           type: string
-    ApplicationPermission:
+    Permission:
       type: object
       properties:
         fields:
-          $ref: '#/components/schemas/ApplicationPermissionFields'
-        application:
-          $ref: '#/components/schemas/Application'
-    ApplicationPermissionFields:
+          $ref: '#/components/schemas/PermissionFields'
+    PermissionFields:
       required:
         - id
         - name
@@ -1803,7 +1801,9 @@ components:
           type: string
         name:
           type: string
-        service_ids:
+        service_id:
+          type: string
+        assigners:
           type: array
           items:
             type: string
@@ -1817,7 +1817,7 @@ components:
         permissions:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationPermission'
+            $ref: '#/components/schemas/Permission'
     ApplicationRoleFields:
       required:
         - id
@@ -1838,7 +1838,7 @@ components:
         permissions:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationPermission'
+            $ref: '#/components/schemas/Permission'
         roles:
           type: array
           items:
@@ -2121,7 +2121,7 @@ components:
         permissions:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationPermission'
+            $ref: '#/components/schemas/Permission'
         roles:
           type: array
           items:
@@ -2517,7 +2517,7 @@ components:
         permissions:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationPermissionFields'
+            $ref: '#/components/schemas/PermissionFields'
         roles:
           type: array
           items:

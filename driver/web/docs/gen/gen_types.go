@@ -153,16 +153,16 @@ type APIKey struct {
 
 // Account defines model for Account.
 type Account struct {
-	Application  *Application             `json:"application,omitempty"`
-	AuthTypes    *[]AccountAuthType       `json:"auth_types,omitempty"`
-	Devices      *[]Device                `json:"devices,omitempty"`
-	Fields       *AccountFields           `json:"fields,omitempty"`
-	Groups       *[]ApplicationGroup      `json:"groups,omitempty"`
-	Organization *Organization            `json:"organization,omitempty"`
-	Permissions  *[]ApplicationPermission `json:"permissions,omitempty"`
-	Preferences  *map[string]interface{}  `json:"preferences,omitempty"`
-	Profile      *Profile                 `json:"profile,omitempty"`
-	Roles        *[]ApplicationRole       `json:"roles,omitempty"`
+	Application  *Application            `json:"application,omitempty"`
+	AuthTypes    *[]AccountAuthType      `json:"auth_types,omitempty"`
+	Devices      *[]Device               `json:"devices,omitempty"`
+	Fields       *AccountFields          `json:"fields,omitempty"`
+	Groups       *[]ApplicationGroup     `json:"groups,omitempty"`
+	Organization *Organization           `json:"organization,omitempty"`
+	Permissions  *[]Permission           `json:"permissions,omitempty"`
+	Preferences  *map[string]interface{} `json:"preferences,omitempty"`
+	Profile      *Profile                `json:"profile,omitempty"`
+	Roles        *[]ApplicationRole      `json:"roles,omitempty"`
 }
 
 // AccountAuthType defines model for AccountAuthType.
@@ -210,10 +210,10 @@ type ApplicationFields struct {
 
 // ApplicationGroup defines model for ApplicationGroup.
 type ApplicationGroup struct {
-	Application *Application             `json:"application,omitempty"`
-	Fields      *ApplicationGroupFields  `json:"fields,omitempty"`
-	Permissions *[]ApplicationPermission `json:"permissions,omitempty"`
-	Roles       *[]ApplicationRole       `json:"roles,omitempty"`
+	Application *Application            `json:"application,omitempty"`
+	Fields      *ApplicationGroupFields `json:"fields,omitempty"`
+	Permissions *[]Permission           `json:"permissions,omitempty"`
+	Roles       *[]ApplicationRole      `json:"roles,omitempty"`
 }
 
 // ApplicationGroupFields defines model for ApplicationGroupFields.
@@ -228,24 +228,11 @@ type ApplicationOrganization struct {
 	Id   *string `json:"id,omitempty"`
 }
 
-// ApplicationPermission defines model for ApplicationPermission.
-type ApplicationPermission struct {
-	Application *Application                 `json:"application,omitempty"`
-	Fields      *ApplicationPermissionFields `json:"fields,omitempty"`
-}
-
-// ApplicationPermissionFields defines model for ApplicationPermissionFields.
-type ApplicationPermissionFields struct {
-	Id         string    `json:"id"`
-	Name       string    `json:"name"`
-	ServiceIds *[]string `json:"service_ids,omitempty"`
-}
-
 // ApplicationRole defines model for ApplicationRole.
 type ApplicationRole struct {
-	Application *Application             `json:"application,omitempty"`
-	Fields      *ApplicationRoleFields   `json:"fields,omitempty"`
-	Permissions *[]ApplicationPermission `json:"permissions,omitempty"`
+	Application *Application           `json:"application,omitempty"`
+	Fields      *ApplicationRoleFields `json:"fields,omitempty"`
+	Permissions *[]Permission          `json:"permissions,omitempty"`
 }
 
 // ApplicationRoleFields defines model for ApplicationRoleFields.
@@ -399,6 +386,19 @@ type OrganizationFields struct {
 
 // OrganizationFieldsType defines model for OrganizationFields.Type.
 type OrganizationFieldsType string
+
+// Permission defines model for Permission.
+type Permission struct {
+	Fields *PermissionFields `json:"fields,omitempty"`
+}
+
+// PermissionFields defines model for PermissionFields.
+type PermissionFields struct {
+	Assigners *[]string `json:"assigners,omitempty"`
+	Id        string    `json:"id"`
+	Name      string    `json:"name"`
+	ServiceId *string   `json:"service_id,omitempty"`
+}
 
 // Profile defines model for Profile.
 type Profile struct {
@@ -710,13 +710,13 @@ type ResSharedLoginUrl struct {
 
 // ResSharedLoginAccount defines model for _res_shared_Login_Account.
 type ResSharedLoginAccount struct {
-	AuthTypes   *[]AccountAuthTypeFields       `json:"auth_types,omitempty"`
-	Groups      *[]ApplicationGroupFields      `json:"groups,omitempty"`
-	Id          string                         `json:"id"`
-	Permissions *[]ApplicationPermissionFields `json:"permissions,omitempty"`
-	Preferences *map[string]interface{}        `json:"preferences"`
-	Profile     *ProfileFields                 `json:"profile,omitempty"`
-	Roles       *[]ApplicationRoleFields       `json:"roles,omitempty"`
+	AuthTypes   *[]AccountAuthTypeFields  `json:"auth_types,omitempty"`
+	Groups      *[]ApplicationGroupFields `json:"groups,omitempty"`
+	Id          string                    `json:"id"`
+	Permissions *[]PermissionFields       `json:"permissions,omitempty"`
+	Preferences *map[string]interface{}   `json:"preferences"`
+	Profile     *ProfileFields            `json:"profile,omitempty"`
+	Roles       *[]ApplicationRoleFields  `json:"roles,omitempty"`
 }
 
 // ResSharedRefresh defines model for _res_shared_Refresh.

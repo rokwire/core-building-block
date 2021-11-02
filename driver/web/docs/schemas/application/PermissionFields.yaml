@@ -7,7 +7,9 @@ properties:
     type: string
   name:
     type: string
-  service_ids:
+  service_id:
+    type: string
+  assigners:
     type: array
     items:
       type: string

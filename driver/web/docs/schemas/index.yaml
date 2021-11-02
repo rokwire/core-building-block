@@ -13,10 +13,10 @@ ApplicationTypeFields:
   $ref: "./application/ApplicationTypeFields.yaml"
 ApplicationOrganization:
   $ref: "./application/ApplicationOrganization.yaml"
-ApplicationPermission:
-  $ref: "./application/ApplicationPermission.yaml"
-ApplicationPermissionFields:
-  $ref: "./application/ApplicationPermissionFields.yaml"
+Permission:
+  $ref: "./application/Permission.yaml"
+PermissionFields:
+  $ref: "./application/PermissionFields.yaml"
 ApplicationRole:
   $ref: "./application/ApplicationRole.yaml"
 ApplicationRoleFields:
