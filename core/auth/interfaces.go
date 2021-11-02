@@ -16,9 +16,8 @@ type authType interface {
 	//signUp applies sign up operation
 	// Returns:
 	//	message (string): Success message if verification is required. If verification is not required, return ""
-	//	identifier (*string): The unique identifier
 	//	credentialValue (map): Credential value
-	signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, *string, map[string]interface{}, error)
+	signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//checks the verification code generated on email signup
 	// Returns:
@@ -31,11 +30,10 @@ type authType interface {
 	resetPassword(credential *model.Credential, resetCode *string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error)
 	// generates a reset password link with code and expiry and sends it to given identifier
 	forgotPassword(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error)
-
-	//userExist checks if the user exists for application and organizations
+	//getUserIdentifier parses the credentials and returns the user identifier
 	// Returns:
-	//	accountAuthType (*model.AccountAuthType): User account auth type
-	userExist(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (*model.AccountAuthType, error)
+	//	userIdentifier (string): User identifier
+	getUserIdentifier(creds string) (string, error)
 
 	//checkCredentials checks if the account credentials are valid for the account auth type
 	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, map[string]interface{}, error)
@@ -48,8 +46,6 @@ type externalAuthType interface {
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 	//externalLogin logins in the external system and provides the authenticated user
 	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
-	//userExist checks if the user exists
-	userExist(externalUserIdentifier string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error)
 	//refresh refreshes tokens
 	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (map[string]interface{}, error)
 }
@@ -95,6 +91,19 @@ type APIs interface {
 	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
 		authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
 		profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, error)
+
+	//AccountExists checks if a user is already registered
+	//The authentication method must be one of the supported for the application.
+	//	Input:
+	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		userIdentifier (string): User identifier for the specified auth type
+	//		apiKey (string): API key to validate the specified app
+	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
+	//		orgID (string): ID of the organization that the user is logging in
+	//		l (*logs.Log): Log object pointer for request
+	//	Returns:
+	//		accountExisted (bool): valid when error is nil
+	AccountExists(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string, l *logs.Log) (bool, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:

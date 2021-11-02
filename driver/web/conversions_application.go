@@ -15,11 +15,11 @@ func applicationToDef(item *model.Application) *Def.ApplicationFields {
 }
 
 //ApplicationPermission
-func applicationPermissionToDef(item model.ApplicationPermission) Def.ApplicationPermissionFields {
+func applicationPermissionToDef(item model.Permission) Def.ApplicationPermissionFields {
 	return Def.ApplicationPermissionFields{Id: item.ID, Name: item.Name}
 }
 
-func applicationPermissionsToDef(items []model.ApplicationPermission) []Def.ApplicationPermissionFields {
+func applicationPermissionsToDef(items []model.Permission) []Def.ApplicationPermissionFields {
 	result := make([]Def.ApplicationPermissionFields, len(items))
 	for i, item := range items {
 		result[i] = applicationPermissionToDef(item)

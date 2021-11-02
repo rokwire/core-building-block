@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.6.0
+  version: 1.9.0
 servers:
   - url: https://api.rokwire.illinois.edu/core
     description: Production server
@@ -24,7 +24,7 @@ tags:
   - name: Third-Party Services
     description: APIs consumed by third-party services.
 paths:
-  #auth
+  #services
   /services/auth/login:
     $ref: "./resources/services/auth/login.yaml"
   /services/auth/refresh:
@@ -39,6 +39,8 @@ paths:
     $ref: "./resources/services/auth/reset-password-client.yaml"
   /services/auth/forgot-password:
     $ref: "./resources/services/auth/forgot-password.yaml"
+  /services/auth/account-exists:
+    $ref: "./resources/services/auth/account-exists.yaml"
   /services/auth/authorize-service:
     $ref: "./resources/services/auth/authorize-service.yaml"
   /services/auth/service-regs:
@@ -53,6 +55,12 @@ paths:
     $ref: "./resources/services/test.yaml"
 
   #admin
+  /admin/auth/login:
+    $ref: "./resources/admin/auth/login.yaml"
+  /admin/auth/refresh:
+    $ref: "./resources/admin/auth/refresh.yaml"
+  /admin/auth/login-url:
+    $ref: "./resources/admin/auth/login-url.yaml"
   /admin/global-config:
     $ref: "./resources/admin/global-config.yaml"
   /admin/organizations/{id}:
@@ -65,8 +73,8 @@ paths:
     $ref: "./resources/admin/applicationsId.yaml"
   /admin/applications:
     $ref: "./resources/admin/applications.yaml"
-  /admin/application-permissions:
-    $ref: "./resources/admin/application-permissions.yaml"
+  /admin/permissions:
+    $ref: "./resources/admin/permissions.yaml"
   /admin/application-roles:
     $ref: "./resources/admin/application-roles.yaml"
   /admin/application-api-keys:

@@ -697,14 +697,11 @@ func (sa *Adapter) UpdateAccountPreferences(accountID string, preferences map[st
 }
 
 //InsertAccountPermissions inserts account permissions
-func (sa *Adapter) InsertAccountPermissions(accountID string, appID string, permissions []model.ApplicationPermission) error {
-	stgPermissions := applicationPermissionsToStorage(permissions)
-
-	//appID included in search to prevent accidentally assigning permissions to account from different application
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}}
+func (sa *Adapter) InsertAccountPermissions(accountID string, permissions []model.Permission) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 	update := bson.D{
 		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "permissions", Value: bson.M{"$each": stgPermissions}},
+			primitive.E{Key: "permissions", Value: bson.M{"$each": permissions}},
 		}},
 	}
 
@@ -935,71 +932,72 @@ func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
 // 	return nil
 // }
 
-//FindApplicationPermissions finds a set of application permissions
-func (sa *Adapter) FindApplicationPermissions(ids []string, appID string) ([]model.ApplicationPermission, error) {
-	permissionsFilter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
-	var permissionsResult []applicationPermission
-	err := sa.db.applicationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
+//FindPermissions finds a set of permissions
+func (sa *Adapter) FindPermissions(ids []string) ([]model.Permission, error) {
+	permissionsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	var permissionsResult []model.Permission
+	err := sa.db.permissions.Find(permissionsFilter, &permissionsResult, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	//get the application from the cached ones
-	application, err := sa.getCachedApplication(appID)
-	if err != nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, &logutils.FieldArgs{"app_id": application}, err)
-	}
-
-	result := applicationPermissionsFromStorage(permissionsResult, *application)
-
-	return result, nil
+	return permissionsResult, nil
 }
 
-//FindApplicationPermissionsByName finds a set of application permissions
-func (sa *Adapter) FindApplicationPermissionsByName(names []string, appID string) ([]model.ApplicationPermission, error) {
-	permissionsFilter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "name", Value: bson.M{"$in": names}}}
-	var permissionsResult []applicationPermission
-	err := sa.db.applicationsPermissions.Find(permissionsFilter, &permissionsResult, nil)
+//FindPermissionsByName finds a set of permissions
+func (sa *Adapter) FindPermissionsByName(names []string) ([]model.Permission, error) {
+	permissionsFilter := bson.D{primitive.E{Key: "name", Value: bson.M{"$in": names}}}
+	var permissionsResult []model.Permission
+	err := sa.db.permissions.Find(permissionsFilter, &permissionsResult, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	//get the application from the cached ones
-	application, err := sa.getCachedApplication(appID)
-	if err != nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, &logutils.FieldArgs{"app_id": application}, err)
-	}
-
-	result := applicationPermissionsFromStorage(permissionsResult, *application)
-
-	return result, nil
+	return permissionsResult, nil
 }
 
-//InsertApplicationPermission inserts a new application permission
-func (sa *Adapter) InsertApplicationPermission(item model.ApplicationPermission) error {
-	_, err := sa.getCachedApplication(item.Application.ID)
+//InsertPermission inserts a new  permission
+func (sa *Adapter) InsertPermission(permission model.Permission) error {
+	_, err := sa.db.permissions.InsertOne(permission)
 	if err != nil {
-		return errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, &logutils.FieldArgs{"app_id": item.Application.ID}, err)
-	}
-
-	permission := applicationPermissionToStorage(item)
-	_, err = sa.db.applicationsPermissions.InsertOne(permission)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplicationPermission, nil, err)
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, nil, err)
 	}
 	return nil
 }
 
-//UpdateApplicationPermission updates application permission
-func (sa *Adapter) UpdateApplicationPermission(item model.ApplicationPermission) error {
+//UpdatePermission updates permission
+func (sa *Adapter) UpdatePermission(item model.Permission) error {
 	//TODO
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
-	return errors.New(logutils.Unimplemented)
+	//TODO
+	//Update the permission in all collection where there is a copy of it - accounts, application_roles, application_groups
+
+	// Update serviceIDs
+	filter := bson.D{primitive.E{Key: "name", Value: item.Name}}
+
+	now := time.Now().UTC()
+	permissionUpdate := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "service_ids", Value: item.ServiceIDs},
+			primitive.E{Key: "date_updated", Value: &now},
+		}},
+	}
+
+	res, err := sa.db.permissions.UpdateOne(filter, permissionUpdate, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypePermission, &logutils.FieldArgs{"name": item.Name}, err)
+	}
+
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypePermission, logutils.StringArgs("unexpected modified count"))
+	}
+
+	return nil
 }
 
-//DeleteApplicationPermission deletes application permission
-func (sa *Adapter) DeleteApplicationPermission(id string) error {
+//DeletePermission deletes permission
+func (sa *Adapter) DeletePermission(id string) error {
 	//TODO
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.

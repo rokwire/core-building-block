@@ -66,8 +66,8 @@ func (_m *Storage) DeleteApplicationGroup(id string) error {
 	return r0
 }
 
-// DeleteApplicationPermission provides a mock function with given fields: id
-func (_m *Storage) DeleteApplicationPermission(id string) error {
+// DeleteApplicationRole provides a mock function with given fields: id
+func (_m *Storage) DeleteApplicationRole(id string) error {
 	ret := _m.Called(id)
 
 	var r0 error
@@ -80,8 +80,8 @@ func (_m *Storage) DeleteApplicationPermission(id string) error {
 	return r0
 }
 
-// DeleteApplicationRole provides a mock function with given fields: id
-func (_m *Storage) DeleteApplicationRole(id string) error {
+// DeletePermission provides a mock function with given fields: id
+func (_m *Storage) DeletePermission(id string) error {
 	ret := _m.Called(id)
 
 	var r0 error
@@ -133,29 +133,6 @@ func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(ID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// FindApplicationPermissionsByName provides a mock function with given fields: names, appID
-func (_m *Storage) FindApplicationPermissionsByName(names []string, appID string) ([]model.ApplicationPermission, error) {
-	ret := _m.Called(names, appID)
-
-	var r0 []model.ApplicationPermission
-	if rf, ok := ret.Get(0).(func([]string, string) []model.ApplicationPermission); ok {
-		r0 = rf(names, appID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.ApplicationPermission)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func([]string, string) error); ok {
-		r1 = rf(names, appID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -232,6 +209,29 @@ func (_m *Storage) FindOrganization(id string) (*model.Organization, error) {
 	return r0, r1
 }
 
+// FindPermissionsByName provides a mock function with given fields: names
+func (_m *Storage) FindPermissionsByName(names []string) ([]model.Permission, error) {
+	ret := _m.Called(names)
+
+	var r0 []model.Permission
+	if rf, ok := ret.Get(0).(func([]string) []model.Permission); ok {
+		r0 = rf(names)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Permission)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func([]string) error); ok {
+		r1 = rf(names)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetGlobalConfig provides a mock function with given fields:
 func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	ret := _m.Called()
@@ -255,13 +255,13 @@ func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	return r0, r1
 }
 
-// InsertAccountPermissions provides a mock function with given fields: accountID, appID, permissions
-func (_m *Storage) InsertAccountPermissions(accountID string, appID string, permissions []model.ApplicationPermission) error {
-	ret := _m.Called(accountID, appID, permissions)
+// InsertAccountPermissions provides a mock function with given fields: accountID, permissions
+func (_m *Storage) InsertAccountPermissions(accountID string, permissions []model.Permission) error {
+	ret := _m.Called(accountID, permissions)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string, []model.ApplicationPermission) error); ok {
-		r0 = rf(accountID, appID, permissions)
+	if rf, ok := ret.Get(0).(func(string, []model.Permission) error); ok {
+		r0 = rf(accountID, permissions)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -320,20 +320,6 @@ func (_m *Storage) InsertApplicationGroup(item model.ApplicationGroup) error {
 	return r0
 }
 
-// InsertApplicationPermission provides a mock function with given fields: item
-func (_m *Storage) InsertApplicationPermission(item model.ApplicationPermission) error {
-	ret := _m.Called(item)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(model.ApplicationPermission) error); ok {
-		r0 = rf(item)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // InsertApplicationRole provides a mock function with given fields: item
 func (_m *Storage) InsertApplicationRole(item model.ApplicationRole) error {
 	ret := _m.Called(item)
@@ -369,6 +355,20 @@ func (_m *Storage) InsertOrganization(organization model.Organization) (*model.O
 	}
 
 	return r0, r1
+}
+
+// InsertPermission provides a mock function with given fields: item
+func (_m *Storage) InsertPermission(item model.Permission) error {
+	ret := _m.Called(item)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.Permission) error); ok {
+		r0 = rf(item)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // LoadApplications provides a mock function with given fields:
@@ -487,20 +487,6 @@ func (_m *Storage) UpdateApplicationGroup(item model.ApplicationGroup) error {
 	return r0
 }
 
-// UpdateApplicationPermission provides a mock function with given fields: item
-func (_m *Storage) UpdateApplicationPermission(item model.ApplicationPermission) error {
-	ret := _m.Called(item)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(model.ApplicationPermission) error); ok {
-		r0 = rf(item)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // UpdateApplicationRole provides a mock function with given fields: item
 func (_m *Storage) UpdateApplicationRole(item model.ApplicationRole) error {
 	ret := _m.Called(item)
@@ -522,6 +508,20 @@ func (_m *Storage) UpdateOrganization(ID string, name string, requestType string
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string, string, []string) error); ok {
 		r0 = rf(ID, name, requestType, organizationDomains)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdatePermission provides a mock function with given fields: item
+func (_m *Storage) UpdatePermission(item model.Permission) error {
+	ret := _m.Called(item)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.Permission) error); ok {
+		r0 = rf(item)
 	} else {
 		r0 = ret.Error(0)
 	}

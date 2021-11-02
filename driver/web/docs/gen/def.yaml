@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.6.0
+  version: 1.9.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -37,7 +37,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_login_Request'
+              $ref: '#/components/schemas/_req_shared_Login'
             examples:
               email-sign_in:
                 summary: Email - sign in
@@ -188,7 +188,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_login_Response'
+                $ref: '#/components/schemas/_res_shared_Login'
         '400':
           description: Bad request
         '401':
@@ -208,7 +208,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_refresh_Request'
+              $ref: '#/components/schemas/_req_shared_Refresh'
         required: true
       responses:
         '200':
@@ -216,7 +216,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_refresh_Response'
+                $ref: '#/components/schemas/_res_shared_Refresh'
         '400':
           description: Bad request
         '401':
@@ -234,7 +234,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_login-url_Request'
+              $ref: '#/components/schemas/_req_shared_LoginUrl'
         required: true
       responses:
         '200':
@@ -242,7 +242,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_login-url_Response'
+                $ref: '#/components/schemas/_res_shared_LoginUrl'
         '400':
           description: Bad request
         '401':
@@ -359,6 +359,34 @@ paths:
             text/plain:
               schema:
                 type: string
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/account-exists:
+    post:
+      tags:
+        - Services
+      summary: Check if an account already exists
+      description: |
+        Account exists checks if an account exists for the provided user identifier and auth type
+      requestBody:
+        description: |
+          Account information to be checked
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_account-exists_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_account-exists_Response'
         '400':
           description: Bad request
         '401':
@@ -613,6 +641,231 @@ paths:
               schema:
                 type: string
                 example: Echooo
+  /admin/auth/login:
+    post:
+      tags:
+        - Admin
+      summary: Login
+      description: |
+        Login using credentials to retrieve access token, refresh token, and user data
+      requestBody:
+        description: |
+          User credential details and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_shared_Login'
+            examples:
+              email-sign_in:
+                summary: Email - sign in
+                value: |
+                  {
+                    "auth_type": "email",
+                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": {
+                      "email": "test@test.com", 
+                      "password": "test12345"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
+                    }
+                  }
+              email-sign_up:
+                summary: Email - sign up
+                value: |
+                  {
+                    "auth_type": "email",
+                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": {
+                      "email": "test@test.com", 
+                      "password": "test12345"
+                    },
+                    "params":{
+                        "sign_up":true,
+                        "confirm_password": "test12345"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
+                    }
+                  }
+              phone:
+                summary: Phone - sign in OR sign up
+                value: |
+                  {
+                    "auth_type": "twilio_phone",
+                    "app_type_identifier": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": {
+                      "phone": "+12223334444", 
+                      "code": "123456"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
+                    }
+                  }
+              illinois_oidc:
+                summary: Illinois OIDC login
+                value: |
+                  {
+                    "auth_type": "illinois_oidc",
+                    "app_type_identifier": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
+                    "params": {
+                      "redirect_uri": "https://redirect.example.com",
+                      "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
+                    }
+                  }
+              anonymous:
+                summary: Anonymous login
+                value: |
+                  {
+                    "auth_type": "anonymous",
+                    "app_type_identifier": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": {
+                      "anonymous_id": "dbb5ea5d-6c6c-44b8-9952-7ebf0e844beb"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
+                    }
+                  }
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_shared_Login'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/auth/refresh:
+    post:
+      tags:
+        - Admin
+      summary: Refresh
+      description: |
+        Refresh access token using a refresh token
+      requestBody:
+        description: |
+          Refresh token
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_shared_Refresh'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_shared_Refresh'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/auth/login-url:
+    post:
+      tags:
+        - Admin
+      summary: Get SSO login url
+      description: |
+        Retrieve a pre-formatted SSO login URL
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_shared_LoginUrl'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_shared_LoginUrl'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /admin/global-config:
     get:
       tags:
@@ -1055,15 +1308,15 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application-permissions:
+  /admin/permissions:
     post:
       tags:
         - Admin
-      summary: Create application permission
+      summary: Create permission
       description: |
-        Creates application permission
+        Creates permission
 
-        **Auth:** Requires auth token with `auth_admin` permission
+        **Auth:** Requires auth token with `all_permission` or 'update_permission" permission
       security:
         - bearerAuth: []
       requestBody:
@@ -1071,7 +1324,38 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_application-permissions_Request'
+              $ref: '#/components/schemas/_req_permissions_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      tags:
+        - Admin
+      summary: Updates permission
+      description: |
+        Updates permission
+
+        **Auth:** Requires auth token with `all_permission` or 'update_permission" permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Application permission
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_permissions_Request'
         required: true
       responses:
         '200':
@@ -1571,6 +1855,10 @@ components:
           type: string
         name:
           type: string
+        service_ids:
+          type: array
+          items:
+            type: string
     ApplicationRole:
       type: object
       properties:
@@ -2008,6 +2296,150 @@ components:
             - other
         os:
           type: string
+    _req_shared_Login:
+      required:
+        - auth_type
+        - app_type_identifier
+        - org_id
+        - api_key
+        - device
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - username
+            - email
+            - twilio_phone
+            - illinois_oidc
+            - anonymous
+        app_type_identifier:
+          type: string
+        org_id:
+          type: string
+        api_key:
+          type: string
+        creds:
+          anyOf:
+            - $ref: '#/components/schemas/_req_shared_Login_CredsEmail'
+            - $ref: '#/components/schemas/_req_shared_Login_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_req_shared_Login_CredsOIDC'
+            - $ref: '#/components/schemas/_req_shared_Login_CredsAPIKey'
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/_req_shared_Login_ParamsEmail'
+            - $ref: '#/components/schemas/_req_shared_Login_ParamsOIDC'
+            - $ref: '#/components/schemas/_req_shared_Login_ParamsNone'
+        device:
+          $ref: '#/components/schemas/_req_shared_Login_Device'
+        profile:
+          $ref: '#/components/schemas/_req_shared_ProfileNullable'
+        preferences:
+          type: object
+          nullable: true
+    _req_shared_Login_CredsEmail:
+      required:
+        - email
+        - password
+      type: object
+      description: Auth login creds for auth_type="email"
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    _req_shared_Login_CredsTwilioPhone:
+      type: object
+      description: Auth login creds for auth_type="twilio_phone"
+      required:
+        - phone
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+    _req_shared_Login_CredsOIDC:
+      type: string
+      description: |
+        Auth login creds for auth_type="oidc" (or variants)
+          - full redirect URI received from OIDC provider
+    _req_shared_Login_CredsAPIKey:
+      type: object
+      description: Auth login creds for auth_type="anonymous"
+      properties:
+        anonymous_id:
+          type: string
+    _req_shared_Login_ParamsEmail:
+      type: object
+      description: Auth login params for auth_type="email"
+      properties:
+        confirm_password:
+          type: string
+          description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+        sign_up:
+          type: boolean
+          default: false
+    _req_shared_Login_ParamsOIDC:
+      type: object
+      description: Auth login params for auth_type="oidc" (or variants)
+      properties:
+        redirect_uri:
+          type: string
+        pkce_verifier:
+          type: string
+    _req_shared_Login_ParamsNone:
+      type: object
+      description: Auth login request params for unlisted auth_types (None)
+      nullable: true
+    _req_shared_Login_Device:
+      required:
+        - type
+      type: object
+      description: Client device
+      properties:
+        device_id:
+          type: string
+        type:
+          type: string
+          enum:
+            - mobile
+            - web
+            - desktop
+            - other
+        os:
+          type: string
+    _req_shared_LoginUrl:
+      required:
+        - auth_type
+        - app_type_identifier
+        - org_id
+        - api_key
+        - redirect_uri
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - illinois_oidc
+        app_type_identifier:
+          type: string
+        org_id:
+          type: string
+        api_key:
+          type: string
+        redirect_uri:
+          type: string
+    _req_shared_Refresh:
+      required:
+        - api_key
+        - refresh_token
+      type: object
+      properties:
+        api_key:
+          type: string
+        refresh_token:
+          type: string
     _req_shared_Profile:
       type: object
       properties:
@@ -2075,140 +2507,23 @@ components:
         country:
           type: string
           nullable: true
-    _res_shared_RokwireToken:
-      type: object
-      properties:
-        access_token:
-          description: The user's access token to be provided to authorize access to ROKWIRE APIs
-          type: string
-        refresh_token:
-          description: A refresh token that can be used to get a new access token once the one provided expires
-          type: string
-        token_type:
-          description: The type of the provided tokens to be specified when they are sent in the "Authorization" header
-          type: string
-          enum:
-            - Bearer
-    _req_login_Request:
+    _res_shared_LoginUrl:
       required:
-        - auth_type
-        - app_type_identifier
-        - org_id
-        - api_key
-        - device
+        - login_url
       type: object
       properties:
-        auth_type:
+        login_url:
           type: string
-          enum:
-            - username
-            - email
-            - twilio_phone
-            - illinois_oidc
-            - anonymous
-        app_type_identifier:
-          type: string
-        org_id:
-          type: string
-        api_key:
-          type: string
-        creds:
-          anyOf:
-            - $ref: '#/components/schemas/_req_login_CredsEmail'
-            - $ref: '#/components/schemas/_req_login_CredsTwilioPhone'
-            - $ref: '#/components/schemas/_req_login_CredsOIDC'
-            - $ref: '#/components/schemas/_req_login_CredsAPIKey'
         params:
           type: object
-          anyOf:
-            - $ref: '#/components/schemas/_req_login_ParamsEmail'
-            - $ref: '#/components/schemas/_req_login_ParamsOIDC'
-            - $ref: '#/components/schemas/_req_login_ParamsNone'
-        device:
-          $ref: '#/components/schemas/_req_login_Device'
-        profile:
-          $ref: '#/components/schemas/_req_shared_ProfileNullable'
-        preferences:
-          type: object
-          nullable: true
-    _req_login_CredsEmail:
-      required:
-        - email
-        - password
-      type: object
-      description: Auth login creds for auth_type="email"
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-    _req_login_CredsTwilioPhone:
-      type: object
-      description: Auth login creds for auth_type="twilio_phone"
-      required:
-        - phone
-      properties:
-        phone:
-          type: string
-        code:
-          type: string
-    _req_login_CredsOIDC:
-      type: string
-      description: |
-        Auth login creds for auth_type="oidc" (or variants)
-          - full redirect URI received from OIDC provider
-    _req_login_CredsAPIKey:
-      type: object
-      description: Auth login creds for auth_type="anonymous"
-      properties:
-        anonymous_id:
-          type: string
-    _req_login_ParamsEmail:
-      type: object
-      description: Auth login params for auth_type="email"
-      properties:
-        confirm_password:
-          type: string
-          description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
-        sign_up:
-          type: boolean
-          default: false
-    _req_login_ParamsOIDC:
-      type: object
-      description: Auth login params for auth_type="oidc" (or variants)
-      properties:
-        redirect_uri:
-          type: string
-        pkce_verifier:
-          type: string
-    _req_login_ParamsNone:
-      type: object
-      description: Auth login request params for unlisted auth_types (None)
-      nullable: true
-    _req_login_Device:
-      required:
-        - type
-      type: object
-      description: Client device
-      properties:
-        device_id:
-          type: string
-        type:
-          type: string
-          enum:
-            - mobile
-            - web
-            - desktop
-            - other
-        os:
-          type: string
-    _res_login_Response:
+          description: Params to be submitted with 'login' request (if necessary)
+    _res_shared_Login:
       type: object
       properties:
         token:
           $ref: '#/components/schemas/_res_shared_RokwireToken'
         account:
-          $ref: '#/components/schemas/_res_login_Account'
+          $ref: '#/components/schemas/_res_shared_Login_Account'
         params:
           type: object
           nullable: true
@@ -2239,7 +2554,7 @@ components:
               nullable: true
         message:
           type: string
-    _res_login_Account:
+    _res_shared_Login_Account:
       required:
         - id
       type: object
@@ -2267,48 +2582,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
-    _req_login-url_Request:
-      required:
-        - auth_type
-        - app_type_identifier
-        - org_id
-        - api_key
-        - redirect_uri
-      type: object
-      properties:
-        auth_type:
-          type: string
-          enum:
-            - illinois_oidc
-        app_type_identifier:
-          type: string
-        org_id:
-          type: string
-        api_key:
-          type: string
-        redirect_uri:
-          type: string
-    _res_login-url_Response:
-      required:
-        - login_url
-      type: object
-      properties:
-        login_url:
-          type: string
-        params:
-          type: object
-          description: Params to be submitted with 'login' request (if necessary)
-    _req_refresh_Request:
-      required:
-        - api_key
-        - refresh_token
-      type: object
-      properties:
-        api_key:
-          type: string
-        refresh_token:
-          type: string
-    _res_refresh_Response:
+    _res_shared_Refresh:
       type: object
       properties:
         token:
@@ -2317,9 +2591,50 @@ components:
           type: object
           nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/0'
-            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/1'
-            - $ref: '#/components/schemas/_res_login_Response/properties/params/anyOf/2'
+            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/0'
+            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/1'
+            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/2'
+    _res_shared_RokwireToken:
+      type: object
+      properties:
+        access_token:
+          description: The user's access token to be provided to authorize access to ROKWIRE APIs
+          type: string
+        refresh_token:
+          description: A refresh token that can be used to get a new access token once the one provided expires
+          type: string
+        token_type:
+          description: The type of the provided tokens to be specified when they are sent in the "Authorization" header
+          type: string
+          enum:
+            - Bearer
+    _req_account-exists_Request:
+      required:
+        - auth_type
+        - app_type_identifier
+        - org_id
+        - api_key
+        - user_identifier
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - username
+            - email
+            - twilio_phone
+            - illinois_oidc
+            - anonymous
+        app_type_identifier:
+          type: string
+        org_id:
+          type: string
+        api_key:
+          type: string
+        user_identifier:
+          type: string
+    _res_account-exists_Response:
+      type: boolean
     _req_reset-password-client_Request:
       required:
         - account_auth_type_id
@@ -2613,16 +2928,18 @@ components:
           type: boolean
         application_types:
           $ref: '#/components/schemas/ApplicationTypeFields'
-    _req_application-permissions_Request:
+    _req_permissions_Request:
       required:
         - name
-        - app_id
       type: object
       properties:
         name:
           type: string
-        app_id:
-          type: string
+        service_ids:
+          type: array
+          description: services that use the permission
+          items:
+            type: string
     _req_application-roles_Request:
       required:
         - name
