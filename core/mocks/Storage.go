@@ -17,27 +17,18 @@ type Storage struct {
 	mock.Mock
 }
 
-// CreateGlobalConfig provides a mock function with given fields: setting
-func (_m *Storage) CreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
-	ret := _m.Called(setting)
+// CreateGlobalConfig provides a mock function with given fields: sessionContext, globalConfig
+func (_m *Storage) CreateGlobalConfig(sessionContext mongo.SessionContext, globalConfig *model.GlobalConfig) error {
+	ret := _m.Called(sessionContext, globalConfig)
 
-	var r0 *model.GlobalConfig
-	if rf, ok := ret.Get(0).(func(string) *model.GlobalConfig); ok {
-		r0 = rf(setting)
+	var r0 error
+	if rf, ok := ret.Get(0).(func(mongo.SessionContext, *model.GlobalConfig) error); ok {
+		r0 = rf(sessionContext, globalConfig)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.GlobalConfig)
-		}
+		r0 = ret.Error(0)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(setting)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // DeleteAccount provides a mock function with given fields: sessionContext, id
@@ -89,6 +80,20 @@ func (_m *Storage) DeleteDevice(sessionContext mongo.SessionContext, id string) 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(mongo.SessionContext, string) error); ok {
 		r0 = rf(sessionContext, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteGlobalConfig provides a mock function with given fields: sessionContext
+func (_m *Storage) DeleteGlobalConfig(sessionContext mongo.SessionContext) error {
+	ret := _m.Called(sessionContext)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(mongo.SessionContext) error); ok {
+		r0 = rf(sessionContext)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -464,43 +469,6 @@ func (_m *Storage) SaveDevice(sessionContext mongo.SessionContext, device *model
 	}
 
 	return r0
-}
-
-// SaveGlobalConfig provides a mock function with given fields: setting
-func (_m *Storage) SaveGlobalConfig(setting *model.GlobalConfig) error {
-	ret := _m.Called(setting)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*model.GlobalConfig) error); ok {
-		r0 = rf(setting)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// UpdateAccount provides a mock function with given fields: updatedUser, orgID, newOrgData
-func (_m *Storage) UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error) {
-	ret := _m.Called(updatedUser, orgID, newOrgData)
-
-	var r0 *model.Account
-	if rf, ok := ret.Get(0).(func(*model.Account, string, *map[string]interface{}) *model.Account); ok {
-		r0 = rf(updatedUser, orgID, newOrgData)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.Account)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(*model.Account, string, *map[string]interface{}) error); ok {
-		r1 = rf(updatedUser, orgID, newOrgData)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
 }
 
 // UpdateAccountPreferences provides a mock function with given fields: accountID, preferences

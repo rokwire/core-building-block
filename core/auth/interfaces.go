@@ -179,6 +179,8 @@ type APIs interface {
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
+	PerformTransaction(func(sessionContext mongo.SessionContext) error) error
+
 	//AuthTypes
 	LoadAuthTypes() ([]model.AuthType, error)
 	FindAuthType(codeOrID string) (*model.AuthType, error)
@@ -192,11 +194,9 @@ type Storage interface {
 
 	//Accounts
 	FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
+	FindAccountByAuthTypeID(sessionContext mongo.SessionContext, id string) (*model.Account, error)
 	InsertAccount(account model.Account) (*model.Account, error)
-	UpdateAccount(account *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
-
-	//AccountAuthTypes
-	UpdateAccountAuthType(item model.AccountAuthType) error
+	SaveAccount(sessionContext mongo.SessionContext, account *model.Account) error
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)

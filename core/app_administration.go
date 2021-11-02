@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (app *application) admGetTest() string {
@@ -173,7 +174,8 @@ func (app *application) admCreateGlobalConfig(setting string) (*model.GlobalConf
 		return nil, errors.New("global config already exists")
 	}
 
-	gc, err = app.storage.CreateGlobalConfig(setting)
+	gc = &model.GlobalConfig{Setting: setting}
+	err = app.storage.CreateGlobalConfig(nil, gc)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
 	}
@@ -198,11 +200,24 @@ func (app *application) admUpdateGlobalConfig(setting string) error {
 	}
 
 	gc.Setting = setting
-	err = app.storage.SaveGlobalConfig(gc)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSave, model.TypeGlobalConfig, nil, err)
+
+	transaction := func(sessionContext mongo.SessionContext) error {
+		//1. clear the global config - we always keep only one global config
+		err := app.storage.DeleteGlobalConfig(sessionContext)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeGlobalConfig, nil, err)
+		}
+
+		//2. add the new one
+		err = app.storage.CreateGlobalConfig(sessionContext, gc)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
+		}
+
+		return nil
 	}
-	return nil
+
+	return app.storage.PerformTransaction(transaction)
 }
 
 func (app *application) admCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {

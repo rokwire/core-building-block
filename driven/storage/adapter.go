@@ -513,6 +513,11 @@ func (sa *Adapter) FindAccountByID(sessionContext mongo.SessionContext, id strin
 	return sa.findAccount(sessionContext, "_id", id)
 }
 
+//FindAccountByAuthTypeID finds an account by auth type id
+func (sa *Adapter) FindAccountByAuthTypeID(sessionContext mongo.SessionContext, id string) (*model.Account, error) {
+	return sa.findAccount(sessionContext, "auth_types.id", id)
+}
+
 func (sa *Adapter) findAccount(sessionContext mongo.SessionContext, key string, id string) (*model.Account, error) {
 	filter := bson.M{key: id}
 	var accounts []account
@@ -524,7 +529,7 @@ func (sa *Adapter) findAccount(sessionContext mongo.SessionContext, key string, 
 	}
 
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{key: id}, err)
 	}
 	if len(accounts) == 0 {
 		//not found
@@ -561,82 +566,27 @@ func (sa *Adapter) InsertAccount(account model.Account) (*model.Account, error) 
 	return &account, nil
 }
 
-//UpdateAccount updates an existing account
-func (sa *Adapter) UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error) {
-	return nil, nil
-	/*if updatedUser == nil {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeUser))
+//SaveAccount saves an existing account
+func (sa *Adapter) SaveAccount(sessionContext mongo.SessionContext, account *model.Account) error {
+	if account == nil {
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("account"))
 	}
 
-	now := time.Now().UTC()
-	newUser := userToStorage(updatedUser)
-	newUser.DateUpdated = &now
+	storageAccount := accountToStorage(account)
 
-	// TODO:
-	// check for device updates and add possible new device
-
-	var newMembership *organizationMembership
-	if newOrgData != nil {
-		membershipID, err := uuid.NewUUID()
-		if err != nil {
-			return nil, errors.WrapErrorData(logutils.StatusInvalid, logutils.TypeString, logutils.StringArgs("membership_id"), err)
-		}
-		newOrgMembership := organizationMembership{ID: membershipID.String(), UserID: updatedUser.ID, OrgID: orgID,
-			OrgUserData: *newOrgData, DateCreated: now}
-		newMembership = &newOrgMembership
-
-		// TODO:
-		// possibly set groups based on organization populations
-
-		newUser.OrganizationsMemberships = append(newUser.OrganizationsMemberships,
-			userMembership{ID: membershipID.String(), OrgID: orgID, OrgUserData: *newOrgData, DateCreated: now})
+	var err error
+	filter := bson.M{"_id": account.ID}
+	if sessionContext != nil {
+		err = sa.db.devices.ReplaceOneWithContext(sessionContext, filter, storageAccount, nil)
+	} else {
+		err = sa.db.devices.ReplaceOne(filter, storageAccount, nil)
 	}
 
-	// transaction
-	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
-		err := sessionContext.StartTransaction()
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
-		}
-
-		filter := bson.M{"_id": updatedUser.ID}
-		err = sa.db.users.ReplaceOneWithContext(sessionContext, filter, newUser, nil)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionReplace, model.TypeUser, nil, err)
-		}
-
-		if newMembership != nil {
-			err = sa.InsertMembership(newMembership, sessionContext)
-			if err != nil {
-				sa.abortTransaction(sessionContext)
-				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganizationMembership, nil, err)
-			}
-		}
-
-		//TODO: save device if some device info has changed or added new device
-		// err = sa.SaveDevice(&newDevice, sessionContext)
-		// if err == nil {
-		// 	abortTransaction(sessionContext)
-		// 	return log.WrapErrorAction(log.ActionSave, "device", nil, err)
-		// }
-
-		//commit the transaction
-		err = sessionContext.CommitTransaction(sessionContext)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
-		}
-		return nil
-	})
 	if err != nil {
-		return nil, err
+		return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, &logutils.FieldArgs{"_id": account.ID}, nil)
 	}
 
-	returnUser := userFromStorage(newUser, sa)
-	return &returnUser, nil
-	*/
+	return nil
 }
 
 //DeleteAccount deletes an account
@@ -720,72 +670,6 @@ func (sa *Adapter) InsertAccountRoles(accountID string, appID string, roles []mo
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
-	}
-
-	return nil
-}
-
-//UpdateAccountAuthType updates account auth type
-func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
-	// transaction
-	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
-		err := sessionContext.StartTransaction()
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
-		}
-
-		//1. set time updated to the item
-		now := time.Now()
-		item.DateUpdated = &now
-
-		//2 convert to storage item
-		storageItem := accountAuthTypeToStorage(item)
-
-		//3. first find the account record
-		findFilter := bson.M{"auth_types.id": item.ID}
-		var accounts []account
-		err = sa.db.accounts.FindWithContext(sessionContext, findFilter, &accounts, nil)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeUserAuth, &logutils.FieldArgs{"account auth type id": item.ID}, err)
-		}
-		if len(accounts) == 0 {
-			sa.abortTransaction(sessionContext)
-			return errors.ErrorAction(logutils.ActionFind, "for some reasons account is nil for account auth type", &logutils.FieldArgs{"acccount auth type id": item.ID})
-		}
-		account := accounts[0]
-
-		//4. update the account auth type in the account record
-		accountAuthTypes := account.AuthTypes
-		newAccountAuthTypes := make([]accountAuthType, len(accountAuthTypes))
-		for j, aAuthType := range accountAuthTypes {
-			if aAuthType.ID == storageItem.ID {
-				newAccountAuthTypes[j] = storageItem
-			} else {
-				newAccountAuthTypes[j] = aAuthType
-			}
-		}
-		account.AuthTypes = newAccountAuthTypes
-
-		//4. update the account record
-		replaceFilter := bson.M{"_id": account.ID}
-		err = sa.db.accounts.ReplaceOneWithContext(sessionContext, replaceFilter, account, nil)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionReplace, model.TypeAccount, nil, err)
-		}
-
-		//commit the transaction
-		err = sessionContext.CommitTransaction(sessionContext)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
-		}
-		return nil
-	})
-	if err != nil {
-		return err
 	}
 
 	return nil
@@ -1210,13 +1094,23 @@ func (sa *Adapter) UpdateProfile(id string, profile *model.Profile) error {
 }
 
 //CreateGlobalConfig creates global config
-func (sa *Adapter) CreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
-	globalConfig := model.GlobalConfig{Setting: setting}
-	_, err := sa.db.globalConfig.InsertOne(globalConfig)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
+func (sa *Adapter) CreateGlobalConfig(sessionContext mongo.SessionContext, globalConfig *model.GlobalConfig) error {
+	if globalConfig == nil {
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("global_config"))
 	}
-	return &globalConfig, nil
+
+	var err error
+	if sessionContext != nil {
+		_, err = sa.db.globalConfig.InsertOneWithContext(sessionContext, globalConfig)
+	} else {
+		_, err = sa.db.globalConfig.InsertOne(globalConfig)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, &logutils.FieldArgs{"setting": globalConfig.Setting}, err)
+	}
+
+	return nil
 }
 
 //GetGlobalConfig give config
@@ -1235,40 +1129,20 @@ func (sa *Adapter) GetGlobalConfig() (*model.GlobalConfig, error) {
 
 }
 
-//SaveGlobalConfig saves the global configuration to the storage
-func (sa *Adapter) SaveGlobalConfig(gc *model.GlobalConfig) error {
-	// transaction
-	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
-		err := sessionContext.StartTransaction()
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
-		}
-
-		//clear the global config - we always keep only one global config
-		delFilter := bson.D{}
+//DeleteGlobalConfig deletes the global configuration from storage
+func (sa *Adapter) DeleteGlobalConfig(sessionContext mongo.SessionContext) error {
+	delFilter := bson.D{}
+	var err error
+	if sessionContext != nil {
 		_, err = sa.db.globalConfig.DeleteManyWithContext(sessionContext, delFilter, nil)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeGlobalConfig, nil, err)
-		}
-
-		//add the new one
-		_, err = sa.db.globalConfig.InsertOneWithContext(sessionContext, gc)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
-		}
-
-		err = sessionContext.CommitTransaction(sessionContext)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
-		}
-		return nil
-	})
-	if err != nil {
-		return err
+	} else {
+		_, err = sa.db.globalConfig.DeleteMany(delFilter, nil)
 	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeGlobalConfig, nil, err)
+	}
+
 	return nil
 }
 

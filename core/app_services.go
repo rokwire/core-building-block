@@ -47,6 +47,7 @@ func (app *application) serUpdateAccountPreferences(id string, preferences map[s
 
 func (app *application) serDeleteAccount(id string) error {
 	transaction := func(sessionContext mongo.SessionContext) error {
+		//1. first find the account record
 		account, err := app.storage.FindAccountByID(sessionContext, id)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
@@ -55,11 +56,13 @@ func (app *application) serDeleteAccount(id string) error {
 			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 		}
 
+		//2. delete the account record
 		err = app.storage.DeleteAccount(sessionContext, id)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 		}
 
+		//3. save or delete device records
 		for _, device := range account.Devices {
 			if len(device.Accounts) > 1 {
 				for i, deviceAccount := range device.Accounts {

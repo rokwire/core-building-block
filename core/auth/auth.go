@@ -17,6 +17,7 @@ import (
 	"github.com/rokwire/core-auth-library-go/authservice"
 	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/go-playground/validator.v9"
 	"gopkg.in/gomail.v2"
@@ -202,7 +203,40 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		if !currentData.Equals(newData) {
 			//there is changes so we need to update it
 			accountAuthType.Params["user"] = newData
-			err = a.storage.UpdateAccountAuthType(*accountAuthType)
+			now := time.Now()
+			accountAuthType.DateUpdated = &now
+
+			transaction := func(sessionContext mongo.SessionContext) error {
+				//1. first find the account record
+				account, err := a.storage.FindAccountByAuthTypeID(sessionContext, accountAuthType.ID)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+				}
+				if account == nil {
+					return errors.ErrorAction(logutils.ActionFind, "for some reason account is nil for account auth type", &logutils.FieldArgs{"account auth type id": accountAuthType.ID})
+				}
+
+				//2. update the account auth type in the account record
+				newAccountAuthTypes := make([]model.AccountAuthType, len(account.AuthTypes))
+				for j, aAuthType := range account.AuthTypes {
+					if aAuthType.ID == accountAuthType.ID {
+						newAccountAuthTypes[j] = *accountAuthType
+					} else {
+						newAccountAuthTypes[j] = aAuthType
+					}
+				}
+				account.AuthTypes = newAccountAuthTypes
+
+				//3. update the account record
+				err = a.storage.SaveAccount(sessionContext, account)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, nil, err)
+				}
+
+				return nil
+			}
+
+			err = a.storage.PerformTransaction(transaction)
 			if err != nil {
 				return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
 			}

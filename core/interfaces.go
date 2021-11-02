@@ -64,7 +64,6 @@ type Storage interface {
 	PerformTransaction(func(sessionContext mongo.SessionContext) error) error
 
 	FindAccountByID(sessionContext mongo.SessionContext, id string) (*model.Account, error)
-	UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
 	DeleteAccount(sessionContext mongo.SessionContext, id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error
@@ -74,9 +73,9 @@ type Storage interface {
 	SaveDevice(sessionContext mongo.SessionContext, device *model.Device) error
 	DeleteDevice(sessionContext mongo.SessionContext, id string) error
 
-	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
+	CreateGlobalConfig(sessionContext mongo.SessionContext, globalConfig *model.GlobalConfig) error
 	GetGlobalConfig() (*model.GlobalConfig, error)
-	SaveGlobalConfig(setting *model.GlobalConfig) error
+	DeleteGlobalConfig(sessionContext mongo.SessionContext) error
 
 	FindPermissionsByName(names []string) ([]model.Permission, error)
 	InsertPermission(item model.Permission) error
