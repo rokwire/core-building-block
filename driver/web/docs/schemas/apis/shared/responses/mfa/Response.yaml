@@ -2,11 +2,7 @@ type: object
 properties:
   type:
     type: string
-  account_id:
-    type: string
   verified:
     type: boolean
-  qr_code:
-    type: string
-  recipient:
-    type: string
+  params:
+    type: object

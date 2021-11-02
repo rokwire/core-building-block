@@ -17,6 +17,8 @@ import (
 const (
 	//AuthTypeEmail email auth type
 	AuthTypeEmail string = "email"
+	//MfaTypeEmail email mfa type
+	MfaTypeEmail string = "email"
 
 	typeTime        logutils.MessageDataType = "time.Time"
 	typeEmailCreds  logutils.MessageDataType = "email creds"
@@ -285,6 +287,7 @@ func (m *emailMfaImpl) verify(params map[string]interface{}, code string) (*stri
 }
 
 func (m *emailMfaImpl) enroll(accountID string) (*model.MFAType, error) {
+	//TODO: make sure to set identifier field in params
 	return nil, errors.New(logutils.Unimplemented)
 }
 
@@ -295,7 +298,7 @@ func (m *emailMfaImpl) sendCode(accountID string) (string, error) {
 
 //initEmailMfa initializes and registers a new email mfa instance
 func initEmailMfa(auth *Auth) (*emailMfaImpl, error) {
-	email := &emailMfaImpl{auth: auth, mfaType: MfaTypeTotp}
+	email := &emailMfaImpl{auth: auth, mfaType: MfaTypeEmail}
 
 	err := auth.registerMfaType(email.mfaType, email)
 	if err != nil {

@@ -162,13 +162,10 @@ type Credential struct {
 
 //MFAType represents a MFA type used by an account
 type MFAType struct {
-	AccountID string
-	Type      string
+	Type string
 
-	Verified  bool
-	QRCode    string
-	Recipient string                 //email or phone
-	Params    map[string]interface{} //mfa type params
+	Verified bool
+	Params   map[string]interface{} //mfa type params
 
 	DateCreated time.Time
 	DateUpdated *time.Time

@@ -56,20 +56,20 @@ func (m *totpMfaImpl) enroll(accountID string) (*model.MFAType, error) {
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionEncode, "TOTP image", nil, err)
 	}
-	qrCode := buf.String()
 
 	now := time.Now().UTC()
 	params := map[string]interface{}{
-		"secret": key.Secret(),
+		"secret":  key.Secret(),
+		"qr_code": buf.String(),
 	}
 
 	//Recipient is empty for totp
-	return &model.MFAType{AccountID: accountID, Type: MfaTypeTotp, Verified: false, QRCode: qrCode, Params: params, DateCreated: now}, nil
+	return &model.MFAType{Type: MfaTypeTotp, Verified: false, Params: params, DateCreated: now}, nil
 }
 
 //sendCode not used for TOTP
 func (m *totpMfaImpl) sendCode(accountID string) (string, error) {
-	return "", nil
+	return "", errors.New(logutils.Unimplemented)
 }
 
 //initTotpMfa initializes and registers a new totp mfa instance

@@ -420,7 +420,7 @@ func (a *Auth) AddMFAType(accountID string, mfaType string) (*model.MFAType, err
 		return nil, errors.WrapErrorAction("enrolling", typeMfaType, nil, err)
 	}
 
-	err = a.storage.InsertMFAType(newMfa)
+	err = a.storage.InsertMFAType(newMfa, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, typeMfaType, &logutils.FieldArgs{"account_id": accountID, "type": mfaType}, err)
 	}
@@ -523,12 +523,15 @@ func (a *Auth) VerifyMFA(accountID string, mfaType string, mfaCode string, l *lo
 		return false, nil, errors.WrapErrorAction("generating", "mfa recovery codes", errFields, err)
 	}
 
-	err = a.storage.UpdateMFAType(mfa, recoveryCodes)
+	shouldReturnCodes, err := a.storage.UpdateMFAType(mfa, accountID, recoveryCodes)
 	if err != nil {
 		return false, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, errFields, err)
 	}
 
-	return true, recoveryCodes, nil
+	if shouldReturnCodes {
+		return true, recoveryCodes, nil
+	}
+	return true, nil, nil
 }
 
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or

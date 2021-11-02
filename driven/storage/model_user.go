@@ -107,10 +107,10 @@ type credential struct {
 }
 
 type mfaType struct {
-	Type      string                 `bson:"type"`
-	Verified  bool                   `bson:"verified"`
-	Recipient string                 `bson:"recipient"` //email or phone
-	Params    map[string]interface{} `bson:"params"`    //mfa type params
+	Type string `bson:"type"`
+
+	Verified bool                   `bson:"verified"`
+	Params   map[string]interface{} `bson:"params"` //mfa type params
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

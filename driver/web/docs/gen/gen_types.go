@@ -770,11 +770,9 @@ type ResSharedLoginMfa struct {
 
 // ResSharedMfa defines model for _res_shared_Mfa.
 type ResSharedMfa struct {
-	AccountId *string `json:"account_id,omitempty"`
-	QrCode    *string `json:"qr_code,omitempty"`
-	Recipient *string `json:"recipient,omitempty"`
-	Type      *string `json:"type,omitempty"`
-	Verified  *bool   `json:"verified,omitempty"`
+	Params   *map[string]interface{} `json:"params,omitempty"`
+	Type     *string                 `json:"type,omitempty"`
+	Verified *bool                   `json:"verified,omitempty"`
 }
 
 // ResSharedRefresh defines model for _res_shared_Refresh.
