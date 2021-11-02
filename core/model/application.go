@@ -131,6 +131,8 @@ type ApplicationOrganization struct {
 	Application  Application
 	Organization Organization
 
+	ServicesIDs []string //which services are used for this app/org
+
 	IdentityProvidersSettings []IdentityProviderSetting
 
 	SupportedAuthTypes []AuthTypesSupport //supported auth types for this organization in this application

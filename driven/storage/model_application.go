@@ -42,6 +42,8 @@ type applicationOrganization struct {
 	AppID string `bson:"app_id"`
 	OrgID string `bson:"org_id"`
 
+	ServicesIDs []string `bson:"services_ids"`
+
 	IdentityProvidersSettings []model.IdentityProviderSetting `bson:"identity_providers_settings"`
 
 	SupportedAuthTypes []model.AuthTypesSupport `bson:"supported_auth_types"`
