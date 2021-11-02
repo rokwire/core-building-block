@@ -1,0 +1,94 @@
+post:
+  tags:
+  - Services
+  summary: Creates mobile app configuration
+  description: |
+    Auth: Requires a valid id_token that indicates membership
+  requestBody:
+    description: Creates AppConfig object
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schemas/apis/services/appconfigs/AppConfig.yaml"
+        examples:
+          withoutSecretKeys:
+            value:
+              mobileAppVersion: "1.0.1"
+              platformBuildingBlocks:
+                appconfig: https://api.rokwire.illinois.edu/app/configs
+                profile: https://api.rokwire.illinois.edu/profiles
+              thirdPartyServices:
+                facebook: https://facebook.com
+                instagram_url: https://instagram.com
+              otherUniversityServices:
+                illini_cash_base_url: https://shibtest.housing.illinois.edu/MobileAppWS/api
+              secretKeys: ""
+              upgrade:
+                available_version: "1.0.2"
+                required_version: "1.0.0"
+                "url":
+                  "android": "market://details?id=com.dropbox.android"
+                  "ios": "itms-apps://itunes.apple.com/us/app/apple-store/id327630330"
+          withSecretKeys:
+            value:
+              mobileAppVersion: "1.0.2"
+              platformBuildingBlocks:
+                appconfig: https://api.rokwire.illinois.edu/app/configs
+                profile: https://api.rokwire.illinois.edu/profiles
+              thirdPartyServices:
+                facebook: https://facebook.com
+                instagram_url: https://instagram.com
+              otherUniversityServices:
+                illini_cash_base_url: https://shibtest.housing.illinois.edu/MobileAppWS/api
+              secretKeys: "123abc456"
+              upgrade:
+                available_version: "1.0.2"
+                required_version: "1.0.0"
+                "url":
+                  "android": "market://details?id=com.dropbox.android"
+                  "ios": "itms-apps://itunes.apple.com/us/app/apple-store/id327630330"
+    required: true
+  responses:
+    201:
+      description: AppConfig created
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schemas/apis/services/appconfigs/AppConfig.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
+get:
+  tags:
+  - Services
+  summary: Reads mobile app configuration
+  description: |
+    Auth: Requires a valid API Key for access.
+  parameters:
+    - name: version
+      in: query
+      description: query by mobile app version, results contain all app configurations if no paramer is given; If given mobileAppVersion, it will return the closest app config that is less than or equal to the given version.
+      style: form
+      explode: false
+      schema:
+        type: string
+  responses:
+    200:
+      description: successfully read mobile app configuration
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "../../../schemas/apis/services/appconfigs/AppConfig.yaml"
+    400:
+      description: Bad request.
+    401:
+      description: Unauthorized
+    404:
+      description: AppConfig not found
+    500:
+      description: Internal error

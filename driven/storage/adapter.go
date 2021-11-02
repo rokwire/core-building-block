@@ -917,15 +917,15 @@ func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
 // 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
 // 	}
 
-// 	var filter bson.D
-// 	if len(orgID) > 0 {
-// 		filter = bson.D{
-// 			primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID},
-// 			primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.AccountID}, //replaced by _id or account_id??
-// 		}
-// 	} else {
-// 		filter = bson.D{primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.AccountID}}
+// var filter bson.D
+// if len(orgID) > 0 {
+// 	filter = bson.D{
+// 		primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID},
+// 		primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.AccountID}, //replaced by _id or account_id??
 // 	}
+// } else {
+// 	filter = bson.D{primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.AccountID}}
+// }
 
 // 	err := sa.db.credentials.ReplaceOne(filter, creds, nil)
 // 	if err != nil {
@@ -1450,6 +1450,95 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 	}
 
 	return result, nil
+}
+
+//FindAppConfigs finds appconfigs
+func (sa *Adapter) FindAppConfigs(version string) ([]model.ApplicationConfigs, error) {
+	filter := bson.D{}
+	var result []model.ApplicationConfigs
+	err := sa.db.applicationConfigs.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
+	}
+
+	if len(result) == 0 {
+		//no data
+		return make([]model.ApplicationConfigs, 0), nil
+	}
+
+	return result, nil
+}
+
+//FindAppConfigByID finds appconfig by ID
+func (sa *Adapter) FindAppConfigByID(ID string) (*model.ApplicationConfigs, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	var result []model.ApplicationConfigs
+	err := sa.db.applicationConfigs.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
+	}
+	if len(result) == 0 {
+		//no record
+		return nil, nil
+	}
+
+	appConfigs := result[0]
+	return &appConfigs, nil
+}
+
+// InsertAppConfig inserts an appconfig
+func (sa *Adapter) InsertAppConfig(appConfig model.ApplicationConfigs) (*model.ApplicationConfigs, error) {
+	_, err := sa.db.applicationConfigs.InsertOne(appConfig)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplicationConfigs, nil, err)
+	}
+
+	return &appConfig, nil
+}
+
+// UpdateAppConfig updates an appconfig
+func (sa *Adapter) UpdateAppConfig(ID string, version string, data map[string]interface{}) error {
+	now := time.Now()
+	//TODO - use pointers and update only what not nil
+	updatAppConfigFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	updateItem := bson.D{primitive.E{Key: "date_updated", Value: now}}
+	if version != "" {
+		updateItem = append(updateItem, primitive.E{Key: "version", Value: version})
+	}
+	if data != nil {
+		updateItem = append(updateItem, primitive.E{Key: "data", Value: data})
+	}
+
+	updateAppConfig := bson.D{
+		primitive.E{Key: "$set", Value: updateItem},
+	}
+	result, err := sa.db.applicationConfigs.UpdateOne(updatAppConfigFilter, updateAppConfig, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigs, &logutils.FieldArgs{"id": ID}, err)
+	}
+	if result.MatchedCount == 0 {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationConfigs, &logutils.FieldArgs{"id": ID}, err)
+	}
+
+	return nil
+}
+
+// DeleteAppConfig deletes an appconfig
+func (sa *Adapter) DeleteAppConfig(ID string) error {
+	filter := bson.M{"_id": ID}
+	result, err := sa.db.applicationConfigs.DeleteOne(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeApplicationConfigs, &logutils.FieldArgs{"_id": ID}, err)
+	}
+	if result == nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"_id": ID}, err)
+	}
+	deletedCount := result.DeletedCount
+	if deletedCount == 0 {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationConfigs, &logutils.FieldArgs{"_id": ID}, err)
+	}
+
+	return nil
 }
 
 //FindApplicationTypeByIdentifier finds an application type by identifier

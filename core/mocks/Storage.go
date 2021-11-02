@@ -52,6 +52,20 @@ func (_m *Storage) DeleteAccount(id string) error {
 	return r0
 }
 
+// DeleteAppConfig provides a mock function with given fields: id
+func (_m *Storage) DeleteAppConfig(id string) error {
+	ret := _m.Called(id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DeleteApplicationGroup provides a mock function with given fields: id
 func (_m *Storage) DeleteApplicationGroup(id string) error {
 	ret := _m.Called(id)
@@ -110,6 +124,52 @@ func (_m *Storage) FindAccountByID(id string) (*model.Account, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindAppConfigByID provides a mock function with given fields: id
+func (_m *Storage) FindAppConfigByID(id string) (*model.ApplicationConfigs, error) {
+	ret := _m.Called(id)
+
+	var r0 *model.ApplicationConfigs
+	if rf, ok := ret.Get(0).(func(string) *model.ApplicationConfigs); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.ApplicationConfigs)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindAppConfigs provides a mock function with given fields: version
+func (_m *Storage) FindAppConfigs(version string) ([]model.ApplicationConfigs, error) {
+	ret := _m.Called(version)
+
+	var r0 []model.ApplicationConfigs
+	if rf, ok := ret.Get(0).(func(string) []model.ApplicationConfigs); ok {
+		r0 = rf(version)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.ApplicationConfigs)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(version)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -281,6 +341,29 @@ func (_m *Storage) InsertAccountRoles(accountID string, appID string, roles []mo
 	}
 
 	return r0
+}
+
+// InsertAppConfig provides a mock function with given fields: appConfig
+func (_m *Storage) InsertAppConfig(appConfig model.ApplicationConfigs) (*model.ApplicationConfigs, error) {
+	ret := _m.Called(appConfig)
+
+	var r0 *model.ApplicationConfigs
+	if rf, ok := ret.Get(0).(func(model.ApplicationConfigs) *model.ApplicationConfigs); ok {
+		r0 = rf(appConfig)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.ApplicationConfigs)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(model.ApplicationConfigs) error); ok {
+		r1 = rf(appConfig)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // InsertApplication provides a mock function with given fields: application
@@ -466,6 +549,20 @@ func (_m *Storage) UpdateAccountPreferences(accountID string, preferences map[st
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, map[string]interface{}) error); ok {
 		r0 = rf(accountID, preferences)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateAppConfig provides a mock function with given fields: id, version, data
+func (_m *Storage) UpdateAppConfig(id string, version string, data map[string]interface{}) error {
+	ret := _m.Called(id, version, data)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string, map[string]interface{}) error); ok {
+		r0 = rf(id, version, data)
 	} else {
 		r0 = ret.Error(0)
 	}

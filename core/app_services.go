@@ -26,6 +26,9 @@ func (app *application) serGetPreferences(accountID string) (map[string]interfac
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountPreferences, nil, err)
 	}
+	if account == nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAccountPreferences, nil, err)
+	}
 
 	preferences := account.Preferences
 	return preferences, nil
@@ -53,4 +56,49 @@ func (app *application) serGetAuthTest(l *logs.Log) string {
 
 func (app *application) serGetCommonTest(l *logs.Log) string {
 	return "Services - Common - test"
+}
+
+func (app *application) serGetAppConfigs(version string) ([]model.ApplicationConfigs, error) {
+	appConfigs, err := app.storage.FindAppConfigs(version)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
+	}
+
+	return appConfigs, nil
+}
+
+func (app *application) serGetAppConfig(id string) (*model.ApplicationConfigs, error) {
+	appConfig, err := app.storage.FindAppConfigByID(id)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
+	}
+
+	return appConfig, nil
+}
+
+func (app *application) serCreateAppConfig(appConfig model.ApplicationConfigs) (*model.ApplicationConfigs, error) {
+	config, err := app.storage.InsertAppConfig(appConfig)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeApplicationConfigs, nil, err)
+	}
+
+	return config, nil
+}
+
+func (app *application) serUpdateAppConfig(id string, version string, data map[string]interface{}) error {
+	err := app.storage.UpdateAppConfig(id, version, data)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigs, nil, err)
+	}
+
+	return nil
+}
+
+func (app *application) serDeleteAppConfig(id string) error {
+	err := app.storage.DeleteAppConfig(id)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeApplicationConfigs, nil, err)
+	}
+
+	return nil
 }

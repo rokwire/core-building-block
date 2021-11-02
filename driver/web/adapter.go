@@ -79,6 +79,13 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.getProfile, we.auth.servicesUserAuth)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.updateProfile, we.auth.servicesUserAuth)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest, nil)).Methods("GET") //Public
+
+	// appconfigs
+	servicesSubRouter.HandleFunc("/app/configs)", we.wrapFunc(we.servicesApisHandler.getAppConfigs, nil)).Methods("GET")
+	servicesSubRouter.HandleFunc("/app/configs)", we.wrapFunc(we.servicesApisHandler.createAppConfig, nil)).Methods("POST")
+	servicesSubRouter.HandleFunc("/app/configs/{id})", we.wrapFunc(we.servicesApisHandler.getAppConfig, nil)).Methods("GET")
+	servicesSubRouter.HandleFunc("/app/configs/{id})", we.wrapFunc(we.servicesApisHandler.updateAppConfig, nil)).Methods("PUT")
+	servicesSubRouter.HandleFunc("/app/configs/{id})", we.wrapFunc(we.servicesApisHandler.deleteAppConfig, nil)).Methods("DELETE")
 	///
 
 	///admin ///

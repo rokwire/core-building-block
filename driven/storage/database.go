@@ -37,6 +37,7 @@ type database struct {
 	applicationsGroups        *collectionWrapper
 	applicationsRoles         *collectionWrapper
 	applicationsPermissions   *collectionWrapper
+	applicationConfigs        *collectionWrapper
 
 	listeners []Listener
 }
@@ -156,6 +157,12 @@ func (m *database) start() error {
 
 	applicationsPermissions := &collectionWrapper{database: m, coll: db.Collection("applications_permissions")}
 	err = m.applyApplicationsPermissionsChecks(applicationsPermissions)
+	if err != nil {
+		return err
+	}
+
+	applicationConfigs := &collectionWrapper{database: m, coll: db.Collection("application_configs")}
+	err = m.applyApplicationConfigsChecks(applicationConfigs)
 	if err != nil {
 		return err
 	}
@@ -438,6 +445,19 @@ func (m *database) applyApplicationsPermissionsChecks(applicationsPermissions *c
 
 	//add application index
 	err := applicationsPermissions.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "name", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("applications permissions checks passed")
+	return nil
+}
+
+func (m *database) applyApplicationConfigsChecks(applicationConfigs *collectionWrapper) error {
+	m.logger.Info("apply applications configs checks.....")
+
+	//add application index
+	err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}

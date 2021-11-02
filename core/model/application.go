@@ -24,6 +24,8 @@ const (
 	TypeApplicationType logutils.MessageDataType = "application type"
 	//TypeApplicationUserRelations ...
 	TypeApplicationUserRelations logutils.MessageDataType = "app user relations"
+	//TypeApplicationConfigs ...
+	TypeApplicationConfigs logutils.MessageDataType = "app configs"
 )
 
 //ApplicationPermission represents application permission entity
@@ -208,4 +210,14 @@ type AuthTypesSupport struct {
 		AuthTypeID string                 `bson:"auth_type_id"`
 		Params     map[string]interface{} `bson:"params"`
 	} `bson:"supported_auth_types"`
+}
+
+//ApplicationConfigs represents mobile app configs
+type ApplicationConfigs struct {
+	ID          string                 `json:"id" bson:"_id" validate:"required"`
+	AppID       string                 `json:"app_id" bson:"app_id" validate:"required"`
+	Version     string                 `json:"version" bson:"version" validate:"required"`
+	Data        map[string]interface{} `json:"data" bson:"data"`
+	DateCreated time.Time              `json:"date_created" bson:"date_created"`
+	DateUpdated *time.Time             `json:"date_updated" bson:"date_updated"`
 }

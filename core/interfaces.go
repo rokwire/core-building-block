@@ -17,6 +17,12 @@ type Services interface {
 
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
+
+	SerGetAppConfigs(version string) ([]model.ApplicationConfigs, error)
+	SerGetAppConfig(id string) (*model.ApplicationConfigs, error)
+	SerCreateAppConfig(appConfig model.ApplicationConfigs) (*model.ApplicationConfigs, error)
+	SerUpdateAppConfig(id string, version string, data map[string]interface{}) error
+	SerDeleteAppConfig(id string) error
 }
 
 //Administration exposes administration APIs for the driver adapters
@@ -94,6 +100,12 @@ type Storage interface {
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
+
+	FindAppConfigs(version string) ([]model.ApplicationConfigs, error)
+	FindAppConfigByID(id string) (*model.ApplicationConfigs, error)
+	InsertAppConfig(appConfig model.ApplicationConfigs) (*model.ApplicationConfigs, error)
+	UpdateAppConfig(id string, version string, data map[string]interface{}) error
+	DeleteAppConfig(id string) error
 }
 
 //StorageListener listenes for change data storage events

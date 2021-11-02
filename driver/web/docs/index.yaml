@@ -45,7 +45,13 @@ paths:
     $ref: "./resources/services/accounts/profile.yaml"
   /services/test:
     $ref: "./resources/services/test.yaml"
-
+  
+  #appconfigs
+  /services/app/configs:
+    $ref: "./resources/services/appconfigs/configs.yaml"
+  /services/app/configs/{id}:
+    $ref: "./resources/services/appconfigs/configsId.yaml"
+  
   #admin
   /admin/global-config:
     $ref: "./resources/admin/global-config.yaml"

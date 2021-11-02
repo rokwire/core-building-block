@@ -89,6 +89,26 @@ func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[st
 	return s.app.serUpdateAccountPreferences(id, preferences)
 }
 
+func (s *servicesImpl) SerGetAppConfigs(version string) ([]model.ApplicationConfigs, error) {
+	return s.app.serGetAppConfigs(version)
+}
+
+func (s *servicesImpl) SerGetAppConfig(id string) (*model.ApplicationConfigs, error) {
+	return s.app.serGetAppConfig(id)
+}
+
+func (s *servicesImpl) SerCreateAppConfig(appConfig model.ApplicationConfigs) (*model.ApplicationConfigs, error) {
+	return s.app.serCreateAppConfig(appConfig)
+}
+
+func (s *servicesImpl) SerUpdateAppConfig(id string, version string, data map[string]interface{}) error {
+	return s.app.serUpdateAppConfig(id, version, data)
+}
+
+func (s *servicesImpl) SerDeleteAppConfig(id string) error {
+	return s.app.serDeleteAppConfig(id)
+}
+
 ///
 
 //administrationImpl

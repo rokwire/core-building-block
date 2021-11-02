@@ -135,6 +135,12 @@ _req_authorize-service_Request:
 _res_authorize-service_Response:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
 
+### application-configs API
+_req_create_Application-Configs_Request:
+  $ref: "./apis/services/appconfigs/AppConfig.yaml"
+_req_update_Application-Configs_Request:
+  $ref: "./apis/services/appconfigs/AppConfig.yaml"
+
 ### organization API
 _req_create-Organization_Request:
   $ref: "./apis/admin/create-organization/request/Request.yaml"
