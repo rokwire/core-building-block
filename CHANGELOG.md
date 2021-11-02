@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Merge client and Profile BB profiles and preferences [#228](https://github.com/rokwire/core-building-block/issues/228)
 
 ## [1.9.0] - 2021-11-01
 ### Added
@@ -33,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.0] - 2021-10-15
 ### Fixed
-- Permission authorization failing on all endpoints in Docker[#239](https://github.com/rokwire/core-building-block/issues/239)
+- Permission authorization failing on all endpoints in Docker [#239](https://github.com/rokwire/core-building-block/issues/239)
 
 ### Changed
 - Switch to ROKWIRE open source libraries [#232](https://github.com/rokwire/core-building-block/issues/232)
