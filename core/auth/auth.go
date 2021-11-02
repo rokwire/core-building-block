@@ -513,7 +513,17 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 	profileID, _ := uuid.NewUUID()
 	readyProfile.ID = profileID.String()
 	//date created
-	readyProfile.DateCreated = time.Now()
+	if readyProfile.DateCreated.IsZero() {
+		readyProfile.DateCreated = time.Now()
+	}
+	if preferences["date_created"] == nil {
+		preferences["date_created"] = time.Now()
+	} else {
+		preferencesCreated, ok := preferences["date_created"].(time.Time)
+		if !ok || preferencesCreated.IsZero() {
+			preferences["date_created"] = time.Now()
+		}
+	}
 	///
 
 	return accountAuthType, credential, &readyProfile, readyPreferences, nil

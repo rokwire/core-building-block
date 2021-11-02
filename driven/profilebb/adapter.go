@@ -15,8 +15,9 @@ import (
 
 //Adapter implements the ProfileBuildingBlock interface
 type Adapter struct {
-	host   string
-	apiKey string
+	migrate bool
+	host    string
+	apiKey  string
 }
 
 type profileBBData struct {
@@ -51,7 +52,6 @@ type profileBBNonPII struct {
 	VoterByMail          *bool               `json:"voter_by_mail"`
 	Voted                *bool               `json:"voted"`
 	CreationDate         string              `json:"creationDate"`
-	LastModifiedDate     string              `json:"lastModifiedDate"`
 }
 
 func (p *profileBBNonPII) convertInterests() map[string][]string {
@@ -106,6 +106,9 @@ type interest struct {
 
 //GetProfileBBData gets profile data by queryParams
 func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error) {
+	if !a.migrate {
+		return nil, nil, nil
+	}
 	if a.host == "" || a.apiKey == "" {
 		return nil, nil, errors.New("Profile BB adapter is not configured")
 	}
@@ -150,14 +153,16 @@ func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (
 		return nil, nil, nil
 	}
 
-	dateCreated, err := time.Parse("2006-01-02T15:04:05.000Z", profileData.PII.DateCreated)
+	now := time.Now()
+	dateCreated, err := parseTime(profileData.PII.DateCreated)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, logutils.TypeString, &logutils.FieldArgs{"creationDate": profileData.PII.DateCreated}, err)
+		l.WarnAction(logutils.ActionParse, "date created", err)
+		dateCreated = &now
 	}
 	existingProfile := model.Profile{FirstName: profileData.PII.FirstName, LastName: profileData.PII.LastName,
 		Email: profileData.PII.Email, Phone: profileData.PII.Phone, BirthYear: profileData.PII.BirthYear,
 		Address: profileData.PII.Address, ZipCode: profileData.PII.ZipCode, State: profileData.PII.State,
-		Country: profileData.PII.Country, DateCreated: dateCreated}
+		Country: profileData.PII.Country, DateCreated: *dateCreated, DateUpdated: &now}
 
 	preferences := a.reformatPreferences(profileData.NonPII, l)
 
@@ -187,13 +192,7 @@ func (a *Adapter) reformatPreferences(nonPII *profileBBNonPII, l *logs.Log) map[
 		preferences["date_created"] = dateCreated
 	}
 
-	dateUpdated, err := parseTime(nonPII.LastModifiedDate)
-	if err != nil {
-		l.WarnAction(logutils.ActionParse, "date updated", err)
-		preferences["date_updated"] = time.Now()
-	} else {
-		preferences["date_updated"] = dateUpdated
-	}
+	preferences["date_updated"] = time.Now()
 
 	return preferences
 }
@@ -207,6 +206,6 @@ func parseTime(timeString string) (*time.Time, error) {
 }
 
 //NewProfileBBAdapter creates a new profile building block adapter instance
-func NewProfileBBAdapter(profileHost string, apiKey string) *Adapter {
-	return &Adapter{host: profileHost, apiKey: apiKey}
+func NewProfileBBAdapter(migrate bool, profileHost string, apiKey string) *Adapter {
+	return &Adapter{migrate: migrate, host: profileHost, apiKey: apiKey}
 }
