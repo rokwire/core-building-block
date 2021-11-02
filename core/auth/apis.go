@@ -361,7 +361,6 @@ func (a *Auth) ResetPasswordClient(accountID string, accountAuthTypeID string, n
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
-	l.Infof("AccountAuthTypeID is %v", accountAuthTypeID)
 	accountAuthType, err := a.findAccountAuthTypeByID(account, accountAuthTypeID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
@@ -373,7 +372,6 @@ func (a *Auth) ResetPasswordClient(accountID string, accountAuthTypeID string, n
 	credential := accountAuthType.Credential
 	//Determine the auth type for resetPassword
 	authType := accountAuthType.AuthType
-	a.logger.Infof("AuthType:", authType)
 	if authType.IsExternal || authType.IsAnonymous {
 		return errors.WrapErrorAction("invalid auth type for reset password client", model.TypeAuthType, nil, err)
 	}

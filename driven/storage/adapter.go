@@ -242,7 +242,6 @@ func (sa *Adapter) cacheAuthTypes() error {
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 	}
-	fmt.Printf("Cached auth types are: %v", authTypes)
 	sa.setCachedAuthTypes(authTypes)
 
 	return nil
