@@ -110,42 +110,37 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appType model.Applicatio
 }
 
 func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, map[string]interface{}, error) {
-	// verifyEmail := a.getVerifyEmail(accountAuthType.AuthType)
-	// if verifyEmail {
-	// 	//check is verified
-	// 	if !accountAuthType.Credential.Verified {
-	// 		return "", nil, nil, errors.ErrorAction("not verified", "", nil)
-	// 	}
-	// }
-
 	//get stored credential
 	storedCreds, err := mapToEmailCreds(accountAuthType.Credential.Value)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction("error on map to email creds", "", nil, err)
 	}
-	//check is verified
-	if !accountAuthType.Credential.Verified {
-		if storedCreds.VerificationExpiry.Before(time.Now()) {
-			//Generate new verification code
-			newCode, err := utils.GenerateRandomString(64)
-			if err != nil {
-				return "", nil, nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate random string for verify code"))
+	//check if email verification is enabled and if it is verified
+	verifyEmail := a.getVerifyEmail(accountAuthType.AuthType)
+	if verifyEmail {
+		if !accountAuthType.Credential.Verified {
+			if storedCreds.VerificationExpiry.Before(time.Now()) {
+				//Generate new verification code
+				newCode, err := utils.GenerateRandomString(64)
+				if err != nil {
+					return "", nil, nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate random string for verify code"))
 
+				}
+				//send new verification code for future
+				if err = a.sendVerificationCode(storedCreds.Email, newCode, accountAuthType.Credential.ID); err != nil {
+					return "", nil, nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
+				}
+				//update new verification data in credential value
+				storedCreds.VerificationCode = newCode
+				storedCreds.VerificationExpiry = time.Now().Add(time.Hour * 24)
+				emailCredValueMap, err := emailCredsToMap(storedCreds)
+				if err != nil {
+					return "", nil, nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
+				}
+				return "new verification code sent successfully", nil, emailCredValueMap, nil
 			}
-			//send new verification code for future
-			if err = a.sendVerificationCode(storedCreds.Email, newCode, accountAuthType.Credential.ID); err != nil {
-				return "", nil, nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
-			}
-			//update new verification data in credential value
-			storedCreds.VerificationCode = newCode
-			storedCreds.VerificationExpiry = time.Now().Add(time.Hour * 24)
-			emailCredValueMap, err := emailCredsToMap(storedCreds)
-			if err != nil {
-				return "", nil, nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
-			}
-			return "new verification code sent successfully", nil, emailCredValueMap, nil
+			return "you must verify your email address", nil, nil, nil
 		}
-		return "you must verify your email address", nil, nil, nil
 	}
 
 	//get request credential
