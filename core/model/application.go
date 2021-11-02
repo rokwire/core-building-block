@@ -31,27 +31,15 @@ type Permission struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 
-	ServiceIDs []string `bson:"service_ids"`
-	Assigners  []string `bson:"assigners"`
+	ServiceID string   `bson:"service_id"`
+	Assigners []string `bson:"assigners"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-func (c Permission) getServiceIDs() string {
-	s := ""
-	if c.ServiceIDs == nil || len(c.ServiceIDs) == 0 {
-		return s
-	}
-	for _, id := range c.ServiceIDs {
-		s += id + ","
-	}
-
-	return s
-}
-
 func (c Permission) String() string {
-	return fmt.Sprintf("[ID:%s\nName:%s\nServiceIDs:%s]", c.ID, c.Name, c.getServiceIDs())
+	return fmt.Sprintf("[ID:%s\nName:%s\nServiceID:%s]", c.ID, c.Name, c.ServiceID)
 }
 
 //ApplicationRole represents application role entity. It is a collection of permissions

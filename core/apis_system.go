@@ -127,10 +127,10 @@ func (app *application) sysGetApplications() ([]model.Application, error) {
 	return getApplications, nil
 }
 
-func (app *application) sysCreatePermission(name string, serviceIDs *[]string, assigners *[]string) (*model.Permission, error) {
+func (app *application) sysCreatePermission(name string, serviceID string, assigners *[]string) (*model.Permission, error) {
 	id, _ := uuid.NewUUID()
 	now := time.Now()
-	permission := model.Permission{ID: id.String(), Name: name, DateCreated: now, ServiceIDs: *serviceIDs, Assigners: *assigners}
+	permission := model.Permission{ID: id.String(), Name: name, DateCreated: now, ServiceID: serviceID, Assigners: *assigners}
 
 	err := app.storage.InsertPermission(permission)
 
@@ -140,7 +140,7 @@ func (app *application) sysCreatePermission(name string, serviceIDs *[]string, a
 	return &permission, nil
 }
 
-func (app *application) sysUpdatePermission(name string, serviceIDs *[]string, assigners *[]string) (*model.Permission, error) {
+func (app *application) sysUpdatePermission(name string, serviceID *string, assigners *[]string) (*model.Permission, error) {
 	permissionNames := []string{name}
 	permissions, err := app.storage.FindPermissionsByName(permissionNames)
 	if err != nil {
@@ -151,8 +151,8 @@ func (app *application) sysUpdatePermission(name string, serviceIDs *[]string, a
 	}
 
 	permission := permissions[0]
-	if serviceIDs != nil {
-		permission.ServiceIDs = *serviceIDs
+	if serviceID != nil {
+		permission.ServiceID = *serviceID
 	}
 	if assigners != nil {
 		permission.Assigners = *assigners

@@ -528,9 +528,7 @@ type ReqPermissionsRequest struct {
 	// permissions that could assign current permission to accounts
 	Assigners *[]string `json:"assigners,omitempty"`
 	Name      string    `json:"name"`
-
-	// services that use the permission
-	ServiceIds *[]string `json:"service_ids,omitempty"`
+	ServiceId *string   `json:"service_id,omitempty"`
 }
 
 // ReqSharedLogin defines model for _req_shared_Login.

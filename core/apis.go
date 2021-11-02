@@ -179,12 +179,12 @@ func (s *systemImpl) SysGetApplications() ([]model.Application, error) {
 	return s.app.sysGetApplications()
 }
 
-func (s *systemImpl) SysCreatePermission(name string, serviceIDs *[]string, assigners *[]string) (*model.Permission, error) {
-	return s.app.sysCreatePermission(name, serviceIDs, assigners)
+func (s *systemImpl) SysCreatePermission(name string, serviceID string, assigners *[]string) (*model.Permission, error) {
+	return s.app.sysCreatePermission(name, serviceID, assigners)
 }
 
-func (s *systemImpl) SysUpdatePermission(name string, serviceIDs *[]string, assigners *[]string) (*model.Permission, error) {
-	return s.app.sysUpdatePermission(name, serviceIDs, assigners)
+func (s *systemImpl) SysUpdatePermission(name string, serviceID *string, assigners *[]string) (*model.Permission, error) {
+	return s.app.sysUpdatePermission(name, serviceID, assigners)
 }
 
 func (s *systemImpl) SysCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error) {

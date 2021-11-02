@@ -443,7 +443,7 @@ func (h SystemApisHandler) createPermission(l *logs.Log, r *http.Request, claims
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
 	}
 
-	_, err = h.coreAPIs.System.SysCreatePermission(requestData.Name, requestData.ServiceIds, requestData.Assigners)
+	_, err = h.coreAPIs.System.SysCreatePermission(requestData.Name, *requestData.ServiceId, requestData.Assigners)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
@@ -464,7 +464,7 @@ func (h SystemApisHandler) updatePermission(l *logs.Log, r *http.Request, claims
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
 	}
 
-	_, err = h.coreAPIs.System.SysUpdatePermission(requestData.Name, requestData.ServiceIds, requestData.Assigners)
+	_, err = h.coreAPIs.System.SysUpdatePermission(requestData.Name, requestData.ServiceId, requestData.Assigners)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}

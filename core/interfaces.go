@@ -50,8 +50,8 @@ type System interface {
 	SysGetApplication(ID string) (*model.Application, error)
 	SysGetApplications() ([]model.Application, error)
 
-	SysCreatePermission(name string, serviceIDs *[]string, assigners *[]string) (*model.Permission, error)
-	SysUpdatePermission(name string, serviceIDs *[]string, assigners *[]string) (*model.Permission, error)
+	SysCreatePermission(name string, serviceID string, assigners *[]string) (*model.Permission, error)
+	SysUpdatePermission(name string, serviceID *string, assigners *[]string) (*model.Permission, error)
 
 	SysCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error)
 

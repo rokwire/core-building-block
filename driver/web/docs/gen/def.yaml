@@ -2832,11 +2832,8 @@ components:
       properties:
         name:
           type: string
-        service_ids:
-          type: array
-          description: services that use the permission
-          items:
-            type: string
+        service_id:
+          type: string
         assigners:
           type: array
           description: permissions that could assign current permission to accounts
