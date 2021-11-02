@@ -32,6 +32,7 @@ type Permission struct {
 	Name string `bson:"name"`
 
 	ServiceIDs []string `bson:"service_ids"`
+	Assigners  []string `bson:"assigners"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

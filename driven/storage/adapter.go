@@ -980,6 +980,7 @@ func (sa *Adapter) UpdatePermission(item model.Permission) error {
 	permissionUpdate := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "service_ids", Value: item.ServiceIDs},
+			primitive.E{Key: "assigners", Value: item.Assigners},
 			primitive.E{Key: "date_updated", Value: &now},
 		}},
 	}
