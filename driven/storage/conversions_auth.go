@@ -23,6 +23,10 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 	accessToken := item.AccessToken
 	refreshToken := item.RefreshToken
 	params := item.Params
+	var state string
+	if item.State != nil {
+		state = *item.State
+	}
 	expires := item.Expires
 	dateUpdated := item.DateUpdated
 	dateCreated := item.DateCreated
@@ -30,7 +34,7 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 	return model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType, AppType: appType,
 		Anonymous: anonymous, Identifier: identifier, AccountAuthType: accountAuthType,
 		Device: device, IPAddress: idAddress, AccessToken: accessToken, RefreshToken: refreshToken, Params: params,
-		Expires: expires, DateUpdated: dateUpdated, DateCreated: dateCreated}
+		State: state, Expires: expires, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
 
 func loginSessionToStorage(item model.LoginSession) *loginSession {
@@ -57,7 +61,10 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 	accessToken := item.AccessToken
 	refreshToken := item.RefreshToken
 	params := item.Params
-	state := item.State
+	var state *string
+	if item.State != "" {
+		state = &item.State
+	}
 	expires := item.Expires
 	dateUpdated := item.DateUpdated
 	dateCreated := item.DateCreated

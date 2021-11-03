@@ -46,7 +46,7 @@ post:
             value: |
               {
                 "identifier": "test@test.com",
-                "mfa_type": "email"
+                "type": "email"
               }
     required: true
   responses:
@@ -72,15 +72,21 @@ delete:
     **Auth:** Requires user auth token
   security:
     - bearerAuth: []
-  parameters:
-    - name: type
-      in: query
-      description: MFA type
-      required: true
-      style: form
-      explode: false
-      schema:
-        type: string
+  requestBody:
+    description: |
+      MFA params
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schemas/apis/shared/requests/mfa/Request.yaml"
+        examples:
+          email:
+            summary: Unenroll in email MFA
+            value: |
+              {
+                "identifier": "test@test.com",
+                "type": "email"
+              }
   responses:
     200:
       description: Success

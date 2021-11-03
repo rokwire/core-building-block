@@ -54,7 +54,7 @@ type anonymousAuthType interface {
 //mfaType is the interface for multi-factor authentication
 type mfaType interface {
 	verify(params map[string]interface{}, code string) (*string, error)
-	enroll(accountID string, identifier string) (*model.MFAType, error)
+	enroll(identifier string) (*model.MFAType, error)
 	sendCode(accountID string) (string, error)
 }
 
@@ -136,6 +136,7 @@ type APIs interface {
 	//LoginMFA verifies a code sent by a user as a final login step for enrolled accounts.
 	//The MFA type must be one of the supported for the application.
 	//	Input:
+	//		apiKey (string): API key to validate the specified app
 	//		accountID (string): ID of account user is trying to access
 	//		sessionID (string): ID of login session generated during login
 	//		identifier (string): Email, phone, or TOTP device name
@@ -148,7 +149,7 @@ type APIs interface {
 	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
-	LoginMFA(accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
+	LoginMFA(apiKey string, accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
 
 	//GetMFATypes gets all MFA types set up for an account
 	//	Input:
@@ -169,8 +170,9 @@ type APIs interface {
 	//RemoveMFAType removes a form of MFA from an account
 	//	Input:
 	//		accountID (string): Account ID to remove MFA
+	//		identifier (string): Email, phone, or TOTP device name
 	//		mfaType (string): Type of MFA to remove
-	RemoveMFAType(accountID string, mfaType string) error
+	RemoveMFAType(accountID string, identifier string, mfaType string) error
 
 	//Verify checks the verification code in the credentials collection
 	Verify(id string, verification string, l *logs.Log) error
@@ -182,11 +184,10 @@ type APIs interface {
 	//		identifier (string): Email, phone, or TOTP device name
 	//		mfaType (string): Type of MFA code sent
 	//		mfaCode (string): Code that must be verified
-	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		Verified (bool): Says if MFA enrollment was verified
 	//		Recovery codes ([]string): List of account recovery codes returned if enrolling in MFA for first time
-	VerifyMFA(accountID string, identifier string, mfaType string, mfaCode string, l *logs.Log) (bool, []string, error)
+	VerifyMFA(accountID string, identifier string, mfaType string, mfaCode string) (bool, []string, error)
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
@@ -278,7 +279,7 @@ type Storage interface {
 	FindMFATypes(accountID string) ([]model.MFAType, error)
 	InsertMFAType(mfa *model.MFAType, accountID string) error
 	UpdateMFAType(mfa *model.MFAType, accountID string, recoveryCodes []string) (bool, error)
-	DeleteMFAType(accountID string, mfaType string) error
+	DeleteMFAType(accountID string, identifier string, mfaType string) error
 
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)

@@ -327,6 +327,7 @@ func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, 
 //LoginMFA verifies a code sent by a user as a final login step for enrolled accounts.
 //The MFA type must be one of the supported for the application.
 //	Input:
+//		apiKey (string): API key to validate the specified app
 //		accountID (string): ID of account user is trying to access
 //		sessionID (string): ID of login session generated during login
 //		identifier (string): Email, phone, or TOTP device name
@@ -340,11 +341,17 @@ func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, 
 //			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
-func (a *Auth) LoginMFA(accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error) {
+func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error) {
 	loginSession, err := a.storage.FindAndUpdateLoginSession(sessionID)
 	if err != nil {
 		a.deleteLoginSession(sessionID, l)
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"session_id": sessionID}, err)
+	}
+
+	err = a.validateAPIKey(apiKey, loginSession.AppOrg.Application.ID)
+	if err != nil {
+		a.deleteLoginSession(sessionID, l)
+		return nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, logutils.StringArgs(apiKey), err)
 	}
 
 	var message string
@@ -417,7 +424,7 @@ func (a *Auth) AddMFAType(accountID string, identifier string, mfaType string) (
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeMfaType, nil, err)
 	}
 
-	newMfa, err := mfaImpl.enroll(accountID, identifier)
+	newMfa, err := mfaImpl.enroll(identifier)
 	if err != nil {
 		return nil, errors.WrapErrorAction("enrolling", typeMfaType, nil, err)
 	}
@@ -433,9 +440,10 @@ func (a *Auth) AddMFAType(accountID string, identifier string, mfaType string) (
 //RemoveMFAType removes a form of MFA from an account
 //	Input:
 //		accountID (string): Account ID to remove MFA
+//		identifier (string): Email, phone, or TOTP device name
 //		mfaType (string): Type of MFA to remove
-func (a *Auth) RemoveMFAType(accountID string, mfaType string) error {
-	err := a.storage.DeleteMFAType(accountID, mfaType)
+func (a *Auth) RemoveMFAType(accountID string, identifier string, mfaType string) error {
+	err := a.storage.DeleteMFAType(accountID, identifier, mfaType)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "type": mfaType}, err)
 	}
@@ -489,10 +497,9 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 //		identifier (string): Email, phone, or TOTP device name
 //		mfaType (string): Type of MFA code sent
 //		mfaCode (string): Code that must be verified
-//		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		Verified (bool): Says if MFA enrollment was verified
-func (a *Auth) VerifyMFA(accountID string, identifier string, mfaType string, mfaCode string, l *logs.Log) (bool, []string, error) {
+func (a *Auth) VerifyMFA(accountID string, identifier string, mfaType string, mfaCode string) (bool, []string, error) {
 	errFields := &logutils.FieldArgs{"account_id": accountID, "type": mfaType}
 	mfa, err := a.storage.FindMFAType(accountID, identifier, mfaType)
 	if err != nil {
@@ -521,7 +528,9 @@ func (a *Auth) VerifyMFA(accountID string, identifier string, mfaType string, mf
 		return false, nil, errors.New(*message)
 	}
 
-	recoveryCodes, err := a.generateRecoveryCodes(accountID)
+	mfa.Verified = true
+
+	recoveryCodes, err := a.generateRecoveryCodes()
 	if err != nil {
 		return false, nil, errors.WrapErrorAction("generating", "mfa recovery codes", errFields, err)
 	}

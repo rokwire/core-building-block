@@ -191,7 +191,13 @@ func mfaTypesToStorage(items []model.MFAType) []mfaType {
 
 func mfaTypeToStorage(item *model.MFAType) mfaType {
 	//don't store totp qr code
-	delete(item.Params, "qr_code")
-	return mfaType{ID: item.ID, Type: item.Type, Verified: item.Verified, Params: item.Params, DateCreated: item.DateCreated,
+	params := make(map[string]interface{})
+	for k, v := range item.Params {
+		if k != "qr_code" {
+			params[k] = v
+		}
+	}
+
+	return mfaType{ID: item.ID, Type: item.Type, Verified: item.Verified, Params: params, DateCreated: item.DateCreated,
 		DateUpdated: item.DateUpdated}
 }

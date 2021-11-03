@@ -816,10 +816,10 @@ func (a *Auth) getExp(exp *int64) int64 {
 	return *exp
 }
 
-func (a *Auth) generateRecoveryCodes(accountID string) ([]string, error) {
+func (a *Auth) generateRecoveryCodes() ([]string, error) {
 	codes := make([]string, 10)
 	for i := 0; i < 10; i++ {
-		newCode, err := utils.GenerateRandomBytes(32)
+		newCode, err := utils.GenerateRandomString(16)
 		if err != nil {
 			return nil, errors.WrapErrorAction("generating", "random string", nil, err)
 		}

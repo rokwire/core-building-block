@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"core-building-block/core/model"
 	"image/png"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -38,15 +39,21 @@ func (m *totpMfaImpl) verify(params map[string]interface{}, code string) (*strin
 	return nil, nil
 }
 
-func (m *totpMfaImpl) enroll(accountID string, identifier string) (*model.MFAType, error) {
+func (m *totpMfaImpl) enroll(identifier string) (*model.MFAType, error) {
 	totpOpts := totp.GenerateOpts{
 		Issuer:      m.auth.host,
-		AccountName: accountID, //TODO: should use some more readable string instead (email, phone, username, etc.)
+		AccountName: identifier,
 	}
 	key, err := totp.Generate(totpOpts)
 	if err != nil {
 		return nil, errors.WrapErrorAction("generate", "TOTP key", nil, err)
 	}
+
+	f, err := os.Create("qr_code.png")
+	if err != nil {
+		return nil, errors.WrapErrorAction("create", "PNG file", nil, err)
+	}
+	defer f.Close()
 
 	var buf bytes.Buffer
 	image, err := key.Image(256, 256)
@@ -56,6 +63,11 @@ func (m *totpMfaImpl) enroll(accountID string, identifier string) (*model.MFATyp
 	err = png.Encode(&buf, image)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionEncode, "TOTP image", nil, err)
+	}
+
+	err = png.Encode(f, image)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionEncode, "TOTP image to PNG", nil, err)
 	}
 
 	now := time.Now().UTC()

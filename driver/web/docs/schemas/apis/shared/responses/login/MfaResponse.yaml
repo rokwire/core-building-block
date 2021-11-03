@@ -1,5 +1,6 @@
 required:
   - enrolled
+  - account_id
   - session_id
   - state
 type: object
@@ -8,6 +9,8 @@ properties:
     type: array
     items:
       $ref: "../../../shared/responses/mfa/Response.yaml"
+  account_id:
+    type: string
   session_id:
     type: string
   state:

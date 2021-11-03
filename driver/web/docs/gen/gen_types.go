@@ -108,22 +108,22 @@ const (
 	ReqSharedLoginDeviceTypeWeb ReqSharedLoginDeviceType = "web"
 )
 
-// Defines values for ReqSharedLoginMfaMfaType.
+// Defines values for ReqSharedLoginMfaType.
 const (
-	ReqSharedLoginMfaMfaTypeEmail ReqSharedLoginMfaMfaType = "email"
+	ReqSharedLoginMfaTypeEmail ReqSharedLoginMfaType = "email"
 
-	ReqSharedLoginMfaMfaTypePhone ReqSharedLoginMfaMfaType = "phone"
+	ReqSharedLoginMfaTypePhone ReqSharedLoginMfaType = "phone"
 
-	ReqSharedLoginMfaMfaTypeTotp ReqSharedLoginMfaMfaType = "totp"
+	ReqSharedLoginMfaTypeTotp ReqSharedLoginMfaType = "totp"
 )
 
-// Defines values for ReqSharedMfaMfaType.
+// Defines values for ReqSharedMfaType.
 const (
-	ReqSharedMfaMfaTypeEmail ReqSharedMfaMfaType = "email"
+	ReqSharedMfaTypeEmail ReqSharedMfaType = "email"
 
-	ReqSharedMfaMfaTypePhone ReqSharedMfaMfaType = "phone"
+	ReqSharedMfaTypePhone ReqSharedMfaType = "phone"
 
-	ReqSharedMfaMfaTypeTotp ReqSharedMfaMfaType = "totp"
+	ReqSharedMfaTypeTotp ReqSharedMfaType = "totp"
 )
 
 // Defines values for ReqUpdateOrganizationRequestType.
@@ -613,16 +613,17 @@ type ReqSharedLoginDeviceType string
 
 // ReqSharedLoginMfa defines model for _req_shared_Login_Mfa.
 type ReqSharedLoginMfa struct {
-	AccountId  string                   `json:"account_id"`
-	Identifier string                   `json:"identifier"`
-	MfaCode    string                   `json:"mfa_code"`
-	MfaType    ReqSharedLoginMfaMfaType `json:"mfa_type"`
-	SessionId  string                   `json:"session_id"`
-	State      string                   `json:"state"`
+	AccountId  string                `json:"account_id"`
+	ApiKey     string                `json:"api_key"`
+	Code       string                `json:"code"`
+	Identifier string                `json:"identifier"`
+	SessionId  string                `json:"session_id"`
+	State      string                `json:"state"`
+	Type       ReqSharedLoginMfaType `json:"type"`
 }
 
-// ReqSharedLoginMfaMfaType defines model for ReqSharedLoginMfa.MfaType.
-type ReqSharedLoginMfaMfaType string
+// ReqSharedLoginMfaType defines model for ReqSharedLoginMfa.Type.
+type ReqSharedLoginMfaType string
 
 // Auth login params for auth_type="email"
 type ReqSharedLoginParamsEmail struct {
@@ -643,13 +644,13 @@ type ReqSharedLoginParamsOIDC struct {
 
 // ReqSharedMfa defines model for _req_shared_Mfa.
 type ReqSharedMfa struct {
-	Identifier string              `json:"identifier"`
-	MfaCode    *string             `json:"mfa_code,omitempty"`
-	MfaType    ReqSharedMfaMfaType `json:"mfa_type"`
+	Code       *string          `json:"code,omitempty"`
+	Identifier string           `json:"identifier"`
+	Type       ReqSharedMfaType `json:"type"`
 }
 
-// ReqSharedMfaMfaType defines model for ReqSharedMfa.MfaType.
-type ReqSharedMfaMfaType string
+// ReqSharedMfaType defines model for ReqSharedMfa.Type.
+type ReqSharedMfaType string
 
 // ReqSharedProfile defines model for _req_shared_Profile.
 type ReqSharedProfile struct {
@@ -763,6 +764,7 @@ type ResSharedLoginAccount struct {
 
 // ResSharedLoginMfa defines model for _res_shared_Login_Mfa.
 type ResSharedLoginMfa struct {
+	AccountId string         `json:"account_id"`
 	Enrolled  []ResSharedMfa `json:"enrolled"`
 	Params    *interface{}   `json:"params"`
 	SessionId string         `json:"session_id"`
@@ -918,12 +920,8 @@ type GetBbsServiceRegsParams struct {
 	Ids string `json:"ids"`
 }
 
-// DeleteServicesAccountMfaParams defines parameters for DeleteServicesAccountMfa.
-type DeleteServicesAccountMfaParams struct {
-
-	// MFA type
-	Type string `json:"type"`
-}
+// DeleteServicesAccountMfaJSONBody defines parameters for DeleteServicesAccountMfa.
+type DeleteServicesAccountMfaJSONBody ReqSharedMfa
 
 // PostServicesAccountMfaJSONBody defines parameters for PostServicesAccountMfa.
 type PostServicesAccountMfaJSONBody ReqSharedMfa
@@ -1042,6 +1040,9 @@ type PostAdminServiceRegsJSONRequestBody PostAdminServiceRegsJSONBody
 
 // PutAdminServiceRegsJSONRequestBody defines body for PutAdminServiceRegs for application/json ContentType.
 type PutAdminServiceRegsJSONRequestBody PutAdminServiceRegsJSONBody
+
+// DeleteServicesAccountMfaJSONRequestBody defines body for DeleteServicesAccountMfa for application/json ContentType.
+type DeleteServicesAccountMfaJSONRequestBody DeleteServicesAccountMfaJSONBody
 
 // PostServicesAccountMfaJSONRequestBody defines body for PostServicesAccountMfa for application/json ContentType.
 type PostServicesAccountMfaJSONRequestBody PostServicesAccountMfaJSONBody

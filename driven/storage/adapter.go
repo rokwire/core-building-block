@@ -390,8 +390,11 @@ func (sa *Adapter) FindAndUpdateLoginSession(id string) (*model.LoginSession, er
 	//find loggin session
 	filter := bson.D{primitive.E{Key: "_id", Value: id}}
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
+		primitive.E{Key: "$unset", Value: bson.D{
 			primitive.E{Key: "state", Value: ""},
+		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 	opts := options.FindOneAndUpdateOptions{}
@@ -902,7 +905,7 @@ func (sa *Adapter) FindMFAType(accountID string, identifier string, mfaType stri
 
 	mfaList := mfaTypesFromStorage(account.MFATypes)
 	for _, mfa := range mfaList {
-		if mfa.Type == mfaType {
+		if mfa.Type == mfaType && mfa.Params != nil && mfa.Params["identifier"] == identifier {
 			return &mfa, nil
 		}
 	}
@@ -929,13 +932,15 @@ func (sa *Adapter) InsertMFAType(mfa *model.MFAType, accountID string) error {
 		return errors.ErrorData(logutils.StatusMissing, "mfa identifier", nil)
 	}
 
+	storageMfa := mfaTypeToStorage(mfa)
+
 	filter := bson.D{
 		primitive.E{Key: "_id", Value: accountID},
 		primitive.E{Key: "mfa_types.params.identifier", Value: bson.M{"$ne": mfa.Params["identifier"]}},
 	}
 	update := bson.D{
 		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "mfa_types", Value: mfa},
+			primitive.E{Key: "mfa_types", Value: storageMfa},
 		}},
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
@@ -962,8 +967,16 @@ func (sa *Adapter) UpdateMFAType(mfa *model.MFAType, accountID string, recoveryC
 			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
 		}
 
+		if mfa.Params == nil || mfa.Params["identifier"] == nil {
+			return errors.ErrorData(logutils.StatusMissing, "mfa identifier", nil)
+		}
+
 		now := time.Now().UTC()
-		filter := bson.D{primitive.E{Key: "_id", Value: accountID}, primitive.E{Key: "mfa_types.type", Value: mfa.Type}}
+		filter := bson.D{
+			primitive.E{Key: "_id", Value: accountID},
+			primitive.E{Key: "mfa_types.type", Value: mfa.Type},
+			primitive.E{Key: "mfa_types.params.identifier", Value: mfa.Params["identifier"]},
+		}
 		update := bson.D{
 			primitive.E{Key: "$set", Value: bson.D{
 				primitive.E{Key: "mfa_types.$.verified", Value: mfa.Verified},
@@ -1017,7 +1030,7 @@ func (sa *Adapter) UpdateMFAType(mfa *model.MFAType, accountID string, recoveryC
 }
 
 //DeleteMFAType deletes a MFA type
-func (sa *Adapter) DeleteMFAType(accountID string, mfaType string) error {
+func (sa *Adapter) DeleteMFAType(accountID string, identifier string, mfaType string) error {
 	// transaction
 	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
 		err := sessionContext.StartTransaction()
@@ -1028,7 +1041,7 @@ func (sa *Adapter) DeleteMFAType(accountID string, mfaType string) error {
 		filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 		update := bson.D{
 			primitive.E{Key: "$pull", Value: bson.D{
-				primitive.E{Key: "mfa_types", Value: bson.M{"type": mfaType}},
+				primitive.E{Key: "mfa_types", Value: bson.M{"type": mfaType, "params.identifier": identifier}},
 			}},
 			primitive.E{Key: "$set", Value: bson.D{
 				primitive.E{Key: "date_updated", Value: time.Now().UTC()},
@@ -1039,6 +1052,9 @@ func (sa *Adapter) DeleteMFAType(accountID string, mfaType string) error {
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("deleting mfa type"), err)
 		}
+		if res.ModifiedCount == 0 {
+			return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("item to remove not found"))
+		}
 		if res.ModifiedCount != 1 {
 			return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 		}
@@ -1047,11 +1063,11 @@ func (sa *Adapter) DeleteMFAType(accountID string, mfaType string) error {
 		//remove recovery codes if this is the case (will be regenerated if MFA is re-enabled)
 		filter = bson.D{
 			primitive.E{Key: "_id", Value: accountID},
-			primitive.E{Key: "recovery_codes", Value: bson.M{"$exists": true}},
 			primitive.E{Key: "mfa_types", Value: bson.M{"$size": 0}},
 		}
 		update = bson.D{
 			primitive.E{Key: "$unset", Value: bson.D{
+				primitive.E{Key: "mfa_types", Value: ""},
 				primitive.E{Key: "recovery_codes", Value: ""},
 			}},
 		}
@@ -1060,7 +1076,7 @@ func (sa *Adapter) DeleteMFAType(accountID string, mfaType string) error {
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("clearing recovery codes"), err)
 		}
-		if res.ModifiedCount != 1 {
+		if res.ModifiedCount > 1 {
 			return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 		}
 
@@ -1071,11 +1087,8 @@ func (sa *Adapter) DeleteMFAType(accountID string, mfaType string) error {
 		}
 		return nil
 	})
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 // //FindCredentialsByID finds a set of credentials by ID
