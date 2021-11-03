@@ -2582,6 +2582,7 @@ components:
         - account_id
         - session_id
         - state
+        - identifier
         - mfa_type
         - mfa_code
       type: object
@@ -2591,6 +2592,8 @@ components:
         session_id:
           type: string
         state:
+          type: string
+        identifier:
           type: string
         mfa_type:
           type: string
@@ -2708,6 +2711,7 @@ components:
           type: string
     _req_shared_Mfa:
       required:
+        - identifier
         - mfa_type
       type: object
       properties:

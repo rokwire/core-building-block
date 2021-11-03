@@ -108,7 +108,7 @@ func (h ServicesApisHandler) authLoginMFA(l *logs.Log, r *http.Request, claims *
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("login mfa request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	message, loginSession, err := h.coreAPIs.Auth.LoginMFA(mfaData.AccountId, mfaData.SessionId, string(mfaData.MfaType), mfaData.MfaCode, mfaData.State, l)
+	message, loginSession, err := h.coreAPIs.Auth.LoginMFA(mfaData.AccountId, mfaData.SessionId, mfaData.Identifier, string(mfaData.MfaType), mfaData.MfaCode, mfaData.State, l)
 	if message != nil {
 		return l.HttpResponseError(*message, err, http.StatusUnauthorized, true)
 	}
@@ -305,11 +305,7 @@ func (h ServicesApisHandler) addMFAType(l *logs.Log, r *http.Request, claims *to
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("verify mfa request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	if mfaData.Identifier == nil || *mfaData.Identifier == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, "mfa identifier", nil, nil, http.StatusBadRequest, true)
-	}
-
-	mfa, err := h.coreAPIs.Auth.AddMFAType(claims.Subject, *mfaData.Identifier, string(mfaData.MfaType))
+	mfa, err := h.coreAPIs.Auth.AddMFAType(claims.Subject, mfaData.Identifier, string(mfaData.MfaType))
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionInsert, model.TypeMFAType, nil, err, http.StatusInternalServerError, true)
 	}
@@ -454,7 +450,7 @@ func (h ServicesApisHandler) verifyMFA(l *logs.Log, r *http.Request, claims *tok
 		return l.HttpResponseErrorData(logutils.StatusMissing, "mfa code", nil, nil, http.StatusBadRequest, true)
 	}
 
-	verified, recoveryCodes, err := h.coreAPIs.Auth.VerifyMFA(claims.Subject, string(mfaData.MfaType), *mfaData.MfaCode, l)
+	verified, recoveryCodes, err := h.coreAPIs.Auth.VerifyMFA(claims.Subject, mfaData.Identifier, string(mfaData.MfaType), *mfaData.MfaCode, l)
 	if err != nil {
 		return l.HttpResponseError("Error verifying MFA", err, http.StatusInternalServerError, true)
 	}

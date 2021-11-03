@@ -613,11 +613,12 @@ type ReqSharedLoginDeviceType string
 
 // ReqSharedLoginMfa defines model for _req_shared_Login_Mfa.
 type ReqSharedLoginMfa struct {
-	AccountId string                   `json:"account_id"`
-	MfaCode   string                   `json:"mfa_code"`
-	MfaType   ReqSharedLoginMfaMfaType `json:"mfa_type"`
-	SessionId string                   `json:"session_id"`
-	State     string                   `json:"state"`
+	AccountId  string                   `json:"account_id"`
+	Identifier string                   `json:"identifier"`
+	MfaCode    string                   `json:"mfa_code"`
+	MfaType    ReqSharedLoginMfaMfaType `json:"mfa_type"`
+	SessionId  string                   `json:"session_id"`
+	State      string                   `json:"state"`
 }
 
 // ReqSharedLoginMfaMfaType defines model for ReqSharedLoginMfa.MfaType.
@@ -642,7 +643,7 @@ type ReqSharedLoginParamsOIDC struct {
 
 // ReqSharedMfa defines model for _req_shared_Mfa.
 type ReqSharedMfa struct {
-	Identifier *string             `json:"identifier,omitempty"`
+	Identifier string              `json:"identifier"`
 	MfaCode    *string             `json:"mfa_code,omitempty"`
 	MfaType    ReqSharedMfaMfaType `json:"mfa_type"`
 }

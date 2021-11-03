@@ -1,4 +1,5 @@
 required:
+  - identifier
   - mfa_type
 type: object
 properties:

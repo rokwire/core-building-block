@@ -887,8 +887,12 @@ func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
 }
 
 //FindMFAType finds one MFA type for an account
-func (sa *Adapter) FindMFAType(accountID string, mfaType string) (*model.MFAType, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}, primitive.E{Key: "mfa_types.type", Value: mfaType}}
+func (sa *Adapter) FindMFAType(accountID string, identifier string, mfaType string) (*model.MFAType, error) {
+	filter := bson.D{
+		primitive.E{Key: "_id", Value: accountID},
+		primitive.E{Key: "mfa_types.type", Value: mfaType},
+		primitive.E{Key: "mfa_types.params.identifier", Value: identifier},
+	}
 
 	var account account
 	err := sa.db.accounts.FindOne(filter, &account, nil)
@@ -921,9 +925,13 @@ func (sa *Adapter) FindMFATypes(accountID string) ([]model.MFAType, error) {
 
 //InsertMFAType inserts a MFA type
 func (sa *Adapter) InsertMFAType(mfa *model.MFAType, accountID string) error {
+	if mfa.Params == nil || mfa.Params["identifier"] == nil {
+		return errors.ErrorData(logutils.StatusMissing, "mfa identifier", nil)
+	}
+
 	filter := bson.D{
 		primitive.E{Key: "_id", Value: accountID},
-		primitive.E{Key: "mfa_types.type", Value: bson.M{"$ne": mfa.Type}},
+		primitive.E{Key: "mfa_types.params.identifier", Value: bson.M{"$ne": mfa.Params["identifier"]}},
 	}
 	update := bson.D{
 		primitive.E{Key: "$push", Value: bson.D{

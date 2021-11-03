@@ -329,6 +329,7 @@ func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, 
 //	Input:
 //		accountID (string): ID of account user is trying to access
 //		sessionID (string): ID of login session generated during login
+//		identifier (string): Email, phone, or TOTP device name
 //		mfaType (string): Type of MFA code sent
 //		mfaCode (string): Code that must be verified
 //		state (string): Variable used to verify user has already passed credentials check
@@ -339,7 +340,7 @@ func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, 
 //			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
-func (a *Auth) LoginMFA(accountID string, sessionID string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error) {
+func (a *Auth) LoginMFA(accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error) {
 	loginSession, err := a.storage.FindAndUpdateLoginSession(sessionID)
 	if err != nil {
 		a.deleteLoginSession(sessionID, l)
@@ -348,7 +349,7 @@ func (a *Auth) LoginMFA(accountID string, sessionID string, mfaType string, mfaC
 
 	var message string
 	errFields := &logutils.FieldArgs{"account_id": accountID, "type": mfaType}
-	mfa, err := a.storage.FindMFAType(accountID, mfaType)
+	mfa, err := a.storage.FindMFAType(accountID, identifier, mfaType)
 	if err != nil {
 		a.deleteLoginSession(sessionID, l)
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, errFields, err)
@@ -485,14 +486,15 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 //The MFA type must be one of the supported for the application.
 //	Input:
 //		accountID (string): ID of account for which user is trying to verify MFA
+//		identifier (string): Email, phone, or TOTP device name
 //		mfaType (string): Type of MFA code sent
 //		mfaCode (string): Code that must be verified
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		Verified (bool): Says if MFA enrollment was verified
-func (a *Auth) VerifyMFA(accountID string, mfaType string, mfaCode string, l *logs.Log) (bool, []string, error) {
+func (a *Auth) VerifyMFA(accountID string, identifier string, mfaType string, mfaCode string, l *logs.Log) (bool, []string, error) {
 	errFields := &logutils.FieldArgs{"account_id": accountID, "type": mfaType}
-	mfa, err := a.storage.FindMFAType(accountID, mfaType)
+	mfa, err := a.storage.FindMFAType(accountID, identifier, mfaType)
 	if err != nil {
 		return false, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, errFields, err)
 	}

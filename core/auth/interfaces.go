@@ -138,6 +138,7 @@ type APIs interface {
 	//	Input:
 	//		accountID (string): ID of account user is trying to access
 	//		sessionID (string): ID of login session generated during login
+	//		identifier (string): Email, phone, or TOTP device name
 	//		mfaType (string): Type of MFA code sent
 	//		mfaCode (string): Code that must be verified
 	//		state (string): Variable used to verify user has already passed credentials check
@@ -147,7 +148,7 @@ type APIs interface {
 	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
-	LoginMFA(accountID string, sessionID string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
+	LoginMFA(accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
 
 	//GetMFATypes gets all MFA types set up for an account
 	//	Input:
@@ -178,13 +179,14 @@ type APIs interface {
 	//The MFA type must be one of the supported for the application.
 	//	Input:
 	//		accountID (string): ID of account for which user is trying to verify MFA
+	//		identifier (string): Email, phone, or TOTP device name
 	//		mfaType (string): Type of MFA code sent
 	//		mfaCode (string): Code that must be verified
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		Verified (bool): Says if MFA enrollment was verified
 	//		Recovery codes ([]string): List of account recovery codes returned if enrolling in MFA for first time
-	VerifyMFA(accountID string, mfaType string, mfaCode string, l *logs.Log) (bool, []string, error)
+	VerifyMFA(accountID string, identifier string, mfaType string, mfaCode string, l *logs.Log) (bool, []string, error)
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
@@ -272,7 +274,7 @@ type Storage interface {
 	InsertCredential(creds *model.Credential, context mongo.SessionContext) error
 
 	//MFA
-	FindMFAType(accountID string, mfaType string) (*model.MFAType, error)
+	FindMFAType(accountID string, identifier string, mfaType string) (*model.MFAType, error)
 	FindMFATypes(accountID string) ([]model.MFAType, error)
 	InsertMFAType(mfa *model.MFAType, accountID string) error
 	UpdateMFAType(mfa *model.MFAType, accountID string, recoveryCodes []string) (bool, error)

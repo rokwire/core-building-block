@@ -2,6 +2,7 @@ required:
   - account_id
   - session_id
   - state
+  - identifier
   - mfa_type
   - mfa_code
 type: object
@@ -11,6 +12,8 @@ properties:
   session_id:
     type: string
   state:
+    type: string
+  identifier:
     type: string
   mfa_type:
     type: string
