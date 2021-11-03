@@ -46,6 +46,7 @@ type Administration interface {
 	AdmGrantAccountRoles(accountID string, appID string, roleIDs []string) error
 
 	AdmGetAccount(accountID string) (*model.Account, error)
+	AdmGetAccounts(accountID string, identifier string, appID *string, orgID *string) ([]model.Account, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -63,6 +64,7 @@ type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
 	FindAccountByID(id string) (*model.Account, error)
+	FindAccounts(id string, identifier string, appID *string, orgID *string) ([]model.Account, error)
 	UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
 	DeleteAccount(id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
