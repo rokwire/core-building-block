@@ -37,6 +37,35 @@ func accountToStorage(item *model.Account) *account {
 		Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated} //Anonymous: item.Anonymous
 }
 
+func getAccountsFromStorage(item *model.Account) *model.Account {
+	if item == nil {
+		return nil
+	}
+	/*profile := profileToStorage(item.Profile)
+	//permissions
+	permissions := applicationPermissionsToStorage(item.Permissions)
+	//roles
+	roles := applicationRolesToStorage(item.Roles)
+	//groups
+	groups := applicationGroupsToStorage(item.Groups)
+	//account auth types
+	authTypes := accountAuthTypesToStorage(item.AuthTypes)*/
+	return &model.Account{ID: item.ID, Permissions: item.Permissions, Roles: item.Roles, Groups: item.Groups, AuthTypes: item.AuthTypes}
+}
+
+func getAccountsListToStorage(item []model.Account) []model.Account {
+	out := make([]model.Account, len(item))
+	for i, item := range item {
+		defItem := getAccountsFromStorage(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = model.Account{}
+		}
+	}
+	return out
+}
+
 func accountDevicesFromStorage(item account) []model.Device {
 	devices := make([]model.Device, len(item.Devices))
 
