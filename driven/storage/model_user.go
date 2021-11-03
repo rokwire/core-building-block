@@ -9,8 +9,7 @@ import (
 type account struct {
 	ID string `bson:"_id"`
 
-	AppID string `bson:"app_id,omitempty"`
-	OrgID string `bson:"org_id,omitempty"`
+	AppOrgID string `bson:"app_org_id,omitempty"`
 
 	Permissions []model.Permission `bson:"permissions,omitempty"`
 	Roles       []appOrgRole       `bson:"roles,omitempty"`

@@ -454,9 +454,8 @@ func (sa *Adapter) DeleteExpiredSessions(now *time.Time) error {
 }
 
 //FindAccount finds an account for app, org, auth type and account auth type identifier
-func (sa *Adapter) FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error) {
-	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
-		primitive.E{Key: "org_id", Value: orgID},
+func (sa *Adapter) FindAccount(appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error) {
+	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID},
 		primitive.E{Key: "auth_types.auth_type_id", Value: authTypeID},
 		primitive.E{Key: "auth_types.identifier", Value: accountAuthTypeIdentifier}}
 	var accounts []account
@@ -470,19 +469,13 @@ func (sa *Adapter) FindAccount(appID string, orgID string, authTypeID string, ac
 	}
 	account := accounts[0]
 
-	//application - from cache
-	application, err := sa.getCachedApplication(account.AppID)
+	//application organization - from cache
+	appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 	}
 
-	//organization - from cache
-	organization, err := sa.getCachedOrganization(account.OrgID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
-	}
-
-	modelAccount := accountFromStorage(account, sa, *application, *organization)
+	modelAccount := accountFromStorage(account, sa, *appOrg)
 	return &modelAccount, nil
 }
 
@@ -505,19 +498,13 @@ func (sa *Adapter) findAccount(key string, id string) (*model.Account, error) {
 
 	account := accounts[0]
 
-	//application - from cache
-	application, err := sa.getCachedApplication(account.AppID)
+	//application organization - from cache
+	appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 	}
 
-	//organization - from cache
-	organization, err := sa.getCachedOrganization(account.OrgID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
-	}
-
-	modelAccount := accountFromStorage(account, sa, *application, *organization)
+	modelAccount := accountFromStorage(account, sa, *appOrg)
 	return &modelAccount, nil
 }
 
