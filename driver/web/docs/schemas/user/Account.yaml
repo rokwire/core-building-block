@@ -2,10 +2,8 @@ type: object
 properties:
   fields:
     $ref: "./AccountFields.yaml"
-  application:
-    $ref: "../application/Application.yaml"
-  organization:
-    $ref: "../application/Organization.yaml"
+  app_org:
+    $ref: "../application/ApplicationOrganization.yaml"
   permissions:
     type: array
     items:

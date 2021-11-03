@@ -153,16 +153,15 @@ type APIKey struct {
 
 // Account defines model for Account.
 type Account struct {
-	Application  *Application            `json:"application,omitempty"`
-	AuthTypes    *[]AccountAuthType      `json:"auth_types,omitempty"`
-	Devices      *[]Device               `json:"devices,omitempty"`
-	Fields       *AccountFields          `json:"fields,omitempty"`
-	Groups       *[]AppOrgGroup          `json:"groups,omitempty"`
-	Organization *Organization           `json:"organization,omitempty"`
-	Permissions  *[]Permission           `json:"permissions,omitempty"`
-	Preferences  *map[string]interface{} `json:"preferences,omitempty"`
-	Profile      *Profile                `json:"profile,omitempty"`
-	Roles        *[]AppOrgRole           `json:"roles,omitempty"`
+	AppOrg      *ApplicationOrganization `json:"app_org,omitempty"`
+	AuthTypes   *[]AccountAuthType       `json:"auth_types,omitempty"`
+	Devices     *[]Device                `json:"devices,omitempty"`
+	Fields      *AccountFields           `json:"fields,omitempty"`
+	Groups      *[]AppOrgGroup           `json:"groups,omitempty"`
+	Permissions *[]Permission            `json:"permissions,omitempty"`
+	Preferences *map[string]interface{}  `json:"preferences,omitempty"`
+	Profile     *Profile                 `json:"profile,omitempty"`
+	Roles       *[]AppOrgRole            `json:"roles,omitempty"`
 }
 
 // AccountAuthType defines model for AccountAuthType.
@@ -239,8 +238,10 @@ type ApplicationFields struct {
 
 // ApplicationOrganization defines model for ApplicationOrganization.
 type ApplicationOrganization struct {
-	TODO *string `json:"TODO,omitempty"`
-	Id   *string `json:"id,omitempty"`
+	TODO         *string       `json:"TODO,omitempty"`
+	Application  *Application  `json:"application,omitempty"`
+	Id           *string       `json:"id,omitempty"`
+	Organization *Organization `json:"organization,omitempty"`
 }
 
 // ApplicationType defines model for ApplicationType.

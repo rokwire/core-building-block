@@ -1784,6 +1784,10 @@ components:
       properties:
         id:
           type: string
+        application:
+          $ref: '#/components/schemas/Application'
+        organization:
+          $ref: '#/components/schemas/Organization'
         TODO:
           type: string
     Permission:
@@ -2118,10 +2122,8 @@ components:
       properties:
         fields:
           $ref: '#/components/schemas/AccountFields'
-        application:
-          $ref: '#/components/schemas/Application'
-        organization:
-          $ref: '#/components/schemas/Organization'
+        app_org:
+          $ref: '#/components/schemas/ApplicationOrganization'
         permissions:
           type: array
           items:
