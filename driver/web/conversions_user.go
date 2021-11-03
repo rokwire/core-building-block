@@ -33,6 +33,37 @@ func userToDef(item *model.Account) *Def.Account {
 	return nil
 }
 
+//Accounts
+func getAccountsToDef(item *model.Account) *Def.ResLoginAccount {
+	if item == nil {
+		return nil
+	}
+	profile := profileToDef(&item.Profile)
+	//permissions
+	permissions := applicationPermissionsToDef(item.Permissions)
+	//roles
+	roles := applicationRolesToDef(item.Roles)
+	//groups
+	groups := applicationGroupsToDef(item.Groups)
+	//account auth types
+	authTypes := accountAuthTypesToDef(item.AuthTypes)
+	return &Def.ResLoginAccount{Id: item.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
+
+}
+
+func getAccountsListToDef(item []model.Account) []Def.ResLoginAccount {
+	out := make([]Def.ResLoginAccount, len(item))
+	for i, item := range item {
+		defItem := getAccountsToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.ResLoginAccount{}
+		}
+	}
+	return out
+}
+
 //AccountAuthType
 func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthTypeFields {
 	params := &Def.AccountAuthTypeFields_Params{}

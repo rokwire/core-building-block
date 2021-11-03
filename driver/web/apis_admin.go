@@ -510,6 +510,30 @@ func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *token
 	return l.HttpResponseSuccessJSON(data)
 }
 
+func (h AdminApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	accountID := r.URL.Query().Get("id")
+	if accountID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
+	}
+
+	identifier := r.URL.Query().Get("auth_type_identifier")
+	if identifier == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	}
+
+	getAccounts, err := h.coreAPIs.Administration.AdmGetAccounts(accountID, identifier, &claims.AppID, &claims.OrgID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+	response := getAccountsListToDef(getAccounts)
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
 //grantAccountPermissions grants an account the given permissions
 func (h AdminApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)

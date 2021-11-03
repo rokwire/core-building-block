@@ -104,6 +104,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application-roles", we.wrapFunc(we.adminApisHandler.createApplicationRole, we.auth.adminAuth)).Methods("POST")
 
 	adminSubrouter.HandleFunc("/account", we.wrapFunc(we.adminApisHandler.getAccount, we.auth.adminAuth)).Methods("GET")
+	adminSubrouter.HandleFunc("/accounts", we.wrapFunc(we.adminApisHandler.getAccounts, we.auth.adminAuth)).Methods("GET")
 	adminSubrouter.HandleFunc("/account/permissions", we.wrapFunc(we.adminApisHandler.grantAccountPermissions, we.auth.adminAuth)).Methods("PUT")
 	adminSubrouter.HandleFunc("/account/roles", we.wrapFunc(we.adminApisHandler.grantAccountRoles, we.auth.adminAuth)).Methods("PUT")
 
