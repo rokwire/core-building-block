@@ -642,9 +642,9 @@ type ReqSharedLoginParamsOIDC struct {
 
 // ReqSharedMfa defines model for _req_shared_Mfa.
 type ReqSharedMfa struct {
-	AccountId string              `json:"account_id"`
-	MfaCode   string              `json:"mfa_code"`
-	MfaType   ReqSharedMfaMfaType `json:"mfa_type"`
+	Identifier *string             `json:"identifier,omitempty"`
+	MfaCode    *string             `json:"mfa_code,omitempty"`
+	MfaType    ReqSharedMfaMfaType `json:"mfa_type"`
 }
 
 // ReqSharedMfaMfaType defines model for ReqSharedMfa.MfaType.
@@ -924,12 +924,8 @@ type DeleteServicesAccountMfaParams struct {
 	Type string `json:"type"`
 }
 
-// PostServicesAccountMfaParams defines parameters for PostServicesAccountMfa.
-type PostServicesAccountMfaParams struct {
-
-	// MFA type
-	Type string `json:"type"`
-}
+// PostServicesAccountMfaJSONBody defines parameters for PostServicesAccountMfa.
+type PostServicesAccountMfaJSONBody ReqSharedMfa
 
 // PutServicesAccountPreferencesJSONBody defines parameters for PutServicesAccountPreferences.
 type PutServicesAccountPreferencesJSONBody map[string]interface{}
@@ -1045,6 +1041,9 @@ type PostAdminServiceRegsJSONRequestBody PostAdminServiceRegsJSONBody
 
 // PutAdminServiceRegsJSONRequestBody defines body for PutAdminServiceRegs for application/json ContentType.
 type PutAdminServiceRegsJSONRequestBody PutAdminServiceRegsJSONBody
+
+// PostServicesAccountMfaJSONRequestBody defines body for PostServicesAccountMfa for application/json ContentType.
+type PostServicesAccountMfaJSONRequestBody PostServicesAccountMfaJSONBody
 
 // PutServicesAccountPreferencesJSONRequestBody defines body for PutServicesAccountPreferences for application/json ContentType.
 type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJSONBody

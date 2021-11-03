@@ -545,15 +545,22 @@ paths:
         **Auth:** Requires user auth token
       security:
         - bearerAuth: []
-      parameters:
-        - name: type
-          in: query
-          description: MFA type
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
+      requestBody:
+        description: |
+          MFA enrollment params
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_shared_Mfa'
+            examples:
+              email:
+                summary: Enroll in email MFA
+                value: |
+                  {
+                    "identifier": "test@test.com",
+                    "mfa_type": "email"
+                  }
+        required: true
       responses:
         '200':
           description: Success
@@ -2701,12 +2708,10 @@ components:
           type: string
     _req_shared_Mfa:
       required:
-        - account_id
         - mfa_type
-        - mfa_code
       type: object
       properties:
-        account_id:
+        identifier:
           type: string
         mfa_type:
           type: string

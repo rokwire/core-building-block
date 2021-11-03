@@ -294,24 +294,34 @@ func (h ServicesApisHandler) getMFATypes(l *logs.Log, r *http.Request, claims *t
 }
 
 func (h ServicesApisHandler) addMFAType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	mfaType := r.URL.Query().Get("type")
-	if mfaType == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("type"), nil, http.StatusBadRequest, false)
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	mfaData, err := h.coreAPIs.Auth.AddMFAType(claims.Subject, mfaType)
+	var mfaData Def.ReqSharedMfa
+	err = json.Unmarshal(data, &mfaData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("verify mfa request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	if mfaData.Identifier == nil || *mfaData.Identifier == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, "mfa identifier", nil, nil, http.StatusBadRequest, true)
+	}
+
+	mfa, err := h.coreAPIs.Auth.AddMFAType(claims.Subject, *mfaData.Identifier, string(mfaData.MfaType))
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionInsert, model.TypeMFAType, nil, err, http.StatusInternalServerError, true)
 	}
 
-	mfaResp := mfaDataToDef(mfaData)
+	mfaResp := mfaDataToDef(mfa)
 
-	data, err := json.Marshal(mfaResp)
+	respData, err := json.Marshal(mfaResp)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeMFAType, nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HttpResponseSuccessJSON(data)
+	return l.HttpResponseSuccessJSON(respData)
 }
 
 func (h ServicesApisHandler) removeMFAType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
@@ -440,7 +450,11 @@ func (h ServicesApisHandler) verifyMFA(l *logs.Log, r *http.Request, claims *tok
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("verify mfa request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	verified, recoveryCodes, err := h.coreAPIs.Auth.VerifyMFA(mfaData.AccountId, string(mfaData.MfaType), mfaData.MfaCode, l)
+	if mfaData.MfaCode == nil || *mfaData.MfaCode == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, "mfa code", nil, nil, http.StatusBadRequest, true)
+	}
+
+	verified, recoveryCodes, err := h.coreAPIs.Auth.VerifyMFA(claims.Subject, string(mfaData.MfaType), *mfaData.MfaCode, l)
 	if err != nil {
 		return l.HttpResponseError("Error verifying MFA", err, http.StatusInternalServerError, true)
 	}

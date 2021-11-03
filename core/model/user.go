@@ -162,6 +162,7 @@ type Credential struct {
 
 //MFAType represents a MFA type used by an account
 type MFAType struct {
+	ID   string
 	Type string
 
 	Verified bool

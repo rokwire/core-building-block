@@ -72,7 +72,7 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL, nil)).Methods("POST") //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh, nil)).Methods("POST")    //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/verify", we.wrapFunc(we.servicesApisHandler.verifyCode, nil)).Methods("GET")       //Public (validates code)
-	servicesSubRouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.servicesApisHandler.verifyMFA, nil)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.servicesApisHandler.verifyMFA, we.auth.servicesUserAuth)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/account-exists", we.wrapFunc(we.servicesApisHandler.accountExists, nil)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService, we.auth.servicesUserAuth)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations, we.auth.servicesAuth)).Methods("GET")

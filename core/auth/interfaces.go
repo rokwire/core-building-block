@@ -54,7 +54,7 @@ type anonymousAuthType interface {
 //mfaType is the interface for multi-factor authentication
 type mfaType interface {
 	verify(params map[string]interface{}, code string) (*string, error)
-	enroll(accountID string) (*model.MFAType, error)
+	enroll(accountID string, identifier string) (*model.MFAType, error)
 	sendCode(accountID string) (string, error)
 }
 
@@ -159,10 +159,11 @@ type APIs interface {
 	//AddMFAType adds a form of MFA to an account
 	//	Input:
 	//		accountID (string): Account ID to add MFA
+	//		identifier (string): Email, phone, or TOTP device name
 	//		mfaType (string): Type of MFA to be added
 	//	Returns:
 	//		MFA Type (*model.MFAType): MFA information for the specified type
-	AddMFAType(accountID string, mfaType string) (*model.MFAType, error)
+	AddMFAType(accountID string, identifier string, mfaType string) (*model.MFAType, error)
 
 	//RemoveMFAType removes a form of MFA from an account
 	//	Input:

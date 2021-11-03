@@ -114,9 +114,10 @@ func mfaDataListToDef(items []model.MFAType) []Def.ResSharedMfa {
 }
 
 func mfaDataToDef(item *model.MFAType) *Def.ResSharedMfa {
-	//mask and remove params (as needed) before returning
 	params := item.Params
 	delete(params, "expires")
+	//TODO: mask identifier
+
 	//email and phone
 	delete(params, "code")
 	//totp

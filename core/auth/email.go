@@ -286,7 +286,7 @@ func (m *emailMfaImpl) verify(params map[string]interface{}, code string) (*stri
 	return nil, nil
 }
 
-func (m *emailMfaImpl) enroll(accountID string) (*model.MFAType, error) {
+func (m *emailMfaImpl) enroll(accountID string, identifier string) (*model.MFAType, error) {
 	//TODO: make sure to set identifier field in params
 	return nil, errors.New(logutils.Unimplemented)
 }

@@ -177,7 +177,7 @@ func mfaTypesFromStorage(items []mfaType) []model.MFAType {
 }
 
 func mfaTypeFromStorage(item mfaType) model.MFAType {
-	return model.MFAType{Type: item.Type, Verified: item.Verified, Params: item.Params, DateCreated: item.DateCreated,
+	return model.MFAType{ID: item.ID, Type: item.Type, Verified: item.Verified, Params: item.Params, DateCreated: item.DateCreated,
 		DateUpdated: item.DateUpdated}
 }
 
@@ -192,6 +192,6 @@ func mfaTypesToStorage(items []model.MFAType) []mfaType {
 func mfaTypeToStorage(item *model.MFAType) mfaType {
 	//don't store totp qr code
 	delete(item.Params, "qr_code")
-	return mfaType{Type: item.Type, Verified: item.Verified, Params: item.Params, DateCreated: item.DateCreated,
+	return mfaType{ID: item.ID, Type: item.Type, Verified: item.Verified, Params: item.Params, DateCreated: item.DateCreated,
 		DateUpdated: item.DateUpdated}
 }

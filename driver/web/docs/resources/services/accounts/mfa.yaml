@@ -33,15 +33,22 @@ post:
     **Auth:** Requires user auth token
   security:
     - bearerAuth: []
-  parameters:
-    - name: type
-      in: query
-      description: MFA type
-      required: true
-      style: form
-      explode: false
-      schema:
-        type: string
+  requestBody:
+    description: |
+      MFA enrollment params
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schemas/apis/shared/requests/mfa/Request.yaml"
+        examples:
+          email:
+            summary: Enroll in email MFA
+            value: |
+              {
+                "identifier": "test@test.com",
+                "mfa_type": "email"
+              }
+    required: true
   responses:
     200:
       description: Success

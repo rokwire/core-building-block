@@ -216,7 +216,11 @@ func (h AdminApisHandler) adminVerifyMFA(l *logs.Log, r *http.Request, claims *t
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("verify mfa request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	verified, recoveryCodes, err := h.coreAPIs.Auth.VerifyMFA(mfaData.AccountId, string(mfaData.MfaType), mfaData.MfaCode, l)
+	if mfaData.MfaCode == nil || *mfaData.MfaCode == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, "mfa code", nil, nil, http.StatusBadRequest, true)
+	}
+
+	verified, recoveryCodes, err := h.coreAPIs.Auth.VerifyMFA(claims.Subject, string(mfaData.MfaType), *mfaData.MfaCode, l)
 	if err != nil {
 		return l.HttpResponseError("Error verifying MFA", err, http.StatusInternalServerError, true)
 	}

@@ -6,6 +6,7 @@ import (
 	"image/png"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pquerna/otp/totp"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -37,7 +38,7 @@ func (m *totpMfaImpl) verify(params map[string]interface{}, code string) (*strin
 	return nil, nil
 }
 
-func (m *totpMfaImpl) enroll(accountID string) (*model.MFAType, error) {
+func (m *totpMfaImpl) enroll(accountID string, identifier string) (*model.MFAType, error) {
 	totpOpts := totp.GenerateOpts{
 		Issuer:      m.auth.host,
 		AccountName: accountID, //TODO: should use some more readable string instead (email, phone, username, etc.)
@@ -59,12 +60,14 @@ func (m *totpMfaImpl) enroll(accountID string) (*model.MFAType, error) {
 
 	now := time.Now().UTC()
 	params := map[string]interface{}{
-		"secret":  key.Secret(),
-		"qr_code": buf.String(),
+		"identifier": identifier,
+		"secret":     key.Secret(),
+		"qr_code":    buf.String(),
 	}
 
 	//Recipient is empty for totp
-	return &model.MFAType{Type: MfaTypeTotp, Verified: false, Params: params, DateCreated: now}, nil
+	id, _ := uuid.NewUUID()
+	return &model.MFAType{ID: id.String(), Type: MfaTypeTotp, Verified: false, Params: params, DateCreated: now}, nil
 }
 
 //sendCode not used for TOTP

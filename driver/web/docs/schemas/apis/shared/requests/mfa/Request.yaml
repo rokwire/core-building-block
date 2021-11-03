@@ -1,10 +1,8 @@
 required:
-  - account_id
   - mfa_type
-  - mfa_code
 type: object
 properties:
-  account_id:
+  identifier:
     type: string
   mfa_type:
     type: string

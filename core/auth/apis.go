@@ -406,16 +406,17 @@ func (a *Auth) GetMFATypes(accountID string) ([]model.MFAType, error) {
 //AddMFAType adds a form of MFA to an account
 //	Input:
 //		accountID (string): Account ID to add MFA
+//		identifier (string): Email, phone, or TOTP device name
 //		mfaType (string): Type of MFA to be added
 //	Returns:
 //		MFA Type (*model.MFAType): MFA information for the specified type
-func (a *Auth) AddMFAType(accountID string, mfaType string) (*model.MFAType, error) {
+func (a *Auth) AddMFAType(accountID string, identifier string, mfaType string) (*model.MFAType, error) {
 	mfaImpl, err := a.getMfaTypeImpl(mfaType)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeMfaType, nil, err)
 	}
 
-	newMfa, err := mfaImpl.enroll(accountID)
+	newMfa, err := mfaImpl.enroll(accountID, identifier)
 	if err != nil {
 		return nil, errors.WrapErrorAction("enrolling", typeMfaType, nil, err)
 	}

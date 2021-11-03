@@ -107,6 +107,7 @@ type credential struct {
 }
 
 type mfaType struct {
+	ID   string `bson:"_id"`
 	Type string `bson:"type"`
 
 	Verified bool                   `bson:"verified"`
