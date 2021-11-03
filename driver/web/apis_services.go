@@ -30,7 +30,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 	//TODO - most probably it will be needed to be taken more preciselly
 	ip := r.RemoteAddr
 
-	var requestData Def.ReqLoginRequest
+	var requestData Def.ReqSharedLogin
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login request"), nil, err, http.StatusBadRequest, true)
@@ -70,7 +70,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 
 	//message
 	if message != nil {
-		responseData := &Def.ResLoginResponse{Message: message}
+		responseData := &Def.ResSharedLogin{Message: message}
 		respData, err := json.Marshal(responseData)
 		if err != nil {
 			return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
@@ -86,7 +86,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
 	//account
-	var accountData *Def.ResLoginAccount
+	var accountData *Def.ResSharedLoginAccount
 	if !loginSession.Anonymous {
 		account := loginSession.AccountAuthType.Account
 
@@ -102,7 +102,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		groups := applicationGroupsToDef(account.Groups)
 		//account auth types
 		authTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
+		accountData = &Def.ResSharedLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 	}
 
 	//params
@@ -111,10 +111,35 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		paramsRes = loginSession.Params
 	}
 
-	responseData := &Def.ResLoginResponse{Token: &rokwireToken, Account: accountData, Params: &paramsRes}
+	responseData := &Def.ResSharedLogin{Token: &rokwireToken, Account: accountData, Params: &paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
+}
+
+func (h ServicesApisHandler) accountExists(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqAccountExistsRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
+	}
+
+	accountExists, err := h.coreAPIs.Auth.AccountExists(string(requestData.AuthType), requestData.UserIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, logutils.MessageDataType("account exists"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	respData, err := json.Marshal(accountExists)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.TypeResponse, nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HttpResponseSuccessJSON(respData)
@@ -126,7 +151,7 @@ func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request, claims *t
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqRefreshRequest
+	var requestData Def.ReqSharedRefresh
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth refresh request"), nil, err, http.StatusBadRequest, true)
@@ -151,7 +176,7 @@ func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request, claims *t
 
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
-	responseData := &Def.ResRefreshResponse{Token: &rokwireToken, Params: &paramsRes}
+	responseData := &Def.ResSharedRefresh{Token: &rokwireToken, Params: &paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth refresh response"), nil, err, http.StatusInternalServerError, false)
@@ -166,7 +191,7 @@ func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request, claims *
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqLoginUrlRequest
+	var requestData Def.ReqSharedLoginUrl
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "auth login url request", nil, err, http.StatusBadRequest, true)
@@ -177,7 +202,7 @@ func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request, claims *
 		return l.HttpResponseErrorAction(logutils.ActionGet, "login url", nil, err, http.StatusInternalServerError, true)
 	}
 
-	responseData := &Def.ResLoginUrlResponse{LoginUrl: loginURL, Params: &params}
+	responseData := &Def.ResSharedLoginUrl{LoginUrl: loginURL, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "auth login url response", nil, err, http.StatusInternalServerError, false)
@@ -382,7 +407,10 @@ func (h ServicesApisHandler) getAppConfig(l *logs.Log, r *http.Request, claims *
 
 	appConfig, err := h.coreAPIs.Services.SerGetAppConfig(ID)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
+	}
+	if appConfig == nil {
+		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeApplicationConfigs, &logutils.FieldArgs{"id": ID}, nil, http.StatusNotFound, false)
 	}
 
 	response := appConfig
@@ -406,15 +434,16 @@ func (h ServicesApisHandler) createAppConfig(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create appconfig request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	var appConfig model.ApplicationConfigs
-	err = json.Unmarshal(data, &appConfig)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "appconfig create request", nil, err, http.StatusBadRequest, true)
+	configData := map[string]interface{}{
+		"platformBuildingBlocks":  requestData.PlatformBuildingBlocks,
+		"thirdPartyServices":      requestData.ThirdPartyServices,
+		"otherUniversityServices": requestData.OtherUniversityServices,
+		"secretKeys":              requestData.SecretKeys,
+		"upgrade":                 requestData.Upgrade,
 	}
-
-	config, err := h.coreAPIs.Services.SerCreateAppConfig(appConfig)
+	config, err := h.coreAPIs.Services.SerCreateAppConfig(requestData.MobileAppVersion, requestData.AppId, configData)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
 	}
 
 	response := config

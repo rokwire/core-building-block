@@ -97,8 +97,8 @@ func (s *servicesImpl) SerGetAppConfig(id string) (*model.ApplicationConfigs, er
 	return s.app.serGetAppConfig(id)
 }
 
-func (s *servicesImpl) SerCreateAppConfig(appConfig model.ApplicationConfigs) (*model.ApplicationConfigs, error) {
-	return s.app.serCreateAppConfig(appConfig)
+func (s *servicesImpl) SerCreateAppConfig(version string, appID string, data map[string]interface{}) (*model.ApplicationConfigs, error) {
+	return s.app.serCreateAppConfig(version, appID, data)
 }
 
 func (s *servicesImpl) SerUpdateAppConfig(id string, version string, data map[string]interface{}) error {
@@ -165,16 +165,20 @@ func (s *administrationImpl) AdmGetApplications() ([]model.Application, error) {
 	return s.app.admGetApplications()
 }
 
-func (s *administrationImpl) AdmCreateApplicationPermission(name string, appID string) (*model.ApplicationPermission, error) {
-	return s.app.admCreateApplicationPermission(name, appID)
+func (s *administrationImpl) AdmCreatePermission(name string, serviceIDs []string) (*model.Permission, error) {
+	return s.app.admCreatePermission(name, serviceIDs)
+}
+
+func (s *administrationImpl) AdmUpdatePermission(name string, serviceIDs *[]string) (*model.Permission, error) {
+	return s.app.admUpdatePermission(name, serviceIDs)
 }
 
 func (s *administrationImpl) AdmCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error) {
 	return s.app.admCreateApplicationRole(name, appID, description, permissionNames)
 }
 
-func (s *administrationImpl) AdmGrantAccountPermissions(accountID string, appID string, permissionNames []string) error {
-	return s.app.admGrantAccountPermissions(accountID, appID, permissionNames)
+func (s *administrationImpl) AdmGrantAccountPermissions(accountID string, permissionNames []string) error {
+	return s.app.admGrantAccountPermissions(accountID, permissionNames)
 }
 
 func (s *administrationImpl) AdmGrantAccountRoles(accountID string, appID string, roleIDs []string) error {

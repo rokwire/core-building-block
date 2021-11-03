@@ -1,4 +1,5 @@
 required:
+  - app_id
   - mobileAppVersion
   - platformBuildingBlocks
   - thirdPartyServices
@@ -7,6 +8,8 @@ required:
 type: object
 properties:
   id:
+    type: string
+  app_id:
     type: string
   mobileAppVersion:
     type: string

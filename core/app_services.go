@@ -2,7 +2,9 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -76,13 +78,17 @@ func (app *application) serGetAppConfig(id string) (*model.ApplicationConfigs, e
 	return appConfig, nil
 }
 
-func (app *application) serCreateAppConfig(appConfig model.ApplicationConfigs) (*model.ApplicationConfigs, error) {
-	config, err := app.storage.InsertAppConfig(appConfig)
+func (app *application) serCreateAppConfig(version string, appID string, data map[string]interface{}) (*model.ApplicationConfigs, error) {
+	now := time.Now()
+	appConfigID, _ := uuid.NewUUID()
+	applicationConfig := model.ApplicationConfigs{ID: appConfigID.String(), AppID: appID, Version: version, Data: data, DateCreated: now}
+
+	insertedConfig, err := app.storage.InsertAppConfig(applicationConfig)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeApplicationConfigs, nil, err)
 	}
 
-	return config, nil
+	return insertedConfig, nil
 }
 
 func (app *application) serUpdateAppConfig(id string, version string, data map[string]interface{}) error {

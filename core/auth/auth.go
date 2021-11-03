@@ -173,9 +173,9 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	}
 
 	//2. check if the user exists
-	account, err := authImpl.userExist(externalUser.Identifier, authType, appType, appOrg, l)
+	account, err := a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, externalUser.Identifier)
 	if err != nil {
-		return nil, nil, errors.WrapErrorData(logutils.StatusMissing, "external user", nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if account != nil {
 		//user exists, just check if need to update it
@@ -250,6 +250,7 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.App
 func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
 	creds string, params string, regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (string, *model.AccountAuthType, error) {
 	var message string
+	var account *model.Account
 	var accountAuthType *model.AccountAuthType
 	var credential *model.Credential
 	var profile *model.Profile
@@ -262,12 +263,16 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 
 	//check if the user exists check
-	accountAuthType, err = authImpl.userExist(authType, appType, appOrg, creds, l)
+	userIdentifier, err := authImpl.getUserIdentifier(creds)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
+	}
+	account, err = a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, userIdentifier)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 
-	accountExists := (accountAuthType != nil)
+	accountExists := (account != nil)
 
 	//check if it is sign in or sign up
 	isSignUp, err := a.isSignUp(accountExists, params, l)
@@ -286,12 +291,12 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		credID := credentialID.String()
 
 		//apply sign up
-		message, identifier, credentialValue, err := authImpl.signUp(authType, appType, appOrg, creds, params, credentialID.String(), l)
+		message, credentialValue, err := authImpl.signUp(authType, appType, appOrg, creds, params, credentialID.String(), l)
 		if err != nil {
 			return "", nil, errors.Wrap("error signing up", err)
 		}
 
-		accountAuthType, credential, profile, preferences, err = a.prepareRegistrationData(authType, *identifier, nil, &credID, credentialValue, regProfile, regPreferences, l)
+		accountAuthType, credential, profile, preferences, err = a.prepareRegistrationData(authType, userIdentifier, nil, &credID, credentialValue, regProfile, regPreferences, l)
 		if err != nil {
 			return "", nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
@@ -307,6 +312,11 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	//apply sign in
 	if !accountExists {
 		return "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+	}
+
+	accountAuthType, err = a.findAccountAuthType(account, &authType, userIdentifier)
+	if accountAuthType == nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
 
 	//2. it seems the user exist, now check the credentials
@@ -482,44 +492,70 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 
 	///profile and preferences
 	//get profile BB data
-	/*gotProfile, gotPreferences, err := a.getProfileBBData(authType, identifier, l)
+	gotProfile, gotPreferences, err := a.getProfileBBData(authType, identifier, l)
 	if err != nil {
 		args := &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}
 		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "error getting profile BB data", args, err)
-	} */
-	//TODO - revert
-	var gotProfile *model.Profile
-	var gotPreferences map[string]interface{}
+	}
 
 	readyProfile := profile
 	//if there is profile bb data
 	if gotProfile != nil {
-		readyProfile = a.prepareProfile(profile, *gotProfile, l)
+		readyProfile = a.prepareProfile(profile, *gotProfile)
 	}
 	readyPreferences := preferences
 	//if there is preferences bb data
 	if gotPreferences != nil {
-		readyPreferences = a.preparePreferences(preferences, gotPreferences, l)
+		readyPreferences = a.preparePreferences(preferences, gotPreferences)
 	}
 
 	//generate profile ID
 	profileID, _ := uuid.NewUUID()
 	readyProfile.ID = profileID.String()
 	//date created
-	readyProfile.DateCreated = time.Now()
+	if readyProfile.DateCreated.IsZero() {
+		readyProfile.DateCreated = time.Now()
+	}
+	if preferences["date_created"] == nil {
+		preferences["date_created"] = time.Now()
+	} else {
+		preferencesCreated, ok := preferences["date_created"].(time.Time)
+		if !ok || preferencesCreated.IsZero() {
+			preferences["date_created"] = time.Now()
+		}
+	}
 	///
 
 	return accountAuthType, credential, &readyProfile, readyPreferences, nil
 }
 
-func (a *Auth) prepareProfile(clientData model.Profile, profileBBData model.Profile, l *logs.Log) model.Profile {
-	//TODO - merge from both sources
-	return profileBBData
+func (a *Auth) prepareProfile(clientData model.Profile, profileBBData model.Profile) model.Profile {
+	clientData.PhotoURL = utils.SetStringIfEmpty(clientData.PhotoURL, profileBBData.PhotoURL)
+	clientData.FirstName = utils.SetStringIfEmpty(clientData.FirstName, profileBBData.FirstName)
+	clientData.LastName = utils.SetStringIfEmpty(clientData.LastName, profileBBData.LastName)
+	clientData.Email = utils.SetStringIfEmpty(clientData.Email, profileBBData.Email)
+	clientData.Phone = utils.SetStringIfEmpty(clientData.Phone, profileBBData.Phone)
+	clientData.Address = utils.SetStringIfEmpty(clientData.Address, profileBBData.Address)
+	clientData.ZipCode = utils.SetStringIfEmpty(clientData.ZipCode, profileBBData.ZipCode)
+	clientData.State = utils.SetStringIfEmpty(clientData.State, profileBBData.State)
+	clientData.Country = utils.SetStringIfEmpty(clientData.Country, profileBBData.Country)
+
+	if clientData.BirthYear == 0 {
+		clientData.BirthYear = profileBBData.BirthYear
+	}
+
+	return clientData
 }
 
-func (a *Auth) preparePreferences(clientData map[string]interface{}, profileBBData map[string]interface{}, l *logs.Log) map[string]interface{} {
-	//TODO - merge from both sources
-	return profileBBData
+func (a *Auth) preparePreferences(clientData map[string]interface{}, profileBBData map[string]interface{}) map[string]interface{} {
+	mergedData := profileBBData
+	for k, v := range clientData {
+		if profileBBData[k] == nil {
+			mergedData[k] = v
+		}
+	}
+
+	return mergedData
 }
 
 func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *logs.Log) (*model.Profile, map[string]interface{}, error) {

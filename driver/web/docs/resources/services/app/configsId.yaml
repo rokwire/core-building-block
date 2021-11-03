@@ -3,7 +3,9 @@ get:
   - Services
   summary: Reads mobile app configuration by given id
   description: |
-    Auth: Requires a valid API Key for access.
+    **Auth:** Requires user auth token
+  security:
+    - bearerAuth: []
   parameters:
     - name: id
       in: path
@@ -33,7 +35,9 @@ put:
   - Services
   summary: Updates mobile app configuration
   description: |
-    Auth: Requires a valid id_token that indicates membership
+    **Auth:** Requires user auth token
+  security:
+    - bearerAuth: []
   parameters:
   - name: id
     in: path
@@ -69,7 +73,9 @@ delete:
   - Services
   summary: Deletes mobile app configuration
   description: |
-    Auth: Requires a valid id_token that indicates membership
+     **Auth:** Requires user auth token
+  security:
+    - bearerAuth: []
   parameters:
   - name: id
     in: path
@@ -80,7 +86,7 @@ delete:
     schema:
       type: string
   responses:
-    202:
+    200:
       description: AppConfig deleted
     401:
       description: Unauthorized
