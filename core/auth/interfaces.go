@@ -223,6 +223,7 @@ type Storage interface {
 	// InsertCredentials(creds *model.AuthCreds, context mongo.SessionContext) error
 	FindCredential(ID string) (*model.Credential, error)
 	UpdateCredential(creds *model.Credential) error
+	UpdateCredentialValue(ID string, value map[string]interface{}) error
 	InsertCredential(creds *model.Credential, context mongo.SessionContext) error
 
 	//ServiceRegs

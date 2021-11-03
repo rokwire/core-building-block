@@ -329,12 +329,8 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 	//Check if we need to update credentials value
 	if authTypeCreds != nil {
-		credential, err := a.storage.FindCredential(accountAuthType.Credential.ID)
-		if err != nil || credential == nil {
-			return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
-		}
-		credential.Value = authTypeCreds
-		if err = a.storage.UpdateCredential(credential); err != nil {
+		err := a.storage.UpdateCredentialValue(accountAuthType.Credential.ID, authTypeCreds)
+		if err != nil {
 			return "", nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 		}
 	}

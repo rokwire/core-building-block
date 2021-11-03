@@ -415,7 +415,7 @@ func (a *Auth) ResetPasswordLink(credsID string, resetCode string, newPassword s
 	if err != nil || authType == nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
 	}
-	if authType.IsExternal {
+	if authType.IsExternal || authType.IsAnonymous {
 		return errors.WrapErrorAction("invalid auth type for reset password link", model.TypeAuthType, nil, err)
 	}
 
