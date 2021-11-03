@@ -3,7 +3,5 @@ required:
   - type
 type: object
 properties:
-  token:
-    $ref: "../../../../shared/responses/RokwireToken.yaml"
   account:
     $ref: "../../../../shared/responses/Account.yaml"  

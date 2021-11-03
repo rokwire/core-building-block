@@ -2138,8 +2138,6 @@ components:
         - type
       type: object
       properties:
-        token:
-          $ref: '#/components/schemas/_res_shared_RokwireToken'
         account:
           $ref: '#/paths/~1admin~1account/get/responses/200/content/application~1json/schema'
     _req_login-url_Request:
