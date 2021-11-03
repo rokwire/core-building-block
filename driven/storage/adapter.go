@@ -298,6 +298,23 @@ func (sa *Adapter) findAccount(key string, id string) (*model.Account, error) {
 	return &modelAccount, nil
 }
 
+//FindAccounts finds accounts
+func (sa *Adapter) FindAccounts(id string, identifier string, appID *string, orgID *string) ([]model.Account, error) {
+	filter := bson.D{}
+	var result []model.Account
+	err := sa.db.accounts.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	if len(result) == 0 {
+		//no data
+		return make([]model.Account, 0), nil
+	}
+
+	return result, nil
+}
+
 //InsertAccount inserts an account
 func (sa *Adapter) InsertAccount(account model.Account) (*model.Account, error) {
 	storageAccount := accountToStorage(&account)
