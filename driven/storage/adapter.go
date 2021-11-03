@@ -299,8 +299,9 @@ func (sa *Adapter) findAccount(key string, id string) (*model.Account, error) {
 }
 
 //FindAccounts finds accounts
-func (sa *Adapter) FindAccounts(id string, identifier string, appID *string, orgID *string) ([]model.Account, error) {
-	filter := bson.D{}
+func (sa *Adapter) FindAccounts(id string, identifier string) ([]model.Account, error) {
+	filter := bson.D{primitive.E{Key: "id", Value: id},
+		primitive.E{Key: "auth_type_identifier", Value: identifier}}
 	var result []model.Account
 	err := sa.db.accounts.Find(filter, &result, nil)
 	if err != nil {
