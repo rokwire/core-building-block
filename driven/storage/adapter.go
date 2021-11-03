@@ -105,11 +105,8 @@ func (sa *Adapter) PerformTransaction(transaction func(sessionContext mongo.Sess
 		}
 		return nil
 	})
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 //cacheOrganizations caches the organizations from the DB
