@@ -111,9 +111,15 @@ func main() {
 	}
 
 	//profile bb adapter
+	migrateProfiles := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MIGRATE_PROFILES", false, false)
+	migrate, err := strconv.ParseBool(migrateProfiles)
+	if err != nil {
+		logger.Infof("Error parsing migrate profiles flag, applying defaults: %v", err)
+		migrate = true
+	}
 	profileBBHost := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PROFILE_BB_HOST", false, false)
 	profileBBApiKey := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PROFILE_BB_API_KEY", false, true)
-	profileBBAdapter := profilebb.NewProfileBBAdapter(profileBBHost, profileBBApiKey)
+	profileBBAdapter := profilebb.NewProfileBBAdapter(migrate, profileBBHost, profileBBApiKey)
 
 	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, emailer, minTokenExp, maxTokenExp, twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
 	if err != nil {
