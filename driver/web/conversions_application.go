@@ -74,6 +74,15 @@ func organizationsToDef(items []model.Organization) []Def.OrganizationFields {
 }
 
 func appConfigFromDef(requestData Def.ReqCreateApplicationConfigsRequest) (map[string]interface{}, error) {
+	// appConfig := model.ApplicationConfigs{
+	// 	AppID:                   requestData.AppId,
+	// 	MobileAppVersion:        requestData.MobileAppVersion,
+	// 	PlatformBuildingBlocks:  requestData.PlatformBuildingBlocks,
+	// 	ThirdPartyServices:      requestData.ThirdPartyServices,
+	// 	OtherUniversityServices: requestData.OtherUniversityServices,
+	// 	SecretKeys:              requestData.SecretKeys,
+	// }
+
 	configData := map[string]interface{}{
 		"platformBuildingBlocks":  requestData.PlatformBuildingBlocks,
 		"thirdPartyServices":      requestData.ThirdPartyServices,

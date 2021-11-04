@@ -21,7 +21,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/apis/services/appconfigs/AppConfig.yaml"
+            $ref: "../../../schemas/apis/services/appconfigs/response/Response.yaml"
     400:
       description: Bad request.
     401:
@@ -52,7 +52,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/services/appconfigs/AppConfig.yaml"
+          $ref: "../../../schemas/apis/services/appconfigs/request/Request.yaml"
     required: true
   responses:
     200:

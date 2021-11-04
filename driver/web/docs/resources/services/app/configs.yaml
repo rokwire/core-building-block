@@ -9,7 +9,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/services/appconfigs/AppConfig.yaml"
+          $ref: "../../../schemas/apis/services/appconfigs/request/Request.yaml"
         examples:
           withoutSecretKeys:
             value:
@@ -86,7 +86,7 @@ get:
           schema:
             type: array
             items:
-              $ref: "../../../schemas/apis/services/appconfigs/AppConfig.yaml"
+              $ref: "../../../schemas/apis/services/appconfigs/response/Response.yaml"
     400:
       description: Bad request.
     401:

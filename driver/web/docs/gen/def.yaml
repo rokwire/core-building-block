@@ -652,7 +652,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_req_create_Application-Configs_Request'
+                  $ref: '#/paths/~1services~1app~1configs~1%7Bid%7D/get/responses/200/content/application~1json/schema'
         '400':
           description: Bad request.
         '401':
@@ -685,7 +685,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_req_create_Application-Configs_Request'
+                required:
+                  - app_id
+                  - mobile_app_version
+                  - data
+                type: object
+                properties:
+                  id:
+                    type: string
+                  app_id:
+                    type: string
+                  mobile_app_version:
+                    type: string
+                    description: unique and is empty or conforms major.minor.patch format
+                  data:
+                    type: object
         '400':
           description: Bad request.
         '401':

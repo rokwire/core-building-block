@@ -430,12 +430,12 @@ func (h ServicesApisHandler) createAppConfig(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("appconfig create request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	configData, err := appConfigFromDef(requestData)
+	appConfigData, err := appConfigFromDef(requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
 	}
 
-	_, err = h.coreAPIs.Services.SerCreateAppConfig(requestData.MobileAppVersion, requestData.AppId, configData)
+	_, err = h.coreAPIs.Services.SerCreateAppConfig(requestData.MobileAppVersion, requestData.AppId, appConfigData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplicationConfigs, nil, err, http.StatusBadRequest, true)
 	}
