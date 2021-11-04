@@ -283,18 +283,18 @@ func (h ServicesApisHandler) getAccount(l *logs.Log, r *http.Request, claims *to
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	var accountData *Def.ResLoginAccount
+	var accountData *Def.ResSharedLoginAccount
 	if account != nil {
 		profile := profileToDef(&account.Profile)
 		//permissions
 		permissions := applicationPermissionsToDef(account.Permissions)
 		//roles
-		roles := applicationRolesToDef(account.Roles)
+		roles := appOrgRolesToDef(account.Roles)
 		//groups
-		groups := applicationGroupsToDef(account.Groups)
+		groups := appOrgGroupsToDef(account.Groups)
 		//account auth types
 		authTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
+		accountData = &Def.ResSharedLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
 	}
 
 	data, err := json.Marshal(accountData)
