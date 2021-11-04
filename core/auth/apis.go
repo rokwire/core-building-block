@@ -136,7 +136,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		return nil, loginSession, nil, nil
 	}
 
-	return nil, &model.LoginSession{ID: loginSession.ID, Params: responseParams, State: loginSession.State}, mfaTypes, nil
+	return nil, &model.LoginSession{ID: loginSession.ID, Identifier: loginSession.Identifier, Params: responseParams, State: loginSession.State}, mfaTypes, nil
 }
 
 //AccountExists checks if a user is already registered
