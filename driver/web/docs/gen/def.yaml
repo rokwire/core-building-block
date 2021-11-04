@@ -197,6 +197,27 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - invalid
+                      - unverified
+                      - already-exists
+                      - not-found
+                      - internal-server-error
+                    description: |
+                      - `invalid`: Invalid credentials
+                      - `unverified`: Unverified credentials
+                      - `already-found`: Account already exists when `sign-up=true`
+                      - `not-found`: Account could not be found when `sign-up=false`
+                      - `internal-server-error`: An undefined error occurred
+                  message:
+                    type: string
   /services/auth/refresh:
     post:
       tags:
