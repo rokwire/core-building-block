@@ -1,6 +1,7 @@
 post:
+  deprecated: true
   tags:
-  - Admin
+  - System
   summary: Create permission
   description: |
     Creates permission
@@ -9,11 +10,11 @@ post:
   security:
     - bearerAuth: []
   requestBody:
-    description: Application permission
+    description: Permission
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/admin/permissions/request/Request.yaml"
+          $ref: "../../schemas/apis/system/permissions/request/Request.yaml"
     required: true
   responses:
     200:
@@ -30,8 +31,9 @@ post:
     500:
       description: Internal error
 put:
+  deprecated: true
   tags:
-  - Admin
+  - System
   summary: Updates permission
   description: |
     Updates permission
@@ -40,11 +42,11 @@ put:
   security:
     - bearerAuth: []
   requestBody:
-    description: Application permission
+    description: Permission
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/admin/permissions/request/Request.yaml"
+          $ref: "../../schemas/apis/system/permissions/request/Request.yaml"
     required: true
   responses:
     200:
