@@ -299,21 +299,37 @@ func (sa *Adapter) findAccount(key string, id string) (*model.Account, error) {
 }
 
 //FindAccounts finds accounts
-func (sa *Adapter) FindAccounts(id string, identifier string) ([]model.Account, error) {
-	filter := bson.D{primitive.E{Key: "id", Value: id},
-		primitive.E{Key: "auth_type_identifier", Value: identifier}}
-	var result []model.Account
-	err := sa.db.accounts.Find(filter, &result, nil)
+func (sa *Adapter) FindAccounts(accountID string, identifier string) ([]model.Account, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID},
+		primitive.E{Key: "auth_types.identifier", Value: identifier}}
+	//filter := bson.M{}
+	var accounts []model.Account
+	err := sa.db.accounts.Find(filter, &accounts, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	if len(result) == 0 {
-		//no data
+	if len(accounts) == 0 {
+		//not found
 		return make([]model.Account, 0), nil
 	}
+	//account := accounts[0]
 
-	return result, nil
+	//application - from cache
+	/*application, err := sa.getCachedApplication(account.Application.ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+	}
+
+	//organization - from cache
+	organization, err := sa.getCachedOrganization(account.Organization.ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
+	}*/
+
+	//getAccounts := getAccountFromStorage(accounts)
+	//return getAccounts, nil
+	return accounts, nil
 }
 
 //InsertAccount inserts an account

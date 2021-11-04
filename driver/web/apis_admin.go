@@ -513,12 +513,12 @@ func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *token
 func (h AdminApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	accountID := r.URL.Query().Get("id")
 	if accountID == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("_id"), nil, http.StatusBadRequest, false)
 	}
 
 	identifier := r.URL.Query().Get("auth_type_identifier")
 	if identifier == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs(""), nil, http.StatusBadRequest, false)
 	}
 
 	getAccounts, err := h.coreAPIs.Administration.AdmGetAccounts(accountID, identifier)
