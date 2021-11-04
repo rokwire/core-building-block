@@ -23,6 +23,8 @@ const (
 	typeTime        logutils.MessageDataType = "time.Time"
 	typeEmailCreds  logutils.MessageDataType = "email creds"
 	typeEmailParams logutils.MessageDataType = "email params"
+
+	codeMax int = 1000000
 )
 
 //enailCreds represents the creds struct for email auth
@@ -291,9 +293,10 @@ func (m *emailMfaImpl) enroll(identifier string) (*model.MFAType, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-//sendCode not used for TOTP
-func (m *emailMfaImpl) sendCode(accountID string) (string, error) {
-	return "", nil
+func (m *emailMfaImpl) sendCode(identifier string) (string, *time.Time, error) {
+	code := fmt.Sprintf("%06d", utils.GenerateRandomInt(codeMax))
+	//TODO: return expiration time, send code to identifier
+	return code, nil, errors.New(logutils.Unimplemented)
 }
 
 //initEmailMfa initializes and registers a new email mfa instance

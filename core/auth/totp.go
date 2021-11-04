@@ -77,14 +77,13 @@ func (m *totpMfaImpl) enroll(identifier string) (*model.MFAType, error) {
 		"qr_code":    buf.String(),
 	}
 
-	//Recipient is empty for totp
 	id, _ := uuid.NewUUID()
 	return &model.MFAType{ID: id.String(), Type: MfaTypeTotp, Verified: false, Params: params, DateCreated: now}, nil
 }
 
 //sendCode not used for TOTP
-func (m *totpMfaImpl) sendCode(accountID string) (string, error) {
-	return "", errors.New(logutils.Unimplemented)
+func (m *totpMfaImpl) sendCode(identifier string) (string, *time.Time, error) {
+	return "", nil, errors.New(logutils.Unimplemented)
 }
 
 //initTotpMfa initializes and registers a new totp mfa instance

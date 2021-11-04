@@ -3,8 +3,10 @@ package auth
 import (
 	"context"
 	"core-building-block/core/model"
+	"core-building-block/utils"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -20,7 +22,10 @@ import (
 
 const (
 	//AuthTypeTwilioPhone phone auth type
-	AuthTypeTwilioPhone      string                   = "twilio_phone"
+	AuthTypeTwilioPhone string = "twilio_phone"
+	//MfaTypePhone phone mfa type
+	MfaTypePhone string = "phone"
+
 	servicesPathPart                                  = "https://verify.twilio.com/v2/Services"
 	verificationsPathPart                             = "Verifications"
 	verificationCheckPart                             = "VerificationCheck"
@@ -274,6 +279,59 @@ func initPhoneAuth(auth *Auth, twilioAccountSID string, twilioToken string, twil
 	err := auth.registerAuthType(phone.authType, phone)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+	}
+
+	return phone, nil
+}
+
+// Phone implementation of mfaType
+type phoneMfaImpl struct {
+	auth    *Auth
+	mfaType string
+}
+
+func (m *phoneMfaImpl) verify(params map[string]interface{}, code string) (*string, error) {
+	var message string
+
+	storedCode, ok := params["code"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "stored mfa code", nil)
+	}
+	if code != storedCode {
+		message = "invalid code"
+		return &message, errors.ErrorData(logutils.StatusInvalid, "mfa code", nil)
+	}
+
+	expiry, ok := params["expires"].(time.Time)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "stored expiry", nil)
+	}
+	if time.Now().UTC().After(expiry) {
+		message = "expired code"
+		return &message, errors.ErrorData(logutils.StatusInvalid, "expired code", nil)
+	}
+
+	return nil, nil
+}
+
+func (m *phoneMfaImpl) enroll(identifier string) (*model.MFAType, error) {
+	//TODO: make sure to set identifier field in params
+	return nil, errors.New(logutils.Unimplemented)
+}
+
+func (m *phoneMfaImpl) sendCode(identifier string) (string, *time.Time, error) {
+	code := fmt.Sprintf("%06d", utils.GenerateRandomInt(codeMax))
+	//TODO: return expiration time, send code to identifier
+	return code, nil, errors.New(logutils.Unimplemented)
+}
+
+//initPhoneMfa initializes and registers a new phone mfa instance
+func initPhoneMfa(auth *Auth) (*phoneMfaImpl, error) {
+	phone := &phoneMfaImpl{auth: auth, mfaType: MfaTypePhone}
+
+	err := auth.registerMfaType(phone.mfaType, phone)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeMfaType, nil, err)
 	}
 
 	return phone, nil

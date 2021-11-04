@@ -992,6 +992,18 @@ func (sa *Adapter) UpdateMFAType(mfa *model.MFAType, accountID string, recoveryC
 		//check if account recovery codes exist, if not then set them, do nothing if they exist
 		//only perform update if updated MFA type is verified
 		if mfa.Verified {
+			// account, err := sa.findAccount("_id", accountID)
+			// if err != nil {
+			// 	return false, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": accountID}, err)
+			// }
+			// if len(account.MFATypes) == 1 {
+			// 	//TODO: transaction logic will be performed in core/auth/apis.go
+			// 	//	call recovery.enroll() and call InsertMFAType passing returned *model.MFAType
+			// 	err = sa.InsertMFAType(mfa, accountID)
+			// 	if err != nil {
+			// 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeMFAType, nil, err)
+			// 	}
+			// }
 			filter = bson.D{primitive.E{Key: "_id", Value: accountID}, primitive.E{Key: "recovery_codes", Value: bson.M{"$exists": false}}}
 			update = bson.D{
 				primitive.E{Key: "$set", Value: bson.D{
@@ -1056,6 +1068,13 @@ func (sa *Adapter) DeleteMFAType(accountID string, identifier string, mfaType st
 
 		//check if account recovery codes exist and mfa_types is empty
 		//remove recovery codes if this is the case (will be regenerated if MFA is re-enabled)
+
+		// account, err := sa.findAccount("_id", accountID)
+		// if err != nil {
+		// 	return false, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": accountID}, err)
+		// }
+
+		//TODO: what to do with recovery codes if last MFA type is removed? -> remove and regenerate if user re-enrolls
 		filter = bson.D{
 			primitive.E{Key: "_id", Value: accountID},
 			primitive.E{Key: "mfa_types", Value: bson.M{"$size": 0}},

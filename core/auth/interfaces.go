@@ -53,9 +53,12 @@ type anonymousAuthType interface {
 
 //mfaType is the interface for multi-factor authentication
 type mfaType interface {
+	//verify verifies the code based on stored mfa params
 	verify(params map[string]interface{}, code string) (*string, error)
+	//enroll creates a mfa type to be added to an account
 	enroll(identifier string) (*model.MFAType, error)
-	sendCode(accountID string) (string, error)
+	//sendCode generates a mfa code and expiration time and sends the code to the user
+	sendCode(identifier string) (string, *time.Time, error)
 }
 
 //APIs is the interface which defines the APIs provided by the auth package

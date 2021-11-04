@@ -144,6 +144,9 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initSamlAuth(auth)
 
 	initTotpMfa(auth)
+	initEmailMfa(auth)
+	initPhoneMfa(auth)
+	initRecoveryMfa(auth)
 
 	err = auth.cacheIdentityProviders()
 	if err != nil {
@@ -812,19 +815,6 @@ func (a *Auth) getExp(exp *int64) int64 {
 	}
 
 	return *exp
-}
-
-func (a *Auth) generateRecoveryCodes() ([]string, error) {
-	codes := make([]string, 10)
-	for i := 0; i < 10; i++ {
-		newCode, err := utils.GenerateRandomString(16)
-		if err != nil {
-			return nil, errors.WrapErrorAction("generating", "random string", nil, err)
-		}
-		codes[i] = string(newCode)
-	}
-
-	return codes, nil
 }
 
 //storeReg stores the service registration record

@@ -530,19 +530,20 @@ func (a *Auth) VerifyMFA(accountID string, identifier string, mfaType string, mf
 
 	mfa.Verified = true
 
-	recoveryCodes, err := a.generateRecoveryCodes()
-	if err != nil {
-		return false, nil, errors.WrapErrorAction("generating", "mfa recovery codes", errFields, err)
-	}
+	//TODO: put transaction here to update MFA and insert recovery MFA (if necessary)
+	// recoveryCodes, err := a.generateRecoveryCodes()
+	// if err != nil {
+	// 	return false, nil, errors.WrapErrorAction("generating", "mfa recovery codes", errFields, err)
+	// }
 
-	shouldReturnCodes, err := a.storage.UpdateMFAType(mfa, accountID, recoveryCodes)
-	if err != nil {
-		return false, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, errFields, err)
-	}
+	// shouldReturnCodes, err := a.storage.UpdateMFAType(mfa, accountID, recoveryCodes)
+	// if err != nil {
+	// 	return false, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, errFields, err)
+	// }
 
-	if shouldReturnCodes {
-		return true, recoveryCodes, nil
-	}
+	// if shouldReturnCodes {
+	// 	return true, recoveryCodes, nil
+	// }
 	return true, nil, nil
 }
 
