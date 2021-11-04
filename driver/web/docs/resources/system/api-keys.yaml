@@ -1,17 +1,18 @@
 get:
+  deprecated: true
   tags:
-  - Admin
-  summary: Get service registrations
+  - System
+  summary: Get API key
   description: |
-    Returns service registration records
+    Returns API key record
 
-    **Auth:** Requires auth token with `service_admin` permission
+    **Auth:** Requires auth token with `get_api-keys` permission
   security:
     - bearerAuth: []
   parameters:
-    - name: ids
+    - name: id
       in: query
-      description: A comma-separated list of service IDs to return registrations for
+      description: The ID of the API key to return
       required: true
       style: form
       explode: false
@@ -23,9 +24,7 @@ get:
       content:
         application/json:
           schema:
-            type: array
-            items: 
-              $ref: '../../schemas/auth/ServiceReg.yaml'
+            $ref: '../../schemas/auth/APIKey.yaml'
     400:
       description: Bad request
     401:
@@ -33,23 +32,27 @@ get:
     500:
       description: Internal error
 post:
+  deprecated: true
   tags:
-  - Admin
-  summary: Register service
+  - System
+  summary: Create API key
   description: |
-    Creates a new service registration
+    Creates a new API key record
 
-    The "service_id" of the registration must not match an existing registration  
-
-    **Auth:** Requires auth token with `service_admin` permission
+    **Auth:** Requires auth token with `update_api-keys` permission
   security:
     - bearerAuth: []
   requestBody:
-    description: service registration record to be added
+    description: API key record to be added
     content:
       application/json:
         schema:
-          $ref: '../../schemas/auth/ServiceReg.yaml'
+          $ref: '../../schemas/auth/APIKey.yaml'
+        example: |
+          {
+            "app_id": "string",
+            "key": "string"
+          }
     required: true
   responses:
     200:
@@ -66,23 +69,24 @@ post:
     500:
       description: Internal error
 put:
+  deprecated: true
   tags:
-  - Admin
-  summary: Update service registration
+  - System
+  summary: Update API key
   description: |
-    Update an existing service registration
+    Update an existing API key record
 
-    The "service_id" of the registration must match an existing registration
+    Must include the "id" field to identify which key is to be udpated
 
-    **Auth:** Requires auth token with `service_admin` permission
+    **Auth:** Requires auth token with `update_api-keys` permission
   security:
     - bearerAuth: []
   requestBody:
-    description: Service registration record update to be applied
+    description: API key record update to be applied
     content:
       application/json:
         schema:
-          $ref: '../../schemas/auth/ServiceReg.yaml'
+          $ref: '../../schemas/auth/APIKey.yaml'
     required: true
   responses:
     200:
@@ -99,19 +103,20 @@ put:
     500:
       description: Internal error
 delete:
+  deprecated: true
   tags:
-  - Admin
-  summary: Deregister service
+  - System
+  summary: Delete API key
   description: |
-    Deletes an existing service registration record
+    Deletes an existing API key record
 
-    **Auth:** Requires auth token with `service_admin` permission
+    **Auth:** Requires auth token with `update_api-keys` permission
   security:
     - bearerAuth: []
   parameters:
     - name: id
       in: query
-      description: The service ID of the registration to delete
+      description: The ID of the API key to delete
       required: true
       style: form
       explode: false

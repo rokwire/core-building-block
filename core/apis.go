@@ -13,6 +13,7 @@ type APIs struct {
 	Administration Administration //expose to the drivers adapters
 	Encryption     Encryption     //expose to the drivers adapters
 	BBs            BBs            //expose to the drivers adapters
+	System         System         //expose to the drivers adapters
 
 	Auth auth.APIs //expose to the drivers auth
 
@@ -46,10 +47,11 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 	administrationImpl := &administrationImpl{app: &application}
 	encryptionImpl := &encryptionImpl{app: &application}
 	bbsImpl := &bbsImpl{app: &application}
+	systemImpl := &systemImpl{app: &application}
 
 	//+ auth
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
-		BBs: bbsImpl, Auth: auth, app: &application}
+		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application}
 
 	return &coreAPIs
 }
@@ -105,66 +107,6 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
-func (s *administrationImpl) AdmCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
-	return s.app.admCreateGlobalConfig(setting)
-}
-
-func (s *administrationImpl) AdmGetGlobalConfig() (*model.GlobalConfig, error) {
-	return s.app.admGetGlobalConfig()
-}
-
-func (s *administrationImpl) AdmUpdateGlobalConfig(setting string) error {
-	return s.app.admUpdateGlobalConfig(setting)
-}
-
-func (s *administrationImpl) AdmCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {
-	return s.app.admCreateOrganization(name, requestType, organizationDomains)
-}
-
-func (s *administrationImpl) AdmUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error {
-	return s.app.admUpdateOrganization(ID, name, requestType, organizationDomains)
-}
-
-func (s *administrationImpl) AdmGetOrganizations() ([]model.Organization, error) {
-	return s.app.admGetOrganizations()
-}
-
-func (s *administrationImpl) AdmGetOrganization(ID string) (*model.Organization, error) {
-	return s.app.admGetOrganization(ID)
-}
-
-func (s *administrationImpl) AdmCreateApplication(name string, multiTenant bool, requiresOwnUsers bool, identifier string, nameInType string, versions []string) (*model.Application, error) {
-	return s.app.admCreateApplication(name, multiTenant, requiresOwnUsers, identifier, nameInType, versions)
-}
-
-func (s *administrationImpl) AdmGetApplication(ID string) (*model.Application, error) {
-	return s.app.admGetApplication(ID)
-}
-
-func (s *administrationImpl) AdmGetApplications() ([]model.Application, error) {
-	return s.app.admGetApplications()
-}
-
-func (s *administrationImpl) AdmCreatePermission(name string, serviceIDs []string) (*model.Permission, error) {
-	return s.app.admCreatePermission(name, serviceIDs)
-}
-
-func (s *administrationImpl) AdmUpdatePermission(name string, serviceIDs *[]string) (*model.Permission, error) {
-	return s.app.admUpdatePermission(name, serviceIDs)
-}
-
-func (s *administrationImpl) AdmCreateApplicationRole(name string, appID string, description string, permissionNames []string) (*model.ApplicationRole, error) {
-	return s.app.admCreateApplicationRole(name, appID, description, permissionNames)
-}
-
-func (s *administrationImpl) AdmGrantAccountPermissions(accountID string, permissionNames []string) error {
-	return s.app.admGrantAccountPermissions(accountID, permissionNames)
-}
-
-func (s *administrationImpl) AdmGrantAccountRoles(accountID string, appID string, roleIDs []string) error {
-	return s.app.admGrantAccountRoles(accountID, appID, roleIDs)
-}
-
 ///
 
 //encryptionImpl
@@ -187,6 +129,74 @@ type bbsImpl struct {
 
 func (s *bbsImpl) BBsGetTest() string {
 	return s.app.bbsGetTest()
+}
+
+///
+
+//systemImpl
+
+type systemImpl struct {
+	app *application
+}
+
+func (s *systemImpl) SysCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
+	return s.app.sysCreateGlobalConfig(setting)
+}
+
+func (s *systemImpl) SysGetGlobalConfig() (*model.GlobalConfig, error) {
+	return s.app.sysGetGlobalConfig()
+}
+
+func (s *systemImpl) SysUpdateGlobalConfig(setting string) error {
+	return s.app.sysUpdateGlobalConfig(setting)
+}
+
+func (s *systemImpl) SysCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {
+	return s.app.sysCreateOrganization(name, requestType, organizationDomains)
+}
+
+func (s *systemImpl) SysUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error {
+	return s.app.sysUpdateOrganization(ID, name, requestType, organizationDomains)
+}
+
+func (s *systemImpl) SysGetOrganizations() ([]model.Organization, error) {
+	return s.app.sysGetOrganizations()
+}
+
+func (s *systemImpl) SysGetOrganization(ID string) (*model.Organization, error) {
+	return s.app.sysGetOrganization(ID)
+}
+
+func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, requiresOwnUsers bool, identifier string, nameInType string, versions []string) (*model.Application, error) {
+	return s.app.sysCreateApplication(name, multiTenant, requiresOwnUsers, identifier, nameInType, versions)
+}
+
+func (s *systemImpl) SysGetApplication(ID string) (*model.Application, error) {
+	return s.app.sysGetApplication(ID)
+}
+
+func (s *systemImpl) SysGetApplications() ([]model.Application, error) {
+	return s.app.sysGetApplications()
+}
+
+func (s *systemImpl) SysCreatePermission(name string, serviceID string, assigners *[]string) (*model.Permission, error) {
+	return s.app.sysCreatePermission(name, serviceID, assigners)
+}
+
+func (s *systemImpl) SysUpdatePermission(name string, serviceID *string, assigners *[]string) (*model.Permission, error) {
+	return s.app.sysUpdatePermission(name, serviceID, assigners)
+}
+
+func (s *systemImpl) SysCreateAppOrgRole(name string, appOrgID string, description string, permissionNames []string) (*model.AppOrgRole, error) {
+	return s.app.sysCreateAppOrgRole(name, appOrgID, description, permissionNames)
+}
+
+func (s *systemImpl) SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
+	return s.app.sysGrantAccountPermissions(accountID, permissionNames, assignerPermissions)
+}
+
+func (s *systemImpl) SysGrantAccountRoles(accountID string, appID string, roleIDs []string) error {
+	return s.app.sysGrantAccountRoles(accountID, appID, roleIDs)
 }
 
 ///
