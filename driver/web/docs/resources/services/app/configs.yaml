@@ -13,7 +13,7 @@ post:
         examples:
           withoutSecretKeys:
             value:
-              mobileAppVersion: "1.0.1"
+              mobile_app_version: "1.0.1"
               app_id: "9770"
               platformBuildingBlocks:
                 appconfig: https://api.rokwire.illinois.edu/app/configs
@@ -32,7 +32,7 @@ post:
                   "ios": "itms-apps://itunes.apple.com/us/app/apple-store/id327630330"
           withSecretKeys:
             value:
-              mobileAppVersion: "1.0.2"
+              mobile_app_version: "1.0.2"
               app_id: "9770"
               platformBuildingBlocks:
                 appconfig: https://api.rokwire.illinois.edu/app/configs
@@ -73,7 +73,7 @@ get:
   parameters:
     - name: version
       in: query
-      description: query by mobile app version, results contain all app configurations if no paramer is given; If given mobileAppVersion, it will return the closest app config that is less than or equal to the given version.
+      description: query by mobile app version, results contain all app configurations if no paramer is given; If given mobile_app_version, it will return the closest app config that is less than or equal to the given version.
       style: form
       explode: false
       schema:

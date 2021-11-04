@@ -458,7 +458,7 @@ func (m *database) applyApplicationConfigsChecks(applicationConfigs *collectionW
 	m.logger.Info("apply applications configs checks.....")
 
 	//add appconfigs index
-	err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "version", Value: 1}}, true)
+	err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "mobile_app_version", Value: 1}}, true)
 	if err != nil {
 		return err
 	}

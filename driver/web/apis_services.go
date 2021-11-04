@@ -441,18 +441,20 @@ func (h ServicesApisHandler) createAppConfig(l *logs.Log, r *http.Request, claim
 		"secretKeys":              requestData.SecretKeys,
 		"upgrade":                 requestData.Upgrade,
 	}
-	config, err := h.coreAPIs.Services.SerCreateAppConfig(requestData.MobileAppVersion, requestData.AppId, configData)
+	_, err = h.coreAPIs.Services.SerCreateAppConfig(requestData.MobileAppVersion, requestData.AppId, configData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
 	}
 
-	response := config
-	data, err = json.Marshal(response)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, false)
-	}
+	// response := config
+	// data, err = json.Marshal(response)
+	// if err != nil {
+	// 	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, false)
+	// }
 
-	return l.HttpResponseSuccessJSON(data)
+	// return l.HttpResponseSuccessJSON(data)
+
+	return l.HttpResponseSuccess()
 }
 
 func (h ServicesApisHandler) updateAppConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
@@ -473,7 +475,7 @@ func (h ServicesApisHandler) updateAppConfig(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "appconfig update request", nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.Services.SerUpdateAppConfig(ID, appConfig.Version, appConfig.Data)
+	err = h.coreAPIs.Services.SerUpdateAppConfig(ID, appConfig.MobileAppVersion, appConfig.Data)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
 	}

@@ -504,7 +504,7 @@ type ReqCreateApplicationConfigsRequest struct {
 	Id    *string `json:"id,omitempty"`
 
 	// unique and is empty or conforms major.minor.patch format
-	MobileAppVersion        string                 `json:"mobileAppVersion"`
+	MobileAppVersion        string                 `json:"mobile_app_version"`
 	OtherUniversityServices map[string]interface{} `json:"otherUniversityServices"`
 	PlatformBuildingBlocks  map[string]interface{} `json:"platformBuildingBlocks"`
 	SecretKeys              string                 `json:"secretKeys"`
@@ -850,7 +850,7 @@ type PutServicesAccountProfileJSONBody ReqSharedProfile
 
 // GetServicesAppConfigsParams defines parameters for GetServicesAppConfigs.
 type GetServicesAppConfigsParams struct {
-	// query by mobile app version, results contain all app configurations if no paramer is given; If given mobileAppVersion, it will return the closest app config that is less than or equal to the given version.
+	// query by mobile app version, results contain all app configurations if no paramer is given; If given mobile_app_version, it will return the closest app config that is less than or equal to the given version.
 	Version *string `json:"version,omitempty"`
 }
 

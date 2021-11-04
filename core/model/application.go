@@ -226,10 +226,10 @@ type AuthTypesSupport struct {
 
 //ApplicationConfigs represents mobile app configs
 type ApplicationConfigs struct {
-	ID          string                 `json:"id" bson:"_id" validate:"required"`
-	AppID       string                 `json:"app_id" bson:"app_id" validate:"required"`
-	Version     string                 `json:"version" bson:"version" validate:"required"`
-	Data        map[string]interface{} `json:"data" bson:"data"`
-	DateCreated time.Time              `json:"date_created" bson:"date_created"`
-	DateUpdated *time.Time             `json:"date_updated" bson:"date_updated"`
+	ID               string                 `json:"id" bson:"_id" validate:"required"`
+	AppID            string                 `json:"app_id" bson:"app_id" validate:"required"`
+	MobileAppVersion string                 `json:"mobile_app_version" bson:"mobile_app_version" validate:"required"`
+	Data             map[string]interface{} `json:"data" bson:"data"`
+	DateCreated      time.Time              `json:"date_created" bson:"date_created"`
+	DateUpdated      *time.Time             `json:"date_updated" bson:"date_updated"`
 }
