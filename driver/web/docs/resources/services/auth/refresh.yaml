@@ -8,9 +8,9 @@ post:
     description: |
       Refresh token
     content:
-      text/plain:
+      application/json:
         schema:
-          type: string
+          $ref: "../../../schemas/apis/shared/requests/refresh/Request.yaml"
     required: true
   responses:
     200:
@@ -18,7 +18,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/apis/services/refresh/response/Response.yaml"
+            $ref: "../../../schemas/apis/shared/responses/refresh/Response.yaml"
     400:
       description: Bad request
     401:

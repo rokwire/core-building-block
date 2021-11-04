@@ -14,5 +14,3 @@ properties:
       - other
   os:
     type: string
-  mac_address:
-    type: string

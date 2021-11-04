@@ -1,0 +1,16 @@
+type: object
+description: Auth login response params for auth_type="oidc" (or variants)
+properties:
+  oidc_token:
+    type: object
+    properties:
+      id_token:
+        type: string
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+      redirect_uri:
+        type: string

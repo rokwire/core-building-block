@@ -4,7 +4,7 @@ import (
 	"core-building-block/utils"
 	"time"
 
-	"github.com/rokmetro/logging-library/logutils"
+	"github.com/rokwire/logging-library-go/logutils"
 )
 
 const (
@@ -32,12 +32,11 @@ const (
 type Account struct {
 	ID string //this is ID for the account
 
-	Application  Application
-	Organization Organization
+	AppOrg ApplicationOrganization
 
-	Permissions []ApplicationPermission
-	Roles       []ApplicationRole
-	Groups      []ApplicationGroup
+	Permissions []Permission
+	Roles       []AppOrgRole
+	Groups      []AppOrgGroup
 
 	AuthTypes []AccountAuthType
 
@@ -54,18 +53,21 @@ type Account struct {
 
 //GetAccountAuthType finds account auth type
 func (a Account) GetAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
+	var result AccountAuthType
 	for _, aat := range a.AuthTypes {
 		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {
-			return &aat
+			result = aat
 		}
 	}
-	return nil
+	//assign account
+	result.Account = a
+	return &result
 }
 
 //GetPermissions returns all permissions granted to this account
-func (a Account) GetPermissions() []ApplicationPermission {
+func (a Account) GetPermissions() []Permission {
 	permissionsMap := a.GetPermissionsMap()
-	permissions := make([]ApplicationPermission, len(permissionsMap))
+	permissions := make([]Permission, len(permissionsMap))
 	i := 0
 	for _, permission := range permissionsMap {
 		permissions[i] = permission
@@ -87,8 +89,8 @@ func (a Account) GetPermissionNames() []string {
 }
 
 //GetPermissionsMap returns a map of all permissions granted to this account
-func (a Account) GetPermissionsMap() map[string]ApplicationPermission {
-	permissionsMap := make(map[string]ApplicationPermission, len(a.Permissions))
+func (a Account) GetPermissionsMap() map[string]Permission {
+	permissionsMap := make(map[string]Permission, len(a.Permissions))
 	for _, permission := range a.Permissions {
 		permissionsMap[permission.Name] = permission
 	}
@@ -170,11 +172,7 @@ type Profile struct {
 type Device struct {
 	ID   string
 	Type string //mobile, web, desktop, other
-
-	//TODO - other fields when they are clear
-	OS         string //?
-	MacAddress string //?
-	///
+	OS   string
 
 	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
 	Accounts []Account
