@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.8.0
+  version: 1.11.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -14,15 +14,17 @@ servers:
     description: Local server
 tags:
   - name: Services
-    description: End users applications APIs.
+    description: Clients applications APIs.
   - name: Admin
-    description: Administration applications APIs.
+    description: Clients administration applications APIs.
   - name: Enc
     description: APIs consumed by the Encryption building block.
   - name: BBs
     description: APIs consumed by the platform building blocks.
   - name: Third-Party Services
     description: APIs consumed by third-party services.
+  - name: System
+    description: System APIs.
 paths:
   /services/auth/login:
     post:
@@ -762,90 +764,6 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/global-config:
-    get:
-      tags:
-        - Admin
-      summary: Get global config
-      description: |
-        Gives the system global config
-
-        **Auth:** Requires auth token with `config_admin` permission
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GlobalConfig'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    post:
-      tags:
-        - Admin
-      summary: Create global config
-      description: |
-        Creates the system global config
-
-        **Auth:** Requires auth token with `config_admin` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GlobalConfig'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    put:
-      tags:
-        - Admin
-      summary: Update global config
-      description: |
-        Updates the system global config
-
-        **Auth:** Requires auth token with `config_admin` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GlobalConfig'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
   /admin/auth/account-exists:
     post:
       tags:
@@ -868,662 +786,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/_res_account-exists_Response'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  '/admin/organizations/{id}':
-    put:
-      tags:
-        - Admin
-      summary: Update organization
-      description: |
-        Updates organization
-
-         **Auth:** Requires auth token with `org_admin` permission
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          description: ID of the organization that needs to be updated
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
-      requestBody:
-        description: update one organization
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_req_update_Organization_Request'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    get:
-      tags:
-        - Admin
-      summary: Get organization
-      description: |
-        Gets organization
-
-        **Auth:** Requires auth token with `org_admin` permission
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          description: ID of the organization
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/_req_get_Organization_Request'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '404':
-          description: Not Found
-        '500':
-          description: Internal error
-  /admin/organizations:
-    get:
-      tags:
-        - Admin
-      summary: Get organizations
-      description: |
-        Gets organizations
-
-        **Auth:** Requires auth token with `org_admin` permission
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/_res_get_Organizations_Response'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    post:
-      tags:
-        - Admin
-      summary: Create organization
-      description: |
-        Creates organization
-
-        **Auth:** Requires auth token with `org_admin` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        description: creates one organization
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_req_create-Organization_Request'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /admin/service-regs:
-    get:
-      tags:
-        - Admin
-      summary: Get service registrations
-      description: |
-        Returns service registration records
-
-        **Auth:** Requires auth token with `service_admin` permission
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: ids
-          in: query
-          description: A comma-separated list of service IDs to return registrations for
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ServiceReg'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    post:
-      tags:
-        - Admin
-      summary: Register service
-      description: |
-        Creates a new service registration
-
-        The "service_id" of the registration must not match an existing registration  
-
-        **Auth:** Requires auth token with `service_admin` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        description: service registration record to be added
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ServiceReg'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    put:
-      tags:
-        - Admin
-      summary: Update service registration
-      description: |
-        Update an existing service registration
-
-        The "service_id" of the registration must match an existing registration
-
-        **Auth:** Requires auth token with `service_admin` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        description: Service registration record update to be applied
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ServiceReg'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    delete:
-      tags:
-        - Admin
-      summary: Deregister service
-      description: |
-        Deletes an existing service registration record
-
-        **Auth:** Requires auth token with `service_admin` permission
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: query
-          description: The service ID of the registration to delete
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  '/admin/applications/{id}':
-    get:
-      tags:
-        - Admin
-      summary: Get application
-      description: |
-        Gets application
-
-        **Auth:** Requires auth token with `app_admin` permission
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          description: ID of the application
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/_req_get_Application_Request'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '404':
-          description: Not Found
-        '500':
-          description: Internal error
-  /admin/applications:
-    get:
-      tags:
-        - Admin
-      summary: Get applications
-      description: |
-        Gets applications
-
-        **Auth:** Requires auth token with `app_admin` permission
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/_res_get_Applications_Response'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    post:
-      tags:
-        - Admin
-      summary: Create application
-      description: |
-        Creates application
-
-        **Auth:** Requires auth token with `app_admin` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        description: creates one application
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_req_create_Application_Request'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /admin/application-permissions:
-    post:
-      tags:
-        - Admin
-      summary: Create application permission
-      description: |
-        Creates application permission
-
-        **Auth:** Requires auth token with `auth_admin` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        description: Application permission
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_req_application-permissions_Request'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /admin/application-roles:
-    post:
-      tags:
-        - Admin
-      summary: Create application role
-      description: |
-        Creates application role
-
-        **Auth:** Requires auth token with `auth_admin` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        description: Application role
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_req_application-roles_Request'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /admin/application-api-keys:
-    get:
-      tags:
-        - Admin
-      summary: Get application API keys
-      description: |
-        Returns all API key records for a given app ID
-
-        **Auth:** Requires auth token with `get_api-keys` permission
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: app_id
-          in: query
-          description: The app ID of the API keys to return
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/APIKey'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /admin/account/permissions:
-    put:
-      tags:
-        - Admin
-      summary: Grant account permissions
-      description: |
-        Grant account permissions
-
-        **Auth:** Requires auth token with `auth_admin` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        description: Permissions
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_req_account-permissions_Request'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /admin/account/roles:
-    put:
-      tags:
-        - Admin
-      summary: Grant account roles
-      description: |
-        Grant account roles
-
-        **Auth:** Requires auth token with `auth_admin` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        description: Roles
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_req_account-roles_Request'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /admin/api-keys:
-    get:
-      tags:
-        - Admin
-      summary: Get API key
-      description: |
-        Returns API key record
-
-        **Auth:** Requires auth token with `get_api-keys` permission
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: query
-          description: The ID of the API key to return
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIKey'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    post:
-      tags:
-        - Admin
-      summary: Create API key
-      description: |
-        Creates a new API key record
-
-        **Auth:** Requires auth token with `update_api-keys` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        description: API key record to be added
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/APIKey'
-            example: |
-              {
-                "app_id": "string",
-                "key": "string"
-              }
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    put:
-      tags:
-        - Admin
-      summary: Update API key
-      description: |
-        Update an existing API key record
-
-        Must include the "id" field to identify which key is to be udpated
-
-        **Auth:** Requires auth token with `update_api-keys` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        description: API key record update to be applied
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/APIKey'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    delete:
-      tags:
-        - Admin
-      summary: Delete API key
-      description: |
-        Deletes an existing API key record
-
-        **Auth:** Requires auth token with `update_api-keys` permission
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: query
-          description: The ID of the API key to delete
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
         '400':
           description: Bad request
         '401':
@@ -1638,6 +900,801 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /system/global-config:
+    get:
+      deprecated: true
+      tags:
+        - System
+      summary: Get global config
+      description: |
+        Gives the system global config
+
+        **Auth:** Requires auth token with `config_admin` permission
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobalConfig'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      deprecated: true
+      tags:
+        - System
+      summary: Create global config
+      description: |
+        Creates the system global config
+
+        **Auth:** Requires auth token with `config_admin` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GlobalConfig'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      deprecated: true
+      tags:
+        - System
+      summary: Update global config
+      description: |
+        Updates the system global config
+
+        **Auth:** Requires auth token with `config_admin` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GlobalConfig'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  '/system/organizations/{id}':
+    put:
+      deprecated: true
+      tags:
+        - System
+      summary: Update organization
+      description: |
+        Updates organization
+
+         **Auth:** Requires auth token with `org_admin` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the organization that needs to be updated
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: update one organization
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_update_Organization_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    get:
+      deprecated: true
+      tags:
+        - System
+      summary: Get organization
+      description: |
+        Gets organization
+
+        **Auth:** Requires auth token with `org_admin` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the organization
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_req_get_Organization_Request'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+        '500':
+          description: Internal error
+  /system/organizations:
+    get:
+      deprecated: true
+      tags:
+        - System
+      summary: Get organizations
+      description: |
+        Gets organizations
+
+        **Auth:** Requires auth token with `org_admin` permission
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/_res_get_Organizations_Response'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      deprecated: true
+      tags:
+        - System
+      summary: Create organization
+      description: |
+        Creates organization
+
+        **Auth:** Requires auth token with `org_admin` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: creates one organization
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_create-Organization_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/service-regs:
+    get:
+      deprecated: true
+      tags:
+        - System
+      summary: Get service registrations
+      description: |
+        Returns service registration records
+
+        **Auth:** Requires auth token with `service_admin` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ids
+          in: query
+          description: A comma-separated list of service IDs to return registrations for
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceReg'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      deprecated: true
+      tags:
+        - System
+      summary: Register service
+      description: |
+        Creates a new service registration
+
+        The "service_id" of the registration must not match an existing registration  
+
+        **Auth:** Requires auth token with `service_admin` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: service registration record to be added
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceReg'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      deprecated: true
+      tags:
+        - System
+      summary: Update service registration
+      description: |
+        Update an existing service registration
+
+        The "service_id" of the registration must match an existing registration
+
+        **Auth:** Requires auth token with `service_admin` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Service registration record update to be applied
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceReg'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      deprecated: true
+      tags:
+        - System
+      summary: Deregister service
+      description: |
+        Deletes an existing service registration record
+
+        **Auth:** Requires auth token with `service_admin` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          description: The service ID of the registration to delete
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  '/system/applications/{id}':
+    get:
+      deprecated: true
+      tags:
+        - System
+      summary: Get application
+      description: |
+        Gets application
+
+        **Auth:** Requires auth token with `app_admin` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the application
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_req_get_Application_Request'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+        '500':
+          description: Internal error
+  /system/applications:
+    get:
+      deprecated: true
+      tags:
+        - System
+      summary: Get applications
+      description: |
+        Gets applications
+
+        **Auth:** Requires auth token with `app_admin` permission
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/_res_get_Applications_Response'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      deprecated: true
+      tags:
+        - System
+      summary: Create application
+      description: |
+        Creates application
+
+        **Auth:** Requires auth token with `app_admin` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: creates one application
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_create_Application_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/permissions:
+    post:
+      deprecated: true
+      tags:
+        - System
+      summary: Create permission
+      description: |
+        Creates permission
+
+        **Auth:** Requires auth token with `all_permission` or 'update_permission" permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Permission
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_permissions_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      deprecated: true
+      tags:
+        - System
+      summary: Updates permission
+      description: |
+        Updates permission
+
+        **Auth:** Requires auth token with `all_permission` or 'update_permission" permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Permission
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_permissions_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/application-roles:
+    post:
+      deprecated: true
+      tags:
+        - System
+      summary: Create application role
+      description: |
+        Creates application role
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Application role
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_application-roles_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/application-api-keys:
+    get:
+      deprecated: true
+      tags:
+        - System
+      summary: Get application API keys
+      description: |
+        Returns all API key records for a given app ID
+
+        **Auth:** Requires auth token with `get_api-keys` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: app_id
+          in: query
+          description: The app ID of the API keys to return
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/APIKey'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/account/permissions:
+    put:
+      deprecated: true
+      tags:
+        - System
+      summary: Grant account permissions
+      description: |
+        Grant account permissions
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Permissions
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_account-permissions_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/account/roles:
+    put:
+      deprecated: true
+      tags:
+        - System
+      summary: Grant account roles
+      description: |
+        Grant account roles
+
+        **Auth:** Requires auth token with `auth_admin` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Roles
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_account-roles_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/api-keys:
+    get:
+      deprecated: true
+      tags:
+        - System
+      summary: Get API key
+      description: |
+        Returns API key record
+
+        **Auth:** Requires auth token with `get_api-keys` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          description: The ID of the API key to return
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKey'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      deprecated: true
+      tags:
+        - System
+      summary: Create API key
+      description: |
+        Creates a new API key record
+
+        **Auth:** Requires auth token with `update_api-keys` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: API key record to be added
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIKey'
+            example: |
+              {
+                "app_id": "string",
+                "key": "string"
+              }
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      deprecated: true
+      tags:
+        - System
+      summary: Update API key
+      description: |
+        Update an existing API key record
+
+        Must include the "id" field to identify which key is to be udpated
+
+        **Auth:** Requires auth token with `update_api-keys` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: API key record update to be applied
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIKey'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      deprecated: true
+      tags:
+        - System
+      summary: Delete API key
+      description: |
+        Deletes an existing API key record
+
+        **Auth:** Requires auth token with `update_api-keys` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          description: The ID of the API key to delete
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /version:
     get:
       summary: Get service version
@@ -1729,16 +1786,18 @@ components:
       properties:
         id:
           type: string
+        application:
+          $ref: '#/components/schemas/Application'
+        organization:
+          $ref: '#/components/schemas/Organization'
         TODO:
           type: string
-    ApplicationPermission:
+    Permission:
       type: object
       properties:
         fields:
-          $ref: '#/components/schemas/ApplicationPermissionFields'
-        application:
-          $ref: '#/components/schemas/Application'
-    ApplicationPermissionFields:
+          $ref: '#/components/schemas/PermissionFields'
+    PermissionFields:
       required:
         - id
         - name
@@ -1748,18 +1807,24 @@ components:
           type: string
         name:
           type: string
-    ApplicationRole:
+        service_id:
+          type: string
+        assigners:
+          type: array
+          items:
+            type: string
+    AppOrgRole:
       type: object
       properties:
         fields:
-          $ref: '#/components/schemas/ApplicationRoleFields'
+          $ref: '#/components/schemas/AppOrgRoleFields'
         application:
           $ref: '#/components/schemas/Application'
         permissions:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationPermission'
-    ApplicationRoleFields:
+            $ref: '#/components/schemas/Permission'
+    AppOrgRoleFields:
       required:
         - id
         - name
@@ -1769,22 +1834,24 @@ components:
           type: string
         name:
           type: string
-    ApplicationGroup:
+        system:
+          type: boolean
+    AppOrgGroup:
       type: object
       properties:
         fields:
-          $ref: '#/components/schemas/ApplicationGroupFields'
+          $ref: '#/components/schemas/AppOrgGroupFields'
         application:
           $ref: '#/components/schemas/Application'
         permissions:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationPermission'
+            $ref: '#/components/schemas/Permission'
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationRole'
-    ApplicationGroupFields:
+            $ref: '#/components/schemas/AppOrgRole'
+    AppOrgGroupFields:
       required:
         - id
         - name
@@ -1794,6 +1861,8 @@ components:
           type: string
         name:
           type: string
+        system:
+          type: boolean
     Organization:
       type: object
       properties:
@@ -2055,22 +2124,20 @@ components:
       properties:
         fields:
           $ref: '#/components/schemas/AccountFields'
-        application:
-          $ref: '#/components/schemas/Application'
-        organization:
-          $ref: '#/components/schemas/Organization'
+        app_org:
+          $ref: '#/components/schemas/ApplicationOrganization'
         permissions:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationPermission'
+            $ref: '#/components/schemas/Permission'
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationRole'
+            $ref: '#/components/schemas/AppOrgRole'
         groups:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationGroup'
+            $ref: '#/components/schemas/AppOrgGroup'
         auth_types:
           type: array
           items:
@@ -2483,15 +2550,15 @@ components:
         permissions:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationPermissionFields'
+            $ref: '#/components/schemas/PermissionFields'
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationRoleFields'
+            $ref: '#/components/schemas/AppOrgRoleFields'
         groups:
           type: array
           items:
-            $ref: '#/components/schemas/ApplicationGroupFields'
+            $ref: '#/components/schemas/AppOrgGroupFields'
         auth_types:
           type: array
           items:
@@ -2766,16 +2833,20 @@ components:
           type: boolean
         application_types:
           $ref: '#/components/schemas/ApplicationTypeFields'
-    _req_application-permissions_Request:
+    _req_permissions_Request:
       required:
         - name
-        - app_id
       type: object
       properties:
         name:
           type: string
-        app_id:
+        service_id:
           type: string
+        assigners:
+          type: array
+          description: permissions that could assign current permission to accounts
+          items:
+            type: string
     _req_application-roles_Request:
       required:
         - name

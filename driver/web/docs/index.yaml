@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.8.0
+  version: 1.11.0
 servers:
   - url: https://api.rokwire.illinois.edu/core
     description: Production server
@@ -14,15 +14,17 @@ servers:
     description: Local server
 tags:
   - name: Services
-    description: End users applications APIs.
+    description: Clients applications APIs.
   - name: Admin
-    description: Administration applications APIs.
+    description: Clients administration applications APIs.
   - name: Enc
     description: APIs consumed by the Encryption building block.
   - name: BBs
     description: APIs consumed by the platform building blocks.
   - name: Third-Party Services
     description: APIs consumed by third-party services.
+  - name: System
+    description: System APIs.
 paths:
   #services
   /services/auth/login:
@@ -55,34 +57,8 @@ paths:
     $ref: "./resources/admin/auth/refresh.yaml"
   /admin/auth/login-url:
     $ref: "./resources/admin/auth/login-url.yaml"
-  /admin/global-config:
-    $ref: "./resources/admin/global-config.yaml"
   /admin/auth/account-exists:
     $ref: "./resources/services/auth/account-exists.yaml"
-  /admin/organizations/{id}:
-    $ref: "./resources/admin/organizationsId.yaml"
-  /admin/organizations:
-    $ref: "./resources/admin/organizations.yaml"
-  /admin/service-regs:
-    $ref: "./resources/admin/service-regs.yaml"
-  /admin/applications/{id}:
-    $ref: "./resources/admin/applicationsId.yaml"
-  /admin/applications:
-    $ref: "./resources/admin/applications.yaml"
-  /admin/application-permissions:
-    $ref: "./resources/admin/application-permissions.yaml"
-  /admin/application-roles:
-    $ref: "./resources/admin/application-roles.yaml"
-  /admin/application-api-keys:
-    $ref: "./resources/admin/application-api-keys.yaml"
-
-  /admin/account/permissions:
-    $ref: "./resources/admin/account/permissions.yaml"
-  /admin/account/roles:
-    $ref: "./resources/admin/account/roles.yaml"
-    
-  /admin/api-keys:
-    $ref: "./resources/admin/api-keys.yaml"
 
   #enc
   /enc/test:
@@ -99,6 +75,32 @@ paths:
     $ref: "./resources/third-party-services/service-regs.yaml"
   /tps/auth-keys:
     $ref: "./resources/third-party-services/auth-keys.yaml"
+
+  #system
+  /system/global-config:
+    $ref: "./resources/system/global-config.yaml"
+  /system/organizations/{id}:
+    $ref: "./resources/system/organizationsId.yaml"
+  /system/organizations:
+    $ref: "./resources/system/organizations.yaml"
+  /system/service-regs:
+    $ref: "./resources/system/service-regs.yaml"
+  /system/applications/{id}:
+    $ref: "./resources/system/applicationsId.yaml"
+  /system/applications:
+    $ref: "./resources/system/applications.yaml"
+  /system/permissions:
+    $ref: "./resources/system/permissions.yaml"
+  /system/application-roles:
+    $ref: "./resources/system/application-roles.yaml"
+  /system/application-api-keys:
+    $ref: "./resources/system/application-api-keys.yaml"
+  /system/account/permissions:
+    $ref: "./resources/system/account/permissions.yaml"
+  /system/account/roles:
+    $ref: "./resources/system/account/roles.yaml"
+  /system/api-keys:
+    $ref: "./resources/system/api-keys.yaml"
 
   #default
   /version:
