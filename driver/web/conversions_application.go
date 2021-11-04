@@ -16,40 +16,40 @@ func applicationToDef(item *model.Application) *Def.ApplicationFields {
 }
 
 //ApplicationPermission
-func applicationPermissionToDef(item model.Permission) Def.ApplicationPermissionFields {
-	return Def.ApplicationPermissionFields{Id: item.ID, Name: item.Name}
+func applicationPermissionToDef(item model.Permission) Def.PermissionFields {
+	return Def.PermissionFields{Id: item.ID, Name: item.Name}
 }
 
-func applicationPermissionsToDef(items []model.Permission) []Def.ApplicationPermissionFields {
-	result := make([]Def.ApplicationPermissionFields, len(items))
+func applicationPermissionsToDef(items []model.Permission) []Def.PermissionFields {
+	result := make([]Def.PermissionFields, len(items))
 	for i, item := range items {
 		result[i] = applicationPermissionToDef(item)
 	}
 	return result
 }
 
-//ApplicationRole
-func applicationRoleToDef(item model.ApplicationRole) Def.ApplicationRoleFields {
-	return Def.ApplicationRoleFields{Id: item.ID, Name: item.Name}
+//AppOrgRole
+func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRoleFields {
+	return Def.AppOrgRoleFields{Id: item.ID, Name: item.Name}
 }
 
-func applicationRolesToDef(items []model.ApplicationRole) []Def.ApplicationRoleFields {
-	result := make([]Def.ApplicationRoleFields, len(items))
+func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRoleFields {
+	result := make([]Def.AppOrgRoleFields, len(items))
 	for i, item := range items {
-		result[i] = applicationRoleToDef(item)
+		result[i] = appOrgRoleToDef(item)
 	}
 	return result
 }
 
-//ApplicationGroup
-func applicationGroupToDef(item model.ApplicationGroup) Def.ApplicationGroupFields {
-	return Def.ApplicationGroupFields{Id: item.ID, Name: item.Name}
+//AppOrgGroup
+func appOrgGroupToDef(item model.AppOrgGroup) Def.AppOrgGroupFields {
+	return Def.AppOrgGroupFields{Id: item.ID, Name: item.Name}
 }
 
-func applicationGroupsToDef(items []model.ApplicationGroup) []Def.ApplicationGroupFields {
-	result := make([]Def.ApplicationGroupFields, len(items))
+func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroupFields {
+	result := make([]Def.AppOrgGroupFields, len(items))
 	for i, item := range items {
-		result[i] = applicationGroupToDef(item)
+		result[i] = appOrgGroupToDef(item)
 	}
 	return result
 }

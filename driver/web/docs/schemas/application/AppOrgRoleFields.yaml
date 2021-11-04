@@ -7,3 +7,5 @@ properties:
     type: string
   name:
     type: string
+  system:
+    type: boolean
