@@ -1,4 +1,0 @@
-type: string
-description: |
-  Auth login creds for auth_type="oidc"
-    - full redirect URI received from OIDC provider
