@@ -2,12 +2,12 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 	"time"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (app *application) serGetProfile(accountID string) (*model.Profile, error) {
@@ -46,9 +46,9 @@ func (app *application) serUpdateAccountPreferences(id string, preferences map[s
 }
 
 func (app *application) serDeleteAccount(id string) error {
-	transaction := func(sessionContext mongo.SessionContext) error {
+	transaction := func(context storage.TransactionContext) error {
 		//1. first find the account record
-		account, err := app.storage.FindAccountByID(sessionContext, id)
+		account, err := app.storage.FindAccountByID(context, id)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
@@ -57,7 +57,7 @@ func (app *application) serDeleteAccount(id string) error {
 		}
 
 		//2. delete the account record
-		err = app.storage.DeleteAccount(sessionContext, id)
+		err = app.storage.DeleteAccount(context, id)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 		}
@@ -73,12 +73,12 @@ func (app *application) serDeleteAccount(id string) error {
 				}
 				*device.DateUpdated = time.Now().UTC()
 
-				err = app.storage.SaveDevice(sessionContext, &device)
+				err = app.storage.SaveDevice(context, &device)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionSave, model.TypeDevice, nil, err)
 				}
 			} else {
-				err = app.storage.DeleteDevice(sessionContext, device.ID)
+				err = app.storage.DeleteDevice(context, device.ID)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeDevice, nil, err)
 				}

@@ -83,7 +83,7 @@ func (sa *Adapter) RegisterStorageListener(storageListener Listener) {
 }
 
 //PerformTransaction performs a transaction
-func (sa *Adapter) PerformTransaction(transaction func(sessionContext mongo.SessionContext) error) error {
+func (sa *Adapter) PerformTransaction(transaction func(context TransactionContext) error) error {
 	// transaction
 	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
 		err := sessionContext.StartTransaction()
@@ -506,21 +506,21 @@ func (sa *Adapter) FindAccount(appID string, orgID string, authTypeID string, ac
 }
 
 //FindAccountByID finds an account by id
-func (sa *Adapter) FindAccountByID(sessionContext mongo.SessionContext, id string) (*model.Account, error) {
-	return sa.findAccount(sessionContext, "_id", id)
+func (sa *Adapter) FindAccountByID(context TransactionContext, id string) (*model.Account, error) {
+	return sa.findAccount(context, "_id", id)
 }
 
 //FindAccountByAuthTypeID finds an account by auth type id
-func (sa *Adapter) FindAccountByAuthTypeID(sessionContext mongo.SessionContext, id string) (*model.Account, error) {
-	return sa.findAccount(sessionContext, "auth_types.id", id)
+func (sa *Adapter) FindAccountByAuthTypeID(context TransactionContext, id string) (*model.Account, error) {
+	return sa.findAccount(context, "auth_types.id", id)
 }
 
-func (sa *Adapter) findAccount(sessionContext mongo.SessionContext, key string, id string) (*model.Account, error) {
+func (sa *Adapter) findAccount(context TransactionContext, key string, id string) (*model.Account, error) {
 	filter := bson.M{key: id}
 	var accounts []account
 	var err error
-	if sessionContext != nil {
-		err = sa.db.accounts.FindWithContext(sessionContext, filter, &accounts, nil)
+	if context != nil {
+		err = sa.db.accounts.FindWithContext(context, filter, &accounts, nil)
 	} else {
 		err = sa.db.accounts.Find(filter, &accounts, nil)
 	}
@@ -564,7 +564,7 @@ func (sa *Adapter) InsertAccount(account model.Account) (*model.Account, error) 
 }
 
 //SaveAccount saves an existing account
-func (sa *Adapter) SaveAccount(sessionContext mongo.SessionContext, account *model.Account) error {
+func (sa *Adapter) SaveAccount(context TransactionContext, account *model.Account) error {
 	if account == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("account"))
 	}
@@ -573,8 +573,8 @@ func (sa *Adapter) SaveAccount(sessionContext mongo.SessionContext, account *mod
 
 	var err error
 	filter := bson.M{"_id": account.ID}
-	if sessionContext != nil {
-		err = sa.db.devices.ReplaceOneWithContext(sessionContext, filter, storageAccount, nil)
+	if context != nil {
+		err = sa.db.devices.ReplaceOneWithContext(context, filter, storageAccount, nil)
 	} else {
 		err = sa.db.devices.ReplaceOne(filter, storageAccount, nil)
 	}
@@ -587,14 +587,14 @@ func (sa *Adapter) SaveAccount(sessionContext mongo.SessionContext, account *mod
 }
 
 //DeleteAccount deletes an account
-func (sa *Adapter) DeleteAccount(sessionContext mongo.SessionContext, id string) error {
+func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
 	//TODO - we have to decide what we do on delete user operation - removing all user relations, (or) mark the user disabled etc
 
 	filter := bson.M{"_id": id}
 	var res *mongo.DeleteResult
 	var err error
-	if sessionContext != nil {
-		res, err = sa.db.accounts.DeleteOneWithContext(sessionContext, filter, nil)
+	if context != nil {
+		res, err = sa.db.accounts.DeleteOneWithContext(context, filter, nil)
 	} else {
 		res, err = sa.db.accounts.DeleteOne(filter, nil)
 	}
@@ -690,19 +690,14 @@ func (sa *Adapter) FindCredential(ID string) (*model.Credential, error) {
 }
 
 //InsertCredential inserts a set of credential
-func (sa *Adapter) InsertCredential(creds *model.Credential, context mongo.SessionContext) error {
+func (sa *Adapter) InsertCredential(creds *model.Credential) error {
 	storageCreds := credentialToStorage(creds)
 
 	if storageCreds == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeCredential))
 	}
 
-	var err error
-	if context == nil {
-		_, err = sa.db.credentials.InsertOne(storageCreds)
-	} else {
-		_, err = sa.db.credentials.InsertOneWithContext(context, storageCreds)
-	}
+	_, err := sa.db.credentials.InsertOne(storageCreds)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 	}
@@ -726,78 +721,6 @@ func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
 
 	return nil
 }
-
-// //FindCredentialsByID finds a set of credentials by ID
-// func (sa *Adapter) FindCredentialsByID(ID string) (*model.AuthCreds, error) {
-// 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
-
-// 	var creds model.AuthCreds
-// 	err := sa.db.credentials.FindOne(filter, &creds, nil)
-// 	if err != nil {
-// 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
-// 	}
-
-// 	return &creds, nil
-// }
-
-// //FindCredentials find a set of credentials
-// func (sa *Adapter) FindCredentials(orgID string, appID string, authType string, params map[string]interface{}) (*model.AuthCreds, error) {
-// 	filter := bson.D{primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "auth_type", Value: authType}}
-// 	for k, v := range params {
-// 		filter = append(filter, primitive.E{Key: "creds." + k, Value: v})
-// 	}
-
-// 	var creds model.AuthCreds
-// 	err := sa.db.credentials.FindOne(filter, &creds, nil)
-// 	if err != nil {
-// 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthCred, nil, err)
-// 	}
-
-// 	return &creds, nil
-// }
-
-// //InsertCredentials inserts a set of credentials
-// func (sa *Adapter) InsertCredentials(creds *model.AuthCreds, context mongo.SessionContext) error {
-// 	if creds == nil {
-// 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
-// 	}
-
-// 	var err error
-// 	if context == nil {
-// 		_, err = sa.db.credentials.InsertOne(creds)
-// 	} else {
-// 		_, err = sa.db.credentials.InsertOneWithContext(context, creds)
-// 	}
-// 	if err != nil {
-// 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthCred, nil, err)
-// 	}
-
-// 	return nil
-// }
-
-// //Update credentials updates a set of credentials
-// func (sa *Adapter) UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCreds) error {
-// 	if creds == nil {
-// 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeAuthCred))
-// 	}
-
-// 	var filter bson.D
-// 	if len(orgID) > 0 {
-// 		filter = bson.D{
-// 			primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "app_id", Value: appID},
-// 			primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.AccountID}, //replaced by _id or account_id??
-// 		}
-// 	} else {
-// 		filter = bson.D{primitive.E{Key: "type", Value: authType}, primitive.E{Key: "user_id", Value: creds.AccountID}}
-// 	}
-
-// 	err := sa.db.credentials.ReplaceOne(filter, creds, nil)
-// 	if err != nil {
-// 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthCred, &logutils.FieldArgs{"user_id": creds.AccountID}, err)
-// 	}
-
-// 	return nil
-// }
 
 //FindPermissions finds a set of permissions
 func (sa *Adapter) FindPermissions(ids []string) ([]model.Permission, error) {
@@ -1091,14 +1014,14 @@ func (sa *Adapter) UpdateProfile(id string, profile *model.Profile) error {
 }
 
 //CreateGlobalConfig creates global config
-func (sa *Adapter) CreateGlobalConfig(sessionContext mongo.SessionContext, globalConfig *model.GlobalConfig) error {
+func (sa *Adapter) CreateGlobalConfig(context TransactionContext, globalConfig *model.GlobalConfig) error {
 	if globalConfig == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("global_config"))
 	}
 
 	var err error
-	if sessionContext != nil {
-		_, err = sa.db.globalConfig.InsertOneWithContext(sessionContext, globalConfig)
+	if context != nil {
+		_, err = sa.db.globalConfig.InsertOneWithContext(context, globalConfig)
 	} else {
 		_, err = sa.db.globalConfig.InsertOne(globalConfig)
 	}
@@ -1127,11 +1050,11 @@ func (sa *Adapter) GetGlobalConfig() (*model.GlobalConfig, error) {
 }
 
 //DeleteGlobalConfig deletes the global configuration from storage
-func (sa *Adapter) DeleteGlobalConfig(sessionContext mongo.SessionContext) error {
+func (sa *Adapter) DeleteGlobalConfig(context TransactionContext) error {
 	delFilter := bson.D{}
 	var err error
-	if sessionContext != nil {
-		_, err = sa.db.globalConfig.DeleteManyWithContext(sessionContext, delFilter, nil)
+	if context != nil {
+		_, err = sa.db.globalConfig.DeleteManyWithContext(context, delFilter, nil)
 	} else {
 		_, err = sa.db.globalConfig.DeleteMany(delFilter, nil)
 	}
@@ -1488,7 +1411,7 @@ func (sa *Adapter) DeleteServiceAuthorization(userID string, serviceID string) e
 }
 
 //SaveDevice saves device
-func (sa *Adapter) SaveDevice(sessionContext mongo.SessionContext, device *model.Device) error {
+func (sa *Adapter) SaveDevice(context TransactionContext, device *model.Device) error {
 	if device == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("device"))
 	}
@@ -1498,8 +1421,8 @@ func (sa *Adapter) SaveDevice(sessionContext mongo.SessionContext, device *model
 	var err error
 	filter := bson.M{"_id": device.ID}
 	opts := options.Replace().SetUpsert(true)
-	if sessionContext != nil {
-		err = sa.db.devices.ReplaceOneWithContext(sessionContext, filter, storageDevice, opts)
+	if context != nil {
+		err = sa.db.devices.ReplaceOneWithContext(context, filter, storageDevice, opts)
 	} else {
 		err = sa.db.devices.ReplaceOne(filter, storageDevice, opts)
 	}
@@ -1512,12 +1435,12 @@ func (sa *Adapter) SaveDevice(sessionContext mongo.SessionContext, device *model
 }
 
 //DeleteDevice deletes a device
-func (sa *Adapter) DeleteDevice(sessionContext mongo.SessionContext, id string) error {
+func (sa *Adapter) DeleteDevice(context TransactionContext, id string) error {
 	filter := bson.M{"_id": id}
 	var res *mongo.DeleteResult
 	var err error
-	if sessionContext != nil {
-		res, err = sa.db.devices.DeleteOneWithContext(sessionContext, filter, nil)
+	if context != nil {
+		res, err = sa.db.devices.DeleteOneWithContext(context, filter, nil)
 	} else {
 		res, err = sa.db.devices.DeleteOne(filter, nil)
 	}
@@ -1625,3 +1548,8 @@ func (d *DefaultListenerImpl) OnApplicationsUpdated() {}
 
 //OnApplicationsOrganizationsUpdated notifies applications organizations have been updated
 func (d *DefaultListenerImpl) OnApplicationsOrganizationsUpdated() {}
+
+//TransactionContext wraps mongo.SessionContext for use by external packages
+type TransactionContext interface {
+	mongo.SessionContext
+}

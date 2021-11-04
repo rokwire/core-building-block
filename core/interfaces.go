@@ -5,7 +5,6 @@ import (
 	"core-building-block/driven/storage"
 
 	"github.com/rokwire/logging-library-go/logs"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 //Services exposes APIs for the driver adapters
@@ -61,21 +60,21 @@ type BBs interface {
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
-	PerformTransaction(func(sessionContext mongo.SessionContext) error) error
+	PerformTransaction(func(context storage.TransactionContext) error) error
 
-	FindAccountByID(sessionContext mongo.SessionContext, id string) (*model.Account, error)
-	DeleteAccount(sessionContext mongo.SessionContext, id string) error
+	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
+	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appID string, roles []model.ApplicationRole) error
 
-	SaveDevice(sessionContext mongo.SessionContext, device *model.Device) error
-	DeleteDevice(sessionContext mongo.SessionContext, id string) error
+	SaveDevice(context storage.TransactionContext, device *model.Device) error
+	DeleteDevice(context storage.TransactionContext, id string) error
 
-	CreateGlobalConfig(sessionContext mongo.SessionContext, globalConfig *model.GlobalConfig) error
+	CreateGlobalConfig(context storage.TransactionContext, globalConfig *model.GlobalConfig) error
 	GetGlobalConfig() (*model.GlobalConfig, error)
-	DeleteGlobalConfig(sessionContext mongo.SessionContext) error
+	DeleteGlobalConfig(context storage.TransactionContext) error
 
 	FindPermissionsByName(names []string) ([]model.Permission, error)
 	InsertPermission(item model.Permission) error

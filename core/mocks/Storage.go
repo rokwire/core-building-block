@@ -7,8 +7,6 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
-	mongo "go.mongodb.org/mongo-driver/mongo"
-
 	storage "core-building-block/driven/storage"
 )
 
@@ -17,13 +15,13 @@ type Storage struct {
 	mock.Mock
 }
 
-// CreateGlobalConfig provides a mock function with given fields: sessionContext, globalConfig
-func (_m *Storage) CreateGlobalConfig(sessionContext mongo.SessionContext, globalConfig *model.GlobalConfig) error {
-	ret := _m.Called(sessionContext, globalConfig)
+// CreateGlobalConfig provides a mock function with given fields: context, globalConfig
+func (_m *Storage) CreateGlobalConfig(context storage.TransactionContext, globalConfig *model.GlobalConfig) error {
+	ret := _m.Called(context, globalConfig)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(mongo.SessionContext, *model.GlobalConfig) error); ok {
-		r0 = rf(sessionContext, globalConfig)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *model.GlobalConfig) error); ok {
+		r0 = rf(context, globalConfig)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -31,13 +29,13 @@ func (_m *Storage) CreateGlobalConfig(sessionContext mongo.SessionContext, globa
 	return r0
 }
 
-// DeleteAccount provides a mock function with given fields: sessionContext, id
-func (_m *Storage) DeleteAccount(sessionContext mongo.SessionContext, id string) error {
-	ret := _m.Called(sessionContext, id)
+// DeleteAccount provides a mock function with given fields: context, id
+func (_m *Storage) DeleteAccount(context storage.TransactionContext, id string) error {
+	ret := _m.Called(context, id)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(mongo.SessionContext, string) error); ok {
-		r0 = rf(sessionContext, id)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
+		r0 = rf(context, id)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -73,13 +71,13 @@ func (_m *Storage) DeleteApplicationRole(id string) error {
 	return r0
 }
 
-// DeleteDevice provides a mock function with given fields: sessionContext, id
-func (_m *Storage) DeleteDevice(sessionContext mongo.SessionContext, id string) error {
-	ret := _m.Called(sessionContext, id)
+// DeleteDevice provides a mock function with given fields: context, id
+func (_m *Storage) DeleteDevice(context storage.TransactionContext, id string) error {
+	ret := _m.Called(context, id)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(mongo.SessionContext, string) error); ok {
-		r0 = rf(sessionContext, id)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
+		r0 = rf(context, id)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -87,13 +85,13 @@ func (_m *Storage) DeleteDevice(sessionContext mongo.SessionContext, id string) 
 	return r0
 }
 
-// DeleteGlobalConfig provides a mock function with given fields: sessionContext
-func (_m *Storage) DeleteGlobalConfig(sessionContext mongo.SessionContext) error {
-	ret := _m.Called(sessionContext)
+// DeleteGlobalConfig provides a mock function with given fields: context
+func (_m *Storage) DeleteGlobalConfig(context storage.TransactionContext) error {
+	ret := _m.Called(context)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(mongo.SessionContext) error); ok {
-		r0 = rf(sessionContext)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext) error); ok {
+		r0 = rf(context)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -115,13 +113,13 @@ func (_m *Storage) DeletePermission(id string) error {
 	return r0
 }
 
-// FindAccountByID provides a mock function with given fields: sessionContext, id
-func (_m *Storage) FindAccountByID(sessionContext mongo.SessionContext, id string) (*model.Account, error) {
-	ret := _m.Called(sessionContext, id)
+// FindAccountByID provides a mock function with given fields: context, id
+func (_m *Storage) FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error) {
+	ret := _m.Called(context, id)
 
 	var r0 *model.Account
-	if rf, ok := ret.Get(0).(func(mongo.SessionContext, string) *model.Account); ok {
-		r0 = rf(sessionContext, id)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) *model.Account); ok {
+		r0 = rf(context, id)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Account)
@@ -129,8 +127,8 @@ func (_m *Storage) FindAccountByID(sessionContext mongo.SessionContext, id strin
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(mongo.SessionContext, string) error); ok {
-		r1 = rf(sessionContext, id)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
+		r1 = rf(context, id)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -439,11 +437,11 @@ func (_m *Storage) LoadOrganizations() ([]model.Organization, error) {
 }
 
 // PerformTransaction provides a mock function with given fields: _a0
-func (_m *Storage) PerformTransaction(_a0 func(mongo.SessionContext) error) error {
+func (_m *Storage) PerformTransaction(_a0 func(storage.TransactionContext) error) error {
 	ret := _m.Called(_a0)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(func(mongo.SessionContext) error) error); ok {
+	if rf, ok := ret.Get(0).(func(func(storage.TransactionContext) error) error); ok {
 		r0 = rf(_a0)
 	} else {
 		r0 = ret.Error(0)
@@ -457,13 +455,13 @@ func (_m *Storage) RegisterStorageListener(storageListener storage.Listener) {
 	_m.Called(storageListener)
 }
 
-// SaveDevice provides a mock function with given fields: sessionContext, device
-func (_m *Storage) SaveDevice(sessionContext mongo.SessionContext, device *model.Device) error {
-	ret := _m.Called(sessionContext, device)
+// SaveDevice provides a mock function with given fields: context, device
+func (_m *Storage) SaveDevice(context storage.TransactionContext, device *model.Device) error {
+	ret := _m.Called(context, device)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(mongo.SessionContext, *model.Device) error); ok {
-		r0 = rf(sessionContext, device)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *model.Device) error); ok {
+		r0 = rf(context, device)
 	} else {
 		r0 = ret.Error(0)
 	}

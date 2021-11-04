@@ -2,12 +2,12 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (app *application) admGetTest() string {
@@ -201,15 +201,15 @@ func (app *application) admUpdateGlobalConfig(setting string) error {
 
 	gc.Setting = setting
 
-	transaction := func(sessionContext mongo.SessionContext) error {
+	transaction := func(context storage.TransactionContext) error {
 		//1. clear the global config - we always keep only one global config
-		err := app.storage.DeleteGlobalConfig(sessionContext)
+		err := app.storage.DeleteGlobalConfig(context)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeGlobalConfig, nil, err)
 		}
 
 		//2. add the new one
-		err = app.storage.CreateGlobalConfig(sessionContext, gc)
+		err = app.storage.CreateGlobalConfig(context, gc)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
 		}

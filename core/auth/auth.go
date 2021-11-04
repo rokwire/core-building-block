@@ -17,7 +17,6 @@ import (
 	"github.com/rokwire/core-auth-library-go/authservice"
 	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
-	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/go-playground/validator.v9"
 	"gopkg.in/gomail.v2"
@@ -206,9 +205,9 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 			now := time.Now()
 			accountAuthType.DateUpdated = &now
 
-			transaction := func(sessionContext mongo.SessionContext) error {
+			transaction := func(context storage.TransactionContext) error {
 				//1. first find the account record
-				account, err := a.storage.FindAccountByAuthTypeID(sessionContext, accountAuthType.ID)
+				account, err := a.storage.FindAccountByAuthTypeID(context, accountAuthType.ID)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 				}
@@ -228,7 +227,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 				account.AuthTypes = newAccountAuthTypes
 
 				//3. update the account record
-				err = a.storage.SaveAccount(sessionContext, account)
+				err = a.storage.SaveAccount(context, account)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, nil, err)
 				}
@@ -645,7 +644,7 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 
 	if credential != nil {
 		//TODO - in one transaction
-		if err = a.storage.InsertCredential(credential, nil); err != nil {
+		if err = a.storage.InsertCredential(credential); err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 		}
 	}
