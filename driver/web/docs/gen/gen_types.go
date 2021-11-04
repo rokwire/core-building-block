@@ -523,7 +523,6 @@ type ReqGetOrganizationRequest struct {
 
 // ReqPermissionsRequest defines model for _req_permissions_Request.
 type ReqPermissionsRequest struct {
-
 	// permissions that could assign current permission to accounts
 	Assigners *[]string `json:"assigners,omitempty"`
 	Name      string    `json:"name"`
@@ -593,7 +592,6 @@ type ReqSharedLoginDeviceType string
 
 // Auth login params for auth_type="email"
 type ReqSharedLoginParamsEmail struct {
-
 	// This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
 	ConfirmPassword *string `json:"confirm_password,omitempty"`
 	SignUp          *bool   `json:"sign_up,omitempty"`
@@ -739,75 +737,6 @@ type ResSharedRokwireToken struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResSharedRokwireTokenTokenType string
 
-// PutAdminAccountPermissionsJSONBody defines parameters for PutAdminAccountPermissions.
-type PutAdminAccountPermissionsJSONBody ReqAccountPermissionsRequest
-
-// PutAdminAccountRolesJSONBody defines parameters for PutAdminAccountRoles.
-type PutAdminAccountRolesJSONBody ReqAccountRolesRequest
-
-// DeleteAdminApiKeysParams defines parameters for DeleteAdminApiKeys.
-type DeleteAdminApiKeysParams struct {
-	// The org ID of the API key to delete
-	OrgId string `json:"org_id"`
-
-	// The app ID of the API key to delete
-	AppId string `json:"app_id"`
-}
-
-// GetAdminApiKeysParams defines parameters for GetAdminApiKeys.
-type GetAdminApiKeysParams struct {
-	// The org ID of the API key to return
-	OrgId string `json:"org_id"`
-
-	// The app ID of the API key to return
-	AppId string `json:"app_id"`
-}
-
-// PostAdminApiKeysJSONBody defines parameters for PostAdminApiKeys.
-type PostAdminApiKeysJSONBody APIKey
-
-// PutAdminApiKeysJSONBody defines parameters for PutAdminApiKeys.
-type PutAdminApiKeysJSONBody APIKey
-
-// PostAdminApplicationPermissionsJSONBody defines parameters for PostAdminApplicationPermissions.
-type PostAdminApplicationPermissionsJSONBody ReqApplicationPermissionsRequest
-
-// PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
-type PostAdminApplicationRolesJSONBody ReqApplicationRolesRequest
-
-// PostAdminApplicationsJSONBody defines parameters for PostAdminApplications.
-type PostAdminApplicationsJSONBody ReqCreateApplicationRequest
-
-// PostAdminGlobalConfigJSONBody defines parameters for PostAdminGlobalConfig.
-type PostAdminGlobalConfigJSONBody GlobalConfig
-
-// PutAdminGlobalConfigJSONBody defines parameters for PutAdminGlobalConfig.
-type PutAdminGlobalConfigJSONBody GlobalConfig
-
-// PostAdminOrganizationsJSONBody defines parameters for PostAdminOrganizations.
-type PostAdminOrganizationsJSONBody ReqCreateOrganizationRequest
-
-// PutAdminOrganizationsIdJSONBody defines parameters for PutAdminOrganizationsId.
-type PutAdminOrganizationsIdJSONBody ReqUpdateOrganizationRequest
-
-// DeleteAdminServiceRegsParams defines parameters for DeleteAdminServiceRegs.
-type DeleteAdminServiceRegsParams struct {
-	// The service ID of the registration to delete
-	Id string `json:"id"`
-}
-
-// GetAdminServiceRegsParams defines parameters for GetAdminServiceRegs.
-type GetAdminServiceRegsParams struct {
-	// A comma-separated list of service IDs to return registrations for
-	Ids string `json:"ids"`
-}
-
-// PostAdminServiceRegsJSONBody defines parameters for PostAdminServiceRegs.
-type PostAdminServiceRegsJSONBody ServiceReg
-
-// PutAdminServiceRegsJSONBody defines parameters for PutAdminServiceRegs.
-type PutAdminServiceRegsJSONBody ServiceReg
-
 // PostAdminAuthLoginJSONBody defines parameters for PostAdminAuthLogin.
 type PostAdminAuthLoginJSONBody ReqSharedLogin
 
@@ -859,12 +788,6 @@ type GetServicesAuthVerifyParams struct {
 	Code string `json:"code"`
 }
 
-// GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
-type GetTpsServiceRegsParams struct {
-	// A comma-separated list of service IDs to return registrations for
-	Ids string `json:"ids"`
-}
-
 // PutSystemAccountPermissionsJSONBody defines parameters for PutSystemAccountPermissions.
 type PutSystemAccountPermissionsJSONBody ReqAccountPermissionsRequest
 
@@ -873,14 +796,12 @@ type PutSystemAccountRolesJSONBody ReqAccountRolesRequest
 
 // DeleteSystemApiKeysParams defines parameters for DeleteSystemApiKeys.
 type DeleteSystemApiKeysParams struct {
-
 	// The ID of the API key to delete
 	Id string `json:"id"`
 }
 
 // GetSystemApiKeysParams defines parameters for GetSystemApiKeys.
 type GetSystemApiKeysParams struct {
-
 	// The ID of the API key to return
 	Id string `json:"id"`
 }
@@ -893,7 +814,6 @@ type PutSystemApiKeysJSONBody APIKey
 
 // GetSystemApplicationApiKeysParams defines parameters for GetSystemApplicationApiKeys.
 type GetSystemApplicationApiKeysParams struct {
-
 	// The app ID of the API keys to return
 	AppId string `json:"app_id"`
 }
@@ -924,14 +844,12 @@ type PutSystemPermissionsJSONBody ReqPermissionsRequest
 
 // DeleteSystemServiceRegsParams defines parameters for DeleteSystemServiceRegs.
 type DeleteSystemServiceRegsParams struct {
-
 	// The service ID of the registration to delete
 	Id string `json:"id"`
 }
 
 // GetSystemServiceRegsParams defines parameters for GetSystemServiceRegs.
 type GetSystemServiceRegsParams struct {
-
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
@@ -941,6 +859,12 @@ type PostSystemServiceRegsJSONBody ServiceReg
 
 // PutSystemServiceRegsJSONBody defines parameters for PutSystemServiceRegs.
 type PutSystemServiceRegsJSONBody ServiceReg
+
+// GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
+type GetTpsServiceRegsParams struct {
+	// A comma-separated list of service IDs to return registrations for
+	Ids string `json:"ids"`
+}
 
 // PostAdminAuthLoginJSONRequestBody defines body for PostAdminAuthLogin for application/json ContentType.
 type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody

@@ -469,15 +469,15 @@ paths:
                   permissions:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ApplicationPermissionFields'
+                      $ref: '#/components/schemas/PermissionFields'
                   roles:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ApplicationRoleFields'
+                      $ref: '#/components/schemas/AppOrgRole'
                   groups:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ApplicationGroupFields'
+                      $ref: '#/components/schemas/AppOrgGroupFields'
                   auth_types:
                     type: array
                     items:
