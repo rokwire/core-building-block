@@ -1454,6 +1454,9 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 func (sa *Adapter) FindAppConfigs(version string) ([]model.ApplicationConfigs, error) {
 	filter := bson.D{}
 	var result []model.ApplicationConfigs
+	if version != "" {
+		filter = bson.D{primitive.E{Key: "mobile_app_version", Value: version}}
+	}
 	err := sa.db.applicationConfigs.Find(filter, &result, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
@@ -1501,7 +1504,7 @@ func (sa *Adapter) UpdateAppConfig(ID string, version string, data map[string]in
 	updatAppConfigFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	updateItem := bson.D{primitive.E{Key: "date_updated", Value: now}}
 	if version != "" {
-		updateItem = append(updateItem, primitive.E{Key: "version", Value: version})
+		updateItem = append(updateItem, primitive.E{Key: "mobile_app_version", Value: version})
 	}
 	if data != nil {
 		updateItem = append(updateItem, primitive.E{Key: "data", Value: data})

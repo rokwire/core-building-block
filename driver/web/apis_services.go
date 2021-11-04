@@ -380,10 +380,6 @@ func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request, claims *to
 
 func (h ServicesApisHandler) getAppConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	version := r.URL.Query().Get("version")
-	if version == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("version"), nil, http.StatusBadRequest, false)
-	}
-
 	appConfigs, err := h.coreAPIs.Services.SerGetAppConfigs(version)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
@@ -431,23 +427,20 @@ func (h ServicesApisHandler) createAppConfig(l *logs.Log, r *http.Request, claim
 	var requestData Def.ReqCreateApplicationConfigsRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create appconfig request"), nil, err, http.StatusBadRequest, true)
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("appconfig create request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	configData := map[string]interface{}{
-		"platformBuildingBlocks":  requestData.PlatformBuildingBlocks,
-		"thirdPartyServices":      requestData.ThirdPartyServices,
-		"otherUniversityServices": requestData.OtherUniversityServices,
-		"secretKeys":              requestData.SecretKeys,
-		"upgrade":                 requestData.Upgrade,
+	configData, err := appConfigFromDef(requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
 	}
+
 	_, err = h.coreAPIs.Services.SerCreateAppConfig(requestData.MobileAppVersion, requestData.AppId, configData)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplicationConfigs, nil, err, http.StatusBadRequest, true)
 	}
 
-	// response := config
-	// data, err = json.Marshal(response)
+	// data, err = json.Marshal(insertedConfig)
 	// if err != nil {
 	// 	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, false)
 	// }
@@ -469,13 +462,18 @@ func (h ServicesApisHandler) updateAppConfig(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var appConfig model.ApplicationConfigs
-	err = json.Unmarshal(data, &appConfig)
+	var requestData Def.ReqCreateApplicationConfigsRequest
+	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "appconfig update request", nil, err, http.StatusBadRequest, true)
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("appconfig update request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.Services.SerUpdateAppConfig(ID, appConfig.MobileAppVersion, appConfig.Data)
+	configData, err := appConfigFromDef(requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigs, nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Services.SerUpdateAppConfig(ID, requestData.MobileAppVersion, configData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
 	}

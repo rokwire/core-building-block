@@ -3,6 +3,9 @@ package web
 import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"regexp"
+
+	"github.com/rokwire/logging-library-go/errors"
 )
 
 //Application
@@ -68,4 +71,36 @@ func organizationsToDef(items []model.Organization) []Def.OrganizationFields {
 		result[i] = *organizationToDef(&item)
 	}
 	return result
+}
+
+func appConfigFromDef(requestData Def.ReqCreateApplicationConfigsRequest) (map[string]interface{}, error) {
+	configData := map[string]interface{}{
+		"platformBuildingBlocks":  requestData.PlatformBuildingBlocks,
+		"thirdPartyServices":      requestData.ThirdPartyServices,
+		"otherUniversityServices": requestData.OtherUniversityServices,
+		"secretKeys":              requestData.SecretKeys,
+		"upgrade":                 requestData.Upgrade,
+	}
+
+	version := requestData.MobileAppVersion
+	validVersionRegex := regexp.MustCompile(`^(?P<major>\d+).(?P<minor>\d+).(?P<patch>\d+)$`)
+	if !validVersionRegex.MatchString(version) {
+		return nil, errors.New("MobileAppVersion query parameter is not valid, please use major.minor.patch format")
+	}
+
+	n1 := validVersionRegex.SubexpNames()
+	r2 := validVersionRegex.FindAllStringSubmatch(version, -1)[0]
+	md := map[string]string{}
+	for i, n := range r2 {
+		md[n1[i]] = n
+	}
+
+	versionNumbers := map[string]string{
+		"major": md["major"],
+		"minor": md["minor"],
+		"patch": md["patch"],
+	}
+	configData["version_numbers"] = versionNumbers
+
+	return configData, nil
 }
