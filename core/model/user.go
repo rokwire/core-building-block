@@ -32,12 +32,11 @@ const (
 type Account struct {
 	ID string //this is ID for the account
 
-	Application  Application
-	Organization Organization
+	AppOrg ApplicationOrganization
 
 	Permissions []Permission
-	Roles       []ApplicationRole
-	Groups      []ApplicationGroup
+	Roles       []AppOrgRole
+	Groups      []AppOrgGroup
 
 	AuthTypes []AccountAuthType
 

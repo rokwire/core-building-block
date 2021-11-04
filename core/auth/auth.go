@@ -173,7 +173,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	}
 
 	//2. check if the user exists
-	account, err := a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, externalUser.Identifier)
+	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, externalUser.Identifier)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -300,7 +300,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
 	}
-	account, err = a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, userIdentifier)
+	account, err = a.storage.FindAccount(appOrg.ID, authType.ID, userIdentifier)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
@@ -630,11 +630,9 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 
 	//TODO - ignore useSharedProfile for now
 	accountID, _ := uuid.NewUUID()
-	application := appOrg.Application
-	organization := appOrg.Organization
 	authTypes := []model.AccountAuthType{accountAuthType}
 
-	account := model.Account{ID: accountID.String(), Application: application, Organization: organization,
+	account := model.Account{ID: accountID.String(), AppOrg: appOrg,
 		Permissions: nil, Roles: nil, Groups: nil, AuthTypes: authTypes, Preferences: preferences, Profile: profile, DateCreated: time.Now()} // Anonymous: accountAuthType.AuthType.IsAnonymous
 
 	insertedAccount, err := a.storage.InsertAccount(account)
