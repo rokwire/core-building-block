@@ -1,6 +1,7 @@
  get:
+  deprecated: true
   tags:
-  - Admin
+  - System
   summary: Get applications
   description: |
     Gets applications
@@ -16,7 +17,7 @@
             schema:
               type: array
               items:
-                $ref: "../../schemas/apis/admin/get-applications/response/Response.yaml"
+                $ref: "../../schemas/apis/system/get-applications/response/Response.yaml"
       400:
         description: Bad request
       401:
@@ -24,8 +25,9 @@
       500:
         description: Internal error
  post:
+  deprecated: true
   tags:
-  - Admin
+  - System
   summary: Create application
   description: |
     Creates application
@@ -38,7 +40,7 @@
     content:
       application/json:
         schema:
-         $ref: "../../schemas/apis/admin/create-application/request/Request.yaml"
+         $ref: "../../schemas/apis/system/create-application/request/Request.yaml"
     required: true
   responses:
     200:

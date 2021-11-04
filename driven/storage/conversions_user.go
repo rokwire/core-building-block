@@ -5,36 +5,35 @@ import (
 )
 
 //Account
-func accountFromStorage(item account, sa *Adapter, application model.Application, organization model.Organization) model.Account {
+func accountFromStorage(item account, sa *Adapter, appOrg model.ApplicationOrganization) model.Account {
 	id := item.ID
 	permissions := item.Permissions
-	roles := applicationRolesFromStorage(item.Roles, application)
-	groups := applicationGroupsFromStorage(item.Groups, application)
+	roles := appOrgRolesFromStorage(item.Roles, appOrg)
+	groups := appOrgGroupsFromStorage(item.Groups, appOrg)
 	authTypes := accountAuthTypesFromStorage(item.AuthTypes)
 	profile := profileFromStorage(item.Profile)
 	devices := accountDevicesFromStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
-	return model.Account{ID: id, Application: application, Organization: organization, Permissions: permissions,
+	return model.Account{ID: id, AppOrg: appOrg, Permissions: permissions,
 		Roles: roles, Groups: groups, AuthTypes: authTypes, Preferences: item.Preferences, Profile: profile,
-		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated} // Anonymous: item.Anonymous
+		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountToStorage(item *model.Account) *account {
 	id := item.ID
-	appID := item.Application.ID
-	orgID := item.Organization.ID
+	appOrgID := item.AppOrg.ID
 	permissions := item.Permissions
-	roles := applicationRolesToStorage(item.Roles)
-	groups := applicationGroupsToStorage(item.Groups)
+	roles := appOrgRolesToStorage(item.Roles)
+	groups := appOrgGroupsToStorage(item.Groups)
 	authTypes := accountAuthTypesToStorage(item.AuthTypes)
 	profile := profileToStorage(item.Profile)
 	devices := accountDevicesToStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
-	return &account{ID: id, AppID: appID, OrgID: orgID, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
-		Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated} //Anonymous: item.Anonymous
+	return &account{ID: id, AppOrgID: appOrgID, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
+		Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountDevicesFromStorage(item account) []model.Device {
