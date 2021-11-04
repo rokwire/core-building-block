@@ -6,14 +6,16 @@ import (
 	"encoding/binary"
 	"time"
 
-	"github.com/rokmetro/logging-library/errors"
+	"github.com/rokwire/logging-library-go/errors"
 
-	"github.com/rokmetro/auth-library/authorization"
-	"github.com/rokmetro/auth-library/authservice"
-	"github.com/rokmetro/logging-library/logutils"
+	"github.com/rokwire/core-auth-library-go/authorization"
+	"github.com/rokwire/core-auth-library-go/authservice"
+	"github.com/rokwire/logging-library-go/logutils"
 )
 
 const (
+	//TypeLoginSession auth type type
+	TypeLoginSession logutils.MessageDataType = "login session"
 	//TypeAuthType auth type type
 	TypeAuthType logutils.MessageDataType = "auth type"
 	//TypeIdentityProvider identity provider type
@@ -50,9 +52,40 @@ const (
 	TypeCreds logutils.MessageDataType = "creds"
 )
 
+//LoginSession represents login session entity
+type LoginSession struct {
+	ID string
+
+	AppOrg   ApplicationOrganization
+	AuthType AuthType
+	AppType  ApplicationType
+
+	Anonymous bool
+
+	Identifier      string           //it is the account id(anonymous id for anonymous logins)
+	AccountAuthType *AccountAuthType //it is nil for anonymous logins
+
+	Device Device
+
+	IPAddress    string
+	AccessToken  string
+	RefreshToken string
+	Params       map[string]interface{} //authType-specific set of parameters passed back to client
+
+	Expires time.Time
+
+	DateUpdated *time.Time
+	DateCreated time.Time
+}
+
+//IsExpired says if the sessions is expired
+func (ls LoginSession) IsExpired() bool {
+	return ls.Expires.Before(time.Now())
+}
+
 //APIKey represents an API key entity
 type APIKey struct {
-	OrgID string `json:"org_id" bson:"org_id" validate:"required"`
+	ID    string `json:"id" bson:"_id"`
 	AppID string `json:"app_id" bson:"app_id" validate:"required"`
 	Key   string `json:"key" bson:"key"`
 }
@@ -117,6 +150,7 @@ type AuthCreds struct {
 }
 
 //AuthRefresh represents refresh token info used by auth
+//TODO remove
 type AuthRefresh struct {
 	PreviousToken string                 `bson:"previous_token"`
 	CurrentToken  string                 `bson:"current_token" validate:"required"`

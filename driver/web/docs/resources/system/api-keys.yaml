@@ -1,0 +1,138 @@
+get:
+  deprecated: true
+  tags:
+  - System
+  summary: Get API key
+  description: |
+    Returns API key record
+
+    **Auth:** Requires auth token with `get_api-keys` permission
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: query
+      description: The ID of the API key to return
+      required: true
+      style: form
+      explode: false
+      schema:
+        type: string
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '../../schemas/auth/APIKey.yaml'
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
+post:
+  deprecated: true
+  tags:
+  - System
+  summary: Create API key
+  description: |
+    Creates a new API key record
+
+    **Auth:** Requires auth token with `update_api-keys` permission
+  security:
+    - bearerAuth: []
+  requestBody:
+    description: API key record to be added
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/auth/APIKey.yaml'
+        example: |
+          {
+            "app_id": "string",
+            "key": "string"
+          }
+    required: true
+  responses:
+    200:
+      description: Success
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: Success
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
+put:
+  deprecated: true
+  tags:
+  - System
+  summary: Update API key
+  description: |
+    Update an existing API key record
+
+    Must include the "id" field to identify which key is to be udpated
+
+    **Auth:** Requires auth token with `update_api-keys` permission
+  security:
+    - bearerAuth: []
+  requestBody:
+    description: API key record update to be applied
+    content:
+      application/json:
+        schema:
+          $ref: '../../schemas/auth/APIKey.yaml'
+    required: true
+  responses:
+    200:
+      description: Success
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: Success
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
+delete:
+  deprecated: true
+  tags:
+  - System
+  summary: Delete API key
+  description: |
+    Deletes an existing API key record
+
+    **Auth:** Requires auth token with `update_api-keys` permission
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: query
+      description: The ID of the API key to delete
+      required: true
+      style: form
+      explode: false
+      schema:
+        type: string
+  responses:
+    200:
+      description: Success
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: Success
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error

@@ -4,10 +4,10 @@ import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 
-	"github.com/rokmetro/auth-library/authorization"
-	"github.com/rokmetro/auth-library/authservice"
-	"github.com/rokmetro/logging-library/errors"
-	"github.com/rokmetro/logging-library/logutils"
+	"github.com/rokwire/core-auth-library-go/authorization"
+	"github.com/rokwire/core-auth-library-go/authservice"
+	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logutils"
 )
 
 func pubKeyFromDef(item *Def.PubKey) *authservice.PubKey {
@@ -24,18 +24,32 @@ func pubKeyToDef(item *authservice.PubKey) *Def.PubKey {
 	return &Def.PubKey{KeyPem: item.KeyPem, Alg: item.Alg}
 }
 
-func apiKeyFromDef(item *Def.APIKey) *model.APIKey {
-	if item == nil {
-		return nil
+func apiKeyFromDef(item Def.APIKey) model.APIKey {
+	id := ""
+	if item.Id != nil {
+		id = *item.Id
 	}
-	return &model.APIKey{OrgID: item.OrgId, AppID: item.AppId, Key: item.Key}
+	return model.APIKey{ID: id, AppID: item.AppId, Key: item.Key}
 }
 
 func apiKeyToDef(item *model.APIKey) *Def.APIKey {
 	if item == nil {
 		return nil
 	}
-	return &Def.APIKey{OrgId: item.OrgID, AppId: item.AppID, Key: item.Key}
+	return &Def.APIKey{Id: &item.ID, AppId: item.AppID, Key: item.Key}
+}
+
+func apiKeyListToDef(items []model.APIKey) []Def.APIKey {
+	out := make([]Def.APIKey, len(items))
+	for i, item := range items {
+		defItem := apiKeyToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.APIKey{}
+		}
+	}
+	return out
 }
 
 func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceReg, error) {
