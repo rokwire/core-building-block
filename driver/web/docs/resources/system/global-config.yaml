@@ -1,6 +1,7 @@
 get:
+  deprecated: true
   tags:
-  - Admin
+  - System
   summary: Get global config
   description: |
     Gives the system global config
@@ -22,8 +23,9 @@ get:
       500:
         description: Internal error
 post:
+  deprecated: true
   tags:
-  - Admin
+  - System
   summary: Create global config
   description: |
     Creates the system global config
@@ -52,8 +54,9 @@ post:
       500:
         description: Internal error
 put:
+  deprecated: true
   tags:
-  - Admin
+  - System
   summary: Update global config
   description: |
     Updates the system global config

@@ -205,7 +205,7 @@ type Storage interface {
 
 	//Accounts
 	FindAccountByID(id string) (*model.Account, error)
-	FindAccount(appID string, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
+	FindAccount(appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
 	InsertAccount(account model.Account) (*model.Account, error)
 	UpdateAccount(account *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
 	DeleteAccount(id string) error

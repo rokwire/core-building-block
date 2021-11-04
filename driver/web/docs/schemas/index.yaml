@@ -13,18 +13,18 @@ ApplicationTypeFields:
   $ref: "./application/ApplicationTypeFields.yaml"
 ApplicationOrganization:
   $ref: "./application/ApplicationOrganization.yaml"
-ApplicationPermission:
-  $ref: "./application/ApplicationPermission.yaml"
-ApplicationPermissionFields:
-  $ref: "./application/ApplicationPermissionFields.yaml"
-ApplicationRole:
-  $ref: "./application/ApplicationRole.yaml"
-ApplicationRoleFields:
-  $ref: "./application/ApplicationRoleFields.yaml"
-ApplicationGroup:
-  $ref: "./application/ApplicationGroup.yaml"
-ApplicationGroupFields:
-  $ref: "./application/ApplicationGroupFields.yaml"
+Permission:
+  $ref: "./application/Permission.yaml"
+PermissionFields:
+  $ref: "./application/PermissionFields.yaml"
+AppOrgRole:
+  $ref: "./application/AppOrgRole.yaml"
+AppOrgRoleFields:
+  $ref: "./application/AppOrgRoleFields.yaml"
+AppOrgGroup:
+  $ref: "./application/AppOrgGroup.yaml"
+AppOrgGroupFields:
+  $ref: "./application/AppOrgGroupFields.yaml"
 Organization:
   $ref: "./application/Organization.yaml"
 OrganizationFields:
@@ -152,44 +152,44 @@ _res_authorize-service_Response:
 
 ### organization API
 _req_create-Organization_Request:
-  $ref: "./apis/admin/create-organization/request/Request.yaml"
+  $ref: "./apis/system/create-organization/request/Request.yaml"
 _res_create_Organization_Response:
- $ref: "./apis/admin/create-organization/response/Response.yaml"
+ $ref: "./apis/system/create-organization/response/Response.yaml"
 _req_update_Organization_Request:
- $ref: "./apis/admin/update-organization/request/Request.yaml"
+ $ref: "./apis/system/update-organization/request/Request.yaml"
 _res_update_Organization_Response:
- $ref: "./apis/admin/update-organization/response/Response.yaml"
+ $ref: "./apis/system/update-organization/response/Response.yaml"
 _req_get_Organization_Request:
- $ref: "./apis/admin/get-organization/request/Request.yaml"
+ $ref: "./apis/system/get-organization/request/Request.yaml"
 _res_get_Organization_Response:
- $ref: "./apis/admin/get-organization/response/Response.yaml"
+ $ref: "./apis/system/get-organization/response/Response.yaml"
 _res_get_Organizations_Response:
- $ref: "./apis/admin/get-organizations/response/Response.yaml"
+ $ref: "./apis/system/get-organizations/response/Response.yaml"
 
  ### application API
 _req_create_Application_Request:
-  $ref: "./apis/admin/create-application/request/Request.yaml"
+  $ref: "./apis/system/create-application/request/Request.yaml"
 #_res_create_Application_Response:
 # $ref: "./apis/admin/create-application/response/Response.yaml"
 _req_get_Application_Request:
- $ref: "./apis/admin/get-application/request/Request.yaml"
+ $ref: "./apis/system/get-application/request/Request.yaml"
 _res_get_Application_Response:
- $ref: "./apis/admin/get-application/response/Response.yaml"
+ $ref: "./apis/system/get-application/response/Response.yaml"
 _res_get_Applications_Response:
- $ref: "./apis/admin/get-applications/response/Response.yaml"
+ $ref: "./apis/system/get-applications/response/Response.yaml"
  
 ### permissions API
 _req_permissions_Request:
-  $ref: "./apis/admin/permissions/request/Request.yaml"
+  $ref: "./apis/system/permissions/request/Request.yaml"
   
 ### application-roles API
 _req_application-roles_Request:
-  $ref: "./apis/admin/application-roles/request/Request.yaml"
+  $ref: "./apis/system/application-roles/request/Request.yaml"
 
 ### account permissions API
 _req_account-permissions_Request:
-  $ref: "./apis/admin/account/permissions/request/Request.yaml"
+  $ref: "./apis/system/account/permissions/request/Request.yaml"
 
 ### account roles API
 _req_account-roles_Request:
-  $ref: "./apis/admin/account/roles/request/Request.yaml"
+  $ref: "./apis/system/account/roles/request/Request.yaml"

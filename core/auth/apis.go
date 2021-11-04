@@ -146,7 +146,7 @@ func (a *Auth) AccountExists(authenticationType string, userIdentifier string, a
 	}
 
 	//check if the account exists check
-	account, err := a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, userIdentifier)
+	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, userIdentifier)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -455,11 +455,10 @@ func (a *Auth) ForgotPassword(authenticationType string, appTypeIdentifier strin
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
-	appID := appOrg.Application.ID
 	authTypeID := authType.ID
 
 	//Find the credential for setting reset code and expiry and sending credID in reset link
-	account, err := a.storage.FindAccount(appID, orgID, authTypeID, identifier)
+	account, err := a.storage.FindAccount(appOrg.ID, authTypeID, identifier)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
