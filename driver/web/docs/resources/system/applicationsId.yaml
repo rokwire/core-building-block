@@ -1,6 +1,7 @@
 get:
+  deprecated: true
   tags:
-  - Admin
+  - System
   summary: Get application
   description: |
     Gets application
@@ -23,7 +24,7 @@ get:
       content:
         application/json:
             schema:
-              $ref: "../../schemas/apis/admin/get-application/request/Request.yaml"
+              $ref: "../../schemas/apis/system/get-application/request/Request.yaml"
     400:
       description: Bad request
     401:

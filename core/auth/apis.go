@@ -164,7 +164,7 @@ func (a *Auth) AccountExists(authenticationType string, userIdentifier string, a
 	}
 
 	//check if the account exists check
-	account, err := a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, userIdentifier)
+	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, userIdentifier)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}

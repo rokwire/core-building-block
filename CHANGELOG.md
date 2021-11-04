@@ -6,11 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
-## [1.10.0] - 2021-11-03
 ### Added
 - Add multi-factor authentication support [#19](https://github.com/rokwire/core-building-block/issues/19)
 - Add authentication required auth wrapper [#250](https://github.com/rokwire/core-building-block/issues/250)
+
+## [1.11.0] - 2021-11-04
+### Added
+- Set up permission groups [#25](https://github.com/rokwire/core-building-block/issues/25)
+
+## [1.10.0] - 2021-11-03
+### Added
 - Merge client and Profile BB profiles and preferences [#228](https://github.com/rokwire/core-building-block/issues/228)
 
 ## [1.9.0] - 2021-11-01
@@ -132,7 +137,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/rokwire/core-building-block/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/rokwire/core-building-block/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/rokwire/core-building-block/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/rokwire/core-building-block/compare/v1.7.0...v1.8.0

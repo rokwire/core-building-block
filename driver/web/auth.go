@@ -21,13 +21,13 @@ const (
 
 //Auth handler
 type Auth struct {
-	authService               *authservice.AuthService
 	servicesAuth              *ServicesAuth
 	servicesUserAuth          *ServicesUserAuth
 	servicesAuthenticatedAuth *ServicesAuthenticatedAuth
 	adminAuth                 *AdminAuth
 	encAuth                   *EncAuth
 	bbsAuth                   *BBsAuth
+	systemAuth                *SystemAuth
 
 	logger *logs.Logger
 }
@@ -47,6 +47,7 @@ func (auth *Auth) Start() error {
 	auth.adminAuth.start()
 	auth.encAuth.start()
 	auth.bbsAuth.start()
+	auth.systemAuth.start()
 
 	return nil
 }
@@ -66,8 +67,13 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 	}
 	encAuth := newEncAuth(coreAPIs, logger)
 	bbsAuth := newBBsAuth(coreAPIs, logger)
+	systemAuth, err := newSystemAuth(authService, logger)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "auth handler", nil, err)
+	}
 
-	auth := Auth{servicesAuth: servicesAuth, servicesUserAuth: servicesUserAuth, servicesAuthenticatedAuth: servicesAuthenticatedAuth, adminAuth: adminAuth, encAuth: encAuth, bbsAuth: bbsAuth, logger: logger}
+	auth := Auth{servicesAuth: servicesAuth, servicesUserAuth: servicesUserAuth, servicesAuthenticatedAuth: servicesAuthenticatedAuth,
+		adminAuth: adminAuth, encAuth: encAuth, bbsAuth: bbsAuth, systemAuth: systemAuth, logger: logger}
 
 	return &auth, nil
 }
@@ -98,7 +104,7 @@ func (auth *ServicesAuth) check(req *http.Request) (int, *tokenauth.Claims, erro
 }
 
 func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, serviceID string, logger *logs.Logger) (*ServicesAuth, error) {
-	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/scope_authorization_policy_services_auth.csv", serviceID)
+	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/authorization_services_policy.csv", serviceID)
 
 	servicesTokenAuth, err := tokenauth.NewTokenAuth(true, authService, nil, servicesScopeAuth)
 
@@ -188,7 +194,7 @@ func (auth *AdminAuth) check(req *http.Request) (int, *tokenauth.Claims, error) 
 }
 
 func newAdminAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) (*AdminAuth, error) {
-	adminPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/permission_authorization_policy_admin_auth.csv")
+	adminPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_admin_policy.csv")
 	adminTokenAuth, err := tokenauth.NewTokenAuth(true, authService, adminPermissionAuth, nil)
 
 	if err != nil {
@@ -229,4 +235,31 @@ func (auth *BBsAuth) start() {
 func newBBsAuth(coreAPIs *core.APIs, logger *logs.Logger) *BBsAuth {
 	auth := BBsAuth{coreAPIs: coreAPIs, logger: logger}
 	return &auth
+}
+
+//SystemAuth entity
+type SystemAuth struct {
+	//TODO
+	tokenAuth *tokenauth.TokenAuth
+	logger    *logs.Logger
+}
+
+func (auth *SystemAuth) start() {
+	auth.logger.Info("SystemAuth -> start")
+}
+
+func (auth *SystemAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
+	return 0, nil, nil
+}
+
+func newSystemAuth(authService *authservice.AuthService, logger *logs.Logger) (*SystemAuth, error) {
+	systemPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_system_policy.csv")
+	systemTokenAuth, err := tokenauth.NewTokenAuth(true, authService, systemPermissionAuth, nil)
+
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for adminAuth", nil, err)
+	}
+
+	auth := SystemAuth{tokenAuth: systemTokenAuth, logger: logger}
+	return &auth, nil
 }
