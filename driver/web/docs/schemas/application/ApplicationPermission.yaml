@@ -1,6 +1,0 @@
-type: object
-properties:
-  fields:
-     $ref: "./ApplicationPermissionFields.yaml"
-  application:
-    $ref: "./Application.yaml"
