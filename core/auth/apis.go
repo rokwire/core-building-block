@@ -451,7 +451,7 @@ func (a *Auth) AddMFAType(accountID string, identifier string, mfaType string) (
 		return nil, errors.WrapErrorAction("enrolling", typeMfaType, nil, err)
 	}
 
-	err = a.storage.InsertMFAType(newMfa, accountID)
+	err = a.storage.InsertMFAType(nil, newMfa, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, typeMfaType, &logutils.FieldArgs{"account_id": accountID, "type": mfaType}, err)
 	}
@@ -579,20 +579,55 @@ func (a *Auth) VerifyMFA(accountID string, identifier string, mfaType string, mf
 
 	mfa.Verified = true
 
-	//TODO: put transaction here to update MFA and insert recovery MFA (if necessary)
-	// recoveryCodes, err := a.generateRecoveryCodes()
-	// if err != nil {
-	// 	return false, nil, errors.WrapErrorAction("generating", "mfa recovery codes", errFields, err)
-	// }
+	var recoveryMfa *model.MFAType
+	transaction := func(context storage.TransactionContext) error {
+		//1. update existing MFA type
+		err := a.storage.UpdateMFAType(context, mfa, accountID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "id": mfa.ID}, err)
+		}
 
-	// shouldReturnCodes, err := a.storage.UpdateMFAType(mfa, accountID, recoveryCodes)
-	// if err != nil {
-	// 	return false, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, errFields, err)
-	// }
+		//2. find account
+		account, err := a.storage.FindAccountByID(context, accountID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": accountID}, err)
+		}
 
-	// if shouldReturnCodes {
-	// 	return true, recoveryCodes, nil
-	// }
+		//3. only mfa type just been verified, so enroll in recovery mfa automatically
+		if len(account.MFATypes) == 1 {
+			mfaImpl, err := a.getMfaTypeImpl(MfaTypeRecovery)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionLoadCache, typeMfaType, nil, err)
+			}
+			recoveryMfa, err = mfaImpl.enroll(MfaTypeRecovery)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionValidate, typeMfaType, &logutils.FieldArgs{"account_id": accountID, "type": MfaTypeRecovery}, err)
+			}
+
+			// insert recovery mfa type
+			err = a.storage.InsertMFAType(context, recoveryMfa, accountID)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "type": MfaTypeRecovery}, err)
+			}
+		}
+
+		return nil
+	}
+
+	err = a.storage.PerformTransaction(transaction)
+	if err != nil {
+		return false, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
+	}
+
+	if recoveryMfa != nil && recoveryMfa.Params != nil {
+		recoveryCodes, ok := recoveryMfa.Params["codes"].([]string)
+		if !ok {
+			return false, nil, errors.ErrorAction(logutils.ActionCast, "recovery codes", nil)
+		}
+
+		return true, recoveryCodes, nil
+	}
+
 	return true, nil, nil
 }
 
