@@ -2,6 +2,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"time"
 
@@ -24,24 +25,36 @@ type recoveryMfaImpl struct {
 	mfaType string
 }
 
-func (m *recoveryMfaImpl) verify(params map[string]interface{}, code string) (*string, error) {
-	var message string
+func (m *recoveryMfaImpl) verify(context storage.TransactionContext, mfa *model.MFAType, accountID string, code string) (*string, error) {
+	if mfa == nil || mfa.Params == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, "mfa params", nil)
+	}
 
-	codes, ok := params["codes"].([]string)
+	codes, ok := mfa.Params["codes"].([]string)
 	if !ok {
 		return nil, errors.ErrorData(logutils.StatusInvalid, "stored recovery codes", nil)
 	}
-	//TODO: what happens if codes list is empty? -> maybe admin reset
+	if len(codes) == 0 {
+		message := "no valid codes"
+		return &message, errors.ErrorData(logutils.StatusMissing, "recovery codes", nil)
+	}
 
-	for _, rc := range codes {
+	for i, rc := range codes {
 		if code == rc {
-			//TODO: update MFA type in storage by removing code
+			mfa.Params["codes"] = append(codes[:i], codes[i+1:]...)
+			now := time.Now().UTC()
+			mfa.DateUpdated = &now
+
+			err := m.auth.storage.UpdateMFAType(context, mfa, accountID)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "id": mfa.ID}, err)
+			}
 			return nil, nil
 		}
 	}
 
-	message = "invalid code"
-	return &message, errors.New(logutils.Unimplemented)
+	message := "invalid code"
+	return &message, errors.ErrorData(logutils.StatusInvalid, "recovery code", nil)
 }
 
 func (m *recoveryMfaImpl) enroll(identifier string) (*model.MFAType, error) {

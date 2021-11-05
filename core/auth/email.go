@@ -2,6 +2,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"encoding/json"
 	"fmt"
@@ -263,10 +264,14 @@ type emailMfaImpl struct {
 	mfaType string
 }
 
-func (m *emailMfaImpl) verify(params map[string]interface{}, code string) (*string, error) {
+func (m *emailMfaImpl) verify(context storage.TransactionContext, mfa *model.MFAType, accountID string, code string) (*string, error) {
+	if mfa == nil || mfa.Params == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, "mfa params", nil)
+	}
+
 	var message string
 
-	storedCode, ok := params["code"].(string)
+	storedCode, ok := mfa.Params["code"].(string)
 	if !ok {
 		return nil, errors.ErrorData(logutils.StatusInvalid, "stored mfa code", nil)
 	}
@@ -275,7 +280,7 @@ func (m *emailMfaImpl) verify(params map[string]interface{}, code string) (*stri
 		return &message, errors.ErrorData(logutils.StatusInvalid, "mfa code", nil)
 	}
 
-	expiry, ok := params["expires"].(time.Time)
+	expiry, ok := mfa.Params["expires"].(time.Time)
 	if !ok {
 		return nil, errors.ErrorData(logutils.StatusInvalid, "stored expiry", nil)
 	}
@@ -283,6 +288,8 @@ func (m *emailMfaImpl) verify(params map[string]interface{}, code string) (*stri
 		message = "expired code"
 		return &message, errors.ErrorData(logutils.StatusInvalid, "expired code", nil)
 	}
+
+	//TODO: remove code and expiration from params in storage
 
 	return nil, nil
 }

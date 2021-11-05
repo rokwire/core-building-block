@@ -3,6 +3,7 @@ package auth
 import (
 	"bytes"
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 	"image/png"
 	"os"
 	"time"
@@ -24,15 +25,17 @@ type totpMfaImpl struct {
 	mfaType string
 }
 
-func (m *totpMfaImpl) verify(params map[string]interface{}, code string) (*string, error) {
-	var message string
+func (m *totpMfaImpl) verify(context storage.TransactionContext, mfa *model.MFAType, accountID string, code string) (*string, error) {
+	if mfa == nil || mfa.Params == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, "mfa params", nil)
+	}
 
-	secret, ok := params["secret"].(string)
+	secret, ok := mfa.Params["secret"].(string)
 	if !ok {
 		return nil, errors.ErrorData(logutils.StatusInvalid, "stored totp secret", nil)
 	}
 	if !totp.Validate(code, secret) {
-		message = "invalid code"
+		message := "invalid code"
 		return &message, errors.ErrorData(logutils.StatusInvalid, "mfa code", nil)
 	}
 
