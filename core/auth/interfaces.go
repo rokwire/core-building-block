@@ -259,6 +259,7 @@ type Storage interface {
 
 	//Accounts
 	FindAccount(appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
+	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccount(account model.Account) (*model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
@@ -276,7 +277,7 @@ type Storage interface {
 	FindMFATypes(accountID string) ([]model.MFAType, error)
 	InsertMFAType(mfa *model.MFAType, accountID string) error
 	UpdateMFAType(mfa *model.MFAType, accountID string, recoveryCodes []string) (bool, error)
-	DeleteMFAType(accountID string, identifier string, mfaType string) error
+	DeleteMFAType(context storage.TransactionContext, accountID string, identifier string, mfaType string) error
 
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)

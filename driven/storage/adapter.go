@@ -899,72 +899,36 @@ func (sa *Adapter) UpdateMFAType(mfa *model.MFAType, accountID string, recoveryC
 }
 
 //DeleteMFAType deletes a MFA type
-func (sa *Adapter) DeleteMFAType(accountID string, identifier string, mfaType string) error {
-	// transaction
-	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
-		err := sessionContext.StartTransaction()
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
-		}
+func (sa *Adapter) DeleteMFAType(context TransactionContext, accountID string, identifier string, mfaType string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "mfa_types", Value: bson.M{"type": mfaType, "params.identifier": identifier}},
+		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
+	}
 
-		filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
-		update := bson.D{
-			primitive.E{Key: "$pull", Value: bson.D{
-				primitive.E{Key: "mfa_types", Value: bson.M{"type": mfaType, "params.identifier": identifier}},
-			}},
-			primitive.E{Key: "$set", Value: bson.D{
-				primitive.E{Key: "date_updated", Value: time.Now().UTC()},
-			}},
-		}
+	var res *mongo.UpdateResult
+	var err error
+	if context != nil {
+		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	} else {
+		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
+	}
 
-		res, err := sa.db.accounts.UpdateOneWithContext(sessionContext, filter, update, nil)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("deleting mfa type"), err)
-		}
-		if res.ModifiedCount == 0 {
-			return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("item to remove not found"))
-		}
-		if res.ModifiedCount != 1 {
-			return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
-		}
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("deleting mfa type"), err)
+	}
+	if res.ModifiedCount == 0 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("item to remove not found"))
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
 
-		//check if account recovery codes exist and mfa_types is empty
-		//remove recovery codes if this is the case (will be regenerated if MFA is re-enabled)
-
-		// account, err := sa.findAccount("_id", accountID)
-		// if err != nil {
-		// 	return false, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": accountID}, err)
-		// }
-
-		//TODO: what to do with recovery codes if last MFA type is removed? -> remove and regenerate if user re-enrolls
-		filter = bson.D{
-			primitive.E{Key: "_id", Value: accountID},
-			primitive.E{Key: "mfa_types", Value: bson.M{"$size": 0}},
-		}
-		update = bson.D{
-			primitive.E{Key: "$unset", Value: bson.D{
-				primitive.E{Key: "mfa_types", Value: ""},
-				primitive.E{Key: "recovery_codes", Value: ""},
-			}},
-		}
-
-		res, err = sa.db.accounts.UpdateOneWithContext(sessionContext, filter, update, nil)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("clearing recovery codes"), err)
-		}
-		if res.ModifiedCount > 1 {
-			return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
-		}
-
-		err = sessionContext.CommitTransaction(sessionContext)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
-		}
-		return nil
-	})
-
-	return err
+	return nil
 }
 
 //FindPermissions finds a set of permissions

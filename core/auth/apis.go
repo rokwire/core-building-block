@@ -2,6 +2,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"strings"
 	"time"
@@ -464,9 +465,36 @@ func (a *Auth) AddMFAType(accountID string, identifier string, mfaType string) (
 //		identifier (string): Email, phone, or TOTP device name
 //		mfaType (string): Type of MFA to remove
 func (a *Auth) RemoveMFAType(accountID string, identifier string, mfaType string) error {
-	err := a.storage.DeleteMFAType(accountID, identifier, mfaType)
+	transaction := func(context storage.TransactionContext) error {
+		//1. remove mfa type from account
+		err := a.storage.DeleteMFAType(context, accountID, identifier, mfaType)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "identifier": identifier, "type": mfaType}, err)
+		}
+
+		//2. find account
+		account, err := a.storage.FindAccountByID(context, accountID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		if account == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"_id": accountID})
+		}
+
+		//3. check if account only has recovery MFA remaining
+		if len(account.MFATypes) == 1 && account.MFATypes[0].Type == MfaTypeRecovery {
+			err = a.storage.DeleteMFAType(context, accountID, MfaTypeRecovery, MfaTypeRecovery)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "identifier": MfaTypeRecovery, "type": MfaTypeRecovery}, err)
+			}
+		}
+
+		return nil
+	}
+
+	err := a.storage.PerformTransaction(transaction)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "type": mfaType}, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, nil, err)
 	}
 
 	return nil
