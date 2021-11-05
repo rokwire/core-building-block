@@ -42,6 +42,8 @@ type applicationOrganization struct {
 	AppID string `bson:"app_id"`
 	OrgID string `bson:"org_id"`
 
+	ServicesIDs []string `bson:"services_ids"`
+
 	IdentityProvidersSettings []model.IdentityProviderSetting `bson:"identity_providers_settings"`
 
 	SupportedAuthTypes []model.AuthTypesSupport `bson:"supported_auth_types"`
@@ -49,37 +51,31 @@ type applicationOrganization struct {
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
-type applicationGroup struct {
+type appOrgGroup struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 
-	AppID string `bson:"app_id"`
+	System bool `bson:"system"`
 
-	Permissions []applicationPermission `bson:"permissions"`
-	Roles       []applicationRole       `bson:"roles"`
+	AppOrgID string `bson:"app_org_id"`
+
+	Permissions []model.Permission `bson:"permissions"`
+	Roles       []appOrgRole       `bson:"roles"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-type applicationRole struct {
+type appOrgRole struct {
 	ID          string `bson:"_id"`
 	Name        string `bson:"name"`
 	Description string `bson:"description"`
 
-	AppID string `bson:"app_id"`
+	System bool `bson:"system"`
 
-	Permissions []applicationPermission `bson:"permissions"`
+	AppOrgID string `bson:"app_org_id"`
 
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type applicationPermission struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
-
-	AppID string `bson:"app_id"`
+	Permissions []model.Permission `bson:"permissions"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

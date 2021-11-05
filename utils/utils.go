@@ -9,6 +9,17 @@ import (
 	"github.com/rokwire/logging-library-go/errors"
 )
 
+const (
+	//ErrorStatusAlreadyExists ...
+	ErrorStatusAlreadyExists string = "already-exists"
+	//ErrorStatusNotFound ...
+	ErrorStatusNotFound string = "not-found"
+	//ErrorStatusInvalid ...
+	ErrorStatusInvalid string = "invalid"
+	//ErrorStatusUnverified ...
+	ErrorStatusUnverified string = "unverified"
+)
+
 // GenerateRandomBytes returns securely generated random bytes
 func GenerateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
@@ -38,4 +49,17 @@ func ConvertToJSON(data interface{}) ([]byte, error) {
 //DeepEqual checks whether a and b are ``deeply equal,''
 func DeepEqual(a, b interface{}) bool {
 	return reflect.DeepEqual(a, b)
+}
+
+//SetStringIfEmpty returns b if a is empty, a if not
+func SetStringIfEmpty(a, b string) string {
+	if a == "" {
+		return b
+	}
+	return a
+}
+
+//GetType returns a string representing the type of data
+func GetType(data interface{}) string {
+	return reflect.TypeOf(data).String()
 }

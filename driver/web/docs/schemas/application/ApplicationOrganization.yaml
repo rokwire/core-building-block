@@ -2,5 +2,9 @@ type: object
 properties:
   id:
     type: string
+  application:
+    $ref: "./Application.yaml"
+  organization:
+    $ref: "./Organization.yaml"
   TODO:
     type: string

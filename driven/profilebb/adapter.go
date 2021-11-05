@@ -15,16 +15,17 @@ import (
 
 //Adapter implements the ProfileBuildingBlock interface
 type Adapter struct {
-	host   string
-	apiKey string
+	migrate bool
+	host    string
+	apiKey  string
 }
 
 type profileBBData struct {
-	PII    *profileBBPii          `json:"pii"`
-	NonPII map[string]interface{} `json:"non_pii"`
+	PII    *profileBBPII    `json:"pii"`
+	NonPII *profileBBNonPII `json:"non_pii"`
 }
 
-type profileBBPii struct {
+type profileBBPII struct {
 	LastName  string `json:"lastname"`
 	FirstName string `json:"firstname"`
 	Phone     string `json:"phone"`
@@ -38,10 +39,78 @@ type profileBBPii struct {
 	DateCreated string `json:"creationDate"`
 }
 
+type profileBBNonPII struct {
+	Over13               *bool               `json:"over13"`
+	PrivacySettings      privacySettings     `json:"privacySettings"`
+	Roles                []string            `json:"roles"`
+	Interests            []interest          `json:"interests"`
+	PositiveInterestTags []string            `json:"positiveInterestTags"`
+	NegativeInterestTags []string            `json:"negativeInterestTags"`
+	Favorites            map[string][]string `json:"favorites"`
+	RegisteredVoter      *bool               `json:"registered_voter"`
+	VotePlace            string              `json:"vote_place"`
+	VoterByMail          *bool               `json:"voter_by_mail"`
+	Voted                *bool               `json:"voted"`
+	CreationDate         string              `json:"creationDate"`
+}
+
+func (p *profileBBNonPII) convertInterests() map[string][]string {
+	interestMap := map[string][]string{}
+	for _, val := range p.Interests {
+		if len(val.Category) > 0 {
+			interestMap[val.Category] = val.Subcategories
+		}
+	}
+	return interestMap
+}
+
+func (p *profileBBNonPII) convertTags() map[string]bool {
+	tagsMap := map[string]bool{}
+	for _, val := range p.PositiveInterestTags {
+		tagsMap[val] = true
+	}
+	for _, val := range p.NegativeInterestTags {
+		tagsMap[val] = false
+	}
+	return tagsMap
+}
+
+func (p *profileBBNonPII) convertVoter() map[string]interface{} {
+	voter := map[string]interface{}{
+		"vote_place": p.VotePlace,
+	}
+
+	if p.RegisteredVoter != nil {
+		voter["registered_voter"] = *p.RegisteredVoter
+	}
+
+	if p.VoterByMail != nil {
+		voter["voter_by_mail"] = *p.VoterByMail
+	}
+
+	if p.Voted != nil {
+		voter["voted"] = *p.Voted
+	}
+
+	return voter
+}
+
+type privacySettings struct {
+	Level int `json:"level"`
+}
+
+type interest struct {
+	Category      string   `json:"category"`
+	Subcategories []string `json:"subcategories"`
+}
+
 //GetProfileBBData gets profile data by queryParams
 func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error) {
+	if !a.migrate {
+		return nil, nil, nil
+	}
 	if a.host == "" || a.apiKey == "" {
-		return nil, nil, errors.New("profile bb adapter not configured")
+		return nil, nil, errors.New("Profile BB adapter is not configured")
 	}
 
 	query := url.Values{}
@@ -55,7 +124,7 @@ func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (
 		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
 	}
 
-	req.Header.Set("ROKWIRE-CBB-API-KEY", a.apiKey)
+	req.Header.Set("ROKWIRE-CORE-BB-API-KEY", a.apiKey)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -84,40 +153,59 @@ func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (
 		return nil, nil, nil
 	}
 
-	dateCreated, err := time.Parse("2006-01-02T15:04:05.000Z", profileData.PII.DateCreated)
+	now := time.Now()
+	dateCreated, err := parseTime(profileData.PII.DateCreated)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, logutils.TypeString, &logutils.FieldArgs{"creationDate": profileData.PII.DateCreated}, err)
+		l.WarnAction(logutils.ActionParse, "date created", err)
+		dateCreated = &now
 	}
 	existingProfile := model.Profile{FirstName: profileData.PII.FirstName, LastName: profileData.PII.LastName,
 		Email: profileData.PII.Email, Phone: profileData.PII.Phone, BirthYear: profileData.PII.BirthYear,
 		Address: profileData.PII.Address, ZipCode: profileData.PII.ZipCode, State: profileData.PII.State,
-		Country: profileData.PII.Country, DateCreated: dateCreated}
+		Country: profileData.PII.Country, DateCreated: *dateCreated, DateUpdated: &now}
 
-	if profileData.NonPII != nil {
-		if creationDate, ok := profileData.NonPII["creationDate"].(string); ok {
-			dateCreated, err := time.Parse("2006-01-02T15:04:05.000Z", creationDate)
-			if err != nil {
-				l.WarnAction(logutils.ActionParse, logutils.TypeString, err)
-			} else {
-				profileData.NonPII["date_created"] = dateCreated
-				delete(profileData.NonPII, "creationDate")
-			}
-		}
-		if lastModifiedDate, ok := profileData.NonPII["lastModifiedDate"].(string); ok {
-			dateUpdated, err := time.Parse("2006-01-02T15:04:05.000Z", lastModifiedDate)
-			if err != nil {
-				l.WarnAction(logutils.ActionParse, logutils.TypeString, err)
-			} else {
-				profileData.NonPII["date_updated"] = dateUpdated
-				delete(profileData.NonPII, "lastModifiedDate")
-			}
-		}
+	preferences := a.reformatPreferences(profileData.NonPII, l)
+
+	return &existingProfile, preferences, nil
+}
+
+func (a *Adapter) reformatPreferences(nonPII *profileBBNonPII, l *logs.Log) map[string]interface{} {
+	if nonPII == nil {
+		return nil
 	}
 
-	return &existingProfile, profileData.NonPII, nil
+	preferences := map[string]interface{}{
+		"privacy_level": nonPII.PrivacySettings.Level,
+		"roles":         nonPII.Roles,
+		"favorites":     nonPII.Favorites,
+		"interests":     nonPII.convertInterests(),
+		"tags":          nonPII.convertTags(),
+		"voter":         nonPII.convertVoter(),
+		"over13":        nonPII.Over13,
+	}
+
+	dateCreated, err := parseTime(nonPII.CreationDate)
+	if err != nil {
+		l.WarnAction(logutils.ActionParse, "date created", err)
+		preferences["date_created"] = time.Now()
+	} else {
+		preferences["date_created"] = dateCreated
+	}
+
+	preferences["date_updated"] = time.Now()
+
+	return preferences
+}
+
+func parseTime(timeString string) (*time.Time, error) {
+	parsedTime, err := time.Parse("2006-01-02T15:04:05.000Z", timeString)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionParse, "date", nil, err)
+	}
+	return &parsedTime, nil
 }
 
 //NewProfileBBAdapter creates a new profile building block adapter instance
-func NewProfileBBAdapter(profileHost string, apiKey string) *Adapter {
-	return &Adapter{host: profileHost, apiKey: apiKey}
+func NewProfileBBAdapter(migrate bool, profileHost string, apiKey string) *Adapter {
+	return &Adapter{migrate: migrate, host: profileHost, apiKey: apiKey}
 }
