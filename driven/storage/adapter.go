@@ -646,7 +646,7 @@ func (sa *Adapter) InsertAccountPermissions(accountID string, permissions []mode
 
 //InsertAccountRoles inserts account roles
 func (sa *Adapter) InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error {
-	stgRoles := appOrgRolesToStorage(roles)
+	stgRoles := accountRolesToStorage(roles)
 
 	//appID included in search to prevent accidentally assigning permissions to account from different application
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}, primitive.E{Key: "app_org_id", Value: appOrgID}}
@@ -857,7 +857,7 @@ func (sa *Adapter) DeletePermission(id string) error {
 //FindAppOrgRoles finds a set of application organization roles
 func (sa *Adapter) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error) {
 	if len(ids) == 0 {
-		return []model.ApplicationRole{}, nil
+		return []model.AppOrgRole{}, nil
 	}
 
 	rolesFilter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
@@ -912,7 +912,7 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 //FindAppOrgGroups finds a set of application organization groups
 func (sa *Adapter) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
 	if len(ids) == 0 {
-		return []model.ApplicationGroup{}, nil
+		return []model.AppOrgGroup{}, nil
 	}
 
 	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}

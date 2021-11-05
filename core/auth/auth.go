@@ -637,17 +637,17 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 	accountID, _ := uuid.NewUUID()
 	authTypes := []model.AccountAuthType{accountAuthType}
 
-	roles, err := a.storage.FindApplicationRoles(roleIDs, appOrg.Application.ID)
+	roles, err := a.storage.FindAppOrgRoles(roleIDs, appOrg.ID)
 	if err != nil {
-		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeApplicationRole, nil), err)
+		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgRole, nil), err)
 	}
-	groups, err := a.storage.FindApplicationGroups(groupIDs, appOrg.Application.ID)
+	groups, err := a.storage.FindAppOrgGroups(groupIDs, appOrg.ID)
 	if err != nil {
-		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeApplicationGroup, nil), err)
+		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgGroup, nil), err)
 	}
 
 	account := model.Account{ID: accountID.String(), AppOrg: appOrg,
-		Permissions: nil, Roles: model.AccountRolesFromApplicationRoles(roles, true, false), Groups: model.AccountGroupsFromApplicationGroups(groups, true, false),
+		Permissions: nil, Roles: model.AccountRolesFromAppOrgRoles(roles, true, false), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, false),
 		AuthTypes: authTypes, Preferences: preferences, Profile: profile, DateCreated: time.Now()} // Anonymous: accountAuthType.AuthType.IsAnonymous
 
 	insertedAccount, err := a.storage.InsertAccount(account)
@@ -844,11 +844,11 @@ func (a *Auth) updateExternalAccountRoles(account *model.Account, newExternalRol
 		}
 	}
 
-	addedRoles, err := a.storage.FindApplicationRoles(addedRoleIDs, account.Application.ID)
+	addedRoles, err := a.storage.FindAppOrgRoles(addedRoleIDs, account.AppOrg.ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountRoles, nil, err)
 	}
-	newRoles = append(newRoles, model.AccountRolesFromApplicationRoles(addedRoles, true, false)...)
+	newRoles = append(newRoles, model.AccountRolesFromAppOrgRoles(addedRoles, true, false)...)
 
 	err = a.storage.UpdateAccountRoles(account.ID, newRoles)
 	if err != nil {
@@ -878,11 +878,11 @@ func (a *Auth) updateExternalAccountGroups(account *model.Account, newExternalGr
 		}
 	}
 
-	addedGroups, err := a.storage.FindApplicationGroups(addedGroupIDs, account.Application.ID)
+	addedGroups, err := a.storage.FindAppOrgGroups(addedGroupIDs, account.AppOrg.ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountGroups, nil, err)
 	}
-	newGroups = append(newGroups, model.AccountGroupsFromApplicationGroups(addedGroups, true, false)...)
+	newGroups = append(newGroups, model.AccountGroupsFromAppOrgGroups(addedGroups, true, false)...)
 
 	err = a.storage.UpdateAccountGroups(account.ID, newGroups)
 	if err != nil {

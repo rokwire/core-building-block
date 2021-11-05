@@ -70,7 +70,7 @@ type Storage interface {
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
-	InsertAccountRoles(accountID string, appOrgID string, roles []model.AppOrgRole) error
+	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error

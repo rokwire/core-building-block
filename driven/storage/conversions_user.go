@@ -114,16 +114,16 @@ func accountAuthTypesToStorage(items []model.AccountAuthType) []accountAuthType 
 }
 
 //AccountRole
-func accountRoleFromStorage(item *accountRole, application model.Application) model.AccountRole {
+func accountRoleFromStorage(item *accountRole, appOrg model.ApplicationOrganization) model.AccountRole {
 	if item == nil {
 		return model.AccountRole{}
 	}
 
-	appRole := applicationRoleFromStorage(&item.applicationRole, application)
-	return model.AccountRole{ApplicationRole: appRole, Active: item.Active, AdminSet: item.AdminSet}
+	appOrgRole := appOrgRoleFromStorage(&item.appOrgRole, appOrg)
+	return model.AccountRole{AppOrgRole: appOrgRole, Active: item.Active, AdminSet: item.AdminSet}
 }
 
-func accountRolesFromStorage(items []accountRole, application model.Application) []model.AccountRole {
+func accountRolesFromStorage(items []accountRole, application model.ApplicationOrganization) []model.AccountRole {
 	if len(items) == 0 {
 		return make([]model.AccountRole, 0)
 	}
@@ -136,8 +136,8 @@ func accountRolesFromStorage(items []accountRole, application model.Application)
 }
 
 func accountRoleToStorage(item model.AccountRole) accountRole {
-	appRole := applicationRoleToStorage(item.ApplicationRole)
-	return accountRole{applicationRole: appRole, Active: item.Active, AdminSet: item.AdminSet}
+	appRole := appOrgRoleToStorage(item.AppOrgRole)
+	return accountRole{appOrgRole: appRole, Active: item.Active, AdminSet: item.AdminSet}
 }
 
 func accountRolesToStorage(items []model.AccountRole) []accountRole {
@@ -153,30 +153,30 @@ func accountRolesToStorage(items []model.AccountRole) []accountRole {
 }
 
 //ApplicationGroup
-func accountGroupFromStorage(item *accountGroup, application model.Application) model.AccountGroup {
+func accountGroupFromStorage(item *accountGroup, appOrg model.ApplicationOrganization) model.AccountGroup {
 	if item == nil {
 		return model.AccountGroup{}
 	}
 
-	appGroup := applicationGroupFromStorage(&item.applicationGroup, application)
-	return model.AccountGroup{ApplicationGroup: appGroup, Active: item.Active, AdminSet: item.AdminSet}
+	appOrgGroup := appOrgGroupFromStorage(&item.appOrgGroup, appOrg)
+	return model.AccountGroup{AppOrgGroup: appOrgGroup, Active: item.Active, AdminSet: item.AdminSet}
 }
 
-func accountGroupsFromStorage(items []accountGroup, application model.Application) []model.AccountGroup {
+func accountGroupsFromStorage(items []accountGroup, appOrg model.ApplicationOrganization) []model.AccountGroup {
 	if len(items) == 0 {
 		return make([]model.AccountGroup, 0)
 	}
 
 	res := make([]model.AccountGroup, len(items))
 	for i, item := range items {
-		res[i] = accountGroupFromStorage(&item, application)
+		res[i] = accountGroupFromStorage(&item, appOrg)
 	}
 	return res
 }
 
 func accountGroupToStorage(item model.AccountGroup) accountGroup {
-	appGroup := applicationGroupToStorage(item.ApplicationGroup)
-	return accountGroup{applicationGroup: appGroup, Active: item.Active, AdminSet: item.AdminSet}
+	appGroup := appOrgGroupToStorage(item.AppOrgGroup)
+	return accountGroup{appOrgGroup: appGroup, Active: item.Active, AdminSet: item.AdminSet}
 }
 
 func accountGroupsToStorage(items []model.AccountGroup) []accountGroup {

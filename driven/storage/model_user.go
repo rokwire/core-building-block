@@ -29,13 +29,13 @@ type account struct {
 }
 
 type accountRole struct {
-	applicationRole
+	appOrgRole
 	Active   bool `bson:"active"`
 	AdminSet bool `bson:"admin_set"`
 }
 
 type accountGroup struct {
-	applicationGroup
+	appOrgGroup
 	Active   bool `bson:"active"`
 	AdminSet bool `bson:"admin_set"`
 }

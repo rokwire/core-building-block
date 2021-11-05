@@ -49,12 +49,12 @@ func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeF
 }
 
 //AccountRole
-func accountRoleToDef(item model.AccountRole) Def.ApplicationRoleFields {
-	return Def.ApplicationRoleFields{Id: item.ID, Name: item.Name}
+func accountRoleToDef(item model.AccountRole) Def.AppOrgRoleFields {
+	return Def.AppOrgRoleFields{Id: item.ID, Name: item.Name}
 }
 
-func accountRolesToDef(items []model.AccountRole) []Def.ApplicationRoleFields {
-	result := make([]Def.ApplicationRoleFields, len(items))
+func accountRolesToDef(items []model.AccountRole) []Def.AppOrgRoleFields {
+	result := make([]Def.AppOrgRoleFields, len(items))
 	for i, item := range items {
 		result[i] = accountRoleToDef(item)
 	}
@@ -62,12 +62,12 @@ func accountRolesToDef(items []model.AccountRole) []Def.ApplicationRoleFields {
 }
 
 //AccountGroup
-func accountGroupToDef(item model.AccountGroup) Def.ApplicationGroupFields {
-	return Def.ApplicationGroupFields{Id: item.ID, Name: item.Name}
+func accountGroupToDef(item model.AccountGroup) Def.AppOrgGroupFields {
+	return Def.AppOrgGroupFields{Id: item.ID, Name: item.Name}
 }
 
-func accountGroupsToDef(items []model.AccountGroup) []Def.ApplicationGroupFields {
-	result := make([]Def.ApplicationGroupFields, len(items))
+func accountGroupsToDef(items []model.AccountGroup) []Def.AppOrgGroupFields {
+	result := make([]Def.AppOrgGroupFields, len(items))
 	for i, item := range items {
 		result[i] = accountGroupToDef(item)
 	}

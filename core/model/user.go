@@ -182,30 +182,30 @@ func (a Account) GetGroup(id string) *AccountGroup {
 
 //AccountRole represents a role assigned to an account
 type AccountRole struct {
-	ApplicationRole
+	AppOrgRole
 	Active   bool
 	AdminSet bool
 }
 
-func AccountRolesFromApplicationRoles(items []ApplicationRole, active bool, adminSet bool) []AccountRole {
+func AccountRolesFromAppOrgRoles(items []AppOrgRole, active bool, adminSet bool) []AccountRole {
 	accountRoles := make([]AccountRole, len(items))
 	for i, role := range items {
-		accountRoles[i] = AccountRole{ApplicationRole: role, Active: active, AdminSet: adminSet}
+		accountRoles[i] = AccountRole{AppOrgRole: role, Active: active, AdminSet: adminSet}
 	}
 	return accountRoles
 }
 
 //AccountGroup represents a group assigned to an account
 type AccountGroup struct {
-	ApplicationGroup
+	AppOrgGroup
 	Active   bool
 	AdminSet bool
 }
 
-func AccountGroupsFromApplicationGroups(items []ApplicationGroup, active bool, adminSet bool) []AccountGroup {
+func AccountGroupsFromAppOrgGroups(items []AppOrgGroup, active bool, adminSet bool) []AccountGroup {
 	accountGroups := make([]AccountGroup, len(items))
 	for i, group := range items {
-		accountGroups[i] = AccountGroup{ApplicationGroup: group, Active: active, AdminSet: adminSet}
+		accountGroups[i] = AccountGroup{AppOrgGroup: group, Active: active, AdminSet: adminSet}
 	}
 	return accountGroups
 }

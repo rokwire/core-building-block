@@ -237,12 +237,12 @@ type Storage interface {
 	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
 
 	//ApplicationRoles
-	FindApplicationRoles(ids []string, appID string) ([]model.ApplicationRole, error)
+	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	//AccountRoles
 	UpdateAccountRoles(accountID string, roles []model.AccountRole) error
 
 	//ApplicationGroups
-	FindApplicationGroups(ids []string, appID string) ([]model.ApplicationGroup, error)
+	FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	//AccountGroups
 	UpdateAccountGroups(accountID string, groups []model.AccountGroup) error
 }
