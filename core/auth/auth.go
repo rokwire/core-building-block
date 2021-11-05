@@ -202,7 +202,40 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		if !currentData.Equals(newData) {
 			//there is changes so we need to update it
 			accountAuthType.Params["user"] = newData
-			err = a.storage.UpdateAccountAuthType(*accountAuthType)
+			now := time.Now()
+			accountAuthType.DateUpdated = &now
+
+			transaction := func(context storage.TransactionContext) error {
+				//1. first find the account record
+				account, err := a.storage.FindAccountByAuthTypeID(context, accountAuthType.ID)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+				}
+				if account == nil {
+					return errors.ErrorAction(logutils.ActionFind, "for some reason account is nil for account auth type", &logutils.FieldArgs{"account auth type id": accountAuthType.ID})
+				}
+
+				//2. update the account auth type in the account record
+				newAccountAuthTypes := make([]model.AccountAuthType, len(account.AuthTypes))
+				for j, aAuthType := range account.AuthTypes {
+					if aAuthType.ID == accountAuthType.ID {
+						newAccountAuthTypes[j] = *accountAuthType
+					} else {
+						newAccountAuthTypes[j] = aAuthType
+					}
+				}
+				account.AuthTypes = newAccountAuthTypes
+
+				//3. update the account record
+				err = a.storage.SaveAccount(context, account)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, nil, err)
+				}
+
+				return nil
+			}
+
+			err = a.storage.PerformTransaction(transaction)
 			if err != nil {
 				return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
 			}
@@ -609,7 +642,7 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 
 	if credential != nil {
 		//TODO - in one transaction
-		if err = a.storage.InsertCredential(credential, nil); err != nil {
+		if err = a.storage.InsertCredential(credential); err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 		}
 	}
