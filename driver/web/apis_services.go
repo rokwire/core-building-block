@@ -4,6 +4,7 @@ import (
 	"core-building-block/core"
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -25,7 +26,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	ip := h.coreAPIs.Auth.GetIP(*claims)
+	ip := utils.GetIP(l, r)
 	if err != nil {
 		return l.HttpResponseError("Error getting IP", err, http.StatusBadRequest, true)
 	}

@@ -2,8 +2,6 @@ package auth
 
 import (
 	"core-building-block/core/model"
-	"net"
-	"net/http"
 	"strings"
 	"time"
 
@@ -28,30 +26,6 @@ func (a *Auth) Start() {
 //GetHost returns the host/issuer of the auth service
 func (a *Auth) GetHost() string {
 	return a.host
-}
-
-func (а *Auth) GetIP(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	ip, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeIP, nil, err, http.StatusBadRequest, true)
-
-	}
-
-	userIP := net.ParseIP(ip)
-	if userIP == nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeIP, nil, err, http.StatusContinue, true)
-	}
-
-	forward := r.Header.Get("X-Forwarded-For")
-
-	if forward != "" {
-		// Got X-Forwarded-For
-		ip = forward
-	}
-
-	/*fmt.Printf("<p>IP: %s</p>", ip)
-	fmt.Printf("<p>Forwarded for: %s</p>", forward)*/
-	return l.HttpResponseSuccessJSON(userIP)
 }
 
 //Login logs a user in a specific application using the specified credentials and authentication method.
