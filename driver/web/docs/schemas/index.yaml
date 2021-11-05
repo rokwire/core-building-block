@@ -140,12 +140,6 @@ _req_authorize-service_Request:
 _res_authorize-service_Response:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
 
-### application-configs API
-_req_create_Application-Configs_Request:
-  $ref: "./apis/services/appconfigs/request/Request.yaml"
-_req_update_Application-Configs_Request:
-  $ref: "./apis/services/appconfigs/request/Request.yaml"
-
 ### organization API
 _req_create-Organization_Request:
   $ref: "./apis/system/create-organization/request/Request.yaml"
@@ -181,6 +175,12 @@ _req_permissions_Request:
 ### application-roles API
 _req_application-roles_Request:
   $ref: "./apis/system/application-roles/request/Request.yaml"
+
+### application-configs API
+_req_create_Application-Configs_Request:
+  $ref: "./apis/system/appconfigs/request/Request.yaml"
+_req_update_Application-Configs_Request:
+  $ref: "./apis/system/appconfigs/request/Request.yaml"
 
 ### account permissions API
 _req_account-permissions_Request:

@@ -788,12 +788,6 @@ type GetServicesAppConfigsParams struct {
 	AppId *string `json:"app_id,omitempty"`
 }
 
-// PostServicesAppConfigsJSONBody defines parameters for PostServicesAppConfigs.
-type PostServicesAppConfigsJSONBody ReqCreateApplicationConfigsRequest
-
-// PutServicesAppConfigsIdJSONBody defines parameters for PutServicesAppConfigsId.
-type PutServicesAppConfigsIdJSONBody ReqCreateApplicationConfigsRequest
-
 // PostServicesAuthAccountExistsJSONBody defines parameters for PostServicesAuthAccountExists.
 type PostServicesAuthAccountExistsJSONBody ReqAccountExistsRequest
 
@@ -847,6 +841,21 @@ type PostSystemApiKeysJSONBody APIKey
 
 // PutSystemApiKeysJSONBody defines parameters for PutSystemApiKeys.
 type PutSystemApiKeysJSONBody APIKey
+
+// GetSystemAppConfigsParams defines parameters for GetSystemAppConfigs.
+type GetSystemAppConfigsParams struct {
+	// query by mobile app version and app_id, results contain all app configurations if no paramer is given; If given version, it will return the closest app config that is less than or equal to the given version.
+	Version *string `json:"version,omitempty"`
+
+	// query by mobile app version and app_id, results contain all app configurations if no paramer is given; If given version, it will return the closest app config that is less than or equal to the given version.
+	AppId *string `json:"app_id,omitempty"`
+}
+
+// PostSystemAppConfigsJSONBody defines parameters for PostSystemAppConfigs.
+type PostSystemAppConfigsJSONBody ReqCreateApplicationConfigsRequest
+
+// PutSystemAppConfigsIdJSONBody defines parameters for PutSystemAppConfigsId.
+type PutSystemAppConfigsIdJSONBody ReqCreateApplicationConfigsRequest
 
 // GetSystemApplicationApiKeysParams defines parameters for GetSystemApplicationApiKeys.
 type GetSystemApplicationApiKeysParams struct {
@@ -917,12 +926,6 @@ type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJ
 // PutServicesAccountProfileJSONRequestBody defines body for PutServicesAccountProfile for application/json ContentType.
 type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
 
-// PostServicesAppConfigsJSONRequestBody defines body for PostServicesAppConfigs for application/json ContentType.
-type PostServicesAppConfigsJSONRequestBody PostServicesAppConfigsJSONBody
-
-// PutServicesAppConfigsIdJSONRequestBody defines body for PutServicesAppConfigsId for application/json ContentType.
-type PutServicesAppConfigsIdJSONRequestBody PutServicesAppConfigsIdJSONBody
-
 // PostServicesAuthAccountExistsJSONRequestBody defines body for PostServicesAuthAccountExists for application/json ContentType.
 type PostServicesAuthAccountExistsJSONRequestBody PostServicesAuthAccountExistsJSONBody
 
@@ -949,6 +952,12 @@ type PostSystemApiKeysJSONRequestBody PostSystemApiKeysJSONBody
 
 // PutSystemApiKeysJSONRequestBody defines body for PutSystemApiKeys for application/json ContentType.
 type PutSystemApiKeysJSONRequestBody PutSystemApiKeysJSONBody
+
+// PostSystemAppConfigsJSONRequestBody defines body for PostSystemAppConfigs for application/json ContentType.
+type PostSystemAppConfigsJSONRequestBody PostSystemAppConfigsJSONBody
+
+// PutSystemAppConfigsIdJSONRequestBody defines body for PutSystemAppConfigsId for application/json ContentType.
+type PutSystemAppConfigsIdJSONRequestBody PutSystemAppConfigsIdJSONBody
 
 // PostSystemApplicationRolesJSONRequestBody defines body for PostSystemApplicationRoles for application/json ContentType.
 type PostSystemApplicationRolesJSONRequestBody PostSystemApplicationRolesJSONBody

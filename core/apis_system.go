@@ -196,6 +196,46 @@ func (app *application) sysCreateAppOrgRole(name string, appOrgID string, descri
 	return &role, nil
 }
 
+func (app *application) sysGetAppConfig(id string) (*model.ApplicationConfigs, error) {
+	appConfig, err := app.storage.FindAppConfigByID(id)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
+	}
+
+	return appConfig, nil
+}
+
+func (app *application) sysCreateAppConfig(version string, appID string, data map[string]interface{}) (*model.ApplicationConfigs, error) {
+	now := time.Now()
+	appConfigID, _ := uuid.NewUUID()
+	applicationConfig := model.ApplicationConfigs{ID: appConfigID.String(), AppID: appID, MobileAppVersion: version, Data: data, DateCreated: now}
+
+	insertedConfig, err := app.storage.InsertAppConfig(applicationConfig)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeApplicationConfigs, nil, err)
+	}
+
+	return insertedConfig, nil
+}
+
+func (app *application) sysUpdateAppConfig(id string, version string, data map[string]interface{}) error {
+	err := app.storage.UpdateAppConfig(id, version, data)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigs, nil, err)
+	}
+
+	return nil
+}
+
+func (app *application) sysDeleteAppConfig(id string) error {
+	err := app.storage.DeleteAppConfig(id)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeApplicationConfigs, nil, err)
+	}
+
+	return nil
+}
+
 func (app *application) sysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
 	if assignerPermissions == nil {
 		return errors.New("no permissions from admin assigner")

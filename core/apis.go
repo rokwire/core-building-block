@@ -95,22 +95,6 @@ func (s *servicesImpl) SerGetAppConfigs(appID string, version string) ([]model.A
 	return s.app.serGetAppConfigs(appID, version)
 }
 
-func (s *servicesImpl) SerGetAppConfig(id string) (*model.ApplicationConfigs, error) {
-	return s.app.serGetAppConfig(id)
-}
-
-func (s *servicesImpl) SerCreateAppConfig(version string, appID string, data map[string]interface{}) (*model.ApplicationConfigs, error) {
-	return s.app.serCreateAppConfig(version, appID, data)
-}
-
-func (s *servicesImpl) SerUpdateAppConfig(id string, version string, data map[string]interface{}) error {
-	return s.app.serUpdateAppConfig(id, version, data)
-}
-
-func (s *servicesImpl) SerDeleteAppConfig(id string) error {
-	return s.app.serDeleteAppConfig(id)
-}
-
 ///
 
 //administrationImpl
@@ -209,6 +193,26 @@ func (s *systemImpl) SysUpdatePermission(name string, serviceID *string, assigne
 
 func (s *systemImpl) SysCreateAppOrgRole(name string, appOrgID string, description string, permissionNames []string) (*model.AppOrgRole, error) {
 	return s.app.sysCreateAppOrgRole(name, appOrgID, description, permissionNames)
+}
+
+func (s *systemImpl) SysGetAppConfigs(appID string, version string) ([]model.ApplicationConfigs, error) {
+	return s.app.serGetAppConfigs(appID, version)
+}
+
+func (s *systemImpl) SysGetAppConfig(id string) (*model.ApplicationConfigs, error) {
+	return s.app.sysGetAppConfig(id)
+}
+
+func (s *systemImpl) SysCreateAppConfig(version string, appID string, data map[string]interface{}) (*model.ApplicationConfigs, error) {
+	return s.app.sysCreateAppConfig(version, appID, data)
+}
+
+func (s *systemImpl) SysUpdateAppConfig(id string, version string, data map[string]interface{}) error {
+	return s.app.sysUpdateAppConfig(id, version, data)
+}
+
+func (s *systemImpl) SysDeleteAppConfig(id string) error {
+	return s.app.sysDeleteAppConfig(id)
 }
 
 func (s *systemImpl) SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
