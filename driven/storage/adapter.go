@@ -537,9 +537,9 @@ func (sa *Adapter) FindAccounts(accountID string, identifier string) ([]model.Ac
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}*/
 
-	//getAccounts := getAccountFromStorage(accounts)
-	//return getAccounts, nil
-	return accounts, nil
+	getAccounts := getAccountsListToStorage(accounts)
+	return getAccounts, nil
+	//return accounts, nil
 }
 
 //InsertAccount inserts an account
