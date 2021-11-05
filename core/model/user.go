@@ -187,6 +187,7 @@ type AccountRole struct {
 	AdminSet bool
 }
 
+//AccountRolesFromAppOrgRoles converts AppOrgRoles to AccountRoles
 func AccountRolesFromAppOrgRoles(items []AppOrgRole, active bool, adminSet bool) []AccountRole {
 	accountRoles := make([]AccountRole, len(items))
 	for i, role := range items {
@@ -202,6 +203,7 @@ type AccountGroup struct {
 	AdminSet bool
 }
 
+//AccountGroupsFromAppOrgGroups converts AppOrgGroups to AccountGroups
 func AccountGroupsFromAppOrgGroups(items []AppOrgGroup, active bool, adminSet bool) []AccountGroup {
 	accountGroups := make([]AccountGroup, len(items))
 	for i, group := range items {
