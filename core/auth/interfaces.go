@@ -59,6 +59,8 @@ type APIs interface {
 	//GetHost returns the host/issuer of the auth service
 	GetHost() string
 
+	GetIP(claims tokenauth.Claims) string
+
 	//Login logs a user in a specific application using the specified credentials and authentication method.
 	//The authentication method must be one of the supported for the application.
 	//	Input:
