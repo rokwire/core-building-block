@@ -6,9 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Add password reset from client and reset links [#216](https://github.com/rokwire/core-building-block/issues/216)
+- Add authentication required auth wrapper [#250](https://github.com/rokwire/core-building-block/issues/250)
 
 ### Added
-- Add authentication required auth wrapper [#250](https://github.com/rokwire/core-building-block/issues/250)
 - Add refresh token abuse detection to login sessions [#257](https://github.com/rokwire/core-building-block/issues/257)
 
 ### Changed
@@ -42,8 +43,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.7.0] - 2021-10-25
 ### Added
-- Add password reset from client and reset links [#216](https://github.com/rokwire/core-building-block/issues/216)
-- Add authentication required auth wrapper [#250](https://github.com/rokwire/core-building-block/issues/250)
 - Handle API key validation for non-anonymous users [#244](https://github.com/rokwire/core-building-block/issues/244)
 - Implement logins sessions [#172](https://github.com/rokwire/core-building-block/issues/172) 
 
