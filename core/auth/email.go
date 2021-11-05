@@ -81,33 +81,45 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appType model.Applicatio
 	code, err := utils.GenerateRandomString(64)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate random string for verify code"))
-
 	}
 
-	emailCredValue := emailCreds{Email: email, Password: string(hashedPassword), VerificationCode: code, VerificationExpiry: time.Now().Add(time.Hour * 24)}
+	verifyEmail := a.getVerifyEmail(authType)
+
+	var emailCredValue emailCreds
+	if verifyEmail {
+		emailCredValue = emailCreds{Email: email, Password: string(hashedPassword), VerificationCode: code, VerificationExpiry: time.Now().Add(time.Hour * 24)}
+	} else {
+		emailCredValue = emailCreds{Email: email, Password: string(hashedPassword)}
+	}
+
 	emailCredValueMap, err := emailCredsToMap(&emailCredValue)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction("failed email params to map", "", nil, err)
 	}
 
-	//send verification code
-	if err = a.sendVerificationCode(email, code, newCredentialID); err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
+	if verifyEmail {
+		//send verification code
+		if err = a.sendVerificationCode(email, code, newCredentialID); err != nil {
+			return "", nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
+		}
 	}
 
 	return "verification code sent successfully", emailCredValueMap, nil
 }
 
-func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error) {
-	//check is verified
-	if !accountAuthType.Credential.Verified {
-		return "", nil, errors.ErrorAction("not verified", "", nil)
+func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
+	verifyEmail := a.getVerifyEmail(accountAuthType.AuthType)
+	if verifyEmail {
+		//check is verified
+		if !accountAuthType.Credential.Verified {
+			return "", errors.ErrorAction("not verified", "", nil).SetStatus(utils.ErrorStatusUnverified)
+		}
 	}
 
 	//get stored credential
 	storedCreds, err := mapToEmailCreds(accountAuthType.Credential.Value)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction("error on map to email creds", "", nil, err)
+		return "", errors.WrapErrorAction("error on map to email creds", "", nil, err)
 	}
 
 	//get request credential
@@ -117,18 +129,26 @@ func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, 
 	var sPasswordParams signInPasswordCred
 	err = json.Unmarshal([]byte(creds), &sPasswordParams)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction("error getting sign_in password creds", "", nil, err)
+		return "", errors.WrapErrorAction("error getting sign_in password creds", "", nil, err)
 	}
 	requestPassword := sPasswordParams.Password
 
 	//compare stored and requets ones
 	err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(requestPassword))
 	if err != nil {
-		return "", nil, errors.WrapErrorAction("bad credentials", "", nil, err)
+		return "", errors.WrapErrorAction("bad credentials", "", nil, err).SetStatus(utils.ErrorStatusInvalid)
 	}
 
-	valid := true
-	return "", &valid, nil
+	return "", nil
+}
+
+func (a *emailAuthImpl) getVerifyEmail(authType model.AuthType) bool {
+	verifyEmail := true
+	verifyEmailParam, ok := authType.Params["verify_email"].(bool)
+	if ok {
+		verifyEmail = verifyEmailParam
+	}
+	return verifyEmail
 }
 
 func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode string, credentialID string) error {

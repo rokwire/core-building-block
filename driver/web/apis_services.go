@@ -79,7 +79,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 
 	//token
 	accessToken := loginSession.AccessToken
-	refreshToken := loginSession.RefreshToken
+	refreshToken := loginSession.CurrentRefreshToken()
 
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
@@ -96,9 +96,9 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		//permissions
 		permissions := applicationPermissionsToDef(account.Permissions)
 		//roles
-		roles := applicationRolesToDef(account.Roles)
+		roles := appOrgRolesToDef(account.Roles)
 		//groups
-		groups := applicationGroupsToDef(account.Groups)
+		groups := appOrgGroupsToDef(account.Groups)
 		//account auth types
 		authTypes := accountAuthTypesToDef(account.AuthTypes)
 		accountData = &Def.ResSharedLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
@@ -167,7 +167,7 @@ func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request, claims *t
 	}
 
 	accessToken := loginSession.AccessToken
-	refreshToken := loginSession.RefreshToken
+	refreshToken := loginSession.CurrentRefreshToken()
 	var paramsRes interface{}
 	if loginSession.Params != nil {
 		paramsRes = loginSession.Params
