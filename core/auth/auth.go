@@ -173,7 +173,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	}
 
 	//2. check if the user exists
-	account, err := a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, externalUser.Identifier)
+	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, externalUser.Identifier)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -202,7 +202,40 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		if !currentData.Equals(newData) {
 			//there is changes so we need to update it
 			accountAuthType.Params["user"] = newData
-			err = a.storage.UpdateAccountAuthType(*accountAuthType)
+			now := time.Now()
+			accountAuthType.DateUpdated = &now
+
+			transaction := func(context storage.TransactionContext) error {
+				//1. first find the account record
+				account, err := a.storage.FindAccountByAuthTypeID(context, accountAuthType.ID)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+				}
+				if account == nil {
+					return errors.ErrorAction(logutils.ActionFind, "for some reason account is nil for account auth type", &logutils.FieldArgs{"account auth type id": accountAuthType.ID})
+				}
+
+				//2. update the account auth type in the account record
+				newAccountAuthTypes := make([]model.AccountAuthType, len(account.AuthTypes))
+				for j, aAuthType := range account.AuthTypes {
+					if aAuthType.ID == accountAuthType.ID {
+						newAccountAuthTypes[j] = *accountAuthType
+					} else {
+						newAccountAuthTypes[j] = aAuthType
+					}
+				}
+				account.AuthTypes = newAccountAuthTypes
+
+				//3. update the account record
+				err = a.storage.SaveAccount(context, account)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, nil, err)
+				}
+
+				return nil
+			}
+
+			err = a.storage.PerformTransaction(transaction)
 			if err != nil {
 				return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
 			}
@@ -267,7 +300,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
 	}
-	account, err = a.storage.FindAccount(appOrg.Application.ID, appOrg.Organization.ID, authType.ID, userIdentifier)
+	account, err = a.storage.FindAccount(appOrg.ID, authType.ID, userIdentifier)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
@@ -281,7 +314,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 	if isSignUp {
 		if accountExists {
-			return "", nil, errors.New("account already exists")
+			return "", nil, errors.New("account already exists").SetStatus(utils.ErrorStatusAlreadyExists)
 		}
 
 		//TODO: use shared profile
@@ -311,7 +344,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 
 	//apply sign in
 	if !accountExists {
-		return "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+		return "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil).SetStatus(utils.ErrorStatusNotFound)
 	}
 
 	accountAuthType, err = a.findAccountAuthType(account, &authType, userIdentifier)
@@ -320,12 +353,9 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 
 	//2. it seems the user exist, now check the credentials
-	message, validCredentials, err := authImpl.checkCredentials(*accountAuthType, creds, l)
+	message, err = authImpl.checkCredentials(*accountAuthType, creds, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
-	}
-	if !*validCredentials {
-		return "", nil, errors.ErrorData(logutils.StatusInvalid, model.TypeCredential, nil)
 	}
 
 	return message, accountAuthType, nil
@@ -463,7 +493,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 
 	loginSession := model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType,
 		AppType: appType, Anonymous: anonymous, Identifier: sub, AccountAuthType: accountAuthType,
-		Device: device, IPAddress: ipAddress, AccessToken: accessToken, RefreshToken: refreshToken, Params: params, Expires: *expires, DateCreated: time.Now()}
+		Device: device, IPAddress: ipAddress, AccessToken: accessToken, RefreshTokens: []string{refreshToken}, Params: params, Expires: *expires, DateCreated: time.Now()}
 
 	return &loginSession, nil
 }
@@ -597,11 +627,9 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 
 	//TODO - ignore useSharedProfile for now
 	accountID, _ := uuid.NewUUID()
-	application := appOrg.Application
-	organization := appOrg.Organization
 	authTypes := []model.AccountAuthType{accountAuthType}
 
-	account := model.Account{ID: accountID.String(), Application: application, Organization: organization,
+	account := model.Account{ID: accountID.String(), AppOrg: appOrg,
 		Permissions: nil, Roles: nil, Groups: nil, AuthTypes: authTypes, Preferences: preferences, Profile: profile, DateCreated: time.Now()} // Anonymous: accountAuthType.AuthType.IsAnonymous
 
 	insertedAccount, err := a.storage.InsertAccount(account)
@@ -611,7 +639,7 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 
 	if credential != nil {
 		//TODO - in one transaction
-		if err = a.storage.InsertCredential(credential, nil); err != nil {
+		if err = a.storage.InsertCredential(credential); err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 		}
 	}

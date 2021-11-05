@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"core-building-block/core/model"
+	"core-building-block/utils"
 	"encoding/base64"
 	"encoding/json"
 	"io/ioutil"
@@ -112,20 +113,19 @@ func (a *twilioPhoneAuthImpl) signUp(authType model.AuthType, appType model.Appl
 	return message, nil, nil
 }
 
-func (a *twilioPhoneAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error) {
+func (a *twilioPhoneAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
 	requestCreds, err := a.checkRequestCreds(creds)
 	if err != nil {
-		return "", nil, err
+		return "", err
 	}
 
 	// existing user
 	message, err := a.handlePhoneVerify(requestCreds.Phone, *requestCreds, l)
 	if err != nil {
-		return "", nil, err
+		return "", err
 	}
 
-	valid := true
-	return message, &valid, nil
+	return message, nil
 }
 
 func (a *twilioPhoneAuthImpl) handlePhoneVerify(phone string, verificationCreds twilioPhoneCreds, l *logs.Log) (string, error) {
@@ -202,7 +202,7 @@ func (a *twilioPhoneAuthImpl) checkVerification(phone string, data url.Values, l
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, &logutils.FieldArgs{"expected phone": phone, "actual phone": checkResponse.To})
 	}
 	if checkResponse.Status != "approved" {
-		return errors.ErrorData(logutils.StatusInvalid, typeVerificationStatus, &logutils.FieldArgs{"expected approved, actual:": checkResponse.Status})
+		return errors.ErrorData(logutils.StatusInvalid, typeVerificationStatus, &logutils.FieldArgs{"expected approved, actual:": checkResponse.Status}).SetStatus(utils.ErrorStatusInvalid)
 	}
 
 	return nil
