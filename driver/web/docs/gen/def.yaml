@@ -458,30 +458,7 @@ paths:
           content:
             application/json:
               schema:
-                required:
-                  - id
-                type: object
-                properties:
-                  id:
-                    type: string
-                  profile:
-                    $ref: '#/components/schemas/ProfileFields'
-                  permissions:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/PermissionFields'
-                  roles:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/AppOrgRole'
-                  groups:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/AppOrgGroupFields'
-                  auth_types:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/AccountAuthTypeFields'
+                $ref: '#/components/schemas/_res_shared_Account'
         '400':
           description: Bad request
         '401':
@@ -2523,7 +2500,7 @@ components:
         token:
           $ref: '#/components/schemas/_res_shared_RokwireToken'
         account:
-          $ref: '#/components/schemas/_res_shared_Login_Account'
+          $ref: '#/components/schemas/_res_shared_Account'
         params:
           type: object
           nullable: true
@@ -2554,7 +2531,19 @@ components:
               nullable: true
         message:
           type: string
-    _res_shared_Login_Account:
+    _res_shared_Refresh:
+      type: object
+      properties:
+        token:
+          $ref: '#/components/schemas/_res_shared_RokwireToken'
+        params:
+          type: object
+          nullable: true
+          anyOf:
+            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/0'
+            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/1'
+            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/2'
+    _res_shared_Account:
       required:
         - id
       type: object
@@ -2582,18 +2571,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
-    _res_shared_Refresh:
-      type: object
-      properties:
-        token:
-          $ref: '#/components/schemas/_res_shared_RokwireToken'
-        params:
-          type: object
-          nullable: true
-          anyOf:
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/0'
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/1'
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/2'
     _res_shared_RokwireToken:
       type: object
       properties:

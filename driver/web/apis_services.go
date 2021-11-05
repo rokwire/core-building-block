@@ -85,7 +85,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
 	//account
-	var accountData *Def.ResSharedLoginAccount
+	var accountData *Def.ResSharedAccount
 	if !loginSession.Anonymous {
 		account := loginSession.AccountAuthType.Account
 
@@ -101,7 +101,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		groups := appOrgGroupsToDef(account.Groups)
 		//account auth types
 		authTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResSharedLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
+		accountData = &Def.ResSharedAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 	}
 
 	//params
@@ -283,7 +283,7 @@ func (h ServicesApisHandler) getAccount(l *logs.Log, r *http.Request, claims *to
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	var accountData *Def.ResSharedLoginAccount
+	var accountData *Def.ResSharedAccount
 	if account != nil {
 		profile := profileToDef(&account.Profile)
 		//permissions
@@ -294,7 +294,7 @@ func (h ServicesApisHandler) getAccount(l *logs.Log, r *http.Request, claims *to
 		groups := appOrgGroupsToDef(account.Groups)
 		//account auth types
 		authTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResSharedLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
+		accountData = &Def.ResSharedAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
 	}
 
 	data, err := json.Marshal(accountData)

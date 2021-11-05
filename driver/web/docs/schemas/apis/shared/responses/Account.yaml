@@ -6,6 +6,9 @@ properties:
     type: string
   profile:
     $ref: "../../../user/ProfileFields.yaml"
+  preferences:
+    type: object
+    nullable: true
   permissions:
     type: array
     items:
@@ -13,7 +16,7 @@ properties:
   roles:
     type: array
     items:
-      $ref: "../../../application/AppOrgRole.yaml"
+      $ref: "../../../application/AppOrgRoleFields.yaml"
   groups:
     type: array
     items:
