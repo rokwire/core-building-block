@@ -60,10 +60,11 @@ type Auth struct {
 
 	AuthService *authservice.AuthService
 
-	serviceID   string
-	host        string //Service host
-	minTokenExp int64  //Minimum access token expiration time in minutes
-	maxTokenExp int64  //Maximum access token expiration time in minutes
+	serviceID      string
+	host           string //Service host
+	minTokenExp    int64  //Minimum access token expiration time in minutes
+	maxTokenExp    int64  //Maximum access token expiration time in minutes
+	verifyWaitTime int64  //Time in seconds before next verification email can be sent
 
 	profileBB ProfileBuildingBlock
 
@@ -83,10 +84,14 @@ type Auth struct {
 
 //NewAuth creates a new auth instance
 func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, emailer Emailer, minTokenExp *int64, maxTokenExp *int64, twilioAccountSID string,
-	twilioToken string, twilioServiceSID string, profileBB *profilebb.Adapter, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
+	twilioToken string, twilioServiceSID string, profileBB *profilebb.Adapter, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, verifyWaitTime *int64, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
+	}
+	if verifyWaitTime == nil {
+		var verifyWaitTimeVal int64 = 30
+		verifyWaitTime = &verifyWaitTimeVal
 	}
 
 	if maxTokenExp == nil {
@@ -110,7 +115,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		authPrivKey: authPrivKey, AuthService: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
-		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
+		maxTokenExp: *maxTokenExp, verifyWaitTime: *verifyWaitTime, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
 	err := auth.storeReg()
