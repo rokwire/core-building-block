@@ -26,7 +26,7 @@ type authType interface {
 	//sends the verification code to the identifier
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
-	sendVerify(identifier string, credentialID string, l *logs.Log) (map[string]interface{}, error)
+	sendVerify(authType model.AuthType, identifier string, credential *model.Credential, verifyWaitTime int64, l *logs.Log) (map[string]interface{}, error)
 
 	//getUserIdentifier parses the credentials and returns the user identifier
 	// Returns:

@@ -316,7 +316,6 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 	if credential.Verified {
 		return errors.New("credential has already been verified")
 	}
-
 	//get the auth type
 	authType, err := a.storage.FindAuthType(credential.AuthType.ID)
 	if err != nil || authType == nil {
@@ -369,8 +368,7 @@ func (a *Auth) SendVerify(identifier string, credentialID string, l *logs.Log) e
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
-
-	authTypeCreds, err := authImpl.sendVerify(identifier, credentialID, l)
+	authTypeCreds, err := authImpl.sendVerify(*authType, identifier, credential, a.verifyWaitTime, l)
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "verification code", nil, err)
 	}

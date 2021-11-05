@@ -33,6 +33,9 @@ func (a *usernameAuthImpl) verify(credential *model.Credential, verification str
 func (a *usernameAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error) {
 	return "", nil, nil
 }
+func (a *usernameAuthImpl) sendVerify(authType model.AuthType, identifier string, credential *model.Credential, verifyWaitTime int64, l *logs.Log) (map[string]interface{}, error) {
+	return nil, nil
+}
 
 //initUsernameAuth initializes and registers a new username auth instance
 func initUsernameAuth(auth *Auth) (*usernameAuthImpl, error) {
