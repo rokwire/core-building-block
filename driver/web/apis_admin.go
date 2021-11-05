@@ -96,7 +96,7 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 
 	//token
 	accessToken := loginSession.AccessToken
-	refreshToken := loginSession.RefreshToken
+	refreshToken := loginSession.CurrentRefreshToken()
 
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
@@ -185,7 +185,7 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 	}
 
 	accessToken := loginSession.AccessToken
-	refreshToken := loginSession.RefreshToken
+	refreshToken := loginSession.CurrentRefreshToken()
 	var paramsRes interface{}
 	if loginSession.Params != nil {
 		paramsRes = loginSession.Params

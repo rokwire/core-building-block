@@ -192,6 +192,24 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		return nil, nil
 	}
 
+	//check if a previous refresh token is being used
+	//the session must contain the token since the session was returned by Mongo, so the token is old if not equal to the last token in the list
+	currentToken := loginSession.CurrentRefreshToken()
+	if currentToken == "" {
+		return nil, errors.ErrorData(logutils.StatusMissing, "refresh tokens", nil)
+	}
+	if refreshToken != currentToken {
+		l.Infof("previous refresh token being used, so delete login session and return null - %s", refreshToken)
+
+		//remove the session
+		err = a.storage.DeleteLoginSession(loginSession.ID)
+		if err != nil {
+			return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err)
+		}
+
+		return nil, nil
+	}
+
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
 	err = a.validateAPIKey(apiKey, loginSession.AppOrg.Application.ID)
 	if err != nil {
@@ -234,7 +252,10 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		l.Infof("error generating refresh token on refresh - %s", refreshToken)
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
-	loginSession.RefreshToken = refreshToken //set the generated token
+	if loginSession.RefreshTokens == nil {
+		loginSession.RefreshTokens = make([]string, 0)
+	}
+	loginSession.RefreshTokens = append(loginSession.RefreshTokens, refreshToken) //set the generated token
 	// - update the expired field
 	loginSession.Expires = *expires
 	// - generate new params(if external auth type)
@@ -357,7 +378,7 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 // Handle refresh tokens when applicable
 func (a *Auth) ResetPasswordClient(accountID string, accountAuthTypeID string, newPassword string, confirmPassword string, l *logs.Log) error {
 	//Get the user credential from account auth type in accounts collection
-	account, err := a.storage.FindAccountByID(accountID)
+	account, err := a.storage.FindAccountByID(nil, accountID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}

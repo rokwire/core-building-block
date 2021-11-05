@@ -68,7 +68,7 @@ func TestAdmGetTest(t *testing.T) {
 func TestSysCreateGlobalConfig(t *testing.T) {
 	storage := genmocks.Storage{}
 	storage.On("GetGlobalConfig").Return(nil, nil)
-	storage.On("CreateGlobalConfig", "setting").Return(&model.GlobalConfig{Setting: "setting"}, nil)
+	storage.On("CreateGlobalConfig", nil, &model.GlobalConfig{Setting: "setting"}).Return(nil)
 
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil)
 
@@ -82,7 +82,7 @@ func TestSysCreateGlobalConfig(t *testing.T) {
 	//second case - error
 	storage2 := genmocks.Storage{}
 	storage2.On("GetGlobalConfig").Return(nil, nil)
-	storage2.On("CreateGlobalConfig", "setting").Return(nil, errors.New("error occured"))
+	storage2.On("CreateGlobalConfig", nil, &model.GlobalConfig{Setting: "setting"}).Return(errors.New("error occured"))
 
 	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage2, nil)
 

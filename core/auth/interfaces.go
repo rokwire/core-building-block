@@ -8,7 +8,6 @@ import (
 	"github.com/rokwire/core-auth-library-go/authorization"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 //authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
@@ -192,6 +191,8 @@ type APIs interface {
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
+	PerformTransaction(func(context storage.TransactionContext) error) error
+
 	//AuthTypes
 	LoadAuthTypes() ([]model.AuthType, error)
 	FindAuthType(codeOrID string) (*model.AuthType, error)
@@ -204,27 +205,20 @@ type Storage interface {
 	DeleteExpiredSessions(now *time.Time) error
 
 	//Accounts
-	FindAccountByID(id string) (*model.Account, error)
+	FindAccountByID(context storage.TransactionContext, storageid string) (*model.Account, error)
 	FindAccount(appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
+	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccount(account model.Account) (*model.Account, error)
-	UpdateAccount(account *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
-	DeleteAccount(id string) error
-
-	//AccountAuthTypes
-	UpdateAccountAuthType(item model.AccountAuthType) error
+	SaveAccount(context storage.TransactionContext, account *model.Account) error
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)
 
 	//Credentials
-	// FindCredentialsByID(ID string) (*model.AuthCreds, error)
-	// FindCredentials(orgID string, appID string, authType string, params map[string]interface{}) (*model.AuthCreds, error)
-	// UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCreds) error
-	// InsertCredentials(creds *model.AuthCreds, context mongo.SessionContext) error
+	InsertCredential(creds *model.Credential) error
 	FindCredential(ID string) (*model.Credential, error)
 	UpdateCredential(creds *model.Credential) error
 	UpdateCredentialValue(ID string, value map[string]interface{}) error
-	InsertCredential(creds *model.Credential, context mongo.SessionContext) error
 
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)
