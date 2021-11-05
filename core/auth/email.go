@@ -194,6 +194,33 @@ func (a *emailAuthImpl) verify(credential *model.Credential, verification string
 	return credsMap, nil
 }
 
+func (a *emailAuthImpl) sendVerify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
+	credBytes, err := json.Marshal(credential.Value)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
+	}
+
+	var creds *emailCreds
+	err = json.Unmarshal(credBytes, &creds)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
+	}
+	err = a.compareVerifyCode(creds.VerificationCode, verification, creds.VerificationExpiry, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, &logutils.FieldArgs{"verification_code": verification}, errors.New("invalid verification code"))
+	}
+
+	//Update verification data
+	creds.VerificationCode = ""
+	creds.VerificationExpiry = time.Time{}
+	credsMap, err := emailCredsToMap(creds)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
+	}
+
+	return credsMap, nil
+}
+
 func (a *emailAuthImpl) compareVerifyCode(credCode string, requestCode string, expiryTime time.Time, l *logs.Log) error {
 	if expiryTime.Before(time.Now()) {
 		return errors.WrapErrorAction(logutils.ActionValidate, typeTime, nil, errors.New("verification code has expired"))

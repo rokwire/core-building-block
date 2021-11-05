@@ -377,6 +377,25 @@ func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request, claims *to
 	return l.HttpResponseSuccessMessage("Code verified!")
 }
 
+//Handler for resending verify code
+func (h ServicesApisHandler) sendVerify(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	identifier := r.URL.Query().Get("identifier")
+	if identifier == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	credsID := r.URL.Query().Get("creds_id")
+	if credsID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("code"), nil, http.StatusBadRequest, false)
+	}
+
+	if err := h.coreAPIs.Auth.SendVerify(identifier, credsID, l); err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionValidate, "code", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessMessage("Verification code sent")
+}
+
 //NewServicesApisHandler creates new rest services Handler instance
 func NewServicesApisHandler(coreAPIs *core.APIs) ServicesApisHandler {
 	return ServicesApisHandler{coreAPIs: coreAPIs}

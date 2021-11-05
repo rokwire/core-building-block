@@ -23,6 +23,10 @@ type authType interface {
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
 	verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error)
+	//sends the verification code to the identifier
+	// Returns:
+	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
+	sendVerify(identifier string, credentialID string, l *logs.Log) (map[string]interface{}, error)
 
 	//getUserIdentifier parses the credentials and returns the user identifier
 	// Returns:
@@ -113,6 +117,8 @@ type APIs interface {
 
 	//Verify checks the verification code in the credentials collection
 	Verify(id string, verification string, l *logs.Log) error
+
+	SendVerify(identifier string, credentialID string, l *logs.Log) error
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:

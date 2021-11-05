@@ -345,6 +345,44 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 	return nil
 }
 
+//SendVerify sends the verification code by the identifier
+func (a *Auth) SendVerify(identifier string, credentialID string, l *logs.Log) error {
+	credential, err := a.storage.FindCredential(credentialID)
+	if err != nil || credential == nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+	}
+
+	if credential.Verified {
+		return errors.New("credential has already been verified")
+	}
+
+	//get the auth type
+	authType, err := a.storage.FindAuthType(credential.AuthType.ID)
+	if err != nil || authType == nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
+	}
+	if authType.IsExternal {
+		return errors.WrapErrorAction("invalid auth type for sending verify code", model.TypeAuthType, nil, err)
+	}
+
+	authImpl, err := a.getAuthTypeImpl(*authType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	authTypeCreds, err := authImpl.sendVerify(identifier, credentialID, l)
+	if err != nil || authTypeCreds == nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "verification code", nil, err)
+	}
+
+	credential.Value = authTypeCreds
+	if err = a.storage.UpdateCredential(credential); err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
+
+	return nil
+}
+
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 //	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
 //	return a scoped access token which reflects this change.
