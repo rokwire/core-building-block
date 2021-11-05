@@ -1,0 +1,15 @@
+required:
+  - app_id
+  - mobile_app_version
+  - data
+type: object
+properties:
+  id:
+    type: string
+  app_id:
+    type: string
+  mobile_app_version:
+    type: string
+    description: unique and is empty or conforms major.minor.patch format
+  data:
+    type: object

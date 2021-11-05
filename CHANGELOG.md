@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Add refresh token abuse detection to login sessions [#257](https://github.com/rokwire/core-building-block/issues/257)
+- Add app config endpoints [#261](https://github.com/rokwire/core-building-block/issues/261)
 
 ### Changed
 - Expose transaction interface on storage adapter [#285](https://github.com/rokwire/core-building-block/issues/285)
