@@ -31,8 +31,8 @@ func (a *firebaseAuthImpl) verify(credential *model.Credential, verification str
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *firebaseAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error) {
-	return "", nil, nil
+func (a *firebaseAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
+	return "", nil
 }
 
 //initFirebaseAuth initializes and registers a new Firebase auth instance

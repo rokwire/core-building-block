@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add multi-factor authentication support [#19](https://github.com/rokwire/core-building-block/issues/19)
 - Add authentication required auth wrapper [#250](https://github.com/rokwire/core-building-block/issues/250)
+- Define unified responses for the APIs [#286](https://github.com/rokwire/core-building-block/issues/286)
+- Add refresh token abuse detection to login sessions [#257](https://github.com/rokwire/core-building-block/issues/257)
+
+### Changed
+- Expose transaction interface on storage adapter [#285](https://github.com/rokwire/core-building-block/issues/285)
 
 ## [1.11.0] - 2021-11-04
 ### Added

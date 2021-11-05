@@ -21,7 +21,7 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 	device := model.Device{ID: item.DeviceID}
 	idAddress := item.IPAddress
 	accessToken := item.AccessToken
-	refreshToken := item.RefreshToken
+	refreshTokens := item.RefreshTokens
 	params := item.Params
 	var state string
 	if item.State != nil {
@@ -33,7 +33,7 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 
 	return model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType, AppType: appType,
 		Anonymous: anonymous, Identifier: identifier, AccountAuthType: accountAuthType,
-		Device: device, IPAddress: idAddress, AccessToken: accessToken, RefreshToken: refreshToken, Params: params,
+		Device: device, IPAddress: idAddress, AccessToken: accessToken, RefreshTokens: refreshTokens, Params: params,
 		State: state, Expires: expires, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
 
@@ -59,7 +59,7 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 	deviceID := item.Device.ID
 	ipAddress := item.IPAddress
 	accessToken := item.AccessToken
-	refreshToken := item.RefreshToken
+	refreshTokens := item.RefreshTokens
 	params := item.Params
 	var state *string
 	if item.State != "" {
@@ -73,6 +73,6 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 		AppTypeID: appTypeID, AppTypeIdentifier: appTypeIdentifier, Anonymous: anonymous,
 		Identifier: identifier, AccountAuthTypeID: accountAuthTypeID,
 		AccountAuthTypeIdentifier: accountAuthTypeIdentifier, DeviceID: deviceID, IPAddress: ipAddress,
-		AccessToken: accessToken, RefreshToken: refreshToken, Params: params, State: state, Expires: expires,
+		AccessToken: accessToken, RefreshTokens: refreshTokens, Params: params, State: state, Expires: expires,
 		DateUpdated: dateUpdated, DateCreated: dateCreated}
 }

@@ -242,8 +242,9 @@ github.com/rogpeppe/go-internal v1.2.2/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFR
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rokwire/core-auth-library-go v1.0.1 h1:sKxSsJIYE6lw3yGuO3HohAUxe7r8ZpHgy6HNRJNdr+o=
 github.com/rokwire/core-auth-library-go v1.0.1/go.mod h1:y5XiXjTD52DDX0iHAR8J0kWls/xCgUtqyBFWjp/cmQo=
-github.com/rokwire/logging-library-go v1.0.0 h1:R/jLnioxSomFUjpRKKnDLn9gYOdptTpmGTxMfPfA4gA=
 github.com/rokwire/logging-library-go v1.0.0/go.mod h1:yntksZF2TDmxid9MwDnAAt95TeLMYo6chL0VUyIaFHk=
+github.com/rokwire/logging-library-go v1.0.2 h1:R9L3tJVNQbZMP3fK18WvqCTNZdYVpRcQjkhwI2prV+I=
+github.com/rokwire/logging-library-go v1.0.2/go.mod h1:yntksZF2TDmxid9MwDnAAt95TeLMYo6chL0VUyIaFHk=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/shurcooL/sanitized_anchor_name v1.0.0/go.mod h1:1NzhyTcUVG4SuEtjjoZeVRXNmyL/1OwPU0+IJeTBvfc=
 github.com/sirupsen/logrus v1.4.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=

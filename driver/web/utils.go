@@ -14,7 +14,7 @@ import (
 func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.HttpResponse {
 	//token
 	accessToken := loginSession.AccessToken
-	refreshToken := loginSession.RefreshToken
+	refreshToken := loginSession.CurrentRefreshToken()
 
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}

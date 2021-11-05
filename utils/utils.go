@@ -11,6 +11,17 @@ import (
 	"github.com/rokwire/logging-library-go/errors"
 )
 
+const (
+	//ErrorStatusAlreadyExists ...
+	ErrorStatusAlreadyExists string = "already-exists"
+	//ErrorStatusNotFound ...
+	ErrorStatusNotFound string = "not-found"
+	//ErrorStatusInvalid ...
+	ErrorStatusInvalid string = "invalid"
+	//ErrorStatusUnverified ...
+	ErrorStatusUnverified string = "unverified"
+)
+
 // SetRandomSeed sets the seed for random number generation
 func SetRandomSeed() error {
 	seed := make([]byte, 8)
