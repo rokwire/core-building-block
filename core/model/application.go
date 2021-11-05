@@ -225,18 +225,6 @@ type ApplicationConfigs struct {
 	AppID            string                 `json:"app_id" bson:"app_id"`
 	MobileAppVersion string                 `json:"mobile_app_version" bson:"mobile_app_version"`
 	Data             map[string]interface{} `json:"data" bson:"data"`
-	// OtherUniversityServices map[string]interface{} `json:"otherUniversityServices" bson:"otherUniversityServices"`
-	// PlatformBuildingBlocks  map[string]interface{} `json:"platformBuildingBlocks" bson:"otherUniversityServices"`
-	// SecretKeys              string                 `json:"secretKeys" bson:"otherUniversityServices"`
-	// ThirdPartyServices      map[string]interface{} `json:"thirdPartyServices" bson:"otherUniversityServices"`
-	// Upgrade                 *struct {
-	// 	AvailableVersion *string `json:"available_version"`
-	// 	RequiredVersion  *string `json:"required_version"`
-	// 	Url              *struct {
-	// 		Android *string `json:"android"`
-	// 		Ios     *string `json:"ios"`
-	// 	} `json:"url"`
-	// } `json:"upgrade" bson:"upgrade"`
 
 	DateCreated time.Time  `json:"date_created" bson:"date_created"`
 	DateUpdated *time.Time `json:"date_updated" bson:"date_updated"`

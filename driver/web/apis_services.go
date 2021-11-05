@@ -379,8 +379,17 @@ func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request, claims *to
 }
 
 func (h ServicesApisHandler) getAppConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	appID := r.URL.Query().Get("app_id")
+	// if app_id == "" {
+	// 	return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	// }
+
 	version := r.URL.Query().Get("version")
-	appConfigs, err := h.coreAPIs.Services.SerGetAppConfigs(version)
+	if version != "" && !checkAppVersionFormat(version) {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeQueryParam, logutils.StringArgs("version"), nil, http.StatusBadRequest, false)
+	}
+
+	appConfigs, err := h.coreAPIs.Services.SerGetAppConfigs(appID, version)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
 	}

@@ -1227,11 +1227,14 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 }
 
 //FindAppConfigs finds appconfigs
-func (sa *Adapter) FindAppConfigs(version string) ([]model.ApplicationConfigs, error) {
+func (sa *Adapter) FindAppConfigs(appID string, version string) ([]model.ApplicationConfigs, error) {
 	filter := bson.D{}
 	var result []model.ApplicationConfigs
 	if version != "" {
-		filter = bson.D{primitive.E{Key: "mobile_app_version", Value: version}}
+		filter = append(filter, primitive.E{Key: "mobile_app_version", Value: version})
+	}
+	if appID != "" {
+		filter = append(filter, primitive.E{Key: "app_id", Value: appID})
 	}
 	err := sa.db.applicationConfigs.Find(filter, &result, nil)
 	if err != nil {

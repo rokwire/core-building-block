@@ -18,7 +18,7 @@ type Services interface {
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
 
-	SerGetAppConfigs(version string) ([]model.ApplicationConfigs, error)
+	SerGetAppConfigs(appID string, version string) ([]model.ApplicationConfigs, error)
 	SerGetAppConfig(id string) (*model.ApplicationConfigs, error)
 	SerCreateAppConfig(version string, appID string, data map[string]interface{}) (*model.ApplicationConfigs, error)
 	SerUpdateAppConfig(id string, version string, data map[string]interface{}) error
@@ -109,7 +109,7 @@ type Storage interface {
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 
-	FindAppConfigs(version string) ([]model.ApplicationConfigs, error)
+	FindAppConfigs(appID string, version string) ([]model.ApplicationConfigs, error)
 	FindAppConfigByID(id string) (*model.ApplicationConfigs, error)
 	InsertAppConfig(appConfig model.ApplicationConfigs) (*model.ApplicationConfigs, error)
 	UpdateAppConfig(id string, version string, data map[string]interface{}) error

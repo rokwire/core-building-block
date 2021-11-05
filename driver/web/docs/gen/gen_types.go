@@ -781,8 +781,11 @@ type PutServicesAccountProfileJSONBody ReqSharedProfile
 
 // GetServicesAppConfigsParams defines parameters for GetServicesAppConfigs.
 type GetServicesAppConfigsParams struct {
-	// query by mobile app version, results contain all app configurations if no paramer is given; If given mobile_app_version, it will return the closest app config that is less than or equal to the given version.
+	// query by mobile app version and app_id, results contain all app configurations if no paramer is given; If given version, it will return the closest app config that is less than or equal to the given version.
 	Version *string `json:"version,omitempty"`
+
+	// query by mobile app version and app_id, results contain all app configurations if no paramer is given; If given version, it will return the closest app config that is less than or equal to the given version.
+	AppId *string `json:"app_id,omitempty"`
 }
 
 // PostServicesAppConfigsJSONBody defines parameters for PostServicesAppConfigs.
