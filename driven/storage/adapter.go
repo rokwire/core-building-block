@@ -447,7 +447,7 @@ func (sa *Adapter) InsertLoginSession(session model.LoginSession, limit int) (*m
 //FindLoginSession finds login session by refresh token
 func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, error) {
 	//find loggin session
-	filter := bson.D{primitive.E{Key: "refresh_token", Value: refreshToken}}
+	filter := bson.D{primitive.E{Key: "refresh_tokens", Value: refreshToken}}
 	var loginsSessions []loginSession
 	err := sa.db.loginsSessions.Find(filter, &loginsSessions, nil)
 	if err != nil {
