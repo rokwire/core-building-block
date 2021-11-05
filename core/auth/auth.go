@@ -443,10 +443,38 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 		return nil, errors.WrapErrorAction("error creating a session", "", nil, err)
 	}
 
-	//store it
-	_, err = a.storage.InsertLoginSession(*loginSession, sessionLimit)
+	transaction := func(context storage.TransactionContext) error {
+		//1. store login session
+		err := a.storage.InsertLoginSession(context, *loginSession)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
+		}
+
+		//2. check session limit against number of active sessions
+		if sessionLimit > 0 {
+			loginSessions, err := a.storage.FindLoginSessions(context, loginSession.Identifier)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+			}
+			if len(loginSessions) < 1 {
+				l.ErrorWithDetails("failed to find login session after inserting", logutils.Fields{"identifier": loginSession.Identifier})
+			}
+
+			if len(loginSessions) > sessionLimit {
+				// delete first session in list (sorted by expiration)
+				err = a.storage.DeleteLoginSession(context, loginSessions[0].ID)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
+				}
+			}
+		}
+
+		return nil
+	}
+
+	err = a.storage.PerformTransaction(transaction)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
 	}
 
 	return loginSession, nil

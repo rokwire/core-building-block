@@ -185,10 +185,11 @@ type Storage interface {
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
 	//LoginsSessions
-	InsertLoginSession(session model.LoginSession, limit int) (*model.LoginSession, error)
+	InsertLoginSession(context storage.TransactionContext, session model.LoginSession) error
+	FindLoginSessions(context storage.TransactionContext, identifier string) ([]model.LoginSession, error)
 	FindLoginSession(refreshToken string) (*model.LoginSession, error)
 	UpdateLoginSession(loginSession model.LoginSession) error
-	DeleteLoginSession(id string) error
+	DeleteLoginSession(context storage.TransactionContext, id string) error
 	DeleteExpiredSessions(now *time.Time) error
 
 	//Accounts

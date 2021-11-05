@@ -391,57 +391,65 @@ func (sa *Adapter) FindAuthType(codeOrID string) (*model.AuthType, error) {
 }
 
 //InsertLoginSession inserts login session
-func (sa *Adapter) InsertLoginSession(session model.LoginSession, limit int) (*model.LoginSession, error) {
+func (sa *Adapter) InsertLoginSession(context TransactionContext, session model.LoginSession) error {
 	storageLoginSession := loginSessionToStorage(session)
 
-	// transaction
-	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
-		err := sessionContext.StartTransaction()
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
-		}
-
-		_, err = sa.db.loginsSessions.InsertOneWithContext(sessionContext, storageLoginSession)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
-		}
-
-		if session.AccountAuthType != nil && limit > 0 {
-			filter := bson.D{primitive.E{Key: "identifier", Value: session.AccountAuthType.Account.ID}}
-			opts := options.Find()
-			opts.SetSort(bson.D{primitive.E{Key: "expires", Value: 1}})
-
-			var loginSessions []loginSession
-			err = sa.db.loginsSessions.FindWithContext(sessionContext, filter, &loginSessions, opts)
-			if err != nil {
-				sa.abortTransaction(sessionContext)
-				return errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"identifier": session.AccountAuthType.Account.ID}, err)
-			}
-
-			if len(loginSessions) > limit {
-				filter = bson.D{primitive.E{Key: "_id", Value: loginSessions[0].ID}}
-				_, err = sa.db.loginsSessions.DeleteOneWithContext(sessionContext, filter, nil)
-				if err != nil {
-					sa.abortTransaction(sessionContext)
-					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, &logutils.FieldArgs{"_id": loginSessions[0].ID}, err)
-				}
-			}
-		}
-
-		err = sessionContext.CommitTransaction(sessionContext)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
+	var err error
+	if context != nil {
+		_, err = sa.db.loginsSessions.InsertOneWithContext(context, storageLoginSession)
+	} else {
+		_, err = sa.db.loginsSessions.InsertOne(storageLoginSession)
 	}
 
-	return &session, nil
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
+	}
+
+	return nil
+}
+
+//FindLoginSessions finds login sessions by identifier and sorts by expiration
+func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier string) ([]model.LoginSession, error) {
+	filter := bson.D{primitive.E{Key: "identifier", Value: identifier}}
+	opts := options.Find()
+	opts.SetSort(bson.D{primitive.E{Key: "expires", Value: 1}})
+
+	var loginSessions []loginSession
+	var err error
+	if context != nil {
+		err = sa.db.loginsSessions.FindWithContext(context, filter, &loginSessions, opts)
+	} else {
+		err = sa.db.loginsSessions.Find(filter, &loginSessions, opts)
+	}
+
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"identifier": identifier}, err)
+	}
+
+	//account - from storage
+	account, err := sa.FindAccountByID(context, identifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": identifier}, err)
+	}
+
+	sessions := make([]model.LoginSession, len(loginSessions))
+	for i, session := range loginSessions {
+		//auth type - from cache
+		authType, err := sa.getCachedAuthType(session.AuthTypeCode)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, &logutils.FieldArgs{"code": session.AuthTypeCode}, err)
+		}
+
+		//application organization - from cache
+		appOrg, err := sa.getCachedApplicationOrganization(session.AppID, session.OrgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": session.AppID, "org_id": session.OrgID}, err)
+		}
+
+		sessions[i] = loginSessionFromStorage(session, *authType, account, *appOrg)
+	}
+
+	return sessions, nil
 }
 
 //FindLoginSession finds login session by refresh token
@@ -464,20 +472,20 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 	if loginSession.AccountAuthTypeID != nil {
 		account, err = sa.FindAccountByID(nil, loginSession.Identifier)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": loginSession.Identifier}, err)
 		}
 	}
 
 	//auth type - from cache
 	authType, err := sa.getCachedAuthType(loginSession.AuthTypeCode)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, &logutils.FieldArgs{"code": loginSession.AuthTypeCode}, err)
 	}
 
 	//application organization - from cache
 	appOrg, err := sa.getCachedApplicationOrganization(loginSession.AppID, loginSession.OrgID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": loginSession.AppID, "org_id": loginSession.OrgID}, err)
 	}
 
 	modelLoginSession := loginSessionFromStorage(loginSession, *authType, account, *appOrg)
@@ -498,11 +506,19 @@ func (sa *Adapter) UpdateLoginSession(loginSession model.LoginSession) error {
 }
 
 //DeleteLoginSession deletes login session
-func (sa *Adapter) DeleteLoginSession(id string) error {
+func (sa *Adapter) DeleteLoginSession(context TransactionContext, id string) error {
 	filter := bson.M{"_id": id}
-	res, err := sa.db.loginsSessions.DeleteOne(filter, nil)
+
+	var res *mongo.DeleteResult
+	var err error
+	if context != nil {
+		res, err = sa.db.loginsSessions.DeleteOneWithContext(context, filter, nil)
+	} else {
+		res, err = sa.db.loginsSessions.DeleteOne(filter, nil)
+	}
+
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, &logutils.FieldArgs{"_id": id}, err)
 	}
 	if res.DeletedCount != 1 {
 		return errors.ErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("unexpected deleted count"))
