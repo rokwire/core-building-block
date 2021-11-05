@@ -52,6 +52,7 @@ func (m *totpMfaImpl) enroll(identifier string) (*model.MFAType, error) {
 		return nil, errors.WrapErrorAction("generate", "TOTP key", nil, err)
 	}
 
+	//TODO: clean up file creation before deploying
 	f, err := os.Create("qr_code.png")
 	if err != nil {
 		return nil, errors.WrapErrorAction("create", "PNG file", nil, err)

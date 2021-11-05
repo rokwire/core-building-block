@@ -114,6 +114,8 @@ const (
 
 	ReqSharedLoginMfaTypePhone ReqSharedLoginMfaType = "phone"
 
+	ReqSharedLoginMfaTypeRecovery ReqSharedLoginMfaType = "recovery"
+
 	ReqSharedLoginMfaTypeTotp ReqSharedLoginMfaType = "totp"
 )
 

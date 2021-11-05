@@ -24,5 +24,6 @@ properties:
       - email
       - phone
       - totp
+      - recovery
   code:
     type: string

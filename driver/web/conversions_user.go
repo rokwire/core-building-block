@@ -122,6 +122,8 @@ func mfaDataToDef(item *model.MFAType) *Def.ResSharedMfa {
 	delete(params, "code")
 	//totp
 	delete(params, "secret")
+	//recovery
+	delete(params, "codes")
 
 	return &Def.ResSharedMfa{Type: &item.Type, Verified: &item.Verified, Params: &params}
 }
