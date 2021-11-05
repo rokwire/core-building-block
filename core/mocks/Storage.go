@@ -15,36 +15,27 @@ type Storage struct {
 	mock.Mock
 }
 
-// CreateGlobalConfig provides a mock function with given fields: setting
-func (_m *Storage) CreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
-	ret := _m.Called(setting)
-
-	var r0 *model.GlobalConfig
-	if rf, ok := ret.Get(0).(func(string) *model.GlobalConfig); ok {
-		r0 = rf(setting)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.GlobalConfig)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(setting)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// DeleteAccount provides a mock function with given fields: id
-func (_m *Storage) DeleteAccount(id string) error {
-	ret := _m.Called(id)
+// CreateGlobalConfig provides a mock function with given fields: context, globalConfig
+func (_m *Storage) CreateGlobalConfig(context storage.TransactionContext, globalConfig *model.GlobalConfig) error {
+	ret := _m.Called(context, globalConfig)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(id)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *model.GlobalConfig) error); ok {
+		r0 = rf(context, globalConfig)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteAccount provides a mock function with given fields: context, id
+func (_m *Storage) DeleteAccount(context storage.TransactionContext, id string) error {
+	ret := _m.Called(context, id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
+		r0 = rf(context, id)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -80,6 +71,34 @@ func (_m *Storage) DeleteAppOrgRole(id string) error {
 	return r0
 }
 
+// DeleteDevice provides a mock function with given fields: context, id
+func (_m *Storage) DeleteDevice(context storage.TransactionContext, id string) error {
+	ret := _m.Called(context, id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
+		r0 = rf(context, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteGlobalConfig provides a mock function with given fields: context
+func (_m *Storage) DeleteGlobalConfig(context storage.TransactionContext) error {
+	ret := _m.Called(context)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext) error); ok {
+		r0 = rf(context)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DeletePermission provides a mock function with given fields: id
 func (_m *Storage) DeletePermission(id string) error {
 	ret := _m.Called(id)
@@ -94,13 +113,13 @@ func (_m *Storage) DeletePermission(id string) error {
 	return r0
 }
 
-// FindAccountByID provides a mock function with given fields: id
-func (_m *Storage) FindAccountByID(id string) (*model.Account, error) {
-	ret := _m.Called(id)
+// FindAccountByID provides a mock function with given fields: context, id
+func (_m *Storage) FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error) {
+	ret := _m.Called(context, id)
 
 	var r0 *model.Account
-	if rf, ok := ret.Get(0).(func(string) *model.Account); ok {
-		r0 = rf(id)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) *model.Account); ok {
+		r0 = rf(context, id)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Account)
@@ -108,8 +127,8 @@ func (_m *Storage) FindAccountByID(id string) (*model.Account, error) {
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(id)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
+		r1 = rf(context, id)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -417,18 +436,13 @@ func (_m *Storage) LoadOrganizations() ([]model.Organization, error) {
 	return r0, r1
 }
 
-// RegisterStorageListener provides a mock function with given fields: storageListener
-func (_m *Storage) RegisterStorageListener(storageListener storage.Listener) {
-	_m.Called(storageListener)
-}
-
-// SaveGlobalConfig provides a mock function with given fields: setting
-func (_m *Storage) SaveGlobalConfig(setting *model.GlobalConfig) error {
-	ret := _m.Called(setting)
+// PerformTransaction provides a mock function with given fields: _a0
+func (_m *Storage) PerformTransaction(_a0 func(storage.TransactionContext) error) error {
+	ret := _m.Called(_a0)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*model.GlobalConfig) error); ok {
-		r0 = rf(setting)
+	if rf, ok := ret.Get(0).(func(func(storage.TransactionContext) error) error); ok {
+		r0 = rf(_a0)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -436,27 +450,23 @@ func (_m *Storage) SaveGlobalConfig(setting *model.GlobalConfig) error {
 	return r0
 }
 
-// UpdateAccount provides a mock function with given fields: updatedUser, orgID, newOrgData
-func (_m *Storage) UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error) {
-	ret := _m.Called(updatedUser, orgID, newOrgData)
+// RegisterStorageListener provides a mock function with given fields: storageListener
+func (_m *Storage) RegisterStorageListener(storageListener storage.Listener) {
+	_m.Called(storageListener)
+}
 
-	var r0 *model.Account
-	if rf, ok := ret.Get(0).(func(*model.Account, string, *map[string]interface{}) *model.Account); ok {
-		r0 = rf(updatedUser, orgID, newOrgData)
+// SaveDevice provides a mock function with given fields: context, device
+func (_m *Storage) SaveDevice(context storage.TransactionContext, device *model.Device) error {
+	ret := _m.Called(context, device)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *model.Device) error); ok {
+		r0 = rf(context, device)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.Account)
-		}
+		r0 = ret.Error(0)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(*model.Account, string, *map[string]interface{}) error); ok {
-		r1 = rf(updatedUser, orgID, newOrgData)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // UpdateAccountPreferences provides a mock function with given fields: accountID, preferences

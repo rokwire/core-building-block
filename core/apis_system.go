@@ -2,6 +2,7 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,7 +20,8 @@ func (app *application) sysCreateGlobalConfig(setting string) (*model.GlobalConf
 		return nil, errors.New("global config already exists")
 	}
 
-	gc, err = app.storage.CreateGlobalConfig(setting)
+	gc = &model.GlobalConfig{Setting: setting}
+	err = app.storage.CreateGlobalConfig(nil, gc)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
 	}
@@ -44,11 +46,23 @@ func (app *application) sysUpdateGlobalConfig(setting string) error {
 	}
 
 	gc.Setting = setting
-	err = app.storage.SaveGlobalConfig(gc)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSave, model.TypeGlobalConfig, nil, err)
+	transaction := func(context storage.TransactionContext) error {
+		//1. clear the global config - we always keep only one global config
+		err := app.storage.DeleteGlobalConfig(context)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeGlobalConfig, nil, err)
+		}
+
+		//2. add the new one
+		err = app.storage.CreateGlobalConfig(context, gc)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
+		}
+
+		return nil
 	}
-	return nil
+
+	return app.storage.PerformTransaction(transaction)
 }
 
 func (app *application) sysCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {
