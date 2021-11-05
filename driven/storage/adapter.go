@@ -508,6 +508,23 @@ func (sa *Adapter) findAccount(key string, id string) (*model.Account, error) {
 	return &modelAccount, nil
 }
 
+/*//FindApplications finds applications
+func (sa *Adapter) FindApplications() ([]model.Application, error) {
+	filter := bson.D{}
+	var result []model.Application
+	err := sa.db.applications.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+	}
+
+	if len(result) == 0 {
+		//no data
+		return make([]model.Application, 0), nil
+	}
+
+	return result, nil
+}*/
+
 //FindAccounts finds accounts
 func (sa *Adapter) FindAccounts(accountID string, identifier string) ([]model.Account, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID},
@@ -519,10 +536,10 @@ func (sa *Adapter) FindAccounts(accountID string, identifier string) ([]model.Ac
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	if len(accounts) == 0 {
+	/*if len(accounts) == 0 {
 		//not found
 		return make([]model.Account, 0), nil
-	}
+	}*/
 	//account := accounts[0]
 
 	//application - from cache
@@ -537,9 +554,9 @@ func (sa *Adapter) FindAccounts(accountID string, identifier string) ([]model.Ac
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}*/
 
-	getAccounts := getAccountsListToStorage(accounts)
-	return getAccounts, nil
-	//return accounts, nil
+	//getAccounts := getAccountsListToStorage(accounts)
+	//return getAccounts, nil
+	return accounts, nil
 }
 
 //InsertAccount inserts an account
