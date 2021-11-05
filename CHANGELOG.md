@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Expose transaction interface on storage adapter [#285](https://github.com/rokwire/core-building-block/issues/285)
 
+### Added
+- Define unified responses for the APIs [#286](https://github.com/rokwire/core-building-block/issues/286)
+
 ## [1.11.0] - 2021-11-04
 ### Added
 - Set up permission groups [#25](https://github.com/rokwire/core-building-block/issues/25)

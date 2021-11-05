@@ -314,7 +314,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 	if isSignUp {
 		if accountExists {
-			return "", nil, errors.New("account already exists")
+			return "", nil, errors.New("account already exists").SetStatus(utils.ErrorStatusAlreadyExists)
 		}
 
 		//TODO: use shared profile
@@ -344,7 +344,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 
 	//apply sign in
 	if !accountExists {
-		return "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+		return "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil).SetStatus(utils.ErrorStatusNotFound)
 	}
 
 	accountAuthType, err = a.findAccountAuthType(account, &authType, userIdentifier)
@@ -353,12 +353,9 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 
 	//2. it seems the user exist, now check the credentials
-	message, validCredentials, err := authImpl.checkCredentials(*accountAuthType, creds, l)
+	message, err = authImpl.checkCredentials(*accountAuthType, creds, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
-	}
-	if !*validCredentials {
-		return "", nil, errors.ErrorData(logutils.StatusInvalid, model.TypeCredential, nil)
 	}
 
 	return message, accountAuthType, nil
