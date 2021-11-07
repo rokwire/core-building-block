@@ -242,7 +242,7 @@ func (h AdminApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *toke
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs(""), nil, http.StatusBadRequest, false)
 	}
 
-	getAccounts, err := h.coreAPIs.Administration.AdmGetAccounts(accountID, identifier)
+	getAccounts, err := h.coreAPIs.Administration.AdmGetAccounts(accountID, identifier, claims.AppID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

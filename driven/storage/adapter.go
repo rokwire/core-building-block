@@ -526,9 +526,10 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 }*/
 
 //FindAccounts finds accounts
-func (sa *Adapter) FindAccounts(accountID string, identifier string) ([]model.Account, error) {
+func (sa *Adapter) FindAccounts(accountID string, identifier string, appID string) ([]model.Account, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID},
-		primitive.E{Key: "auth_types.identifier", Value: identifier}}
+		primitive.E{Key: "auth_types.identifier", Value: identifier},
+		primitive.E{Key: "app_id", Value: appID}}
 	//filter := bson.M{}
 	var accounts []model.Account
 	err := sa.db.accounts.Find(filter, &accounts, nil)
@@ -536,10 +537,10 @@ func (sa *Adapter) FindAccounts(accountID string, identifier string) ([]model.Ac
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	/*if len(accounts) == 0 {
+	if len(accounts) == 0 {
 		//not found
 		return make([]model.Account, 0), nil
-	}*/
+	}
 	//account := accounts[0]
 
 	//application - from cache
