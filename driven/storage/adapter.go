@@ -787,6 +787,23 @@ func (sa *Adapter) FindPermissions(ids []string) ([]model.Permission, error) {
 	return permissionsResult, nil
 }
 
+//FindPermissionsList finds permissions
+func (sa *Adapter) FindPermissionsList() ([]model.Permission, error) {
+	filter := bson.D{}
+	var result []model.Permission
+	err := sa.db.permissions.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+	}
+
+	if len(result) == 0 {
+		//no data
+		return make([]model.Permission, 0), nil
+	}
+
+	return result, nil
+}
+
 //FindPermissionsByName finds a set of permissions
 func (sa *Adapter) FindPermissionsByName(names []string) ([]model.Permission, error) {
 	permissionsFilter := bson.D{primitive.E{Key: "name", Value: bson.M{"$in": names}}}
