@@ -20,23 +20,10 @@ func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
 	//account
-	var accountData *Def.ResSharedLoginAccount
+	var accountData *Def.ResSharedAccount
 	if !loginSession.Anonymous {
 		account := loginSession.AccountAuthType.Account
-
-		//profile
-		profile := profileToDef(&account.Profile)
-		//preferences
-		preferences := &account.Preferences
-		//permissions
-		permissions := applicationPermissionsToDef(account.Permissions)
-		//roles
-		roles := appOrgRolesToDef(account.Roles)
-		//groups
-		groups := appOrgGroupsToDef(account.Groups)
-		//account auth types
-		authTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResSharedLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
+		accountData = accountToDef(account)
 	}
 
 	//params

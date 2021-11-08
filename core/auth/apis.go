@@ -202,7 +202,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		l.Infof("the session is expired, so delete it and return null - %s", refreshToken)
 
 		//remove the session
-		err = a.storage.DeleteLoginSession(loginSession.ID)
+		err = a.storage.DeleteLoginSession(nil, loginSession.ID)
 		if err != nil {
 			return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err)
 		}
@@ -221,7 +221,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		l.Infof("previous refresh token being used, so delete login session and return null - %s", refreshToken)
 
 		//remove the session
-		err = a.storage.DeleteLoginSession(loginSession.ID)
+		err = a.storage.DeleteLoginSession(nil, loginSession.ID)
 		if err != nil {
 			return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err)
 		}
