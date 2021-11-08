@@ -74,14 +74,13 @@ func (m *recoveryMfaImpl) enroll(identifier string) (*model.MFAType, error) {
 		codes[i] = string(newCode)
 	}
 
-	now := time.Now().UTC()
 	params := map[string]interface{}{
 		"identifier": identifier,
 		"codes":      codes,
 	}
 
 	id, _ := uuid.NewUUID()
-	return &model.MFAType{ID: id.String(), Type: MfaTypeRecovery, Verified: true, Params: params, DateCreated: now}, nil
+	return &model.MFAType{ID: id.String(), Type: MfaTypeRecovery, Verified: true, Params: params, DateCreated: time.Now().UTC()}, nil
 }
 
 //sendCode not used for recovery

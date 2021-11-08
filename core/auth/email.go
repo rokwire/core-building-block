@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -289,19 +290,33 @@ func (m *emailMfaImpl) verify(context storage.TransactionContext, mfa *model.MFA
 		return &message, errors.ErrorData(logutils.StatusInvalid, "expired code", nil)
 	}
 
-	//TODO: remove code and expiration from params in storage
+	//remove code and expiration from params in storage
+	delete(mfa.Params, "code")
+	delete(mfa.Params, "expires")
+	err := m.auth.storage.UpdateMFAType(context, mfa, accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, nil, err)
+	}
 
 	return nil, nil
 }
 
 func (m *emailMfaImpl) enroll(identifier string) (*model.MFAType, error) {
-	//TODO: make sure to set identifier field in params
-	return nil, errors.New(logutils.Unimplemented)
+	if identifier == "" {
+		return nil, errors.ErrorData(logutils.StatusMissing, "identifier", nil)
+	}
+
+	params := map[string]interface{}{
+		"identifier": identifier,
+	}
+
+	id, _ := uuid.NewUUID()
+	return &model.MFAType{ID: id.String(), Type: MfaTypeEmail, Verified: false, Params: params, DateCreated: time.Now().UTC()}, nil
 }
 
 func (m *emailMfaImpl) sendCode(identifier string) (string, *time.Time, error) {
 	code := fmt.Sprintf("%06d", utils.GenerateRandomInt(codeMax))
-	//TODO: return expiration time, send code to identifier
+	//TODO: return expiration time, send code to identifier, store both in DB
 	return code, nil, errors.New(logutils.Unimplemented)
 }
 

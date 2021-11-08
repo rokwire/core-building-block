@@ -74,7 +74,6 @@ func (m *totpMfaImpl) enroll(identifier string) (*model.MFAType, error) {
 		return nil, errors.WrapErrorAction(logutils.ActionEncode, "TOTP image to PNG", nil, err)
 	}
 
-	now := time.Now().UTC()
 	params := map[string]interface{}{
 		"identifier": identifier,
 		"secret":     key.Secret(),
@@ -82,7 +81,7 @@ func (m *totpMfaImpl) enroll(identifier string) (*model.MFAType, error) {
 	}
 
 	id, _ := uuid.NewUUID()
-	return &model.MFAType{ID: id.String(), Type: MfaTypeTotp, Verified: false, Params: params, DateCreated: now}, nil
+	return &model.MFAType{ID: id.String(), Type: MfaTypeTotp, Verified: false, Params: params, DateCreated: time.Now().UTC()}, nil
 }
 
 //sendCode not used for TOTP
