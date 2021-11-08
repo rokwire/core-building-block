@@ -164,7 +164,7 @@ func (app *application) admGetTestModel() string {
 
 func (app *application) admGetAccount(accountID string) (*model.Account, error) {
 	//find the account
-	account, err := app.storage.FindAccountByID(accountID)
+	account, err := app.storage.FindAccountByID(nil, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
