@@ -168,23 +168,18 @@ func (a *oidcAuthImpl) verify(id string, verification string, l *logs.Log) error
 }
 
 //refresh must be implemented for OIDC auth
-func (a *oidcAuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (map[string]interface{}, error) {
+func (a *oidcAuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
 	refreshParams, err := oidcRefreshParamsFromMap(params)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionParse, typeAuthRefreshParams, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, typeAuthRefreshParams, nil, err)
 	}
 
 	oidcConfig, err := a.getOidcAuthConfig(authType, appType)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
 	}
 
-	result, err := a.refreshToken(authType, appType, appOrg, refreshParams, oidcConfig, l)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	return a.refreshToken(authType, appType, appOrg, refreshParams, oidcConfig, l)
 }
 
 func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
@@ -287,9 +282,9 @@ func (a *oidcAuthImpl) newToken(code string, authType model.AuthType, appType mo
 }
 
 func (a *oidcAuthImpl) refreshToken(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
-	params *oidcRefreshParams, oidcConfig *oidcAuthConfig, l *logs.Log) (map[string]interface{}, error) {
+	params *oidcRefreshParams, oidcConfig *oidcAuthConfig, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
 	if !oidcConfig.UseRefresh {
-		return nil, errors.Newf("refresh tokens not enabled for org_id=%s, app_id=%s",
+		return nil, nil, errors.Newf("refresh tokens not enabled for org_id=%s, app_id=%s",
 			appOrg.Organization.ID, appOrg.Application.ID)
 	}
 
@@ -300,8 +295,7 @@ func (a *oidcAuthImpl) refreshToken(authType model.AuthType, appType model.Appli
 		"client_id":     oidcConfig.ClientID,
 	}
 
-	_, result, err := a.loadOidcTokensAndInfo(bodyData, oidcConfig, authType, appType, appOrg, params.RedirectURI, l)
-	return result, err
+	return a.loadOidcTokensAndInfo(bodyData, oidcConfig, authType, appType, appOrg, params.RedirectURI, l)
 }
 
 func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcConfig *oidcAuthConfig, authType model.AuthType, appType model.ApplicationType,
@@ -351,19 +345,17 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	email, _ := userClaims[identityProviderSetting.EmailField].(string)
 	//roles
 	rolesList, _ := userClaims[identityProviderSetting.RolesField].([]interface{})
-	roles := []string{}
-	for _, item := range rolesList {
+	roles := make([]string, len(rolesList))
+	for i, item := range rolesList {
 		role, _ := item.(string)
-		roleID := identityProviderSetting.Roles[role]
-		roles = append(roles, roleID)
+		roles[i] = role
 	}
 	//groups
 	groupsList, _ := userClaims[identityProviderSetting.GroupsField].([]interface{})
 	groups := make([]string, len(groupsList))
-	for _, item := range groupsList {
+	for i, item := range groupsList {
 		group, _ := item.(string)
-		groupID := identityProviderSetting.Groups[group]
-		groups = append(groups, groupID)
+		groups[i] = group
 	}
 	//system specific
 	systemSpecific := map[string]interface{}{}

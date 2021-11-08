@@ -228,6 +228,46 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 	email := ""
 	phone := ""
 	permissions := []string{}
+
+	// - generate new params(if external auth type)
+	if loginSession.AuthType.IsExternal {
+		extAuthType, err := a.getExternalAuthTypeImpl(loginSession.AuthType)
+		if err != nil {
+			l.Infof("error getting external auth type on refresh - %s", refreshToken)
+			return nil, errors.WrapErrorAction("error getting external auth type on refresh", "", nil, err)
+		}
+
+		externalUser, refreshedData, err := extAuthType.refresh(loginSession.Params, loginSession.AuthType, loginSession.AppType, loginSession.AppOrg, l)
+		if err != nil {
+			l.Infof("error refreshing external auth type on refresh - %s", refreshToken)
+			return nil, errors.WrapErrorAction("error refreshing external auth type on refresh", "", nil, err)
+		}
+
+		loginSession.Params = refreshedData //assing the refreshed data
+
+		newRoles, newGroups, err := a.getExternalUserAuthorization(*externalUser, loginSession.AppOrg, loginSession.AuthType)
+		if err != nil {
+			l.WarnAction(logutils.ActionGet, "external authorization", err)
+		}
+
+		rolesUpdated, err := a.updateExternalAccountRoles(&loginSession.AccountAuthType.Account, newRoles)
+		if err != nil {
+			l.WarnAction(logutils.ActionUpdate, model.TypeAccountRoles, err)
+		}
+
+		groupsUpdated, err := a.updateExternalAccountGroups(&loginSession.AccountAuthType.Account, newGroups)
+		if err != nil {
+			l.WarnAction(logutils.ActionUpdate, model.TypeAccountGroups, err)
+		}
+
+		if rolesUpdated || groupsUpdated {
+			err = a.storage.SaveAccount(nil, &loginSession.AccountAuthType.Account)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, nil, err)
+			}
+		}
+	}
+
 	if !anonymous {
 		accountAuthType := loginSession.AccountAuthType
 		if accountAuthType == nil {
@@ -258,22 +298,6 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 	loginSession.RefreshTokens = append(loginSession.RefreshTokens, refreshToken) //set the generated token
 	// - update the expired field
 	loginSession.Expires = *expires
-	// - generate new params(if external auth type)
-	if loginSession.AuthType.IsExternal {
-		extAuthType, err := a.getExternalAuthTypeImpl(loginSession.AuthType)
-		if err != nil {
-			l.Infof("error getting external auth type on refresh - %s", refreshToken)
-			return nil, errors.WrapErrorAction("error getting external auth type on refresh", "", nil, err)
-		}
-
-		refreshedData, err := extAuthType.refresh(loginSession.Params, loginSession.AuthType, loginSession.AppType, loginSession.AppOrg, l)
-		if err != nil {
-			l.Infof("error refreshing external auth type on refresh - %s", refreshToken)
-			return nil, errors.WrapErrorAction("error refreshing external auth type on refresh", "", nil, err)
-		}
-
-		loginSession.Params = refreshedData //assing the refreshed data
-	}
 
 	//store the updated session
 	now := time.Now()
