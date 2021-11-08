@@ -332,6 +332,8 @@ func (m *phoneMfaImpl) enroll(identifier string) (*model.MFAType, error) {
 		return nil, errors.ErrorData(logutils.StatusMissing, "identifier", nil)
 	}
 
+	//TODO: check identifier is valid phone number
+
 	params := map[string]interface{}{
 		"identifier": identifier,
 	}

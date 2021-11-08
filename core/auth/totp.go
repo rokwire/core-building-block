@@ -5,7 +5,6 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"image/png"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -52,13 +51,6 @@ func (m *totpMfaImpl) enroll(identifier string) (*model.MFAType, error) {
 		return nil, errors.WrapErrorAction("generate", "TOTP key", nil, err)
 	}
 
-	//TODO: clean up file creation before deploying
-	f, err := os.Create("qr_code.png")
-	if err != nil {
-		return nil, errors.WrapErrorAction("create", "PNG file", nil, err)
-	}
-	defer f.Close()
-
 	var buf bytes.Buffer
 	image, err := key.Image(256, 256)
 	if err != nil {
@@ -67,11 +59,6 @@ func (m *totpMfaImpl) enroll(identifier string) (*model.MFAType, error) {
 	err = png.Encode(&buf, image)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionEncode, "TOTP image", nil, err)
-	}
-
-	err = png.Encode(f, image)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionEncode, "TOTP image to PNG", nil, err)
 	}
 
 	params := map[string]interface{}{
