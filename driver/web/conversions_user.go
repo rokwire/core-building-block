@@ -40,7 +40,7 @@ func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeF
 
 //AccountRole
 func accountRoleToDef(item model.AccountRole) Def.AppOrgRoleFields {
-	return Def.AppOrgRoleFields{Id: item.ID, Name: item.Name}
+	return Def.AppOrgRoleFields{Id: item.Role.ID, Name: item.Role.Name}
 }
 
 func accountRolesToDef(items []model.AccountRole) []Def.AppOrgRoleFields {
@@ -53,7 +53,7 @@ func accountRolesToDef(items []model.AccountRole) []Def.AppOrgRoleFields {
 
 //AccountGroup
 func accountGroupToDef(item model.AccountGroup) Def.AppOrgGroupFields {
-	return Def.AppOrgGroupFields{Id: item.ID, Name: item.Name}
+	return Def.AppOrgGroupFields{Id: item.Group.ID, Name: item.Group.Name}
 }
 
 func accountGroupsToDef(items []model.AccountGroup) []Def.AppOrgGroupFields {

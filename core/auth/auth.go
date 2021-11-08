@@ -895,7 +895,7 @@ func (a *Auth) updateExternalAccountRoles(account *model.Account, newExternalRol
 	newRoles := []model.AccountRole{}
 	//Remove any roles which were not set by an admin and are not in new list
 	for _, role := range account.Roles {
-		if role.AdminSet || authutils.ContainsString(newExternalRoleIDs, role.ID) {
+		if role.AdminSet || authutils.ContainsString(newExternalRoleIDs, role.Role.ID) {
 			newRoles = append(newRoles, role)
 		} else {
 			updated = true
@@ -930,7 +930,7 @@ func (a *Auth) updateExternalAccountGroups(account *model.Account, newExternalGr
 	newGroups := []model.AccountGroup{}
 	//Remove any groups which were not set by an admin and are not in new list
 	for _, group := range account.Groups {
-		if group.AdminSet || authutils.ContainsString(newExternalGroupIDs, group.ID) {
+		if group.AdminSet || authutils.ContainsString(newExternalGroupIDs, group.Group.ID) {
 			newGroups = append(newGroups, group)
 		} else {
 			updated = true

@@ -29,15 +29,15 @@ type account struct {
 }
 
 type accountRole struct {
-	appOrgRole
-	Active   bool `bson:"active"`
-	AdminSet bool `bson:"admin_set"`
+	Role     appOrgRole `bson:"role"`
+	Active   bool       `bson:"active"`
+	AdminSet bool       `bson:"admin_set"`
 }
 
 type accountGroup struct {
-	appOrgGroup
-	Active   bool `bson:"active"`
-	AdminSet bool `bson:"admin_set"`
+	Group    appOrgGroup `bson:"group"`
+	Active   bool        `bson:"active"`
+	AdminSet bool        `bson:"admin_set"`
 }
 
 type accountAuthType struct {

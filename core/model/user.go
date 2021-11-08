@@ -98,17 +98,17 @@ func (a Account) GetPermissionsMap() map[string]Permission {
 	}
 	for _, role := range a.Roles {
 		if role.Active {
-			for _, permission := range role.Permissions {
+			for _, permission := range role.Role.Permissions {
 				permissionsMap[permission.Name] = permission
 			}
 		}
 	}
 	for _, group := range a.Groups {
 		if group.Active {
-			for _, permission := range group.Permissions {
+			for _, permission := range group.Group.Permissions {
 				permissionsMap[permission.Name] = permission
 			}
-			for _, role := range group.Roles {
+			for _, role := range group.Group.Roles {
 				for _, permission := range role.Permissions {
 					permissionsMap[permission.Name] = permission
 				}
@@ -152,7 +152,7 @@ func (a Account) GetActiveRoles() []AccountRole {
 //GetRole returns the role for an id if the account has it
 func (a Account) GetRole(id string) *AccountRole {
 	for _, role := range a.Roles {
-		if role.ID == id {
+		if role.Role.ID == id {
 			return &role
 		}
 	}
@@ -173,7 +173,7 @@ func (a Account) GetActiveGroups() []AccountGroup {
 //GetGroup returns the group for an id if the account has it
 func (a Account) GetGroup(id string) *AccountGroup {
 	for _, group := range a.Groups {
-		if group.ID == id {
+		if group.Group.ID == id {
 			return &group
 		}
 	}
@@ -182,7 +182,7 @@ func (a Account) GetGroup(id string) *AccountGroup {
 
 //AccountRole represents a role assigned to an account
 type AccountRole struct {
-	AppOrgRole
+	Role     AppOrgRole
 	Active   bool
 	AdminSet bool
 }
@@ -191,14 +191,14 @@ type AccountRole struct {
 func AccountRolesFromAppOrgRoles(items []AppOrgRole, active bool, adminSet bool) []AccountRole {
 	accountRoles := make([]AccountRole, len(items))
 	for i, role := range items {
-		accountRoles[i] = AccountRole{AppOrgRole: role, Active: active, AdminSet: adminSet}
+		accountRoles[i] = AccountRole{Role: role, Active: active, AdminSet: adminSet}
 	}
 	return accountRoles
 }
 
 //AccountGroup represents a group assigned to an account
 type AccountGroup struct {
-	AppOrgGroup
+	Group    AppOrgGroup
 	Active   bool
 	AdminSet bool
 }
@@ -207,7 +207,7 @@ type AccountGroup struct {
 func AccountGroupsFromAppOrgGroups(items []AppOrgGroup, active bool, adminSet bool) []AccountGroup {
 	accountGroups := make([]AccountGroup, len(items))
 	for i, group := range items {
-		accountGroups[i] = AccountGroup{AppOrgGroup: group, Active: active, AdminSet: adminSet}
+		accountGroups[i] = AccountGroup{Group: group, Active: active, AdminSet: adminSet}
 	}
 	return accountGroups
 }
