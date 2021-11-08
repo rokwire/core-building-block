@@ -851,30 +851,7 @@ paths:
           content:
             application/json:
               schema:
-                required:
-                  - id
-                type: object
-                properties:
-                  id:
-                    type: string
-                  profile:
-                    $ref: '#/components/schemas/ProfileFields'
-                  permissions:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/PermissionFields'
-                  roles:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/AppOrgRoleFields'
-                  groups:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/AppOrgGroupFields'
-                  auth_types:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/AccountAuthTypeFields'
+                $ref: '#/components/schemas/_res_shared_Account'
         '400':
           description: Bad request
         '401':
