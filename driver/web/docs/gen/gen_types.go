@@ -906,6 +906,20 @@ type GetServicesAuthVerifyParams struct {
 // PostServicesAuthVerifyMfaJSONBody defines parameters for PostServicesAuthVerifyMfa.
 type PostServicesAuthVerifyMfaJSONBody ReqSharedMfa
 
+// DeleteSystemAccountMfaParams defines parameters for DeleteSystemAccountMfa.
+type DeleteSystemAccountMfaParams struct {
+
+	// MFA type
+	Type string `json:"type"`
+}
+
+// PostSystemAccountMfaParams defines parameters for PostSystemAccountMfa.
+type PostSystemAccountMfaParams struct {
+
+	// MFA type
+	Type string `json:"type"`
+}
+
 // PutSystemAccountPermissionsJSONBody defines parameters for PutSystemAccountPermissions.
 type PutSystemAccountPermissionsJSONBody ReqAccountPermissionsRequest
 

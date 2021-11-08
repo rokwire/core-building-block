@@ -110,6 +110,8 @@ paths:
     $ref: "./resources/system/account/permissions.yaml"
   /system/account/roles:
     $ref: "./resources/system/account/roles.yaml"
+  /system/account/mfa:
+    $ref: "./resources/system/account/mfa.yaml"
   /system/api-keys:
     $ref: "./resources/system/api-keys.yaml"
 

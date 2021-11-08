@@ -1,6 +1,7 @@
 get:
+  deprecated: true
   tags:
-  - Admin
+  - System
   summary: Get account MFA types
   description: |
     Get MFA types set up for an account
@@ -24,8 +25,9 @@ get:
     500:
       description: Internal error
 post:
+  deprecated: true
   tags:
-  - Admin
+  - System
   summary: Enroll in MFA type
   description: |
     Add MFA type to an account
@@ -56,8 +58,9 @@ post:
     500:
       description: Internal error
 delete:
+  deprecated: true
   tags:
-  - Admin
+  - System
   summary: Remove MFA type
   description: |
     Remove MFA type from an account
