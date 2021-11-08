@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Limit number of active login sessions per account [#256](https://github.com/rokwire/core-building-block/issues/256)
 - Expose transaction interface on storage adapter [#285](https://github.com/rokwire/core-building-block/issues/285)
 
+### Fixed
+- 502 error on login when missing preferences [#299](https://github.com/rokwire/core-building-block/issues/299)
+
+
 ## [1.11.0] - 2021-11-04
 ### Added
 - Set up permission groups [#25](https://github.com/rokwire/core-building-block/issues/25)
