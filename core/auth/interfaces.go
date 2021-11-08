@@ -29,7 +29,7 @@ type authType interface {
 	getUserIdentifier(creds string) (string, error)
 
 	//checkCredentials checks if the account credentials are valid for the account auth type
-	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error)
+	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error)
 }
 
 //externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
@@ -185,10 +185,11 @@ type Storage interface {
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
 	//LoginsSessions
-	InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error)
+	InsertLoginSession(context storage.TransactionContext, session model.LoginSession) error
+	FindLoginSessions(context storage.TransactionContext, identifier string) ([]model.LoginSession, error)
 	FindLoginSession(refreshToken string) (*model.LoginSession, error)
 	UpdateLoginSession(loginSession model.LoginSession) error
-	DeleteLoginSession(id string) error
+	DeleteLoginSession(context storage.TransactionContext, id string) error
 	DeleteExpiredSessions(now *time.Time) error
 
 	//Accounts

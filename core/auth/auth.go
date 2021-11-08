@@ -314,7 +314,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 	if isSignUp {
 		if accountExists {
-			return "", nil, errors.New("account already exists")
+			return "", nil, errors.New("account already exists").SetStatus(utils.ErrorStatusAlreadyExists)
 		}
 
 		//TODO: use shared profile
@@ -344,7 +344,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 
 	//apply sign in
 	if !accountExists {
-		return "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+		return "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil).SetStatus(utils.ErrorStatusNotFound)
 	}
 
 	accountAuthType, err = a.findAccountAuthType(account, &authType, userIdentifier)
@@ -353,12 +353,9 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 
 	//2. it seems the user exist, now check the credentials
-	message, validCredentials, err := authImpl.checkCredentials(*accountAuthType, creds, l)
+	message, err = authImpl.checkCredentials(*accountAuthType, creds, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
-	}
-	if !*validCredentials {
-		return "", nil, errors.ErrorData(logutils.StatusInvalid, model.TypeCredential, nil)
 	}
 
 	return message, accountAuthType, nil
@@ -446,10 +443,38 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 		return nil, errors.WrapErrorAction("error creating a session", "", nil, err)
 	}
 
-	//store it
-	_, err = a.storage.InsertLoginSession(*loginSession)
+	transaction := func(context storage.TransactionContext) error {
+		//1. store login session
+		err := a.storage.InsertLoginSession(context, *loginSession)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
+		}
+
+		//2. check session limit against number of active sessions
+		if sessionLimit > 0 {
+			loginSessions, err := a.storage.FindLoginSessions(context, loginSession.Identifier)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+			}
+			if len(loginSessions) < 1 {
+				l.ErrorWithDetails("failed to find login session after inserting", logutils.Fields{"identifier": loginSession.Identifier})
+			}
+
+			if len(loginSessions) > sessionLimit {
+				// delete first session in list (sorted by expiration)
+				err = a.storage.DeleteLoginSession(context, loginSessions[0].ID)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
+				}
+			}
+		}
+
+		return nil
+	}
+
+	err = a.storage.PerformTransaction(transaction)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
 	}
 
 	return loginSession, nil
