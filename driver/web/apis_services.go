@@ -28,7 +28,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 
 	ip := utils.GetIP(l, r)
 	if err != nil {
-		return l.HttpResponseError("Error getting IP", err, http.StatusBadRequest, true)
+		return l.HttpResponseError("Error getting IP", err, http.StatusInternalServerError, true)
 	}
 
 	var requestData Def.ReqSharedLogin
