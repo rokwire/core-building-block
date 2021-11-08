@@ -1,6 +1,7 @@
 get:
+  deprecated: true
   tags:
-  - Admin
+  - System
   summary: Get application API keys
   description: |
     Returns all API key records for a given app ID
