@@ -24,7 +24,7 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	AdmGetPermissions() ([]model.Permission, error)
+	AdmGetPermissions(serviceID []string) ([]model.Permission, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -82,7 +82,7 @@ type Storage interface {
 	DeleteGlobalConfig(context storage.TransactionContext) error
 
 	FindPermissionsByName(names []string) ([]model.Permission, error)
-	FindPermissionsList() ([]model.Permission, error)
+	FindPermissionsList(serviceID []string) ([]model.Permission, error)
 	InsertPermission(item model.Permission) error
 	UpdatePermission(item model.Permission) error
 	DeletePermission(id string) error

@@ -203,8 +203,8 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 }
 
 func (h AdminApisHandler) adminGetPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-
-	permissions, err := h.coreAPIs.Administration.AdmGetPermissions()
+	var serviceID []string
+	permissions, err := h.coreAPIs.Administration.AdmGetPermissions(serviceID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
