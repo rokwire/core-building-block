@@ -873,14 +873,18 @@ func (a *Auth) getExternalUserAuthorization(externalUser model.ExternalSystemUse
 	roles := []string{}
 	for _, item := range externalUser.Roles {
 		roleID := identityProviderSetting.Roles[item]
-		roles = append(roles, roleID)
+		if len(roleID) > 0 {
+			roles = append(roles, roleID)
+		}
 	}
 
 	//groups
 	groups := []string{}
 	for _, item := range externalUser.Groups {
 		groupID := identityProviderSetting.Groups[item]
-		groups = append(groups, groupID)
+		if len(groupID) > 0 {
+			groups = append(groups, groupID)
+		}
 	}
 
 	return roles, groups, nil
