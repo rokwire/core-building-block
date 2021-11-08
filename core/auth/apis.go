@@ -117,13 +117,11 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		//the credentials are valid
 	}
 
-	if !authType.IgnoreMFA {
-		//check if account is enrolled in MFA
-		if len(mfaTypes) > 0 {
-			state, err = utils.GenerateRandomString(loginStateLength)
-			if err != nil {
-				return nil, nil, nil, errors.WrapErrorAction("generate", "login state", nil, err)
-			}
+	//check if account is enrolled in MFA
+	if !authType.IgnoreMFA && len(mfaTypes) > 0 {
+		state, err = utils.GenerateRandomString(loginStateLength)
+		if err != nil {
+			return nil, nil, nil, errors.WrapErrorAction("generate", "login state", nil, err)
 		}
 	}
 
@@ -366,9 +364,10 @@ func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, 
 func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error) {
 	var message string
 	var loginSession *model.LoginSession
+	var err error
 	transaction := func(context storage.TransactionContext) error {
 		//1. find mfa type in account
-		loginSession, err := a.storage.FindAndUpdateLoginSession(sessionID)
+		loginSession, err = a.storage.FindAndUpdateLoginSession(sessionID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"session_id": sessionID}, err)
 		}
@@ -419,7 +418,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 		return nil
 	}
 
-	err := a.storage.PerformTransaction(transaction)
+	err = a.storage.PerformTransaction(transaction)
 	if err != nil {
 		a.deleteLoginSession(sessionID, l)
 		if message != "" {

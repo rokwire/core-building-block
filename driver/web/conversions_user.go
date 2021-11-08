@@ -104,6 +104,12 @@ func mfaDataListToDef(items []model.MFAType) []Def.ResSharedMfa {
 }
 
 func mfaDataToDef(item *model.MFAType) *Def.ResSharedMfa {
+	if item == nil {
+		return nil
+	}
+
+	mfaType := item.Type
+	verified := item.Verified
 	params := item.Params
 	delete(params, "expires")
 	//TODO: mask identifier
@@ -115,7 +121,7 @@ func mfaDataToDef(item *model.MFAType) *Def.ResSharedMfa {
 	//recovery
 	delete(params, "codes")
 
-	return &Def.ResSharedMfa{Type: &item.Type, Verified: &item.Verified, Params: &params}
+	return &Def.ResSharedMfa{Type: &mfaType, Verified: &verified, Params: &params}
 }
 
 func profileToDef(item *model.Profile) *Def.ProfileFields {
