@@ -209,7 +209,7 @@ func (a *emailAuthImpl) sendVerify(authType model.AuthType, identifier string, c
 	now := time.Now()
 	prevTime := emailCreds.VerificationExpiry.Add(time.Duration(-24) * time.Hour)
 	if now.Sub(prevTime) < time.Duration(verifyWaitTime)*time.Second {
-		return nil, errors.ErrorAction(logutils.ActionSend, logutils.TypeString, logutils.StringArgs("verify resend requested too soon"))
+		return nil, errors.ErrorAction(logutils.ActionSend, "verify code", logutils.StringArgs("resend requested too soon"))
 	}
 	//verification code
 	code, err := utils.GenerateRandomString(64)

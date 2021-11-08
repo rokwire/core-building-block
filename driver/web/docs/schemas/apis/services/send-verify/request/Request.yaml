@@ -1,0 +1,9 @@
+required:
+  - identifier
+  - creds_id
+type: object
+properties:
+  identifier:
+    type: string
+  creds_id:
+    type: string

@@ -33,6 +33,8 @@ paths:
     $ref: "./resources/services/auth/login-url.yaml"
   /services/auth/verify:
     $ref: "./resources/services/auth/verify.yaml"
+  /services/auth/send-verify:
+    $ref: "./resources/services/auth/send-verify.yaml"
   /services/auth/account-exists:
     $ref: "./resources/services/auth/account-exists.yaml"
   /services/auth/authorize-service:

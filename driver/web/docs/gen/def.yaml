@@ -287,6 +287,35 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/auth/send-verify:
+    post:
+      tags:
+        - Services
+      summary: Send verification code to identifier
+      description: |
+        Sends verification code to identifier to verify account ownership
+      requestBody:
+        description: |
+          Account information to be checked
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_send-verify_Request'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Successfully sent verification code
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/auth/account-exists:
     post:
       tags:
@@ -2557,6 +2586,16 @@ components:
           type: string
     _res_account-exists_Response:
       type: boolean
+    _req_send-verify_Request:
+      required:
+        - identifier
+        - creds_id
+      type: object
+      properties:
+        identifier:
+          type: string
+        creds_id:
+          type: string
     _req_authorize-service_Request:
       required:
         - service_id

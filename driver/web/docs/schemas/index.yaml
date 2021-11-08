@@ -134,6 +134,10 @@ _req_account-exists_Request:
 _res_account-exists_Response:
   $ref: "./apis/services/account-exists/response/Response.yaml"
 
+### send-verify API
+_req_send-verify_Request:
+  $ref: "./apis/services/send-verify/request/Request.yaml"
+
 ### authorize-service API
 _req_authorize-service_Request:
   $ref: "./apis/services/authorize-service/request/Request.yaml"

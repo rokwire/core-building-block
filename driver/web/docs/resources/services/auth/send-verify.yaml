@@ -1,0 +1,28 @@
+post:
+  tags:
+    - Services
+  summary: Send verification code to identifier
+  description: |
+    Sends verification code to identifier to verify account ownership
+  requestBody:
+    description: |
+      Account information to be checked
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schemas/apis/services/send-verify/request/Request.yaml"
+    required: true
+  responses:
+    200:
+      description: Successful operation
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: Successfully sent verification code
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error

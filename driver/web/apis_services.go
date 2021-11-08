@@ -379,18 +379,19 @@ func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request, claims *to
 
 //Handler for resending verify code
 func (h ServicesApisHandler) sendVerify(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	identifier := r.URL.Query().Get("identifier")
-	if identifier == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	credsID := r.URL.Query().Get("creds_id")
-	if credsID == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("code"), nil, http.StatusBadRequest, false)
+	var requestData Def.ReqSendVerifyRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth resend verify code request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.SendVerify(identifier, credsID, l); err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionValidate, "code", nil, err, http.StatusInternalServerError, false)
+	if err := h.coreAPIs.Auth.SendVerify(requestData.Identifier, requestData.CredsId, l); err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionSend, "code", nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HttpResponseSuccessMessage("Verification code sent")
