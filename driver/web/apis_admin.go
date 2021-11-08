@@ -202,6 +202,25 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 	return l.HttpResponseSuccessJSON(respData)
 }
 
+func (h AdminApisHandler) adminGetPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+
+	permissions, err := h.coreAPIs.Administration.AdmGetPermissions()
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypePermission, nil, err, http.StatusInternalServerError, true)
+	}
+	var response []Def.PermissionFields
+	for _, permission := range permissions {
+		r := applicationPermissionToDef(permission)
+		response = append(response, r)
+	}
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypePermission, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
 //NewAdminApisHandler creates new admin rest Handler instance
 func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
 	return AdminApisHandler{coreAPIs: coreAPIs}
