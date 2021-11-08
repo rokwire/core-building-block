@@ -56,6 +56,7 @@ func GetType(data interface{}) string {
 	return reflect.TypeOf(data).String()
 }
 
+//GetIP extracts the IP address from the http request
 func GetIP(l *logs.Log, r *http.Request) string {
 	IPAddress := r.Header.Get("X-Real-Ip")
 	if IPAddress == "" {
