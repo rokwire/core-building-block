@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Expose resend verification code services API [#287](https://github.com/rokwire/core-building-block/issues/287)
 - Expose get account services API [#217](https://github.com/rokwire/core-building-block/issues/217)
 - Define unified responses for the APIs [#286](https://github.com/rokwire/core-building-block/issues/286)
 - Add refresh token abuse detection to login sessions [#257](https://github.com/rokwire/core-building-block/issues/257)
