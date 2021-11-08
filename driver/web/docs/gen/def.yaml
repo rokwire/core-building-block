@@ -834,6 +834,31 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /admin/auth/permissions:
+    get:
+      deprecated: true
+      tags:
+        - Admin
+      summary: Get permissions
+      description: |
+        Gets permissions
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/_req_permissions_admin_Request'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /enc/test:
     get:
       tags:
@@ -2876,6 +2901,20 @@ components:
         application_types:
           $ref: '#/components/schemas/ApplicationTypeFields'
     _req_permissions_Request:
+      required:
+        - name
+      type: object
+      properties:
+        name:
+          type: string
+        service_id:
+          type: string
+        assigners:
+          type: array
+          description: permissions that could assign current permission to accounts
+          items:
+            type: string
+    _req_permissions_admin_Request:
       required:
         - name
       type: object
