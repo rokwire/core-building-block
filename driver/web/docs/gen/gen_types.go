@@ -704,9 +704,20 @@ type ResGetOrganizationsResponse struct {
 // ResGetOrganizationsResponseType defines model for ResGetOrganizationsResponse.Type.
 type ResGetOrganizationsResponseType string
 
+// ResSharedAccount defines model for _res_shared_Account.
+type ResSharedAccount struct {
+	AuthTypes   *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
+	Groups      *[]AppOrgGroupFields     `json:"groups,omitempty"`
+	Id          string                   `json:"id"`
+	Permissions *[]PermissionFields      `json:"permissions,omitempty"`
+	Preferences *map[string]interface{}  `json:"preferences"`
+	Profile     *ProfileFields           `json:"profile,omitempty"`
+	Roles       *[]AppOrgRoleFields      `json:"roles,omitempty"`
+}
+
 // ResSharedLogin defines model for _res_shared_Login.
 type ResSharedLogin struct {
-	Account *ResSharedLoginAccount `json:"account,omitempty"`
+	Account *ResSharedAccount      `json:"account,omitempty"`
 	Message *string                `json:"message,omitempty"`
 	Params  *interface{}           `json:"params"`
 	Token   *ResSharedRokwireToken `json:"token,omitempty"`
@@ -718,17 +729,6 @@ type ResSharedLoginUrl struct {
 
 	// Params to be submitted with 'login' request (if necessary)
 	Params *map[string]interface{} `json:"params,omitempty"`
-}
-
-// ResSharedLoginAccount defines model for _res_shared_Login_Account.
-type ResSharedLoginAccount struct {
-	AuthTypes   *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
-	Groups      *[]AppOrgGroupFields     `json:"groups,omitempty"`
-	Id          string                   `json:"id"`
-	Permissions *[]PermissionFields      `json:"permissions,omitempty"`
-	Preferences *map[string]interface{}  `json:"preferences"`
-	Profile     *ProfileFields           `json:"profile,omitempty"`
-	Roles       *[]AppOrgRoleFields      `json:"roles,omitempty"`
 }
 
 // ResSharedRefresh defines model for _res_shared_Refresh.

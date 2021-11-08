@@ -8,10 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Login session duration policies [#258](https://github.com/rokwire/core-building-block/issues/258)
+- Expose get account services API [#217](https://github.com/rokwire/core-building-block/issues/217)
 - Define unified responses for the APIs [#286](https://github.com/rokwire/core-building-block/issues/286)
 - Add refresh token abuse detection to login sessions [#257](https://github.com/rokwire/core-building-block/issues/257)
 
 ### Changed
+- Limit number of active login sessions per account [#256](https://github.com/rokwire/core-building-block/issues/256)
 - Expose transaction interface on storage adapter [#285](https://github.com/rokwire/core-building-block/issues/285)
 
 ## [1.11.0] - 2021-11-04
