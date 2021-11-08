@@ -102,7 +102,7 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
 	//account
-	var accountData *Def.ResSharedLoginAccount
+	var accountData *Def.ResSharedAccount
 	if !loginSession.Anonymous {
 		account := loginSession.AccountAuthType.Account
 
@@ -118,7 +118,7 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 		groups := accountGroupsToDef(account.GetActiveGroups())
 		//account auth types
 		authTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResSharedLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
+		accountData = &Def.ResSharedAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 	}
 
 	//params

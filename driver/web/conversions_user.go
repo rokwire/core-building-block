@@ -5,32 +5,22 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 )
 
-//User
-func userFromDef(item *Def.Account) model.Account {
-	/*	if item == nil {
-			return model.Account{}
-		}
-
-		// account := userAccountFromDef(item.Account)
-		// profile := userProfileFromDef(item.Profile)
-		//TODO: add permissions
-		return model.Account{ID: *item.Id} */
-	return model.Account{}
-
-}
-
-func userToDef(item *model.Account) *Def.Account {
-	/*if item == nil {
-		return nil
-	}
-
-	//TODO
-	//account := userAccountToDef(&item.Account)
-	profile := userProfileToDef(&item.Profile)
-	devices := deviceListToDef(item.Devices)
-	//TODO: handle permissions
-	return &Def.User{Id: item.ID /*Account: account,*/ /*, Profile: profile, Devices: &devices} */
-	return nil
+//Account
+func accountToDef(item model.Account) *Def.ResSharedAccount {
+	//profile
+	profile := profileToDef(&item.Profile)
+	//preferences
+	preferences := &item.Preferences
+	//permissions
+	permissions := applicationPermissionsToDef(item.Permissions)
+	//roles
+	roles := accountRolesToDef(item.GetActiveRoles())
+	//groups
+	groups := accountGroupsToDef(item.GetActiveGroups())
+	//account auth types
+	authTypes := accountAuthTypesToDef(item.AuthTypes)
+	return &Def.ResSharedAccount{Id: item.ID, Permissions: &permissions, Roles: &roles, Groups: &groups,
+		AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 }
 
 //AccountAuthType
