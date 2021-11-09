@@ -197,6 +197,27 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - invalid
+                      - unverified
+                      - already-exists
+                      - not-found
+                      - internal-server-error
+                    description: |
+                      - `invalid`: Invalid credentials
+                      - `unverified`: Unverified credentials
+                      - `already-found`: Account already exists when `sign-up=true`
+                      - `not-found`: Account could not be found when `sign-up=false`
+                      - `internal-server-error`: An undefined error occurred
+                  message:
+                    type: string
   /services/auth/refresh:
     post:
       tags:
@@ -436,6 +457,29 @@ paths:
               schema:
                 type: string
                 example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    get:
+      tags:
+        - Services
+      summary: Get user account
+      description: |
+        Get the user account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_shared_Account'
         '400':
           description: Bad request
         '401':
@@ -2477,7 +2521,7 @@ components:
         token:
           $ref: '#/components/schemas/_res_shared_RokwireToken'
         account:
-          $ref: '#/components/schemas/_res_shared_Login_Account'
+          $ref: '#/components/schemas/_res_shared_Account'
         params:
           type: object
           nullable: true
@@ -2508,7 +2552,19 @@ components:
               nullable: true
         message:
           type: string
-    _res_shared_Login_Account:
+    _res_shared_Refresh:
+      type: object
+      properties:
+        token:
+          $ref: '#/components/schemas/_res_shared_RokwireToken'
+        params:
+          type: object
+          nullable: true
+          anyOf:
+            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/0'
+            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/1'
+            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/2'
+    _res_shared_Account:
       required:
         - id
       type: object
@@ -2536,18 +2592,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
-    _res_shared_Refresh:
-      type: object
-      properties:
-        token:
-          $ref: '#/components/schemas/_res_shared_RokwireToken'
-        params:
-          type: object
-          nullable: true
-          anyOf:
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/0'
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/1'
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/2'
     _res_shared_RokwireToken:
       type: object
       properties:

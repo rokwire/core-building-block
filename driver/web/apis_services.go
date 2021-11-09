@@ -81,29 +81,16 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 
 	//token
 	accessToken := loginSession.AccessToken
-	refreshToken := loginSession.RefreshToken
+	refreshToken := loginSession.CurrentRefreshToken()
 
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
 	//account
-	var accountData *Def.ResSharedLoginAccount
+	var accountData *Def.ResSharedAccount
 	if !loginSession.Anonymous {
 		account := loginSession.AccountAuthType.Account
-
-		//profile
-		profile := profileToDef(&account.Profile)
-		//preferences
-		preferences := &account.Preferences
-		//permissions
-		permissions := applicationPermissionsToDef(account.Permissions)
-		//roles
-		roles := appOrgRolesToDef(account.Roles)
-		//groups
-		groups := appOrgGroupsToDef(account.Groups)
-		//account auth types
-		authTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResSharedLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
+		accountData = accountToDef(account)
 	}
 
 	//params
@@ -169,7 +156,7 @@ func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request, claims *t
 	}
 
 	accessToken := loginSession.AccessToken
-	refreshToken := loginSession.RefreshToken
+	refreshToken := loginSession.CurrentRefreshToken()
 	var paramsRes interface{}
 	if loginSession.Params != nil {
 		paramsRes = loginSession.Params
@@ -277,6 +264,25 @@ func (h ServicesApisHandler) deleteAccount(l *logs.Log, r *http.Request, claims 
 	}
 
 	return l.HttpResponseSuccess()
+}
+
+func (h ServicesApisHandler) getAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	account, err := h.coreAPIs.Services.SerGetAccount(claims.Subject)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	var accountData *Def.ResSharedAccount
+	if account != nil {
+		accountData = accountToDef(*account)
+	}
+
+	data, err := json.Marshal(accountData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
 }
 
 func (h ServicesApisHandler) getProfile(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
