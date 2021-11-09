@@ -272,6 +272,8 @@ func (m *emailMfaImpl) verify(context storage.TransactionContext, mfa *model.MFA
 
 	var message string
 
+	//TODO: may want to move code and expires params to login session (maybe add attempt count as well)
+	// if correct code is not given before expiration, mfa type will become unusable in current system
 	storedCode, ok := mfa.Params["code"].(string)
 	if !ok {
 		return nil, errors.ErrorData(logutils.StatusInvalid, "stored mfa code", nil)

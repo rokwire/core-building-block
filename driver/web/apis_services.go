@@ -478,12 +478,12 @@ func (h ServicesApisHandler) verifyMFA(l *logs.Log, r *http.Request, claims *tok
 		return l.HttpResponseErrorData(logutils.StatusMissing, "mfa code", nil, nil, http.StatusBadRequest, true)
 	}
 
-	verified, recoveryCodes, err := h.coreAPIs.Auth.VerifyMFA(claims.Subject, mfaData.Identifier, string(mfaData.Type), *mfaData.Code)
+	message, recoveryCodes, err := h.coreAPIs.Auth.VerifyMFA(claims.Subject, mfaData.Identifier, string(mfaData.Type), *mfaData.Code)
+	if message != nil {
+		return l.HttpResponseError(*message, nil, http.StatusBadRequest, true)
+	}
 	if err != nil {
 		return l.HttpResponseError("Error verifying MFA", err, http.StatusInternalServerError, true)
-	}
-	if !verified {
-		return l.HttpResponseError("Invalid code", nil, http.StatusBadRequest, true)
 	}
 
 	if recoveryCodes == nil {

@@ -147,6 +147,7 @@ type APIs interface {
 	//		state (string): Variable used to verify user has already passed credentials check
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
+	//		Message (*string): message
 	//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
 	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
@@ -187,9 +188,9 @@ type APIs interface {
 	//		mfaType (string): Type of MFA code sent
 	//		mfaCode (string): Code that must be verified
 	//	Returns:
-	//		Verified (bool): Says if MFA enrollment was verified
+	//		Message (*string): message
 	//		Recovery codes ([]string): List of account recovery codes returned if enrolling in MFA for first time
-	VerifyMFA(accountID string, identifier string, mfaType string, mfaCode string) (bool, []string, error)
+	VerifyMFA(accountID string, identifier string, mfaType string, mfaCode string) (*string, []string, error)
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and

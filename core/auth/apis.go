@@ -575,9 +575,11 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 //		mfaType (string): Type of MFA code sent
 //		mfaCode (string): Code that must be verified
 //	Returns:
-//		Verified (bool): Says if MFA enrollment was verified
-func (a *Auth) VerifyMFA(accountID string, identifier string, mfaType string, mfaCode string) (bool, []string, error) {
+//		Message (*string): message
+//		Recovery codes ([]string): List of account recovery codes returned if enrolling in MFA for first time
+func (a *Auth) VerifyMFA(accountID string, identifier string, mfaType string, mfaCode string) (*string, []string, error) {
 	var recoveryMfa *model.MFAType
+	var message *string
 	transaction := func(context storage.TransactionContext) error {
 		errFields := &logutils.FieldArgs{"account_id": accountID, "type": mfaType}
 		//1. find mfa type in account
@@ -601,12 +603,9 @@ func (a *Auth) VerifyMFA(accountID string, identifier string, mfaType string, mf
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionLoadCache, typeMfaType, nil, err)
 		}
-		message, err := mfaImpl.verify(context, mfa, accountID, mfaCode)
+		message, err = mfaImpl.verify(context, mfa, accountID, mfaCode)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionValidate, typeMfaType, errFields, err)
-		}
-		if message != nil {
-			return errors.New(*message)
 		}
 
 		//3. update existing MFA type
@@ -645,19 +644,19 @@ func (a *Auth) VerifyMFA(accountID string, identifier string, mfaType string, mf
 
 	err := a.storage.PerformTransaction(transaction)
 	if err != nil {
-		return false, nil, errors.WrapErrorAction("verifying", model.TypeMFAType, nil, err)
+		return message, nil, errors.WrapErrorAction("verifying", model.TypeMFAType, nil, err)
 	}
 
 	if recoveryMfa != nil && recoveryMfa.Params != nil {
 		recoveryCodes, ok := recoveryMfa.Params["codes"].([]string)
 		if !ok {
-			return false, nil, errors.ErrorAction(logutils.ActionCast, "recovery codes", nil)
+			return nil, nil, errors.ErrorAction(logutils.ActionCast, "recovery codes", nil)
 		}
 
-		return true, recoveryCodes, nil
+		return nil, recoveryCodes, nil
 	}
 
-	return true, nil, nil
+	return nil, nil, nil
 }
 
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
