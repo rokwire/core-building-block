@@ -229,7 +229,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 	phone := ""
 	permissions := []string{}
 
-	// - generate new params(if external auth type)
+	// - generate new params and update the account if needed(if external auth type)
 	if loginSession.AuthType.IsExternal {
 		extAuthType, err := a.getExternalAuthTypeImpl(loginSession.AuthType)
 		if err != nil {
@@ -243,29 +243,18 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 			return nil, errors.WrapErrorAction("error refreshing external auth type on refresh", "", nil, err)
 		}
 
+		//check if need to update the account
+		authType, err := a.storage.FindAuthType(loginSession.AuthType.ID)
+		if err != nil {
+			l.Infof("error getting auth type - %s", refreshToken)
+			return nil, errors.WrapErrorAction("error getting auth type", "", nil, err)
+		}
+		err = a.updateAccountIfNeeded(*loginSession.AccountAuthType, *externalUser, *authType, loginSession.AppOrg)
+		if err != nil {
+			return nil, errors.WrapErrorAction("update account if needed on refresh", "", nil, err)
+		}
+
 		loginSession.Params = refreshedData //assing the refreshed data
-
-		newRoles, newGroups, err := a.getExternalUserAuthorization(*externalUser, loginSession.AppOrg, loginSession.AuthType)
-		if err != nil {
-			l.WarnAction(logutils.ActionGet, "external authorization", err)
-		}
-
-		rolesUpdated, err := a.updateExternalAccountRoles(&loginSession.AccountAuthType.Account, newRoles)
-		if err != nil {
-			l.WarnAction(logutils.ActionUpdate, model.TypeAccountRoles, err)
-		}
-
-		groupsUpdated, err := a.updateExternalAccountGroups(&loginSession.AccountAuthType.Account, newGroups)
-		if err != nil {
-			l.WarnAction(logutils.ActionUpdate, model.TypeAccountGroups, err)
-		}
-
-		if rolesUpdated || groupsUpdated {
-			err = a.storage.SaveAccount(nil, &loginSession.AccountAuthType.Account)
-			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, nil, err)
-			}
-		}
 	}
 
 	if !anonymous {

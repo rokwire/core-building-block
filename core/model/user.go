@@ -53,6 +53,19 @@ type Account struct {
 	DateUpdated *time.Time
 }
 
+//GetAccountAuthTypeByID finds account auth type by id
+func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
+	var result AccountAuthType
+	for _, aat := range a.AuthTypes {
+		if aat.ID == ID {
+			result = aat
+		}
+	}
+	//assign account
+	result.Account = a
+	return &result
+}
+
 //GetAccountAuthType finds account auth type
 func (a Account) GetAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
 	var result AccountAuthType
