@@ -627,9 +627,9 @@ func (sa *Adapter) SaveAccount(context TransactionContext, account *model.Accoun
 	var err error
 	filter := bson.M{"_id": account.ID}
 	if context != nil {
-		err = sa.db.devices.ReplaceOneWithContext(context, filter, storageAccount, nil)
+		err = sa.db.accounts.ReplaceOneWithContext(context, filter, storageAccount, nil)
 	} else {
-		err = sa.db.devices.ReplaceOne(filter, storageAccount, nil)
+		err = sa.db.accounts.ReplaceOne(filter, storageAccount, nil)
 	}
 
 	if err != nil {
