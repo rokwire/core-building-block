@@ -574,12 +574,15 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 	if readyProfile.DateCreated.IsZero() {
 		readyProfile.DateCreated = time.Now()
 	}
-	if preferences["date_created"] == nil {
-		preferences["date_created"] = time.Now()
-	} else {
-		preferencesCreated, ok := preferences["date_created"].(time.Time)
-		if !ok || preferencesCreated.IsZero() {
-			preferences["date_created"] = time.Now()
+
+	if readyPreferences != nil {
+		if readyPreferences["date_created"] == nil {
+			readyPreferences["date_created"] = time.Now()
+		} else {
+			preferencesCreated, ok := readyPreferences["date_created"].(time.Time)
+			if !ok || preferencesCreated.IsZero() {
+				readyPreferences["date_created"] = time.Now()
+			}
 		}
 	}
 	///
