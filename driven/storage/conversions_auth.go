@@ -24,6 +24,7 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 	if item.State != nil {
 		state = *item.State
 	}
+	stateExpires := item.StateExpires
 	expires := item.Expires
 	dateUpdated := item.DateUpdated
 	dateCreated := item.DateCreated
@@ -31,7 +32,7 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 	return model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType, AppType: appType,
 		Anonymous: anonymous, Identifier: identifier, AccountAuthType: accountAuthType,
 		Device: device, IPAddress: idAddress, AccessToken: accessToken, RefreshTokens: refreshTokens, Params: params,
-		State: state, Expires: expires, DateUpdated: dateUpdated, DateCreated: dateCreated}
+		State: state, StateExpires: stateExpires, Expires: expires, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
 
 func loginSessionToStorage(item model.LoginSession) *loginSession {
@@ -62,6 +63,7 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 	if item.State != "" {
 		state = &item.State
 	}
+	stateExpires := item.StateExpires
 	expires := item.Expires
 	dateUpdated := item.DateUpdated
 	dateCreated := item.DateCreated
@@ -70,6 +72,6 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 		AppTypeID: appTypeID, AppTypeIdentifier: appTypeIdentifier, Anonymous: anonymous,
 		Identifier: identifier, AccountAuthTypeID: accountAuthTypeID,
 		AccountAuthTypeIdentifier: accountAuthTypeIdentifier, DeviceID: deviceID, IPAddress: ipAddress,
-		AccessToken: accessToken, RefreshTokens: refreshTokens, Params: params, State: state, Expires: expires,
-		DateUpdated: dateUpdated, DateCreated: dateCreated}
+		AccessToken: accessToken, RefreshTokens: refreshTokens, Params: params, State: state, StateExpires: stateExpires,
+		Expires: expires, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }

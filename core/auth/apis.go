@@ -414,6 +414,10 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 			message = "invalid login state"
 			return errors.ErrorData(logutils.StatusInvalid, "login state", errFields)
 		}
+		if loginSession.StateExpires != nil && time.Now().UTC().After(*loginSession.StateExpires) {
+			message = "expired state"
+			return errors.ErrorData(logutils.StatusInvalid, "expired state", nil)
+		}
 
 		//5. verify code
 		mfaImpl, err := a.getMfaTypeImpl(mfaType)

@@ -74,7 +74,9 @@ type LoginSession struct {
 	RefreshTokens []string
 	Params        map[string]interface{} //authType-specific set of parameters passed back to client
 
-	State   string
+	State        string
+	StateExpires *time.Time
+
 	Expires time.Time
 
 	DateUpdated *time.Time

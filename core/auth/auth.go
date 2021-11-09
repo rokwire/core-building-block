@@ -45,7 +45,8 @@ const (
 	sessionDeletePeriod int = 2
 	sessionLimit        int = 3
 
-	loginStateLength int = 128
+	loginStateLength   int = 128
+	loginStateDuration int = 5
 )
 
 //Auth represents the auth functionality unit
@@ -567,10 +568,12 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
+	now := time.Now()
+	stateExpires := now.Add(time.Minute * time.Duration(loginStateDuration))
 	loginSession := model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType,
 		AppType: appType, Anonymous: anonymous, Identifier: sub, AccountAuthType: accountAuthType,
 		Device: device, IPAddress: ipAddress, AccessToken: accessToken, RefreshTokens: []string{refreshToken}, Params: params,
-		State: state, Expires: *expires, DateCreated: time.Now()}
+		State: state, StateExpires: &stateExpires, Expires: *expires, DateCreated: now}
 
 	return &loginSession, nil
 }
