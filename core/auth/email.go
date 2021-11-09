@@ -151,6 +151,16 @@ func (a *emailAuthImpl) getVerifyEmail(authType model.AuthType) bool {
 	return verifyEmail
 }
 
+func (a *emailAuthImpl) getVerifyWaitTime(authType model.AuthType) int {
+	//Default is 30 seconds
+	verifyWaitTime := 30
+	verifyWaitTimeParam, ok := authType.Params["verify_wait_time"].(int)
+	if ok {
+		verifyWaitTime = verifyWaitTimeParam
+	}
+	return verifyWaitTime
+}
+
 func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode string, credentialID string) error {
 	params := url.Values{}
 	params.Add("id", credentialID)
@@ -193,12 +203,14 @@ func (a *emailAuthImpl) verify(credential *model.Credential, verification string
 	return credsMap, nil
 }
 
-func (a *emailAuthImpl) sendVerify(authType model.AuthType, identifier string, credential *model.Credential, verifyWaitTime int64, l *logs.Log) (map[string]interface{}, error) {
+func (a *emailAuthImpl) sendVerify(authType model.AuthType, identifier string, credential *model.Credential, l *logs.Log) (map[string]interface{}, error) {
 	//Check if verify email is disabled for the given authType
 	verifyEmail := a.getVerifyEmail(authType)
 	if !verifyEmail {
 		return nil, errors.ErrorAction(logutils.ActionSend, logutils.TypeString, logutils.StringArgs("verify email is disabled for authType"))
 	}
+	verifyWaitTime := a.getVerifyWaitTime(authType)
+
 	//Parse credential value to emailCreds
 	emailCreds, err := mapToEmailCreds(credential.Value)
 	if err != nil {

@@ -25,8 +25,7 @@ type authType interface {
 	//sends the verification code to the identifier
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
-	sendVerify(authType model.AuthType, identifier string, credential *model.Credential, verifyWaitTime int64, l *logs.Log) (map[string]interface{}, error)
-
+	sendVerify(authType model.AuthType, identifier string, credential *model.Credential, l *logs.Log) (map[string]interface{}, error)
 	//getUserIdentifier parses the credentials and returns the user identifier
 	// Returns:
 	//	userIdentifier (string): User identifier
@@ -118,8 +117,7 @@ type APIs interface {
 	Verify(id string, verification string, l *logs.Log) error
 
 	//Send verification code to identifier
-	SendVerify(identifier string, credentialID string, l *logs.Log) error
-
+	SendVerify(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:
 	//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")

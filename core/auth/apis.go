@@ -366,8 +366,34 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 }
 
 //SendVerify sends the verification code to the identifier
-func (a *Auth) SendVerify(identifier string, credentialID string, l *logs.Log) error {
-	credential, err := a.storage.FindCredential(credentialID)
+func (a *Auth) SendVerify(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
+	//validate if the provided auth type is supported by the provided application and organization
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+	//validate api key before making db calls
+	err = a.validateAPIKey(apiKey, appType.Application.ID)
+	if err != nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+	}
+
+	if authType.IsExternal || authType.IsAnonymous {
+		return errors.WrapErrorAction("invalid auth type for sending verify code", model.TypeAuthType, nil, err)
+	}
+	authImpl, err := a.getAuthTypeImpl(*authType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, identifier)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	accountAuthType, err := a.findAccountAuthType(account, authType, identifier)
+	if accountAuthType == nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+	}
+	credential, err := a.storage.FindCredential(accountAuthType.Credential.ID)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
@@ -376,20 +402,7 @@ func (a *Auth) SendVerify(identifier string, credentialID string, l *logs.Log) e
 		return errors.New("credential has already been verified")
 	}
 
-	//get the auth type
-	authType, err := a.storage.FindAuthType(credential.AuthType.ID)
-	if err != nil || authType == nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
-	}
-	if authType.IsExternal {
-		return errors.WrapErrorAction("invalid auth type for sending verify code", model.TypeAuthType, nil, err)
-	}
-
-	authImpl, err := a.getAuthTypeImpl(*authType)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
-	}
-	authTypeCreds, err := authImpl.sendVerify(*authType, identifier, credential, a.verifyWaitTime, l)
+	authTypeCreds, err := authImpl.sendVerify(*authType, identifier, credential, l)
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
 	}

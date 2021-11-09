@@ -396,7 +396,7 @@ func (h ServicesApisHandler) sendVerify(l *logs.Log, r *http.Request, claims *to
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth resend verify code request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.SendVerify(requestData.Identifier, requestData.CredsId, l); err != nil {
+	if err := h.coreAPIs.Auth.SendVerify(string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.OrgId, requestData.ApiKey, requestData.Identifier, l); err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionSend, "code", nil, err, http.StatusInternalServerError, false)
 	}
 

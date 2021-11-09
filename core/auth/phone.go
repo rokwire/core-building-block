@@ -267,7 +267,7 @@ func (a *twilioPhoneAuthImpl) verify(credential *model.Credential, verification 
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *twilioPhoneAuthImpl) sendVerify(authType model.AuthType, identifier string, credential *model.Credential, verifyWaitTime int64, l *logs.Log) (map[string]interface{}, error) {
+func (a *twilioPhoneAuthImpl) sendVerify(authType model.AuthType, identifier string, credential *model.Credential, l *logs.Log) (map[string]interface{}, error) {
 	return nil, nil
 }
 

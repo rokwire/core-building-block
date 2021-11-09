@@ -1,9 +1,24 @@
 required:
+  - auth_type
+  - app_type_identifier
+  - org_id
+  - api_key
   - identifier
-  - creds_id
 type: object
 properties:
   identifier:
     type: string
-  creds_id:
+  org_id:
     type: string
+  api_key:
+    type: string
+  app_type_identifier:
+    type: string
+  auth_type:
+    type: string
+    enum:
+      - username
+      - email
+      - twilio_phone
+      - illinois_oidc
+      - anonymous

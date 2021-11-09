@@ -34,7 +34,7 @@ func (a *firebaseAuthImpl) checkCredentials(accountAuthType model.AccountAuthTyp
 	return "", nil
 }
 
-func (a *firebaseAuthImpl) sendVerify(authType model.AuthType, identifier string, credential *model.Credential, verifyWaitTime int64, l *logs.Log) (map[string]interface{}, error) {
+func (a *firebaseAuthImpl) sendVerify(authType model.AuthType, identifier string, credential *model.Credential, l *logs.Log) (map[string]interface{}, error) {
 	return nil, nil
 }
 

@@ -33,7 +33,7 @@ func (a *usernameAuthImpl) verify(credential *model.Credential, verification str
 func (a *usernameAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
 	return "", nil
 }
-func (a *usernameAuthImpl) sendVerify(authType model.AuthType, identifier string, credential *model.Credential, verifyWaitTime int64, l *logs.Log) (map[string]interface{}, error) {
+func (a *usernameAuthImpl) sendVerify(authType model.AuthType, identifier string, credential *model.Credential, l *logs.Log) (map[string]interface{}, error) {
 	return nil, nil
 }
 

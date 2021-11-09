@@ -121,15 +121,7 @@ func main() {
 	profileBBApiKey := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PROFILE_BB_API_KEY", false, true)
 	profileBBAdapter := profilebb.NewProfileBBAdapter(migrate, profileBBHost, profileBBApiKey)
 
-	verifyWaitTimeStr := envLoader.GetAndLogEnvVar("VERIFY_WAIT_TIME", false, false)
-	var verifyWaitTime *int64
-	verifyWaitTimeVal, err := strconv.ParseInt(verifyWaitTimeStr, 10, 64)
-	if err == nil {
-		verifyWaitTime = &verifyWaitTimeVal
-	} else {
-		logger.Infof("Error parsing verify wait time, applying defaults: %v", err)
-	}
-	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, emailer, minTokenExp, maxTokenExp, twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, verifyWaitTime, logger)
+	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, emailer, minTokenExp, maxTokenExp, twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}

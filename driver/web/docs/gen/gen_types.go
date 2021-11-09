@@ -79,6 +79,19 @@ const (
 	ReqCreateOrganizationRequestTypeSmall ReqCreateOrganizationRequestType = "small"
 )
 
+// Defines values for ReqSendVerifyRequestAuthType.
+const (
+	ReqSendVerifyRequestAuthTypeAnonymous ReqSendVerifyRequestAuthType = "anonymous"
+
+	ReqSendVerifyRequestAuthTypeEmail ReqSendVerifyRequestAuthType = "email"
+
+	ReqSendVerifyRequestAuthTypeIllinoisOidc ReqSendVerifyRequestAuthType = "illinois_oidc"
+
+	ReqSendVerifyRequestAuthTypeTwilioPhone ReqSendVerifyRequestAuthType = "twilio_phone"
+
+	ReqSendVerifyRequestAuthTypeUsername ReqSendVerifyRequestAuthType = "username"
+)
+
 // Defines values for ReqSharedLoginAuthType.
 const (
 	ReqSharedLoginAuthTypeAnonymous ReqSharedLoginAuthType = "anonymous"
@@ -531,9 +544,15 @@ type ReqPermissionsRequest struct {
 
 // ReqSendVerifyRequest defines model for _req_send-verify_Request.
 type ReqSendVerifyRequest struct {
-	CredsId    string `json:"creds_id"`
-	Identifier string `json:"identifier"`
+	ApiKey            string                       `json:"api_key"`
+	AppTypeIdentifier string                       `json:"app_type_identifier"`
+	AuthType          ReqSendVerifyRequestAuthType `json:"auth_type"`
+	Identifier        string                       `json:"identifier"`
+	OrgId             string                       `json:"org_id"`
 }
+
+// ReqSendVerifyRequestAuthType defines model for ReqSendVerifyRequest.AuthType.
+type ReqSendVerifyRequestAuthType string
 
 // ReqSharedLogin defines model for _req_shared_Login.
 type ReqSharedLogin struct {
