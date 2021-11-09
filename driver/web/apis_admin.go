@@ -4,6 +4,7 @@ import (
 	"core-building-block/core"
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -43,8 +44,10 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 	}
 
 	//get ip
-	//TODO - most probably it will be needed to be taken more preciselly
-	ip := r.RemoteAddr
+	ip := utils.GetIP(l, r)
+	if err != nil {
+		return l.HttpResponseError("Error getting IP", err, http.StatusInternalServerError, true)
+	}
 
 	var requestData Def.ReqSharedLogin
 	err = json.Unmarshal(data, &requestData)

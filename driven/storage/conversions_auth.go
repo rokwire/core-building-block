@@ -13,10 +13,7 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 	identifier := item.Identifier
 	var accountAuthType *model.AccountAuthType
 	if item.AccountAuthTypeID != nil {
-		aatID := *item.AccountAuthTypeID
-		aatIdentifier := *item.AccountAuthTypeIdentifier
-		aatAccount := *account
-		accountAuthType = &model.AccountAuthType{ID: aatID, Identifier: aatIdentifier, Account: aatAccount}
+		accountAuthType = account.GetAccountAuthTypeByID(*item.AccountAuthTypeID)
 	}
 	device := model.Device{ID: item.DeviceID}
 	idAddress := item.IPAddress

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add multi-factor authentication support [#19](https://github.com/rokwire/core-building-block/issues/19)
 - Add authentication required auth wrapper [#250](https://github.com/rokwire/core-building-block/issues/250)
+- Handle groups mappings from OIDC integration [#276](https://github.com/rokwire/core-building-block/issues/276)
 - Expose get account services API [#217](https://github.com/rokwire/core-building-block/issues/217)
 - Define unified responses for the APIs [#286](https://github.com/rokwire/core-building-block/issues/286)
 - Add refresh token abuse detection to login sessions [#257](https://github.com/rokwire/core-building-block/issues/257)
@@ -16,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Limit number of active login sessions per account [#256](https://github.com/rokwire/core-building-block/issues/256)
 - Expose transaction interface on storage adapter [#285](https://github.com/rokwire/core-building-block/issues/285)
+
+### Fixed
+- 502 error on login when missing preferences [#299](https://github.com/rokwire/core-building-block/issues/299)
 
 ## [1.11.0] - 2021-11-04
 ### Added
@@ -75,6 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
+- Extract IP address from reques [#246](https://github.com/rokwire/core-building-block/issues/246)
 - Populate profile data automatically from ROKWIRE 2.0 Profile BB [#185](https://github.com/rokwire/core-building-block/issues/185)
 - Add phone authentication support [#24](https://github.com/rokwire/core-building-block/issues/24)
 - Handle anonymous ID conversion [#204](https://github.com/rokwire/core-building-block/issues/204)
