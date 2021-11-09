@@ -14,9 +14,9 @@ func accountToDef(item model.Account) *Def.ResSharedAccount {
 	//permissions
 	permissions := applicationPermissionsToDef(item.Permissions)
 	//roles
-	roles := appOrgRolesToDef(item.Roles)
+	roles := accountRolesToDef(item.GetActiveRoles())
 	//groups
-	groups := appOrgGroupsToDef(item.Groups)
+	groups := accountGroupsToDef(item.GetActiveGroups())
 	//account auth types
 	authTypes := accountAuthTypesToDef(item.AuthTypes)
 	return &Def.ResSharedAccount{Id: item.ID, Permissions: &permissions, Roles: &roles, Groups: &groups,
@@ -34,6 +34,32 @@ func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeF
 	result := make([]Def.AccountAuthTypeFields, len(items))
 	for i, item := range items {
 		result[i] = accountAuthTypeToDef(item)
+	}
+	return result
+}
+
+//AccountRole
+func accountRoleToDef(item model.AccountRole) Def.AppOrgRoleFields {
+	return Def.AppOrgRoleFields{Id: item.Role.ID, Name: item.Role.Name}
+}
+
+func accountRolesToDef(items []model.AccountRole) []Def.AppOrgRoleFields {
+	result := make([]Def.AppOrgRoleFields, len(items))
+	for i, item := range items {
+		result[i] = accountRoleToDef(item)
+	}
+	return result
+}
+
+//AccountGroup
+func accountGroupToDef(item model.AccountGroup) Def.AppOrgGroupFields {
+	return Def.AppOrgGroupFields{Id: item.Group.ID, Name: item.Group.Name}
+}
+
+func accountGroupsToDef(items []model.AccountGroup) []Def.AppOrgGroupFields {
+	result := make([]Def.AppOrgGroupFields, len(items))
+	for i, item := range items {
+		result[i] = accountGroupToDef(item)
 	}
 	return result
 }

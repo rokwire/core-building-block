@@ -230,8 +230,8 @@ func (app *application) sysGrantAccountPermissions(accountID string, permissionN
 	return nil
 }
 
-func (app *application) sysGrantAccountRoles(accountID string, appID string, roleIDs []string) error {
-	roles, err := app.storage.FindAppOrgRoles(roleIDs, appID)
+func (app *application) sysGrantAccountRoles(accountID string, appOrgID string, roleIDs []string) error {
+	roles, err := app.storage.FindAppOrgRoles(roleIDs, appOrgID)
 	if err != nil {
 		return err
 	}
@@ -240,7 +240,7 @@ func (app *application) sysGrantAccountRoles(accountID string, appID string, rol
 		return errors.Newf("no roles found for IDs: %v", roleIDs)
 	}
 
-	err = app.storage.InsertAccountRoles(accountID, appID, roles)
+	err = app.storage.InsertAccountRoles(accountID, appOrgID, model.AccountRolesFromAppOrgRoles(roles, true, true))
 	if err != nil {
 		return err
 	}
