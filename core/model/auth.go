@@ -50,6 +50,8 @@ const (
 	TypeAPIKey logutils.MessageDataType = "api key"
 	//TypeCreds cred type
 	TypeCreds logutils.MessageDataType = "creds"
+	//TypeIP auth type type
+	TypeIP logutils.MessageDataType = "ip"
 )
 
 //LoginSession represents login session entity
