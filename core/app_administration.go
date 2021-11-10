@@ -170,3 +170,12 @@ func (app *application) admGetApplicationOrgRoles() ([]model.AppOrgRole, error) 
 
 	return getAppOrgRoles, nil
 }
+
+func (app *application) admGetApplicationOrgGroups() ([]model.AppOrgGroup, error) {
+	getAppOrgGroups, err := app.storage.FindAppOrgGroupsList()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err)
+	}
+
+	return getAppOrgGroups, nil
+}

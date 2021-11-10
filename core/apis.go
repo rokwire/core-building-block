@@ -114,6 +114,10 @@ func (s *administrationImpl) AdmGetApplicationOrgRoles() ([]model.AppOrgRole, er
 	return s.app.admGetApplicationOrgRoles()
 }
 
+func (s *administrationImpl) AdmGetApplicationOrgGroups() ([]model.AppOrgGroup, error) {
+	return s.app.admGetApplicationOrgGroups()
+}
+
 ///
 
 //encryptionImpl
