@@ -10,6 +10,7 @@ import (
 //Services exposes APIs for the driver adapters
 type Services interface {
 	SerDeleteAccount(id string) error
+	SerGetAccount(accountID string) (*model.Account, error)
 	SerGetProfile(accountID string) (*model.Profile, error)
 	SerGetPreferences(accountID string) (map[string]interface{}, error)
 	SerUpdateProfile(accountID string, profile *model.Profile) error
@@ -70,7 +71,7 @@ type Storage interface {
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
-	InsertAccountRoles(accountID string, appOrgID string, roles []model.AppOrgRole) error
+	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error

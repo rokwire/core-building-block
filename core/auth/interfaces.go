@@ -40,7 +40,7 @@ type externalAuthType interface {
 	//externalLogin logins in the external system and provides the authenticated user
 	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 	//refresh refreshes tokens
-	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (map[string]interface{}, error)
+	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 }
 
 //anonymousAuthType is the interface for authentication for auth types which are anonymous
@@ -185,10 +185,11 @@ type Storage interface {
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
 	//LoginsSessions
-	InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error)
+	InsertLoginSession(context storage.TransactionContext, session model.LoginSession) error
+	FindLoginSessions(context storage.TransactionContext, identifier string) ([]model.LoginSession, error)
 	FindLoginSession(refreshToken string) (*model.LoginSession, error)
 	UpdateLoginSession(loginSession model.LoginSession) error
-	DeleteLoginSession(id string) error
+	DeleteLoginSession(context storage.TransactionContext, id string) error
 	DeleteExpiredSessions(now *time.Time) error
 
 	//Accounts
@@ -235,6 +236,16 @@ type Storage interface {
 	//ApplicationsOrganizations
 	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
 	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
+
+	//ApplicationRoles
+	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
+	//AccountRoles
+	UpdateAccountRoles(accountID string, roles []model.AccountRole) error
+
+	//ApplicationGroups
+	FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
+	//AccountGroups
+	UpdateAccountGroups(accountID string, groups []model.AccountGroup) error
 }
 
 //ProfileBuildingBlock is used by auth to communicate with the profile building block.

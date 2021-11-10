@@ -391,15 +391,65 @@ func (sa *Adapter) FindAuthType(codeOrID string) (*model.AuthType, error) {
 }
 
 //InsertLoginSession inserts login session
-func (sa *Adapter) InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error) {
-	storageLoginSession := loginSessionToStorage(loginSession)
+func (sa *Adapter) InsertLoginSession(context TransactionContext, session model.LoginSession) error {
+	storageLoginSession := loginSessionToStorage(session)
 
-	_, err := sa.db.loginsSessions.InsertOne(storageLoginSession)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
+	var err error
+	if context != nil {
+		_, err = sa.db.loginsSessions.InsertOneWithContext(context, storageLoginSession)
+	} else {
+		_, err = sa.db.loginsSessions.InsertOne(storageLoginSession)
 	}
 
-	return &loginSession, nil
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
+	}
+
+	return nil
+}
+
+//FindLoginSessions finds login sessions by identifier and sorts by expiration
+func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier string) ([]model.LoginSession, error) {
+	filter := bson.D{primitive.E{Key: "identifier", Value: identifier}}
+	opts := options.Find()
+	opts.SetSort(bson.D{primitive.E{Key: "expires", Value: 1}})
+
+	var loginSessions []loginSession
+	var err error
+	if context != nil {
+		err = sa.db.loginsSessions.FindWithContext(context, filter, &loginSessions, opts)
+	} else {
+		err = sa.db.loginsSessions.Find(filter, &loginSessions, opts)
+	}
+
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"identifier": identifier}, err)
+	}
+
+	//account - from storage
+	account, err := sa.FindAccountByID(context, identifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": identifier}, err)
+	}
+
+	sessions := make([]model.LoginSession, len(loginSessions))
+	for i, session := range loginSessions {
+		//auth type - from cache
+		authType, err := sa.getCachedAuthType(session.AuthTypeCode)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, &logutils.FieldArgs{"code": session.AuthTypeCode}, err)
+		}
+
+		//application organization - from cache
+		appOrg, err := sa.getCachedApplicationOrganization(session.AppID, session.OrgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": session.AppID, "org_id": session.OrgID}, err)
+		}
+
+		sessions[i] = loginSessionFromStorage(session, *authType, account, *appOrg)
+	}
+
+	return sessions, nil
 }
 
 //FindLoginSession finds login session by refresh token
@@ -422,20 +472,20 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 	if loginSession.AccountAuthTypeID != nil {
 		account, err = sa.FindAccountByID(nil, loginSession.Identifier)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": loginSession.Identifier}, err)
 		}
 	}
 
 	//auth type - from cache
 	authType, err := sa.getCachedAuthType(loginSession.AuthTypeCode)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, &logutils.FieldArgs{"code": loginSession.AuthTypeCode}, err)
 	}
 
 	//application organization - from cache
 	appOrg, err := sa.getCachedApplicationOrganization(loginSession.AppID, loginSession.OrgID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": loginSession.AppID, "org_id": loginSession.OrgID}, err)
 	}
 
 	modelLoginSession := loginSessionFromStorage(loginSession, *authType, account, *appOrg)
@@ -456,11 +506,19 @@ func (sa *Adapter) UpdateLoginSession(loginSession model.LoginSession) error {
 }
 
 //DeleteLoginSession deletes login session
-func (sa *Adapter) DeleteLoginSession(id string) error {
+func (sa *Adapter) DeleteLoginSession(context TransactionContext, id string) error {
 	filter := bson.M{"_id": id}
-	res, err := sa.db.loginsSessions.DeleteOne(filter, nil)
+
+	var res *mongo.DeleteResult
+	var err error
+	if context != nil {
+		res, err = sa.db.loginsSessions.DeleteOneWithContext(context, filter, nil)
+	} else {
+		res, err = sa.db.loginsSessions.DeleteOne(filter, nil)
+	}
+
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, &logutils.FieldArgs{"_id": id}, err)
 	}
 	if res.DeletedCount != 1 {
 		return errors.ErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("unexpected deleted count"))
@@ -569,9 +627,9 @@ func (sa *Adapter) SaveAccount(context TransactionContext, account *model.Accoun
 	var err error
 	filter := bson.M{"_id": account.ID}
 	if context != nil {
-		err = sa.db.devices.ReplaceOneWithContext(context, filter, storageAccount, nil)
+		err = sa.db.accounts.ReplaceOneWithContext(context, filter, storageAccount, nil)
 	} else {
-		err = sa.db.devices.ReplaceOne(filter, storageAccount, nil)
+		err = sa.db.accounts.ReplaceOne(filter, storageAccount, nil)
 	}
 
 	if err != nil {
@@ -635,18 +693,18 @@ func (sa *Adapter) InsertAccountPermissions(accountID string, permissions []mode
 
 	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return nil
 }
 
 //InsertAccountRoles inserts account roles
-func (sa *Adapter) InsertAccountRoles(accountID string, appOrgID string, roles []model.AppOrgRole) error {
-	stgRoles := appOrgRolesToStorage(roles)
+func (sa *Adapter) InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error {
+	stgRoles := accountRolesToStorage(roles)
 
 	//appID included in search to prevent accidentally assigning permissions to account from different application
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}, primitive.E{Key: "app_org_id", Value: appOrgID}}
@@ -658,10 +716,74 @@ func (sa *Adapter) InsertAccountRoles(accountID string, appOrgID string, roles [
 
 	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+//UpdateAccountRoles updates the account roles
+func (sa *Adapter) UpdateAccountRoles(accountID string, roles []model.AccountRole) error {
+	stgRoles := accountRolesToStorage(roles)
+
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "roles", Value: stgRoles},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+//DeleteAccountRoles deletes account roles
+func (sa *Adapter) DeleteAccountRoles(accountID string, roleIDs []string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "roles", Value: bson.M{"$each": roleIDs}},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+//UpdateAccountGroups updates the account groups
+func (sa *Adapter) UpdateAccountGroups(accountID string, groups []model.AccountGroup) error {
+	stgGroups := accountGroupsToStorage(groups)
+
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "groups", Value: stgGroups},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return nil
@@ -792,6 +914,10 @@ func (sa *Adapter) DeletePermission(id string) error {
 
 //FindAppOrgRoles finds a set of application organization roles
 func (sa *Adapter) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error) {
+	if len(ids) == 0 {
+		return []model.AppOrgRole{}, nil
+	}
+
 	rolesFilter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var rolesResult []appOrgRole
 	err := sa.db.applicationsOrganizationsRoles.Find(rolesFilter, &rolesResult, nil)
@@ -843,6 +969,10 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 
 //FindAppOrgGroups finds a set of application organization groups
 func (sa *Adapter) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
+	if len(ids) == 0 {
+		return []model.AppOrgGroup{}, nil
+	}
+
 	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var groupsResult []appOrgGroup
 	err := sa.db.applicationsOrganizationsGroups.Find(filter, &groupsResult, nil)
