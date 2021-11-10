@@ -2907,6 +2907,18 @@ components:
           type: array
           items:
             type: string
+    _res_application_organization_roles_Response:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        system:
+          type: boolean
     _req_account-permissions_Request:
       required:
         - account_id
