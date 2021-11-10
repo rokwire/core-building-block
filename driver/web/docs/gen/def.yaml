@@ -858,6 +858,30 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /admin/auth/appOrgGroups:
+    get:
+      tags:
+        - Admin
+      summary: Get applications_organizations_groups
+      description: |
+        Gets applications_organizations_groups
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/_res_get_AppOrgGroups_Response'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /enc/test:
     get:
       tags:
@@ -2932,6 +2956,19 @@ components:
           items:
             type: string
     _res_get_AppOrgRoles_Response:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        system:
+          type: boolean
+    _res_get_AppOrgGroups_Response:
       required:
         - id
         - name
