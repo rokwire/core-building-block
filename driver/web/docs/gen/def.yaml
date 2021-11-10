@@ -834,7 +834,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/auth/appOrgRole:
+  /admin/auth/appOrgRoles:
     get:
       tags:
         - Admin
