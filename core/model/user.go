@@ -44,8 +44,7 @@ type Account struct {
 
 	AuthTypes []AccountAuthType
 
-	MFATypes      []MFAType
-	RecoveryCodes []string
+	MFATypes []MFAType
 
 	Preferences map[string]interface{}
 	Profile     Profile //one account has one profile, one profile can be shared between many accounts
