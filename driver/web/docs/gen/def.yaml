@@ -836,9 +836,8 @@ paths:
           description: Internal error
   /admin/auth/appOrgRole:
     get:
-      deprecated: true
       tags:
-        - System
+        - Admin
       summary: Get applications_organizations_roles
       description: |
         Gets applications_organizations_roles
