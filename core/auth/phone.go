@@ -298,7 +298,6 @@ func (m *phoneMfaImpl) verify(context storage.TransactionContext, mfa *model.MFA
 
 	var message string
 
-	//TODO: may want to move code and expires params to login session (maybe add attempt count as well)
 	storedCode, ok := mfa.Params["code"].(string)
 	if !ok {
 		return nil, errors.ErrorData(logutils.StatusInvalid, "stored mfa code", nil)
