@@ -12,6 +12,8 @@ type application struct {
 	MultiTenant      bool `bson:"multi_tenant"`
 	RequiresOwnUsers bool `bson:"requires_own_users"`
 
+	MaxLoginSessionDuration *int `bson:"max_login_session_duration,omitempty"`
+
 	Types []applicationType `bson:"types"`
 
 	DateCreated time.Time  `bson:"date_created"`
