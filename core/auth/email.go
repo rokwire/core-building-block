@@ -84,10 +84,11 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appType model.Applicatio
 	}
 
 	verifyEmail := a.getVerifyEmail(authType)
+	verifyExpiryTime := a.getVerifyExpiry(authType)
 
 	var emailCredValue emailCreds
 	if verifyEmail {
-		emailCredValue = emailCreds{Email: email, Password: string(hashedPassword), VerificationCode: code, VerificationExpiry: time.Now().Add(time.Hour * 24)}
+		emailCredValue = emailCreds{Email: email, Password: string(hashedPassword), VerificationCode: code, VerificationExpiry: time.Now().Add(time.Hour * time.Duration(verifyExpiryTime))}
 	} else {
 		emailCredValue = emailCreds{Email: email, Password: string(hashedPassword)}
 	}
@@ -151,6 +152,7 @@ func (a *emailAuthImpl) getVerifyEmail(authType model.AuthType) bool {
 	return verifyEmail
 }
 
+//Time in seconds to wait before sending another verification email
 func (a *emailAuthImpl) getVerifyWaitTime(authType model.AuthType) int {
 	//Default is 30 seconds
 	verifyWaitTime := 30
@@ -159,6 +161,17 @@ func (a *emailAuthImpl) getVerifyWaitTime(authType model.AuthType) int {
 		verifyWaitTime = verifyWaitTimeParam
 	}
 	return verifyWaitTime
+}
+
+//Time in hours before verification code expires
+func (a *emailAuthImpl) getVerifyExpiry(authType model.AuthType) int {
+	//Default is 24 hours
+	verifyExpiry := 24
+	verifyExpiryParam, ok := authType.Params["verify_expiry"].(int)
+	if ok {
+		verifyExpiry = verifyExpiryParam
+	}
+	return verifyExpiry
 }
 
 func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode string, credentialID string) error {
@@ -210,6 +223,7 @@ func (a *emailAuthImpl) sendVerify(authType model.AuthType, identifier string, c
 		return nil, errors.ErrorAction(logutils.ActionSend, logutils.TypeString, logutils.StringArgs("verify email is disabled for authType"))
 	}
 	verifyWaitTime := a.getVerifyWaitTime(authType)
+	verifyExpiryTime := a.getVerifyExpiry(authType)
 
 	//Parse credential value to emailCreds
 	emailCreds, err := mapToEmailCreds(credential.Value)
@@ -218,7 +232,7 @@ func (a *emailAuthImpl) sendVerify(authType model.AuthType, identifier string, c
 	}
 	//Check if previous verification email was sent less than 30 seconds ago
 	now := time.Now()
-	prevTime := emailCreds.VerificationExpiry.Add(time.Duration(-24) * time.Hour)
+	prevTime := emailCreds.VerificationExpiry.Add(time.Duration(-verifyExpiryTime) * time.Hour)
 	if now.Sub(prevTime) < time.Duration(verifyWaitTime)*time.Second {
 		return nil, errors.ErrorAction(logutils.ActionSend, "verify code", logutils.StringArgs("resend requested too soon"))
 	}
@@ -235,7 +249,7 @@ func (a *emailAuthImpl) sendVerify(authType model.AuthType, identifier string, c
 
 	//Update verification data in credential value
 	emailCreds.VerificationCode = code
-	emailCreds.VerificationExpiry = time.Now().Add(time.Hour * 24)
+	emailCreds.VerificationExpiry = time.Now().Add(time.Hour * time.Duration(verifyExpiryTime))
 	credsMap, err := emailCredsToMap(emailCreds)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)

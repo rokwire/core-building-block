@@ -9,11 +9,7 @@ properties:
   auth_type:
     type: string
     enum:
-      - username
       - email
-      - twilio_phone
-      - illinois_oidc
-      - anonymous
   app_type_identifier:
     type: string
   org_id:

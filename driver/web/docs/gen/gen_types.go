@@ -94,15 +94,7 @@ const (
 
 // Defines values for ReqSharedLoginAuthType.
 const (
-	ReqSharedLoginAuthTypeAnonymous ReqSharedLoginAuthType = "anonymous"
-
 	ReqSharedLoginAuthTypeEmail ReqSharedLoginAuthType = "email"
-
-	ReqSharedLoginAuthTypeIllinoisOidc ReqSharedLoginAuthType = "illinois_oidc"
-
-	ReqSharedLoginAuthTypeTwilioPhone ReqSharedLoginAuthType = "twilio_phone"
-
-	ReqSharedLoginAuthTypeUsername ReqSharedLoginAuthType = "username"
 )
 
 // Defines values for ReqSharedLoginUrlAuthType.
