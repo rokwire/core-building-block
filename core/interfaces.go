@@ -24,6 +24,7 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
+	AdmGetApplicationOrgRoles() ([]model.AppOrgRole, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -89,6 +90,7 @@ type Storage interface {
 	InsertAppOrgRole(item model.AppOrgRole) error
 	UpdateAppOrgRole(item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
+	LoadAppOrgRoles() ([]model.AppOrgRole, error)
 
 	InsertAppOrgGroup(item model.AppOrgGroup) error
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
