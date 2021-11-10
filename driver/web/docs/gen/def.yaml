@@ -834,6 +834,31 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /admin/auth/appOrgRole:
+    get:
+      deprecated: true
+      tags:
+        - System
+      summary: Get applications_organizations_roles
+      description: |
+        Gets applications_organizations_roles
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/_res_get_AppOrgRoles_Response'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /enc/test:
     get:
       tags:
@@ -2907,13 +2932,14 @@ components:
           type: array
           items:
             type: string
-    _res_application_organization_roles_Response:
+    _res_get_AppOrgRoles_Response:
       required:
         - id
         - name
       type: object
       properties:
         id:
+          readOnly: true
           type: string
         name:
           type: string
