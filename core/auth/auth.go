@@ -205,6 +205,8 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("update account if needed", "", nil, err)
 		}
+
+		mfaTypes = account.GetVerifiedMFATypes()
 	} else {
 		//user does not exist, we need to register it
 
@@ -571,7 +573,11 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 	}
 
 	now := time.Now().UTC()
-	stateExpires := now.Add(time.Minute * time.Duration(loginStateDuration))
+	var stateExpires *time.Time
+	if state != "" {
+		stateExpireTime := now.Add(time.Minute * time.Duration(loginStateDuration))
+		stateExpires = &stateExpireTime
+	}
 	var forceExpires *time.Time
 	if appType.Application.MaxLoginSessionDuration != nil {
 		forceLogoutTime := now.Add(time.Duration(*appType.Application.MaxLoginSessionDuration) * time.Hour)
@@ -581,13 +587,13 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 	loginSession := model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType,
 		AppType: appType, Anonymous: anonymous, Identifier: sub, AccountAuthType: accountAuthType,
 		Device: device, IPAddress: ipAddress, AccessToken: accessToken, RefreshTokens: []string{refreshToken}, Params: params,
-		State: state, StateExpires: &stateExpires, Expires: *expires, ForceExpires: forceExpires, DateCreated: now}
+		State: state, StateExpires: stateExpires, Expires: *expires, ForceExpires: forceExpires, DateCreated: now}
 
 	return &loginSession, nil
 }
 
-func (a *Auth) deleteLoginSession(sessionID string, l *logs.Log) {
-	err := a.storage.DeleteLoginSession(nil, sessionID)
+func (a *Auth) deleteLoginSession(context storage.TransactionContext, sessionID string, l *logs.Log) {
+	err := a.storage.DeleteLoginSession(context, sessionID)
 	if err != nil {
 		l.WarnAction(logutils.ActionDelete, model.TypeLoginSession, err)
 	}

@@ -572,6 +572,7 @@ func (sa *Adapter) DeleteExpiredSessions(now *time.Time) error {
 	filter := bson.D{primitive.E{Key: "$or", Value: []interface{}{
 		bson.M{"expires": bson.M{"$lte": now}},
 		bson.M{"force_expires": bson.M{"$lte": now}},
+		bson.M{"state_expires": bson.M{"$lte": now}},
 	}}}
 
 	_, err := sa.db.loginsSessions.DeleteMany(filter, nil)

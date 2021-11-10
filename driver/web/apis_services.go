@@ -113,7 +113,7 @@ func (h ServicesApisHandler) authLoginMFA(l *logs.Log, r *http.Request, claims *
 
 	message, loginSession, err := h.coreAPIs.Auth.LoginMFA(mfaData.ApiKey, mfaData.AccountId, mfaData.SessionId, mfaData.Identifier, string(mfaData.Type), mfaData.Code, mfaData.State, l)
 	if message != nil {
-		return l.HttpResponseError(*message, err, http.StatusUnauthorized, true)
+		return l.HttpResponseError(*message, err, http.StatusUnauthorized, false)
 	}
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)

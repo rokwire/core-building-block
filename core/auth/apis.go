@@ -387,6 +387,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 		}
 
 		if loginSession.MfaAttempts >= maxMfaAttempts {
+			a.deleteLoginSession(context, sessionID, l)
 			message = fmt.Sprintf("max mfa attempts reached: %d", maxMfaAttempts)
 			return errors.New(message)
 		}
@@ -421,6 +422,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 			return errors.ErrorData(logutils.StatusInvalid, "login state", errFields)
 		}
 		if loginSession.StateExpires != nil && time.Now().UTC().After(*loginSession.StateExpires) {
+			a.deleteLoginSession(context, sessionID, l)
 			message = "expired state"
 			return errors.ErrorData(logutils.StatusInvalid, "expired state", nil)
 		}
@@ -451,7 +453,6 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 
 	err = a.storage.PerformTransaction(transaction)
 	if err != nil {
-		a.deleteLoginSession(sessionID, l)
 		if message != "" {
 			return &message, nil, errors.WrapErrorAction("verifying", model.TypeMFAType, nil, err)
 		}
