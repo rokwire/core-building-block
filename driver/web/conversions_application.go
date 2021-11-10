@@ -4,8 +4,6 @@ import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"regexp"
-
-	"github.com/rokwire/logging-library-go/errors"
 )
 
 //Application
@@ -82,10 +80,29 @@ func appConfigFromDef(requestData Def.ReqCreateApplicationConfigsRequest) (map[s
 		"upgrade":                 requestData.Upgrade,
 	}
 
-	version := requestData.MobileAppVersion
+	version := requestData.Version
+
+	versionNumbers := createVersionNumbers(version)
+	if versionNumbers != nil {
+		configData["versionNumbers"] = versionNumbers
+	}
+
+	return configData, nil
+}
+
+func checkAppVersionFormat(version string) bool {
+	valid := regexp.MustCompile(`^\d+.\d+.\d+$`)
+	if !valid.MatchString(version) {
+		return false
+	}
+
+	return true
+}
+
+func createVersionNumbers(version string) map[string]string {
 	validVersionRegex := regexp.MustCompile(`^(?P<major>\d+).(?P<minor>\d+).(?P<patch>\d+)$`)
 	if !validVersionRegex.MatchString(version) {
-		return nil, errors.New("MobileAppVersion query parameter is not valid, please use major.minor.patch format")
+		return nil
 	}
 
 	n1 := validVersionRegex.SubexpNames()
@@ -100,16 +117,6 @@ func appConfigFromDef(requestData Def.ReqCreateApplicationConfigsRequest) (map[s
 		"minor": md["minor"],
 		"patch": md["patch"],
 	}
-	configData["version_numbers"] = versionNumbers
 
-	return configData, nil
-}
-
-func checkAppVersionFormat(version string) bool {
-	valid := regexp.MustCompile(`^\d+.\d+.\d+$`)
-	if !valid.MatchString(version) {
-		return false
-	}
-
-	return true
+	return versionNumbers
 }

@@ -618,7 +618,7 @@ paths:
                 items:
                   required:
                     - app_id
-                    - mobile_app_version
+                    - version
                     - data
                   type: object
                   properties:
@@ -626,7 +626,7 @@ paths:
                       type: string
                     app_id:
                       type: string
-                    mobile_app_version:
+                    version:
                       type: string
                       description: unique and is empty or conforms major.minor.patch format
                     data:
@@ -1579,28 +1579,9 @@ paths:
             schema:
               $ref: '#/components/schemas/_req_create_Application-Configs_Request'
             examples:
-              withoutSecretKeys:
-                value:
-                  mobile_app_version: 1.0.1
-                  app_id: '9770'
-                  platformBuildingBlocks:
-                    appconfig: 'https://api.rokwire.illinois.edu/app/configs'
-                    profile: 'https://api.rokwire.illinois.edu/profiles'
-                  thirdPartyServices:
-                    facebook: 'https://facebook.com'
-                    instagram_url: 'https://instagram.com'
-                  otherUniversityServices:
-                    illini_cash_base_url: 'https://shibtest.housing.illinois.edu/MobileAppWS/api'
-                  secretKeys: ''
-                  upgrade:
-                    available_version: 1.0.2
-                    required_version: 1.0.0
-                    url:
-                      android: 'market://details?id=com.dropbox.android'
-                      ios: 'itms-apps://itunes.apple.com/us/app/apple-store/id327630330'
               withSecretKeys:
                 value:
-                  mobile_app_version: 1.0.2
+                  version: 1.0.2
                   app_id: '9770'
                   platformBuildingBlocks:
                     appconfig: 'https://api.rokwire.illinois.edu/app/configs'
@@ -1702,7 +1683,7 @@ paths:
               schema:
                 required:
                   - app_id
-                  - mobile_app_version
+                  - version
                   - data
                 type: object
                 properties:
@@ -1710,7 +1691,7 @@ paths:
                     type: string
                   app_id:
                     type: string
-                  mobile_app_version:
+                  version:
                     type: string
                     description: unique and is empty or conforms major.minor.patch format
                   data:
@@ -3171,7 +3152,7 @@ components:
     _req_create_Application-Configs_Request:
       required:
         - app_id
-        - mobile_app_version
+        - version
         - platformBuildingBlocks
         - thirdPartyServices
         - otherUniversityServices
@@ -3182,7 +3163,7 @@ components:
           type: string
         app_id:
           type: string
-        mobile_app_version:
+        version:
           type: string
           description: unique and is empty or conforms major.minor.patch format
         platformBuildingBlocks:

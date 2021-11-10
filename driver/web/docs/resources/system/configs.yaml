@@ -14,28 +14,9 @@ post:
         schema:
           $ref: "../../schemas/apis/system/appconfigs/request/Request.yaml"
         examples:
-          withoutSecretKeys:
-            value:
-              mobile_app_version: "1.0.1"
-              app_id: "9770"
-              platformBuildingBlocks:
-                appconfig: https://api.rokwire.illinois.edu/app/configs
-                profile: https://api.rokwire.illinois.edu/profiles
-              thirdPartyServices:
-                facebook: https://facebook.com
-                instagram_url: https://instagram.com
-              otherUniversityServices:
-                illini_cash_base_url: https://shibtest.housing.illinois.edu/MobileAppWS/api
-              secretKeys: ""
-              upgrade:
-                available_version: "1.0.2"
-                required_version: "1.0.0"
-                "url":
-                  "android": "market://details?id=com.dropbox.android"
-                  "ios": "itms-apps://itunes.apple.com/us/app/apple-store/id327630330"
           withSecretKeys:
             value:
-              mobile_app_version: "1.0.2"
+              version: "1.0.2"
               app_id: "9770"
               platformBuildingBlocks:
                 appconfig: https://api.rokwire.illinois.edu/app/configs

@@ -208,7 +208,7 @@ func (app *application) sysGetAppConfig(id string) (*model.ApplicationConfigs, e
 func (app *application) sysCreateAppConfig(version string, appID string, data map[string]interface{}) (*model.ApplicationConfigs, error) {
 	now := time.Now()
 	appConfigID, _ := uuid.NewUUID()
-	applicationConfig := model.ApplicationConfigs{ID: appConfigID.String(), AppID: appID, MobileAppVersion: version, Data: data, DateCreated: now}
+	applicationConfig := model.ApplicationConfigs{ID: appConfigID.String(), AppID: appID, Version: version, Data: data, DateCreated: now}
 
 	insertedConfig, err := app.storage.InsertAppConfig(applicationConfig)
 	if err != nil {

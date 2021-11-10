@@ -503,11 +503,8 @@ type ReqCreateOrganizationRequestType string
 
 // ReqCreateApplicationConfigsRequest defines model for _req_create_Application-Configs_Request.
 type ReqCreateApplicationConfigsRequest struct {
-	AppId string  `json:"app_id"`
-	Id    *string `json:"id,omitempty"`
-
-	// unique and is empty or conforms major.minor.patch format
-	MobileAppVersion        string                 `json:"mobile_app_version"`
+	AppId                   string                 `json:"app_id"`
+	Id                      *string                `json:"id,omitempty"`
 	OtherUniversityServices map[string]interface{} `json:"otherUniversityServices"`
 	PlatformBuildingBlocks  map[string]interface{} `json:"platformBuildingBlocks"`
 	SecretKeys              string                 `json:"secretKeys"`
@@ -520,6 +517,9 @@ type ReqCreateApplicationConfigsRequest struct {
 			Ios     *string `json:"ios,omitempty"`
 		} `json:"url,omitempty"`
 	} `json:"upgrade,omitempty"`
+
+	// unique and is empty or conforms major.minor.patch format
+	Version string `json:"version"`
 }
 
 // ReqCreateApplicationRequest defines model for _req_create_Application_Request.

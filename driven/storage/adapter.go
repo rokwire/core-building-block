@@ -1227,12 +1227,36 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 }
 
 //FindAppConfigs finds appconfigs
-func (sa *Adapter) FindAppConfigs(appID string, version string) ([]model.ApplicationConfigs, error) {
+func (sa *Adapter) FindAppConfigs(appID string, versionNumbers map[string]string) ([]model.ApplicationConfigs, error) {
 	filter := bson.D{}
-	var result []model.ApplicationConfigs
-	if version != "" {
-		filter = append(filter, primitive.E{Key: "mobile_app_version", Value: version})
+
+	if versionNumbers != nil {
+		major, _ := strconv.ParseInt(versionNumbers["major"], 10, 64)
+		minor, _ := strconv.ParseInt(versionNumbers["minor"], 10, 64)
+		patch, _ := strconv.ParseInt(versionNumbers["patch"], 10, 64)
+
+		filter = bson.D{
+			primitive.E{Key: "$or", Value: []interface{}{
+				bson.D{
+					primitive.E{Key: "version_numbers.major", Value: bson.M{"$lt": major}},
+				},
+				primitive.E{Key: "$and", Value: []interface{}{
+					bson.D{primitive.E{Key: "version_number.major", Value: bson.M{"$eq": major}}},
+					bson.D{primitive.E{Key: "version_number.minor", Value: bson.M{"$lt": minor}}},
+				}},
+				primitive.E{Key: "$and", Value: []interface{}{
+					bson.D{primitive.E{Key: "version_number.major", Value: bson.M{"$eq": major}}},
+					bson.D{primitive.E{Key: "version_number.minor", Value: bson.M{"$eq": minor}}},
+					bson.D{primitive.E{Key: "version_number.patch", Value: bson.M{"$lte": patch}}},
+				}},
+			}},
+		}
 	}
+
+	var result []model.ApplicationConfigs
+	// if version != "" {
+	// 	filter = append(filter, primitive.E{Key: "version", Value: version})
+	// }
 	if appID != "" {
 		filter = append(filter, primitive.E{Key: "app_id", Value: appID})
 	}
@@ -1283,7 +1307,7 @@ func (sa *Adapter) UpdateAppConfig(ID string, version string, data map[string]in
 	updatAppConfigFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	updateItem := bson.D{primitive.E{Key: "date_updated", Value: now}}
 	if version != "" {
-		updateItem = append(updateItem, primitive.E{Key: "mobile_app_version", Value: version})
+		updateItem = append(updateItem, primitive.E{Key: "version", Value: version})
 	}
 	if data != nil {
 		updateItem = append(updateItem, primitive.E{Key: "data", Value: data})

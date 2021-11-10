@@ -1,38 +1,15 @@
 required:
   - app_id
-  - mobile_app_version
-  - platformBuildingBlocks
-  - thirdPartyServices
-  - otherUniversityServices
-  - secretKeys
+  - version
+  - data
 type: object
 properties:
   id:
     type: string
   app_id:
     type: string
-  mobile_app_version:
+  version:
     type: string
     description: unique and is empty or conforms major.minor.patch format
-  platformBuildingBlocks:
+  data:
     type: object
-  thirdPartyServices:
-    type: object
-  otherUniversityServices:
-    type: object
-  secretKeys:
-    type: string
-  upgrade:
-    type: object
-    properties:
-      available_version:
-        type: string
-      required_version:
-        type: string
-      url:
-        type: object
-        properties:
-          android:
-            type: string
-          ios:
-            type: string

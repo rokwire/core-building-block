@@ -91,8 +91,8 @@ func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[st
 	return s.app.serUpdateAccountPreferences(id, preferences)
 }
 
-func (s *servicesImpl) SerGetAppConfigs(appID string, version string) ([]model.ApplicationConfigs, error) {
-	return s.app.serGetAppConfigs(appID, version)
+func (s *servicesImpl) SerGetAppConfigs(appID string, versionNumbers map[string]string) ([]model.ApplicationConfigs, error) {
+	return s.app.serGetAppConfigs(appID, versionNumbers)
 }
 
 ///
@@ -195,8 +195,8 @@ func (s *systemImpl) SysCreateAppOrgRole(name string, appOrgID string, descripti
 	return s.app.sysCreateAppOrgRole(name, appOrgID, description, permissionNames)
 }
 
-func (s *systemImpl) SysGetAppConfigs(appID string, version string) ([]model.ApplicationConfigs, error) {
-	return s.app.serGetAppConfigs(appID, version)
+func (s *systemImpl) SysGetAppConfigs(appID string, versionNumbers map[string]string) ([]model.ApplicationConfigs, error) {
+	return s.app.serGetAppConfigs(appID, versionNumbers)
 }
 
 func (s *systemImpl) SysGetAppConfig(id string) (*model.ApplicationConfigs, error) {
