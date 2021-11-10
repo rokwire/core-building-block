@@ -230,10 +230,13 @@ type Application struct {
 
 // ApplicationFields defines model for ApplicationFields.
 type ApplicationFields struct {
-	Id               string `json:"id"`
-	MultiTenant      *bool  `json:"multi_tenant,omitempty"`
-	Name             string `json:"name"`
-	RequiresOwnUsers *bool  `json:"requires_own_users,omitempty"`
+	Id string `json:"id"`
+
+	// The maximum allowed duration (in hours) of a user's login session for this application
+	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
+	MultiTenant             *bool  `json:"multi_tenant,omitempty"`
+	Name                    string `json:"name"`
+	RequiresOwnUsers        *bool  `json:"requires_own_users,omitempty"`
 }
 
 // ApplicationOrganization defines model for ApplicationOrganization.
@@ -508,9 +511,12 @@ type ReqCreateApplicationRequest struct {
 		Name       *string   `json:"name,omitempty"`
 		Versions   *[]string `json:"versions,omitempty"`
 	} `json:"application_types,omitempty"`
-	MultiTenant      bool   `json:"multi_tenant"`
-	Name             string `json:"name"`
-	RequiresOwnUsers bool   `json:"requires_own_users"`
+
+	// The maximum allowed duration (in hours) of a user's login session for this application
+	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
+	MultiTenant             bool   `json:"multi_tenant"`
+	Name                    string `json:"name"`
+	RequiresOwnUsers        bool   `json:"requires_own_users"`
 }
 
 // ReqGetApplicationRequest defines model for _req_get_Application_Request.
@@ -673,9 +679,12 @@ type ResAuthorizeServiceResponseTokenType string
 type ResGetApplicationsResponse struct {
 	ApplicationTypes *ApplicationTypeFields `json:"application_types,omitempty"`
 	Id               string                 `json:"id"`
-	MultiTenant      bool                   `json:"multi_tenant"`
-	Name             string                 `json:"name"`
-	RequiresOwnUsers bool                   `json:"requires_own_users"`
+
+	// The maximum allowed duration (in hours) of a user's login session for this application
+	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
+	MultiTenant             bool   `json:"multi_tenant"`
+	Name                    string `json:"name"`
+	RequiresOwnUsers        bool   `json:"requires_own_users"`
 }
 
 // ResGetOrganizationsResponse defines model for _res_get_Organizations_Response.

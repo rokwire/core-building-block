@@ -228,6 +228,35 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 	email := ""
 	phone := ""
 	permissions := []string{}
+
+	// - generate new params and update the account if needed(if external auth type)
+	if loginSession.AuthType.IsExternal {
+		extAuthType, err := a.getExternalAuthTypeImpl(loginSession.AuthType)
+		if err != nil {
+			l.Infof("error getting external auth type on refresh - %s", refreshToken)
+			return nil, errors.WrapErrorAction("error getting external auth type on refresh", "", nil, err)
+		}
+
+		externalUser, refreshedData, err := extAuthType.refresh(loginSession.Params, loginSession.AuthType, loginSession.AppType, loginSession.AppOrg, l)
+		if err != nil {
+			l.Infof("error refreshing external auth type on refresh - %s", refreshToken)
+			return nil, errors.WrapErrorAction("error refreshing external auth type on refresh", "", nil, err)
+		}
+
+		//check if need to update the account
+		authType, err := a.storage.FindAuthType(loginSession.AuthType.ID)
+		if err != nil {
+			l.Infof("error getting auth type - %s", refreshToken)
+			return nil, errors.WrapErrorAction("error getting auth type", "", nil, err)
+		}
+		err = a.updateAccountIfNeeded(*loginSession.AccountAuthType, *externalUser, *authType, loginSession.AppOrg)
+		if err != nil {
+			return nil, errors.WrapErrorAction("update account if needed on refresh", "", nil, err)
+		}
+
+		loginSession.Params = refreshedData //assing the refreshed data
+	}
+
 	if !anonymous {
 		accountAuthType := loginSession.AccountAuthType
 		if accountAuthType == nil {
@@ -239,7 +268,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, email, phone, "rokwire", orgID, appID, authType, nil, anonymous)
+	claims := a.getStandardClaims(sub, uid, email, phone, "rokwire", orgID, appID, authType, nil, anonymous, false)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
@@ -258,22 +287,6 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 	loginSession.RefreshTokens = append(loginSession.RefreshTokens, refreshToken) //set the generated token
 	// - update the expired field
 	loginSession.Expires = *expires
-	// - generate new params(if external auth type)
-	if loginSession.AuthType.IsExternal {
-		extAuthType, err := a.getExternalAuthTypeImpl(loginSession.AuthType)
-		if err != nil {
-			l.Infof("error getting external auth type on refresh - %s", refreshToken)
-			return nil, errors.WrapErrorAction("error getting external auth type on refresh", "", nil, err)
-		}
-
-		refreshedData, err := extAuthType.refresh(loginSession.Params, loginSession.AuthType, loginSession.AppType, loginSession.AppOrg, l)
-		if err != nil {
-			l.Infof("error refreshing external auth type on refresh - %s", refreshToken)
-			return nil, errors.WrapErrorAction("error refreshing external auth type on refresh", "", nil, err)
-		}
-
-		loginSession.Params = refreshedData //assing the refreshed data
-	}
 
 	//store the updated session
 	now := time.Now()
@@ -428,7 +441,7 @@ func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 	aud := strings.Join(services, ",")
 	scope := strings.Join(scopeStrings, " ")
 
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, nil, claims.Anonymous)
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, nil, claims.Anonymous, claims.Authenticated)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 

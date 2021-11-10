@@ -6,7 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
 ### Added
+- Add authentication required auth wrapper [#250](https://github.com/rokwire/core-building-block/issues/250)
+
+## [1.12.0] - 2021-11-10
+### Added
+- Login session duration policies [#258](https://github.com/rokwire/core-building-block/issues/258)
+- Handle groups mappings from OIDC integration [#276](https://github.com/rokwire/core-building-block/issues/276)
 - Expose get account services API [#217](https://github.com/rokwire/core-building-block/issues/217)
 - Define unified responses for the APIs [#286](https://github.com/rokwire/core-building-block/issues/286)
 - Add refresh token abuse detection to login sessions [#257](https://github.com/rokwire/core-building-block/issues/257)
@@ -14,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Limit number of active login sessions per account [#256](https://github.com/rokwire/core-building-block/issues/256)
 - Expose transaction interface on storage adapter [#285](https://github.com/rokwire/core-building-block/issues/285)
+
+### Fixed
+- 502 error on login when missing preferences [#299](https://github.com/rokwire/core-building-block/issues/299)
+
 
 ## [1.11.0] - 2021-11-04
 ### Added
@@ -143,7 +154,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.11.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.12.0...HEAD
+[1.12.0]: https://github.com/rokwire/core-building-block/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/rokwire/core-building-block/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/rokwire/core-building-block/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/rokwire/core-building-block/compare/v1.8.0...v1.9.0
