@@ -163,7 +163,7 @@ func (app *application) admGetTestModel() string {
 }
 
 func (app *application) admGetApplicationOrgRoles() ([]model.AppOrgRole, error) {
-	getAppOrgRoles, err := app.storage.LoadAppOrgRoles()
+	getAppOrgRoles, err := app.storage.FindAppOrgRolesList()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err)
 	}

@@ -967,8 +967,8 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 	return errors.New(logutils.Unimplemented)
 }
 
-//LoadAppOrgRoles loads all application_organization_roles
-func (sa *Adapter) LoadAppOrgRoles() ([]model.AppOrgRole, error) {
+//FindAppOrgRolesList loads all application_organization_roles
+func (sa *Adapter) FindAppOrgRolesList() ([]model.AppOrgRole, error) {
 	filter := bson.D{}
 	var result []model.AppOrgRole
 	err := sa.db.applicationsOrganizationsRoles.Find(filter, &result, nil)
@@ -1387,33 +1387,34 @@ func (sa *Adapter) FindApplicationTypeByIdentifier(identifier string) (*model.Ap
 
 //LoadApplicationsOrganizations loads all applications organizations
 func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error) {
-	/*	filter := bson.D{}
-		var list []applicationOrganization
-		err := sa.db.applicationsOrganizations.Find(filter, &list, nil)
+	filter := bson.D{}
+	var list []applicationOrganization
+	err := sa.db.applicationsOrganizations.Find(filter, &list, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
+	if len(list) == 0 {
+		//no data
+		return nil, nil
+	}
+
+	result := make([]model.ApplicationOrganization, len(list))
+	for i, item := range list {
+		//we have organizations and applications cached
+		application, err := sa.getCachedApplication(item.AppID)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 		}
-		if len(list) == 0 {
-			//no data
-			return nil, nil
+		organization, err := sa.getCachedOrganization(item.OrgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 		}
 
-		result := make([]model.ApplicationOrganization, len(list))
-		for i, item := range list {
-			//we have organizations and applications cached
-			application, err := sa.getCachedApplication(item.AppID)
-			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-			}
-			organization, err := sa.getCachedOrganization(item.OrgID)
-			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
-			}
-
-			result[i] = applicationOrganizationFromStorage(item, *application, *organization)
-		}
-		return result, nil*/
+		result[i] = applicationOrganizationFromStorage(item, *application, *organization)
+	}
+	return result, nil
 	return nil, nil
+
 }
 
 //FindApplicationOrganizations finds application organization
