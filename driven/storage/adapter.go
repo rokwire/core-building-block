@@ -528,7 +528,10 @@ func (sa *Adapter) DeleteLoginSession(context TransactionContext, id string) err
 
 //DeleteExpiredSessions deletes expired sessions
 func (sa *Adapter) DeleteExpiredSessions(now *time.Time) error {
-	filter := bson.M{"expires": bson.M{"$lte": now}}
+	filter := bson.D{primitive.E{Key: "$or", Value: []interface{}{
+		bson.M{"expires": bson.M{"$lte": now}},
+		bson.M{"force_expires": bson.M{"$lte": now}},
+	}}}
 
 	_, err := sa.db.loginsSessions.DeleteMany(filter, nil)
 	if err != nil {
