@@ -1237,18 +1237,18 @@ func (sa *Adapter) FindAppConfigs(appID string, versionNumbers map[string]string
 
 		filter = bson.D{
 			primitive.E{Key: "$or", Value: []interface{}{
+				primitive.E{Key: "$and", Value: []interface{}{
+					bson.D{primitive.E{Key: "version_numbers.major", Value: bson.M{"$eq": major}}},
+					bson.D{primitive.E{Key: "version_numbers.minor", Value: bson.M{"$eq": minor}}},
+					bson.D{primitive.E{Key: "version_numbers.patch", Value: bson.M{"$lte": patch}}},
+				}},
+				primitive.E{Key: "$and", Value: []interface{}{
+					bson.D{primitive.E{Key: "version_numbers.major", Value: bson.M{"$eq": major}}},
+					bson.D{primitive.E{Key: "version_numbers.minor", Value: bson.M{"$lt": minor}}},
+				}},
 				bson.D{
 					primitive.E{Key: "version_numbers.major", Value: bson.M{"$lt": major}},
 				},
-				primitive.E{Key: "$and", Value: []interface{}{
-					bson.D{primitive.E{Key: "version_number.major", Value: bson.M{"$eq": major}}},
-					bson.D{primitive.E{Key: "version_number.minor", Value: bson.M{"$lt": minor}}},
-				}},
-				primitive.E{Key: "$and", Value: []interface{}{
-					bson.D{primitive.E{Key: "version_number.major", Value: bson.M{"$eq": major}}},
-					bson.D{primitive.E{Key: "version_number.minor", Value: bson.M{"$eq": minor}}},
-					bson.D{primitive.E{Key: "version_number.patch", Value: bson.M{"$lte": patch}}},
-				}},
 			}},
 		}
 	}
@@ -1260,6 +1260,7 @@ func (sa *Adapter) FindAppConfigs(appID string, versionNumbers map[string]string
 	if appID != "" {
 		filter = append(filter, primitive.E{Key: "app_id", Value: appID})
 	}
+	fmt.Printf("filter: %v", filter)
 	err := sa.db.applicationConfigs.Find(filter, &result, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
@@ -1301,13 +1302,13 @@ func (sa *Adapter) InsertAppConfig(appConfig model.ApplicationConfigs) (*model.A
 }
 
 // UpdateAppConfig updates an appconfig
-func (sa *Adapter) UpdateAppConfig(ID string, version string, data map[string]interface{}) error {
+func (sa *Adapter) UpdateAppConfig(ID string, version string, data map[string]interface{}, versionNumbers map[string]string) error {
 	now := time.Now()
 	//TODO - use pointers and update only what not nil
 	updatAppConfigFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	updateItem := bson.D{primitive.E{Key: "date_updated", Value: now}}
 	if version != "" {
-		updateItem = append(updateItem, primitive.E{Key: "version", Value: version})
+		updateItem = append(updateItem, primitive.E{Key: "version", Value: version}, primitive.E{Key: "version_numbers", Value: versionNumbers})
 	}
 	if data != nil {
 		updateItem = append(updateItem, primitive.E{Key: "data", Value: data})

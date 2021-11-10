@@ -203,12 +203,12 @@ func (s *systemImpl) SysGetAppConfig(id string) (*model.ApplicationConfigs, erro
 	return s.app.sysGetAppConfig(id)
 }
 
-func (s *systemImpl) SysCreateAppConfig(version string, appID string, data map[string]interface{}) (*model.ApplicationConfigs, error) {
-	return s.app.sysCreateAppConfig(version, appID, data)
+func (s *systemImpl) SysCreateAppConfig(version string, appID string, data map[string]interface{}, versionNumbers map[string]string) (*model.ApplicationConfigs, error) {
+	return s.app.sysCreateAppConfig(version, appID, data, versionNumbers)
 }
 
-func (s *systemImpl) SysUpdateAppConfig(id string, version string, data map[string]interface{}) error {
-	return s.app.sysUpdateAppConfig(id, version, data)
+func (s *systemImpl) SysUpdateAppConfig(id string, version string, data map[string]interface{}, versionNumbers map[string]string) error {
+	return s.app.sysUpdateAppConfig(id, version, data, versionNumbers)
 }
 
 func (s *systemImpl) SysDeleteAppConfig(id string) error {

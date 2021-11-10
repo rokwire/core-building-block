@@ -71,25 +71,6 @@ func organizationsToDef(items []model.Organization) []Def.OrganizationFields {
 	return result
 }
 
-func appConfigFromDef(requestData Def.ReqCreateApplicationConfigsRequest) (map[string]interface{}, error) {
-	configData := map[string]interface{}{
-		"platformBuildingBlocks":  requestData.PlatformBuildingBlocks,
-		"thirdPartyServices":      requestData.ThirdPartyServices,
-		"otherUniversityServices": requestData.OtherUniversityServices,
-		"secretKeys":              requestData.SecretKeys,
-		"upgrade":                 requestData.Upgrade,
-	}
-
-	version := requestData.Version
-
-	versionNumbers := createVersionNumbers(version)
-	if versionNumbers != nil {
-		configData["versionNumbers"] = versionNumbers
-	}
-
-	return configData, nil
-}
-
 func checkAppVersionFormat(version string) bool {
 	valid := regexp.MustCompile(`^\d+.\d+.\d+$`)
 	if !valid.MatchString(version) {

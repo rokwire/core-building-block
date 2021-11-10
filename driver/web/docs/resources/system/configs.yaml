@@ -1,5 +1,5 @@
 post:
-  deprecated: true
+  # deprecated: true
   tags:
   - System
   summary: Creates mobile app configuration
@@ -18,21 +18,22 @@ post:
             value:
               version: "1.0.2"
               app_id: "9770"
-              platformBuildingBlocks:
-                appconfig: https://api.rokwire.illinois.edu/app/configs
-                profile: https://api.rokwire.illinois.edu/profiles
-              thirdPartyServices:
-                facebook: https://facebook.com
-                instagram_url: https://instagram.com
-              otherUniversityServices:
-                illini_cash_base_url: https://shibtest.housing.illinois.edu/MobileAppWS/api
-              secretKeys: "123abc456"
-              upgrade:
-                available_version: "1.0.2"
-                required_version: "1.0.0"
-                "url":
-                  "android": "market://details?id=com.dropbox.android"
-                  "ios": "itms-apps://itunes.apple.com/us/app/apple-store/id327630330"
+              data:
+                platformBuildingBlocks:
+                  appconfig: https://api.rokwire.illinois.edu/app/configs
+                  profile: https://api.rokwire.illinois.edu/profiles
+                thirdPartyServices:
+                  facebook: https://facebook.com
+                  instagram_url: https://instagram.com
+                otherUniversityServices:
+                  illini_cash_base_url: https://shibtest.housing.illinois.edu/MobileAppWS/api
+                secretKeys: "123abc456"
+                upgrade:
+                  available_version: "1.0.2"
+                  required_version: "1.0.0"
+                  "url":
+                    "android": "market://details?id=com.dropbox.android"
+                    "ios": "itms-apps://itunes.apple.com/us/app/apple-store/id327630330"
     required: true
   responses:
     200:
@@ -49,7 +50,7 @@ post:
     500:
       description: Internal error
 get:
-  deprecated: true
+  # deprecated: true
   tags:
   - System
   summary: Reads mobile app configuration

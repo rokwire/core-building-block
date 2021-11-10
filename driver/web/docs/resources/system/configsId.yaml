@@ -1,5 +1,5 @@
 get:
-  deprecated: true
+  # deprecated: true
   tags:
   - System
   summary: Reads mobile app configuration by given id
@@ -32,7 +32,7 @@ get:
     500:
       description: Internal error
 put:
-  deprecated: true
+  # deprecated: true
   tags:
   - System
   summary: Updates mobile app configuration
@@ -73,7 +73,7 @@ put:
     500:
       description: Internal error
 delete:
-  deprecated: true
+  # deprecated: true
   tags:
   - System
   summary: Deletes mobile app configuration

@@ -1564,7 +1564,6 @@ paths:
           description: Internal error
   /system/app/configs:
     post:
-      deprecated: true
       tags:
         - System
       summary: Creates mobile app configuration
@@ -1583,21 +1582,22 @@ paths:
                 value:
                   version: 1.0.2
                   app_id: '9770'
-                  platformBuildingBlocks:
-                    appconfig: 'https://api.rokwire.illinois.edu/app/configs'
-                    profile: 'https://api.rokwire.illinois.edu/profiles'
-                  thirdPartyServices:
-                    facebook: 'https://facebook.com'
-                    instagram_url: 'https://instagram.com'
-                  otherUniversityServices:
-                    illini_cash_base_url: 'https://shibtest.housing.illinois.edu/MobileAppWS/api'
-                  secretKeys: 123abc456
-                  upgrade:
-                    available_version: 1.0.2
-                    required_version: 1.0.0
-                    url:
-                      android: 'market://details?id=com.dropbox.android'
-                      ios: 'itms-apps://itunes.apple.com/us/app/apple-store/id327630330'
+                  data:
+                    platformBuildingBlocks:
+                      appconfig: 'https://api.rokwire.illinois.edu/app/configs'
+                      profile: 'https://api.rokwire.illinois.edu/profiles'
+                    thirdPartyServices:
+                      facebook: 'https://facebook.com'
+                      instagram_url: 'https://instagram.com'
+                    otherUniversityServices:
+                      illini_cash_base_url: 'https://shibtest.housing.illinois.edu/MobileAppWS/api'
+                    secretKeys: 123abc456
+                    upgrade:
+                      available_version: 1.0.2
+                      required_version: 1.0.0
+                      url:
+                        android: 'market://details?id=com.dropbox.android'
+                        ios: 'itms-apps://itunes.apple.com/us/app/apple-store/id327630330'
         required: true
       responses:
         '200':
@@ -1614,7 +1614,6 @@ paths:
         '500':
           description: Internal error
     get:
-      deprecated: true
       tags:
         - System
       summary: Reads mobile app configuration
@@ -1658,7 +1657,6 @@ paths:
           description: Internal error
   '/system/app/configs/{id}':
     get:
-      deprecated: true
       tags:
         - System
       summary: Reads mobile app configuration by given id
@@ -1705,7 +1703,6 @@ paths:
         '500':
           description: Internal error
     put:
-      deprecated: true
       tags:
         - System
       summary: Updates mobile app configuration
@@ -1746,7 +1743,6 @@ paths:
         '500':
           description: Internal error
     delete:
-      deprecated: true
       tags:
         - System
       summary: Deletes mobile app configuration
@@ -3153,10 +3149,7 @@ components:
       required:
         - app_id
         - version
-        - platformBuildingBlocks
-        - thirdPartyServices
-        - otherUniversityServices
-        - secretKeys
+        - data
       type: object
       properties:
         id:
@@ -3166,28 +3159,8 @@ components:
         version:
           type: string
           description: unique and is empty or conforms major.minor.patch format
-        platformBuildingBlocks:
+        data:
           type: object
-        thirdPartyServices:
-          type: object
-        otherUniversityServices:
-          type: object
-        secretKeys:
-          type: string
-        upgrade:
-          type: object
-          properties:
-            available_version:
-              type: string
-            required_version:
-              type: string
-            url:
-              type: object
-              properties:
-                android:
-                  type: string
-                ios:
-                  type: string
     _req_update_Application-Configs_Request:
       $ref: '#/components/schemas/_req_create_Application-Configs_Request'
     _req_account-permissions_Request:
