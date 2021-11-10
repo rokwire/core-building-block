@@ -1033,6 +1033,22 @@ func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 	return errors.New(logutils.Unimplemented)
 }
 
+func (sa *Adapter) FindAppOrgGroupsList() ([]model.AppOrgGroup, error) {
+	filter := bson.D{}
+	var result []model.AppOrgGroup
+	err := sa.db.applicationsOrganizationsGroups.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+	}
+
+	if len(result) == 0 {
+		//no data
+		return make([]model.AppOrgGroup, 0), nil
+	}
+
+	return result, nil
+}
+
 //LoadAPIKeys finds all api key documents in the DB
 func (sa *Adapter) LoadAPIKeys() ([]model.APIKey, error) {
 	filter := bson.D{}
@@ -1413,8 +1429,6 @@ func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganizat
 		result[i] = applicationOrganizationFromStorage(item, *application, *organization)
 	}
 	return result, nil
-	return nil, nil
-
 }
 
 //FindApplicationOrganizations finds application organization
