@@ -254,8 +254,8 @@ type Storage interface {
 	InsertLoginSession(context storage.TransactionContext, session model.LoginSession) error
 	FindLoginSessions(context storage.TransactionContext, identifier string) ([]model.LoginSession, error)
 	FindLoginSession(refreshToken string) (*model.LoginSession, error)
-	FindAndUpdateLoginSession(id string) (*model.LoginSession, error)
-	UpdateLoginSession(loginSession model.LoginSession) error
+	FindAndUpdateLoginSession(context storage.TransactionContext, id string) (*model.LoginSession, error)
+	UpdateLoginSession(context storage.TransactionContext, loginSession model.LoginSession) error
 	DeleteLoginSession(context storage.TransactionContext, id string) error
 	DeleteExpiredSessions(now *time.Time) error
 
@@ -275,7 +275,7 @@ type Storage interface {
 	InsertCredential(creds *model.Credential) error
 
 	//MFA
-	FindMFAType(accountID string, identifier string, mfaType string) (*model.MFAType, error)
+	FindMFAType(context storage.TransactionContext, accountID string, identifier string, mfaType string) (*model.MFAType, error)
 	FindMFATypes(accountID string) ([]model.MFAType, error)
 	InsertMFAType(context storage.TransactionContext, mfa *model.MFAType, accountID string) error
 	UpdateMFAType(context storage.TransactionContext, mfa *model.MFAType, accountID string) error

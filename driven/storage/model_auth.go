@@ -29,6 +29,7 @@ type loginSession struct {
 
 	State        *string    `bson:"state,omitempty"`
 	StateExpires *time.Time `bson:"state_expires,omitempty"`
+	MfaAttempts  *int       `bson:"mfa_attempts,omitempty"`
 
 	Expires      time.Time  `bson:"expires"`
 	ForceExpires *time.Time `bson:"force_expires,omitempty"`

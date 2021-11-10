@@ -471,12 +471,12 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 }
 
 //FindAndUpdateLoginSession finds and updates a login session
-func (sa *Adapter) FindAndUpdateLoginSession(id string) (*model.LoginSession, error) {
+func (sa *Adapter) FindAndUpdateLoginSession(context TransactionContext, id string) (*model.LoginSession, error) {
 	//find loggin session
 	filter := bson.D{primitive.E{Key: "_id", Value: id}}
 	update := bson.D{
-		primitive.E{Key: "$unset", Value: bson.D{
-			primitive.E{Key: "state", Value: ""},
+		primitive.E{Key: "$inc", Value: bson.D{
+			primitive.E{Key: "mfa_attempts", Value: 1},
 		}},
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
@@ -486,9 +486,15 @@ func (sa *Adapter) FindAndUpdateLoginSession(id string) (*model.LoginSession, er
 	opts.SetReturnDocument(options.Before)
 
 	var loginSession loginSession
-	err := sa.db.loginsSessions.FindOneAndUpdate(filter, update, &loginSession, &opts)
+	var err error
+	if context != nil {
+		err = sa.db.loginsSessions.FindOneAndUpdateWithContext(context, filter, update, &loginSession, &opts)
+	} else {
+		err = sa.db.loginsSessions.FindOneAndUpdate(filter, update, &loginSession, &opts)
+	}
+
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+		return nil, errors.WrapErrorAction("finding and updating", model.TypeLoginSession, &logutils.FieldArgs{"_id": id}, err)
 	}
 
 	return sa.buildLoginSession(&loginSession)
@@ -522,13 +528,19 @@ func (sa *Adapter) buildLoginSession(ls *loginSession) (*model.LoginSession, err
 }
 
 //UpdateLoginSession updates login session
-func (sa *Adapter) UpdateLoginSession(loginSession model.LoginSession) error {
-	storageLoganSession := loginSessionToStorage(loginSession)
+func (sa *Adapter) UpdateLoginSession(context TransactionContext, loginSession model.LoginSession) error {
+	storageLoginSession := loginSessionToStorage(loginSession)
 
-	filter := bson.D{primitive.E{Key: "_id", Value: storageLoganSession.ID}}
-	err := sa.db.loginsSessions.ReplaceOne(filter, storageLoganSession, nil)
+	filter := bson.D{primitive.E{Key: "_id", Value: storageLoginSession.ID}}
+	var err error
+	if context != nil {
+		err = sa.db.loginsSessions.ReplaceOneWithContext(context, filter, storageLoginSession, nil)
+	} else {
+		err = sa.db.loginsSessions.ReplaceOne(filter, storageLoginSession, nil)
+	}
+
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"_id": storageLoganSession.ID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"_id": storageLoginSession.ID}, err)
 	}
 
 	return nil
@@ -872,7 +884,7 @@ func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
 }
 
 //FindMFAType finds one MFA type for an account
-func (sa *Adapter) FindMFAType(accountID string, identifier string, mfaType string) (*model.MFAType, error) {
+func (sa *Adapter) FindMFAType(context TransactionContext, accountID string, identifier string, mfaType string) (*model.MFAType, error) {
 	filter := bson.D{
 		primitive.E{Key: "_id", Value: accountID},
 		primitive.E{Key: "mfa_types.type", Value: mfaType},
@@ -880,7 +892,13 @@ func (sa *Adapter) FindMFAType(accountID string, identifier string, mfaType stri
 	}
 
 	var account account
-	err := sa.db.accounts.FindOne(filter, &account, nil)
+	var err error
+	if context != nil {
+		err = sa.db.accounts.FindOneWithContext(context, filter, &account, nil)
+	} else {
+		err = sa.db.accounts.FindOne(filter, &account, nil)
+	}
+
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}

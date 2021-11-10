@@ -4,6 +4,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
+	"fmt"
 	"strings"
 	"time"
 
@@ -308,7 +309,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 	//store the updated session
 	now := time.Now()
 	loginSession.DateUpdated = &now
-	err = a.storage.UpdateLoginSession(*loginSession)
+	err = a.storage.UpdateLoginSession(nil, *loginSession)
 	if err != nil {
 		l.Infof("error updating login session on refresh - %s", refreshToken)
 		return nil, errors.WrapErrorAction("error updating login session on refresh", "", nil, err)
@@ -380,9 +381,14 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 	var err error
 	transaction := func(context storage.TransactionContext) error {
 		//1. find mfa type in account
-		loginSession, err = a.storage.FindAndUpdateLoginSession(sessionID)
+		loginSession, err = a.storage.FindAndUpdateLoginSession(context, sessionID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"session_id": sessionID}, err)
+		}
+
+		if loginSession.MfaAttempts >= maxMfaAttempts {
+			message = fmt.Sprintf("max mfa attempts reached: %d", maxMfaAttempts)
+			return errors.New(message)
 		}
 
 		//2. check api key
@@ -393,7 +399,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 
 		//3. find mfa type in account
 		errFields := &logutils.FieldArgs{"account_id": accountID, "type": mfaType}
-		mfa, err := a.storage.FindMFAType(accountID, identifier, mfaType)
+		mfa, err := a.storage.FindMFAType(context, accountID, identifier, mfaType)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, errFields, err)
 		}
@@ -430,6 +436,14 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 				message = *verifyMsg
 			}
 			return errors.WrapErrorAction("verifying", "mfa code", errFields, err)
+		}
+
+		loginSession.State = ""
+		loginSession.StateExpires = nil
+		loginSession.MfaAttempts = 0
+		err = a.storage.UpdateLoginSession(context, *loginSession)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, nil, err)
 		}
 
 		return nil
@@ -583,7 +597,7 @@ func (a *Auth) VerifyMFA(accountID string, identifier string, mfaType string, mf
 	transaction := func(context storage.TransactionContext) error {
 		errFields := &logutils.FieldArgs{"account_id": accountID, "type": mfaType}
 		//1. find mfa type in account
-		mfa, err := a.storage.FindMFAType(accountID, identifier, mfaType)
+		mfa, err := a.storage.FindMFAType(context, accountID, identifier, mfaType)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, errFields, err)
 		}
