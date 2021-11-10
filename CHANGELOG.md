@@ -74,8 +74,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Expose get account admin API [#270] (https://github.com/rokwire/core-building-block/issues/270)
-- Expose get account services API [#217](https://github.com/rokwire/core-building-block/issues/217)
-- Expose get account preferences services API [#206](https://github.com/rokwire/core-building-block/issues/206) 
 - Populate profile data automatically from ROKWIRE 2.0 Profile BB [#185](https://github.com/rokwire/core-building-block/issues/185)
 - Add phone authentication support [#24](https://github.com/rokwire/core-building-block/issues/24)
 - Handle anonymous ID conversion [#204](https://github.com/rokwire/core-building-block/issues/204)
