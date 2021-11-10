@@ -8,7 +8,6 @@ import (
 	"github.com/rokwire/core-auth-library-go/authorization"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 //authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
@@ -30,7 +29,7 @@ type authType interface {
 	getUserIdentifier(creds string) (string, error)
 
 	//checkCredentials checks if the account credentials are valid for the account auth type
-	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error)
+	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error)
 }
 
 //externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
@@ -41,7 +40,7 @@ type externalAuthType interface {
 	//externalLogin logins in the external system and provides the authenticated user
 	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 	//refresh refreshes tokens
-	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (map[string]interface{}, error)
+	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 }
 
 //anonymousAuthType is the interface for authentication for auth types which are anonymous
@@ -179,37 +178,33 @@ type APIs interface {
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
+	PerformTransaction(func(context storage.TransactionContext) error) error
+
 	//AuthTypes
 	LoadAuthTypes() ([]model.AuthType, error)
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
 	//LoginsSessions
-	InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error)
+	InsertLoginSession(context storage.TransactionContext, session model.LoginSession) error
+	FindLoginSessions(context storage.TransactionContext, identifier string) ([]model.LoginSession, error)
 	FindLoginSession(refreshToken string) (*model.LoginSession, error)
 	UpdateLoginSession(loginSession model.LoginSession) error
-	DeleteLoginSession(id string) error
+	DeleteLoginSession(context storage.TransactionContext, id string) error
 	DeleteExpiredSessions(now *time.Time) error
 
 	//Accounts
 	FindAccount(appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
+	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccount(account model.Account) (*model.Account, error)
-	UpdateAccount(account *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
-	DeleteAccount(id string) error
-
-	//AccountAuthTypes
-	UpdateAccountAuthType(item model.AccountAuthType) error
+	SaveAccount(context storage.TransactionContext, account *model.Account) error
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)
 
 	//Credentials
-	// FindCredentialsByID(ID string) (*model.AuthCreds, error)
-	// FindCredentials(orgID string, appID string, authType string, params map[string]interface{}) (*model.AuthCreds, error)
-	// UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCreds) error
-	// InsertCredentials(creds *model.AuthCreds, context mongo.SessionContext) error
 	FindCredential(ID string) (*model.Credential, error)
 	UpdateCredential(creds *model.Credential) error
-	InsertCredential(creds *model.Credential, context mongo.SessionContext) error
+	InsertCredential(creds *model.Credential) error
 
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)
@@ -241,6 +236,16 @@ type Storage interface {
 	//ApplicationsOrganizations
 	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
 	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
+
+	//ApplicationRoles
+	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
+	//AccountRoles
+	UpdateAccountRoles(accountID string, roles []model.AccountRole) error
+
+	//ApplicationGroups
+	FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
+	//AccountGroups
+	UpdateAccountGroups(accountID string, groups []model.AccountGroup) error
 }
 
 //ProfileBuildingBlock is used by auth to communicate with the profile building block.

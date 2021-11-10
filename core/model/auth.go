@@ -50,6 +50,8 @@ const (
 	TypeAPIKey logutils.MessageDataType = "api key"
 	//TypeCreds cred type
 	TypeCreds logutils.MessageDataType = "creds"
+	//TypeIP auth type type
+	TypeIP logutils.MessageDataType = "ip"
 )
 
 //LoginSession represents login session entity
@@ -67,10 +69,10 @@ type LoginSession struct {
 
 	Device Device
 
-	IPAddress    string
-	AccessToken  string
-	RefreshToken string
-	Params       map[string]interface{} //authType-specific set of parameters passed back to client
+	IPAddress     string
+	AccessToken   string
+	RefreshTokens []string
+	Params        map[string]interface{} //authType-specific set of parameters passed back to client
 
 	Expires time.Time
 
@@ -81,6 +83,15 @@ type LoginSession struct {
 //IsExpired says if the sessions is expired
 func (ls LoginSession) IsExpired() bool {
 	return ls.Expires.Before(time.Now())
+}
+
+//CurrentRefreshToken returns the current refresh token (last element of RefreshTokens)
+func (ls LoginSession) CurrentRefreshToken() string {
+	numTokens := len(ls.RefreshTokens)
+	if numTokens <= 0 {
+		return ""
+	}
+	return ls.RefreshTokens[numTokens-1]
 }
 
 //APIKey represents an API key entity
