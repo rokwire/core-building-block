@@ -72,8 +72,7 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "auth handler", nil, err)
 	}
 
-	auth := Auth{servicesAuth: servicesAuth, servicesUserAuth: servicesUserAuth, servicesAuthenticatedAuth: servicesAuthenticatedAuth,
-		adminAuth: adminAuth, encAuth: encAuth, bbsAuth: bbsAuth, systemAuth: systemAuth, logger: logger}
+	auth := Auth{servicesAuth: servicesAuth, servicesUserAuth: servicesUserAuth, servicesAuthenticatedAuth: servicesAuthenticatedAuth, adminAuth: adminAuth, encAuth: encAuth, bbsAuth: bbsAuth, systemAuth: systemAuth, logger: logger}
 
 	return &auth, nil
 }

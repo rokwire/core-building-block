@@ -30,7 +30,8 @@ type loginSession struct {
 	State        *string    `bson:"state,omitempty"`
 	StateExpires *time.Time `bson:"state_expires,omitempty"`
 
-	Expires time.Time `bson:"expires"`
+	Expires      time.Time  `bson:"expires"`
+	ForceExpires *time.Time `bson:"force_expires,omitempty"`
 
 	DateUpdated *time.Time `bson:"date_updated"`
 	DateCreated time.Time  `bson:"date_created"`
