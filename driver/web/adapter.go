@@ -92,7 +92,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/auth/login", we.wrapFunc(we.adminApisHandler.adminLogin, nil)).Methods("POST")
 	adminSubrouter.HandleFunc("/auth/login-url", we.wrapFunc(we.adminApisHandler.adminLoginURL, nil)).Methods("POST")
 	adminSubrouter.HandleFunc("/auth/refresh", we.wrapFunc(we.adminApisHandler.adminRefresh, nil)).Methods("POST")
-	adminSubrouter.HandleFunc("/auth/appOrgRoles", we.wrapFunc(we.adminApisHandler.getApplicationOrgRoles, nil)).Methods("GET")
+	adminSubrouter.HandleFunc("/auth/applicationOrgRoles", we.wrapFunc(we.adminApisHandler.getApplicationOrgRoles, nil)).Methods("GET")
 	///
 
 	///enc ///

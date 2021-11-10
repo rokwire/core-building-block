@@ -206,12 +206,15 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 }
 
 func (h AdminApisHandler) getApplicationOrgRoles(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	appOrgRoles, err := h.coreAPIs.Administration.AdmGetApplicationOrgRoles()
+	getAppOrgRoles, err := h.coreAPIs.Administration.AdmGetApplicationOrgRoles()
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
-
-	response := appOrgRolesToDef(appOrgRoles)
+	var response []Def.AppOrgRoleFields
+	for _, appOrgRole := range getAppOrgRoles {
+		r := appOrgRoleToDef(appOrgRole)
+		response = append(response, r)
+	}
 
 	data, err := json.Marshal(response)
 	if err != nil {
