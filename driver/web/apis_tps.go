@@ -3,7 +3,9 @@ package web
 import (
 	"core-building-block/core"
 	"core-building-block/core/model"
+	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -53,6 +55,50 @@ func (h TPSApisHandler) getAuthKeys(l *logs.Log, r *http.Request, claims *tokena
 	}
 
 	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h TPSApisHandler) getServiceToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqSharedLogin
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("service account auth request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	//creds
+	requestCreds, err := interfaceToJSON(requestData.Creds)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
+	//params
+	requestParams, err := interfaceToJSON(requestData.Params)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
+	}
+
+	message, accessToken, err := h.coreAPIs.Auth.GetServiceToken("", string(requestData.AuthType), requestCreds, requestParams, l)
+	if err != nil {
+		return l.HttpResponseError("Error authenticating", err, http.StatusInternalServerError, true)
+	}
+
+	///prepare response
+
+	//message
+	if message != nil {
+		responseData := &Def.ResSharedLogin{Message: message}
+		respData, err := json.Marshal(responseData)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service account auth response"), nil, err, http.StatusInternalServerError, false)
+		}
+		return l.HttpResponseSuccessJSON(respData)
+	}
+
+	return l.HttpResponseSuccessJSON([]byte(accessToken))
 }
 
 //NewTPSApisHandler creates new tps Handler instance

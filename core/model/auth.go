@@ -32,6 +32,8 @@ const (
 	TypeAuthRefresh logutils.MessageDataType = "auth refresh"
 	//TypeRefreshToken refresh token type
 	TypeRefreshToken logutils.MessageDataType = "refresh token"
+	//TypeServiceAccount service account type
+	TypeServiceAccount logutils.MessageDataType = "service account"
 	//TypeServiceReg service reg type
 	TypeServiceReg logutils.MessageDataType = "service reg"
 	//TypeServiceScope service scope type
@@ -194,6 +196,50 @@ type ServiceScope struct {
 	Scope       *authorization.Scope `json:"scope" bson:"scope"`
 	Required    bool                 `json:"required" bson:"required"`
 	Explanation string               `json:"explanation,omitempty" bson:"explanation,omitempty"`
+}
+
+//ServiceAccount represents a service account entity
+type ServiceAccount struct {
+	ID string //this is ID for the service account
+
+	AppOrg ApplicationOrganization
+
+	Permissions []Permission
+	Roles       []AccountRole
+
+	Tokens  []string
+	Expires time.Time
+
+	DateCreated time.Time
+	DateUpdated *time.Time
+}
+
+//GetPermissionNames returns all names of permissions granted to this account
+func (s ServiceAccount) GetPermissionNames() []string {
+	permissionsMap := s.GetPermissionsMap()
+	permissions := make([]string, len(permissionsMap))
+	i := 0
+	for name := range permissionsMap {
+		permissions[i] = name
+		i++
+	}
+	return permissions
+}
+
+//GetPermissionsMap returns a map of all permissions granted to this account
+func (s ServiceAccount) GetPermissionsMap() map[string]Permission {
+	permissionsMap := make(map[string]Permission, len(s.Permissions))
+	for _, permission := range s.Permissions {
+		permissionsMap[permission.Name] = permission
+	}
+	for _, role := range s.Roles {
+		if role.Active {
+			for _, permission := range role.Role.Permissions {
+				permissionsMap[permission.Name] = permission
+			}
+		}
+	}
+	return permissionsMap
 }
 
 //ServiceAuthorization represents service authorization entity

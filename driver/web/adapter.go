@@ -109,6 +109,8 @@ func (we Adapter) Start() {
 	tpsSubrouter := subRouter.PathPrefix("/tps").Subrouter()
 	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations, nil)).Methods("GET") //Public
 	tpsSubrouter.HandleFunc("/auth-keys", we.wrapFunc(we.tpsApisHandler.getAuthKeys, nil)).Methods("GET")                //Public
+
+	tpsSubrouter.HandleFunc("/account/auth", we.wrapFunc(we.tpsApisHandler.getServiceToken, nil)).Methods("POST")
 	///
 
 	///system ///

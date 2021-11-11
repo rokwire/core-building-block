@@ -268,7 +268,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, email, phone, "rokwire", orgID, appID, authType, nil, anonymous, false)
+	claims := a.getStandardClaims(sub, uid, email, phone, "rokwire", orgID, appID, authType, nil, anonymous, false, false)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
@@ -379,6 +379,33 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 	return nil
 }
 
+//GetServiceToken returns an access token for a non-human client
+func (a *Auth) GetServiceToken(serviceAccountID string, authType string, creds string, params string, l *logs.Log) (*string, string, error) {
+	serviceAuthType, err := a.getServiceAuthTypeImpl(authType)
+	if err != nil {
+		l.Info("error getting service auth type on get service token")
+		return nil, "", errors.WrapErrorAction("error getting service auth type on get service token", "", nil, err)
+	}
+
+	account, err := a.storage.FindServiceAccount(serviceAccountID)
+	if err != nil {
+		return nil, "", errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+	}
+
+	message, err := serviceAuthType.checkCredentials(account, creds, l)
+	if err != nil {
+		return message, "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
+	}
+
+	permissions := account.GetPermissionNames()
+	claims := a.getStandardClaims(serviceAccountID, "", "", "", "rokwire", account.AppOrg.Organization.ID, account.AppOrg.Application.ID, authType, nil, false, false, true)
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
+	if err != nil {
+		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+	}
+	return nil, accessToken, errors.New(logutils.Unimplemented)
+}
+
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 //	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
 //	return a scoped access token which reflects this change.
@@ -441,7 +468,7 @@ func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 	aud := strings.Join(services, ",")
 	scope := strings.Join(scopeStrings, " ")
 
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, nil, claims.Anonymous, claims.Authenticated)
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, nil, claims.Anonymous, claims.Authenticated, claims.Service)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 

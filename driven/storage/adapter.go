@@ -665,6 +665,27 @@ func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
 	return nil
 }
 
+//FindServiceAccount finds a service account
+func (sa *Adapter) FindServiceAccount(id string) (*model.ServiceAccount, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+
+	var account serviceAccount
+	err := sa.db.serviceAccounts.FindOne(filter, &account, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &logutils.FieldArgs{"_id": id}, err)
+	}
+
+	//application organization - from cache
+	appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
+
+	modelAccount := serviceAccountFromStorage(account, appOrg)
+
+	return modelAccount, nil
+}
+
 //UpdateAccountPreferences updates account preferences
 func (sa *Adapter) UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}

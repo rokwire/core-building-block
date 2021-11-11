@@ -1,6 +1,9 @@
 package storage
 
-import "time"
+import (
+	"core-building-block/core/model"
+	"time"
+)
 
 type loginSession struct {
 	ID string `bson:"_id"`
@@ -32,4 +35,19 @@ type loginSession struct {
 
 	DateUpdated *time.Time `bson:"date_updated"`
 	DateCreated time.Time  `bson:"date_created"`
+}
+
+type serviceAccount struct {
+	ID string `bson:"_id"`
+
+	AppOrgID string `bson:"app_org_id,omitempty"`
+
+	Permissions []model.Permission `bson:"permissions"`
+	Roles       []accountRole      `bson:"roles"`
+
+	Tokens  []string  `bson:"tokens"`
+	Expires time.Time `bson:"expires"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
