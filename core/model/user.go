@@ -79,16 +79,6 @@ func (a Account) GetAccountAuthType(authTypeID string, identifier string) *Accou
 	return &result
 }
 
-//GetAccountAuthTypeByID finds account auth type by ID
-func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
-	for _, aat := range a.AuthTypes {
-		if aat.ID == ID {
-			return &aat
-		}
-	}
-	return nil
-}
-
 //GetPermissions returns all permissions granted to this account
 func (a Account) GetPermissions() []Permission {
 	permissionsMap := a.GetPermissionsMap()
