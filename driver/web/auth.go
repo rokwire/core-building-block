@@ -21,9 +21,9 @@ const (
 
 //Auth handler
 type Auth struct {
-	servicesAuthenticatedAuth *ServicesAuthenticatedAuth
 	servicesAuth              *ServicesAuth
 	servicesUserAuth          *ServicesUserAuth
+	servicesAuthenticatedAuth *ServicesAuthenticatedAuth
 	adminAuth                 *AdminAuth
 	encAuth                   *EncAuth
 	bbsAuth                   *BBsAuth

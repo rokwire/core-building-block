@@ -4,7 +4,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"math/rand"
+	"net/http"
 	"reflect"
+
+	"github.com/rokwire/logging-library-go/logs"
 
 	"github.com/rokwire/logging-library-go/errors"
 )
@@ -62,4 +65,16 @@ func SetStringIfEmpty(a, b string) string {
 //GetType returns a string representing the type of data
 func GetType(data interface{}) string {
 	return reflect.TypeOf(data).String()
+}
+
+//GetIP extracts the IP address from the http request
+func GetIP(l *logs.Log, r *http.Request) string {
+	IPAddress := r.Header.Get("X-Real-Ip")
+	if IPAddress == "" {
+		IPAddress = r.Header.Get("X-Forwarded-For")
+	}
+	if IPAddress == "" {
+		IPAddress = r.RemoteAddr
+	}
+	return IPAddress
 }
