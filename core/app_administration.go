@@ -2,7 +2,9 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -169,6 +171,22 @@ func (app *application) admGetApplicationOrgRoles() ([]model.AppOrgRole, error) 
 	}
 
 	return getAppOrgRoles, nil
+}
+
+func (app *application) admCreateAppOrgRole(name string, appID string, description string, permissionID []string) (*model.AppOrgRole, error) {
+	permissions, err := app.storage.FindPermissionsByID(permissionID)
+	if err != nil {
+		return nil, err
+	}
+
+	id, _ := uuid.NewUUID()
+	now := time.Now()
+	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: permissions, DateCreated: now}
+	err = app.storage.InsertAdmAppOrgRole(role)
+	if err != nil {
+		return nil, err
+	}
+	return &role, nil
 }
 
 func (app *application) admGetApplicationOrgGroups() ([]model.AppOrgGroup, error) {
