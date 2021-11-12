@@ -858,6 +858,36 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+    post:
+      tags:
+        - Admin
+      summary: Create applications_organizations_roles
+      description: |
+        Create applications_organizations_roles
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          Create applications_organizations_roles
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/_req_create_AppOrgRoles_Request'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/_res_create_AppOrgRoles_Response'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /admin/auth/appOrgGroups:
     get:
       tags:
@@ -2968,6 +2998,30 @@ components:
           type: string
         system:
           type: boolean
+    _req_create_AppOrgRoles_Request:
+      required:
+        - name
+        - description
+        - permissions
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+    _res_create_AppOrgRoles_Response:
+      type: object
+      properties:
+        fields:
+          $ref: '#/components/schemas/AppOrgRoleFields'
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionFields'
     _res_get_AppOrgGroups_Response:
       required:
         - id
