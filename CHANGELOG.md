@@ -80,7 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
-- Expose create app org role admin API  [#308] (https://github.com/rokwire/core-building-block/issues/308)
+- Expose create app org group admin API [#309](https://github.com/rokwire/core-building-block/issues/309)
+- Expose create app org role admin API  [#308](https://github.com/rokwire/core-building-block/issues/308)
 - Expose get application organization groups admin API [#302](https://github.com/rokwire/core-building-block/issues/302)
 - Expose get application organization roles admin API [#301](https://github.com/rokwire/core-building-block/issues/301)
 - Extract IP address from reques [#246](https://github.com/rokwire/core-building-block/issues/246)
