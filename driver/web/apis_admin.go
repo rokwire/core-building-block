@@ -223,6 +223,27 @@ func (h AdminApisHandler) adminGetApplicationOrgRoles(l *logs.Log, r *http.Reque
 	return l.HttpResponseSuccessJSON(data)
 }
 
+//adminCreateApplicationOrgRoles creates an application_organization_role
+func (h AdminApisHandler) adminCreateApplicationOrgRoles(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqApplicationRolesRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)
+	}
+
+	_, err = h.coreAPIs.Administration.AdmCreateAppOrgRole(requestData.Name, requestData.AppId, requestData.Description, requestData.Permissions)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 func (h AdminApisHandler) adminGetApplicationOrgGroups(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	getAppOrgGroups, err := h.coreAPIs.Administration.AdmGetApplicationOrgGroups()
 	if err != nil {
