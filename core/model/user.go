@@ -307,6 +307,16 @@ type Profile struct {
 	DateUpdated *time.Time
 }
 
+//GetFullName returns the user's full name
+func (p Profile) GetFullName() string {
+	fullname := p.FirstName
+	if len(fullname) > 0 {
+		fullname += " "
+	}
+	fullname += p.LastName
+	return fullname
+}
+
 //Device represents user devices entity.
 type Device struct {
 	ID   string
