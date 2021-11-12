@@ -863,6 +863,18 @@ func (sa *Adapter) FindPermissionsByName(names []string) ([]model.Permission, er
 	return permissionsResult, nil
 }
 
+//FindPermissionsByName finds a set of permissions
+func (sa *Adapter) FindPermissionsByID(ids []string) ([]model.Permission, error) {
+	permissionsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	var permissionsResult []model.Permission
+	err := sa.db.permissions.Find(permissionsFilter, &permissionsResult, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return permissionsResult, nil
+}
+
 //InsertPermission inserts a new  permission
 func (sa *Adapter) InsertPermission(permission model.Permission) error {
 	_, err := sa.db.permissions.InsertOne(permission)
@@ -945,6 +957,15 @@ func (sa *Adapter) InsertAppOrgRole(item model.AppOrgRole) error {
 
 	role := appOrgRoleToStorage(item)
 	_, err = sa.db.applicationsOrganizationsRoles.InsertOne(role)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
+	}
+	return nil
+}
+
+//InsertPermission inserts a new  permission
+func (sa *Adapter) InsertAdmAppOrgRole(item model.AppOrgRole) error {
+	_, err := sa.db.applicationsOrganizationsRoles.InsertOne(item)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
 	}
