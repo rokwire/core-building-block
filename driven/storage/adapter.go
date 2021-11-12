@@ -666,13 +666,13 @@ func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
 }
 
 //FindServiceAccount finds a service account
-func (sa *Adapter) FindServiceAccount(id string) (*model.ServiceAccount, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+func (sa *Adapter) FindServiceAccount(token string) (*model.ServiceAccount, error) {
+	filter := bson.D{primitive.E{Key: "tokens", Value: token}}
 
 	var account serviceAccount
 	err := sa.db.serviceAccounts.FindOne(filter, &account, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &logutils.FieldArgs{"_id": id}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &logutils.FieldArgs{"token": token}, err)
 	}
 
 	//application organization - from cache
@@ -686,6 +686,26 @@ func (sa *Adapter) FindServiceAccount(id string) (*model.ServiceAccount, error) 
 	return modelAccount, nil
 }
 
+//UpdateServiceAccount updates a service account
+func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) error {
+	if account == nil {
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeServiceAccount, nil)
+	}
+
+	storageAccount := serviceAccountToStorage(*account)
+
+	filter := bson.D{primitive.E{Key: "_id", Value: account.ID}}
+	res, err := sa.db.serviceAccounts.UpdateOne(filter, storageAccount, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, &logutils.FieldArgs{"_id": account.ID}, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, &logutils.FieldArgs{"_id": account.ID, "unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
 //UpdateAccountPreferences updates account preferences
 func (sa *Adapter) UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
@@ -697,7 +717,7 @@ func (sa *Adapter) UpdateAccountPreferences(accountID string, preferences map[st
 
 	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountPreferences, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, nil, err)
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})

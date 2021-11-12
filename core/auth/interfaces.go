@@ -52,7 +52,7 @@ type anonymousAuthType interface {
 
 //serviceAuthType is the interface for authentication for non-human clients
 type serviceAuthType interface {
-	checkCredentials(account *model.ServiceAccount, creds string, l *logs.Log) (*string, error)
+	checkCredentials(creds string, l *logs.Log) (*string, *model.ServiceAccount, error)
 }
 
 //APIs is the interface which defines the APIs provided by the auth package
@@ -131,8 +131,11 @@ type APIs interface {
 	//		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
 	GetLoginURL(authType string, appTypeIdentifier string, orgID string, redirectURI string, apiKey string, l *logs.Log) (string, map[string]interface{}, error)
 
-	//GetServiceToken returns an access token for a non-human client
-	GetServiceToken(serviceAccountID string, authType string, creds string, params string, l *logs.Log) (*string, string, error)
+	//GetServiceAccessToken returns an access token for a non-human client
+	GetServiceAccessToken(authType string, creds string, l *logs.Log) (*string, string, error)
+
+	//RefreshServiceToken refreshes the current service token and generates a new access token
+	RefreshServiceToken(token string, l *logs.Log) (*string, string, string, error)
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
@@ -207,7 +210,8 @@ type Storage interface {
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 
 	//ServiceAccounts
-	FindServiceAccount(id string) (*model.ServiceAccount, error)
+	FindServiceAccount(token string) (*model.ServiceAccount, error)
+	UpdateServiceAccount(account *model.ServiceAccount) error
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)

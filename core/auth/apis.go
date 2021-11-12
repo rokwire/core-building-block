@@ -381,31 +381,57 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 	return nil
 }
 
-//GetServiceToken returns an access token for a non-human client
-func (a *Auth) GetServiceToken(serviceAccountID string, authType string, creds string, params string, l *logs.Log) (*string, string, error) {
+//GetServiceAccessToken returns an access token for a non-human client
+func (a *Auth) GetServiceAccessToken(authType string, creds string, l *logs.Log) (*string, string, error) {
 	serviceAuthType, err := a.getServiceAuthTypeImpl(authType)
 	if err != nil {
-		l.Info("error getting service auth type on get service token")
-		return nil, "", errors.WrapErrorAction("error getting service auth type on get service token", "", nil, err)
+		l.Info("error getting service auth type on get service access token")
+		return nil, "", errors.WrapErrorAction("error getting service auth type on get service access token", "", nil, err)
 	}
 
-	account, err := a.storage.FindServiceAccount(serviceAccountID)
-	if err != nil {
-		return nil, "", errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
-	}
-
-	message, err := serviceAuthType.checkCredentials(account, creds, l)
+	message, account, err := serviceAuthType.checkCredentials(creds, l)
 	if err != nil {
 		return message, "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}
 
 	permissions := account.GetPermissionNames()
-	claims := a.getStandardClaims(serviceAccountID, "", "", "", "", "rokwire", account.AppOrg.Organization.ID, account.AppOrg.Application.ID, authType, nil, false, false, true)
+	claims := a.getStandardClaims(account.ID, "", "", "", "", "rokwire", account.AppOrg.Organization.ID, account.AppOrg.Application.ID, authType, nil, false, false, true)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 	return nil, accessToken, errors.New(logutils.Unimplemented)
+}
+
+//RefreshServiceToken refreshes the current service token and generates a new access token
+func (a *Auth) RefreshServiceToken(token string, l *logs.Log) (*string, string, string, error) {
+	account, err := a.storage.FindServiceAccount(token)
+	if err != nil {
+		return nil, "", "", errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+	}
+
+	permissions := account.GetPermissionNames()
+	claims := a.getStandardClaims(account.ID, "", "", "", "", "rokwire", account.AppOrg.Organization.ID, account.AppOrg.Application.ID, ServiceAuthTypeStaticToken, nil, false, false, true)
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
+	if err != nil {
+		l.Info("error generating access token on refresh service token")
+		return nil, "", "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+	}
+
+	refreshToken, expires, err := a.buildRefreshToken()
+	if err != nil {
+		l.Info("error generating refresh token on refresh service token")
+		return nil, "", "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+	}
+
+	account.Tokens = append(account.Tokens, refreshToken)
+	account.Expires = *expires
+	err = a.storage.UpdateServiceAccount(account)
+	if err != nil {
+		return nil, "", "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
+	}
+
+	return nil, accessToken, refreshToken, nil
 }
 
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or

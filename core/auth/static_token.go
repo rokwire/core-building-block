@@ -2,20 +2,25 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"encoding/json"
+	"time"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 const (
 	//ServiceAuthTypeStaticToken static token service auth type
 	ServiceAuthTypeStaticToken string = "static token"
+	//TypeStaticTokenCreds type static token creds
+	TypeStaticTokenCreds logutils.MessageDataType = "static token creds"
 )
 
 //staticTokenCreds represents the creds struct for static token auth
 type staticTokenCreds struct {
-	Token string `json:"token" bson:"token" validate:"required"`
+	Token string `json:"token" validate:"required"`
 }
 
 // Static token implementation of serviceAuthType
@@ -24,8 +29,35 @@ type staticTokenAuthImpl struct {
 	serviceAuthType string
 }
 
-func (s *staticTokenAuthImpl) checkCredentials(account *model.ServiceAccount, creds string, l *logs.Log) (*string, error) {
-	return nil, errors.New(logutils.Unimplemented)
+func (s *staticTokenAuthImpl) checkCredentials(creds string, l *logs.Log) (*string, *model.ServiceAccount, error) {
+	var tokenCreds staticTokenCreds
+	err := json.Unmarshal([]byte(creds), &tokenCreds)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, TypeStaticTokenCreds, nil, err)
+	}
+
+	validate := validator.New()
+	err = validate.Struct(tokenCreds)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, TypeStaticTokenCreds, nil, err)
+	}
+
+	account, err := s.auth.storage.FindServiceAccount(tokenCreds.Token)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+	}
+
+	if tokenCreds.Token != account.CurrentToken() {
+		message := "previous token"
+		//remove all tokens in storage?
+		return &message, nil, errors.WrapErrorAction(logutils.ActionValidate, "service account token", nil, err)
+	}
+	if account.Expires.Before(time.Now().UTC()) {
+		message := "token expired"
+		return &message, nil, errors.ErrorData(logutils.StatusInvalid, "service account token", logutils.StringArgs("expired token"))
+	}
+
+	return nil, account, nil
 }
 
 //initStaticTokenAuth initializes and registers a new static token service auth instance

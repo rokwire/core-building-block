@@ -57,7 +57,7 @@ func (h TPSApisHandler) getAuthKeys(l *logs.Log, r *http.Request, claims *tokena
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h TPSApisHandler) getServiceToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -75,18 +75,10 @@ func (h TPSApisHandler) getServiceToken(l *logs.Log, r *http.Request, claims *to
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
 	}
 
-	//params
-	requestParams, err := interfaceToJSON(requestData.Params)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
-	}
-
-	message, accessToken, err := h.coreAPIs.Auth.GetServiceToken("", string(requestData.AuthType), requestCreds, requestParams, l)
+	message, accessToken, err := h.coreAPIs.Auth.GetServiceAccessToken(string(requestData.AuthType), requestCreds, l)
 	if err != nil {
 		return l.HttpResponseError("Error authenticating", err, http.StatusInternalServerError, true)
 	}
-
-	///prepare response
 
 	//message
 	if message != nil {
@@ -99,6 +91,42 @@ func (h TPSApisHandler) getServiceToken(l *logs.Log, r *http.Request, claims *to
 	}
 
 	return l.HttpResponseSuccessJSON([]byte(accessToken))
+}
+
+func (h TPSApisHandler) refreshServiceToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqSharedRefresh
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth refresh request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	message, accessToken, refreshToken, err := h.coreAPIs.Auth.RefreshServiceToken(requestData.RefreshToken, l)
+	if err != nil {
+		return l.HttpResponseError("Error refreshing token", err, http.StatusInternalServerError, true)
+	}
+
+	//message
+	if message != nil {
+		responseData := &Def.ResSharedLogin{Message: message}
+		respData, err := json.Marshal(responseData)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service account auth response"), nil, err, http.StatusInternalServerError, false)
+		}
+		return l.HttpResponseSuccessJSON(respData)
+	}
+
+	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken}
+	respData, err := json.Marshal(rokwireToken)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth refresh response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
 }
 
 //NewTPSApisHandler creates new tps Handler instance

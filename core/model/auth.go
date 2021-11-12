@@ -242,6 +242,15 @@ func (s ServiceAccount) GetPermissionsMap() map[string]Permission {
 	return permissionsMap
 }
 
+//CurrentToken returns the current service account token (last element of Tokens)
+func (s ServiceAccount) CurrentToken() string {
+	numTokens := len(s.Tokens)
+	if numTokens <= 0 {
+		return ""
+	}
+	return s.Tokens[numTokens-1]
+}
+
 //ServiceAuthorization represents service authorization entity
 type ServiceAuthorization struct {
 	UserID    string                `json:"user_id" bson:"user_id"`

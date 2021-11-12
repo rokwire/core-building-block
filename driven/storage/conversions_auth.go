@@ -67,6 +67,7 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 		Params: params, Expires: expires, ForceExpires: forceExpires, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
 
+//ServiceAccount
 func serviceAccountFromStorage(item serviceAccount, appOrg *model.ApplicationOrganization) *model.ServiceAccount {
 	if appOrg == nil {
 		return &model.ServiceAccount{ID: item.ID, Permissions: item.Permissions, Tokens: item.Tokens,
@@ -76,5 +77,12 @@ func serviceAccountFromStorage(item serviceAccount, appOrg *model.ApplicationOrg
 	roles := accountRolesFromStorage(item.Roles, *appOrg)
 
 	return &model.ServiceAccount{ID: item.ID, AppOrg: *appOrg, Permissions: item.Permissions, Roles: roles,
+		Tokens: item.Tokens, Expires: item.Expires, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func serviceAccountToStorage(item model.ServiceAccount) *serviceAccount {
+	roles := accountRolesToStorage(item.Roles)
+
+	return &serviceAccount{ID: item.ID, AppOrgID: item.AppOrg.ID, Permissions: item.Permissions, Roles: roles,
 		Tokens: item.Tokens, Expires: item.Expires, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
