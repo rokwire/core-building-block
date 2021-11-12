@@ -105,7 +105,7 @@ func (h TPSApisHandler) refreshServiceToken(l *logs.Log, r *http.Request, claims
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth refresh request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	message, accessToken, refreshToken, err := h.coreAPIs.Auth.RefreshServiceToken(requestData.RefreshToken, l)
+	message, token, err := h.coreAPIs.Auth.AddServiceToken(requestData.RefreshToken, l)
 	if err != nil {
 		return l.HttpResponseError("Error refreshing token", err, http.StatusInternalServerError, true)
 	}
@@ -120,8 +120,7 @@ func (h TPSApisHandler) refreshServiceToken(l *logs.Log, r *http.Request, claims
 		return l.HttpResponseSuccessJSON(respData)
 	}
 
-	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken}
-	respData, err := json.Marshal(rokwireToken)
+	respData, err := json.Marshal(token)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth refresh response"), nil, err, http.StatusInternalServerError, false)
 	}

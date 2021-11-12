@@ -207,8 +207,7 @@ type ServiceAccount struct {
 	Permissions []Permission
 	Roles       []AccountRole
 
-	Tokens  []string
-	Expires time.Time
+	Tokens []string
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -240,15 +239,6 @@ func (s ServiceAccount) GetPermissionsMap() map[string]Permission {
 		}
 	}
 	return permissionsMap
-}
-
-//CurrentToken returns the current service account token (last element of Tokens)
-func (s ServiceAccount) CurrentToken() string {
-	numTokens := len(s.Tokens)
-	if numTokens <= 0 {
-		return ""
-	}
-	return s.Tokens[numTokens-1]
 }
 
 //ServiceAuthorization represents service authorization entity

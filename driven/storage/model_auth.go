@@ -45,8 +45,7 @@ type serviceAccount struct {
 	Permissions []model.Permission `bson:"permissions"`
 	Roles       []accountRole      `bson:"roles"`
 
-	Tokens  []string  `bson:"tokens"`
-	Expires time.Time `bson:"expires"`
+	Tokens []string `bson:"tokens"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

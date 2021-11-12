@@ -403,35 +403,31 @@ func (a *Auth) GetServiceAccessToken(authType string, creds string, l *logs.Log)
 	return nil, accessToken, errors.New(logutils.Unimplemented)
 }
 
-//RefreshServiceToken refreshes the current service token and generates a new access token
-func (a *Auth) RefreshServiceToken(token string, l *logs.Log) (*string, string, string, error) {
-	account, err := a.storage.FindServiceAccount(token)
+//AddServiceToken adds a token to a service account
+func (a *Auth) AddServiceToken(accountID string, l *logs.Log) (*string, string, error) {
+	account, err := a.storage.FindServiceAccountByID(accountID)
 	if err != nil {
-		return nil, "", "", errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+		return nil, "", errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 	}
 
-	permissions := account.GetPermissionNames()
-	claims := a.getStandardClaims(account.ID, "", "", "", "", "rokwire", account.AppOrg.Organization.ID, account.AppOrg.Application.ID, ServiceAuthTypeStaticToken, nil, false, false, true)
-	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
+	// err = a.storage.UpdateServiceAccount(account)
+	// if err != nil {
+	// 	return nil, "", "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
+	// }
+
+	token, _, err := a.buildRefreshToken()
 	if err != nil {
-		l.Info("error generating access token on refresh service token")
-		return nil, "", "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+		l.Info("error generating service account token")
+		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
-	refreshToken, expires, err := a.buildRefreshToken()
-	if err != nil {
-		l.Info("error generating refresh token on refresh service token")
-		return nil, "", "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
-	}
-
-	account.Tokens = append(account.Tokens, refreshToken)
-	account.Expires = *expires
+	account.Tokens = append(account.Tokens, token)
 	err = a.storage.UpdateServiceAccount(account)
 	if err != nil {
-		return nil, "", "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
+		return nil, "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
 	}
 
-	return nil, accessToken, refreshToken, nil
+	return nil, token, nil
 }
 
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or

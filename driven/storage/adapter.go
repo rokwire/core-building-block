@@ -665,14 +665,23 @@ func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
 	return nil
 }
 
-//FindServiceAccount finds a service account
-func (sa *Adapter) FindServiceAccount(token string) (*model.ServiceAccount, error) {
-	filter := bson.D{primitive.E{Key: "tokens", Value: token}}
+//FindServiceAccountByID finds a service account by id
+func (sa *Adapter) FindServiceAccountByID(id string) (*model.ServiceAccount, error) {
+	return sa.findServiceAccount("_id", id)
+}
+
+//FindServiceAccountByToken finds a service account by token
+func (sa *Adapter) FindServiceAccountByToken(token string) (*model.ServiceAccount, error) {
+	return sa.findServiceAccount("tokens", token)
+}
+
+func (sa *Adapter) findServiceAccount(key string, value string) (*model.ServiceAccount, error) {
+	filter := bson.D{primitive.E{Key: key, Value: value}}
 
 	var account serviceAccount
 	err := sa.db.serviceAccounts.FindOne(filter, &account, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &logutils.FieldArgs{"token": token}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &logutils.FieldArgs{key: value}, err)
 	}
 
 	//application organization - from cache

@@ -134,8 +134,8 @@ type APIs interface {
 	//GetServiceAccessToken returns an access token for a non-human client
 	GetServiceAccessToken(authType string, creds string, l *logs.Log) (*string, string, error)
 
-	//RefreshServiceToken refreshes the current service token and generates a new access token
-	RefreshServiceToken(token string, l *logs.Log) (*string, string, string, error)
+	//AddServiceToken adds a token to a service account
+	AddServiceToken(accountID string, l *logs.Log) (*string, string, error)
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
@@ -210,7 +210,8 @@ type Storage interface {
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 
 	//ServiceAccounts
-	FindServiceAccount(token string) (*model.ServiceAccount, error)
+	FindServiceAccountByID(id string) (*model.ServiceAccount, error)
+	FindServiceAccountByToken(token string) (*model.ServiceAccount, error)
 	UpdateServiceAccount(account *model.ServiceAccount) error
 
 	//Organizations

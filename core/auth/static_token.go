@@ -3,7 +3,6 @@ package auth
 import (
 	"core-building-block/core/model"
 	"encoding/json"
-	"time"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
@@ -42,20 +41,15 @@ func (s *staticTokenAuthImpl) checkCredentials(creds string, l *logs.Log) (*stri
 		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, TypeStaticTokenCreds, nil, err)
 	}
 
-	account, err := s.auth.storage.FindServiceAccount(tokenCreds.Token)
+	account, err := s.auth.storage.FindServiceAccountByToken(tokenCreds.Token)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 	}
 
-	if tokenCreds.Token != account.CurrentToken() {
-		message := "previous token"
-		//remove all tokens in storage?
-		return &message, nil, errors.WrapErrorAction(logutils.ActionValidate, "service account token", nil, err)
-	}
-	if account.Expires.Before(time.Now().UTC()) {
-		message := "token expired"
-		return &message, nil, errors.ErrorData(logutils.StatusInvalid, "service account token", logutils.StringArgs("expired token"))
-	}
+	// err = s.auth.storage.UpdateServiceAccount(account)
+	// if err != nil {
+	// 	return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
+	// }
 
 	return nil, account, nil
 }
