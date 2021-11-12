@@ -197,3 +197,25 @@ func (app *application) admGetApplicationOrgGroups() ([]model.AppOrgGroup, error
 
 	return getAppOrgGroups, nil
 }
+
+func (app *application) admCreateAppOrgGroup(name string, ID string, permissionID []string) (*model.AppOrgGroup, error) {
+
+	permissions, err := app.storage.FindPermissionsByID(permissionID)
+	if err != nil {
+		return nil, err
+	}
+	var rolesID []string
+	role, err := app.storage.FindAppOrgRolesByID(rolesID)
+	if err != nil {
+		return nil, err
+	}
+
+	id, _ := uuid.NewUUID()
+	now := time.Now()
+	group := model.AppOrgGroup{ID: id.String(), Name: name, Roles: role, Permissions: permissions, DateCreated: now}
+	err = app.storage.InsertAdmAppOrgGroup(group)
+	if err != nil {
+		return nil, err
+	}
+	return &group, nil
+}

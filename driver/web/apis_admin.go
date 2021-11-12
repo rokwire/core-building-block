@@ -262,6 +262,27 @@ func (h AdminApisHandler) adminGetApplicationOrgGroups(l *logs.Log, r *http.Requ
 	return l.HttpResponseSuccessJSON(data)
 }
 
+//adminCreateApplicationOrgGroups creates an application_organization_role
+func (h AdminApisHandler) adminCreateApplicationOrgGroups(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData model.AppOrgGroup
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgGroup, nil, err, http.StatusBadRequest, true)
+	}
+
+	_, err = h.coreAPIs.Administration.AdmCreateAppOrgGroup(requestData.Name, requestData.ID, nil)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 //NewAdminApisHandler creates new admin rest Handler instance
 func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
 	return AdminApisHandler{coreAPIs: coreAPIs}

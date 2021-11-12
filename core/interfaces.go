@@ -26,6 +26,7 @@ type Administration interface {
 	AdmGetTestModel() string
 	AdmGetApplicationOrgRoles() ([]model.AppOrgRole, error)
 	AdmCreateAppOrgRole(name string, addID string, description string, permissionID []string) (*model.AppOrgRole, error)
+	AdmCreateAppOrgGroup(name string, ID string, permissionID []string) (*model.AppOrgGroup, error)
 	AdmGetApplicationOrgGroups() ([]model.AppOrgGroup, error)
 }
 
@@ -90,13 +91,15 @@ type Storage interface {
 	DeletePermission(id string) error
 
 	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
+	FindAppOrgRolesList() ([]model.AppOrgRole, error)
+	FindAppOrgRolesByID(ids []string) ([]model.AppOrgRole, error)
 	InsertAppOrgRole(item model.AppOrgRole) error
 	InsertAdmAppOrgRole(item model.AppOrgRole) error
 	UpdateAppOrgRole(item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
-	FindAppOrgRolesList() ([]model.AppOrgRole, error)
 
 	InsertAppOrgGroup(item model.AppOrgGroup) error
+	InsertAdmAppOrgGroup(item model.AppOrgGroup) error
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
 	FindAppOrgGroupsList() ([]model.AppOrgGroup, error)

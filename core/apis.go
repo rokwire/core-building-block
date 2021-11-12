@@ -122,6 +122,10 @@ func (s *administrationImpl) AdmGetApplicationOrgGroups() ([]model.AppOrgGroup, 
 	return s.app.admGetApplicationOrgGroups()
 }
 
+func (s *administrationImpl) AdmCreateAppOrgGroup(name string, ID string, permissionID []string) (*model.AppOrgGroup, error) {
+	return s.app.admCreateAppOrgGroup(name, ID, permissionID)
+}
+
 ///
 
 //encryptionImpl
