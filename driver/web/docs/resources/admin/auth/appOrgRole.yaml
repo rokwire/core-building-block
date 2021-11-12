@@ -40,7 +40,7 @@
       200:
         description: Successful operation
         content:
-          application/json:
+        text/plain:
             schema:
               type: array
               items:

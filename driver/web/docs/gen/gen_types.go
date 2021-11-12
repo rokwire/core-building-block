@@ -669,13 +669,6 @@ type ResAuthorizeServiceResponse struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResAuthorizeServiceResponseTokenType string
 
-// ResCreateAppOrgRolesResponse defines model for _res_create_AppOrgRoles_Response.
-type ResCreateAppOrgRolesResponse struct {
-	Application *ApplicationFields  `json:"application,omitempty"`
-	Fields      *AppOrgRoleFields   `json:"fields,omitempty"`
-	Permissions *[]PermissionFields `json:"permissions,omitempty"`
-}
-
 // ResGetAppOrgGroupsResponse defines model for _res_get_AppOrgGroups_Response.
 type ResGetAppOrgGroupsResponse struct {
 	Id     string `json:"id"`

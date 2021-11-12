@@ -876,12 +876,12 @@ paths:
       responses:
         '200':
           description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/_res_create_AppOrgRoles_Response'
+          content: null
+          text/plain:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/_res_create_AppOrgRoles_Response'
         '400':
           description: Bad request
         '401':
