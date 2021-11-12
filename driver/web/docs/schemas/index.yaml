@@ -185,6 +185,10 @@ _res_create_AppOrgRoles_Response:
  ### application-organization-groups API
 _res_get_AppOrgGroups_Response:
  $ref: "./apis/system/get-appOrgGroups/response/Response.yaml"
+_req_create_AppOrgGroups_Request:
+ $ref: "./apis/system/create-appOrgGroups/request/Request.yaml"
+_res_create_AppOrgGroups_Response:
+ $ref: "./apis/system/create-appOrgGroups/response/Response.yaml"
 
 ### account permissions API
 _req_account-permissions_Request:

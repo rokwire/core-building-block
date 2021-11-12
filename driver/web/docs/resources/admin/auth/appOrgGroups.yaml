@@ -21,3 +21,33 @@
         description: Unauthorized
       500:
         description: Internal error
+ post:
+  tags:
+  - Admin
+  summary: Create applications_organizations_groups
+  description: |
+    Create applications_organizations_groups
+  security:
+    - bearerAuth: []
+  requestBody:
+    description: |
+      Create applications_organizations_groups
+  content:
+    application/json:
+      schema:
+          $ref: "../../../schemas/apis/system/create-appOrgGroups/request/Request.yaml"
+  responses:
+      200:
+        description: Successful operation
+        content:
+        text/plain:
+            schema:
+              type: array
+              items:
+                $ref: "../../../schemas/apis/system/create-appOrgGroups/response/Response.yaml"
+      400:
+        description: Bad request
+      401:
+        description: Unauthorized
+      500:
+        description: Internal error       
