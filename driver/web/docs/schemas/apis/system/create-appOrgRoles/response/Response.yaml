@@ -1,7 +1,9 @@
 type: object
 properties:
   fields:
-    $ref: "../../../../application/AppOrgRoleFields.yaml"
+      $ref: "../../../../application/AppOrgRoleFields.yaml"
+  application:
+      $ref: "../../../../application/ApplicationFields.yaml"
   permissions:
     type: array
     items:

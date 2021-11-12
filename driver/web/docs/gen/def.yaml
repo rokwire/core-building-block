@@ -3018,6 +3018,8 @@ components:
       properties:
         fields:
           $ref: '#/components/schemas/AppOrgRoleFields'
+        application:
+          $ref: '#/components/schemas/ApplicationFields'
         permissions:
           type: array
           items:

@@ -671,6 +671,7 @@ type ResAuthorizeServiceResponseTokenType string
 
 // ResCreateAppOrgRolesResponse defines model for _res_create_AppOrgRoles_Response.
 type ResCreateAppOrgRolesResponse struct {
+	Application *ApplicationFields  `json:"application,omitempty"`
 	Fields      *AppOrgRoleFields   `json:"fields,omitempty"`
 	Permissions *[]PermissionFields `json:"permissions,omitempty"`
 }
