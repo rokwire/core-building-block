@@ -388,7 +388,7 @@ func (h ServicesApisHandler) getAppConfigs(l *logs.Log, r *http.Request, claims 
 		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeQueryParam, logutils.StringArgs("version"), nil, http.StatusBadRequest, false)
 	}
 	versionNumbers := createVersionNumbers(version)
-	appConfigs, err := h.coreAPIs.Services.SerGetAppConfigs(appID, versionNumbers)
+	appConfigs, err := h.coreAPIs.Services.SerGetAppConfigs(appID, *versionNumbers)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
 	}

@@ -224,9 +224,31 @@ type ApplicationConfigs struct {
 	ID             string                 `json:"id" bson:"_id"`
 	AppID          string                 `json:"app_id" bson:"app_id"`
 	Version        string                 `json:"version" bson:"version"`
-	VersionNumbers map[string]string      `json:"version_numbers" bson:"version_numbers"`
+	VersionNumbers VersionNumbers         `json:"version_numbers" bson:"version_numbers"`
 	Data           map[string]interface{} `json:"data" bson:"data"`
 
 	DateCreated time.Time  `json:"date_created" bson:"date_created"`
 	DateUpdated *time.Time `json:"date_updated" bson:"date_updated"`
+}
+
+//VersionNumbers represents mobile app config version numbers
+type VersionNumbers struct {
+	Major string `json:"major" bson:"major"`
+	Minor string `json:"minor" bson:"minor"`
+	Patch string `json:"patch" bson:"patch"`
+}
+
+// LessThanOrEqualTo evaluates if v1 is less than or equal to v
+func (v VersionNumbers) LessThanOrEqualTo(v1 VersionNumbers) bool {
+	if v1.Major < v.Major {
+		return true
+	}
+	if v1.Major == v.Major && v1.Minor < v.Minor {
+		return true
+	}
+	if v1.Major == v.Major && v1.Minor < v.Minor && v1.Patch <= v.Patch {
+		return true
+	}
+
+	return false
 }

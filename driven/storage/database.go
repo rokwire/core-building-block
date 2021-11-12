@@ -196,6 +196,7 @@ func (m *database) start() error {
 	go m.organizations.Watch(nil, m.logger)
 	go m.applications.Watch(nil, m.logger)
 	go m.applicationsOrganizations.Watch(nil, m.logger)
+	go m.applicationConfigs.Watch(nil, m.logger)
 
 	m.listeners = []Listener{}
 
@@ -458,7 +459,7 @@ func (m *database) applyApplicationConfigsChecks(applicationConfigs *collectionW
 	m.logger.Info("apply applications configs checks.....")
 
 	//add appconfigs index
-	err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "version", Value: 1}}, true)
+	err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "version_numbers.major", Value: 1}, primitive.E{Key: "version_numbers.minor", Value: -1}, primitive.E{Key: "version_numbers.patch", Value: -1}}, true)
 	if err != nil {
 		return err
 	}

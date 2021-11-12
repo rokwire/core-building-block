@@ -91,7 +91,7 @@ func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[st
 	return s.app.serUpdateAccountPreferences(id, preferences)
 }
 
-func (s *servicesImpl) SerGetAppConfigs(appID string, versionNumbers map[string]string) ([]model.ApplicationConfigs, error) {
+func (s *servicesImpl) SerGetAppConfigs(appID string, versionNumbers model.VersionNumbers) ([]model.ApplicationConfigs, error) {
 	return s.app.serGetAppConfigs(appID, versionNumbers)
 }
 
@@ -195,7 +195,7 @@ func (s *systemImpl) SysCreateAppOrgRole(name string, appOrgID string, descripti
 	return s.app.sysCreateAppOrgRole(name, appOrgID, description, permissionNames)
 }
 
-func (s *systemImpl) SysGetAppConfigs(appID string, versionNumbers map[string]string) ([]model.ApplicationConfigs, error) {
+func (s *systemImpl) SysGetAppConfigs(appID string, versionNumbers model.VersionNumbers) ([]model.ApplicationConfigs, error) {
 	return s.app.serGetAppConfigs(appID, versionNumbers)
 }
 
@@ -203,11 +203,11 @@ func (s *systemImpl) SysGetAppConfig(id string) (*model.ApplicationConfigs, erro
 	return s.app.sysGetAppConfig(id)
 }
 
-func (s *systemImpl) SysCreateAppConfig(version string, appID string, data map[string]interface{}, versionNumbers map[string]string) (*model.ApplicationConfigs, error) {
+func (s *systemImpl) SysCreateAppConfig(version string, appID string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfigs, error) {
 	return s.app.sysCreateAppConfig(version, appID, data, versionNumbers)
 }
 
-func (s *systemImpl) SysUpdateAppConfig(id string, version string, data map[string]interface{}, versionNumbers map[string]string) error {
+func (s *systemImpl) SysUpdateAppConfig(id string, version string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
 	return s.app.sysUpdateAppConfig(id, version, data, versionNumbers)
 }
 

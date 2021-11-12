@@ -505,7 +505,7 @@ func (h SystemApisHandler) getAppConfigs(l *logs.Log, r *http.Request, claims *t
 	}
 
 	versionNumbers := createVersionNumbers(version)
-	appConfigs, err := h.coreAPIs.System.SysGetAppConfigs(appID, versionNumbers)
+	appConfigs, err := h.coreAPIs.System.SysGetAppConfigs(appID, *versionNumbers)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
 	}
@@ -555,7 +555,7 @@ func (h SystemApisHandler) createAppConfig(l *logs.Log, r *http.Request, claims 
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("appconfig create request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	_, err = h.coreAPIs.System.SysCreateAppConfig(requestData.Version, requestData.AppId, requestData.Data, createVersionNumbers(requestData.Version))
+	_, err = h.coreAPIs.System.SysCreateAppConfig(requestData.Version, requestData.AppId, requestData.Data, *createVersionNumbers(requestData.Version))
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplicationConfigs, nil, err, http.StatusBadRequest, true)
 	}
@@ -588,7 +588,7 @@ func (h SystemApisHandler) updateAppConfig(l *logs.Log, r *http.Request, claims 
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("appconfig update request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.System.SysUpdateAppConfig(ID, requestData.Version, requestData.Data, createVersionNumbers(requestData.Version))
+	err = h.coreAPIs.System.SysUpdateAppConfig(ID, requestData.Version, requestData.Data, *createVersionNumbers(requestData.Version))
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
 	}

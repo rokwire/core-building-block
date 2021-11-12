@@ -36,6 +36,9 @@ type Adapter struct {
 
 	cachedApplicationsOrganizations *syncmap.Map //cache applications organizations
 	applicationsOrganizationsLock   *sync.RWMutex
+
+	cachedApplicationConfigs *syncmap.Map
+	applicationConfigsLock   *sync.RWMutex
 }
 
 //Start starts the storage
@@ -72,6 +75,12 @@ func (sa *Adapter) Start() error {
 	err = sa.cacheApplicationsOrganizations()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeApplicationOrganization, nil, err)
+	}
+
+	// cache application configs
+	err = sa.cacheApplicationConfigs()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionCache, model.TypeApplicationConfigs, nil, err)
 	}
 
 	return err
@@ -368,6 +377,133 @@ func (sa *Adapter) getCachedApplicationOrganizationByKey(key string) (*model.App
 		return &appOrg, nil
 	}
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, errArgs)
+}
+
+func (sa *Adapter) cacheApplicationConfigs() error {
+	sa.logger.Info("cacheApplicationConfigs..")
+
+	applicationConfigs, err := sa.LoadAppConfigs()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
+	}
+
+	sa.setCachedApplicationConfigs(&applicationConfigs)
+
+	return nil
+}
+
+func (sa *Adapter) setCachedApplicationConfigs(applicationConfigs *[]model.ApplicationConfigs) {
+	sa.applicationConfigsLock.Lock()
+	defer sa.applicationConfigsLock.Unlock()
+
+	sa.cachedApplicationConfigs = &syncmap.Map{}
+	validate := validator.New()
+
+	for _, config := range *applicationConfigs {
+		err := validate.Struct(config)
+		if err != nil {
+			sa.logger.Errorf("failed to validate and cache application config with appID-version %s-%s: %s", config.AppID, config.Version, err.Error())
+		} else {
+			// key 1 - ID
+			sa.cachedApplicationConfigs.Store(config.ID, config)
+
+			// key 2 - appID
+			sa.cachedApplicationConfigs.Store(config.AppID, config)
+
+			// key 3 - appID_version
+			key := fmt.Sprintf("%s_%s", config.AppID, config.Version)
+			sa.cachedApplicationConfigs.Store(key, config)
+		}
+	}
+}
+
+func (sa *Adapter) getCachedApplicationConfigByAppIDVersion(appID string, versionNumbers model.VersionNumbers) (*model.ApplicationConfigs, error) {
+	sa.applicationConfigsLock.RLock()
+	defer sa.applicationConfigsLock.RUnlock()
+
+	version := fmt.Sprintf("%s.%s.%s", versionNumbers.Major, versionNumbers.Minor, versionNumbers.Patch)
+	key := fmt.Sprintf("%s-%s", appID, version)
+
+	errArgs := &logutils.FieldArgs{"appID": appID, "version": version}
+	item, _ := sa.cachedApplicationConfigs.Load(key)
+	if item != nil {
+		config, ok := item.(model.ApplicationConfigs)
+		if !ok {
+			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplicationConfigs, errArgs)
+		}
+		return &config, nil
+	}
+	// find highest one
+	var err error
+	var appConfig *model.ApplicationConfigs
+
+	sa.cachedApplicationConfigs.Range(func(key, item interface{}) bool {
+		errArgs := &logutils.FieldArgs{"id": key}
+		if item == nil {
+			err = errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigs, errArgs)
+			return false
+		}
+
+		currentConfig, ok := item.(model.ApplicationConfigs)
+		if !ok {
+			return false
+		}
+
+		if currentConfig.VersionNumbers.LessThanOrEqualTo(versionNumbers) {
+			appConfig = &currentConfig
+			// break the iteration
+			return false
+		}
+
+		return true
+	})
+
+	return appConfig, err
+}
+
+// get app config by id or app_id
+func (sa *Adapter) getCachedApplicationConfig(key string) (*model.ApplicationConfigs, error) {
+	sa.applicationConfigsLock.RLock()
+	defer sa.applicationConfigsLock.RUnlock()
+
+	errArgs := &logutils.FieldArgs{"id or app id": key}
+
+	item, _ := sa.cachedApplicationConfigs.Load(key)
+	if item != nil {
+		config, ok := item.(model.ApplicationConfigs)
+		if !ok {
+			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplicationConfigs, errArgs)
+		}
+		return &config, nil
+	}
+
+	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationConfigs, errArgs)
+}
+
+func (sa *Adapter) getCachedApplicationConfigs() ([]model.ApplicationConfigs, error) {
+	sa.applicationConfigsLock.RLock()
+	defer sa.applicationConfigsLock.RUnlock()
+
+	var err error
+	appConfigList := make([]model.ApplicationConfigs, 0)
+	sa.cachedApplicationConfigs.Range(func(key, item interface{}) bool {
+		errArgs := &logutils.FieldArgs{"id": key}
+		if item == nil {
+			err = errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigs, errArgs)
+			return false
+		}
+
+		appConfig, ok := item.(model.ApplicationConfigs)
+		if !ok {
+			err = errors.ErrorAction(logutils.ActionCast, model.TypeApplicationConfigs, errArgs)
+			return false
+		}
+
+		appConfigList = append(appConfigList, appConfig)
+		return true
+	})
+
+	return appConfigList, err
 }
 
 //LoadAuthTypes loads all auth types
@@ -1226,41 +1362,10 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 	return result, nil
 }
 
-//FindAppConfigs finds appconfigs
-func (sa *Adapter) FindAppConfigs(appID string, versionNumbers map[string]string) ([]model.ApplicationConfigs, error) {
+//LoadAppConfigs loads all application configs
+func (sa *Adapter) LoadAppConfigs() ([]model.ApplicationConfigs, error) {
 	filter := bson.D{}
-
-	if versionNumbers != nil {
-		major, _ := strconv.ParseInt(versionNumbers["major"], 10, 64)
-		minor, _ := strconv.ParseInt(versionNumbers["minor"], 10, 64)
-		patch, _ := strconv.ParseInt(versionNumbers["patch"], 10, 64)
-
-		filter = bson.D{
-			primitive.E{Key: "$or", Value: []interface{}{
-				primitive.E{Key: "$and", Value: []interface{}{
-					bson.D{primitive.E{Key: "version_numbers.major", Value: bson.M{"$eq": major}}},
-					bson.D{primitive.E{Key: "version_numbers.minor", Value: bson.M{"$eq": minor}}},
-					bson.D{primitive.E{Key: "version_numbers.patch", Value: bson.M{"$lte": patch}}},
-				}},
-				primitive.E{Key: "$and", Value: []interface{}{
-					bson.D{primitive.E{Key: "version_numbers.major", Value: bson.M{"$eq": major}}},
-					bson.D{primitive.E{Key: "version_numbers.minor", Value: bson.M{"$lt": minor}}},
-				}},
-				bson.D{
-					primitive.E{Key: "version_numbers.major", Value: bson.M{"$lt": major}},
-				},
-			}},
-		}
-	}
-
 	var result []model.ApplicationConfigs
-	// if version != "" {
-	// 	filter = append(filter, primitive.E{Key: "version", Value: version})
-	// }
-	if appID != "" {
-		filter = append(filter, primitive.E{Key: "app_id", Value: appID})
-	}
-	fmt.Printf("filter: %v", filter)
 	err := sa.db.applicationConfigs.Find(filter, &result, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
@@ -1274,21 +1379,33 @@ func (sa *Adapter) FindAppConfigs(appID string, versionNumbers map[string]string
 	return result, nil
 }
 
-//FindAppConfigByID finds appconfig by ID
-func (sa *Adapter) FindAppConfigByID(ID string) (*model.ApplicationConfigs, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	var result []model.ApplicationConfigs
-	err := sa.db.applicationConfigs.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
-	}
-	if len(result) == 0 {
-		//no record
-		return nil, nil
+//FindAppConfigs finds appconfigs
+func (sa *Adapter) FindAppConfigs(appID string, versionNumbers model.VersionNumbers) ([]model.ApplicationConfigs, error) {
+	if appID == "" {
+		return sa.getCachedApplicationConfigs()
 	}
 
-	appConfigs := result[0]
-	return &appConfigs, nil
+	appConfigs := make([]model.ApplicationConfigs, 0)
+	if versionNumbers.Major == "" {
+		cachedConfig, err := sa.getCachedApplicationConfig(appID)
+		if err != nil {
+			return appConfigs, err
+		}
+		appConfigs = append(appConfigs, *cachedConfig)
+	} else {
+		cachedConfig, err := sa.getCachedApplicationConfigByAppIDVersion(appID, versionNumbers)
+		if err != nil {
+			return appConfigs, err
+		}
+		appConfigs = append(appConfigs, *cachedConfig)
+	}
+
+	return appConfigs, nil
+}
+
+//FindAppConfigByID finds appconfig by ID
+func (sa *Adapter) FindAppConfigByID(ID string) (*model.ApplicationConfigs, error) {
+	return sa.getCachedApplicationConfig(ID)
 }
 
 // InsertAppConfig inserts an appconfig
@@ -1302,7 +1419,7 @@ func (sa *Adapter) InsertAppConfig(appConfig model.ApplicationConfigs) (*model.A
 }
 
 // UpdateAppConfig updates an appconfig
-func (sa *Adapter) UpdateAppConfig(ID string, version string, data map[string]interface{}, versionNumbers map[string]string) error {
+func (sa *Adapter) UpdateAppConfig(ID string, version string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
 	now := time.Now()
 	//TODO - use pointers and update only what not nil
 	updatAppConfigFilter := bson.D{primitive.E{Key: "_id", Value: ID}}

@@ -80,7 +80,7 @@ func checkAppVersionFormat(version string) bool {
 	return true
 }
 
-func createVersionNumbers(version string) map[string]string {
+func createVersionNumbers(version string) *model.VersionNumbers {
 	validVersionRegex := regexp.MustCompile(`^(?P<major>\d+).(?P<minor>\d+).(?P<patch>\d+)$`)
 	if !validVersionRegex.MatchString(version) {
 		return nil
@@ -93,11 +93,5 @@ func createVersionNumbers(version string) map[string]string {
 		md[n1[i]] = n
 	}
 
-	versionNumbers := map[string]string{
-		"major": md["major"],
-		"minor": md["minor"],
-		"patch": md["patch"],
-	}
-
-	return versionNumbers
+	return &model.VersionNumbers{Major: md["mojor"], Minor: md["minor"], Patch: md["patch"]}
 }

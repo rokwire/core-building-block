@@ -18,7 +18,7 @@ type Services interface {
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
 
-	SerGetAppConfigs(appID string, versionNumbers map[string]string) ([]model.ApplicationConfigs, error)
+	SerGetAppConfigs(appID string, versionNumbers model.VersionNumbers) ([]model.ApplicationConfigs, error)
 }
 
 //Administration exposes administration APIs for the driver adapters
@@ -57,10 +57,10 @@ type System interface {
 
 	SysCreateAppOrgRole(name string, appID string, description string, permissionNames []string) (*model.AppOrgRole, error)
 
-	SysGetAppConfigs(appID string, versionNumbers map[string]string) ([]model.ApplicationConfigs, error)
+	SysGetAppConfigs(appID string, versionNumbers model.VersionNumbers) ([]model.ApplicationConfigs, error)
 	SysGetAppConfig(id string) (*model.ApplicationConfigs, error)
-	SysCreateAppConfig(version string, appID string, data map[string]interface{}, versionNumbers map[string]string) (*model.ApplicationConfigs, error)
-	SysUpdateAppConfig(id string, version string, data map[string]interface{}, versionNumbers map[string]string) error
+	SysCreateAppConfig(version string, appID string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfigs, error)
+	SysUpdateAppConfig(id string, version string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
 	SysDeleteAppConfig(id string) error
 
 	SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
@@ -111,11 +111,11 @@ type Storage interface {
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 
-	FindAppConfigs(appID string, versionNumbers map[string]string) ([]model.ApplicationConfigs, error)
-	FindAppConfigByID(id string) (*model.ApplicationConfigs, error)
+	FindAppConfigs(appID string, versionNumbers model.VersionNumbers) ([]model.ApplicationConfigs, error)
+	FindAppConfigByID(ID string) (*model.ApplicationConfigs, error)
 	InsertAppConfig(appConfig model.ApplicationConfigs) (*model.ApplicationConfigs, error)
-	UpdateAppConfig(id string, version string, data map[string]interface{}, versionNumbers map[string]string) error
-	DeleteAppConfig(id string) error
+	UpdateAppConfig(ID string, version string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
+	DeleteAppConfig(ID string) error
 }
 
 //StorageListener listenes for change data storage events
