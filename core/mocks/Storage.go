@@ -43,13 +43,13 @@ func (_m *Storage) DeleteAccount(context storage.TransactionContext, id string) 
 	return r0
 }
 
-// DeleteAppConfig provides a mock function with given fields: id
-func (_m *Storage) DeleteAppConfig(id string) error {
-	ret := _m.Called(id)
+// DeleteAppConfig provides a mock function with given fields: ID
+func (_m *Storage) DeleteAppConfig(ID string) error {
+	ret := _m.Called(ID)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(id)
+		r0 = rf(ID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -150,13 +150,13 @@ func (_m *Storage) FindAccountByID(context storage.TransactionContext, id string
 	return r0, r1
 }
 
-// FindAppConfigByID provides a mock function with given fields: id
-func (_m *Storage) FindAppConfigByID(id string) (*model.ApplicationConfigs, error) {
-	ret := _m.Called(id)
+// FindAppConfigByID provides a mock function with given fields: ID
+func (_m *Storage) FindAppConfigByID(ID string) (*model.ApplicationConfigs, error) {
+	ret := _m.Called(ID)
 
 	var r0 *model.ApplicationConfigs
 	if rf, ok := ret.Get(0).(func(string) *model.ApplicationConfigs); ok {
-		r0 = rf(id)
+		r0 = rf(ID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.ApplicationConfigs)
@@ -165,7 +165,7 @@ func (_m *Storage) FindAppConfigByID(id string) (*model.ApplicationConfigs, erro
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(id)
+		r1 = rf(ID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -566,13 +566,13 @@ func (_m *Storage) UpdateAccountPreferences(accountID string, preferences map[st
 	return r0
 }
 
-// UpdateAppConfig provides a mock function with given fields: id, version, data, versionNumbers
-func (_m *Storage) UpdateAppConfig(id string, version string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
-	ret := _m.Called(id, version, data, versionNumbers)
+// UpdateAppConfig provides a mock function with given fields: ID, version, data, versionNumbers
+func (_m *Storage) UpdateAppConfig(ID string, version string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
+	ret := _m.Called(ID, version, data, versionNumbers)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string, map[string]interface{}, model.VersionNumbers) error); ok {
-		r0 = rf(id, version, data, versionNumbers)
+		r0 = rf(ID, version, data, versionNumbers)
 	} else {
 		r0 = ret.Error(0)
 	}
