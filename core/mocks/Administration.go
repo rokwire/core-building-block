@@ -13,6 +13,29 @@ type Administration struct {
 	mock.Mock
 }
 
+// AdmCreateAppOrgGroup provides a mock function with given fields: name, ID, permissionID
+func (_m *Administration) AdmCreateAppOrgGroup(name string, ID string, permissionID []string) (*model.AppOrgGroup, error) {
+	ret := _m.Called(name, ID, permissionID)
+
+	var r0 *model.AppOrgGroup
+	if rf, ok := ret.Get(0).(func(string, string, []string) *model.AppOrgGroup); ok {
+		r0 = rf(name, ID, permissionID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.AppOrgGroup)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string, []string) error); ok {
+		r1 = rf(name, ID, permissionID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // AdmCreateAppOrgRole provides a mock function with given fields: name, addID, description, permissionID
 func (_m *Administration) AdmCreateAppOrgRole(name string, addID string, description string, permissionID []string) (*model.AppOrgRole, error) {
 	ret := _m.Called(name, addID, description, permissionID)
