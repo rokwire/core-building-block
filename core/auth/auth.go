@@ -537,16 +537,18 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 	orgID := appOrg.Organization.ID
 	appID := appOrg.Application.ID
 	uid := ""
+	name := ""
 	email := ""
 	phone := ""
 	permissions := []string{}
 	if !anonymous {
 		uid = accountAuthType.Identifier
+		name = accountAuthType.Account.Profile.GetFullName()
 		email = accountAuthType.Account.Profile.Email
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, email, phone, "rokwire", orgID, appID, authType.Code, nil, anonymous, true, false)
+	claims := a.getStandardClaims(sub, uid, name, email, phone, "rokwire", orgID, appID, authType.Code, nil, anonymous, true, false)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -872,7 +874,7 @@ func (a *Auth) buildRefreshToken() (string, *time.Time, error) {
 	return newToken, &expireTime, nil
 }
 
-func (a *Auth) getStandardClaims(sub string, uid string, email string, phone string, aud string, orgID string, appID string,
+func (a *Auth) getStandardClaims(sub string, uid string, name string, email string, phone string, aud string, orgID string, appID string,
 	authType string, exp *int64, anonymous bool, authenticated bool, service bool) tokenauth.Claims {
 	return tokenauth.Claims{
 		StandardClaims: jwt.StandardClaims{
@@ -881,7 +883,7 @@ func (a *Auth) getStandardClaims(sub string, uid string, email string, phone str
 			ExpiresAt: a.getExp(exp),
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    a.host,
-		}, OrgID: orgID, AppID: appID, AuthType: authType, UID: uid, Email: email, Phone: phone, Anonymous: anonymous, Authenticated: authenticated, Service: service,
+		}, OrgID: orgID, AppID: appID, AuthType: authType, UID: uid, Name: name, Email: email, Phone: phone, Anonymous: anonymous, Authenticated: authenticated, Service: service,
 	}
 }
 

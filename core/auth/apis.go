@@ -225,6 +225,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 
 	anonymous := loginSession.Anonymous
 	uid := ""
+	name := ""
 	email := ""
 	phone := ""
 	permissions := []string{}
@@ -264,11 +265,12 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 			return nil, errors.ErrorAction("for some reasons account auth type is null for not anonymous login", "", nil)
 		}
 		uid = accountAuthType.Identifier
+		name = accountAuthType.Account.Profile.GetFullName()
 		email = accountAuthType.Account.Profile.Email
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, email, phone, "rokwire", orgID, appID, authType, nil, anonymous, false, false)
+	claims := a.getStandardClaims(sub, uid, name, email, phone, "rokwire", orgID, appID, authType, nil, anonymous, false, false)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
@@ -398,7 +400,7 @@ func (a *Auth) GetServiceToken(serviceAccountID string, authType string, creds s
 	}
 
 	permissions := account.GetPermissionNames()
-	claims := a.getStandardClaims(serviceAccountID, "", "", "", "rokwire", account.AppOrg.Organization.ID, account.AppOrg.Application.ID, authType, nil, false, false, true)
+	claims := a.getStandardClaims(serviceAccountID, "", "", "", "", "rokwire", account.AppOrg.Organization.ID, account.AppOrg.Application.ID, authType, nil, false, false, true)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -468,7 +470,7 @@ func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 	aud := strings.Join(services, ",")
 	scope := strings.Join(scopeStrings, " ")
 
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, nil, claims.Anonymous, claims.Authenticated, claims.Service)
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, nil, claims.Anonymous, claims.Authenticated, claims.Service)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
