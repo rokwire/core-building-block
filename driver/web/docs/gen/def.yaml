@@ -3084,17 +3084,17 @@ components:
       type: object
       properties:
         fields:
-          $ref: '#/components/schemas/AppOrgGroupFields'
+          $ref: '#/components/schemas/AppOrgGroup'
         application:
-          $ref: '#/components/schemas/ApplicationFields'
+          $ref: '#/components/schemas/Application'
         permissions:
           type: array
           items:
-            $ref: '#/components/schemas/PermissionFields'
+            $ref: '#/components/schemas/Permission'
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/AppOrgRoleFields'
+            $ref: '#/components/schemas/AppOrgRole'
     _req_account-permissions_Request:
       required:
         - account_id
