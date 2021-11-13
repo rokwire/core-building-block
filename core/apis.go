@@ -110,6 +110,7 @@ func (s *administrationImpl) AdmGetTest() string {
 func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
+
 func (s *administrationImpl) AdmGetPermissions(serviceID []string) ([]model.Permission, error) {
 	return s.app.admGetPermissions(serviceID)
 }

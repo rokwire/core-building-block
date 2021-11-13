@@ -834,7 +834,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/auth/permissions:
+  /admin/permissions:
     get:
       deprecated: true
       tags:
@@ -2917,6 +2917,7 @@ components:
     _req_permissions_admin_Request:
       required:
         - name
+        - service_id
       type: object
       properties:
         name:
@@ -2925,7 +2926,6 @@ components:
           type: string
         assigners:
           type: array
-          description: permissions that could assign current permission to accounts
           items:
             type: string
     _req_application-roles_Request:

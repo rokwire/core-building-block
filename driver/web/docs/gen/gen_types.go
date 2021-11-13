@@ -531,10 +531,9 @@ type ReqPermissionsRequest struct {
 
 // ReqPermissionsAdminRequest defines model for _req_permissions_admin_Request.
 type ReqPermissionsAdminRequest struct {
-	// permissions that could assign current permission to accounts
 	Assigners *[]string `json:"assigners,omitempty"`
 	Name      string    `json:"name"`
-	ServiceId *string   `json:"service_id,omitempty"`
+	ServiceId string    `json:"service_id"`
 }
 
 // ReqSharedLogin defines model for _req_shared_Login.

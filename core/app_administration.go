@@ -163,7 +163,7 @@ func (app *application) admGetTestModel() string {
 }
 
 func (app *application) admGetPermissions(serviceID []string) ([]model.Permission, error) {
-	getPermissions, err := app.storage.FindPermissionsList(serviceID)
+	getPermissions, err := app.storage.FindPermissionsByServiceID(serviceID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypePermission, nil, err)
 	}

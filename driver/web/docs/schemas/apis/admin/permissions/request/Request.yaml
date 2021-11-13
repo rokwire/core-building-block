@@ -1,5 +1,6 @@
 required:
   - name
+  - service_id
 type: object
 properties:
   name:
@@ -8,6 +9,5 @@ properties:
     type: string
   assigners:
     type: array
-    description: permissions that could assign current permission to accounts
     items:
       type: string
