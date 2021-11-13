@@ -59,7 +59,7 @@ paths:
     $ref: "./resources/admin/auth/login-url.yaml"
   /admin/auth/appOrgRoles:
     $ref: "./resources/admin/auth/appOrgRole.yaml"
-  /admin/auth/appOrgGroups:
+  /admin/appOrgGroups:
     $ref: "./resources/admin/auth/appOrgGroups.yaml"
 
   #enc
