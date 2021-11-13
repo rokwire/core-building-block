@@ -9,15 +9,15 @@ properties:
     type: string
   system:
     type: boolean
-application:
+  application:
     type: array
     items:
       type: string
-permissions:
+  permissions:
     type: array
     items:
       type: string
-roles:
+  roles:
     type: array
     items:
       type: string

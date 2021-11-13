@@ -503,9 +503,12 @@ type ReqCreateOrganizationRequestType string
 
 // ReqCreateAppOrgGroupsRequest defines model for _req_create_AppOrgGroups_Request.
 type ReqCreateAppOrgGroupsRequest struct {
-	Id     string `json:"id"`
-	Name   string `json:"name"`
-	System *bool  `json:"system,omitempty"`
+	Application *[]string `json:"application,omitempty"`
+	Id          string    `json:"id"`
+	Name        string    `json:"name"`
+	Permissions *[]string `json:"permissions,omitempty"`
+	Roles       *[]string `json:"roles,omitempty"`
+	System      *bool     `json:"system,omitempty"`
 }
 
 // ReqCreateApplicationRequest defines model for _req_create_Application_Request.
