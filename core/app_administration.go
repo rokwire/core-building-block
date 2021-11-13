@@ -173,7 +173,7 @@ func (app *application) admGetApplicationOrgRoles() ([]model.AppOrgRole, error) 
 	return getAppOrgRoles, nil
 }
 
-func (app *application) admCreateAppOrgRole(name string, appID string, description string, permissionID []string) (*model.AppOrgRole, error) {
+func (app *application) admCreateAppOrgRole(name string, description string, permissionID []string) (*model.AppOrgRole, error) {
 	permissions, err := app.storage.FindPermissionsByID(permissionID)
 	if err != nil {
 		return nil, err

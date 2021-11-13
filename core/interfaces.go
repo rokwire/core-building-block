@@ -25,7 +25,7 @@ type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
 	AdmGetApplicationOrgRoles() ([]model.AppOrgRole, error)
-	AdmCreateAppOrgRole(name string, addID string, description string, permissionID []string) (*model.AppOrgRole, error)
+	AdmCreateAppOrgRole(name string, description string, permissionID []string) (*model.AppOrgRole, error)
 	AdmGetApplicationOrgGroups() ([]model.AppOrgGroup, error)
 }
 

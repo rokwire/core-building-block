@@ -230,13 +230,13 @@ func (h AdminApisHandler) adminCreateApplicationOrgRoles(l *logs.Log, r *http.Re
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqApplicationRolesRequest
+	var requestData Def.ReqCreateAppOrgRolesRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)
 	}
 
-	_, err = h.coreAPIs.Administration.AdmCreateAppOrgRole(requestData.Name, requestData.AppId, requestData.Description, requestData.Permissions)
+	_, err = h.coreAPIs.Administration.AdmCreateAppOrgRole(requestData.Name, requestData.Description, requestData.Permissions)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}

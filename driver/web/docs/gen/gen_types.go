@@ -501,6 +501,13 @@ type ReqCreateOrganizationRequest struct {
 // ReqCreateOrganizationRequestType defines model for ReqCreateOrganizationRequest.Type.
 type ReqCreateOrganizationRequestType string
 
+// ReqCreateAppOrgRolesRequest defines model for _req_create_AppOrgRoles_Request.
+type ReqCreateAppOrgRolesRequest struct {
+	Description string   `json:"description"`
+	Name        string   `json:"name"`
+	Permissions []string `json:"permissions"`
+}
+
 // ReqCreateApplicationRequest defines model for _req_create_Application_Request.
 type ReqCreateApplicationRequest struct {
 	ApplicationTypes *[]struct {
@@ -751,6 +758,9 @@ type ResSharedRokwireToken struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResSharedRokwireTokenTokenType string
 
+// PostAdminAppOrgRolesJSONBody defines parameters for PostAdminAppOrgRoles.
+type PostAdminAppOrgRolesJSONBody ReqCreateAppOrgRolesRequest
+
 // PostAdminAuthLoginJSONBody defines parameters for PostAdminAuthLogin.
 type PostAdminAuthLoginJSONBody ReqSharedLogin
 
@@ -879,6 +889,9 @@ type GetTpsServiceRegsParams struct {
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
+
+// PostAdminAppOrgRolesJSONRequestBody defines body for PostAdminAppOrgRoles for application/json ContentType.
+type PostAdminAppOrgRolesJSONRequestBody PostAdminAppOrgRolesJSONBody
 
 // PostAdminAuthLoginJSONRequestBody defines body for PostAdminAuthLogin for application/json ContentType.
 type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody
