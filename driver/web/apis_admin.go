@@ -269,13 +269,13 @@ func (h AdminApisHandler) adminCreateApplicationOrgGroups(l *logs.Log, r *http.R
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData model.AppOrgGroup
+	var requestData Def.AppOrgGroupFields
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgGroup, nil, err, http.StatusBadRequest, true)
 	}
 
-	_, err = h.coreAPIs.Administration.AdmCreateAppOrgGroup(requestData.Name, requestData.ID, nil)
+	_, err = h.coreAPIs.Administration.AdmCreateAppOrgGroup(requestData.Name, requestData.id)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
 	}

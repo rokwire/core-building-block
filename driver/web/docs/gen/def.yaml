@@ -913,29 +913,29 @@ paths:
         '500':
           description: Internal error
     post:
+      deprecated: true
       tags:
         - Admin
-      summary: Create applications_organizations_groups
+      summary: Create application_organization_groups
       description: |
-        Create applications_organizations_groups
+        Create application_organization_groups
       security:
         - bearerAuth: []
       requestBody:
-        description: |
-          Create applications_organizations_groups
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/_req_create_AppOrgGroups_Request'
+        description: application_organization_groups
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_create_AppOrgGroups_Request'
+        required: true
       responses:
         '200':
-          description: Successful operation
-          content: null
-          text/plain:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/_res_create_AppOrgGroups_Response'
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -3074,27 +3074,23 @@ components:
       type: object
       properties:
         id:
-          readOnly: true
           type: string
         name:
           type: string
         system:
           type: boolean
-    _res_create_AppOrgGroups_Response:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/AppOrgGroup'
-        application:
-          $ref: '#/components/schemas/Application'
-        permissions:
-          type: array
-          items:
-            $ref: '#/components/schemas/Permission'
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/AppOrgRole'
+      application:
+        type: array
+        items:
+          type: string
+      permissions:
+        type: array
+        items:
+          type: string
+      roles:
+        type: array
+        items:
+          type: string
     _req_account-permissions_Request:
       required:
         - account_id
