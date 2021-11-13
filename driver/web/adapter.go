@@ -95,7 +95,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/auth/appOrgRoles", we.wrapFunc(we.adminApisHandler.adminGetApplicationOrgRoles, nil)).Methods("GET")
 	adminSubrouter.HandleFunc("/auth/appOrgRoles", we.wrapFunc(we.adminApisHandler.adminCreateApplicationOrgRoles, nil)).Methods("POST")
 	adminSubrouter.HandleFunc("/auth/appOrgGroups", we.wrapFunc(we.adminApisHandler.adminGetApplicationOrgGroups, nil)).Methods("GET")
-	adminSubrouter.HandleFunc("/auth/appOrgGroups", we.wrapFunc(we.adminApisHandler.adminCreateApplicationOrgGroups, nil)).Methods("POST")
+	adminSubrouter.HandleFunc("/appOrgGroups", we.wrapFunc(we.adminApisHandler.adminCreateApplicationOrgGroups, nil)).Methods("POST")
 	///
 
 	///enc ///
