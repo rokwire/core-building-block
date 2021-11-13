@@ -198,13 +198,13 @@ func (app *application) admGetApplicationOrgGroups() ([]model.AppOrgGroup, error
 	return getAppOrgGroups, nil
 }
 
-func (app *application) admCreateAppOrgGroup(name string, ID string, permissionID []string) (*model.AppOrgGroup, error) {
+func (app *application) admCreateAppOrgGroup(name string, ID string, permissionID []string, rolesID []string) (*model.AppOrgGroup, error) {
 
 	permissions, err := app.storage.FindPermissionsByID(permissionID)
 	if err != nil {
 		return nil, err
 	}
-	var rolesID []string
+
 	role, err := app.storage.FindAppOrgRolesByID(rolesID)
 	if err != nil {
 		return nil, err
