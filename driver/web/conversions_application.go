@@ -93,5 +93,5 @@ func createVersionNumbers(version string) *model.VersionNumbers {
 		md[n1[i]] = n
 	}
 
-	return &model.VersionNumbers{Major: md["mojor"], Minor: md["minor"], Patch: md["patch"]}
+	return &model.VersionNumbers{Major: md["major"], Minor: md["minor"], Patch: md["patch"]}
 }

@@ -505,7 +505,7 @@ func (h SystemApisHandler) getAppConfigs(l *logs.Log, r *http.Request, claims *t
 	}
 
 	versionNumbers := createVersionNumbers(version)
-	appConfigs, err := h.coreAPIs.System.SysGetAppConfigs(appID, *versionNumbers)
+	appConfigs, err := h.coreAPIs.System.SysGetAppConfigs(appID, versionNumbers)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
 	}

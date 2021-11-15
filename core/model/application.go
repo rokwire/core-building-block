@@ -238,15 +238,26 @@ type VersionNumbers struct {
 	Patch string `json:"patch" bson:"patch"`
 }
 
+func (v *VersionNumbers) String() string {
+	if v == nil {
+		return ""
+	}
+	return fmt.Sprintf("%s.%s.%s", v.Major, v.Minor, v.Patch)
+}
+
 // LessThanOrEqualTo evaluates if v1 is less than or equal to v
-func (v VersionNumbers) LessThanOrEqualTo(v1 VersionNumbers) bool {
+func (v VersionNumbers) LessThanOrEqualTo(v1 *VersionNumbers) bool {
+	if v1 == nil {
+		return false
+	}
+
 	if v1.Major < v.Major {
 		return true
 	}
 	if v1.Major == v.Major && v1.Minor < v.Minor {
 		return true
 	}
-	if v1.Major == v.Major && v1.Minor < v.Minor && v1.Patch <= v.Patch {
+	if v1.Major == v.Major && v1.Minor == v.Minor && v1.Patch <= v.Patch {
 		return true
 	}
 

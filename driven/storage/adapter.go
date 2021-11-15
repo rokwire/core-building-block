@@ -399,6 +399,8 @@ func (sa *Adapter) setCachedApplicationConfigs(applicationConfigs *[]model.Appli
 	sa.cachedApplicationConfigs = &syncmap.Map{}
 	validate := validator.New()
 
+	var currentAppID string
+	var currentConfigList []model.ApplicationConfigs
 	for _, config := range *applicationConfigs {
 		err := validate.Struct(config)
 		if err != nil {
@@ -407,68 +409,70 @@ func (sa *Adapter) setCachedApplicationConfigs(applicationConfigs *[]model.Appli
 			// key 1 - ID
 			sa.cachedApplicationConfigs.Store(config.ID, config)
 
-			// key 2 - appID
-			sa.cachedApplicationConfigs.Store(config.AppID, config)
+			// key 2 - cahce pair {appID: []model.ApplicationConfigs}
+			appID := config.AppID
+			if currentAppID == "" {
+				currentAppID = appID
+			}
+			if currentAppID != appID {
+				// cache processed list
+				sa.cachedApplicationConfigs.Store(currentAppID, currentConfigList)
 
-			// key 3 - appID_version
-			key := fmt.Sprintf("%s_%s", config.AppID, config.Version)
-			sa.cachedApplicationConfigs.Store(key, config)
+				// init new appID and configList
+				currentAppID = appID
+				currentConfigList = make([]model.ApplicationConfigs, 0)
+			}
+			currentConfigList = append(currentConfigList, config)
 		}
 	}
 }
 
-func (sa *Adapter) getCachedApplicationConfigByAppIDVersion(appID string, versionNumbers model.VersionNumbers) (*model.ApplicationConfigs, error) {
+func (sa *Adapter) getCachedApplicationConfigByAppIDAndVersion(appID string, versionNumbers *model.VersionNumbers) (*model.ApplicationConfigs, error) {
 	sa.applicationConfigsLock.RLock()
 	defer sa.applicationConfigsLock.RUnlock()
 
-	version := fmt.Sprintf("%s.%s.%s", versionNumbers.Major, versionNumbers.Minor, versionNumbers.Patch)
-	key := fmt.Sprintf("%s-%s", appID, version)
-
-	errArgs := &logutils.FieldArgs{"appID": appID, "version": version}
-	item, _ := sa.cachedApplicationConfigs.Load(key)
-	if item != nil {
-		config, ok := item.(model.ApplicationConfigs)
-		if !ok {
-			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplicationConfigs, errArgs)
-		}
-		return &config, nil
-	}
-	// find highest one
 	var err error
 	var appConfig *model.ApplicationConfigs
 
-	sa.cachedApplicationConfigs.Range(func(key, item interface{}) bool {
-		errArgs := &logutils.FieldArgs{"id": key}
-		if item == nil {
-			err = errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigs, errArgs)
-			return false
-		}
+	errArgs := &logutils.FieldArgs{"appID": appID, "version": versionNumbers.String()}
+	item, ok := sa.cachedApplicationConfigs.Load(appID)
+	if !ok {
+		return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeApplicationConfigs, errArgs)
+	}
 
-		currentConfig, ok := item.(model.ApplicationConfigs)
+	if item != nil {
+		configList, ok := item.([]model.ApplicationConfigs)
 		if !ok {
-			return false
+			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplicationConfigs, errArgs)
 		}
 
-		if currentConfig.VersionNumbers.LessThanOrEqualTo(versionNumbers) {
-			appConfig = &currentConfig
-			// break the iteration
-			return false
+		if versionNumbers == nil {
+			return &configList[0], nil
 		}
 
-		return true
-	})
+		// return highest version <= versionNumbers
+		for _, config := range configList {
+			if config.VersionNumbers.LessThanOrEqualTo(versionNumbers) {
+				appConfig = &config
+				break
+			}
+		}
+	}
 
 	return appConfig, err
 }
 
-// get app config by id or app_id
-func (sa *Adapter) getCachedApplicationConfig(key string) (*model.ApplicationConfigs, error) {
+// get app config by id
+func (sa *Adapter) getCachedApplicationConfigByID(id string) (*model.ApplicationConfigs, error) {
 	sa.applicationConfigsLock.RLock()
 	defer sa.applicationConfigsLock.RUnlock()
 
-	errArgs := &logutils.FieldArgs{"id or app id": key}
+	errArgs := &logutils.FieldArgs{"id": id}
 
-	item, _ := sa.cachedApplicationConfigs.Load(key)
+	item, ok := sa.cachedApplicationConfigs.Load(id)
+	if !ok {
+		return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeApplicationConfigs, errArgs)
+	}
 	if item != nil {
 		config, ok := item.(model.ApplicationConfigs)
 		if !ok {
@@ -1380,20 +1384,20 @@ func (sa *Adapter) LoadAppConfigs() ([]model.ApplicationConfigs, error) {
 }
 
 //FindAppConfigs finds appconfigs
-func (sa *Adapter) FindAppConfigs(appID string, versionNumbers model.VersionNumbers) ([]model.ApplicationConfigs, error) {
+func (sa *Adapter) FindAppConfigs(appID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfigs, error) {
 	if appID == "" {
 		return sa.getCachedApplicationConfigs()
 	}
 
 	appConfigs := make([]model.ApplicationConfigs, 0)
-	if versionNumbers.Major == "" {
-		cachedConfig, err := sa.getCachedApplicationConfig(appID)
+	if versionNumbers == nil {
+		cachedConfig, err := sa.getCachedApplicationConfigByID(appID)
 		if err != nil {
 			return appConfigs, err
 		}
 		appConfigs = append(appConfigs, *cachedConfig)
 	} else {
-		cachedConfig, err := sa.getCachedApplicationConfigByAppIDVersion(appID, versionNumbers)
+		cachedConfig, err := sa.getCachedApplicationConfigByAppIDAndVersion(appID, versionNumbers)
 		if err != nil {
 			return appConfigs, err
 		}
@@ -1405,7 +1409,7 @@ func (sa *Adapter) FindAppConfigs(appID string, versionNumbers model.VersionNumb
 
 //FindAppConfigByID finds appconfig by ID
 func (sa *Adapter) FindAppConfigByID(ID string) (*model.ApplicationConfigs, error) {
-	return sa.getCachedApplicationConfig(ID)
+	return sa.getCachedApplicationConfigByID(ID)
 }
 
 // InsertAppConfig inserts an appconfig
@@ -1716,11 +1720,14 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	cachedApplicationsOrganizations := &syncmap.Map{}
 	applicationsOrganizationsLock := &sync.RWMutex{}
 
+	cachedApplicationConfigs := &syncmap.Map{}
+	applicationConfigsLock := &sync.RWMutex{}
+
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout, logger: logger}
 	return &Adapter{db: db, logger: logger, cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock,
 		cachedApplications: cachedApplications, applicationsLock: applicationsLock,
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
-		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock}
+		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock, cachedApplicationConfigs: cachedApplicationConfigs, applicationConfigsLock: applicationConfigsLock}
 }
 
 type storageListener struct {
