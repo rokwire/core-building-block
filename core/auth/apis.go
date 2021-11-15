@@ -358,8 +358,8 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 	if err != nil || authType == nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
 	}
-	if authType.IsExternal {
-		return errors.WrapErrorAction("invalid auth type for verify", model.TypeAuthType, nil, err)
+	if !authType.UseCredentials {
+		return errors.WrapErrorAction("invalid auth type for credential verification", model.TypeAuthType, nil, err)
 	}
 
 	authImpl, err := a.getAuthTypeImpl(*authType)
