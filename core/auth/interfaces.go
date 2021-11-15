@@ -27,8 +27,10 @@ type authType interface {
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
 	resetPassword(credential *model.Credential, resetCode *string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error)
-	// generates a reset password link with code and expiry and sends it to given identifier
-	forgotPassword(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error)
+
+	//apply forgot credential for the auth type (generates a reset password link with code and expiry and sends it to given identifier for email auth type)
+	forgotCredential(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error)
+
 	//getUserIdentifier parses the credentials and returns the user identifier
 	// Returns:
 	//	userIdentifier (string): User identifier

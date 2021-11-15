@@ -38,7 +38,7 @@ func (a *firebaseAuthImpl) resetPassword(credential *model.Credential, resetCode
 	return nil, nil
 }
 
-func (a *firebaseAuthImpl) forgotPassword(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
+func (a *firebaseAuthImpl) forgotCredential(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, nil
 }
 

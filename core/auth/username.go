@@ -38,7 +38,7 @@ func (a *usernameAuthImpl) resetPassword(credential *model.Credential, resetCode
 	return nil, nil
 }
 
-func (a *usernameAuthImpl) forgotPassword(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
+func (a *usernameAuthImpl) forgotCredential(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, nil
 }
 

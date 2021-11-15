@@ -484,10 +484,23 @@ func (a *Auth) ResetPasswordLink(credsID string, resetCode string, newPassword s
 //		error: if any
 func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
 	//validate if the provided auth type is supported by the provided application and organization
-	authType, _, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
+
+	//check for api key
+	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
+	err = a.validateAPIKey(apiKey, appType.Application.ID)
+	if err != nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+	}
+
+	//check if the auth types uses credentials
+	if !authType.UseCredentials {
+		return errors.WrapErrorAction("invalid auth type for forgot credential", model.TypeAuthType, nil, err)
+	}
+
 	authImpl, err := a.getAuthTypeImpl(*authType)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
@@ -509,7 +522,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 		return errors.New("Invalid account auth type for reset link")
 	}
 
-	authTypeCreds, err := authImpl.forgotPassword(credential, identifier, l)
+	authTypeCreds, err := authImpl.forgotCredential(credential, identifier, l)
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "forgot password", nil, err)
 	}

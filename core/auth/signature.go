@@ -38,7 +38,7 @@ func (a *signatureAuthImpl) resetPassword(credential *model.Credential, resetCod
 	return nil, nil
 }
 
-func (a *signatureAuthImpl) forgotPassword(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
+func (a *signatureAuthImpl) forgotCredential(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, nil
 }
 

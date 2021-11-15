@@ -272,7 +272,7 @@ func (a *twilioPhoneAuthImpl) resetPassword(credential *model.Credential, resetC
 	return nil, nil
 }
 
-func (a *twilioPhoneAuthImpl) forgotPassword(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
+func (a *twilioPhoneAuthImpl) forgotCredential(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, nil
 }
 

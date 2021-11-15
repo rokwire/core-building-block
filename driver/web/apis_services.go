@@ -440,7 +440,7 @@ func (h ServicesApisHandler) forgotCredential(l *logs.Log, r *http.Request, clai
 	}
 
 	if err := h.coreAPIs.Auth.ForgotCredential(string(requestData.AuthType), requestData.AppTypeIdentifier,
-		requestData.OrgId, *requestData.ApiKey, requestData.Identifier, l); err != nil {
+		requestData.OrgId, requestData.ApiKey, requestData.Identifier, l); err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
 	}
 

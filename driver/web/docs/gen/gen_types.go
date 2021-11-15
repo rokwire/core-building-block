@@ -538,7 +538,7 @@ type ReqCreateApplicationRequest struct {
 
 // ReqCredentialForgotRequest defines model for _req_credential_forgot_Request.
 type ReqCredentialForgotRequest struct {
-	ApiKey            *string                            `json:"api_key,omitempty"`
+	ApiKey            string                             `json:"api_key"`
 	AppTypeIdentifier string                             `json:"app_type_identifier"`
 	AuthType          ReqCredentialForgotRequestAuthType `json:"auth_type"`
 	Identifier        string                             `json:"identifier"`

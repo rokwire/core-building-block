@@ -278,7 +278,7 @@ func (a *emailAuthImpl) resetPassword(credential *model.Credential, resetCode *s
 	return credsMap, nil
 }
 
-func (a *emailAuthImpl) forgotPassword(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
+func (a *emailAuthImpl) forgotCredential(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
 	emailCreds, err := mapToEmailCreds(credential.Value)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error on map to email creds", "", nil, err)
