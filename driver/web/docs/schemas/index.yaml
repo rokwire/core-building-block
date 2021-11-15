@@ -65,6 +65,12 @@ JWKS:
 OIDCDiscovery:
   $ref: "./auth/OIDCDiscovery.yaml"
 
+# service accounts
+AccessTokenRequest:
+  $ref: "./auth/service-accounts/AccessTokenRequest.yaml"
+StaticToken:
+  $ref: "./auth/service-accounts/StaticToken.yaml"
+
 # user
 Account:
   $ref: "./user/Account.yaml"

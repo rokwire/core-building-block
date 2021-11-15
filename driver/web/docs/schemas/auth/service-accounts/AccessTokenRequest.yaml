@@ -1,0 +1,9 @@
+required:
+  - auth_type
+type: object
+properties:
+  auth_type:
+    type: string
+  creds:
+    anyOf:
+      - $ref: "./StaticToken.yaml"

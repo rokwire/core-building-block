@@ -151,6 +151,12 @@ type APIKey struct {
 	Key   string  `json:"key"`
 }
 
+// AccessTokenRequest defines model for AccessTokenRequest.
+type AccessTokenRequest struct {
+	AuthType string       `json:"auth_type"`
+	Creds    *interface{} `json:"creds,omitempty"`
+}
+
 // Account defines model for Account.
 type Account struct {
 	AppOrg      *ApplicationOrganization `json:"app_org,omitempty"`
@@ -453,6 +459,11 @@ type ServiceScope struct {
 	Explanation *string `json:"explanation,omitempty"`
 	Required    bool    `json:"required"`
 	Scope       string  `json:"scope"`
+}
+
+// Service account token for auth_type="static_token"
+type StaticToken struct {
+	Token string `json:"token"`
 }
 
 // ReqAccountExistsRequest defines model for _req_account-exists_Request.
@@ -884,6 +895,12 @@ type PostSystemServiceRegsJSONBody ServiceReg
 // PutSystemServiceRegsJSONBody defines parameters for PutSystemServiceRegs.
 type PutSystemServiceRegsJSONBody ServiceReg
 
+// DeleteTpsAccountTokenJSONBody defines parameters for DeleteTpsAccountToken.
+type DeleteTpsAccountTokenJSONBody StaticToken
+
+// PostTpsAccountTokenJSONBody defines parameters for PostTpsAccountToken.
+type PostTpsAccountTokenJSONBody AccessTokenRequest
+
 // GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
 type GetTpsServiceRegsParams struct {
 
@@ -962,6 +979,12 @@ type PostSystemServiceRegsJSONRequestBody PostSystemServiceRegsJSONBody
 
 // PutSystemServiceRegsJSONRequestBody defines body for PutSystemServiceRegs for application/json ContentType.
 type PutSystemServiceRegsJSONRequestBody PutSystemServiceRegsJSONBody
+
+// DeleteTpsAccountTokenJSONRequestBody defines body for DeleteTpsAccountToken for application/json ContentType.
+type DeleteTpsAccountTokenJSONRequestBody DeleteTpsAccountTokenJSONBody
+
+// PostTpsAccountTokenJSONRequestBody defines body for PostTpsAccountToken for application/json ContentType.
+type PostTpsAccountTokenJSONRequestBody PostTpsAccountTokenJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found

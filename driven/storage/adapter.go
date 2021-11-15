@@ -666,20 +666,26 @@ func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
 }
 
 //FindServiceAccountByID finds a service account by id
-func (sa *Adapter) FindServiceAccountByID(id string) (*model.ServiceAccount, error) {
-	return sa.findServiceAccount("_id", id)
+func (sa *Adapter) FindServiceAccountByID(context TransactionContext, id string) (*model.ServiceAccount, error) {
+	return sa.findServiceAccount(context, "_id", id)
 }
 
 //FindServiceAccountByToken finds a service account by token
 func (sa *Adapter) FindServiceAccountByToken(token string) (*model.ServiceAccount, error) {
-	return sa.findServiceAccount("tokens", token)
+	return sa.findServiceAccount(nil, "tokens", token)
 }
 
-func (sa *Adapter) findServiceAccount(key string, value string) (*model.ServiceAccount, error) {
+func (sa *Adapter) findServiceAccount(context TransactionContext, key string, value string) (*model.ServiceAccount, error) {
 	filter := bson.D{primitive.E{Key: key, Value: value}}
 
 	var account serviceAccount
-	err := sa.db.serviceAccounts.FindOne(filter, &account, nil)
+	var err error
+	if context != nil {
+		err = sa.db.serviceAccounts.FindOneWithContext(context, filter, &account, nil)
+	} else {
+		err = sa.db.serviceAccounts.FindOne(filter, &account, nil)
+	}
+
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &logutils.FieldArgs{key: value}, err)
 	}
@@ -696,7 +702,7 @@ func (sa *Adapter) findServiceAccount(key string, value string) (*model.ServiceA
 }
 
 //UpdateServiceAccount updates a service account
-func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) error {
+func (sa *Adapter) UpdateServiceAccount(context TransactionContext, account *model.ServiceAccount) error {
 	if account == nil {
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeServiceAccount, nil)
 	}
@@ -704,7 +710,15 @@ func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) error {
 	storageAccount := serviceAccountToStorage(*account)
 
 	filter := bson.D{primitive.E{Key: "_id", Value: account.ID}}
-	res, err := sa.db.serviceAccounts.UpdateOne(filter, storageAccount, nil)
+
+	var res *mongo.UpdateResult
+	var err error
+	if context != nil {
+		res, err = sa.db.serviceAccounts.UpdateOneWithContext(context, filter, storageAccount, nil)
+	} else {
+		res, err = sa.db.serviceAccounts.UpdateOne(filter, storageAccount, nil)
+	}
+
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, &logutils.FieldArgs{"_id": account.ID}, err)
 	}

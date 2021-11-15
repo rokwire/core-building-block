@@ -12,7 +12,7 @@ import (
 
 const (
 	//ServiceAuthTypeStaticToken static token service auth type
-	ServiceAuthTypeStaticToken string = "static token"
+	ServiceAuthTypeStaticToken string = "static_token"
 	//TypeStaticTokenCreds type static token creds
 	TypeStaticTokenCreds logutils.MessageDataType = "static token creds"
 )
@@ -45,11 +45,6 @@ func (s *staticTokenAuthImpl) checkCredentials(creds string, l *logs.Log) (*stri
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 	}
-
-	// err = s.auth.storage.UpdateServiceAccount(account)
-	// if err != nil {
-	// 	return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
-	// }
 
 	return nil, account, nil
 }

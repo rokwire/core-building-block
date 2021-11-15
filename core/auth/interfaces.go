@@ -135,7 +135,10 @@ type APIs interface {
 	GetServiceAccessToken(authType string, creds string, l *logs.Log) (*string, string, error)
 
 	//AddServiceToken adds a token to a service account
-	AddServiceToken(accountID string, l *logs.Log) (*string, string, error)
+	AddServiceToken(accountID string, l *logs.Log) (string, error)
+
+	//RemoveServiceToken removes a token from a service account
+	RemoveServiceToken(accountID string, token string) error
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
@@ -210,9 +213,9 @@ type Storage interface {
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 
 	//ServiceAccounts
-	FindServiceAccountByID(id string) (*model.ServiceAccount, error)
+	FindServiceAccountByID(context storage.TransactionContext, id string) (*model.ServiceAccount, error)
 	FindServiceAccountByToken(token string) (*model.ServiceAccount, error)
-	UpdateServiceAccount(account *model.ServiceAccount) error
+	UpdateServiceAccount(context storage.TransactionContext, account *model.ServiceAccount) error
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)

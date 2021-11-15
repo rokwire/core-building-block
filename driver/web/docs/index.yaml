@@ -73,6 +73,9 @@ paths:
     $ref: "./resources/third-party-services/service-regs.yaml"
   /tps/auth-keys:
     $ref: "./resources/third-party-services/auth-keys.yaml"
+  
+  /tps/account/token:
+    $ref: "./resources/third-party-services/account-tokens.yaml"
 
   #system
   /system/global-config:

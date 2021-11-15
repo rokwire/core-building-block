@@ -942,6 +942,94 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /tps/account/token:
+    post:
+      tags:
+        - Third-Party Services
+      summary: Get service account access token
+      description: |
+        Returns a new service account access token
+      requestBody:
+        description: |
+          Service account credentials
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccessTokenRequest'
+            examples:
+              static_token:
+                summary: Static token
+                value: |
+                  {
+                    "auth_type": "static_token"
+                    "creds": {
+                      "token": "account_token"
+                    }
+                  }
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      tags:
+        - Third-Party Services
+      summary: Add service account token
+      description: |
+        Adds a new token to a service account
+
+        **Auth:** Requires service account auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      tags:
+        - Third-Party Services
+      summary: Remove service account token
+      description: |
+        Removes a token from a service account
+
+        **Auth:** Requires service account auth token
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          Service account token
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaticToken'
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /system/global-config:
     get:
       deprecated: true
@@ -2163,6 +2251,24 @@ components:
         issuer:
           type: string
         jwks_uri:
+          type: string
+    AccessTokenRequest:
+      required:
+        - auth_type
+      type: object
+      properties:
+        auth_type:
+          type: string
+        creds:
+          anyOf:
+            - $ref: '#/components/schemas/StaticToken'
+    StaticToken:
+      required:
+        - token
+      type: object
+      description: Service account token for auth_type="static_token"
+      properties:
+        token:
           type: string
     Account:
       type: object
