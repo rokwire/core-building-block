@@ -225,6 +225,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 
 	anonymous := loginSession.Anonymous
 	uid := ""
+	name := ""
 	email := ""
 	phone := ""
 	permissions := []string{}
@@ -264,11 +265,12 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 			return nil, errors.ErrorAction("for some reasons account auth type is null for not anonymous login", "", nil)
 		}
 		uid = accountAuthType.Identifier
+		name = accountAuthType.Account.Profile.GetFullName()
 		email = accountAuthType.Account.Profile.Email
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, email, phone, "rokwire", orgID, appID, authType, nil, anonymous, false)
+	claims := a.getStandardClaims(sub, uid, name, email, phone, "rokwire", orgID, appID, authType, nil, anonymous, false)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
@@ -580,7 +582,7 @@ func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 	aud := strings.Join(services, ",")
 	scope := strings.Join(scopeStrings, " ")
 
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, nil, claims.Anonymous, claims.Authenticated)
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, nil, claims.Anonymous, claims.Authenticated)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
