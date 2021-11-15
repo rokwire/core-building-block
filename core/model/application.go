@@ -251,13 +251,13 @@ func (v VersionNumbers) LessThanOrEqualTo(v1 *VersionNumbers) bool {
 		return false
 	}
 
-	if v1.Major < v.Major {
+	if v.Major < v1.Major {
 		return true
 	}
-	if v1.Major == v.Major && v1.Minor < v.Minor {
+	if v.Major == v1.Major && v.Minor < v1.Minor {
 		return true
 	}
-	if v1.Major == v.Major && v1.Minor == v.Minor && v1.Patch <= v.Patch {
+	if v.Major == v1.Major && v.Minor == v1.Minor && v.Patch <= v1.Patch {
 		return true
 	}
 

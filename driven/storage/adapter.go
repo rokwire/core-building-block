@@ -330,7 +330,6 @@ func (sa *Adapter) cacheApplicationsOrganizations() error {
 	}
 
 	sa.setCachedApplicationsOrganizations(applicationsOrganizations)
-
 	return nil
 }
 
@@ -413,26 +412,27 @@ func (sa *Adapter) setCachedApplicationConfigs(applicationConfigs *[]model.Appli
 			appID := config.AppID
 			if currentAppID == "" {
 				currentAppID = appID
-			}
-			if currentAppID != appID {
+			} else if currentAppID != appID {
 				// cache processed list
 				sa.cachedApplicationConfigs.Store(currentAppID, currentConfigList)
-
 				// init new appID and configList
 				currentAppID = appID
 				currentConfigList = make([]model.ApplicationConfigs, 0)
 			}
+
 			currentConfigList = append(currentConfigList, config)
 		}
 	}
+
+	sa.cachedApplicationConfigs.Store(currentAppID, currentConfigList)
 }
 
-func (sa *Adapter) getCachedApplicationConfigByAppIDAndVersion(appID string, versionNumbers *model.VersionNumbers) (*model.ApplicationConfigs, error) {
+func (sa *Adapter) getCachedApplicationConfigByAppIDAndVersion(appID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfigs, error) {
 	sa.applicationConfigsLock.RLock()
 	defer sa.applicationConfigsLock.RUnlock()
 
 	var err error
-	var appConfig *model.ApplicationConfigs
+	appConfigs := make([]model.ApplicationConfigs, 0)
 
 	errArgs := &logutils.FieldArgs{"appID": appID, "version": versionNumbers.String()}
 	item, ok := sa.cachedApplicationConfigs.Load(appID)
@@ -447,19 +447,19 @@ func (sa *Adapter) getCachedApplicationConfigByAppIDAndVersion(appID string, ver
 		}
 
 		if versionNumbers == nil {
-			return &configList[0], nil
+			return configList, nil
 		}
 
 		// return highest version <= versionNumbers
 		for _, config := range configList {
 			if config.VersionNumbers.LessThanOrEqualTo(versionNumbers) {
-				appConfig = &config
+				appConfigs = append(appConfigs, config)
 				break
 			}
 		}
 	}
 
-	return appConfig, err
+	return appConfigs, err
 }
 
 // get app config by id
@@ -499,6 +499,11 @@ func (sa *Adapter) getCachedApplicationConfigs() ([]model.ApplicationConfigs, er
 
 		appConfig, ok := item.(model.ApplicationConfigs)
 		if !ok {
+			// skip appID : configList cache items
+			_, ok := item.([]model.ApplicationConfigs)
+			if ok {
+				return true
+			}
 			err = errors.ErrorAction(logutils.ActionCast, model.TypeApplicationConfigs, errArgs)
 			return false
 		}
@@ -1369,8 +1374,11 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 //LoadAppConfigs loads all application configs
 func (sa *Adapter) LoadAppConfigs() ([]model.ApplicationConfigs, error) {
 	filter := bson.D{}
+	options := options.Find()
+	options.SetSort(bson.D{primitive.E{Key: "version_numbers.major", Value: -1}, primitive.E{Key: "version_numbers.minor", Value: -1}, primitive.E{Key: "version_numbers.patch", Value: -1}}) //sort by version numbers
 	var result []model.ApplicationConfigs
-	err := sa.db.applicationConfigs.Find(filter, &result, nil)
+
+	err := sa.db.applicationConfigs.Find(filter, &result, options)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
 	}
@@ -1389,22 +1397,7 @@ func (sa *Adapter) FindAppConfigs(appID string, versionNumbers *model.VersionNum
 		return sa.getCachedApplicationConfigs()
 	}
 
-	appConfigs := make([]model.ApplicationConfigs, 0)
-	if versionNumbers == nil {
-		cachedConfig, err := sa.getCachedApplicationConfigByID(appID)
-		if err != nil {
-			return appConfigs, err
-		}
-		appConfigs = append(appConfigs, *cachedConfig)
-	} else {
-		cachedConfig, err := sa.getCachedApplicationConfigByAppIDAndVersion(appID, versionNumbers)
-		if err != nil {
-			return appConfigs, err
-		}
-		appConfigs = append(appConfigs, *cachedConfig)
-	}
-
-	return appConfigs, nil
+	return sa.getCachedApplicationConfigByAppIDAndVersion(appID, versionNumbers)
 }
 
 //FindAppConfigByID finds appconfig by ID

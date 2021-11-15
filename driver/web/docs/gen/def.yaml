@@ -596,14 +596,14 @@ paths:
       parameters:
         - name: version
           in: query
-          description: 'query by mobile app version and app_id, results contain all app configurations if no paramer is given; If given version, it will return the closest app config that is less than or equal to the given version.'
+          description: 'query by mobile app version and app_id, results contain all app configurations if no paramer is given; If given version and app_id, it will return the closest app config that is less than or equal to the given version.'
           style: form
           explode: false
           schema:
             type: string
         - name: app_id
           in: query
-          description: 'query by mobile app version and app_id, results contain all app configurations if no paramer is given; If given version, it will return the closest app config that is less than or equal to the given version.'
+          description: 'query by mobile app version and app_id, results contain all app configurations if no app_id is given; If given app_id, it will return the app configs that match the given app_id.'
           style: form
           explode: false
           schema:
@@ -1624,14 +1624,14 @@ paths:
       parameters:
         - name: version
           in: query
-          description: 'query by mobile app version and app_id, results contain all app configurations if no paramer is given; If given version, it will return the closest app config that is less than or equal to the given version.'
+          description: 'query by mobile app version and app_id, results contain all app configurations if no paramer is given; If given version and app_id, it will return the closest app config that is less than or equal to the given version.'
           style: form
           explode: false
           schema:
             type: string
         - name: app_id
           in: query
-          description: 'query by mobile app version and app_id, results contain all app configurations if no paramer is given; If given version, it will return the closest app config that is less than or equal to the given version.'
+          description: 'query by mobile app version and app_id, results contain all app configurations if no app_id is given; If given app_id, it will return the app configs that match the given app_id.'
           style: form
           explode: false
           schema:
