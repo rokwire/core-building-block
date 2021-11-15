@@ -36,7 +36,7 @@ paths:
   /services/auth/credential/verify:
     $ref: "./resources/services/auth/credential/verify.yaml"
   /services/auth/credential/forgot/initiate:
-    $ref: "./resources/services/auth/credential/initiate/forgot.yaml"
+    $ref: "./resources/services/auth/credential/forgot/initiate.yaml"
   /services/auth/reset-password-link:
     $ref: "./resources/services/auth/reset-password-link.yaml"
   /services/auth/reset-password-client:
