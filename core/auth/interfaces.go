@@ -123,8 +123,17 @@ type APIs interface {
 	ResetPasswordClient(accountID string, accountAuthTypeID string, newPassword string, confirmPassword string, l *logs.Log) error
 	//ResetPasswordLink updates the credential object with the new password from reset link
 	ResetPasswordLink(credsID string, resetCode string, newPassword string, confirmPassword string, l *logs.Log) error
-	// ForgotPassword generates a reset link and sends to the given identifier
-	ForgotPassword(authenticationType string, appTypeIdentifier string, orgID string, identifier string, l *logs.Log) error
+
+	//ForgotCredential initialize forgot credential process (generates a reset link and sends to the given identifier for email auth type)
+	//	Input:
+	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		identifier: identifier of the account auth type
+	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
+	//		orgID (string): ID of the organization that the user is logging in
+	//		apiKey (string): API key to validate the specified app
+	//	Returns:
+	//		error: if any
+	ForgotCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:

@@ -426,40 +426,21 @@ func (h ServicesApisHandler) resetPasswordLink(l *logs.Log, r *http.Request, cla
 	return l.HttpResponseSuccessMessage("Reset Password from link successfully")
 }
 
-//Handler for forgot password endpoint
-func (h ServicesApisHandler) forgotPassword(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+//Handler for forgot credential endpoint
+func (h ServicesApisHandler) forgotCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqForgotPasswordRequest
+	var requestData Def.ReqCredentialForgotRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.ForgotPassword(string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.OrgId, requestData.Identifier, l); err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
-	}
-
-	return l.HttpResponseSuccessMessage("Sent forgot password link successfully")
-}
-
-//Handler for forgot password endpoint
-func (h ServicesApisHandler) renderResetPasswordForm(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.ReqForgotPasswordRequest
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password request"), nil, err, http.StatusBadRequest, true)
-	}
-
-	if err := h.coreAPIs.Auth.ForgotPassword(string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.OrgId, requestData.Identifier, l); err != nil {
+	if err := h.coreAPIs.Auth.ForgotCredential(string(requestData.AuthType), requestData.AppTypeIdentifier,
+		requestData.OrgId, *requestData.ApiKey, requestData.Identifier, l); err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
 	}
 

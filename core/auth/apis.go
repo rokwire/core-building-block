@@ -473,15 +473,16 @@ func (a *Auth) ResetPasswordLink(credsID string, resetCode string, newPassword s
 	return nil
 }
 
-//ForgotPassword generates a reset link with code and expiry and sends it to the given identifier
+//ForgotCredential initialize forgot credential process (generates a reset link and sends to the given identifier for email auth type)
 //	Input:
 //		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		identifier: identifier of the account auth type
 //		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
+//		apiKey (string): API key to validate the specified app
 //	Returns:
 //		error: if any
-func (a *Auth) ForgotPassword(authenticationType string, appTypeIdentifier string, orgID string, identifier string, l *logs.Log) error {
+func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, _, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {

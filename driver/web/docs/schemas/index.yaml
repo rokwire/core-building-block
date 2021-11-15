@@ -140,9 +140,9 @@ _req_reset-password-client_Request:
 _req_reset-password-link_Request:
   $ref: "./apis/services/reset-password-link/request/Request.yaml"
 
-### forgot-password API
-_req_forgot-password_Request:
-  $ref: "./apis/services/forgot-password/request/Request.yaml"
+### credential-forgot API
+_req_credential_forgot_Request:
+  $ref: "./apis/services/credential/forgot/request/Request.yaml"
 
 ### authorize-service API
 _req_authorize-service_Request:
