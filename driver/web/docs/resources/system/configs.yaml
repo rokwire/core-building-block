@@ -1,5 +1,5 @@
 post:
-  # deprecated: true
+  deprecated: true
   tags:
   - System
   summary: Creates mobile app configuration
@@ -50,7 +50,7 @@ post:
     500:
       description: Internal error
 get:
-  # deprecated: true
+  deprecated: true
   tags:
   - System
   summary: Reads mobile app configuration

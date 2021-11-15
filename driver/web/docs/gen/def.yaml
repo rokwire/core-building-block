@@ -1564,6 +1564,7 @@ paths:
           description: Internal error
   /system/app/configs:
     post:
+      deprecated: true
       tags:
         - System
       summary: Creates mobile app configuration
@@ -1614,6 +1615,7 @@ paths:
         '500':
           description: Internal error
     get:
+      deprecated: true
       tags:
         - System
       summary: Reads mobile app configuration
@@ -1657,6 +1659,7 @@ paths:
           description: Internal error
   '/system/app/configs/{id}':
     get:
+      deprecated: true
       tags:
         - System
       summary: Reads mobile app configuration by given id
@@ -1703,6 +1706,7 @@ paths:
         '500':
           description: Internal error
     put:
+      deprecated: true
       tags:
         - System
       summary: Updates mobile app configuration
@@ -1743,6 +1747,7 @@ paths:
         '500':
           description: Internal error
     delete:
+      deprecated: true
       tags:
         - System
       summary: Deletes mobile app configuration
