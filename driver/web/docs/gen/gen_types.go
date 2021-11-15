@@ -79,17 +79,17 @@ const (
 	ReqCreateOrganizationRequestTypeSmall ReqCreateOrganizationRequestType = "small"
 )
 
-// Defines values for ReqCredentialForgotRequestAuthType.
+// Defines values for ReqCredentialForgotInitiateRequestAuthType.
 const (
-	ReqCredentialForgotRequestAuthTypeApiKey ReqCredentialForgotRequestAuthType = "api_key"
+	ReqCredentialForgotInitiateRequestAuthTypeApiKey ReqCredentialForgotInitiateRequestAuthType = "api_key"
 
-	ReqCredentialForgotRequestAuthTypeEmail ReqCredentialForgotRequestAuthType = "email"
+	ReqCredentialForgotInitiateRequestAuthTypeEmail ReqCredentialForgotInitiateRequestAuthType = "email"
 
-	ReqCredentialForgotRequestAuthTypeIllinoisOidc ReqCredentialForgotRequestAuthType = "illinois_oidc"
+	ReqCredentialForgotInitiateRequestAuthTypeIllinoisOidc ReqCredentialForgotInitiateRequestAuthType = "illinois_oidc"
 
-	ReqCredentialForgotRequestAuthTypeTwilioPhone ReqCredentialForgotRequestAuthType = "twilio_phone"
+	ReqCredentialForgotInitiateRequestAuthTypeTwilioPhone ReqCredentialForgotInitiateRequestAuthType = "twilio_phone"
 
-	ReqCredentialForgotRequestAuthTypeUsername ReqCredentialForgotRequestAuthType = "username"
+	ReqCredentialForgotInitiateRequestAuthTypeUsername ReqCredentialForgotInitiateRequestAuthType = "username"
 )
 
 // Defines values for ReqSharedLoginAuthType.
@@ -536,17 +536,17 @@ type ReqCreateApplicationRequest struct {
 	RequiresOwnUsers        bool   `json:"requires_own_users"`
 }
 
-// ReqCredentialForgotRequest defines model for _req_credential_forgot_Request.
-type ReqCredentialForgotRequest struct {
-	ApiKey            string                             `json:"api_key"`
-	AppTypeIdentifier string                             `json:"app_type_identifier"`
-	AuthType          ReqCredentialForgotRequestAuthType `json:"auth_type"`
-	Identifier        string                             `json:"identifier"`
-	OrgId             string                             `json:"org_id"`
+// ReqCredentialForgotInitiateRequest defines model for _req_credential_forgot_initiate_Request.
+type ReqCredentialForgotInitiateRequest struct {
+	ApiKey            string                                     `json:"api_key"`
+	AppTypeIdentifier string                                     `json:"app_type_identifier"`
+	AuthType          ReqCredentialForgotInitiateRequestAuthType `json:"auth_type"`
+	Identifier        string                                     `json:"identifier"`
+	OrgId             string                                     `json:"org_id"`
 }
 
-// ReqCredentialForgotRequestAuthType defines model for ReqCredentialForgotRequest.AuthType.
-type ReqCredentialForgotRequestAuthType string
+// ReqCredentialForgotInitiateRequestAuthType defines model for ReqCredentialForgotInitiateRequest.AuthType.
+type ReqCredentialForgotInitiateRequestAuthType string
 
 // ReqGetApplicationRequest defines model for _req_get_Application_Request.
 type ReqGetApplicationRequest string
@@ -821,8 +821,8 @@ type PostServicesAuthAccountExistsJSONBody ReqAccountExistsRequest
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
-// PostServicesAuthCredentialForgotJSONBody defines parameters for PostServicesAuthCredentialForgot.
-type PostServicesAuthCredentialForgotJSONBody ReqCredentialForgotRequest
+// PostServicesAuthCredentialForgotInitiateJSONBody defines parameters for PostServicesAuthCredentialForgotInitiate.
+type PostServicesAuthCredentialForgotInitiateJSONBody ReqCredentialForgotInitiateRequest
 
 // GetServicesAuthCredentialVerifyParams defines parameters for GetServicesAuthCredentialVerify.
 type GetServicesAuthCredentialVerifyParams struct {
@@ -961,8 +961,8 @@ type PostServicesAuthAccountExistsJSONRequestBody PostServicesAuthAccountExistsJ
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody
 
-// PostServicesAuthCredentialForgotJSONRequestBody defines body for PostServicesAuthCredentialForgot for application/json ContentType.
-type PostServicesAuthCredentialForgotJSONRequestBody PostServicesAuthCredentialForgotJSONBody
+// PostServicesAuthCredentialForgotInitiateJSONRequestBody defines body for PostServicesAuthCredentialForgotInitiate for application/json ContentType.
+type PostServicesAuthCredentialForgotInitiateJSONRequestBody PostServicesAuthCredentialForgotInitiateJSONBody
 
 // PostServicesAuthLoginJSONRequestBody defines body for PostServicesAuthLogin for application/json ContentType.
 type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
