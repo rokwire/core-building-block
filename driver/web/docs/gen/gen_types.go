@@ -536,6 +536,14 @@ type ReqCreateApplicationRequest struct {
 	RequiresOwnUsers        bool   `json:"requires_own_users"`
 }
 
+// ReqCredentialForgotCompleteRequest defines model for _req_credential_forgot_complete_Request.
+type ReqCredentialForgotCompleteRequest struct {
+	ApiKey          string `json:"api_key"`
+	ConfirmPassword string `json:"confirm_password"`
+	NewPassword     string `json:"new_password"`
+	ResetCode       string `json:"reset_code"`
+}
+
 // ReqCredentialForgotInitiateRequest defines model for _req_credential_forgot_initiate_Request.
 type ReqCredentialForgotInitiateRequest struct {
 	ApiKey            string                                     `json:"api_key"`
@@ -814,7 +822,7 @@ type PostServicesAuthAccountExistsJSONBody ReqAccountExistsRequest
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
 // PostServicesAuthCredentialForgotCompleteJSONBody defines parameters for PostServicesAuthCredentialForgotComplete.
-type PostServicesAuthCredentialForgotCompleteJSONBody interface{}
+type PostServicesAuthCredentialForgotCompleteJSONBody ReqCredentialForgotCompleteRequest
 
 // PostServicesAuthCredentialForgotInitiateJSONBody defines parameters for PostServicesAuthCredentialForgotInitiate.
 type PostServicesAuthCredentialForgotInitiateJSONBody ReqCredentialForgotInitiateRequest

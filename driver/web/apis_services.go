@@ -407,7 +407,8 @@ func (h ServicesApisHandler) resetPasswordClient(l *logs.Log, r *http.Request, c
 }
 
 //Handler for reset password endpoint from reset link
-func (h ServicesApisHandler) resetPasswordLink(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	//TODO
 	/*	data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -428,7 +429,7 @@ func (h ServicesApisHandler) resetPasswordLink(l *logs.Log, r *http.Request, cla
 }
 
 //Handler for forgot credential endpoint
-func (h ServicesApisHandler) forgotCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h ServicesApisHandler) forgotCredentialInitiate(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)

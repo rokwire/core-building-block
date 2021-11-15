@@ -347,7 +347,7 @@ paths:
         content:
           application/json:
             schema:
-              ref: ../../../../../schemas/apis/services/credential/forgot/complete/request/Request.yaml
+              $ref: '#/components/schemas/_req_credential_forgot_complete_Request'
         required: true
       responses:
         '200':
