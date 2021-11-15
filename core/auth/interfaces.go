@@ -18,10 +18,10 @@ type authType interface {
 	//	credentialValue (map): Credential value
 	signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
 
-	//checks the verification code generated on email signup
+	//verifies credential (checks the verification code generated on email signup for email auth type)
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
-	verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error)
+	verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error)
 
 	//updates the value of the credential object with new password
 	// Returns:
@@ -116,8 +116,8 @@ type APIs interface {
 	//			Params (interface{}): authType-specific set of parameters passed back to client
 	Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.LoginSession, error)
 
-	//Verify checks the verification code in the credentials collection
-	Verify(id string, verification string, l *logs.Log) error
+	//VerifyCredential verifies credential (checks the verification code in the credentials collection)
+	VerifyCredential(id string, verification string, l *logs.Log) error
 
 	//ResetPasswordClient updates the credential object with the new password from client app
 	ResetPasswordClient(accountID string, accountAuthTypeID string, newPassword string, confirmPassword string, l *logs.Log) error

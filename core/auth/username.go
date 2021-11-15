@@ -26,7 +26,7 @@ func (a *usernameAuthImpl) getUserIdentifier(creds string) (string, error) {
 	return "", nil
 }
 
-func (a *usernameAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
+func (a *usernameAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
 

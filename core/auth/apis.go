@@ -342,8 +342,8 @@ func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, 
 	return loginURL, params, nil
 }
 
-//Verify checks the verification code generated on signup
-func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
+//VerifyCredential verifies credential (checks the verification code in the credentials collection)
+func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) error {
 	credential, err := a.storage.FindCredential(id)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
@@ -367,7 +367,7 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	authTypeCreds, err := authImpl.verify(credential, verification, l)
+	authTypeCreds, err := authImpl.verifyCredential(credential, verification, l)
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "verification code", nil, err)
 	}

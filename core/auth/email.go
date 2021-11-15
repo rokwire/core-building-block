@@ -191,7 +191,7 @@ func (a *emailAuthImpl) sendPasswordResetEmail(credentialID string, resetCode st
 	return a.auth.emailer.Send(email, "Password Reset", "Please click the link below to reset your password:\n"+passwordResetLink+"\n\nIf you did not request a password reset, please ignore this message.", nil)
 }
 
-func (a *emailAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
+func (a *emailAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
 	credBytes, err := json.Marshal(credential.Value)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)

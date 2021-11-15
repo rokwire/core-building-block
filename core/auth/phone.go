@@ -264,7 +264,7 @@ func (a *twilioPhoneAuthImpl) getUserIdentifier(creds string) (string, error) {
 	return requestCreds.Phone, nil
 }
 
-func (a *twilioPhoneAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
+func (a *twilioPhoneAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
 

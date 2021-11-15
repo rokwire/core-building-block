@@ -272,7 +272,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/auth/verify:
+  /services/auth/credential/verify:
     get:
       tags:
         - Services

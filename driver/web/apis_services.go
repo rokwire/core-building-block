@@ -367,7 +367,7 @@ func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request, claims *token
 }
 
 //Handler for verify endpoint
-func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h ServicesApisHandler) verifyCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
@@ -378,7 +378,7 @@ func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request, claims *to
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("code"), nil, http.StatusBadRequest, false)
 	}
 
-	if err := h.coreAPIs.Auth.Verify(id, code, l); err != nil {
+	if err := h.coreAPIs.Auth.VerifyCredential(id, code, l); err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionValidate, "code", nil, err, http.StatusInternalServerError, false)
 	}
 
