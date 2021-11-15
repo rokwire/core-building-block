@@ -2614,6 +2614,23 @@ components:
         country:
           type: string
           nullable: true
+    _req_shared_ServiceAccount:
+      type: object
+      properties:
+        app_id:
+          type: string
+          nullable: true
+        org_id:
+          type: string
+          nullable: true
+        permissions:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            type: string
     _res_shared_LoginUrl:
       required:
         - login_url

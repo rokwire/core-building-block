@@ -111,8 +111,8 @@ func (we Adapter) Start() {
 	tpsSubrouter.HandleFunc("/auth-keys", we.wrapFunc(we.tpsApisHandler.getAuthKeys, nil)).Methods("GET")                //Public
 
 	tpsSubrouter.HandleFunc("/account/token", we.wrapFunc(we.tpsApisHandler.getServiceAccessToken, nil)).Methods("POST")
-	tpsSubrouter.HandleFunc("/account/token", we.wrapFunc(we.tpsApisHandler.addServiceToken, nil)).Methods("PUT")
-	tpsSubrouter.HandleFunc("/account/token", we.wrapFunc(we.tpsApisHandler.removeServiceToken, nil)).Methods("DELETE")
+	tpsSubrouter.HandleFunc("/account/token", we.wrapFunc(we.tpsApisHandler.addServiceToken, we.auth.serviceAccountAuth)).Methods("PUT")
+	tpsSubrouter.HandleFunc("/account/token", we.wrapFunc(we.tpsApisHandler.removeServiceToken, we.auth.serviceAccountAuth)).Methods("DELETE")
 	///
 
 	///system ///

@@ -120,6 +120,8 @@ _req_shared_Profile:
   $ref: "../schemas/apis/shared/requests/Profile.yaml"
 _req_shared_ProfileNullable:
   $ref: "../schemas/apis/shared/requests/ProfileNullable.yaml"
+_req_shared_ServiceAccount:
+  $ref: "../schemas/apis/shared/requests/ServiceAccount.yaml"
 
 #### responses
 _res_shared_LoginUrl:

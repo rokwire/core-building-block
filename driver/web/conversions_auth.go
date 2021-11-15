@@ -52,6 +52,10 @@ func apiKeyListToDef(items []model.APIKey) []Def.APIKey {
 	return out
 }
 
+func serviceAccountFromDef(item *Def.ServiceAccount) (*model.ServiceAccount, error) {
+
+}
+
 func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceReg, error) {
 	if item == nil {
 		return nil, nil
