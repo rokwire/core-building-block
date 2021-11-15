@@ -338,18 +338,16 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/auth/reset-password-link:
+  /services/auth/credential/forgot/complete:
     post:
       tags:
         - Services
-      summary: Reset the login password from reset link
-      description: |
-        Updates the credential with new password
+      summary: Complete resetting forgotten credential
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_reset-password-link_Request'
+              ref: ../../../../../schemas/apis/services/credential/forgot/complete/request/Request.yaml
         required: true
       responses:
         '200':
@@ -2733,22 +2731,6 @@ components:
           type: string
         confirm_password:
           type: string
-    _req_reset-password-link_Request:
-      required:
-        - creds_id
-        - reset_code
-        - new_password
-        - confirm_password
-      type: object
-      properties:
-        creds_id:
-          type: string
-        reset_code:
-          type: string
-        new_password:
-          type: string
-        confirm_password:
-          type: string
     _req_credential_forgot_initiate_Request:
       required:
         - auth_type
@@ -2773,6 +2755,22 @@ components:
         api_key:
           type: string
         identifier:
+          type: string
+    _req_credential_forgot_complete_Request:
+      required:
+        - api_key
+        - reset_code
+        - new_password
+        - confirm_password
+      type: object
+      properties:
+        api_key:
+          type: string
+        reset_code:
+          type: string
+        new_password:
+          type: string
+        confirm_password:
           type: string
     _req_authorize-service_Request:
       required:
