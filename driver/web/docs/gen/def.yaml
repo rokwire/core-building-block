@@ -314,7 +314,7 @@ paths:
     post:
       tags:
         - Services
-      summary: Initialize reset credential for a given identifier
+      summary: Initiate reset credential for a given identifier
       description: |
         Email auth type:
         Sends the reset password link for a given identifier

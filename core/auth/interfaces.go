@@ -126,7 +126,7 @@ type APIs interface {
 	//ResetPasswordLink updates the credential object with the new password from reset link
 	ResetPasswordLink(credsID string, resetCode string, newPassword string, confirmPassword string, l *logs.Log) error
 
-	//ForgotCredential initialize forgot credential process (generates a reset link and sends to the given identifier for email auth type)
+	//ForgotCredential initiate forgot credential process (generates a reset link and sends to the given identifier for email auth type)
 	//	Input:
 	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		identifier: identifier of the account auth type
