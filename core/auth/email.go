@@ -268,10 +268,14 @@ func (a *emailAuthImpl) resetCredential(credential *model.Credential, resetCode 
 	}
 	//reset password from link
 	if resetCode != nil {
-		err = a.compareCode(creds.ResetCode, *resetCode, creds.ResetExpiry, l)
+		if creds.ResetExpiry.Before(time.Now()) {
+			return nil, errors.WrapErrorAction(logutils.ActionValidate, typeTime, nil, errors.New("reset code has expired"))
+		}
+		err = bcrypt.CompareHashAndPassword([]byte(creds.ResetCode), []byte(*resetCode))
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, &logutils.FieldArgs{"reset_code": *resetCode}, errors.New("invalid reset code"))
 		}
+
 		//Update verification data
 		creds.ResetCode = ""
 		creds.ResetExpiry = time.Time{}
@@ -302,7 +306,11 @@ func (a *emailAuthImpl) forgotCredential(credential *model.Credential, identifie
 		return nil, errors.WrapErrorAction(logutils.ActionCompute, logutils.TypeString, nil, errors.New("failed to generate random string for reset code"))
 
 	}
-	emailCreds.ResetCode = resetCode
+	hashedResetCode, err := bcrypt.GenerateFromPassword([]byte(resetCode), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCompute, logutils.TypeString, nil, errors.New("failed to generate hash from reset code"))
+	}
+	emailCreds.ResetCode = string(hashedResetCode)
 	emailCreds.ResetExpiry = time.Now().Add(time.Hour * 24)
 	err = a.sendPasswordResetEmail(credential.ID, resetCode, identifier)
 	if err != nil {
