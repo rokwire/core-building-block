@@ -182,6 +182,29 @@ func (_m *Storage) FindAppOrgGroupsList() ([]model.AppOrgGroup, error) {
 	return r0, r1
 }
 
+// FindAppOrgRole provides a mock function with given fields: id
+func (_m *Storage) FindAppOrgRole(id string) (*model.AppOrgRole, error) {
+	ret := _m.Called(id)
+
+	var r0 *model.AppOrgRole
+	if rf, ok := ret.Get(0).(func(string) *model.AppOrgRole); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.AppOrgRole)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindAppOrgRoles provides a mock function with given fields: ids, appOrgID
 func (_m *Storage) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error) {
 	ret := _m.Called(ids, appOrgID)
