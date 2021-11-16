@@ -362,13 +362,13 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/auth/reset-password-client:
+  /services/auth/credential/update:
     post:
       tags:
         - Services
-      summary: Reset the login password from client application
+      summary: Reset a credential from client application
       description: |
-        Updates the credential with new password. Needs user auth token for authorization
+        Needs user auth token for authorization
 
         **Auth:** Requires token from direct user authentication from recent login
       security:
@@ -377,7 +377,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_reset-password-client_Request'
+              $ref: '#/components/schemas/_req_credential_update_Request'
         required: true
       responses:
         '200':
@@ -2718,7 +2718,7 @@ components:
           type: string
     _res_account-exists_Response:
       type: boolean
-    _req_reset-password-client_Request:
+    _req_credential_update_Request:
       required:
         - account_auth_type_id
         - new_password

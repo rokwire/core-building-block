@@ -556,6 +556,13 @@ type ReqCredentialForgotInitiateRequest struct {
 // ReqCredentialForgotInitiateRequestAuthType defines model for ReqCredentialForgotInitiateRequest.AuthType.
 type ReqCredentialForgotInitiateRequestAuthType string
 
+// ReqCredentialUpdateRequest defines model for _req_credential_update_Request.
+type ReqCredentialUpdateRequest struct {
+	AccountAuthTypeId string `json:"account_auth_type_id"`
+	ConfirmPassword   string `json:"confirm_password"`
+	NewPassword       string `json:"new_password"`
+}
+
 // ReqGetApplicationRequest defines model for _req_get_Application_Request.
 type ReqGetApplicationRequest string
 
@@ -571,13 +578,6 @@ type ReqPermissionsRequest struct {
 	Assigners *[]string `json:"assigners,omitempty"`
 	Name      string    `json:"name"`
 	ServiceId *string   `json:"service_id,omitempty"`
-}
-
-// ReqResetPasswordClientRequest defines model for _req_reset-password-client_Request.
-type ReqResetPasswordClientRequest struct {
-	AccountAuthTypeId string `json:"account_auth_type_id"`
-	ConfirmPassword   string `json:"confirm_password"`
-	NewPassword       string `json:"new_password"`
 }
 
 // ReqSharedLogin defines model for _req_shared_Login.
@@ -827,6 +827,9 @@ type PostServicesAuthCredentialForgotCompleteJSONBody ReqCredentialForgotComplet
 // PostServicesAuthCredentialForgotInitiateJSONBody defines parameters for PostServicesAuthCredentialForgotInitiate.
 type PostServicesAuthCredentialForgotInitiateJSONBody ReqCredentialForgotInitiateRequest
 
+// PostServicesAuthCredentialUpdateJSONBody defines parameters for PostServicesAuthCredentialUpdate.
+type PostServicesAuthCredentialUpdateJSONBody ReqCredentialUpdateRequest
+
 // GetServicesAuthCredentialVerifyParams defines parameters for GetServicesAuthCredentialVerify.
 type GetServicesAuthCredentialVerifyParams struct {
 
@@ -845,9 +848,6 @@ type PostServicesAuthLoginUrlJSONBody ReqSharedLoginUrl
 
 // PostServicesAuthRefreshJSONBody defines parameters for PostServicesAuthRefresh.
 type PostServicesAuthRefreshJSONBody ReqSharedRefresh
-
-// PostServicesAuthResetPasswordClientJSONBody defines parameters for PostServicesAuthResetPasswordClient.
-type PostServicesAuthResetPasswordClientJSONBody ReqResetPasswordClientRequest
 
 // GetServicesAuthServiceRegsParams defines parameters for GetServicesAuthServiceRegs.
 type GetServicesAuthServiceRegsParams struct {
@@ -967,6 +967,9 @@ type PostServicesAuthCredentialForgotCompleteJSONRequestBody PostServicesAuthCre
 // PostServicesAuthCredentialForgotInitiateJSONRequestBody defines body for PostServicesAuthCredentialForgotInitiate for application/json ContentType.
 type PostServicesAuthCredentialForgotInitiateJSONRequestBody PostServicesAuthCredentialForgotInitiateJSONBody
 
+// PostServicesAuthCredentialUpdateJSONRequestBody defines body for PostServicesAuthCredentialUpdate for application/json ContentType.
+type PostServicesAuthCredentialUpdateJSONRequestBody PostServicesAuthCredentialUpdateJSONBody
+
 // PostServicesAuthLoginJSONRequestBody defines body for PostServicesAuthLogin for application/json ContentType.
 type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 
@@ -975,9 +978,6 @@ type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
 
 // PostServicesAuthRefreshJSONRequestBody defines body for PostServicesAuthRefresh for application/json ContentType.
 type PostServicesAuthRefreshJSONRequestBody PostServicesAuthRefreshJSONBody
-
-// PostServicesAuthResetPasswordClientJSONRequestBody defines body for PostServicesAuthResetPasswordClient for application/json ContentType.
-type PostServicesAuthResetPasswordClientJSONRequestBody PostServicesAuthResetPasswordClientJSONBody
 
 // PutSystemAccountPermissionsJSONRequestBody defines body for PutSystemAccountPermissions for application/json ContentType.
 type PutSystemAccountPermissionsJSONRequestBody PutSystemAccountPermissionsJSONBody

@@ -134,9 +134,9 @@ _req_account-exists_Request:
 _res_account-exists_Response:
   $ref: "./apis/services/account-exists/response/Response.yaml"
 
-### reset-password API
-_req_reset-password-client_Request:
-  $ref: "./apis/services/reset-password-client/request/Request.yaml"
+### credential-update API
+_req_credential_update_Request:
+  $ref: "./apis/services/credential/update/request/Request.yaml"
 
 ### credential-forgot-initiate API
 _req_credential_forgot_initiate_Request:
