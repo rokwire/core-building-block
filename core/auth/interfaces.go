@@ -121,9 +121,14 @@ type APIs interface {
 	//VerifyCredential verifies credential (checks the verification code in the credentials collection)
 	VerifyCredential(id string, verification string, l *logs.Log) error
 
-	//ResetPasswordClient updates the credential object with the new password from client app
-	//TODO ResetCredential
-	ResetPasswordClient(accountID string, accountAuthTypeID string, newPassword string, confirmPassword string, l *logs.Log) error
+	//UpdateCredential updates the credential object with the new value
+	//	Input:
+	//		accountID: id of the associated account to reset
+	//		accountAuthTypeID (string): id of the AccountAuthType
+	//		params: specific params for the different auth types
+	//	Returns:
+	//		error: if any
+	UpdateCredential(accountID string, accountAuthTypeID string, params string, l *logs.Log) error
 
 	//ForgotCredential initiate forgot credential process (generates a reset link and sends to the given identifier for email auth type)
 	//	Input:

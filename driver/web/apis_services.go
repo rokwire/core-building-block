@@ -386,25 +386,30 @@ func (h ServicesApisHandler) verifyCredential(l *logs.Log, r *http.Request, clai
 }
 
 //Handler for reset password endpoint from client application
-func (h ServicesApisHandler) resetPasswordClient(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	/*	accountID := claims.Subject
-		data, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-		}
+func (h ServicesApisHandler) updateCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	accountID := claims.Subject
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
 
-		var requestData Def.ReqCredentialUpdateRequest
-		err = json.Unmarshal(data, &requestData)
-		if err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password client request"), nil, err, http.StatusBadRequest, true)
-		}
+	var requestData Def.ReqCredentialUpdateRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password client request"), nil, err, http.StatusBadRequest, true)
+	}
 
-		if err := h.coreAPIs.Auth.ResetPasswordClient(accountID, requestData.AccountAuthTypeId, requestData.NewPassword, requestData.ConfirmPassword, l); err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
-		}
+	//params
+	requestParams, err := interfaceToJSON(requestData.Params)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
+	}
 
-		return l.HttpResponseSuccessMessage("Reset Password from client successfully") */
-	return l.HttpResponseSuccess()
+	if err := h.coreAPIs.Auth.UpdateCredential(accountID, requestData.AccountAuthTypeId, requestParams, l); err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessMessage("Reset Password from client successfully")
 }
 
 //Handler for reset password endpoint from reset link
