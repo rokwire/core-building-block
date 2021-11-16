@@ -994,10 +994,20 @@ func (sa *Adapter) UpdateAppOrgRole(item model.AppOrgRole) error {
 
 //DeleteAppOrgRole deletes application organization role
 func (sa *Adapter) DeleteAppOrgRole(id string) error {
-	//TODO
-	//This will be slow operation as we keep a copy of the entity in the users collection without index.
-	//Maybe we need to up the transaction timeout for this operation because of this.
-	return errors.New(logutils.Unimplemented)
+	filter := bson.M{"_id": id}
+	result, err := sa.db.applicationsOrganizationsRoles.DeleteOne(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgRole, &logutils.FieldArgs{"_id": id}, err)
+	}
+	if result == nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"_id": id}, err)
+	}
+	deletedCount := result.DeletedCount
+	if deletedCount == 0 {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeAppOrgRole, &logutils.FieldArgs{"_id": id}, err)
+	}
+
+	return nil
 }
 
 //FindAppOrgRolesList loads all application_organization_roles
@@ -1015,6 +1025,23 @@ func (sa *Adapter) FindAppOrgRolesList() ([]model.AppOrgRole, error) {
 	}
 
 	return result, nil
+}
+
+//FindAppOrgRoleinds an application organization group
+func (sa *Adapter) FindAppOrgRole(id string) (*model.AppOrgRole, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+	var result []model.AppOrgRole
+	err := sa.db.applicationsOrganizationsRoles.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+	}
+	if len(result) == 0 {
+		//no record
+		return nil, nil
+	}
+
+	appRoles := result[0]
+	return &appRoles, nil
 }
 
 //FindAppOrgGroups finds a set of application organization groups
