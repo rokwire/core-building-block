@@ -178,7 +178,7 @@ func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode stri
 	params.Add("id", credentialID)
 	params.Add("code", verificationCode)
 
-	verificationLink := a.auth.host + fmt.Sprintf("/services/auth/verify?%s", params.Encode())
+	verificationLink := a.auth.host + fmt.Sprintf("/services/auth/credential/verify?%s", params.Encode())
 
 	return a.auth.emailer.Send(email, "Verify your email address", "Please click the link below to verify your email address:\n"+verificationLink+"\n\nIf you did not request this verification link, please ignore this message.", nil)
 }
