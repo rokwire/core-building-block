@@ -7,6 +7,7 @@ import (
 	"core-building-block/utils"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 
@@ -387,45 +388,46 @@ func (h ServicesApisHandler) verifyCredential(l *logs.Log, r *http.Request, clai
 
 //Handler for reset password endpoint from client application
 func (h ServicesApisHandler) resetPasswordClient(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	accountID := claims.Subject
+	/*	accountID := claims.Subject
+		data, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+		}
+
+		var requestData Def.ReqCredentialUpdateRequest
+		err = json.Unmarshal(data, &requestData)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password client request"), nil, err, http.StatusBadRequest, true)
+		}
+
+		if err := h.coreAPIs.Auth.ResetPasswordClient(accountID, requestData.AccountAuthTypeId, requestData.NewPassword, requestData.ConfirmPassword, l); err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+		}
+
+		return l.HttpResponseSuccessMessage("Reset Password from client successfully") */
+	return l.HttpResponseSuccess()
+}
+
+//Handler for reset password endpoint from reset link
+func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqCredentialUpdateRequest
+	var requestData Def.ReqCredentialForgotCompleteRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password client request"), nil, err, http.StatusBadRequest, true)
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password link request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.ResetPasswordClient(accountID, requestData.AccountAuthTypeId, requestData.NewPassword, requestData.ConfirmPassword, l); err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
-	}
+	log.Println(requestData)
 
-	return l.HttpResponseSuccessMessage("Reset Password from client successfully")
-}
+	//	if err := h.coreAPIs.Auth.ResetPasswordLink(requestData.CredsId, requestData.ResetCode, requestData.NewPassword, requestData.ConfirmPassword, l); err != nil {
+	//		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+	//	}
 
-//Handler for reset password endpoint from reset link
-func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	//TODO
-	/*	data, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-		}
-
-		var requestData Def.ReqCredentialForgotInitiateRequest
-		err = json.Unmarshal(data, &requestData)
-		if err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password link request"), nil, err, http.StatusBadRequest, true)
-		}
-
-		if err := h.coreAPIs.Auth.ResetPasswordLink(requestData.CredsId, requestData.ResetCode, requestData.NewPassword, requestData.ConfirmPassword, l); err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
-		}
-
-		return l.HttpResponseSuccessMessage("Reset Password from link successfully") */
-	return l.HttpResponseSuccess()
+	return l.HttpResponseSuccessMessage("Reset Password from link successfully")
 }
 
 //Handler for forgot credential endpoint

@@ -2590,6 +2590,16 @@ components:
         country:
           type: string
           nullable: true
+    _req_shared_ParamsSetEmailCredential:
+      required:
+        - new_password
+        - confirm_password
+      type: object
+      properties:
+        new_password:
+          type: string
+        confirm_password:
+          type: string
     _res_shared_LoginUrl:
       required:
         - login_url
@@ -2721,16 +2731,14 @@ components:
     _req_credential_update_Request:
       required:
         - account_auth_type_id
-        - new_password
-        - confirm_password
       type: object
       properties:
         account_auth_type_id:
           type: string
-        new_password:
-          type: string
-        confirm_password:
-          type: string
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/_req_shared_ParamsSetEmailCredential'
     _req_credential_forgot_initiate_Request:
       required:
         - auth_type
@@ -2758,20 +2766,18 @@ components:
           type: string
     _req_credential_forgot_complete_Request:
       required:
-        - api_key
+        - credential_id
         - reset_code
-        - new_password
-        - confirm_password
       type: object
       properties:
-        api_key:
+        credential_id:
           type: string
         reset_code:
           type: string
-        new_password:
-          type: string
-        confirm_password:
-          type: string
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/_req_shared_ParamsSetEmailCredential'
     _req_authorize-service_Request:
       required:
         - service_id

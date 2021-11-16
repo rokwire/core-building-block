@@ -538,10 +538,9 @@ type ReqCreateApplicationRequest struct {
 
 // ReqCredentialForgotCompleteRequest defines model for _req_credential_forgot_complete_Request.
 type ReqCredentialForgotCompleteRequest struct {
-	ApiKey          string `json:"api_key"`
-	ConfirmPassword string `json:"confirm_password"`
-	NewPassword     string `json:"new_password"`
-	ResetCode       string `json:"reset_code"`
+	CredentialId string       `json:"credential_id"`
+	Params       *interface{} `json:"params,omitempty"`
+	ResetCode    string       `json:"reset_code"`
 }
 
 // ReqCredentialForgotInitiateRequest defines model for _req_credential_forgot_initiate_Request.
@@ -558,9 +557,8 @@ type ReqCredentialForgotInitiateRequestAuthType string
 
 // ReqCredentialUpdateRequest defines model for _req_credential_update_Request.
 type ReqCredentialUpdateRequest struct {
-	AccountAuthTypeId string `json:"account_auth_type_id"`
-	ConfirmPassword   string `json:"confirm_password"`
-	NewPassword       string `json:"new_password"`
+	AccountAuthTypeId string       `json:"account_auth_type_id"`
+	Params            *interface{} `json:"params,omitempty"`
 }
 
 // ReqGetApplicationRequest defines model for _req_get_Application_Request.
@@ -656,6 +654,12 @@ type ReqSharedLoginParamsNone map[string]interface{}
 type ReqSharedLoginParamsOIDC struct {
 	PkceVerifier *string `json:"pkce_verifier,omitempty"`
 	RedirectUri  *string `json:"redirect_uri,omitempty"`
+}
+
+// ReqSharedParamsSetEmailCredential defines model for _req_shared_ParamsSetEmailCredential.
+type ReqSharedParamsSetEmailCredential struct {
+	ConfirmPassword string `json:"confirm_password"`
+	NewPassword     string `json:"new_password"`
 }
 
 // ReqSharedProfile defines model for _req_shared_Profile.

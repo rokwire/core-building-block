@@ -114,6 +114,8 @@ _req_shared_Profile:
   $ref: "../schemas/apis/shared/requests/Profile.yaml"
 _req_shared_ProfileNullable:
   $ref: "../schemas/apis/shared/requests/ProfileNullable.yaml"
+_req_shared_ParamsSetEmailCredential:
+  $ref: "../schemas/apis/shared/requests/ParamsSetEmailCredential.yaml"
 
 #### responses
 _res_shared_LoginUrl:

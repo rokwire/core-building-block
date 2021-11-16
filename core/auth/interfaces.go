@@ -122,9 +122,8 @@ type APIs interface {
 	VerifyCredential(id string, verification string, l *logs.Log) error
 
 	//ResetPasswordClient updates the credential object with the new password from client app
+	//TODO ResetCredential
 	ResetPasswordClient(accountID string, accountAuthTypeID string, newPassword string, confirmPassword string, l *logs.Log) error
-	//ResetPasswordLink updates the credential object with the new password from reset link
-	ResetPasswordLink(credsID string, resetCode string, newPassword string, confirmPassword string, l *logs.Log) error
 
 	//ForgotCredential initiate forgot credential process (generates a reset link and sends to the given identifier for email auth type)
 	//	Input:
@@ -136,6 +135,10 @@ type APIs interface {
 	//	Returns:
 	//		error: if any
 	ForgotCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error
+
+	//ResetPasswordLink updates the credential object with the new password from reset link
+	//TODO ResetForgotCredential
+	ResetPasswordLink(credsID string, resetCode string, newPassword string, confirmPassword string, l *logs.Log) error
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:
