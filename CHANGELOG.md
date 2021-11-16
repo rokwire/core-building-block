@@ -80,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
+- Expose delete app org role admin API [#313](https://github.com/rokwire/core-building-block/issues/313)
 - Expose delete app org group admin API [#312](https://github.com/rokwire/core-building-block/issues/312)
 - Expose create app org group admin API [#309](https://github.com/rokwire/core-building-block/issues/309)
 - Expose create app org role admin API  [#308](https://github.com/rokwire/core-building-block/issues/308)
