@@ -219,3 +219,22 @@ func (app *application) admCreateAppOrgGroup(name string, ID string, permissionI
 	}
 	return &group, nil
 }
+
+func (app *application) admDeleteAppOrgGroup(ID string) error {
+
+	appOrgGroup, err := app.storage.FindAppOrgGroupByID(ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+	}
+	if appOrgGroup == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgGroup, nil)
+	}
+
+	//2. delete the application_organization_group record
+	err = app.storage.DeleteAppOrgGroup(ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgGroup, nil, err)
+	}
+
+	return nil
+}

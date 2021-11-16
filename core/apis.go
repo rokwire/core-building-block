@@ -126,6 +126,10 @@ func (s *administrationImpl) AdmCreateAppOrgGroup(name string, ID string, permis
 	return s.app.admCreateAppOrgGroup(name, ID, permissionID, rolesID)
 }
 
+func (s *administrationImpl) AdmDeleteAppOrgGroup(ID string) error {
+	return s.app.admDeleteAppOrgGroup(ID)
+}
+
 ///
 
 //encryptionImpl

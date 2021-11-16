@@ -28,6 +28,7 @@ type Administration interface {
 	AdmCreateAppOrgRole(name string, addID string, description string, permissionID []string) (*model.AppOrgRole, error)
 	AdmCreateAppOrgGroup(name string, ID string, permissionID []string, rolesID []string) (*model.AppOrgGroup, error)
 	AdmGetApplicationOrgGroups() ([]model.AppOrgGroup, error)
+	AdmDeleteAppOrgGroup(ID string) error
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -103,6 +104,7 @@ type Storage interface {
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
 	FindAppOrgGroupsList() ([]model.AppOrgGroup, error)
+	FindAppOrgGroupByID(id string) (*model.AppOrgGroup, error)
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
