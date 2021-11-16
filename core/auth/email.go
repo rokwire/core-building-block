@@ -230,7 +230,21 @@ func (a *emailAuthImpl) compareCode(credCode string, requestCode string, expiryT
 
 }
 
-func (a *emailAuthImpl) resetPassword(credential *model.Credential, resetCode *string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
+func (a *emailAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error) {
+	//get the data from params
+	type Params struct {
+		NewPassword     string `json:"new_password"`
+		ConfirmPassword string `json:"confirm_password"`
+	}
+
+	var paramsData Params
+	err := json.Unmarshal([]byte(params), &paramsData)
+	if err != nil {
+		return nil, errors.New("error parsing new_password and confirm_password")
+	}
+	newPassword := paramsData.NewPassword
+	confirmPassword := paramsData.ConfirmPassword
+
 	if len(newPassword) == 0 {
 		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, logutils.StringArgs("new_password"))
 	}

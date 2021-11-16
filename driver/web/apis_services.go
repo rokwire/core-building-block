@@ -7,7 +7,6 @@ import (
 	"core-building-block/utils"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 
@@ -421,11 +420,15 @@ func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Reque
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password link request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	log.Println(requestData)
+	//params
+	requestParams, err := interfaceToJSON(requestData.Params)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
+	}
 
-	//	if err := h.coreAPIs.Auth.ResetPasswordLink(requestData.CredsId, requestData.ResetCode, requestData.NewPassword, requestData.ConfirmPassword, l); err != nil {
-	//		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
-	//	}
+	if err := h.coreAPIs.Auth.ResetForgotCredential(requestData.CredentialId, requestData.ResetCode, requestParams, l); err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+	}
 
 	return l.HttpResponseSuccessMessage("Reset Password from link successfully")
 }

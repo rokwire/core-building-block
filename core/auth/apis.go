@@ -392,55 +392,54 @@ func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) err
 //TODO: Clear login sessions using old creds
 // Handle refresh tokens when applicable
 func (a *Auth) ResetPasswordClient(accountID string, accountAuthTypeID string, newPassword string, confirmPassword string, l *logs.Log) error {
-	//Get the user credential from account auth type in accounts collection
-	account, err := a.storage.FindAccountByID(nil, accountID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-	accountAuthType, err := a.findAccountAuthTypeByID(account, accountAuthTypeID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
-	}
-	if accountAuthType.Credential == nil {
-		return errors.New("Invalid account auth type for reset password")
-	}
+	/*	//Get the user credential from account auth type in accounts collection
+		account, err := a.storage.FindAccountByID(nil, accountID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		accountAuthType, err := a.findAccountAuthTypeByID(account, accountAuthTypeID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
+		}
+		if accountAuthType.Credential == nil {
+			return errors.New("Invalid account auth type for reset password")
+		}
 
-	credential := accountAuthType.Credential
-	//Determine the auth type for resetPassword
-	authType := accountAuthType.AuthType
-	if authType.IsExternal || authType.IsAnonymous {
-		return errors.WrapErrorAction("invalid auth type for reset password client", model.TypeAuthType, nil, err)
-	}
+		credential := accountAuthType.Credential
+		//Determine the auth type for resetPassword
+		authType := accountAuthType.AuthType
+		if authType.IsExternal || authType.IsAnonymous {
+			return errors.WrapErrorAction("invalid auth type for reset password client", model.TypeAuthType, nil, err)
+		}
 
-	authImpl, err := a.getAuthTypeImpl(authType)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
-	}
+		authImpl, err := a.getAuthTypeImpl(authType)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+		}
 
-	authTypeCreds, err := authImpl.resetPassword(credential, nil, newPassword, confirmPassword, l)
-	if err != nil || authTypeCreds == nil {
-		return errors.WrapErrorAction(logutils.ActionValidate, "reset password", nil, err)
-	}
-	//Update the credential with new password
-	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(credential); err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
-	}
-
+		authTypeCreds, err := authImpl.resetPassword(credential, nil, newPassword, confirmPassword, l)
+		if err != nil || authTypeCreds == nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "reset password", nil, err)
+		}
+		//Update the credential with new password
+		credential.Value = authTypeCreds
+		if err = a.storage.UpdateCredential(credential); err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+		}
+	*/
 	return nil
 }
 
-//ResetPasswordLink updates the value in the credential with new password
+//ResetForgotCredential resets forgot credential
 //	Input:
 //		credsID: id of the credential object
 //		resetCode: code from the reset link
-//		newPassword: new password to reset to
-//		confirmPassword: new password to reset to
+//		params: specific params for the different auth types
 //	Returns:
 //		error: if any
 //TODO: Clear login sessions using old creds
 // Handle refresh tokens when applicable
-func (a *Auth) ResetPasswordLink(credsID string, resetCode string, newPassword string, confirmPassword string, l *logs.Log) error {
+func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params string, l *logs.Log) error {
 	credential, err := a.storage.FindCredential(credsID)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
@@ -451,7 +450,7 @@ func (a *Auth) ResetPasswordLink(credsID string, resetCode string, newPassword s
 	if err != nil || authType == nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
 	}
-	if authType.IsExternal || authType.IsAnonymous {
+	if !authType.UseCredentials {
 		return errors.WrapErrorAction("invalid auth type for reset password link", model.TypeAuthType, nil, err)
 	}
 
@@ -460,7 +459,7 @@ func (a *Auth) ResetPasswordLink(credsID string, resetCode string, newPassword s
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	authTypeCreds, err := authImpl.resetPassword(credential, &resetCode, newPassword, confirmPassword, l)
+	authTypeCreds, err := authImpl.resetCredential(credential, &resetCode, params, l)
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "reset password", nil, err)
 	}

@@ -23,10 +23,10 @@ type authType interface {
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
 	verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error)
 
-	//updates the value of the credential object with new password
+	//updates the value of the credential object with new value
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
-	resetPassword(credential *model.Credential, resetCode *string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error)
+	resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error)
 
 	//apply forgot credential for the auth type (generates a reset password link with code and expiry and sends it to given identifier for email auth type)
 	forgotCredential(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error)
@@ -136,9 +136,14 @@ type APIs interface {
 	//		error: if any
 	ForgotCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error
 
-	//ResetPasswordLink updates the credential object with the new password from reset link
-	//TODO ResetForgotCredential
-	ResetPasswordLink(credsID string, resetCode string, newPassword string, confirmPassword string, l *logs.Log) error
+	//ResetForgotCredential resets forgot credential
+	//	Input:
+	//		credsID: id of the credential object
+	//		resetCode: code from the reset link
+	//		params: specific params for the different auth types
+	//	Returns:
+	//		error: if any
+	ResetForgotCredential(credsID string, resetCode string, params string, l *logs.Log) error
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:

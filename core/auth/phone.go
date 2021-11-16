@@ -268,7 +268,7 @@ func (a *twilioPhoneAuthImpl) verifyCredential(credential *model.Credential, ver
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *twilioPhoneAuthImpl) resetPassword(credential *model.Credential, resetCode *string, newPassword string, confirmPassword string, l *logs.Log) (map[string]interface{}, error) {
+func (a *twilioPhoneAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, nil
 }
 
