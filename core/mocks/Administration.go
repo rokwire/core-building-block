@@ -13,13 +13,13 @@ type Administration struct {
 	mock.Mock
 }
 
-// AdmCreateAppOrgGroup provides a mock function with given fields: name, ID, permissionID
-func (_m *Administration) AdmCreateAppOrgGroup(name string, ID string, permissionID []string) (*model.AppOrgGroup, error) {
-	ret := _m.Called(name, ID, permissionID)
+// AdmCreateAppOrgGroup provides a mock function with given fields: name, ID, permissionID, rolesID
+func (_m *Administration) AdmCreateAppOrgGroup(name string, ID string, permissionID []string, rolesID []string) (*model.AppOrgGroup, error) {
+	ret := _m.Called(name, ID, permissionID, rolesID)
 
 	var r0 *model.AppOrgGroup
-	if rf, ok := ret.Get(0).(func(string, string, []string) *model.AppOrgGroup); ok {
-		r0 = rf(name, ID, permissionID)
+	if rf, ok := ret.Get(0).(func(string, string, []string, []string) *model.AppOrgGroup); ok {
+		r0 = rf(name, ID, permissionID, rolesID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.AppOrgGroup)
@@ -27,8 +27,8 @@ func (_m *Administration) AdmCreateAppOrgGroup(name string, ID string, permissio
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string, []string) error); ok {
-		r1 = rf(name, ID, permissionID)
+	if rf, ok := ret.Get(1).(func(string, string, []string, []string) error); ok {
+		r1 = rf(name, ID, permissionID, rolesID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -57,6 +57,20 @@ func (_m *Administration) AdmCreateAppOrgRole(name string, addID string, descrip
 	}
 
 	return r0, r1
+}
+
+// AdmDeleteAppOrgGroup provides a mock function with given fields: ID
+func (_m *Administration) AdmDeleteAppOrgGroup(ID string) error {
+	ret := _m.Called(ID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(ID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // AdmGetApplicationOrgGroups provides a mock function with given fields:
