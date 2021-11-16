@@ -187,7 +187,7 @@ func (a *emailAuthImpl) sendPasswordResetEmail(credentialID string, resetCode st
 	params := url.Values{}
 	params.Add("id", credentialID)
 	params.Add("code", resetCode)
-	passwordResetLink := a.auth.host + fmt.Sprintf("/services/auth/reset-password-form?%s", params.Encode())
+	passwordResetLink := a.auth.host + fmt.Sprintf("/ui/reset-credential?%s", params.Encode())
 	return a.auth.emailer.Send(email, "Password Reset", "Please click the link below to reset your password:\n"+passwordResetLink+"\n\nIf you did not request a password reset, please ignore this message.", nil)
 }
 
