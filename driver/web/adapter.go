@@ -57,9 +57,15 @@ func (we Adapter) Start() {
 	router := mux.NewRouter().StrictSlash(true)
 	subRouter := router.PathPrefix("/core").Subrouter()
 
-	// handle apis
+	///UI
+
+	//reset credential
+	subRouter.HandleFunc("/ui/reset-credential", we.serveResetCredential) //Public
+
+	//docs
 	subRouter.PathPrefix("/doc/ui").Handler(we.serveDocUI()) //Public
 	subRouter.HandleFunc("/doc", we.serveDoc)                //Public
+	///
 
 	///default ///
 	subRouter.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion, nil)).Methods("GET")                                      //Public
@@ -155,6 +161,12 @@ func (we Adapter) Start() {
 	if err != nil {
 		we.logger.Fatalf("error on listen and server - %s", err.Error())
 	}
+}
+
+func (we Adapter) serveResetCredential(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(r.URL.Path)
+	w.Header().Add("access-control-allow-origin", "*")
+	http.ServeFile(w, r, "./driver/web/ui/reset-credential.html")
 }
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
