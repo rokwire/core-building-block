@@ -85,6 +85,8 @@ paths:
     $ref: "./resources/system/organizations.yaml"
   /system/service-regs:
     $ref: "./resources/system/service-regs.yaml"
+  /system/service-accounts/{id}:
+    $ref: "./resources/system/service-accountsId.yaml"
   /system/service-accounts:
     $ref: "./resources/system/service-accounts.yaml"
   /system/applications/{id}:

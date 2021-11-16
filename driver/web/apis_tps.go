@@ -63,7 +63,7 @@ func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, clai
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.AccessTokenRequest
+	var requestData Def.ReqServiceAccountsTokenRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("service account access token request"), nil, err, http.StatusBadRequest, true)
@@ -84,35 +84,6 @@ func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, clai
 	}
 
 	return l.HttpResponseSuccessMessage(accessToken)
-}
-
-func (h TPSApisHandler) addServiceToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	token, err := h.coreAPIs.Auth.AddServiceToken(claims.Subject, l)
-	if err != nil {
-		return l.HttpResponseError("Error adding service account token", err, http.StatusInternalServerError, true)
-	}
-
-	return l.HttpResponseSuccessMessage(token)
-}
-
-func (h TPSApisHandler) removeServiceToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.StaticToken
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("service account static token"), nil, err, http.StatusBadRequest, true)
-	}
-
-	err = h.coreAPIs.Auth.RemoveServiceToken(claims.Subject, requestData.Token)
-	if err != nil {
-		return l.HttpResponseError("Error removing service account token", err, http.StatusInternalServerError, true)
-	}
-
-	return l.HttpResponseSuccess()
 }
 
 //NewTPSApisHandler creates new tps Handler instance

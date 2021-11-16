@@ -52,8 +52,38 @@ func apiKeyListToDef(items []model.APIKey) []Def.APIKey {
 	return out
 }
 
-func serviceAccountFromDef(item *Def.ServiceAccount) (*model.ServiceAccount, error) {
+func serviceAccountListToDef(items []model.ServiceAccount) []Def.ServiceAccount {
+	out := make([]Def.ServiceAccount, len(items))
+	for i, item := range items {
+		defItem := serviceAccountToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.ServiceAccount{}
+		}
+	}
+	return out
+}
 
+func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
+	if item == nil {
+		return nil
+	}
+
+	id := item.ID
+	name := item.Name
+	orgID := item.AppOrg.Organization.ID
+	appID := item.AppOrg.Application.ID
+	permissions := make([]string, len(item.Permissions))
+	for i, p := range item.Permissions {
+		permissions[i] = p.Name
+	}
+	roles := make([]string, len(item.Roles))
+	for i, r := range item.Roles {
+		roles[i] = r.Role.Name
+	}
+
+	return &Def.ServiceAccount{Id: &id, Name: name, OrgId: &orgID, AppId: &appID, Permissions: permissions, Roles: roles}
 }
 
 func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceReg, error) {

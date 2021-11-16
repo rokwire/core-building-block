@@ -264,25 +264,62 @@ func (h SystemApisHandler) deregisterService(l *logs.Log, r *http.Request, claim
 	return l.HttpResponseSuccess()
 }
 
+func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	serviceAccounts, err := h.coreAPIs.Auth.GetServiceAccounts(l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	serviceAccountsResp := serviceAccountListToDef(serviceAccounts)
+
+	data, err := json.Marshal(serviceAccountsResp)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
 func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqServiceAccount
+	var requestData Def.ServiceAccount
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeServiceAccount, nil, err, http.StatusBadRequest, true)
 	}
 
-	serviceAccount, err := serviceAccountFromDef(&requestData)
+	message, err := h.coreAPIs.Auth.RegisterServiceAccount(requestData.Name, requestData.OrgId, requestData.AppId, requestData.Permissions, requestData.Roles)
 	if err != nil {
-		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeServiceAccount, nil, err, http.StatusBadRequest, true)
+		if message != nil {
+			return l.HttpResponseError(*message, err, http.StatusBadRequest, true)
+		}
+		return l.HttpResponseErrorAction(logutils.ActionRegister, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	err = h.coreAPIs.Auth.RegisterServiceAccount(serviceAccount)
+	return l.HttpResponseSuccess()
+}
+
+func (h SystemApisHandler) updateServiceAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ServiceAccount
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeServiceAccount, nil, err, http.StatusBadRequest, true)
+	}
+
+	message, err := h.coreAPIs.Auth.UpdateServiceAccount(requestData.Id, requestData.Name, requestData.OrgId, requestData.AppId, requestData.Permissions, requestData.Roles)
+	if err != nil {
+		if message != nil {
+			return l.HttpResponseError(*message, err, http.StatusNotFound, true)
+		}
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
@@ -295,9 +332,12 @@ func (h SystemApisHandler) deregisterServiceAccount(l *logs.Log, r *http.Request
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	err := h.coreAPIs.Auth.DeregisterServiceAccount(accountID)
+	message, err := h.coreAPIs.Auth.DeregisterServiceAccount(accountID)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
+		if message != nil {
+			return l.HttpResponseError(*message, err, http.StatusNotFound, true)
+		}
+		return l.HttpResponseErrorAction(logutils.ActionDeregister, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()

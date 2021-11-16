@@ -200,7 +200,8 @@ type ServiceScope struct {
 
 //ServiceAccount represents a service account entity
 type ServiceAccount struct {
-	ID string //this is ID for the service account
+	ID   string //this is ID for the service account
+	Name string
 
 	AppOrg ApplicationOrganization
 

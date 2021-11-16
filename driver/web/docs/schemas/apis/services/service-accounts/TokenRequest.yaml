@@ -6,4 +6,4 @@ properties:
     type: string
   creds:
     anyOf:
-      - $ref: "./StaticToken.yaml"
+      - $ref: "./CredsStaticToken.yaml"

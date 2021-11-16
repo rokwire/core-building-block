@@ -151,12 +151,6 @@ type APIKey struct {
 	Key   string  `json:"key"`
 }
 
-// AccessTokenRequest defines model for AccessTokenRequest.
-type AccessTokenRequest struct {
-	AuthType string       `json:"auth_type"`
-	Creds    *interface{} `json:"creds,omitempty"`
-}
-
 // Account defines model for Account.
 type Account struct {
 	AppOrg      *ApplicationOrganization `json:"app_org,omitempty"`
@@ -439,6 +433,16 @@ type PubKey struct {
 	KeyPem string `json:"key_pem"`
 }
 
+// ServiceAccount defines model for ServiceAccount.
+type ServiceAccount struct {
+	AppId       *string  `json:"app_id"`
+	Id          *string  `json:"id,omitempty"`
+	Name        string   `json:"name"`
+	OrgId       *string  `json:"org_id"`
+	Permissions []string `json:"permissions"`
+	Roles       []string `json:"roles"`
+}
+
 // Full service registration record
 type ServiceReg struct {
 	Description string          `json:"description"`
@@ -459,11 +463,6 @@ type ServiceScope struct {
 	Explanation *string `json:"explanation,omitempty"`
 	Required    bool    `json:"required"`
 	Scope       string  `json:"scope"`
-}
-
-// Service account token for auth_type="static_token"
-type StaticToken struct {
-	Token string `json:"token"`
 }
 
 // ReqAccountExistsRequest defines model for _req_account-exists_Request.
@@ -549,6 +548,17 @@ type ReqPermissionsRequest struct {
 	Assigners *[]string `json:"assigners,omitempty"`
 	Name      string    `json:"name"`
 	ServiceId *string   `json:"service_id,omitempty"`
+}
+
+// Service account token for auth_type="static_token"
+type ReqServiceAccountsCredsStaticToken struct {
+	Token string `json:"token"`
+}
+
+// ReqServiceAccountsTokenRequest defines model for _req_service-accounts_TokenRequest.
+type ReqServiceAccountsTokenRequest struct {
+	AuthType string       `json:"auth_type"`
+	Creds    *interface{} `json:"creds,omitempty"`
 }
 
 // ReqSharedLogin defines model for _req_shared_Login.
@@ -875,6 +885,12 @@ type PostSystemPermissionsJSONBody ReqPermissionsRequest
 // PutSystemPermissionsJSONBody defines parameters for PutSystemPermissions.
 type PutSystemPermissionsJSONBody ReqPermissionsRequest
 
+// PostSystemServiceAccountsJSONBody defines parameters for PostSystemServiceAccounts.
+type PostSystemServiceAccountsJSONBody ServiceAccount
+
+// PutSystemServiceAccountsJSONBody defines parameters for PutSystemServiceAccounts.
+type PutSystemServiceAccountsJSONBody ServiceAccount
+
 // DeleteSystemServiceRegsParams defines parameters for DeleteSystemServiceRegs.
 type DeleteSystemServiceRegsParams struct {
 
@@ -895,11 +911,8 @@ type PostSystemServiceRegsJSONBody ServiceReg
 // PutSystemServiceRegsJSONBody defines parameters for PutSystemServiceRegs.
 type PutSystemServiceRegsJSONBody ServiceReg
 
-// DeleteTpsAccountTokenJSONBody defines parameters for DeleteTpsAccountToken.
-type DeleteTpsAccountTokenJSONBody StaticToken
-
 // PostTpsAccountTokenJSONBody defines parameters for PostTpsAccountToken.
-type PostTpsAccountTokenJSONBody AccessTokenRequest
+type PostTpsAccountTokenJSONBody ReqServiceAccountsTokenRequest
 
 // GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
 type GetTpsServiceRegsParams struct {
@@ -974,14 +987,17 @@ type PostSystemPermissionsJSONRequestBody PostSystemPermissionsJSONBody
 // PutSystemPermissionsJSONRequestBody defines body for PutSystemPermissions for application/json ContentType.
 type PutSystemPermissionsJSONRequestBody PutSystemPermissionsJSONBody
 
+// PostSystemServiceAccountsJSONRequestBody defines body for PostSystemServiceAccounts for application/json ContentType.
+type PostSystemServiceAccountsJSONRequestBody PostSystemServiceAccountsJSONBody
+
+// PutSystemServiceAccountsJSONRequestBody defines body for PutSystemServiceAccounts for application/json ContentType.
+type PutSystemServiceAccountsJSONRequestBody PutSystemServiceAccountsJSONBody
+
 // PostSystemServiceRegsJSONRequestBody defines body for PostSystemServiceRegs for application/json ContentType.
 type PostSystemServiceRegsJSONRequestBody PostSystemServiceRegsJSONBody
 
 // PutSystemServiceRegsJSONRequestBody defines body for PutSystemServiceRegs for application/json ContentType.
 type PutSystemServiceRegsJSONRequestBody PutSystemServiceRegsJSONBody
-
-// DeleteTpsAccountTokenJSONRequestBody defines body for DeleteTpsAccountToken for application/json ContentType.
-type DeleteTpsAccountTokenJSONRequestBody DeleteTpsAccountTokenJSONBody
 
 // PostTpsAccountTokenJSONRequestBody defines body for PostTpsAccountToken for application/json ContentType.
 type PostTpsAccountTokenJSONRequestBody PostTpsAccountTokenJSONBody

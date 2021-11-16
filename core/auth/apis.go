@@ -2,7 +2,6 @@ package auth
 
 import (
 	"core-building-block/core/model"
-	"core-building-block/driven/storage"
 	"strings"
 	"time"
 
@@ -404,76 +403,24 @@ func (a *Auth) GetServiceAccessToken(authType string, creds string, l *logs.Log)
 	return nil, accessToken, errors.New(logutils.Unimplemented)
 }
 
-//AddServiceToken adds a token to a service account
-func (a *Auth) AddServiceToken(accountID string, l *logs.Log) (string, error) {
-	var token string
-
-	transaction := func(context storage.TransactionContext) error {
-		//1. find service account
-		account, err := a.storage.FindServiceAccountByID(context, accountID)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
-		}
-
-		//2. build new token
-		token, _, err = a.buildRefreshToken()
-		if err != nil {
-			l.Info("error generating service account token")
-			return errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
-		}
-
-		//3. update service account
-		account.Tokens = append(account.Tokens, token)
-		err = a.storage.UpdateServiceAccount(context, account)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
-		}
-
-		return nil
-	}
-
-	err := a.storage.PerformTransaction(transaction)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
-	}
-	return token, nil
+//GetServiceAccounts gets all service accounts
+func (a *Auth) GetServiceAccounts(l *logs.Log) ([]model.ServiceAccount, error) {
+	return nil, errors.New(logutils.Unimplemented)
 }
 
-//RemoveServiceToken removes a token from a service account
-func (a *Auth) RemoveServiceToken(accountID string, token string) error {
-	transaction := func(context storage.TransactionContext) error {
-		//1. find service account
-		account, err := a.storage.FindServiceAccountByID(context, accountID)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
-		}
+//RegisterServiceAccount registers a service account
+func (a *Auth) RegisterServiceAccount(name string, orgID *string, appID *string, permissions []string, roles []string) (*string, error) {
+	return nil, errors.New(logutils.Unimplemented)
+}
 
-		//2. remove token from token list
-		updated := false
-		for i, t := range account.Tokens {
-			if t == token {
-				account.Tokens = append(account.Tokens[:i], account.Tokens[i+1:]...)
-				updated = true
-				break
-			}
-		}
+//UpdateServiceAccount updates a service account
+func (a *Auth) UpdateServiceAccount(id *string, name string, orgID *string, appID *string, permissions []string, roles []string) (*string, error) {
+	return nil, errors.New(logutils.Unimplemented)
+}
 
-		//3. update account
-		if updated {
-			err = a.storage.UpdateServiceAccount(context, account)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
-			}
-		}
-
-		return nil
-	}
-
-	err := a.storage.PerformTransaction(transaction)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
-	}
-	return nil
+//DeregisterServiceAccount deregisters a service account
+func (a *Auth) DeregisterServiceAccount(accountID string) (*string, error) {
+	return nil, errors.New(logutils.Unimplemented)
 }
 
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or

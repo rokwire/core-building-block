@@ -47,6 +47,8 @@ Credential:
   $ref: "./auth/Credential.yaml"
 CredentialFields:
   $ref: "./auth/CredentialFields.yaml"
+ServiceAccount:
+  $ref: "./auth/ServiceAccount.yaml"
 ServiceReg:
   $ref: "./auth/ServiceReg.yaml"
 AuthServiceReg:
@@ -64,12 +66,6 @@ JWKS:
   $ref: "./auth/JWKS.yaml"
 OIDCDiscovery:
   $ref: "./auth/OIDCDiscovery.yaml"
-
-# service accounts
-AccessTokenRequest:
-  $ref: "./auth/service-accounts/AccessTokenRequest.yaml"
-StaticToken:
-  $ref: "./auth/service-accounts/StaticToken.yaml"
 
 # user
 Account:
@@ -120,8 +116,6 @@ _req_shared_Profile:
   $ref: "../schemas/apis/shared/requests/Profile.yaml"
 _req_shared_ProfileNullable:
   $ref: "../schemas/apis/shared/requests/ProfileNullable.yaml"
-_req_shared_ServiceAccount:
-  $ref: "../schemas/apis/shared/requests/ServiceAccount.yaml"
 
 #### responses
 _res_shared_LoginUrl:
@@ -147,6 +141,12 @@ _req_authorize-service_Request:
   $ref: "./apis/services/authorize-service/request/Request.yaml"
 _res_authorize-service_Response:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
+
+### service-accounts API
+_req_service-accounts_TokenRequest:
+  $ref: "./apis/services/service-accounts/TokenRequest.yaml"
+_req_service-accounts_CredsStaticToken:
+  $ref: "./apis/services/service-accounts/CredsStaticToken.yaml"
 
 ### organization API
 _req_create-Organization_Request:

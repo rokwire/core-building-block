@@ -955,7 +955,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AccessTokenRequest'
+              $ref: '#/components/schemas/_req_service-accounts_TokenRequest'
             examples:
               static_token:
                 summary: Static token
@@ -974,56 +974,6 @@ paths:
             text/plain:
               schema:
                 type: string
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    put:
-      tags:
-        - Third-Party Services
-      summary: Add service account token
-      description: |
-        Adds a new token to a service account
-
-        **Auth:** Requires service account auth token
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    delete:
-      tags:
-        - Third-Party Services
-      summary: Remove service account token
-      description: |
-        Removes a token from a service account
-
-        **Auth:** Requires service account auth token
-      security:
-        - bearerAuth: []
-      requestBody:
-        description: |
-          Service account token
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/StaticToken'
-        required: true
-      responses:
-        '200':
-          description: Success
         '400':
           description: Bad request
         '401':
@@ -1385,6 +1335,115 @@ paths:
               schema:
                 type: string
                 example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  '/system/service-accounts/{id}':
+    delete:
+      tags:
+        - System
+      summary: Deregister service account
+      description: |
+        Removes a service account
+
+        **Auth:** Requires auth token with permission to delete service accounts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the service account that needs to be deleted
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/service-accounts:
+    get:
+      tags:
+        - System
+      summary: Get service accounts
+      description: |
+        Get list of all service accounts
+
+        **Auth:** Requires auth token with permission to read service accounts
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      tags:
+        - System
+      summary: Register service account
+      description: |
+        Creates a new service account
+
+        **Auth:** Requires auth token with permission to create service accounts
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          Service account
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceAccount'
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      tags:
+        - System
+      summary: Update service account
+      description: |
+        Updates a service account
+
+        **Auth:** Requires auth token with permission to update service accounts
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          Service account
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceAccount'
+        required: true
+      responses:
+        '200':
+          description: Success
         '400':
           description: Bad request
         '401':
@@ -2116,6 +2175,31 @@ components:
           type: string
         value:
           type: object
+    ServiceAccount:
+      required:
+        - name
+        - permissions
+        - roles
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        app_id:
+          type: string
+          nullable: true
+        org_id:
+          type: string
+          nullable: true
+        permissions:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            type: string
     ServiceReg:
       required:
         - service_id
@@ -2251,24 +2335,6 @@ components:
         issuer:
           type: string
         jwks_uri:
-          type: string
-    AccessTokenRequest:
-      required:
-        - auth_type
-      type: object
-      properties:
-        auth_type:
-          type: string
-        creds:
-          anyOf:
-            - $ref: '#/components/schemas/StaticToken'
-    StaticToken:
-      required:
-        - token
-      type: object
-      description: Service account token for auth_type="static_token"
-      properties:
-        token:
           type: string
     Account:
       type: object
@@ -2614,23 +2680,6 @@ components:
         country:
           type: string
           nullable: true
-    _req_shared_ServiceAccount:
-      type: object
-      properties:
-        app_id:
-          type: string
-          nullable: true
-        org_id:
-          type: string
-          nullable: true
-        permissions:
-          type: array
-          items:
-            type: string
-        roles:
-          type: array
-          items:
-            type: string
     _res_shared_LoginUrl:
       required:
         - login_url
@@ -2787,6 +2836,24 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
+    _req_service-accounts_TokenRequest:
+      required:
+        - auth_type
+      type: object
+      properties:
+        auth_type:
+          type: string
+        creds:
+          anyOf:
+            - $ref: '#/components/schemas/_req_service-accounts_CredsStaticToken'
+    _req_service-accounts_CredsStaticToken:
+      required:
+        - token
+      type: object
+      description: Service account token for auth_type="static_token"
+      properties:
+        token:
+          type: string
     _req_create-Organization_Request:
       required:
         - name

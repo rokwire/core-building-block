@@ -111,8 +111,6 @@ func (we Adapter) Start() {
 	tpsSubrouter.HandleFunc("/auth-keys", we.wrapFunc(we.tpsApisHandler.getAuthKeys, nil)).Methods("GET")                //Public
 
 	tpsSubrouter.HandleFunc("/account/token", we.wrapFunc(we.tpsApisHandler.getServiceAccessToken, nil)).Methods("POST")
-	tpsSubrouter.HandleFunc("/account/token", we.wrapFunc(we.tpsApisHandler.addServiceToken, we.auth.serviceAccountAuth)).Methods("PUT")
-	tpsSubrouter.HandleFunc("/account/token", we.wrapFunc(we.tpsApisHandler.removeServiceToken, we.auth.serviceAccountAuth)).Methods("DELETE")
 	///
 
 	///system ///
@@ -145,8 +143,10 @@ func (we Adapter) Start() {
 		systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.updateServiceRegistration, we.auth.systemAuth)).Methods("PUT")
 		systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.deregisterService, we.auth.systemAuth)).Methods("DELETE")
 
+		systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.getServiceAccounts, we.auth.systemAuth)).Methods("GET")
 		systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.registerServiceAccount, we.auth.systemAuth)).Methods("POST")
-		systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.deregisterServiceAccount, we.auth.systemAuth)).Methods("DELETE")
+		systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.updateServiceAccount, we.auth.systemAuth)).Methods("PUT")
+		systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.deregisterServiceAccount, we.auth.systemAuth)).Methods("DELETE")
 
 		systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.getAPIKey, we.auth.systemAuth)).Methods("GET")
 		systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.createAPIKey, we.auth.systemAuth)).Methods("POST")

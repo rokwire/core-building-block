@@ -134,11 +134,17 @@ type APIs interface {
 	//GetServiceAccessToken returns an access token for a non-human client
 	GetServiceAccessToken(authType string, creds string, l *logs.Log) (*string, string, error)
 
-	//AddServiceToken adds a token to a service account
-	AddServiceToken(accountID string, l *logs.Log) (string, error)
+	//GetServiceAccounts gets all service accounts
+	GetServiceAccounts(l *logs.Log) ([]model.ServiceAccount, error)
 
-	//RemoveServiceToken removes a token from a service account
-	RemoveServiceToken(accountID string, token string) error
+	//RegisterServiceAccount registers a service account
+	RegisterServiceAccount(name string, orgID *string, appID *string, permissions []string, roles []string) (*string, error)
+
+	//UpdateServiceAccount updates a service account
+	UpdateServiceAccount(id *string, name string, orgID *string, appID *string, permissions []string, roles []string) (*string, error)
+
+	//DeregisterServiceAccount deregisters a service account
+	DeregisterServiceAccount(accountID string) (*string, error)
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
