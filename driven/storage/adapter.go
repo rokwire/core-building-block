@@ -484,37 +484,6 @@ func (sa *Adapter) getCachedApplicationConfigByID(id string) (*model.Application
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationConfigs, errArgs)
 }
 
-func (sa *Adapter) getCachedApplicationConfigs() ([]model.ApplicationConfigs, error) {
-	sa.applicationConfigsLock.RLock()
-	defer sa.applicationConfigsLock.RUnlock()
-
-	var err error
-	appConfigList := make([]model.ApplicationConfigs, 0)
-	sa.cachedApplicationConfigs.Range(func(key, item interface{}) bool {
-		errArgs := &logutils.FieldArgs{"id": key}
-		if item == nil {
-			err = errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigs, errArgs)
-			return false
-		}
-
-		appConfig, ok := item.(model.ApplicationConfigs)
-		if !ok {
-			// skip appID : configList cache items
-			_, ok := item.([]model.ApplicationConfigs)
-			if ok {
-				return true
-			}
-			err = errors.ErrorAction(logutils.ActionCast, model.TypeApplicationConfigs, errArgs)
-			return false
-		}
-
-		appConfigList = append(appConfigList, appConfig)
-		return true
-	})
-
-	return appConfigList, err
-}
-
 //LoadAuthTypes loads all auth types
 func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
 	filter := bson.D{}
@@ -1393,10 +1362,6 @@ func (sa *Adapter) LoadAppConfigs() ([]model.ApplicationConfigs, error) {
 
 //FindAppConfigs finds appconfigs
 func (sa *Adapter) FindAppConfigs(appID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfigs, error) {
-	if appID == "" {
-		return sa.getCachedApplicationConfigs()
-	}
-
 	return sa.getCachedApplicationConfigByAppIDAndVersion(appID, versionNumbers)
 }
 
