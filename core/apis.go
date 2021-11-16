@@ -118,6 +118,10 @@ func (s *administrationImpl) AdmCreateAppOrgRole(name string, appID string, desc
 	return s.app.admCreateAppOrgRole(name, appID, description, permissionID)
 }
 
+func (s *administrationImpl) AdmDeleteAppOrgRole(ID string) error {
+	return s.app.admDeleteAppOrgRole(ID)
+}
+
 func (s *administrationImpl) AdmGetApplicationOrgGroups() ([]model.AppOrgGroup, error) {
 	return s.app.admGetApplicationOrgGroups()
 }
