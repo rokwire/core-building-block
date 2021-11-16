@@ -1060,10 +1060,20 @@ func (sa *Adapter) UpdateAppOrgGroup(item model.AppOrgGroup) error {
 
 //DeleteAppOrgGroup deletes application organization group
 func (sa *Adapter) DeleteAppOrgGroup(id string) error {
-	//TODO
-	//This will be slow operation as we keep a copy of the entity in the users collection without index.
-	//Maybe we need to up the transaction timeout for this operation because of this.
-	return errors.New(logutils.Unimplemented)
+	filter := bson.M{"_id": id}
+	result, err := sa.db.applicationsOrganizationsGroups.DeleteOne(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgGroup, &logutils.FieldArgs{"_id": id}, err)
+	}
+	if result == nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"_id": id}, err)
+	}
+	deletedCount := result.DeletedCount
+	if deletedCount == 0 {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeAppOrgGroup, &logutils.FieldArgs{"_id": id}, err)
+	}
+
+	return nil
 }
 
 func (sa *Adapter) FindAppOrgGroupsList() ([]model.AppOrgGroup, error) {
@@ -1089,6 +1099,23 @@ func (sa *Adapter) InsertAdmAppOrgGroup(item model.AppOrgGroup) error {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgGroup, nil, err)
 	}
 	return nil
+}
+
+//FindAppOrgGroupByID finds an application organization group
+func (sa *Adapter) FindAppOrgGroupByID(id string) (*model.AppOrgGroup, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+	var result []model.AppOrgGroup
+	err := sa.db.applicationsOrganizationsGroups.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+	}
+	if len(result) == 0 {
+		//no record
+		return nil, nil
+	}
+
+	appGroupRes := result[0]
+	return &appGroupRes, nil
 }
 
 //LoadAPIKeys finds all api key documents in the DB
