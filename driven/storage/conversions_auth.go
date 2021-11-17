@@ -1,6 +1,11 @@
 package storage
 
-import "core-building-block/core/model"
+import (
+	"core-building-block/core/model"
+
+	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logutils"
+)
 
 //LoginSession
 func loginSessionFromStorage(item loginSession, authType model.AuthType, account *model.Account,
@@ -68,21 +73,48 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 }
 
 //ServiceAccount
-func serviceAccountFromStorage(item serviceAccount, appOrg *model.ApplicationOrganization) *model.ServiceAccount {
-	if appOrg == nil {
-		return &model.ServiceAccount{ID: item.ID, Permissions: item.Permissions, Tokens: item.Tokens,
-			DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+func serviceAccountFromStorage(item serviceAccount, sa *Adapter) (*model.ServiceAccount, error) {
+	var err error
+	var application *model.Application
+	if item.AppID != nil {
+		application, err = sa.getCachedApplication(*item.AppID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, &logutils.FieldArgs{"app_id": *item.AppID}, err)
+		}
+	}
+	var organization *model.Organization
+	if item.OrgID != nil {
+		organization, err = sa.getCachedOrganization(*item.OrgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"org_id": *item.OrgID}, err)
+		}
 	}
 
-	roles := accountRolesFromStorage(item.Roles, *appOrg)
+	roles := make([]model.AccountRole, len(item.Roles))
+	for i, role := range item.Roles {
+		appOrg, err := sa.getCachedApplicationOrganizationByKey(role.Role.AppOrgID)
+		if err != nil || appOrg == nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": role.Role.AppOrgID}, err)
+		}
+		roles[i] = accountRoleFromStorage(&role, *appOrg)
+	}
 
-	return &model.ServiceAccount{ID: item.ID, AppOrg: *appOrg, Permissions: item.Permissions, Roles: roles,
-		Tokens: item.Tokens, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return &model.ServiceAccount{ID: item.ID, Application: application, Organization: organization, Permissions: item.Permissions,
+		Roles: roles, Tokens: item.Tokens, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}, nil
 }
 
 func serviceAccountToStorage(item model.ServiceAccount) *serviceAccount {
 	roles := accountRolesToStorage(item.Roles)
 
-	return &serviceAccount{ID: item.ID, AppOrgID: item.AppOrg.ID, Permissions: item.Permissions, Roles: roles,
+	var appID *string
+	if item.Application != nil {
+		appID = &item.Application.ID
+	}
+	var orgID *string
+	if item.Organization != nil {
+		orgID = &item.Organization.ID
+	}
+
+	return &serviceAccount{ID: item.ID, AppID: appID, OrgID: orgID, Permissions: item.Permissions, Roles: roles,
 		Tokens: item.Tokens, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

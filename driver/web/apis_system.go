@@ -265,7 +265,7 @@ func (h SystemApisHandler) deregisterService(l *logs.Log, r *http.Request, claim
 }
 
 func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	serviceAccounts, err := h.coreAPIs.Auth.GetServiceAccounts(l)
+	serviceAccounts, err := h.coreAPIs.Auth.GetServiceAccounts()
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -292,11 +292,8 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeServiceAccount, nil, err, http.StatusBadRequest, true)
 	}
 
-	message, err := h.coreAPIs.Auth.RegisterServiceAccount(requestData.Name, requestData.OrgId, requestData.AppId, requestData.Permissions, requestData.Roles)
+	err = h.coreAPIs.Auth.RegisterServiceAccount(requestData.Name, requestData.OrgId, requestData.AppId, requestData.Permissions, requestData.Roles)
 	if err != nil {
-		if message != nil {
-			return l.HttpResponseError(*message, err, http.StatusBadRequest, true)
-		}
 		return l.HttpResponseErrorAction(logutils.ActionRegister, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
@@ -327,17 +324,55 @@ func (h SystemApisHandler) updateServiceAccount(l *logs.Log, r *http.Request, cl
 }
 
 func (h SystemApisHandler) deregisterServiceAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	accountID := r.URL.Query().Get("id")
-	if accountID == "" {
+	params := mux.Vars(r)
+	id := params["id"]
+	if len(id) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	message, err := h.coreAPIs.Auth.DeregisterServiceAccount(accountID)
+	err := h.coreAPIs.Auth.DeregisterServiceAccount(id)
 	if err != nil {
-		if message != nil {
-			return l.HttpResponseError(*message, err, http.StatusNotFound, true)
-		}
 		return l.HttpResponseErrorAction(logutils.ActionDeregister, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h SystemApisHandler) addServiceAccountToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	id := params["id"]
+	if len(id) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	name := r.URL.Query().Get("name")
+	if name == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("name"), nil, http.StatusBadRequest, false)
+	}
+
+	token, err := h.coreAPIs.Auth.AddServiceToken(id, name, l)
+	if err != nil {
+		return l.HttpResponseError("Error adding service account token", err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccessMessage(token)
+}
+
+func (h SystemApisHandler) removeServiceAccountToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	id := params["id"]
+	if len(id) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	name := r.URL.Query().Get("name")
+	if name == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("name"), nil, http.StatusBadRequest, false)
+	}
+
+	err := h.coreAPIs.Auth.RemoveServiceToken(id, name)
+	if err != nil {
+		return l.HttpResponseError("Error removing service account token", err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()

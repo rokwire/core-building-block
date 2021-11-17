@@ -435,12 +435,13 @@ type PubKey struct {
 
 // ServiceAccount defines model for ServiceAccount.
 type ServiceAccount struct {
-	AppId       *string  `json:"app_id"`
-	Id          *string  `json:"id,omitempty"`
-	Name        string   `json:"name"`
-	OrgId       *string  `json:"org_id"`
-	Permissions []string `json:"permissions"`
-	Roles       []string `json:"roles"`
+	AppId       *string        `json:"app_id"`
+	Id          *string        `json:"id,omitempty"`
+	Name        string         `json:"name"`
+	OrgId       *string        `json:"org_id"`
+	Permissions []string       `json:"permissions"`
+	Roles       []string       `json:"roles"`
+	Tokens      *[]StaticToken `json:"tokens,omitempty"`
 }
 
 // Full service registration record
@@ -463,6 +464,12 @@ type ServiceScope struct {
 	Explanation *string `json:"explanation,omitempty"`
 	Required    bool    `json:"required"`
 	Scope       string  `json:"scope"`
+}
+
+// StaticToken defines model for StaticToken.
+type StaticToken struct {
+	Name  string `json:"name"`
+	Token string `json:"token"`
 }
 
 // ReqAccountExistsRequest defines model for _req_account-exists_Request.
@@ -890,6 +897,20 @@ type PostSystemServiceAccountsJSONBody ServiceAccount
 
 // PutSystemServiceAccountsJSONBody defines parameters for PutSystemServiceAccounts.
 type PutSystemServiceAccountsJSONBody ServiceAccount
+
+// DeleteSystemServiceAccountsTokensIdParams defines parameters for DeleteSystemServiceAccountsTokensId.
+type DeleteSystemServiceAccountsTokensIdParams struct {
+
+	// name of the token to be removed
+	Name string `json:"name"`
+}
+
+// PutSystemServiceAccountsTokensIdParams defines parameters for PutSystemServiceAccountsTokensId.
+type PutSystemServiceAccountsTokensIdParams struct {
+
+	// name of the token to be added
+	Name string `json:"name"`
+}
 
 // DeleteSystemServiceRegsParams defines parameters for DeleteSystemServiceRegs.
 type DeleteSystemServiceRegsParams struct {

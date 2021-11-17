@@ -147,6 +147,8 @@ func (we Adapter) Start() {
 		systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.registerServiceAccount, we.auth.systemAuth)).Methods("POST")
 		systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.updateServiceAccount, we.auth.systemAuth)).Methods("PUT")
 		systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.deregisterServiceAccount, we.auth.systemAuth)).Methods("DELETE")
+		systemSubrouter.HandleFunc("/service-accounts/tokens/{id}", we.wrapFunc(we.systemApisHandler.addServiceAccountToken, we.auth.systemAuth)).Methods("PUT")
+		systemSubrouter.HandleFunc("/service-accounts/tokens/{id}", we.wrapFunc(we.systemApisHandler.removeServiceAccountToken, we.auth.systemAuth)).Methods("DELETE")
 
 		systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.getAPIKey, we.auth.systemAuth)).Methods("GET")
 		systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.createAPIKey, we.auth.systemAuth)).Methods("POST")

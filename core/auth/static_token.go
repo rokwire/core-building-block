@@ -2,6 +2,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/utils"
 	"encoding/json"
 
 	"github.com/rokwire/logging-library-go/errors"
@@ -41,7 +42,8 @@ func (s *staticTokenAuthImpl) checkCredentials(creds string, l *logs.Log) (*stri
 		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, TypeStaticTokenCreds, nil, err)
 	}
 
-	account, err := s.auth.storage.FindServiceAccountByToken(tokenCreds.Token)
+	hashedToken := utils.SHA256Hash([]byte(tokenCreds.Token))
+	account, err := s.auth.storage.FindServiceAccountByToken(string(hashedToken))
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 	}

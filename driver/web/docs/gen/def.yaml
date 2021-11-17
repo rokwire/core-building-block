@@ -1450,6 +1450,83 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  '/system/service-accounts/tokens/{id}':
+    put:
+      tags:
+        - System
+      summary: Add service account token
+      description: |
+        Adds a new static token to an existing service token
+
+        **Auth:** Requires auth token with permission to add service account tokens
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the service account to which new token should be added
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: name of the token to be added
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      tags:
+        - System
+      summary: Remove service account token
+      description: |
+        Removes a static token from an existing service account
+
+        **Auth:** Requires auth token with permission to delete service account tokens
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the service account from which token should be removed
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: name of the token to be removed
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   '/system/applications/{id}':
     get:
       deprecated: true
@@ -2178,6 +2255,8 @@ components:
     ServiceAccount:
       required:
         - name
+        - app_id
+        - org_id
         - permissions
         - roles
       type: object
@@ -2200,6 +2279,10 @@ components:
           type: array
           items:
             type: string
+        tokens:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaticToken'
     ServiceReg:
       required:
         - service_id
@@ -2266,6 +2349,16 @@ components:
           type: boolean
         explanation:
           description: Explanation displayed to users for why this scope is requested/required
+          type: string
+    StaticToken:
+      required:
+        - name
+        - token
+      type: object
+      properties:
+        name:
+          type: string
+        token:
           type: string
     APIKey:
       required:

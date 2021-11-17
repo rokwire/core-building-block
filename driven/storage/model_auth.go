@@ -40,12 +40,13 @@ type loginSession struct {
 type serviceAccount struct {
 	ID string `bson:"_id"`
 
-	AppOrgID string `bson:"app_org_id,omitempty"`
+	AppID *string `bson:"app_id"`
+	OrgID *string `bson:"org_id"`
 
 	Permissions []model.Permission `bson:"permissions"`
 	Roles       []accountRole      `bson:"roles"`
 
-	Tokens []string `bson:"tokens"`
+	Tokens []model.StaticToken `bson:"tokens"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

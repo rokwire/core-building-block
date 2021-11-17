@@ -203,12 +203,13 @@ type ServiceAccount struct {
 	ID   string //this is ID for the service account
 	Name string
 
-	AppOrg ApplicationOrganization
+	Application  *Application
+	Organization *Organization
 
 	Permissions []Permission
 	Roles       []AccountRole
 
-	Tokens []string
+	Tokens []StaticToken
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -240,6 +241,12 @@ func (s ServiceAccount) GetPermissionsMap() map[string]Permission {
 		}
 	}
 	return permissionsMap
+}
+
+//StaticToken represents a static token entity
+type StaticToken struct {
+	Name  string `bson:"name"`
+	Token string `bson:"token"`
 }
 
 //ServiceAuthorization represents service authorization entity

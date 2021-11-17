@@ -671,8 +671,8 @@ func (sa *Adapter) FindServiceAccountByID(context TransactionContext, id string)
 }
 
 //FindServiceAccountByToken finds a service account by token
-func (sa *Adapter) FindServiceAccountByToken(token string) (*model.ServiceAccount, error) {
-	return sa.findServiceAccount(nil, "tokens", token)
+func (sa *Adapter) FindServiceAccountByToken(tokenHash string) (*model.ServiceAccount, error) {
+	return sa.findServiceAccount(nil, "tokens.token", tokenHash)
 }
 
 func (sa *Adapter) findServiceAccount(context TransactionContext, key string, value string) (*model.ServiceAccount, error) {
@@ -690,15 +690,22 @@ func (sa *Adapter) findServiceAccount(context TransactionContext, key string, va
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &logutils.FieldArgs{key: value}, err)
 	}
 
-	//application organization - from cache
-	appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
+	modelAccount, err := serviceAccountFromStorage(account, sa)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCast, model.TypeServiceAccount, &logutils.FieldArgs{key: value}, err)
 	}
 
-	modelAccount := serviceAccountFromStorage(account, appOrg)
-
 	return modelAccount, nil
+}
+
+//FindServiceAccounts gets all service accounts
+func (sa *Adapter) FindServiceAccounts() ([]model.ServiceAccount, error) {
+	return nil, errors.New(logutils.Unimplemented)
+}
+
+//InsertServiceAccount inserts a service account
+func (sa *Adapter) InsertServiceAccount(account *model.ServiceAccount) error {
+	return errors.New(logutils.Unimplemented)
 }
 
 //UpdateServiceAccount updates a service account
@@ -727,6 +734,11 @@ func (sa *Adapter) UpdateServiceAccount(context TransactionContext, account *mod
 	}
 
 	return nil
+}
+
+//DeleteServiceAccount deletes a service account
+func (sa *Adapter) DeleteServiceAccount(id string) error {
+	return errors.New(logutils.Unimplemented)
 }
 
 //UpdateAccountPreferences updates account preferences

@@ -135,16 +135,22 @@ type APIs interface {
 	GetServiceAccessToken(authType string, creds string, l *logs.Log) (*string, string, error)
 
 	//GetServiceAccounts gets all service accounts
-	GetServiceAccounts(l *logs.Log) ([]model.ServiceAccount, error)
+	GetServiceAccounts() ([]model.ServiceAccount, error)
 
 	//RegisterServiceAccount registers a service account
-	RegisterServiceAccount(name string, orgID *string, appID *string, permissions []string, roles []string) (*string, error)
+	RegisterServiceAccount(name string, orgID *string, appID *string, permissions []string, roles []string) error
 
 	//UpdateServiceAccount updates a service account
 	UpdateServiceAccount(id *string, name string, orgID *string, appID *string, permissions []string, roles []string) (*string, error)
 
 	//DeregisterServiceAccount deregisters a service account
-	DeregisterServiceAccount(accountID string) (*string, error)
+	DeregisterServiceAccount(id string) error
+
+	//AddServiceToken adds a token to a service account
+	AddServiceToken(accountID string, name string, l *logs.Log) (string, error)
+
+	//RemoveServiceToken removes a token from a service account
+	RemoveServiceToken(accountID string, name string) error
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
@@ -220,8 +226,11 @@ type Storage interface {
 
 	//ServiceAccounts
 	FindServiceAccountByID(context storage.TransactionContext, id string) (*model.ServiceAccount, error)
-	FindServiceAccountByToken(token string) (*model.ServiceAccount, error)
+	FindServiceAccountByToken(tokenHash string) (*model.ServiceAccount, error)
+	FindServiceAccounts() ([]model.ServiceAccount, error)
+	InsertServiceAccount(account *model.ServiceAccount) error
 	UpdateServiceAccount(context storage.TransactionContext, account *model.ServiceAccount) error
+	DeleteServiceAccount(id string) error
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)
@@ -261,6 +270,9 @@ type Storage interface {
 	//ApplicationsOrganizations
 	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
 	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
+
+	//Permissions
+	FindPermissionsByName(names []string) ([]model.Permission, error)
 
 	//ApplicationRoles
 	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)

@@ -72,8 +72,14 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 
 	id := item.ID
 	name := item.Name
-	orgID := item.AppOrg.Organization.ID
-	appID := item.AppOrg.Application.ID
+	var appID *string
+	if item.Application != nil {
+		appID = &item.Application.ID
+	}
+	var orgID *string
+	if item.Organization != nil {
+		orgID = &item.Organization.ID
+	}
 	permissions := make([]string, len(item.Permissions))
 	for i, p := range item.Permissions {
 		permissions[i] = p.Name
@@ -83,7 +89,7 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 		roles[i] = r.Role.Name
 	}
 
-	return &Def.ServiceAccount{Id: &id, Name: name, OrgId: &orgID, AppId: &appID, Permissions: permissions, Roles: roles}
+	return &Def.ServiceAccount{Id: &id, Name: name, OrgId: orgID, AppId: appID, Permissions: permissions, Roles: roles}
 }
 
 func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceReg, error) {

@@ -57,6 +57,8 @@ PubKey:
   $ref: "./auth/PubKey.yaml"
 ServiceScope:
   $ref: "./auth/ServiceScope.yaml"
+StaticToken:
+  $ref: "./auth/StaticToken.yaml"
 
 APIKey:
   $ref: "./auth/APIKey.yaml"
