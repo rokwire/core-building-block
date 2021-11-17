@@ -3,6 +3,7 @@ package auth
 import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -195,14 +196,13 @@ func (a *emailAuthImpl) verify(credential *model.Credential, verification string
 
 func (a *emailAuthImpl) compareVerifyCode(credCode string, requestCode string, expiryTime time.Time, l *logs.Log) error {
 	if expiryTime.Before(time.Now()) {
-		return errors.WrapErrorAction(logutils.ActionValidate, typeTime, nil, errors.New("verification code has expired"))
+		return errors.New("verification code has expired")
 	}
 
-	if credCode != requestCode {
-		return errors.WrapErrorAction(logutils.ActionValidate, typeTime, nil, errors.New("Invalid verification code"))
+	if subtle.ConstantTimeCompare([]byte(credCode), []byte(requestCode)) == 0 {
+		return errors.ErrorData(logutils.StatusInvalid, "verification code", nil)
 	}
 	return nil
-
 }
 
 func (a *emailAuthImpl) getUserIdentifier(creds string) (string, error) {
