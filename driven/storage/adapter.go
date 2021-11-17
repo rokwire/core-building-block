@@ -1344,7 +1344,7 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 func (sa *Adapter) LoadAppConfigs() ([]model.ApplicationConfigs, error) {
 	filter := bson.D{}
 	options := options.Find()
-	options.SetSort(bson.D{primitive.E{Key: "version_numbers.major", Value: -1}, primitive.E{Key: "version_numbers.minor", Value: -1}, primitive.E{Key: "version_numbers.patch", Value: -1}}) //sort by version numbers
+	options.SetSort(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "version_numbers.major", Value: -1}, primitive.E{Key: "version_numbers.minor", Value: -1}, primitive.E{Key: "version_numbers.patch", Value: -1}}) //sort by version numbers
 	var result []model.ApplicationConfigs
 
 	err := sa.db.applicationConfigs.Find(filter, &result, options)

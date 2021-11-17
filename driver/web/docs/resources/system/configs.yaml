@@ -4,7 +4,7 @@ post:
   - System
   summary: Creates mobile app configuration
   description: |
-    Auth: Requires a valid id_token that indicates membership
+    Auth: Requires user auth token with 'all_appconfigs' or 'update_appconfig' permission.
   security:
     - bearerAuth: []
   requestBody:
@@ -55,7 +55,9 @@ get:
   - System
   summary: Reads app configuration
   description: |
-    Auth: Requires a valid API Key for access.
+    Auth: Requires user auth token with 'all_appconfigs' or 'get_appconfig' permission
+    If version is provided, the app config for the highest version that is equal to or less than this value will be returned as the only item in the list.
+    Otherwise it will return a list of all app config versions for the given app_id.
   security:
     - bearerAuth: []
   parameters:

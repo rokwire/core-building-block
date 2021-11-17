@@ -4,6 +4,8 @@ get:
   summary: Reads app configuration
   description: |
     Auth: Requires a valid API Key for access.
+    If version is provided, the app config for the highest version that is equal to or less than this value will be returned as the only item in the list.
+    Otherwise it will return a list of all app config versions for the given app_id.
   parameters:
     - name: app_id
       in: query

@@ -4,7 +4,7 @@ get:
   - System
   summary: Reads mobile app configuration by given id
   description: |
-    **Auth:** Requires user auth token
+    **Auth:** Requires user auth token  with 'all_appconfigs' or 'get_appconfig' permission
   security:
     - bearerAuth: []
   parameters:
@@ -37,7 +37,7 @@ put:
   - System
   summary: Updates mobile app configuration
   description: |
-    **Auth:** Requires user auth token
+    **Auth:** Requires user auth token with 'all_appconfigs' or 'update_appconfig' permission
   security:
     - bearerAuth: []
   parameters:
@@ -78,7 +78,7 @@ delete:
   - System
   summary: Deletes mobile app configuration
   description: |
-     **Auth:** Requires user auth token
+     **Auth:** Requires user auth token with 'all_appconfigs' or 'update_appconfig' permission
   security:
     - bearerAuth: []
   parameters:
