@@ -36,6 +36,11 @@ type authType interface {
 	//	userIdentifier (string): User identifier
 	getUserIdentifier(creds string) (string, error)
 
+	//isCredentialVerified says if the credential is verified
+	// Returns:
+	//	verified (boolean): is verified
+	isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, error)
+
 	//checkCredentials checks if the account credentials are valid for the account auth type
 	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, map[string]interface{}, error)
 }

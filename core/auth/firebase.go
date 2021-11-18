@@ -30,6 +30,11 @@ func (a *firebaseAuthImpl) getUserIdentifier(creds string) (string, error) {
 func (a *firebaseAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
+
+func (a *firebaseAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, error) {
+	return nil, nil
+}
+
 func (a *firebaseAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, map[string]interface{}, error) {
 	return "", nil, nil, nil
 }

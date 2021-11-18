@@ -30,6 +30,11 @@ func (a *signatureAuthImpl) getUserIdentifier(creds string) (string, error) {
 func (a *signatureAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
+
+func (a *signatureAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, error) {
+	return nil, nil
+}
+
 func (a *signatureAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, map[string]interface{}, error) {
 	return "", nil, nil, nil
 }

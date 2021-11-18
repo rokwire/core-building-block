@@ -113,6 +113,10 @@ func (a *twilioPhoneAuthImpl) signUp(authType model.AuthType, appType model.Appl
 	return message, nil, nil
 }
 
+func (a *twilioPhoneAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, error) {
+	return nil, nil
+}
+
 func (a *twilioPhoneAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, map[string]interface{}, error) {
 	requestCreds, err := a.checkRequestCreds(creds)
 	if err != nil {

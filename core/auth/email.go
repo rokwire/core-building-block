@@ -109,6 +109,23 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appType model.Applicatio
 	return "verification code sent successfully", emailCredValueMap, nil
 }
 
+func (a *emailAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, error) {
+	if credential.Verified {
+		result := true
+		return &result, nil
+	}
+
+	//check if email verification is off
+	verifyEmail := a.getVerifyEmail(credential.AuthType)
+	if !verifyEmail {
+		result := true
+		return &result, nil
+	}
+
+	result := false
+	return &result, nil
+}
+
 func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, map[string]interface{}, error) {
 	//get stored credential
 	storedCreds, err := mapToEmailCreds(accountAuthType.Credential.Value)
