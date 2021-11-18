@@ -98,8 +98,20 @@ func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[st
 	return s.app.serUpdateAccountPreferences(id, preferences)
 }
 
-func (s *servicesImpl) SerGetAppConfig(appID string, versionNumbers model.VersionNumbers, apiKey string) (*model.ApplicationConfig, error) {
-	err := s.auth.ValidateAPIKey(appID, apiKey)
+func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, versionNumbers model.VersionNumbers, apiKey string) (*model.ApplicationConfig, error) {
+	//get the app type
+	applicationType, err := s.app.storage.FindApplicationTypeByIdentifier(appTypeIdentifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
+
+	}
+	if applicationType == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier))
+	}
+
+	appID := applicationType.Application.ID
+
+	err = s.auth.ValidateAPIKey(appID, apiKey)
 	if err != nil {
 		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}

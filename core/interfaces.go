@@ -19,7 +19,7 @@ type Services interface {
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
 
-	SerGetAppConfig(appID string, versionNumbers model.VersionNumbers, apiKey string) (*model.ApplicationConfig, error)
+	SerGetAppConfig(appTypeIdentifier string, versionNumbers model.VersionNumbers, apiKey string) (*model.ApplicationConfig, error)
 }
 
 //Administration exposes administration APIs for the driver adapters
@@ -111,6 +111,8 @@ type Storage interface {
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
+
+	FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error)
 
 	FindAppConfigs(appID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	FindAppConfigByVersion(appID string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)

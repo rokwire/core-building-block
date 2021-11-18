@@ -506,8 +506,8 @@ type ReqAccountRolesRequest struct {
 
 // ReqAppConfigsRequest defines model for _req_app-configs_Request.
 type ReqAppConfigsRequest struct {
-	ApiKey string `json:"api_key"`
-	AppId  string `json:"app_id"`
+	ApiKey            string `json:"api_key"`
+	AppTypeIdentifier string `json:"app_type_identifier"`
 
 	// conforms major.minor.patch format
 	Version string `json:"version"`

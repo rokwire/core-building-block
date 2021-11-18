@@ -3043,12 +3043,12 @@ components:
           $ref: '#/components/schemas/ServiceReg'
     _req_app-configs_Request:
       required:
-        - app_id
+        - app_type_identifier
         - version
         - api_key
       type: object
       properties:
-        app_id:
+        app_type_identifier:
           type: string
         version:
           type: string

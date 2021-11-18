@@ -265,6 +265,29 @@ func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	return r0, r1
 }
 
+// FindApplicationTypeByIdentifier provides a mock function with given fields: identifier
+func (_m *Storage) FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error) {
+	ret := _m.Called(identifier)
+
+	var r0 *model.ApplicationType
+	if rf, ok := ret.Get(0).(func(string) *model.ApplicationType); ok {
+		r0 = rf(identifier)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.ApplicationType)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(identifier)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindApplications provides a mock function with given fields:
 func (_m *Storage) FindApplications() ([]model.Application, error) {
 	ret := _m.Called()
