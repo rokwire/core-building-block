@@ -67,6 +67,10 @@ func (s *servicesImpl) SerDeleteAccount(id string) error {
 	return s.app.serDeleteAccount(id)
 }
 
+func (s *servicesImpl) SerGetAccount(accountID string) (*model.Account, error) {
+	return s.app.serGetAccount(accountID)
+}
+
 func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, error) {
 	return s.app.serGetProfile(accountID)
 }
@@ -171,8 +175,8 @@ func (s *systemImpl) SysGetOrganization(ID string) (*model.Organization, error) 
 	return s.app.sysGetOrganization(ID)
 }
 
-func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, requiresOwnUsers bool, identifier string, nameInType string, versions []string) (*model.Application, error) {
-	return s.app.sysCreateApplication(name, multiTenant, requiresOwnUsers, identifier, nameInType, versions)
+func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, requiresOwnUsers bool, maxLoginSessionDuration *int, identifier string, nameInType string, versions []string) (*model.Application, error) {
+	return s.app.sysCreateApplication(name, multiTenant, requiresOwnUsers, maxLoginSessionDuration, identifier, nameInType, versions)
 }
 
 func (s *systemImpl) SysGetApplication(ID string) (*model.Application, error) {

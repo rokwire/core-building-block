@@ -114,16 +114,18 @@ _req_shared_Profile:
   $ref: "../schemas/apis/shared/requests/Profile.yaml"
 _req_shared_ProfileNullable:
   $ref: "../schemas/apis/shared/requests/ProfileNullable.yaml"
+_req_shared_ParamsSetEmailCredential:
+  $ref: "../schemas/apis/shared/requests/ParamsSetEmailCredential.yaml"
 
 #### responses
 _res_shared_LoginUrl:
   $ref: "../schemas/apis/shared/responses/login-url/Response.yaml"
 _res_shared_Login:
   $ref: "../schemas/apis/shared/responses/login/Response.yaml"
-_res_shared_Login_Account:
-  $ref: "../schemas/apis/shared/responses/login/Account.yaml"
 _res_shared_Refresh:
   $ref: "../schemas/apis/shared/responses/refresh/Response.yaml"
+_res_shared_Account:
+  $ref: "../schemas/apis/shared/responses/Account.yaml"
 _res_shared_RokwireToken:
   $ref: "../schemas/apis/shared/responses/RokwireToken.yaml"
 ### end - shared requests and responses
@@ -133,6 +135,18 @@ _req_account-exists_Request:
   $ref: "./apis/services/account-exists/request/Request.yaml"
 _res_account-exists_Response:
   $ref: "./apis/services/account-exists/response/Response.yaml"
+
+### credential-update API
+_req_credential_update_Request:
+  $ref: "./apis/services/credential/update/request/Request.yaml"
+
+### credential-forgot-initiate API
+_req_credential_forgot_initiate_Request:
+  $ref: "./apis/services/credential/forgot/initiate/request/Request.yaml"
+
+### credential-forgot-complete API
+_req_credential_forgot_complete_Request:
+  $ref: "./apis/services/credential/forgot/complete/request/Request.yaml"
 
 ### authorize-service API
 _req_authorize-service_Request:

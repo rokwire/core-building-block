@@ -94,6 +94,8 @@ type Application struct {
 	//if true the service will always require the user to create profile for the application, otherwise he/she could use his/her already created profile from another platform application
 	RequiresOwnUsers bool
 
+	MaxLoginSessionDuration *int
+
 	Types []ApplicationType
 
 	Organizations []ApplicationOrganization
@@ -189,14 +191,13 @@ type IdentityProviderSetting struct {
 	MiddleNameField string `bson:"middle_name_field"`
 	LastNameField   string `bson:"last_name_field"`
 	EmailField      string `bson:"email_field"`
+	RolesField      string `bson:"roles_field"`
 	GroupsField     string `bson:"groups_field"`
 
 	UserSpecificFields []string `bson:"user_specific_fields"`
 
-	Groups []struct {
-		IdentityProviderGroup string `bson:"identity_provider_group"`
-		AppGroupID            string `bson:"app_group_id"`
-	} `bson:"groups"`
+	Roles  map[string]string `bson:"roles"`  //map[identity_provider_role]app_role_id
+	Groups map[string]string `bson:"groups"` //map[identity_provider_group]app_group_id
 }
 
 //ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc

@@ -349,11 +349,11 @@ func (_m *Storage) InsertAccountPermissions(accountID string, permissions []mode
 }
 
 // InsertAccountRoles provides a mock function with given fields: accountID, appOrgID, roles
-func (_m *Storage) InsertAccountRoles(accountID string, appOrgID string, roles []model.AppOrgRole) error {
+func (_m *Storage) InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error {
 	ret := _m.Called(accountID, appOrgID, roles)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string, []model.AppOrgRole) error); ok {
+	if rf, ok := ret.Get(0).(func(string, string, []model.AccountRole) error); ok {
 		r0 = rf(accountID, appOrgID, roles)
 	} else {
 		r0 = ret.Error(0)

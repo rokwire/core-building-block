@@ -4,6 +4,7 @@ import (
 	"core-building-block/core"
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -43,8 +44,10 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 	}
 
 	//get ip
-	//TODO - most probably it will be needed to be taken more preciselly
-	ip := r.RemoteAddr
+	ip := utils.GetIP(l, r)
+	if err != nil {
+		return l.HttpResponseError("Error getting IP", err, http.StatusInternalServerError, true)
+	}
 
 	var requestData Def.ReqSharedLogin
 	err = json.Unmarshal(data, &requestData)
@@ -102,7 +105,7 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
 	//account
-	var accountData *Def.ResSharedLoginAccount
+	var accountData *Def.ResSharedAccount
 	if !loginSession.Anonymous {
 		account := loginSession.AccountAuthType.Account
 
@@ -113,12 +116,12 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 		//permissions
 		permissions := applicationPermissionsToDef(account.Permissions)
 		//roles
-		roles := appOrgRolesToDef(account.Roles)
+		roles := accountRolesToDef(account.GetActiveRoles())
 		//groups
-		groups := appOrgGroupsToDef(account.Groups)
+		groups := accountGroupsToDef(account.GetActiveGroups())
 		//account auth types
 		authTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResSharedLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
+		accountData = &Def.ResSharedAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 	}
 
 	//params

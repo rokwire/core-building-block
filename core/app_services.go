@@ -22,6 +22,15 @@ func (app *application) serGetProfile(accountID string) (*model.Profile, error) 
 	return &profile, nil
 }
 
+func (app *application) serGetAccount(accountID string) (*model.Account, error) {
+	//find the account
+	account, err := app.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	return account, nil
+}
+
 func (app *application) serGetPreferences(accountID string) (map[string]interface{}, error) {
 	//find the account
 	account, err := app.storage.FindAccountByID(nil, accountID)
