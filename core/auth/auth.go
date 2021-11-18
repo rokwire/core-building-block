@@ -389,29 +389,36 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 
 	//check is verified
 	if authType.UseCredentials {
-		verified, err := authImpl.isCredentialVerified(accountAuthType.Credential, l)
+		verified, expired, err := authImpl.isCredentialVerified(accountAuthType.Credential, l)
 		if err != nil {
 			return "", nil, errors.Wrap("error checking is credential verified", err)
 		}
 		if !*verified {
-			return "", nil, errors.ErrorData("", "unverified credential", nil).SetStatus(utils.ErrorStatusUnverified)
+			//it is unverified
+
+			//check if verification is expired
+			if !*expired {
+				//not expired, just notify the client that it is "unverified"
+				return "", nil, errors.ErrorData("", "unverified credential", nil).SetStatus(utils.ErrorStatusUnverified)
+			} else {
+				//expired, first restart the verification and then notify the client that it is unverified and verification is restarted
+
+				//restart credential verification
+				err = authImpl.restartCredentialVerification(accountAuthType.Credential, l)
+				if err != nil {
+					return "", nil, errors.Wrap("error restarting creation verification", err)
+				}
+
+				//notify the client
+				return "", nil, errors.ErrorData("", "credential verification expired", nil).SetStatus(utils.ErrorStatusVerificationExpired)
+			}
 		}
 	}
 
 	//now check the credentials
-	message, validCredentials, authTypeCreds, err := authImpl.checkCredentials(*accountAuthType, creds, l)
+	message, err = authImpl.checkCredentials(*accountAuthType, creds, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
-	}
-	if validCredentials != nil && !*validCredentials {
-		return "", nil, errors.ErrorData(logutils.StatusInvalid, model.TypeCredential, nil)
-	}
-	//Check if we need to update credentials value
-	if authTypeCreds != nil {
-		err := a.storage.UpdateCredentialValue(accountAuthType.Credential.ID, authTypeCreds)
-		if err != nil {
-			return "", nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
-		}
 	}
 
 	return message, accountAuthType, nil

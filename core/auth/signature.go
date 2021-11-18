@@ -31,12 +31,16 @@ func (a *signatureAuthImpl) verifyCredential(credential *model.Credential, verif
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *signatureAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, error) {
-	return nil, nil
+func (a *signatureAuthImpl) restartCredentialVerification(credential *model.Credential, l *logs.Log) error {
+	return nil
 }
 
-func (a *signatureAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, map[string]interface{}, error) {
-	return "", nil, nil, nil
+func (a *signatureAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
+	return nil, nil, nil
+}
+
+func (a *signatureAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
+	return "", nil
 }
 
 func (a *signatureAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error) {

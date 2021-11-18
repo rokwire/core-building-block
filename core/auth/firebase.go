@@ -31,12 +31,16 @@ func (a *firebaseAuthImpl) verifyCredential(credential *model.Credential, verifi
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *firebaseAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, error) {
-	return nil, nil
+func (a *firebaseAuthImpl) restartCredentialVerification(credential *model.Credential, l *logs.Log) error {
+	return nil
 }
 
-func (a *firebaseAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, map[string]interface{}, error) {
-	return "", nil, nil, nil
+func (a *firebaseAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
+	return nil, nil, nil
+}
+
+func (a *firebaseAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
+	return "", nil
 }
 
 func (a *firebaseAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error) {

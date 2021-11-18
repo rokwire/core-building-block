@@ -23,6 +23,9 @@ type authType interface {
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
 	verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error)
 
+	//restarts the credential verification
+	restartCredentialVerification(credential *model.Credential, l *logs.Log) error
+
 	//updates the value of the credential object with new value
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
@@ -38,11 +41,12 @@ type authType interface {
 
 	//isCredentialVerified says if the credential is verified
 	// Returns:
-	//	verified (boolean): is verified
-	isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, error)
+	//	verified (bool): is credential verified
+	//	expired (bool): is credential verification expired
+	isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error)
 
 	//checkCredentials checks if the account credentials are valid for the account auth type
-	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, map[string]interface{}, error)
+	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error)
 }
 
 //externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
