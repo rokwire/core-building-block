@@ -502,7 +502,7 @@ func (h SystemApisHandler) getAppConfigs(l *logs.Log, r *http.Request, claims *t
 
 	version := r.URL.Query().Get("version")
 	versionNumbers := model.VersionNumbersFromString(version)
-	if versionNumbers == nil {
+	if version != "" && versionNumbers == nil {
 		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeQueryParam, logutils.StringArgs("version"), nil, http.StatusBadRequest, false)
 	}
 

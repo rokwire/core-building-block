@@ -1876,6 +1876,10 @@ func (sl *storageListener) OnApplicationsOrganizationsUpdated() {
 	sl.adapter.cacheApplicationsOrganizations()
 }
 
+func (sl *storageListener) OnApplicationConfigsUpdated() {
+	sl.adapter.cacheApplicationConfigs()
+}
+
 //Listener represents storage listener
 type Listener interface {
 	OnAPIKeysUpdated()
@@ -1885,6 +1889,7 @@ type Listener interface {
 	OnOrganizationsUpdated()
 	OnApplicationsUpdated()
 	OnApplicationsOrganizationsUpdated()
+	OnApplicationConfigsUpdated()
 }
 
 //DefaultListenerImpl default listener implementation
@@ -1910,6 +1915,9 @@ func (d *DefaultListenerImpl) OnApplicationsUpdated() {}
 
 //OnApplicationsOrganizationsUpdated notifies applications organizations have been updated
 func (d *DefaultListenerImpl) OnApplicationsOrganizationsUpdated() {}
+
+//OnApplicationConfigsUpdated notifies application configs have been updated
+func (d *DefaultListenerImpl) OnApplicationConfigsUpdated() {}
 
 //TransactionContext wraps mongo.SessionContext for use by external packages
 type TransactionContext interface {

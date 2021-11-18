@@ -60,12 +60,10 @@ post:
       application/json:
         schema:
           $ref: "../../schemas/application/AppConfig.yaml"
-        examples:
-          withSecretKeys:
-            value:
-              version: "1.0.2"
-              app_id: "9770"
-              data: {}
+        example:
+          version: "1.0.0"
+          app_id: "9766"
+          data: {}
     required: true
   responses:
     200:

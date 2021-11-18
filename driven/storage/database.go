@@ -523,5 +523,11 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 		for _, listener := range m.listeners {
 			go listener.OnApplicationsOrganizationsUpdated()
 		}
+	case "application_configs":
+		m.logger.Info("application configs collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnApplicationConfigsUpdated()
+		}
 	}
 }
