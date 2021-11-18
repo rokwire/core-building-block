@@ -400,18 +400,17 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 			if !*expired {
 				//not expired, just notify the client that it is "unverified"
 				return "", nil, errors.ErrorData("", "unverified credential", nil).SetStatus(utils.ErrorStatusUnverified)
-			} else {
-				//expired, first restart the verification and then notify the client that it is unverified and verification is restarted
-
-				//restart credential verification
-				err = authImpl.restartCredentialVerification(accountAuthType.Credential, l)
-				if err != nil {
-					return "", nil, errors.Wrap("error restarting creation verification", err)
-				}
-
-				//notify the client
-				return "", nil, errors.ErrorData("", "credential verification expired", nil).SetStatus(utils.ErrorStatusVerificationExpired)
 			}
+
+			//expired, first restart the verification and then notify the client that it is unverified and verification is restarted
+			//restart credential verification
+			err = authImpl.restartCredentialVerification(accountAuthType.Credential, l)
+			if err != nil {
+				return "", nil, errors.Wrap("error restarting creation verification", err)
+			}
+
+			//notify the client
+			return "", nil, errors.ErrorData("", "credential verification expired", nil).SetStatus(utils.ErrorStatusVerificationExpired)
 		}
 	}
 

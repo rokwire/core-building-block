@@ -267,6 +267,7 @@ func (v VersionNumbers) LessThanOrEqualTo(v1 *VersionNumbers) bool {
 	return false
 }
 
+//VersionNumbersFromString parses a string into a VersionNumbers struct. Returns nil if invalid format.
 func VersionNumbersFromString(version string) *VersionNumbers {
 	validVersionRegex := regexp.MustCompile(`^(?P<major>\d+).(?P<minor>\d+).(?P<patch>\d+)$`)
 	if !validVersionRegex.MatchString(version) {
