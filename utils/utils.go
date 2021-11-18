@@ -21,6 +21,8 @@ const (
 	ErrorStatusInvalid string = "invalid"
 	//ErrorStatusUnverified ...
 	ErrorStatusUnverified string = "unverified"
+	//ErrorStatusVerificationExpired ...
+	ErrorStatusVerificationExpired string = "verification-expired"
 )
 
 // GenerateRandomBytes returns securely generated random bytes
