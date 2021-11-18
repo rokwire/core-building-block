@@ -3,7 +3,6 @@ package web
 import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
-	"regexp"
 )
 
 //Application
@@ -72,27 +71,15 @@ func organizationsToDef(items []model.Organization) []Def.OrganizationFields {
 	return result
 }
 
-func checkAppVersionFormat(version string) bool {
-	valid := regexp.MustCompile(`^\d+.\d+.\d+$`)
-	if !valid.MatchString(version) {
-		return false
-	}
-
-	return true
+//App Config
+func appConfigToDef(item model.ApplicationConfig) Def.AppConfig {
+	return Def.AppConfig{Id: &item.ID, AppId: item.AppID, Version: item.VersionNumbers.String(), Data: item.Data}
 }
 
-func createVersionNumbers(version string) *model.VersionNumbers {
-	validVersionRegex := regexp.MustCompile(`^(?P<major>\d+).(?P<minor>\d+).(?P<patch>\d+)$`)
-	if !validVersionRegex.MatchString(version) {
-		return nil
+func appConfigsToDef(items []model.ApplicationConfig) []Def.AppConfig {
+	result := make([]Def.AppConfig, len(items))
+	for i, item := range items {
+		result[i] = appConfigToDef(item)
 	}
-
-	n1 := validVersionRegex.SubexpNames()
-	r2 := validVersionRegex.FindAllStringSubmatch(version, -1)[0]
-	md := map[string]string{}
-	for i, n := range r2 {
-		md[n1[i]] = n
-	}
-
-	return &model.VersionNumbers{Major: md["major"], Minor: md["minor"], Patch: md["patch"]}
+	return result
 }

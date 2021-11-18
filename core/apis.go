@@ -4,7 +4,9 @@ import (
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
 
+	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/logutils"
 )
 
 //APIs exposes to the drivers adapters access to the core functionality
@@ -43,7 +45,7 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners}
 
 	//add coreAPIs instance
-	servicesImpl := &servicesImpl{app: &application}
+	servicesImpl := &servicesImpl{app: &application, auth: auth}
 	administrationImpl := &administrationImpl{app: &application}
 	encryptionImpl := &encryptionImpl{app: &application}
 	bbsImpl := &bbsImpl{app: &application}
@@ -60,7 +62,8 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 
 //servicesImpl
 type servicesImpl struct {
-	app *application
+	auth auth.APIs
+	app  *application
 }
 
 func (s *servicesImpl) SerDeleteAccount(id string) error {
@@ -95,8 +98,13 @@ func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[st
 	return s.app.serUpdateAccountPreferences(id, preferences)
 }
 
-func (s *servicesImpl) SerGetAppConfigs(appID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfigs, error) {
-	return s.app.serGetAppConfigs(appID, versionNumbers)
+func (s *servicesImpl) SerGetAppConfig(appID string, versionNumbers model.VersionNumbers, apiKey string) (*model.ApplicationConfig, error) {
+	err := s.auth.ValidateAPIKey(appID, apiKey)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+	}
+
+	return s.app.serGetAppConfig(appID, versionNumbers)
 }
 
 ///
@@ -199,15 +207,15 @@ func (s *systemImpl) SysCreateAppOrgRole(name string, appOrgID string, descripti
 	return s.app.sysCreateAppOrgRole(name, appOrgID, description, permissionNames)
 }
 
-func (s *systemImpl) SysGetAppConfigs(appID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfigs, error) {
-	return s.app.serGetAppConfigs(appID, versionNumbers)
+func (s *systemImpl) SysGetAppConfigs(appID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+	return s.app.sysGetAppConfigs(appID, versionNumbers)
 }
 
-func (s *systemImpl) SysGetAppConfig(id string) (*model.ApplicationConfigs, error) {
+func (s *systemImpl) SysGetAppConfig(id string) (*model.ApplicationConfig, error) {
 	return s.app.sysGetAppConfig(id)
 }
 
-func (s *systemImpl) SysCreateAppConfig(version string, appID string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfigs, error) {
+func (s *systemImpl) SysCreateAppConfig(version string, appID string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
 	return s.app.sysCreateAppConfig(version, appID, data, versionNumbers)
 }
 

@@ -91,9 +91,7 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.getProfile, we.auth.servicesUserAuth)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.updateProfile, we.auth.servicesUserAuth)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest, nil)).Methods("GET") //Public
-
-	// appconfigs
-	servicesSubRouter.HandleFunc("/app/configs", we.wrapFunc(we.servicesApisHandler.getAppConfigs, nil)).Methods("GET")
+	servicesSubRouter.HandleFunc("/app/configs", we.wrapFunc(we.servicesApisHandler.getAppConfigs, nil)).Methods("POST")
 	///
 
 	///admin ///

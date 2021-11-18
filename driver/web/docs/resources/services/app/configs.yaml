@@ -1,36 +1,25 @@
-get:
+post:
   tags:
   - Services
-  summary: Reads app configuration
+  summary: Gets app config
   description: |
-    Auth: Requires a valid API Key for access.
-    If version is provided, the app config for the highest version that is equal to or less than this value will be returned as the only item in the list.
-    Otherwise it will return a list of all app config versions for the given app_id.
-  parameters:
-    - name: app_id
-      in: query
-      description: query by app version and app_id, results contain all app configs that match the given app_id.
-      required: true
-      style: form
-      explode: false
-      schema:
-        type: string
-    - name: version
-      in: query
-      description: query by app version and app_id. If given version and app_id, it will return the closest app config that is less than or equal to the given version.
-      style: form
-      explode: false
-      schema:
-        type: string
+    Returns the app config for the highest version that is equal to or less than the provided version
+
+    **Auth:** Requires a valid API Key for access.
+  requestBody:
+    description: |
+      App config query
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schemas/apis/services/appconfigs/request/Request.yaml"
   responses:
     200:
       description: successfully read app configuration
       content:
         application/json:
           schema:
-            type: array
-            items:
-              $ref: "../../../schemas/apis/services/appconfigs/response/Response.yaml"
+            $ref: "../../../schemas/application/AppConfig.yaml"
     400:
       description: Bad request.
     401:

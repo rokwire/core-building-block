@@ -205,6 +205,16 @@ type AccountFields struct {
 	Id string `json:"id"`
 }
 
+// AppConfig defines model for AppConfig.
+type AppConfig struct {
+	AppId string                 `json:"app_id"`
+	Data  map[string]interface{} `json:"data"`
+	Id    *string                `json:"id,omitempty"`
+
+	// conforms major.minor.patch format
+	Version string `json:"version"`
+}
+
 // AppOrgGroup defines model for AppOrgGroup.
 type AppOrgGroup struct {
 	Application *Application       `json:"application,omitempty"`
@@ -494,6 +504,15 @@ type ReqAccountRolesRequest struct {
 	RoleIds   []string `json:"role_ids"`
 }
 
+// ReqAppConfigsRequest defines model for _req_app-configs_Request.
+type ReqAppConfigsRequest struct {
+	ApiKey string `json:"api_key"`
+	AppId  string `json:"app_id"`
+
+	// conforms major.minor.patch format
+	Version string `json:"version"`
+}
+
 // ReqApplicationRolesRequest defines model for _req_application-roles_Request.
 type ReqApplicationRolesRequest struct {
 	AppId       string   `json:"app_id"`
@@ -520,16 +539,6 @@ type ReqCreateOrganizationRequest struct {
 
 // ReqCreateOrganizationRequestType defines model for ReqCreateOrganizationRequest.Type.
 type ReqCreateOrganizationRequestType string
-
-// ReqCreateApplicationConfigsRequest defines model for _req_create_Application-Configs_Request.
-type ReqCreateApplicationConfigsRequest struct {
-	AppId string                 `json:"app_id"`
-	Data  map[string]interface{} `json:"data"`
-	Id    *string                `json:"id,omitempty"`
-
-	// unique and is empty or conforms major.minor.patch format
-	Version string `json:"version"`
-}
 
 // ReqCreateApplicationRequest defines model for _req_create_Application_Request.
 type ReqCreateApplicationRequest struct {
@@ -829,15 +838,8 @@ type PutServicesAccountPreferencesJSONBody map[string]interface{}
 // PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
 type PutServicesAccountProfileJSONBody ReqSharedProfile
 
-// GetServicesAppConfigsParams defines parameters for GetServicesAppConfigs.
-type GetServicesAppConfigsParams struct {
-
-	// query by app version and app_id, results contain all app configs that match the given app_id.
-	AppId string `json:"app_id"`
-
-	// query by app version and app_id. If given version and app_id, it will return the closest app config that is less than or equal to the given version.
-	Version *string `json:"version,omitempty"`
-}
+// PostServicesAppConfigsJSONBody defines parameters for PostServicesAppConfigs.
+type PostServicesAppConfigsJSONBody ReqAppConfigsRequest
 
 // PostServicesAuthAccountExistsJSONBody defines parameters for PostServicesAuthAccountExists.
 type PostServicesAuthAccountExistsJSONBody ReqAccountExistsRequest
@@ -917,10 +919,10 @@ type GetSystemAppConfigsParams struct {
 }
 
 // PostSystemAppConfigsJSONBody defines parameters for PostSystemAppConfigs.
-type PostSystemAppConfigsJSONBody ReqCreateApplicationConfigsRequest
+type PostSystemAppConfigsJSONBody AppConfig
 
 // PutSystemAppConfigsIdJSONBody defines parameters for PutSystemAppConfigsId.
-type PutSystemAppConfigsIdJSONBody ReqCreateApplicationConfigsRequest
+type PutSystemAppConfigsIdJSONBody AppConfig
 
 // GetSystemApplicationApiKeysParams defines parameters for GetSystemApplicationApiKeys.
 type GetSystemApplicationApiKeysParams struct {
@@ -994,6 +996,9 @@ type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJ
 
 // PutServicesAccountProfileJSONRequestBody defines body for PutServicesAccountProfile for application/json ContentType.
 type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
+
+// PostServicesAppConfigsJSONRequestBody defines body for PostServicesAppConfigs for application/json ContentType.
+type PostServicesAppConfigsJSONRequestBody PostServicesAppConfigsJSONBody
 
 // PostServicesAuthAccountExistsJSONRequestBody defines body for PostServicesAuthAccountExists for application/json ContentType.
 type PostServicesAuthAccountExistsJSONRequestBody PostServicesAuthAccountExistsJSONBody

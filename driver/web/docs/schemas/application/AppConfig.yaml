@@ -10,6 +10,6 @@ properties:
     type: string
   version:
     type: string
-    description: unique and is empty or conforms major.minor.patch format
+    description: conforms major.minor.patch format
   data:
     type: object

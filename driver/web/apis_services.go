@@ -386,28 +386,35 @@ func (h ServicesApisHandler) verifyCredential(l *logs.Log, r *http.Request, clai
 }
 
 func (h ServicesApisHandler) getAppConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	appID := r.URL.Query().Get("app_id")
-	// if app_id == "" {
-	// 	return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
-	// }
-
-	version := r.URL.Query().Get("version")
-	if version != "" && !checkAppVersionFormat(version) {
-		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeQueryParam, logutils.StringArgs("version"), nil, http.StatusBadRequest, false)
-	}
-	versionNumbers := createVersionNumbers(version)
-	appConfigs, err := h.coreAPIs.Services.SerGetAppConfigs(appID, versionNumbers)
+	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqAppConfigsRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("appconfig request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	version := model.VersionNumbersFromString(requestData.Version)
+	if version == nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeVersionNumbers, nil, nil, http.StatusBadRequest, false)
+	}
+
+	appConfig, err := h.coreAPIs.Services.SerGetAppConfig(requestData.AppId, *version, requestData.ApiKey)
+	if err != nil || appConfig == nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
 	}
 
-	response := appConfigs
-	data, err := json.Marshal(response)
+	appConfigResp := appConfigToDef(*appConfig)
+
+	response, err := json.Marshal(appConfigResp)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HttpResponseSuccessJSON(data)
+	return l.HttpResponseSuccessJSON(response)
 }
 
 //Handler for reset password endpoint from client application

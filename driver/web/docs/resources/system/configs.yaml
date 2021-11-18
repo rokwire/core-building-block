@@ -1,63 +1,13 @@
-post:
-  deprecated: true
-  tags:
-  - System
-  summary: Creates mobile app configuration
-  description: |
-    Auth: Requires user auth token with 'all_appconfigs' or 'update_appconfig' permission.
-  security:
-    - bearerAuth: []
-  requestBody:
-    description: Creates AppConfig object
-    content:
-      application/json:
-        schema:
-          $ref: "../../schemas/apis/system/appconfigs/request/Request.yaml"
-        examples:
-          withSecretKeys:
-            value:
-              version: "1.0.2"
-              app_id: "9770"
-              data:
-                platformBuildingBlocks:
-                  appconfig: https://api.rokwire.illinois.edu/app/configs
-                  profile: https://api.rokwire.illinois.edu/profiles
-                thirdPartyServices:
-                  facebook: https://facebook.com
-                  instagram_url: https://instagram.com
-                otherUniversityServices:
-                  illini_cash_base_url: https://shibtest.housing.illinois.edu/MobileAppWS/api
-                secretKeys: "123abc456"
-                upgrade:
-                  available_version: "1.0.2"
-                  required_version: "1.0.0"
-                  "url":
-                    "android": "market://details?id=com.dropbox.android"
-                    "ios": "itms-apps://itunes.apple.com/us/app/apple-store/id327630330"
-    required: true
-  responses:
-    200:
-      description: AppConfig created
-      content:
-        text/plain:
-          schema:
-            type: string
-            example: Success
-    400:
-      description: Bad request
-    401:
-      description: Unauthorized
-    500:
-      description: Internal error
 get:
   deprecated: true
   tags:
   - System
   summary: Reads app configuration
   description: |
-    Auth: Requires user auth token with 'all_appconfigs' or 'get_appconfig' permission
     If version is provided, the app config for the highest version that is equal to or less than this value will be returned as the only item in the list.
     Otherwise it will return a list of all app config versions for the given app_id.
+
+    **Auth:** Requires user auth token with 'all_appconfigs' or 'get_appconfig' permission
   security:
     - bearerAuth: []
   parameters:
@@ -84,7 +34,7 @@ get:
           schema:
             type: array
             items:
-              $ref: "../../schemas/apis/system/appconfigs/response/Response.yaml"
+              $ref: "../../schemas/application/AppConfig.yaml"
     400:
       description: Bad request.
     401:
@@ -93,5 +43,41 @@ get:
       description: AppConfig not found
     405:
       description: Invalid input
+    500:
+      description: Internal error
+post:
+  deprecated: true
+  tags:
+  - System
+  summary: Creates mobile app configuration
+  description: |
+    **Auth:** Requires user auth token with 'all_appconfigs' or 'update_appconfig' permission.
+  security:
+    - bearerAuth: []
+  requestBody:
+    description: Creates AppConfig object
+    content:
+      application/json:
+        schema:
+          $ref: "../../schemas/application/AppConfig.yaml"
+        examples:
+          withSecretKeys:
+            value:
+              version: "1.0.2"
+              app_id: "9770"
+              data: {}
+    required: true
+  responses:
+    200:
+      description: AppConfig created
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: Success
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
     500:
       description: Internal error

@@ -218,6 +218,9 @@ type APIs interface {
 
 	//DeleteAPIKey deletes an API key
 	DeleteAPIKey(ID string) error
+
+	//ValidateAPIKey validates the given API key for the given app ID
+	ValidateAPIKey(appID string, apiKey string) error
 }
 
 //Storage interface to communicate with the storage

@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/rokwire/logging-library-go/logutils"
@@ -26,6 +27,8 @@ const (
 	TypeApplicationUserRelations logutils.MessageDataType = "app user relations"
 	//TypeApplicationConfigs ...
 	TypeApplicationConfigs logutils.MessageDataType = "app configs"
+	//TypeVersionNumbers ...
+	TypeVersionNumbers logutils.MessageDataType = "version numbers"
 )
 
 //Permission represents permission entity
@@ -220,11 +223,10 @@ type AuthTypesSupport struct {
 	} `bson:"supported_auth_types"`
 }
 
-//ApplicationConfigs represents mobile app configs
-type ApplicationConfigs struct {
+//ApplicationConfig represents mobile app configs
+type ApplicationConfig struct {
 	ID             string                 `json:"id" bson:"_id"`
 	AppID          string                 `json:"app_id" bson:"app_id"`
-	Version        string                 `json:"version" bson:"version"`
 	VersionNumbers VersionNumbers         `json:"version_numbers" bson:"version_numbers"`
 	Data           map[string]interface{} `json:"data" bson:"data"`
 
@@ -263,4 +265,20 @@ func (v VersionNumbers) LessThanOrEqualTo(v1 *VersionNumbers) bool {
 	}
 
 	return false
+}
+
+func VersionNumbersFromString(version string) *VersionNumbers {
+	validVersionRegex := regexp.MustCompile(`^(?P<major>\d+).(?P<minor>\d+).(?P<patch>\d+)$`)
+	if !validVersionRegex.MatchString(version) {
+		return nil
+	}
+
+	n1 := validVersionRegex.SubexpNames()
+	r2 := validVersionRegex.FindAllStringSubmatch(version, -1)[0]
+	md := map[string]string{}
+	for i, n := range r2 {
+		md[n1[i]] = n
+	}
+
+	return &VersionNumbers{Major: md["major"], Minor: md["minor"], Patch: md["patch"]}
 }

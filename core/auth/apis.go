@@ -684,3 +684,8 @@ func (a *Auth) UpdateAPIKey(apiKey model.APIKey) error {
 func (a *Auth) DeleteAPIKey(ID string) error {
 	return a.storage.DeleteAPIKey(ID)
 }
+
+//ValidateAPIKey validates the given API key for the given app ID
+func (a *Auth) ValidateAPIKey(appID string, apiKey string) error {
+	return a.validateAPIKey(apiKey, appID)
+}

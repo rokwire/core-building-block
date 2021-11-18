@@ -151,15 +151,15 @@ func (_m *Storage) FindAccountByID(context storage.TransactionContext, id string
 }
 
 // FindAppConfigByID provides a mock function with given fields: ID
-func (_m *Storage) FindAppConfigByID(ID string) (*model.ApplicationConfigs, error) {
+func (_m *Storage) FindAppConfigByID(ID string) (*model.ApplicationConfig, error) {
 	ret := _m.Called(ID)
 
-	var r0 *model.ApplicationConfigs
-	if rf, ok := ret.Get(0).(func(string) *model.ApplicationConfigs); ok {
+	var r0 *model.ApplicationConfig
+	if rf, ok := ret.Get(0).(func(string) *model.ApplicationConfig); ok {
 		r0 = rf(ID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.ApplicationConfigs)
+			r0 = ret.Get(0).(*model.ApplicationConfig)
 		}
 	}
 
@@ -173,16 +173,39 @@ func (_m *Storage) FindAppConfigByID(ID string) (*model.ApplicationConfigs, erro
 	return r0, r1
 }
 
-// FindAppConfigs provides a mock function with given fields: appID, versionNumbers
-func (_m *Storage) FindAppConfigs(appID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfigs, error) {
+// FindAppConfigByVersion provides a mock function with given fields: appID, versionNumbers
+func (_m *Storage) FindAppConfigByVersion(appID string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
 	ret := _m.Called(appID, versionNumbers)
 
-	var r0 []model.ApplicationConfigs
-	if rf, ok := ret.Get(0).(func(string, *model.VersionNumbers) []model.ApplicationConfigs); ok {
+	var r0 *model.ApplicationConfig
+	if rf, ok := ret.Get(0).(func(string, model.VersionNumbers) *model.ApplicationConfig); ok {
 		r0 = rf(appID, versionNumbers)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.ApplicationConfigs)
+			r0 = ret.Get(0).(*model.ApplicationConfig)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, model.VersionNumbers) error); ok {
+		r1 = rf(appID, versionNumbers)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindAppConfigs provides a mock function with given fields: appID, versionNumbers
+func (_m *Storage) FindAppConfigs(appID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+	ret := _m.Called(appID, versionNumbers)
+
+	var r0 []model.ApplicationConfig
+	if rf, ok := ret.Get(0).(func(string, *model.VersionNumbers) []model.ApplicationConfig); ok {
+		r0 = rf(appID, versionNumbers)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.ApplicationConfig)
 		}
 	}
 
@@ -363,20 +386,20 @@ func (_m *Storage) InsertAccountRoles(accountID string, appOrgID string, roles [
 }
 
 // InsertAppConfig provides a mock function with given fields: appConfig
-func (_m *Storage) InsertAppConfig(appConfig model.ApplicationConfigs) (*model.ApplicationConfigs, error) {
+func (_m *Storage) InsertAppConfig(appConfig model.ApplicationConfig) (*model.ApplicationConfig, error) {
 	ret := _m.Called(appConfig)
 
-	var r0 *model.ApplicationConfigs
-	if rf, ok := ret.Get(0).(func(model.ApplicationConfigs) *model.ApplicationConfigs); ok {
+	var r0 *model.ApplicationConfig
+	if rf, ok := ret.Get(0).(func(model.ApplicationConfig) *model.ApplicationConfig); ok {
 		r0 = rf(appConfig)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.ApplicationConfigs)
+			r0 = ret.Get(0).(*model.ApplicationConfig)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(model.ApplicationConfigs) error); ok {
+	if rf, ok := ret.Get(1).(func(model.ApplicationConfig) error); ok {
 		r1 = rf(appConfig)
 	} else {
 		r1 = ret.Error(1)
