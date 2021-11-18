@@ -580,24 +580,32 @@ func (a *Auth) GetServiceAccounts() ([]model.ServiceAccount, error) {
 //RegisterServiceAccount registers a service account
 func (a *Auth) RegisterServiceAccount(name string, orgID *string, appID *string, permissions []string, roles []string) error {
 	id, _ := uuid.NewUUID()
-	permissionList, err := a.storage.FindPermissionsByName(permissions)
+	newAccount, err := a.constructServiceAccount(id.String(), name, orgID, appID, permissions, roles)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+		return errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 	}
 
-	//TODO: get application, organization, and roles
-	newAccount := model.ServiceAccount{ID: id.String(), Name: name, Permissions: permissionList}
-	err = a.storage.InsertServiceAccount(&newAccount)
+	err = a.storage.InsertServiceAccount(newAccount)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceAccount, nil, err)
 	}
 
-	return errors.New(logutils.Unimplemented)
+	return nil
 }
 
 //UpdateServiceAccount updates a service account
-func (a *Auth) UpdateServiceAccount(id *string, name string, orgID *string, appID *string, permissions []string, roles []string) (*string, error) {
-	return nil, errors.New(logutils.Unimplemented)
+func (a *Auth) UpdateServiceAccount(id string, name string, orgID *string, appID *string, permissions []string, roles []string) error {
+	updatedAccount, err := a.constructServiceAccount(id, name, orgID, appID, permissions, roles)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
+	}
+
+	err = a.storage.UpdateServiceAccount(nil, updatedAccount)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
+	}
+
+	return nil
 }
 
 //DeregisterServiceAccount deregisters a service account

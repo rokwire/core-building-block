@@ -187,7 +187,7 @@ type APIs interface {
 	RegisterServiceAccount(name string, orgID *string, appID *string, permissions []string, roles []string) error
 
 	//UpdateServiceAccount updates a service account
-	UpdateServiceAccount(id *string, name string, orgID *string, appID *string, permissions []string, roles []string) (*string, error)
+	UpdateServiceAccount(id string, name string, orgID *string, appID *string, permissions []string, roles []string) error
 
 	//DeregisterServiceAccount deregisters a service account
 	DeregisterServiceAccount(id string) error
@@ -278,6 +278,9 @@ type Storage interface {
 	InsertServiceAccount(account *model.ServiceAccount) error
 	UpdateServiceAccount(context storage.TransactionContext, account *model.ServiceAccount) error
 	DeleteServiceAccount(id string) error
+
+	//Applications
+	FindApplication(ID string) (*model.Application, error)
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)

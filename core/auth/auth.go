@@ -405,18 +405,18 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 			if !*expired {
 				//not expired, just notify the client that it is "unverified"
 				return "", nil, errors.ErrorData("", "unverified credential", nil).SetStatus(utils.ErrorStatusUnverified)
-			} else {
-				//expired, first restart the verification and then notify the client that it is unverified and verification is restarted
-
-				//restart credential verification
-				err = authImpl.restartCredentialVerification(accountAuthType.Credential, l)
-				if err != nil {
-					return "", nil, errors.Wrap("error restarting creation verification", err)
-				}
-
-				//notify the client
-				return "", nil, errors.ErrorData("", "credential verification expired", nil).SetStatus(utils.ErrorStatusVerificationExpired)
 			}
+
+			//expired, first restart the verification and then notify the client that it is unverified and verification is restarted
+
+			//restart credential verification
+			err = authImpl.restartCredentialVerification(accountAuthType.Credential, l)
+			if err != nil {
+				return "", nil, errors.Wrap("error restarting creation verification", err)
+			}
+
+			//notify the client
+			return "", nil, errors.ErrorData("", "credential verification expired", nil).SetStatus(utils.ErrorStatusVerificationExpired)
 		}
 	}
 
@@ -800,6 +800,46 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 	accountAuthType.Account = *insertedAccount
 
 	return &accountAuthType, nil
+}
+
+func (a *Auth) constructServiceAccount(id string, name string, orgID *string, appID *string, permissions []string, roles []string) (*model.ServiceAccount, error) {
+	permissionList, err := a.storage.FindPermissionsByName(permissions)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+	}
+
+	var application *model.Application
+	if appID != nil {
+		application, err = a.storage.FindApplication(*appID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		}
+	}
+	var organization *model.Organization
+	if orgID != nil {
+		organization, err = a.storage.FindOrganization(*orgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
+		}
+	}
+
+	var rolesList []model.AccountRole
+	if appID != nil && orgID != nil {
+		appOrg, err := a.storage.FindApplicationOrganizations(*appID, *orgID)
+		if err != nil || appOrg == nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+		}
+
+		appOrgRoles, err := a.storage.FindAppOrgRoles(roles, appOrg.ID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+		}
+
+		rolesList = model.AccountRolesFromAppOrgRoles(appOrgRoles, true, false)
+	}
+
+	return &model.ServiceAccount{ID: id, Name: name, Application: application, Organization: organization,
+		Permissions: permissionList, Roles: rolesList}, nil
 }
 
 func (a *Auth) registerAuthType(name string, auth authType) error {

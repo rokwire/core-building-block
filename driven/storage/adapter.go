@@ -230,6 +230,31 @@ func (sa *Adapter) getCachedApplication(appID string) (*model.Application, error
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplication, errArgs)
 }
 
+func (sa *Adapter) getCachedApplications() ([]model.Application, error) {
+	sa.applicationsLock.RLock()
+	defer sa.applicationsLock.RUnlock()
+
+	var err error
+	applicationList := make([]model.Application, 0)
+	sa.cachedApplications.Range(func(key, item interface{}) bool {
+		errArgs := &logutils.FieldArgs{"app_id": key}
+		if item == nil {
+			err = errors.ErrorData(logutils.StatusInvalid, model.TypeApplication, errArgs)
+			return false
+		}
+
+		application, ok := item.(model.Application)
+		if !ok {
+			err = errors.ErrorAction(logutils.ActionCast, model.TypeApplication, errArgs)
+			return false
+		}
+		applicationList = append(applicationList, application)
+		return true
+	})
+
+	return applicationList, err
+}
+
 func (sa *Adapter) getCachedApplicationTypeByIdentifier(appTypeIdentifier string) (*model.Application, *model.ApplicationType, error) {
 	sa.applicationsLock.RLock()
 	defer sa.applicationsLock.RUnlock()
@@ -1422,36 +1447,12 @@ func (sa *Adapter) InsertApplication(application model.Application) (*model.Appl
 
 //FindApplication finds application
 func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	var result []model.Application
-	err := sa.db.applications.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-	}
-	if len(result) == 0 {
-		//no record
-		return nil, nil
-	}
-
-	appRes := result[0]
-	return &appRes, nil
+	return sa.getCachedApplication(ID)
 }
 
 //FindApplications finds applications
 func (sa *Adapter) FindApplications() ([]model.Application, error) {
-	filter := bson.D{}
-	var result []model.Application
-	err := sa.db.applications.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-	}
-
-	if len(result) == 0 {
-		//no data
-		return make([]model.Application, 0), nil
-	}
-
-	return result, nil
+	return sa.getCachedApplications()
 }
 
 //FindApplicationTypeByIdentifier finds an application type by identifier

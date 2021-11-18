@@ -312,11 +312,11 @@ func (h SystemApisHandler) updateServiceAccount(l *logs.Log, r *http.Request, cl
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeServiceAccount, nil, err, http.StatusBadRequest, true)
 	}
 
-	message, err := h.coreAPIs.Auth.UpdateServiceAccount(requestData.Id, requestData.Name, requestData.OrgId, requestData.AppId, requestData.Permissions, requestData.Roles)
+	if requestData.Id == nil {
+		return l.HttpResponseErrorData(logutils.StatusMissing, "request body param", logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+	err = h.coreAPIs.Auth.UpdateServiceAccount(*requestData.Id, requestData.Name, requestData.OrgId, requestData.AppId, requestData.Permissions, requestData.Roles)
 	if err != nil {
-		if message != nil {
-			return l.HttpResponseError(*message, err, http.StatusNotFound, true)
-		}
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
 

@@ -86,7 +86,7 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 	}
 	roles := make([]string, len(item.Roles))
 	for i, r := range item.Roles {
-		roles[i] = r.Role.Name
+		roles[i] = r.Role.ID
 	}
 
 	return &Def.ServiceAccount{Id: &id, Name: name, OrgId: orgID, AppId: appID, Permissions: permissions, Roles: roles}
