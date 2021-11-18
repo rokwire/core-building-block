@@ -269,7 +269,6 @@ func (sa *Adapter) cacheAuthTypes() error {
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 	}
-
 	sa.setCachedAuthTypes(authTypes)
 
 	return nil
@@ -837,6 +836,26 @@ func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
 	err := sa.db.credentials.ReplaceOne(filter, storageCreds, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"_id": storageCreds.ID}, err)
+	}
+
+	return nil
+}
+
+//UpdateCredentialValue updates the value in credentials collection
+func (sa *Adapter) UpdateCredentialValue(ID string, value map[string]interface{}) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "value", Value: value},
+		}},
+	}
+
+	res, err := sa.db.credentials.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return nil
