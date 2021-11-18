@@ -362,7 +362,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		credentialID, _ := uuid.NewUUID()
 		credID := credentialID.String()
 
-		//apply sign up
+		///apply sign up
 		message, credentialValue, err := authImpl.signUp(authType, appType, appOrg, creds, params, credentialID.String(), l)
 		if err != nil {
 			return "", nil, errors.Wrap("error signing up", err)
@@ -381,17 +381,46 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		return message, accountAuthType, nil
 	}
 
-	//apply sign in
+	///apply sign in
 	if !accountExists {
 		return "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil).SetStatus(utils.ErrorStatusNotFound)
 	}
 
+	//find account auth type
 	accountAuthType, err = a.findAccountAuthType(account, &authType, userIdentifier)
 	if accountAuthType == nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
 
-	//2. it seems the user exist, now check the credentials
+	//check is verified
+	if authType.UseCredentials {
+		verified, expired, err := authImpl.isCredentialVerified(accountAuthType.Credential, l)
+		if err != nil {
+			return "", nil, errors.Wrap("error checking is credential verified", err)
+		}
+		if !*verified {
+			//it is unverified
+
+			//check if verification is expired
+			if !*expired {
+				//not expired, just notify the client that it is "unverified"
+				return "", nil, errors.ErrorData("", "unverified credential", nil).SetStatus(utils.ErrorStatusUnverified)
+			} else {
+				//expired, first restart the verification and then notify the client that it is unverified and verification is restarted
+
+				//restart credential verification
+				err = authImpl.restartCredentialVerification(accountAuthType.Credential, l)
+				if err != nil {
+					return "", nil, errors.Wrap("error restarting creation verification", err)
+				}
+
+				//notify the client
+				return "", nil, errors.ErrorData("", "credential verification expired", nil).SetStatus(utils.ErrorStatusVerificationExpired)
+			}
+		}
+	}
+
+	//now check the credentials
 	message, err = authImpl.checkCredentials(*accountAuthType, creds, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
@@ -461,9 +490,43 @@ func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthT
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 		}
+		credential.AuthType = *authType
 		accountAuthType.Credential = credential
 	}
 
+	return accountAuthType, nil
+}
+
+func (a *Auth) findAccountAuthTypeByID(account *model.Account, accountAuthTypeID string) (*model.AccountAuthType, error) {
+	if account == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+	}
+
+	if accountAuthTypeID == "" {
+		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, nil)
+	}
+
+	accountAuthType := account.GetAccountAuthTypeByID(accountAuthTypeID)
+	if accountAuthType == nil {
+		return nil, errors.New("for some reasons the user auth type is nil")
+	}
+
+	authType, err := a.storage.FindAuthType(accountAuthType.AuthType.ID)
+	if err != nil {
+		return nil, errors.New("Failed to find authType by ID in accountAuthType")
+
+	}
+	accountAuthType.AuthType = *authType
+
+	if accountAuthType.Credential != nil {
+		//populate credentials in accountAuthType
+		credential, err := a.storage.FindCredential(accountAuthType.Credential.ID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+		}
+		credential.AuthType = *authType
+		accountAuthType.Credential = credential
+	}
 	return accountAuthType, nil
 }
 
