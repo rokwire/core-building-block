@@ -21,13 +21,14 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 	refreshTokens := item.RefreshTokens
 	params := item.Params
 	expires := item.Expires
+	forceExpires := item.ForceExpires
 	dateUpdated := item.DateUpdated
 	dateCreated := item.DateCreated
 
 	return model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType, AppType: appType,
 		Anonymous: anonymous, Identifier: identifier, AccountAuthType: accountAuthType,
 		Device: device, IPAddress: idAddress, AccessToken: accessToken, RefreshTokens: refreshTokens, Params: params,
-		Expires: expires, DateUpdated: dateUpdated, DateCreated: dateCreated}
+		Expires: expires, ForceExpires: forceExpires, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
 
 func loginSessionToStorage(item model.LoginSession) *loginSession {
@@ -55,13 +56,13 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 	refreshTokens := item.RefreshTokens
 	params := item.Params
 	expires := item.Expires
+	forceExpires := item.ForceExpires
 	dateUpdated := item.DateUpdated
 	dateCreated := item.DateCreated
 
 	return &loginSession{ID: id, AppID: appID, OrgID: orgID, AuthTypeCode: authTypeCode,
 		AppTypeID: appTypeID, AppTypeIdentifier: appTypeIdentifier, Anonymous: anonymous,
-		Identifier: identifier, AccountAuthTypeID: accountAuthTypeID,
-		AccountAuthTypeIdentifier: accountAuthTypeIdentifier, DeviceID: deviceID, IPAddress: ipAddress,
-		AccessToken: accessToken, RefreshTokens: refreshTokens, Params: params, Expires: expires,
-		DateUpdated: dateUpdated, DateCreated: dateCreated}
+		Identifier: identifier, AccountAuthTypeID: accountAuthTypeID, AccountAuthTypeIdentifier: accountAuthTypeIdentifier,
+		DeviceID: deviceID, IPAddress: ipAddress, AccessToken: accessToken, RefreshTokens: refreshTokens,
+		Params: params, Expires: expires, ForceExpires: forceExpires, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
