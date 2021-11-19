@@ -33,8 +33,16 @@ paths:
     $ref: "./resources/services/auth/refresh.yaml"
   /services/auth/login-url:
     $ref: "./resources/services/auth/login-url.yaml"
-  /services/auth/verify:
-    $ref: "./resources/services/auth/verify.yaml"
+  /services/auth/credential/verify:
+    $ref: "./resources/services/auth/credential/verify.yaml"
+  /services/auth/credential/send-verify:
+    $ref: "./resources/services/auth/credential/send-verify.yaml"
+  /services/auth/credential/forgot/initiate:
+    $ref: "./resources/services/auth/credential/forgot/initiate.yaml"
+  /services/auth/credential/forgot/complete:
+    $ref: "./resources/services/auth/credential/forgot/complete.yaml"
+  /services/auth/credential/update:
+    $ref: "./resources/services/auth/credential/update.yaml"
   /services/auth/account-exists:
     $ref: "./resources/services/auth/account-exists.yaml"
   /services/auth/authorize-service:
