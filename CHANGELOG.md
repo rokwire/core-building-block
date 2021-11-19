@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Expose resend verification code services API [#287](https://github.com/rokwire/core-building-block/issues/287)
 - Add password reset from client and reset links [#216](https://github.com/rokwire/core-building-block/issues/216)
 - User PII in tokens [#169](https://github.com/rokwire/core-building-block/issues/169)
 - Add authentication required auth wrapper [#250](https://github.com/rokwire/core-building-block/issues/250)

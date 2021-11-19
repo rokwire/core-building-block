@@ -271,6 +271,10 @@ func (a *twilioPhoneAuthImpl) verifyCredential(credential *model.Credential, ver
 	return nil, errors.New(logutils.Unimplemented)
 }
 
+func (a *twilioPhoneAuthImpl) sendVerifyCredential(credential *model.Credential, l *logs.Log) error {
+	return nil
+}
+
 func (a *twilioPhoneAuthImpl) restartCredentialVerification(credential *model.Credential, l *logs.Log) error {
 	return nil
 }
