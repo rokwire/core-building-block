@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Change string comparisons to constant time comparisons [#317](https://github.com/rokwire/core-building-block/issues/317)
 
+### Fixed
+- Auth types removed from wrong endpoint [#321](https://github.com/rokwire/core-building-block/issues/321)
+
 ## [1.12.0] - 2021-11-10
 ### Added
 - Login session duration policies [#258](https://github.com/rokwire/core-building-block/issues/258)

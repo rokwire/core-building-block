@@ -2422,7 +2422,11 @@ components:
         auth_type:
           type: string
           enum:
+            - username
             - email
+            - twilio_phone
+            - illinois_oidc
+            - anonymous
         app_type_identifier:
           type: string
         org_id:
@@ -2786,11 +2790,7 @@ components:
         auth_type:
           type: string
           enum:
-            - username
             - email
-            - twilio_phone
-            - illinois_oidc
-            - anonymous
     _req_credential_forgot_initiate_Request:
       required:
         - auth_type
@@ -2803,11 +2803,7 @@ components:
         auth_type:
           type: string
           enum:
-            - username
             - email
-            - twilio_phone
-            - illinois_oidc
-            - api_key
         app_type_identifier:
           type: string
         org_id:
