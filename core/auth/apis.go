@@ -536,8 +536,8 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	return nil
 }
 
-//SendVerify sends the verification code to the identifier
-func (a *Auth) SendVerify(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
+//SendVerifyCredential sends the verification code to the identifier
+func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
@@ -564,23 +564,18 @@ func (a *Auth) SendVerify(authenticationType string, appTypeIdentifier string, o
 	if accountAuthType == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
-	credential, err := a.storage.FindCredential(accountAuthType.Credential.ID)
-	if err != nil || credential == nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+	credential := accountAuthType.Credential
+	if credential == nil {
+		return errors.New("Invalid account auth type for reset link")
 	}
 
 	if credential.Verified {
 		return errors.New("credential has already been verified")
 	}
 
-	authTypeCreds, err := authImpl.sendVerify(*authType, identifier, credential, l)
-	if err != nil || authTypeCreds == nil {
+	err = authImpl.sendVerifyCredential(credential, l)
+	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
-	}
-
-	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(credential); err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 
 	return nil

@@ -271,12 +271,12 @@ func (a *twilioPhoneAuthImpl) verifyCredential(credential *model.Credential, ver
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *twilioPhoneAuthImpl) restartCredentialVerification(credential *model.Credential, l *logs.Log) error {
+func (a *twilioPhoneAuthImpl) sendVerifyCredential(credential *model.Credential, l *logs.Log) error {
 	return nil
 }
 
-func (a *twilioPhoneAuthImpl) sendVerify(authType model.AuthType, identifier string, credential *model.Credential, l *logs.Log) (map[string]interface{}, error) {
-	return nil, nil
+func (a *twilioPhoneAuthImpl) restartCredentialVerification(credential *model.Credential, l *logs.Log) error {
+	return nil
 }
 
 func (a *twilioPhoneAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error) {

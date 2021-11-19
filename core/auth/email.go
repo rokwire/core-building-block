@@ -240,6 +240,54 @@ func (a *emailAuthImpl) verifyCredential(credential *model.Credential, verificat
 	return credsMap, nil
 }
 
+func (a *emailAuthImpl) sendVerifyCredential(credential *model.Credential, l *logs.Log) error {
+	//Check if verify email is disabled for the given authType
+	authType := credential.AuthType
+	verifyEmail := a.getVerifyEmail(authType)
+	if !verifyEmail {
+		return errors.ErrorAction(logutils.ActionSend, logutils.TypeString, logutils.StringArgs("verify email is disabled for authType"))
+	}
+	verifyWaitTime := a.getVerifyWaitTime(authType)
+	verifyExpiryTime := a.getVerifyExpiry(authType)
+
+	//Parse credential value to emailCreds
+	emailCreds, err := mapToEmailCreds(credential.Value)
+	if err != nil {
+		return errors.WrapErrorAction("error on map to email creds", "", nil, err)
+	}
+	//Check if previous verification email was sent less than 30 seconds ago
+	now := time.Now()
+	prevTime := emailCreds.VerificationExpiry.Add(time.Duration(-verifyExpiryTime) * time.Hour)
+	if now.Sub(prevTime) < time.Duration(verifyWaitTime)*time.Second {
+		return errors.ErrorAction(logutils.ActionSend, "verify code", logutils.StringArgs("resend requested too soon"))
+	}
+	//verification code
+	code, err := utils.GenerateRandomString(64)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate random string for verify code"))
+	}
+
+	//send verification email
+	if err = a.sendVerificationCode(emailCreds.Email, code, credential.ID); err != nil {
+		return errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
+	}
+
+	//Update verification data in credential value
+	emailCreds.VerificationCode = code
+	emailCreds.VerificationExpiry = time.Now().Add(time.Hour * time.Duration(verifyExpiryTime))
+	credsMap, err := emailCredsToMap(emailCreds)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
+	}
+
+	credential.Value = credsMap
+	if err = a.auth.storage.UpdateCredential(credential); err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
+
+	return nil
+}
+
 func (a *emailAuthImpl) restartCredentialVerification(credential *model.Credential, l *logs.Log) error {
 	storedCreds, err := mapToEmailCreds(credential.Value)
 	if err != nil {
@@ -268,48 +316,6 @@ func (a *emailAuthImpl) restartCredentialVerification(credential *model.Credenti
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 	return nil
-}
-
-func (a *emailAuthImpl) sendVerify(authType model.AuthType, identifier string, credential *model.Credential, l *logs.Log) (map[string]interface{}, error) {
-	//Check if verify email is disabled for the given authType
-	verifyEmail := a.getVerifyEmail(authType)
-	if !verifyEmail {
-		return nil, errors.ErrorAction(logutils.ActionSend, logutils.TypeString, logutils.StringArgs("verify email is disabled for authType"))
-	}
-	verifyWaitTime := a.getVerifyWaitTime(authType)
-	verifyExpiryTime := a.getVerifyExpiry(authType)
-
-	//Parse credential value to emailCreds
-	emailCreds, err := mapToEmailCreds(credential.Value)
-	if err != nil {
-		return nil, errors.WrapErrorAction("error on map to email creds", "", nil, err)
-	}
-	//Check if previous verification email was sent less than 30 seconds ago
-	now := time.Now()
-	prevTime := emailCreds.VerificationExpiry.Add(time.Duration(-verifyExpiryTime) * time.Hour)
-	if now.Sub(prevTime) < time.Duration(verifyWaitTime)*time.Second {
-		return nil, errors.ErrorAction(logutils.ActionSend, "verify code", logutils.StringArgs("resend requested too soon"))
-	}
-	//verification code
-	code, err := utils.GenerateRandomString(64)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate random string for verify code"))
-	}
-
-	//send verification email
-	if err = a.sendVerificationCode(identifier, code, credential.ID); err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
-	}
-
-	//Update verification data in credential value
-	emailCreds.VerificationCode = code
-	emailCreds.VerificationExpiry = time.Now().Add(time.Hour * time.Duration(verifyExpiryTime))
-	credsMap, err := emailCredsToMap(emailCreds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
-	}
-
-	return credsMap, nil
 }
 
 func (a *emailAuthImpl) compareCode(credCode string, requestCode string, expiryTime time.Time, l *logs.Log) error {

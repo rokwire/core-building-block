@@ -23,13 +23,11 @@ type authType interface {
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
 	verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error)
 
+	//sends the verification code to the identifier
+	sendVerifyCredential(credential *model.Credential, l *logs.Log) error
+
 	//restarts the credential verification
 	restartCredentialVerification(credential *model.Credential, l *logs.Log) error
-
-	//sends the verification code to the identifier
-	// Returns:
-	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
-	sendVerify(authType model.AuthType, identifier string, credential *model.Credential, l *logs.Log) (map[string]interface{}, error)
 
 	//updates the value of the credential object with new value
 	// Returns:
@@ -135,8 +133,8 @@ type APIs interface {
 	//VerifyCredential verifies credential (checks the verification code in the credentials collection)
 	VerifyCredential(id string, verification string, l *logs.Log) error
 
-	//Send verification code to identifier
-	SendVerify(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error
+	//SendVerifyCredential sends verification code to identifier
+	SendVerifyCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error
 
 	//UpdateCredential updates the credential object with the new value
 	//	Input:
