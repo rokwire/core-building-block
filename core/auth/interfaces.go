@@ -8,7 +8,6 @@ import (
 	"github.com/rokwire/core-auth-library-go/authorization"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 //authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
@@ -19,18 +18,38 @@ type authType interface {
 	//	credentialValue (map): Credential value
 	signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
 
-	//checks the verification code generated on email signup
+	//verifies credential (checks the verification code generated on email signup for email auth type)
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
-	verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error)
+	verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error)
+
+	//sends the verification code to the identifier
+	sendVerifyCredential(credential *model.Credential, l *logs.Log) error
+
+	//restarts the credential verification
+	restartCredentialVerification(credential *model.Credential, l *logs.Log) error
+
+	//updates the value of the credential object with new value
+	// Returns:
+	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
+	resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error)
+
+	//apply forgot credential for the auth type (generates a reset password link with code and expiry and sends it to given identifier for email auth type)
+	forgotCredential(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error)
 
 	//getUserIdentifier parses the credentials and returns the user identifier
 	// Returns:
 	//	userIdentifier (string): User identifier
 	getUserIdentifier(creds string) (string, error)
 
+	//isCredentialVerified says if the credential is verified
+	// Returns:
+	//	verified (bool): is credential verified
+	//	expired (bool): is credential verification expired
+	isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error)
+
 	//checkCredentials checks if the account credentials are valid for the account auth type
-	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, *bool, error)
+	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error)
 }
 
 //externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
@@ -41,7 +60,7 @@ type externalAuthType interface {
 	//externalLogin logins in the external system and provides the authenticated user
 	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 	//refresh refreshes tokens
-	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (map[string]interface{}, error)
+	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 }
 
 //anonymousAuthType is the interface for authentication for auth types which are anonymous
@@ -111,8 +130,40 @@ type APIs interface {
 	//			Params (interface{}): authType-specific set of parameters passed back to client
 	Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.LoginSession, error)
 
-	//Verify checks the verification code in the credentials collection
-	Verify(id string, verification string, l *logs.Log) error
+	//VerifyCredential verifies credential (checks the verification code in the credentials collection)
+	VerifyCredential(id string, verification string, l *logs.Log) error
+
+	//SendVerifyCredential sends verification code to identifier
+	SendVerifyCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error
+
+	//UpdateCredential updates the credential object with the new value
+	//	Input:
+	//		accountID: id of the associated account to reset
+	//		accountAuthTypeID (string): id of the AccountAuthType
+	//		params: specific params for the different auth types
+	//	Returns:
+	//		error: if any
+	UpdateCredential(accountID string, accountAuthTypeID string, params string, l *logs.Log) error
+
+	//ForgotCredential initiate forgot credential process (generates a reset link and sends to the given identifier for email auth type)
+	//	Input:
+	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		identifier: identifier of the account auth type
+	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
+	//		orgID (string): ID of the organization that the user is logging in
+	//		apiKey (string): API key to validate the specified app
+	//	Returns:
+	//		error: if any
+	ForgotCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error
+
+	//ResetForgotCredential resets forgot credential
+	//	Input:
+	//		credsID: id of the credential object
+	//		resetCode: code from the reset link
+	//		params: specific params for the different auth types
+	//	Returns:
+	//		error: if any
+	ResetForgotCredential(credsID string, resetCode string, params string, l *logs.Log) error
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:
@@ -179,37 +230,35 @@ type APIs interface {
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
+	PerformTransaction(func(context storage.TransactionContext) error) error
+
 	//AuthTypes
 	LoadAuthTypes() ([]model.AuthType, error)
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
 	//LoginsSessions
-	InsertLoginSession(loginSession model.LoginSession) (*model.LoginSession, error)
+	InsertLoginSession(context storage.TransactionContext, session model.LoginSession) error
+	FindLoginSessions(context storage.TransactionContext, identifier string) ([]model.LoginSession, error)
 	FindLoginSession(refreshToken string) (*model.LoginSession, error)
 	UpdateLoginSession(loginSession model.LoginSession) error
-	DeleteLoginSession(id string) error
+	DeleteLoginSession(context storage.TransactionContext, id string) error
 	DeleteExpiredSessions(now *time.Time) error
 
 	//Accounts
+	FindAccountByID(context storage.TransactionContext, storageid string) (*model.Account, error)
 	FindAccount(appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
+	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccount(account model.Account) (*model.Account, error)
-	UpdateAccount(account *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
-	DeleteAccount(id string) error
-
-	//AccountAuthTypes
-	UpdateAccountAuthType(item model.AccountAuthType) error
+	SaveAccount(context storage.TransactionContext, account *model.Account) error
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)
 
 	//Credentials
-	// FindCredentialsByID(ID string) (*model.AuthCreds, error)
-	// FindCredentials(orgID string, appID string, authType string, params map[string]interface{}) (*model.AuthCreds, error)
-	// UpdateCredentials(orgID string, appID string, authType string, creds *model.AuthCreds) error
-	// InsertCredentials(creds *model.AuthCreds, context mongo.SessionContext) error
+	InsertCredential(creds *model.Credential) error
 	FindCredential(ID string) (*model.Credential, error)
 	UpdateCredential(creds *model.Credential) error
-	InsertCredential(creds *model.Credential, context mongo.SessionContext) error
+	UpdateCredentialValue(ID string, value map[string]interface{}) error
 
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)
@@ -241,6 +290,16 @@ type Storage interface {
 	//ApplicationsOrganizations
 	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
 	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
+
+	//ApplicationRoles
+	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
+	//AccountRoles
+	UpdateAccountRoles(accountID string, roles []model.AccountRole) error
+
+	//ApplicationGroups
+	FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
+	//AccountGroups
+	UpdateAccountGroups(accountID string, groups []model.AccountGroup) error
 }
 
 //ProfileBuildingBlock is used by auth to communicate with the profile building block.

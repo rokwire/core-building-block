@@ -4,6 +4,7 @@ import (
 	"core-building-block/core"
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -43,8 +44,10 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 	}
 
 	//get ip
-	//TODO - most probably it will be needed to be taken more preciselly
-	ip := r.RemoteAddr
+	ip := utils.GetIP(l, r)
+	if err != nil {
+		return l.HttpResponseError("Error getting IP", err, http.StatusInternalServerError, true)
+	}
 
 	var requestData Def.ReqSharedLogin
 	err = json.Unmarshal(data, &requestData)
@@ -96,13 +99,13 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 
 	//token
 	accessToken := loginSession.AccessToken
-	refreshToken := loginSession.RefreshToken
+	refreshToken := loginSession.CurrentRefreshToken()
 
 	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
 	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
 	//account
-	var accountData *Def.ResSharedLoginAccount
+	var accountData *Def.ResSharedAccount
 	if !loginSession.Anonymous {
 		account := loginSession.AccountAuthType.Account
 
@@ -113,12 +116,12 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 		//permissions
 		permissions := applicationPermissionsToDef(account.Permissions)
 		//roles
-		roles := appOrgRolesToDef(account.Roles)
+		roles := accountRolesToDef(account.GetActiveRoles())
 		//groups
-		groups := appOrgGroupsToDef(account.Groups)
+		groups := accountGroupsToDef(account.GetActiveGroups())
 		//account auth types
 		authTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResSharedLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
+		accountData = &Def.ResSharedAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 	}
 
 	//params
@@ -185,7 +188,7 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 	}
 
 	accessToken := loginSession.AccessToken
-	refreshToken := loginSession.RefreshToken
+	refreshToken := loginSession.CurrentRefreshToken()
 	var paramsRes interface{}
 	if loginSession.Params != nil {
 		paramsRes = loginSession.Params
@@ -200,59 +203,6 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 	}
 
 	return l.HttpResponseSuccessJSON(respData)
-}
-
-//getAccount gets the account
-func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	account, err := h.coreAPIs.Administration.AdmGetAccount(claims.Subject)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
-	}
-
-	var accountData *Def.ResSharedLoginAccount
-	if account != nil {
-		profile := profileToDef(&account.Profile)
-		//permissions
-		permissions := applicationPermissionsToDef(account.Permissions)
-		//roles
-		roles := appOrgRolesToDef(account.Roles)
-		//groups
-		groups := appOrgGroupsToDef(account.Groups)
-		//account auth types
-		authTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResSharedLoginAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
-	}
-
-	data, err := json.Marshal(accountData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
-	}
-
-	return l.HttpResponseSuccessJSON(data)
-}
-
-func (h AdminApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	accountID := r.URL.Query().Get("id")
-	if accountID == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("_id"), nil, http.StatusBadRequest, false)
-	}
-
-	identifier := r.URL.Query().Get("auth_type_identifier")
-	if identifier == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs(""), nil, http.StatusBadRequest, false)
-	}
-
-	getAccounts, err := h.coreAPIs.Administration.AdmGetAccounts(accountID, identifier, claims.AppID)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
-	}
-	response := getAccountsListToDef(getAccounts)
-
-	data, err := json.Marshal(response)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
-	}
-	return l.HttpResponseSuccessJSON(data)
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance
