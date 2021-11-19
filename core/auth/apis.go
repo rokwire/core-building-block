@@ -549,7 +549,7 @@ func (a *Auth) SendVerify(authenticationType string, appTypeIdentifier string, o
 		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
 
-	if authType.IsExternal || authType.IsAnonymous {
+	if !authType.UseCredentials {
 		return errors.WrapErrorAction("invalid auth type for sending verify code", model.TypeAuthType, nil, err)
 	}
 	authImpl, err := a.getAuthTypeImpl(*authType)
