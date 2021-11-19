@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - User PII in tokens [#169](https://github.com/rokwire/core-building-block/issues/169)
 - Add authentication required auth wrapper [#250](https://github.com/rokwire/core-building-block/issues/250)
 
+### Security
+- Change string comparisons to constant time comparisons [#317](https://github.com/rokwire/core-building-block/issues/317)
+
 ## [1.12.0] - 2021-11-10
 ### Added
 - Login session duration policies [#258](https://github.com/rokwire/core-building-block/issues/258)
