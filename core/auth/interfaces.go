@@ -3,6 +3,7 @@ package auth
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"net/http"
 	"time"
 
 	"github.com/rokwire/core-auth-library-go/authorization"
@@ -72,7 +73,7 @@ type anonymousAuthType interface {
 
 //serviceAuthType is the interface for authentication for non-human clients
 type serviceAuthType interface {
-	checkCredentials(creds string, l *logs.Log) (*string, *model.ServiceAccount, error)
+	checkCredentials(r *http.Request, l *logs.Log) (*string, *model.ServiceAccount, error)
 }
 
 //APIs is the interface which defines the APIs provided by the auth package
@@ -184,7 +185,7 @@ type APIs interface {
 	GetLoginURL(authType string, appTypeIdentifier string, orgID string, redirectURI string, apiKey string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//GetServiceAccessToken returns an access token for a non-human client
-	GetServiceAccessToken(authType string, creds string, l *logs.Log) (*string, string, error)
+	GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, string, error)
 
 	//GetServiceAccounts gets all service accounts
 	GetServiceAccounts() ([]model.ServiceAccount, error)

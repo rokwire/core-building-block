@@ -3,9 +3,7 @@ package web
 import (
 	"core-building-block/core"
 	"core-building-block/core/model"
-	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -58,24 +56,23 @@ func (h TPSApisHandler) getAuthKeys(l *logs.Log, r *http.Request, claims *tokena
 }
 
 func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
+	// data, err := ioutil.ReadAll(r.Body)
+	// if err != nil {
+	// 	return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	// }
 
-	var requestData Def.ReqServiceAccountsTokenRequest
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("service account access token request"), nil, err, http.StatusBadRequest, true)
-	}
+	// var requestData Def.ReqServiceAccountsTokenRequest
+	// err = json.Unmarshal(data, &requestData)
+	// if err != nil {
+	// 	return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("service account access token request"), nil, err, http.StatusBadRequest, true)
+	// }
 
-	//creds
-	requestCreds, err := interfaceToJSON(requestData.Creds)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
-	}
+	// requestCreds, err := interfaceToJSON(requestData.Creds)
+	// if err != nil {
+	// 	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	// }
 
-	message, accessToken, err := h.coreAPIs.Auth.GetServiceAccessToken(string(requestData.AuthType), requestCreds, l)
+	message, accessToken, err := h.coreAPIs.Auth.GetServiceAccessToken(r, l)
 	if err != nil {
 		if message != nil {
 			return l.HttpResponseError(*message, err, http.StatusUnauthorized, false)

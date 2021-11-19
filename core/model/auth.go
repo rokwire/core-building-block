@@ -211,6 +211,7 @@ type ServiceAccount struct {
 	Roles       []AccountRole
 
 	Tokens []StaticToken
+	PubKey *rsa.PublicKey
 
 	DateCreated time.Time
 	DateUpdated *time.Time

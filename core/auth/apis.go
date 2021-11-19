@@ -3,6 +3,7 @@ package auth
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"net/http"
 	"strings"
 	"time"
 
@@ -583,14 +584,17 @@ func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier
 }
 
 //GetServiceAccessToken returns an access token for a non-human client
-func (a *Auth) GetServiceAccessToken(authType string, creds string, l *logs.Log) (*string, string, error) {
+func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, string, error) {
+	//TODO: get authType from request
+	var authType string
+
 	serviceAuthType, err := a.getServiceAuthTypeImpl(authType)
 	if err != nil {
 		l.Info("error getting service auth type on get service access token")
 		return nil, "", errors.WrapErrorAction("error getting service auth type on get service access token", "", nil, err)
 	}
 
-	message, account, err := serviceAuthType.checkCredentials(creds, l)
+	message, account, err := serviceAuthType.checkCredentials(r, l)
 	if err != nil {
 		return message, "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}

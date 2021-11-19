@@ -2,6 +2,7 @@ package storage
 
 import (
 	"core-building-block/core/model"
+	"crypto/rsa"
 	"time"
 )
 
@@ -46,7 +47,8 @@ type serviceAccount struct {
 	Permissions []model.Permission `bson:"permissions"`
 	Roles       []accountRole      `bson:"roles"`
 
-	Tokens []model.StaticToken `bson:"tokens"`
+	Tokens []model.StaticToken `bson:"tokens,omitempty"`
+	PubKey *rsa.PublicKey      `bson:"pub_key,omitempty"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

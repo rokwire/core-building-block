@@ -3,12 +3,11 @@ package auth
 import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
-	"encoding/json"
+	"net/http"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 const (
@@ -24,23 +23,25 @@ type staticTokenCreds struct {
 }
 
 // Static token implementation of serviceAuthType
-type staticTokenAuthImpl struct {
+type staticTokenServiceAuthImpl struct {
 	auth            *Auth
 	serviceAuthType string
 }
 
-func (s *staticTokenAuthImpl) checkCredentials(creds string, l *logs.Log) (*string, *model.ServiceAccount, error) {
+func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, l *logs.Log) (*string, *model.ServiceAccount, error) {
+	//TODO: parse tokenCreds from request
 	var tokenCreds staticTokenCreds
-	err := json.Unmarshal([]byte(creds), &tokenCreds)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, TypeStaticTokenCreds, nil, err)
-	}
 
-	validate := validator.New()
-	err = validate.Struct(tokenCreds)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, TypeStaticTokenCreds, nil, err)
-	}
+	// err := json.Unmarshal([]byte(creds), &tokenCreds)
+	// if err != nil {
+	// 	return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, TypeStaticTokenCreds, nil, err)
+	// }
+
+	// validate := validator.New()
+	// err = validate.Struct(tokenCreds)
+	// if err != nil {
+	// 	return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, TypeStaticTokenCreds, nil, err)
+	// }
 
 	hashedToken := utils.SHA256Hash([]byte(tokenCreds.Token))
 	account, err := s.auth.storage.FindServiceAccountByToken(string(hashedToken))
@@ -51,9 +52,9 @@ func (s *staticTokenAuthImpl) checkCredentials(creds string, l *logs.Log) (*stri
 	return nil, account, nil
 }
 
-//initStaticTokenAuth initializes and registers a new static token service auth instance
-func initStaticTokenAuth(auth *Auth) (*staticTokenAuthImpl, error) {
-	staticToken := &staticTokenAuthImpl{auth: auth, serviceAuthType: ServiceAuthTypeStaticToken}
+//initStaticTokenServiceAuth initializes and registers a new static token service auth instance
+func initStaticTokenServiceAuth(auth *Auth) (*staticTokenServiceAuthImpl, error) {
+	staticToken := &staticTokenServiceAuthImpl{auth: auth, serviceAuthType: ServiceAuthTypeStaticToken}
 
 	err := auth.registerServiceAuthType(staticToken.serviceAuthType, staticToken)
 	if err != nil {

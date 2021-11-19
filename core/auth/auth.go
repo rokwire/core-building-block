@@ -16,6 +16,7 @@ import (
 	"github.com/rokwire/core-auth-library-go/authorization"
 	"github.com/rokwire/core-auth-library-go/authservice"
 	"github.com/rokwire/core-auth-library-go/authutils"
+	"github.com/rokwire/core-auth-library-go/sigauth"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/go-playground/validator.v9"
@@ -60,7 +61,8 @@ type Auth struct {
 
 	authPrivKey *rsa.PrivateKey
 
-	AuthService *authservice.AuthService
+	AuthService   *authservice.AuthService
+	SignatureAuth *sigauth.SignatureAuth
 
 	serviceID   string
 	host        string //Service host
@@ -130,6 +132,13 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	auth.AuthService = authService
 
+	signatureAuth, err := sigauth.NewSignatureAuth(authPrivKey, authService)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "signature auth", nil, err)
+	}
+
+	auth.SignatureAuth = signatureAuth
+
 	//Initialize auth types
 	initUsernameAuth(auth)
 	initEmailAuth(auth)
@@ -141,7 +150,8 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initOidcAuth(auth)
 	initSamlAuth(auth)
 
-	initStaticTokenAuth(auth)
+	initStaticTokenServiceAuth(auth)
+	initSignatureServiceAuth(auth)
 
 	err = auth.cacheIdentityProviders()
 	if err != nil {
