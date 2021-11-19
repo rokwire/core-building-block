@@ -269,7 +269,6 @@ func (sa *Adapter) cacheAuthTypes() error {
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 	}
-
 	sa.setCachedAuthTypes(authTypes)
 
 	return nil
@@ -313,14 +312,14 @@ func (sa *Adapter) getCachedAuthType(key string) (*model.AuthType, error) {
 
 //cacheApplicationsOrganizations caches the applications organizations
 func (sa *Adapter) cacheApplicationsOrganizations() error {
-	/*	sa.logger.Info("cacheApplicationsOrganizations..")
+	sa.logger.Info("cacheApplicationsOrganizations..")
 
-		applicationsOrganizations, err := sa.LoadApplicationsOrganizations()
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
-		}
+	applicationsOrganizations, err := sa.LoadApplicationsOrganizations()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
 
-		sa.setCachedApplicationsOrganizations(applicationsOrganizations)*/
+	sa.setCachedApplicationsOrganizations(applicationsOrganizations)
 
 	return nil
 }
@@ -528,7 +527,10 @@ func (sa *Adapter) DeleteLoginSession(context TransactionContext, id string) err
 
 //DeleteExpiredSessions deletes expired sessions
 func (sa *Adapter) DeleteExpiredSessions(now *time.Time) error {
-	filter := bson.M{"expires": bson.M{"$lte": now}}
+	filter := bson.D{primitive.E{Key: "$or", Value: []interface{}{
+		bson.M{"expires": bson.M{"$lte": now}},
+		bson.M{"force_expires": bson.M{"$lte": now}},
+	}}}
 
 	_, err := sa.db.loginsSessions.DeleteMany(filter, nil)
 	if err != nil {
@@ -834,6 +836,26 @@ func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
 	err := sa.db.credentials.ReplaceOne(filter, storageCreds, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"_id": storageCreds.ID}, err)
+	}
+
+	return nil
+}
+
+//UpdateCredentialValue updates the value in credentials collection
+func (sa *Adapter) UpdateCredentialValue(ID string, value map[string]interface{}) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "value", Value: value},
+		}},
+	}
+
+	res, err := sa.db.credentials.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return nil
@@ -1472,33 +1494,32 @@ func (sa *Adapter) FindApplicationTypeByIdentifier(identifier string) (*model.Ap
 
 //LoadApplicationsOrganizations loads all applications organizations
 func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error) {
-	/*	filter := bson.D{}
-		var list []applicationOrganization
-		err := sa.db.applicationsOrganizations.Find(filter, &list, nil)
+	filter := bson.D{}
+	var list []applicationOrganization
+	err := sa.db.applicationsOrganizations.Find(filter, &list, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
+	if len(list) == 0 {
+		//no data
+		return nil, nil
+	}
+
+	result := make([]model.ApplicationOrganization, len(list))
+	for i, item := range list {
+		//we have organizations and applications cached
+		application, err := sa.getCachedApplication(item.AppID)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 		}
-		if len(list) == 0 {
-			//no data
-			return nil, nil
+		organization, err := sa.getCachedOrganization(item.OrgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 		}
 
-		result := make([]model.ApplicationOrganization, len(list))
-		for i, item := range list {
-			//we have organizations and applications cached
-			application, err := sa.getCachedApplication(item.AppID)
-			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-			}
-			organization, err := sa.getCachedOrganization(item.OrgID)
-			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
-			}
-
-			result[i] = applicationOrganizationFromStorage(item, *application, *organization)
-		}
-		return result, nil*/
-	return nil, nil
+		result[i] = applicationOrganizationFromStorage(item, *application, *organization)
+	}
+	return result, nil
 }
 
 //FindApplicationOrganizations finds application organization

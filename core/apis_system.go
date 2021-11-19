@@ -118,7 +118,7 @@ func (app *application) sysGetApplication(ID string) (*model.Application, error)
 	return appAdm, nil
 }
 
-func (app *application) sysCreateApplication(name string, multiTenant bool, requiresOwnUsers bool, identifier string, nameInType string, versions []string) (*model.Application, error) {
+func (app *application) sysCreateApplication(name string, multiTenant bool, requiresOwnUsers bool, maxLoginSessionDuration *int, identifier string, nameInType string, versions []string) (*model.Application, error) {
 	/*now := time.Now()
 
 	applicationID, _ := uuid.NewUUID()
