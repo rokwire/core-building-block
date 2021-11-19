@@ -113,6 +113,10 @@ func (a *twilioPhoneAuthImpl) signUp(authType model.AuthType, appType model.Appl
 	return message, nil, nil
 }
 
+func (a *twilioPhoneAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
+	return nil, nil, nil
+}
+
 func (a *twilioPhoneAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
 	requestCreds, err := a.checkRequestCreds(creds)
 	if err != nil {
@@ -263,8 +267,20 @@ func (a *twilioPhoneAuthImpl) getUserIdentifier(creds string) (string, error) {
 	return requestCreds.Phone, nil
 }
 
-func (a *twilioPhoneAuthImpl) verify(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
+func (a *twilioPhoneAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, errors.New(logutils.Unimplemented)
+}
+
+func (a *twilioPhoneAuthImpl) restartCredentialVerification(credential *model.Credential, l *logs.Log) error {
+	return nil
+}
+
+func (a *twilioPhoneAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (a *twilioPhoneAuthImpl) forgotCredential(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
+	return nil, nil
 }
 
 //initPhoneAuth initializes and registers a new phone auth instance

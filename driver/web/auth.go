@@ -21,12 +21,13 @@ const (
 
 //Auth handler
 type Auth struct {
-	servicesAuth     *ServicesAuth
-	servicesUserAuth *ServicesUserAuth
-	adminAuth        *AdminAuth
-	encAuth          *EncAuth
-	bbsAuth          *BBsAuth
-	systemAuth       *SystemAuth
+	servicesAuth              *ServicesAuth
+	servicesUserAuth          *ServicesUserAuth
+	servicesAuthenticatedAuth *ServicesAuthenticatedAuth
+	adminAuth                 *AdminAuth
+	encAuth                   *EncAuth
+	bbsAuth                   *BBsAuth
+	systemAuth                *SystemAuth
 
 	logger *logs.Logger
 }
@@ -42,6 +43,7 @@ func (auth *Auth) Start() error {
 
 	auth.servicesAuth.start()
 	auth.servicesUserAuth.start()
+	auth.servicesAuthenticatedAuth.start()
 	auth.adminAuth.start()
 	auth.encAuth.start()
 	auth.bbsAuth.start()
@@ -57,6 +59,7 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "auth handler", nil, err)
 	}
 	servicesUserAuth := newServicesUserAuth(*servicesAuth)
+	servicesAuthenticatedAuth := newServicesAuthenticatedAuth(*servicesUserAuth)
 
 	adminAuth, err := newAdminAuth(coreAPIs, authService, logger)
 	if err != nil {
@@ -69,8 +72,7 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "auth handler", nil, err)
 	}
 
-	auth := Auth{servicesAuth: servicesAuth, servicesUserAuth: servicesUserAuth, adminAuth: adminAuth, encAuth: encAuth, bbsAuth: bbsAuth, systemAuth: systemAuth,
-		logger: logger}
+	auth := Auth{servicesAuth: servicesAuth, servicesUserAuth: servicesUserAuth, servicesAuthenticatedAuth: servicesAuthenticatedAuth, adminAuth: adminAuth, encAuth: encAuth, bbsAuth: bbsAuth, systemAuth: systemAuth, logger: logger}
 
 	return &auth, nil
 }
@@ -136,6 +138,33 @@ func (auth *ServicesUserAuth) check(req *http.Request) (int, *tokenauth.Claims, 
 
 func newServicesUserAuth(servicesAuth ServicesAuth) *ServicesUserAuth {
 	auth := ServicesUserAuth{servicesAuth: servicesAuth}
+	return &auth
+}
+
+//ServicesAuthenticatedAuth entity
+// This enforces that the token was the result of direct user authentication. It should be used to protect sensitive account settings
+type ServicesAuthenticatedAuth struct {
+	servicesUserAuth ServicesUserAuth
+}
+
+func (auth *ServicesAuthenticatedAuth) start() {
+	auth.servicesUserAuth.servicesAuth.logger.Info("ServicesAuthenticatedAuth -> start")
+}
+
+func (auth *ServicesAuthenticatedAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
+	status, claims, err := auth.servicesUserAuth.check(req)
+
+	if err == nil && claims != nil {
+		if !claims.Authenticated {
+			return http.StatusForbidden, nil, errors.New("user must login again")
+		}
+	}
+
+	return status, claims, err
+}
+
+func newServicesAuthenticatedAuth(servicesUserAuth ServicesUserAuth) *ServicesAuthenticatedAuth {
+	auth := ServicesAuthenticatedAuth{servicesUserAuth: servicesUserAuth}
 	return &auth
 }
 
