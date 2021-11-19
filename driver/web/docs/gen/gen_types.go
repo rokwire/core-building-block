@@ -79,17 +79,35 @@ const (
 	ReqCreateOrganizationRequestTypeSmall ReqCreateOrganizationRequestType = "small"
 )
 
+// Defines values for ReqCredentialForgotInitiateRequestAuthType.
+const (
+	ReqCredentialForgotInitiateRequestAuthTypeApiKey ReqCredentialForgotInitiateRequestAuthType = "api_key"
+
+	ReqCredentialForgotInitiateRequestAuthTypeEmail ReqCredentialForgotInitiateRequestAuthType = "email"
+
+	ReqCredentialForgotInitiateRequestAuthTypeIllinoisOidc ReqCredentialForgotInitiateRequestAuthType = "illinois_oidc"
+
+	ReqCredentialForgotInitiateRequestAuthTypeTwilioPhone ReqCredentialForgotInitiateRequestAuthType = "twilio_phone"
+
+	ReqCredentialForgotInitiateRequestAuthTypeUsername ReqCredentialForgotInitiateRequestAuthType = "username"
+)
+
+// Defines values for ReqCredentialSendVerifyRequestAuthType.
+const (
+	ReqCredentialSendVerifyRequestAuthTypeAnonymous ReqCredentialSendVerifyRequestAuthType = "anonymous"
+
+	ReqCredentialSendVerifyRequestAuthTypeEmail ReqCredentialSendVerifyRequestAuthType = "email"
+
+	ReqCredentialSendVerifyRequestAuthTypeIllinoisOidc ReqCredentialSendVerifyRequestAuthType = "illinois_oidc"
+
+	ReqCredentialSendVerifyRequestAuthTypeTwilioPhone ReqCredentialSendVerifyRequestAuthType = "twilio_phone"
+
+	ReqCredentialSendVerifyRequestAuthTypeUsername ReqCredentialSendVerifyRequestAuthType = "username"
+)
+
 // Defines values for ReqSharedLoginAuthType.
 const (
-	ReqSharedLoginAuthTypeAnonymous ReqSharedLoginAuthType = "anonymous"
-
 	ReqSharedLoginAuthTypeEmail ReqSharedLoginAuthType = "email"
-
-	ReqSharedLoginAuthTypeIllinoisOidc ReqSharedLoginAuthType = "illinois_oidc"
-
-	ReqSharedLoginAuthTypeTwilioPhone ReqSharedLoginAuthType = "twilio_phone"
-
-	ReqSharedLoginAuthTypeUsername ReqSharedLoginAuthType = "username"
 )
 
 // Defines values for ReqSharedLoginUrlAuthType.
@@ -519,6 +537,43 @@ type ReqCreateApplicationRequest struct {
 	RequiresOwnUsers        bool   `json:"requires_own_users"`
 }
 
+// ReqCredentialForgotCompleteRequest defines model for _req_credential_forgot_complete_Request.
+type ReqCredentialForgotCompleteRequest struct {
+	CredentialId string       `json:"credential_id"`
+	Params       *interface{} `json:"params,omitempty"`
+	ResetCode    string       `json:"reset_code"`
+}
+
+// ReqCredentialForgotInitiateRequest defines model for _req_credential_forgot_initiate_Request.
+type ReqCredentialForgotInitiateRequest struct {
+	ApiKey            string                                     `json:"api_key"`
+	AppTypeIdentifier string                                     `json:"app_type_identifier"`
+	AuthType          ReqCredentialForgotInitiateRequestAuthType `json:"auth_type"`
+	Identifier        string                                     `json:"identifier"`
+	OrgId             string                                     `json:"org_id"`
+}
+
+// ReqCredentialForgotInitiateRequestAuthType defines model for ReqCredentialForgotInitiateRequest.AuthType.
+type ReqCredentialForgotInitiateRequestAuthType string
+
+// ReqCredentialSendVerifyRequest defines model for _req_credential_send-verify_Request.
+type ReqCredentialSendVerifyRequest struct {
+	ApiKey            string                                 `json:"api_key"`
+	AppTypeIdentifier string                                 `json:"app_type_identifier"`
+	AuthType          ReqCredentialSendVerifyRequestAuthType `json:"auth_type"`
+	Identifier        string                                 `json:"identifier"`
+	OrgId             string                                 `json:"org_id"`
+}
+
+// ReqCredentialSendVerifyRequestAuthType defines model for ReqCredentialSendVerifyRequest.AuthType.
+type ReqCredentialSendVerifyRequestAuthType string
+
+// ReqCredentialUpdateRequest defines model for _req_credential_update_Request.
+type ReqCredentialUpdateRequest struct {
+	AccountAuthTypeId string       `json:"account_auth_type_id"`
+	Params            *interface{} `json:"params,omitempty"`
+}
+
 // ReqGetApplicationRequest defines model for _req_get_Application_Request.
 type ReqGetApplicationRequest string
 
@@ -610,6 +665,12 @@ type ReqSharedLoginParamsNone map[string]interface{}
 type ReqSharedLoginParamsOIDC struct {
 	PkceVerifier *string `json:"pkce_verifier,omitempty"`
 	RedirectUri  *string `json:"redirect_uri,omitempty"`
+}
+
+// ReqSharedParamsSetEmailCredential defines model for _req_shared_ParamsSetEmailCredential.
+type ReqSharedParamsSetEmailCredential struct {
+	ConfirmPassword string `json:"confirm_password"`
+	NewPassword     string `json:"new_password"`
 }
 
 // ReqSharedProfile defines model for _req_shared_Profile.
@@ -773,6 +834,28 @@ type PostServicesAuthAccountExistsJSONBody ReqAccountExistsRequest
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
+// PostServicesAuthCredentialForgotCompleteJSONBody defines parameters for PostServicesAuthCredentialForgotComplete.
+type PostServicesAuthCredentialForgotCompleteJSONBody ReqCredentialForgotCompleteRequest
+
+// PostServicesAuthCredentialForgotInitiateJSONBody defines parameters for PostServicesAuthCredentialForgotInitiate.
+type PostServicesAuthCredentialForgotInitiateJSONBody ReqCredentialForgotInitiateRequest
+
+// PostServicesAuthCredentialSendVerifyJSONBody defines parameters for PostServicesAuthCredentialSendVerify.
+type PostServicesAuthCredentialSendVerifyJSONBody ReqCredentialSendVerifyRequest
+
+// PostServicesAuthCredentialUpdateJSONBody defines parameters for PostServicesAuthCredentialUpdate.
+type PostServicesAuthCredentialUpdateJSONBody ReqCredentialUpdateRequest
+
+// GetServicesAuthCredentialVerifyParams defines parameters for GetServicesAuthCredentialVerify.
+type GetServicesAuthCredentialVerifyParams struct {
+
+	// Credential ID
+	Id string `json:"id"`
+
+	// Verification code
+	Code string `json:"code"`
+}
+
 // PostServicesAuthLoginJSONBody defines parameters for PostServicesAuthLogin.
 type PostServicesAuthLoginJSONBody ReqSharedLogin
 
@@ -895,6 +978,18 @@ type PostServicesAuthAccountExistsJSONRequestBody PostServicesAuthAccountExistsJ
 
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody
+
+// PostServicesAuthCredentialForgotCompleteJSONRequestBody defines body for PostServicesAuthCredentialForgotComplete for application/json ContentType.
+type PostServicesAuthCredentialForgotCompleteJSONRequestBody PostServicesAuthCredentialForgotCompleteJSONBody
+
+// PostServicesAuthCredentialForgotInitiateJSONRequestBody defines body for PostServicesAuthCredentialForgotInitiate for application/json ContentType.
+type PostServicesAuthCredentialForgotInitiateJSONRequestBody PostServicesAuthCredentialForgotInitiateJSONBody
+
+// PostServicesAuthCredentialSendVerifyJSONRequestBody defines body for PostServicesAuthCredentialSendVerify for application/json ContentType.
+type PostServicesAuthCredentialSendVerifyJSONRequestBody PostServicesAuthCredentialSendVerifyJSONBody
+
+// PostServicesAuthCredentialUpdateJSONRequestBody defines body for PostServicesAuthCredentialUpdate for application/json ContentType.
+type PostServicesAuthCredentialUpdateJSONRequestBody PostServicesAuthCredentialUpdateJSONBody
 
 // PostServicesAuthLoginJSONRequestBody defines body for PostServicesAuthLogin for application/json ContentType.
 type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody

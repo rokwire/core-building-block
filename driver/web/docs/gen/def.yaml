@@ -207,12 +207,14 @@ paths:
                     enum:
                       - invalid
                       - unverified
+                      - verification-expired
                       - already-exists
                       - not-found
                       - internal-server-error
                     description: |
                       - `invalid`: Invalid credentials
                       - `unverified`: Unverified credentials
+                      - `verification-expired`: Credentials verification expired. The verification is restarted
                       - `already-found`: Account already exists when `sign-up=true`
                       - `not-found`: Account could not be found when `sign-up=false`
                       - `internal-server-error`: An undefined error occurred
@@ -272,7 +274,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/auth/verify:
+  /services/auth/credential/verify:
     get:
       tags:
         - Services
@@ -304,6 +306,117 @@ paths:
               schema:
                 type: string
                 example: Successfully verified code
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/credential/send-verify:
+    post:
+      tags:
+        - Services
+      summary: Send verification code to identifier
+      description: |
+        Sends verification code to identifier to verify account ownership
+      requestBody:
+        description: |
+          Account information to be checked
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_credential_send-verify_Request'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Successfully sent verification code
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/credential/forgot/initiate:
+    post:
+      tags:
+        - Services
+      summary: Initiate reset credential for a given identifier
+      description: |
+        Email auth type:
+        Sends the reset password code for a given identifier
+        Generates a reset code and expiry and sends it to the given identifier 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_credential_forgot_initiate_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/credential/forgot/complete:
+    post:
+      tags:
+        - Services
+      summary: Complete resetting forgotten credential
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_credential_forgot_complete_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/credential/update:
+    post:
+      tags:
+        - Services
+      summary: Reset a credential from client application
+      description: |
+        Needs user auth token for authorization
+
+        **Auth:** Requires token from direct user authentication from recent login
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_credential_update_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
         '400':
           description: Bad request
         '401':
@@ -2333,11 +2446,7 @@ components:
         auth_type:
           type: string
           enum:
-            - username
             - email
-            - twilio_phone
-            - illinois_oidc
-            - anonymous
         app_type_identifier:
           type: string
         org_id:
@@ -2532,6 +2641,16 @@ components:
         country:
           type: string
           nullable: true
+    _req_shared_ParamsSetEmailCredential:
+      required:
+        - new_password
+        - confirm_password
+      type: object
+      properties:
+        new_password:
+          type: string
+        confirm_password:
+          type: string
     _res_shared_LoginUrl:
       required:
         - login_url
@@ -2660,6 +2779,81 @@ components:
           type: string
     _res_account-exists_Response:
       type: boolean
+    _req_credential_update_Request:
+      required:
+        - account_auth_type_id
+      type: object
+      properties:
+        account_auth_type_id:
+          type: string
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/_req_shared_ParamsSetEmailCredential'
+    _req_credential_send-verify_Request:
+      required:
+        - auth_type
+        - app_type_identifier
+        - org_id
+        - api_key
+        - identifier
+      type: object
+      properties:
+        identifier:
+          type: string
+        org_id:
+          type: string
+        api_key:
+          type: string
+        app_type_identifier:
+          type: string
+        auth_type:
+          type: string
+          enum:
+            - username
+            - email
+            - twilio_phone
+            - illinois_oidc
+            - anonymous
+    _req_credential_forgot_initiate_Request:
+      required:
+        - auth_type
+        - app_type_identifier
+        - org_id
+        - api_key
+        - identifier
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - username
+            - email
+            - twilio_phone
+            - illinois_oidc
+            - api_key
+        app_type_identifier:
+          type: string
+        org_id:
+          type: string
+        api_key:
+          type: string
+        identifier:
+          type: string
+    _req_credential_forgot_complete_Request:
+      required:
+        - credential_id
+        - reset_code
+      type: object
+      properties:
+        credential_id:
+          type: string
+        reset_code:
+          type: string
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/_req_shared_ParamsSetEmailCredential'
     _req_authorize-service_Request:
       required:
         - service_id
