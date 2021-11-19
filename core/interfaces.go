@@ -10,6 +10,7 @@ import (
 //Services exposes APIs for the driver adapters
 type Services interface {
 	SerDeleteAccount(id string) error
+	SerGetAccount(accountID string) (*model.Account, error)
 	SerGetProfile(accountID string) (*model.Profile, error)
 	SerGetPreferences(accountID string) (map[string]interface{}, error)
 	SerUpdateProfile(accountID string, profile *model.Profile) error
@@ -46,7 +47,7 @@ type System interface {
 	SysGetOrganization(ID string) (*model.Organization, error)
 	SysUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 
-	SysCreateApplication(name string, multiTenant bool, requiresOwnUsers bool, identifier string, nameInType string, versions []string) (*model.Application, error)
+	SysCreateApplication(name string, multiTenant bool, requiresOwnUsers bool, maxLoginSessionDuration *int, identifier string, nameInType string, versions []string) (*model.Application, error)
 	SysGetApplication(ID string) (*model.Application, error)
 	SysGetApplications() ([]model.Application, error)
 
@@ -63,17 +64,21 @@ type System interface {
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
-	FindAccountByID(id string) (*model.Account, error)
-	UpdateAccount(updatedUser *model.Account, orgID string, newOrgData *map[string]interface{}) (*model.Account, error)
-	DeleteAccount(id string) error
+	PerformTransaction(func(context storage.TransactionContext) error) error
+
+	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
+	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
-	InsertAccountRoles(accountID string, appOrgID string, roles []model.AppOrgRole) error
+	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
 
-	CreateGlobalConfig(setting string) (*model.GlobalConfig, error)
+	SaveDevice(context storage.TransactionContext, device *model.Device) error
+	DeleteDevice(context storage.TransactionContext, id string) error
+
+	CreateGlobalConfig(context storage.TransactionContext, globalConfig *model.GlobalConfig) error
 	GetGlobalConfig() (*model.GlobalConfig, error)
-	SaveGlobalConfig(setting *model.GlobalConfig) error
+	DeleteGlobalConfig(context storage.TransactionContext) error
 
 	FindPermissionsByName(names []string) ([]model.Permission, error)
 	InsertPermission(item model.Permission) error

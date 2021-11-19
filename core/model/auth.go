@@ -50,6 +50,8 @@ const (
 	TypeAPIKey logutils.MessageDataType = "api key"
 	//TypeCreds cred type
 	TypeCreds logutils.MessageDataType = "creds"
+	//TypeIP auth type type
+	TypeIP logutils.MessageDataType = "ip"
 )
 
 //LoginSession represents login session entity
@@ -67,12 +69,13 @@ type LoginSession struct {
 
 	Device Device
 
-	IPAddress    string
-	AccessToken  string
-	RefreshToken string
-	Params       map[string]interface{} //authType-specific set of parameters passed back to client
+	IPAddress     string
+	AccessToken   string
+	RefreshTokens []string
+	Params        map[string]interface{} //authType-specific set of parameters passed back to client
 
-	Expires time.Time
+	Expires      time.Time
+	ForceExpires *time.Time
 
 	DateUpdated *time.Time
 	DateCreated time.Time
@@ -80,7 +83,17 @@ type LoginSession struct {
 
 //IsExpired says if the sessions is expired
 func (ls LoginSession) IsExpired() bool {
-	return ls.Expires.Before(time.Now())
+	now := time.Now()
+	return ls.Expires.Before(now) || (ls.ForceExpires != nil && ls.ForceExpires.Before(now))
+}
+
+//CurrentRefreshToken returns the current refresh token (last element of RefreshTokens)
+func (ls LoginSession) CurrentRefreshToken() string {
+	numTokens := len(ls.RefreshTokens)
+	if numTokens <= 0 {
+		return ""
+	}
+	return ls.RefreshTokens[numTokens-1]
 }
 
 //APIKey represents an API key entity
@@ -93,12 +106,13 @@ type APIKey struct {
 //AuthType represents authentication type entity
 //	The system supports different authentication types - username, email, phone, identity providers ones etc
 type AuthType struct {
-	ID          string                 `bson:"_id"`
-	Code        string                 `bson:"code"` //username or email or phone or illinois_oidc etc
-	Description string                 `bson:"description"`
-	IsExternal  bool                   `bson:"is_external"`  //says if the users source is external - identity providers
-	IsAnonymous bool                   `bson:"is_anonymous"` //says if the auth type results in anonymous users
-	Params      map[string]interface{} `bson:"params"`
+	ID             string                 `bson:"_id"`
+	Code           string                 `bson:"code"` //username or email or phone or illinois_oidc etc
+	Description    string                 `bson:"description"`
+	IsExternal     bool                   `bson:"is_external"`     //says if the users source is external - identity providers
+	IsAnonymous    bool                   `bson:"is_anonymous"`    //says if the auth type results in anonymous users
+	UseCredentials bool                   `bson:"use_credentials"` //says if the auth type uses credentials
+	Params         map[string]interface{} `bson:"params"`
 }
 
 //IdentityProvider represents identity provider entity
