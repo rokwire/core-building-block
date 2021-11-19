@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Expose resend verification code services API [#287](https://github.com/rokwire/core-building-block/issues/287)
+- Add password reset from client and reset links [#216](https://github.com/rokwire/core-building-block/issues/216)
+- User PII in tokens [#169](https://github.com/rokwire/core-building-block/issues/169)
+- Add authentication required auth wrapper [#250](https://github.com/rokwire/core-building-block/issues/250)
+
 ## [1.12.0] - 2021-11-10
 ### Added
+- Login session duration policies [#258](https://github.com/rokwire/core-building-block/issues/258)
 - Handle groups mappings from OIDC integration [#276](https://github.com/rokwire/core-building-block/issues/276)
 - Expose get account services API [#217](https://github.com/rokwire/core-building-block/issues/217)
 - Define unified responses for the APIs [#286](https://github.com/rokwire/core-building-block/issues/286)
