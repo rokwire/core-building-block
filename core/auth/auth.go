@@ -731,14 +731,13 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 	var preferences map[string]interface{}
 	var err error
 
-	profileSearch := make(map[string]string)
+	var profileSearch map[string]string
 	if authType.Code == "twilio_phone" {
-		profileSearch["phone"] = identifier
+		profileSearch = map[string]string{"phone": identifier}
 	} else if authType.Code == "illinois_oidc" {
-		profileSearch["uin"] = identifier
-	} else {
-		return nil, nil, nil
+		profileSearch = map[string]string{"uin": identifier}
 	}
+
 	if profileSearch != nil {
 		profile, preferences, err = a.profileBB.GetProfileBBData(profileSearch, l)
 		if err != nil {
