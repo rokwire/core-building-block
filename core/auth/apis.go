@@ -537,6 +537,51 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	return nil
 }
 
+//SendVerifyCredential sends the verification code to the identifier
+func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
+	//validate if the provided auth type is supported by the provided application and organization
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+	//validate api key before making db calls
+	err = a.validateAPIKey(apiKey, appType.Application.ID)
+	if err != nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+	}
+
+	if !authType.UseCredentials {
+		return errors.WrapErrorAction("invalid auth type for sending verify code", model.TypeAuthType, nil, err)
+	}
+	authImpl, err := a.getAuthTypeImpl(*authType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, identifier)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	accountAuthType, err := a.findAccountAuthType(account, authType, identifier)
+	if accountAuthType == nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+	}
+	credential := accountAuthType.Credential
+	if credential == nil {
+		return errors.New("Invalid account auth type for reset link")
+	}
+
+	if credential.Verified {
+		return errors.New("credential has already been verified")
+	}
+
+	err = authImpl.sendVerifyCredential(credential, l)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
+	}
+
+	return nil
+}
+
 //GetServiceAccessToken returns an access token for a non-human client
 func (a *Auth) GetServiceAccessToken(authType string, creds string, l *logs.Log) (*string, string, error) {
 	serviceAuthType, err := a.getServiceAuthTypeImpl(authType)

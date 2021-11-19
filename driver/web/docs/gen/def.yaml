@@ -312,6 +312,35 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/auth/credential/send-verify:
+    post:
+      tags:
+        - Services
+      summary: Send verification code to identifier
+      description: |
+        Sends verification code to identifier to verify account ownership
+      requestBody:
+        description: |
+          Account information to be checked
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_credential_send-verify_Request'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Successfully sent verification code
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/auth/credential/forgot/initiate:
     post:
       tags:
@@ -2658,11 +2687,7 @@ components:
         auth_type:
           type: string
           enum:
-            - username
             - email
-            - twilio_phone
-            - illinois_oidc
-            - anonymous
         app_type_identifier:
           type: string
         org_id:
@@ -3006,6 +3031,31 @@ components:
           type: object
           anyOf:
             - $ref: '#/components/schemas/_req_shared_ParamsSetEmailCredential'
+    _req_credential_send-verify_Request:
+      required:
+        - auth_type
+        - app_type_identifier
+        - org_id
+        - api_key
+        - identifier
+      type: object
+      properties:
+        identifier:
+          type: string
+        org_id:
+          type: string
+        api_key:
+          type: string
+        app_type_identifier:
+          type: string
+        auth_type:
+          type: string
+          enum:
+            - username
+            - email
+            - twilio_phone
+            - illinois_oidc
+            - anonymous
     _req_credential_forgot_initiate_Request:
       required:
         - auth_type

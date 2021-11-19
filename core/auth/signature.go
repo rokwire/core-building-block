@@ -31,6 +31,10 @@ func (a *signatureAuthImpl) verifyCredential(credential *model.Credential, verif
 	return nil, errors.New(logutils.Unimplemented)
 }
 
+func (a *signatureAuthImpl) sendVerifyCredential(credential *model.Credential, l *logs.Log) error {
+	return nil
+}
+
 func (a *signatureAuthImpl) restartCredentialVerification(credential *model.Credential, l *logs.Log) error {
 	return nil
 }
