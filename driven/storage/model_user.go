@@ -2,17 +2,18 @@ package storage
 
 import (
 	"time"
+
+	"core-building-block/core/model"
 )
 
 type account struct {
 	ID string `bson:"_id"`
 
-	AppID string `bson:"app_id,omitempty"`
-	OrgID string `bson:"org_id,omitempty"`
+	AppOrgID string `bson:"app_org_id,omitempty"`
 
-	Permissions []applicationPermission `bson:"permissions,omitempty"`
-	Roles       []applicationRole       `bson:"roles,omitempty"`
-	Groups      []applicationGroup      `bson:"groups,omitempty"`
+	Permissions []model.Permission `bson:"permissions,omitempty"`
+	Roles       []accountRole      `bson:"roles,omitempty"`
+	Groups      []accountGroup     `bson:"groups,omitempty"`
 
 	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
 
@@ -25,6 +26,18 @@ type account struct {
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type accountRole struct {
+	Role     appOrgRole `bson:"role"`
+	Active   bool       `bson:"active"`
+	AdminSet bool       `bson:"admin_set"`
+}
+
+type accountGroup struct {
+	Group    appOrgGroup `bson:"group"`
+	Active   bool        `bson:"active"`
+	AdminSet bool        `bson:"admin_set"`
 }
 
 type accountAuthType struct {

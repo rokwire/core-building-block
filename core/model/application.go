@@ -10,12 +10,12 @@ import (
 const (
 	//TypeApplication ...
 	TypeApplication logutils.MessageDataType = "application"
-	//TypeApplicationPermission ...
-	TypeApplicationPermission logutils.MessageDataType = "application permission"
-	//TypeApplicationRole ...
-	TypeApplicationRole logutils.MessageDataType = "application role"
-	//TypeApplicationGroup ...
-	TypeApplicationGroup logutils.MessageDataType = "application group"
+	//TypePermission ...
+	TypePermission logutils.MessageDataType = "permission"
+	//TypeAppOrgRole ...
+	TypeAppOrgRole logutils.MessageDataType = "application organization role"
+	//TypeAppOrgGroup ...
+	TypeAppOrgGroup logutils.MessageDataType = "application organization group"
 	//TypeOrganization ...
 	TypeOrganization logutils.MessageDataType = "organization"
 	//TypeApplicationOrganization ...
@@ -26,55 +26,60 @@ const (
 	TypeApplicationUserRelations logutils.MessageDataType = "app user relations"
 )
 
-//ApplicationPermission represents application permission entity
-type ApplicationPermission struct {
-	ID   string
-	Name string
+//Permission represents permission entity
+type Permission struct {
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
 
-	Application Application
+	ServiceID string   `bson:"service_id"`
+	Assigners []string `bson:"assigners"`
 
-	DateCreated time.Time
-	DateUpdated *time.Time
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-func (c ApplicationPermission) String() string {
-	return fmt.Sprintf("[ID:%s\nName:%s\nApplication:%s]", c.ID, c.Name, c.Application.Name)
+func (c Permission) String() string {
+	return fmt.Sprintf("[ID:%s\nName:%s\nServiceID:%s]", c.ID, c.Name, c.ServiceID)
 }
 
-//ApplicationRole represents application role entity. It is a collection of permissions
-type ApplicationRole struct {
+//AppOrgRole represents application organization role entity. It is a collection of permissions
+type AppOrgRole struct {
 	ID          string
 	Name        string
 	Description string
 
-	Permissions []ApplicationPermission
+	System bool
 
-	Application Application
+	Permissions []Permission
+
+	AppOrg ApplicationOrganization
 
 	DateCreated time.Time
 	DateUpdated *time.Time
 }
 
-func (c ApplicationRole) String() string {
-	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s\tApplication:%s]", c.ID, c.Name, c.Permissions, c.Application.Name)
+func (c AppOrgRole) String() string {
+	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s\tAppOrg:%s]", c.ID, c.Name, c.Permissions, c.AppOrg.ID)
 }
 
-//ApplicationGroup represents application group entity. It is a collection of users
-type ApplicationGroup struct {
+//AppOrgGroup represents application organization group entity. It is a collection of users
+type AppOrgGroup struct {
 	ID   string
 	Name string
 
-	Permissions []ApplicationPermission
-	Roles       []ApplicationRole
+	System bool
 
-	Application Application
+	Permissions []Permission
+	Roles       []AppOrgRole
+
+	AppOrg ApplicationOrganization
 
 	DateCreated time.Time
 	DateUpdated *time.Time
 }
 
-func (cg ApplicationGroup) String() string {
-	return fmt.Sprintf("[ID:%s\nName:%s\nApplication:%s]", cg.ID, cg.Name, cg.Application.Name)
+func (cg AppOrgGroup) String() string {
+	return fmt.Sprintf("[ID:%s\nName:%s\nAppOrg:%s]", cg.ID, cg.Name, cg.AppOrg.ID)
 }
 
 //Application represents users application entity - safer community, uuic, etc
@@ -86,6 +91,8 @@ type Application struct {
 
 	//if true the service will always require the user to create profile for the application, otherwise he/she could use his/her already created profile from another platform application
 	RequiresOwnUsers bool
+
+	MaxLoginSessionDuration *int
 
 	Types []ApplicationType
 
@@ -129,6 +136,8 @@ type ApplicationOrganization struct {
 
 	Application  Application
 	Organization Organization
+
+	ServicesIDs []string //which services are used for this app/org
 
 	IdentityProvidersSettings []IdentityProviderSetting
 
@@ -180,14 +189,13 @@ type IdentityProviderSetting struct {
 	MiddleNameField string `bson:"middle_name_field"`
 	LastNameField   string `bson:"last_name_field"`
 	EmailField      string `bson:"email_field"`
+	RolesField      string `bson:"roles_field"`
 	GroupsField     string `bson:"groups_field"`
 
 	UserSpecificFields []string `bson:"user_specific_fields"`
 
-	Groups []struct {
-		IdentityProviderGroup string `bson:"identity_provider_group"`
-		AppGroupID            string `bson:"app_group_id"`
-	} `bson:"groups"`
+	Roles  map[string]string `bson:"roles"`  //map[identity_provider_role]app_role_id
+	Groups map[string]string `bson:"groups"` //map[identity_provider_group]app_group_id
 }
 
 //ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc

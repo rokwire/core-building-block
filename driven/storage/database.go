@@ -21,22 +21,22 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
-	apiKeys                   *collectionWrapper
-	authTypes                 *collectionWrapper
-	identityProviders         *collectionWrapper
-	accounts                  *collectionWrapper
-	devices                   *collectionWrapper
-	credentials               *collectionWrapper
-	loginsSessions            *collectionWrapper
-	globalConfig              *collectionWrapper
-	serviceRegs               *collectionWrapper
-	serviceAuthorizations     *collectionWrapper
-	organizations             *collectionWrapper
-	applications              *collectionWrapper
-	applicationsOrganizations *collectionWrapper
-	applicationsGroups        *collectionWrapper
-	applicationsRoles         *collectionWrapper
-	applicationsPermissions   *collectionWrapper
+	apiKeys                         *collectionWrapper
+	authTypes                       *collectionWrapper
+	identityProviders               *collectionWrapper
+	accounts                        *collectionWrapper
+	devices                         *collectionWrapper
+	credentials                     *collectionWrapper
+	loginsSessions                  *collectionWrapper
+	globalConfig                    *collectionWrapper
+	serviceRegs                     *collectionWrapper
+	serviceAuthorizations           *collectionWrapper
+	organizations                   *collectionWrapper
+	applications                    *collectionWrapper
+	applicationsOrganizations       *collectionWrapper
+	applicationsOrganizationsGroups *collectionWrapper
+	applicationsOrganizationsRoles  *collectionWrapper
+	permissions                     *collectionWrapper
 
 	listeners []Listener
 }
@@ -142,20 +142,20 @@ func (m *database) start() error {
 		return err
 	}
 
-	applicationsGroups := &collectionWrapper{database: m, coll: db.Collection("applications_groups")}
-	err = m.applyApplicationsGroupsChecks(applicationsGroups)
+	applicationsOrganizationsGroups := &collectionWrapper{database: m, coll: db.Collection("applications_organziations_groups")}
+	err = m.applyApplicationsOrganizationsGroupsChecks(applicationsOrganizationsGroups)
 	if err != nil {
 		return err
 	}
 
-	applicationsRoles := &collectionWrapper{database: m, coll: db.Collection("applications_roles")}
-	err = m.applyApplicationsRolesChecks(applicationsRoles)
+	applicationsOrganizationsRoles := &collectionWrapper{database: m, coll: db.Collection("applications_organizations_roles")}
+	err = m.applyApplicationsOrganziationsRolesChecks(applicationsOrganizationsRoles)
 	if err != nil {
 		return err
 	}
 
-	applicationsPermissions := &collectionWrapper{database: m, coll: db.Collection("applications_permissions")}
-	err = m.applyApplicationsPermissionsChecks(applicationsPermissions)
+	permissions := &collectionWrapper{database: m, coll: db.Collection("permissions")}
+	err = m.applyPermissionsChecks(permissions)
 	if err != nil {
 		return err
 	}
@@ -177,9 +177,9 @@ func (m *database) start() error {
 	m.organizations = organizations
 	m.applications = applications
 	m.applicationsOrganizations = applicationsOrganziations
-	m.applicationsGroups = applicationsGroups
-	m.applicationsRoles = applicationsRoles
-	m.applicationsPermissions = applicationsPermissions
+	m.applicationsOrganizationsGroups = applicationsOrganizationsGroups
+	m.applicationsOrganizationsRoles = applicationsOrganizationsRoles
+	m.permissions = permissions
 
 	go m.apiKeys.Watch(nil, m.logger)
 	go m.authTypes.Watch(nil, m.logger)
@@ -383,61 +383,61 @@ func (m *database) applyApplicationsOrganizationsChecks(applicationsOrganization
 	return nil
 }
 
-func (m *database) applyApplicationsGroupsChecks(applicationsGroups *collectionWrapper) error {
-	m.logger.Info("apply applications groups checks.....")
+func (m *database) applyApplicationsOrganizationsGroupsChecks(applicationsOrganizationGroups *collectionWrapper) error {
+	m.logger.Info("apply applications organziations groups checks.....")
 
-	//add application index
-	err := applicationsGroups.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}}, false)
+	//add application organization index
+	err := applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add permissions index
-	err = applicationsGroups.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
+	err = applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add roles index
-	err = applicationsGroups.AddIndex(bson.D{primitive.E{Key: "roles._id", Value: 1}}, false)
+	err = applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "roles._id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add roles permissions index
-	err = applicationsGroups.AddIndex(bson.D{primitive.E{Key: "roles.permissions._id", Value: 1}}, false)
+	err = applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "roles.permissions._id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
-	m.logger.Info("applications groups checks passed")
+	m.logger.Info("applications organizations groups checks passed")
 	return nil
 }
 
-func (m *database) applyApplicationsRolesChecks(applicationsRoles *collectionWrapper) error {
-	m.logger.Info("apply applications roles checks.....")
+func (m *database) applyApplicationsOrganziationsRolesChecks(applicationsOrganziationsRoles *collectionWrapper) error {
+	m.logger.Info("apply applications organizations roles checks.....")
 
-	//add application index
-	err := applicationsRoles.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}}, false)
+	//add application organization index
+	err := applicationsOrganziationsRoles.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add permissions index
-	err = applicationsRoles.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
+	err = applicationsOrganziationsRoles.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
-	m.logger.Info("applications roles checks passed")
+	m.logger.Info("applications organizations roles checks passed")
 	return nil
 }
 
-func (m *database) applyApplicationsPermissionsChecks(applicationsPermissions *collectionWrapper) error {
+func (m *database) applyPermissionsChecks(permissions *collectionWrapper) error {
 	m.logger.Info("apply applications permissions checks.....")
 
-	//add application index
-	err := applicationsPermissions.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "name", Value: 1}}, true)
+	//add permissions index
+	err := permissions.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}}, true)
 	if err != nil {
 		return err
 	}

@@ -1,0 +1,14 @@
+type: object
+properties:
+  fields:
+     $ref: "./AppOrgGroupFields.yaml"
+  application:
+    $ref: "./Application.yaml"
+  permissions:
+    type: array
+    items:
+      $ref: "./Permission.yaml"
+  roles:
+    type: array
+    items:
+      $ref: "./AppOrgRole.yaml"

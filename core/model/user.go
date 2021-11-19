@@ -18,6 +18,8 @@ const (
 	TypeAccountPermissions logutils.MessageDataType = "account permissions"
 	//TypeAccountRoles account roles
 	TypeAccountRoles logutils.MessageDataType = "account roles"
+	//TypeAccountGroups account groups
+	TypeAccountGroups logutils.MessageDataType = "account groups"
 	//TypeProfile profile
 	TypeProfile logutils.MessageDataType = "profile"
 	//TypeDevice device
@@ -32,12 +34,11 @@ const (
 type Account struct {
 	ID string //this is ID for the account
 
-	Application  Application
-	Organization Organization
+	AppOrg ApplicationOrganization
 
-	Permissions []ApplicationPermission
-	Roles       []ApplicationRole
-	Groups      []ApplicationGroup
+	Permissions []Permission
+	Roles       []AccountRole
+	Groups      []AccountGroup
 
 	AuthTypes []AccountAuthType
 
@@ -50,6 +51,19 @@ type Account struct {
 
 	DateCreated time.Time
 	DateUpdated *time.Time
+}
+
+//GetAccountAuthTypeByID finds account auth type by id
+func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
+	var result AccountAuthType
+	for _, aat := range a.AuthTypes {
+		if aat.ID == ID {
+			result = aat
+		}
+	}
+	//assign account
+	result.Account = a
+	return &result
 }
 
 //GetAccountAuthType finds account auth type
@@ -66,9 +80,9 @@ func (a Account) GetAccountAuthType(authTypeID string, identifier string) *Accou
 }
 
 //GetPermissions returns all permissions granted to this account
-func (a Account) GetPermissions() []ApplicationPermission {
+func (a Account) GetPermissions() []Permission {
 	permissionsMap := a.GetPermissionsMap()
-	permissions := make([]ApplicationPermission, len(permissionsMap))
+	permissions := make([]Permission, len(permissionsMap))
 	i := 0
 	for _, permission := range permissionsMap {
 		permissions[i] = permission
@@ -90,27 +104,125 @@ func (a Account) GetPermissionNames() []string {
 }
 
 //GetPermissionsMap returns a map of all permissions granted to this account
-func (a Account) GetPermissionsMap() map[string]ApplicationPermission {
-	permissionsMap := make(map[string]ApplicationPermission, len(a.Permissions))
+func (a Account) GetPermissionsMap() map[string]Permission {
+	permissionsMap := make(map[string]Permission, len(a.Permissions))
 	for _, permission := range a.Permissions {
 		permissionsMap[permission.Name] = permission
 	}
 	for _, role := range a.Roles {
-		for _, permission := range role.Permissions {
-			permissionsMap[permission.Name] = permission
-		}
-	}
-	for _, group := range a.Groups {
-		for _, permission := range group.Permissions {
-			permissionsMap[permission.Name] = permission
-		}
-		for _, role := range group.Roles {
-			for _, permission := range role.Permissions {
+		if role.Active {
+			for _, permission := range role.Role.Permissions {
 				permissionsMap[permission.Name] = permission
 			}
 		}
 	}
+	for _, group := range a.Groups {
+		if group.Active {
+			for _, permission := range group.Group.Permissions {
+				permissionsMap[permission.Name] = permission
+			}
+			for _, role := range group.Group.Roles {
+				for _, permission := range role.Permissions {
+					permissionsMap[permission.Name] = permission
+				}
+			}
+		}
+	}
 	return permissionsMap
+}
+
+//GetPermission returns the permission for an ID if the account has it
+func (a Account) GetPermission(id string) *Permission {
+	for _, permission := range a.Permissions {
+		if permission.ID == id {
+			return &permission
+		}
+	}
+	return nil
+}
+
+//GetPermissionNamed returns the permission for a name if the account has it
+func (a Account) GetPermissionNamed(name string) *Permission {
+	for _, permission := range a.Permissions {
+		if permission.Name == name {
+			return &permission
+		}
+	}
+	return nil
+}
+
+//GetActiveRoles returns all active roles
+func (a Account) GetActiveRoles() []AccountRole {
+	roles := []AccountRole{}
+	for _, role := range a.Roles {
+		if role.Active {
+			roles = append(roles, role)
+		}
+	}
+	return roles
+}
+
+//GetRole returns the role for an id if the account has it
+func (a Account) GetRole(id string) *AccountRole {
+	for _, role := range a.Roles {
+		if role.Role.ID == id {
+			return &role
+		}
+	}
+	return nil
+}
+
+//GetActiveGroups returns all active groups
+func (a Account) GetActiveGroups() []AccountGroup {
+	groups := []AccountGroup{}
+	for _, group := range a.Groups {
+		if group.Active {
+			groups = append(groups, group)
+		}
+	}
+	return groups
+}
+
+//GetGroup returns the group for an id if the account has it
+func (a Account) GetGroup(id string) *AccountGroup {
+	for _, group := range a.Groups {
+		if group.Group.ID == id {
+			return &group
+		}
+	}
+	return nil
+}
+
+//AccountRole represents a role assigned to an account
+type AccountRole struct {
+	Role     AppOrgRole
+	Active   bool
+	AdminSet bool
+}
+
+//AccountRolesFromAppOrgRoles converts AppOrgRoles to AccountRoles
+func AccountRolesFromAppOrgRoles(items []AppOrgRole, active bool, adminSet bool) []AccountRole {
+	accountRoles := make([]AccountRole, len(items))
+	for i, role := range items {
+		accountRoles[i] = AccountRole{Role: role, Active: active, AdminSet: adminSet}
+	}
+	return accountRoles
+}
+
+//AccountGroup represents a group assigned to an account
+type AccountGroup struct {
+	Group    AppOrgGroup
+	Active   bool
+	AdminSet bool
+}
+
+//AccountGroupsFromAppOrgGroups converts AppOrgGroups to AccountGroups
+func AccountGroupsFromAppOrgGroups(items []AppOrgGroup, active bool, adminSet bool) []AccountGroup {
+	accountGroups := make([]AccountGroup, len(items))
+	for i, group := range items {
+		accountGroups[i] = AccountGroup{Group: group, Active: active, AdminSet: adminSet}
+	}
+	return accountGroups
 }
 
 //AccountAuthType represents account auth type
@@ -169,6 +281,16 @@ type Profile struct {
 	DateUpdated *time.Time
 }
 
+//GetFullName returns the user's full name
+func (p Profile) GetFullName() string {
+	fullname := p.FirstName
+	if len(fullname) > 0 {
+		fullname += " "
+	}
+	fullname += p.LastName
+	return fullname
+}
+
 //Device represents user devices entity.
 type Device struct {
 	ID   string
@@ -191,6 +313,7 @@ type ExternalSystemUser struct {
 	MiddleName string   `json:"middle_name" bson:"middle_name"`
 	LastName   string   `json:"last_name" bson:"last_name"`
 	Email      string   `json:"email" bson:"email"`
+	Roles      []string `json:"roles" bson:"roles"`
 	Groups     []string `json:"groups" bson:"groups"`
 
 	//here are the system specific data for the user - uiucedu_uin etc
@@ -212,6 +335,9 @@ func (esu ExternalSystemUser) Equals(other ExternalSystemUser) bool {
 		return false
 	}
 	if esu.Email != other.Email {
+		return false
+	}
+	if !utils.DeepEqual(esu.Roles, other.Roles) {
 		return false
 	}
 	if !utils.DeepEqual(esu.Groups, other.Groups) {
