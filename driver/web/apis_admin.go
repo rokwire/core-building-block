@@ -205,6 +205,59 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 	return l.HttpResponseSuccessJSON(respData)
 }
 
+func (h AdminApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	accountID := r.URL.Query().Get("id")
+	if accountID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
+	}
+
+	identifier := r.URL.Query().Get("auth_type_identifier")
+	if identifier == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	}
+
+	getAccounts, err := h.coreAPIs.Administration.AdmGetAccounts(accountID, identifier, &claims.AppID, &claims.OrgID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+	response := getAccountListToDef(getAccounts)
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
+//getAccount gets the account
+func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	account, err := h.coreAPIs.Administration.AdmGetAccount(claims.Subject)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	var accountData *Def.ResSharedAccount
+	if account != nil {
+		profile := profileToDef(&account.Profile)
+		//permissions
+		permissions := applicationPermissionsToDef(account.Permissions)
+		//roles
+		roles := appOrgRolesToDef(account.Roles)
+		//groups
+		groups := appOrgGroupsToDef(account.Groups)
+		//account auth types
+		authTypes := accountAuthTypesToDef(account.AuthTypes)
+		accountData = &Def.ResSharedAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
+	}
+
+	data, err := json.Marshal(accountData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
 //NewAdminApisHandler creates new admin rest Handler instance
 func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
 	return AdminApisHandler{coreAPIs: coreAPIs}

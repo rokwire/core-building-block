@@ -111,6 +111,14 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
+func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
+	return s.app.admGetAccount(accountID)
+}
+
+func (s *administrationImpl) AdmGetAccounts(accountID string, identifier string, appID *string, orgID *string) ([]model.Account, error) {
+	return s.app.admGetAccounts(accountID, identifier, appID, orgID)
+}
+
 ///
 
 //encryptionImpl

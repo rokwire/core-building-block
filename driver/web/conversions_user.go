@@ -23,37 +23,6 @@ func accountToDef(item model.Account) *Def.ResSharedAccount {
 		AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 }
 
-//Accounts
-func getAccountsToDef(item *model.Account) *Def.ResSharedLoginAccount {
-	if item == nil {
-		return nil
-	}
-	profile := profileToDef(&item.Profile)
-	//permissions
-	permissions := applicationPermissionsToDef(item.Permissions)
-	//roles
-	roles := appOrgRolesToDef(item.Roles)
-	//groups
-	groups := appOrgGroupsToDef(item.Groups)
-	//account auth types
-	authTypes := accountAuthTypesToDef(item.AuthTypes)
-	return &Def.ResSharedLoginAccount{Id: item.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
-
-}
-
-func getAccountsListToDef(item []model.Account) []Def.ResSharedLoginAccount {
-	out := make([]Def.ResSharedLoginAccount, len(item))
-	for i, item := range item {
-		defItem := getAccountsToDef(&item)
-		if defItem != nil {
-			out[i] = *defItem
-		} else {
-			out[i] = Def.ResSharedLoginAccount{}
-		}
-	}
-	return out
-}
-
 //AccountAuthType
 func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthTypeFields {
 	params := &Def.AccountAuthTypeFields_Params{}
@@ -201,6 +170,37 @@ func profileFromDefNullable(item *Def.ReqSharedProfileNullable) model.Profile {
 	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
 		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
 		State: state, Country: country}
+}
+
+//Accounts
+func getAccountsToDef(item *model.Account) *Def.ResSharedAccount {
+	if item == nil {
+		return nil
+	}
+	profile := profileToDef(&item.Profile)
+	//permissions
+	permissions := applicationPermissionsToDef(item.Permissions)
+	//roles
+	roles := appOrgRolesToDef(item.Roles)
+	//groups
+	groups := appOrgGroupsToDef(item.Groups)
+	//account auth types
+	authTypes := accountAuthTypesToDef(item.AuthTypes)
+	return &Def.ResSharedAccount{Id: item.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
+
+}
+
+func getAccountsListToDef(item []model.Account) []Def.ResSharedAccount {
+	out := make([]Def.ResSharedAccount, len(item))
+	for i, item := range item {
+		defItem := getAccountsToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.ResLoginAccount{}
+		}
+	}
+	return out
 }
 
 //Device
