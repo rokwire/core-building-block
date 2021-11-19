@@ -105,6 +105,7 @@ func (we Adapter) Start() {
 
 	adminSubrouter.HandleFunc("/account", we.wrapFunc(we.adminApisHandler.getAccount, we.auth.adminAuth)).Methods("GET")
 	adminSubrouter.HandleFunc("/accounts", we.wrapFunc(we.adminApisHandler.getAccounts, nil)).Methods("GET")
+	adminSubrouter.HandleFunc("/auth/account-exists", we.wrapFunc(we.adminApisHandler.accountExists, nil)).Methods("POST")
 	///
 
 	///enc ///

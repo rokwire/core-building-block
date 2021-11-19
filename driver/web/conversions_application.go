@@ -70,3 +70,34 @@ func organizationsToDef(items []model.Organization) []Def.OrganizationFields {
 	}
 	return result
 }
+
+//Accounts
+func getAccountsToDef(item *model.Account) *Def.ResSharedAccount {
+	if item == nil {
+		return nil
+	}
+	profile := profileToDef(&item.Profile)
+	//permissions
+	permissions := applicationPermissionsToDef(item.Permissions)
+	//roles
+	roles := appOrgRolesToDef(nil)
+	//groups
+	groups := appOrgGroupsToDef(nil)
+	//account auth types
+	authTypes := accountAuthTypesToDef(item.AuthTypes)
+	return &Def.ResSharedAccount{Id: item.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
+
+}
+
+func getAccountsListToDef(item []model.Account) []Def.ResSharedAccount {
+	out := make([]Def.ResSharedAccount, len(item))
+	for i, item := range item {
+		defItem := getAccountsToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.ResSharedAccount{}
+		}
+	}
+	return out
+}

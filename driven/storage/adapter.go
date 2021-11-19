@@ -624,7 +624,7 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 }*/
 
 //FindAccounts finds accounts
-func (sa *Adapter) FindAccounts(accountID string, identifier string, appID string) ([]model.Account, error) {
+func (sa *Adapter) FindAccounts(accountID string, identifier string, appID *string, orgID *string) ([]model.Account, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID},
 		primitive.E{Key: "auth_types.identifier", Value: identifier},
 		primitive.E{Key: "app_id", Value: appID}}

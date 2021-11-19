@@ -424,33 +424,7 @@ paths:
         '500':
           description: Internal error
   /services/auth/account-exists:
-    post:
-      tags:
-        - Services
-      summary: Check if an account already exists
-      description: |
-        Account exists checks if an account exists for the provided user identifier and auth type
-      requestBody:
-        description: |
-          Account information to be checked
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_req_account-exists_Request'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/_res_account-exists_Response'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
+    $ref: '#/paths/~1admin~1auth~1account-exists'
   /services/auth/authorize-service:
     post:
       tags:
@@ -1014,6 +988,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/_res_shared_LoginUrl'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/auth/account-exists:
+    post:
+      tags:
+        - Services
+      summary: Check if an account already exists
+      description: |
+        Account exists checks if an account exists for the provided user identifier and auth type
+      requestBody:
+        description: |
+          Account information to be checked
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_account-exists_Request'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_account-exists_Response'
         '400':
           description: Bad request
         '401':
@@ -2692,6 +2694,30 @@ components:
         country:
           type: string
           nullable: true
+    _req_account-exists_Request:
+      required:
+        - auth_type
+        - app_type_identifier
+        - org_id
+        - api_key
+        - user_identifier
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - username
+            - email
+            - twilio_phone
+            - illinois_oidc
+            - anonymous
+        app_type_identifier:
+          type: string
+        org_id:
+          type: string
+        api_key:
+          type: string
+        user_identifier:
     _req_shared_ParamsSetEmailCredential:
       required:
         - new_password
@@ -2803,31 +2829,6 @@ components:
           type: string
           enum:
             - Bearer
-    _req_account-exists_Request:
-      required:
-        - auth_type
-        - app_type_identifier
-        - org_id
-        - api_key
-        - user_identifier
-      type: object
-      properties:
-        auth_type:
-          type: string
-          enum:
-            - username
-            - email
-            - twilio_phone
-            - illinois_oidc
-            - anonymous
-        app_type_identifier:
-          type: string
-        org_id:
-          type: string
-        api_key:
-          type: string
-        user_identifier:
-          type: string
     _res_account-exists_Response:
       type: boolean
     _req_credential_update_Request:
