@@ -79,17 +79,35 @@ const (
 	ReqCreateOrganizationRequestTypeSmall ReqCreateOrganizationRequestType = "small"
 )
 
+// Defines values for ReqCredentialForgotInitiateRequestAuthType.
+const (
+	ReqCredentialForgotInitiateRequestAuthTypeApiKey ReqCredentialForgotInitiateRequestAuthType = "api_key"
+
+	ReqCredentialForgotInitiateRequestAuthTypeEmail ReqCredentialForgotInitiateRequestAuthType = "email"
+
+	ReqCredentialForgotInitiateRequestAuthTypeIllinoisOidc ReqCredentialForgotInitiateRequestAuthType = "illinois_oidc"
+
+	ReqCredentialForgotInitiateRequestAuthTypeTwilioPhone ReqCredentialForgotInitiateRequestAuthType = "twilio_phone"
+
+	ReqCredentialForgotInitiateRequestAuthTypeUsername ReqCredentialForgotInitiateRequestAuthType = "username"
+)
+
+// Defines values for ReqCredentialSendVerifyRequestAuthType.
+const (
+	ReqCredentialSendVerifyRequestAuthTypeAnonymous ReqCredentialSendVerifyRequestAuthType = "anonymous"
+
+	ReqCredentialSendVerifyRequestAuthTypeEmail ReqCredentialSendVerifyRequestAuthType = "email"
+
+	ReqCredentialSendVerifyRequestAuthTypeIllinoisOidc ReqCredentialSendVerifyRequestAuthType = "illinois_oidc"
+
+	ReqCredentialSendVerifyRequestAuthTypeTwilioPhone ReqCredentialSendVerifyRequestAuthType = "twilio_phone"
+
+	ReqCredentialSendVerifyRequestAuthTypeUsername ReqCredentialSendVerifyRequestAuthType = "username"
+)
+
 // Defines values for ReqSharedLoginAuthType.
 const (
-	ReqSharedLoginAuthTypeAnonymous ReqSharedLoginAuthType = "anonymous"
-
 	ReqSharedLoginAuthTypeEmail ReqSharedLoginAuthType = "email"
-
-	ReqSharedLoginAuthTypeIllinoisOidc ReqSharedLoginAuthType = "illinois_oidc"
-
-	ReqSharedLoginAuthTypeTwilioPhone ReqSharedLoginAuthType = "twilio_phone"
-
-	ReqSharedLoginAuthTypeUsername ReqSharedLoginAuthType = "username"
 )
 
 // Defines values for ReqSharedLoginUrlAuthType.
@@ -230,10 +248,13 @@ type Application struct {
 
 // ApplicationFields defines model for ApplicationFields.
 type ApplicationFields struct {
-	Id               string `json:"id"`
-	MultiTenant      *bool  `json:"multi_tenant,omitempty"`
-	Name             string `json:"name"`
-	RequiresOwnUsers *bool  `json:"requires_own_users,omitempty"`
+	Id string `json:"id"`
+
+	// The maximum allowed duration (in hours) of a user's login session for this application
+	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
+	MultiTenant             *bool  `json:"multi_tenant,omitempty"`
+	Name                    string `json:"name"`
+	RequiresOwnUsers        *bool  `json:"requires_own_users,omitempty"`
 }
 
 // ApplicationOrganization defines model for ApplicationOrganization.
@@ -512,9 +533,49 @@ type ReqCreateApplicationRequest struct {
 		Name       *string   `json:"name,omitempty"`
 		Versions   *[]string `json:"versions,omitempty"`
 	} `json:"application_types,omitempty"`
-	MultiTenant      bool   `json:"multi_tenant"`
-	Name             string `json:"name"`
-	RequiresOwnUsers bool   `json:"requires_own_users"`
+
+	// The maximum allowed duration (in hours) of a user's login session for this application
+	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
+	MultiTenant             bool   `json:"multi_tenant"`
+	Name                    string `json:"name"`
+	RequiresOwnUsers        bool   `json:"requires_own_users"`
+}
+
+// ReqCredentialForgotCompleteRequest defines model for _req_credential_forgot_complete_Request.
+type ReqCredentialForgotCompleteRequest struct {
+	CredentialId string       `json:"credential_id"`
+	Params       *interface{} `json:"params,omitempty"`
+	ResetCode    string       `json:"reset_code"`
+}
+
+// ReqCredentialForgotInitiateRequest defines model for _req_credential_forgot_initiate_Request.
+type ReqCredentialForgotInitiateRequest struct {
+	ApiKey            string                                     `json:"api_key"`
+	AppTypeIdentifier string                                     `json:"app_type_identifier"`
+	AuthType          ReqCredentialForgotInitiateRequestAuthType `json:"auth_type"`
+	Identifier        string                                     `json:"identifier"`
+	OrgId             string                                     `json:"org_id"`
+}
+
+// ReqCredentialForgotInitiateRequestAuthType defines model for ReqCredentialForgotInitiateRequest.AuthType.
+type ReqCredentialForgotInitiateRequestAuthType string
+
+// ReqCredentialSendVerifyRequest defines model for _req_credential_send-verify_Request.
+type ReqCredentialSendVerifyRequest struct {
+	ApiKey            string                                 `json:"api_key"`
+	AppTypeIdentifier string                                 `json:"app_type_identifier"`
+	AuthType          ReqCredentialSendVerifyRequestAuthType `json:"auth_type"`
+	Identifier        string                                 `json:"identifier"`
+	OrgId             string                                 `json:"org_id"`
+}
+
+// ReqCredentialSendVerifyRequestAuthType defines model for ReqCredentialSendVerifyRequest.AuthType.
+type ReqCredentialSendVerifyRequestAuthType string
+
+// ReqCredentialUpdateRequest defines model for _req_credential_update_Request.
+type ReqCredentialUpdateRequest struct {
+	AccountAuthTypeId string       `json:"account_auth_type_id"`
+	Params            *interface{} `json:"params,omitempty"`
 }
 
 // ReqGetApplicationRequest defines model for _req_get_Application_Request.
@@ -612,6 +673,12 @@ type ReqSharedLoginParamsOIDC struct {
 	RedirectUri  *string `json:"redirect_uri,omitempty"`
 }
 
+// ReqSharedParamsSetEmailCredential defines model for _req_shared_ParamsSetEmailCredential.
+type ReqSharedParamsSetEmailCredential struct {
+	ConfirmPassword string `json:"confirm_password"`
+	NewPassword     string `json:"new_password"`
+}
+
 // ReqSharedProfile defines model for _req_shared_Profile.
 type ReqSharedProfile struct {
 	Address   *string `json:"address"`
@@ -679,9 +746,12 @@ type ResAuthorizeServiceResponseTokenType string
 type ResGetApplicationsResponse struct {
 	ApplicationTypes *ApplicationTypeFields `json:"application_types,omitempty"`
 	Id               string                 `json:"id"`
-	MultiTenant      bool                   `json:"multi_tenant"`
-	Name             string                 `json:"name"`
-	RequiresOwnUsers bool                   `json:"requires_own_users"`
+
+	// The maximum allowed duration (in hours) of a user's login session for this application
+	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
+	MultiTenant             bool   `json:"multi_tenant"`
+	Name                    string `json:"name"`
+	RequiresOwnUsers        bool   `json:"requires_own_users"`
 }
 
 // ResGetOrganizationsResponse defines model for _res_get_Organizations_Response.
@@ -772,6 +842,28 @@ type PostServicesAuthAccountExistsJSONBody ReqAccountExistsRequest
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
 
+// PostServicesAuthCredentialForgotCompleteJSONBody defines parameters for PostServicesAuthCredentialForgotComplete.
+type PostServicesAuthCredentialForgotCompleteJSONBody ReqCredentialForgotCompleteRequest
+
+// PostServicesAuthCredentialForgotInitiateJSONBody defines parameters for PostServicesAuthCredentialForgotInitiate.
+type PostServicesAuthCredentialForgotInitiateJSONBody ReqCredentialForgotInitiateRequest
+
+// PostServicesAuthCredentialSendVerifyJSONBody defines parameters for PostServicesAuthCredentialSendVerify.
+type PostServicesAuthCredentialSendVerifyJSONBody ReqCredentialSendVerifyRequest
+
+// PostServicesAuthCredentialUpdateJSONBody defines parameters for PostServicesAuthCredentialUpdate.
+type PostServicesAuthCredentialUpdateJSONBody ReqCredentialUpdateRequest
+
+// GetServicesAuthCredentialVerifyParams defines parameters for GetServicesAuthCredentialVerify.
+type GetServicesAuthCredentialVerifyParams struct {
+
+	// Credential ID
+	Id string `json:"id"`
+
+	// Verification code
+	Code string `json:"code"`
+}
+
 // PostServicesAuthLoginJSONBody defines parameters for PostServicesAuthLogin.
 type PostServicesAuthLoginJSONBody ReqSharedLogin
 
@@ -786,16 +878,6 @@ type GetServicesAuthServiceRegsParams struct {
 
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
-}
-
-// GetServicesAuthVerifyParams defines parameters for GetServicesAuthVerify.
-type GetServicesAuthVerifyParams struct {
-
-	// Credential ID
-	Id string `json:"id"`
-
-	// Verification code
-	Code string `json:"code"`
 }
 
 // PutSystemAccountPermissionsJSONBody defines parameters for PutSystemAccountPermissions.
@@ -902,6 +984,18 @@ type PostServicesAuthAccountExistsJSONRequestBody PostServicesAuthAccountExistsJ
 
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody PostServicesAuthAuthorizeServiceJSONBody
+
+// PostServicesAuthCredentialForgotCompleteJSONRequestBody defines body for PostServicesAuthCredentialForgotComplete for application/json ContentType.
+type PostServicesAuthCredentialForgotCompleteJSONRequestBody PostServicesAuthCredentialForgotCompleteJSONBody
+
+// PostServicesAuthCredentialForgotInitiateJSONRequestBody defines body for PostServicesAuthCredentialForgotInitiate for application/json ContentType.
+type PostServicesAuthCredentialForgotInitiateJSONRequestBody PostServicesAuthCredentialForgotInitiateJSONBody
+
+// PostServicesAuthCredentialSendVerifyJSONRequestBody defines body for PostServicesAuthCredentialSendVerify for application/json ContentType.
+type PostServicesAuthCredentialSendVerifyJSONRequestBody PostServicesAuthCredentialSendVerifyJSONBody
+
+// PostServicesAuthCredentialUpdateJSONRequestBody defines body for PostServicesAuthCredentialUpdate for application/json ContentType.
+type PostServicesAuthCredentialUpdateJSONRequestBody PostServicesAuthCredentialUpdateJSONBody
 
 // PostServicesAuthLoginJSONRequestBody defines body for PostServicesAuthLogin for application/json ContentType.
 type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
