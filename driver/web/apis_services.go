@@ -4,6 +4,7 @@ import (
 	"core-building-block/core"
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -25,9 +26,10 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	//get ip
-	//TODO - most probably it will be needed to be taken more preciselly
-	ip := r.RemoteAddr
+	ip := utils.GetIP(l, r)
+	if err != nil {
+		return l.HttpResponseError("Error getting IP", err, http.StatusInternalServerError, true)
+	}
 
 	var requestData Def.ReqSharedLogin
 	err = json.Unmarshal(data, &requestData)
@@ -365,7 +367,7 @@ func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request, claims *token
 }
 
 //Handler for verify endpoint
-func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h ServicesApisHandler) verifyCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
@@ -376,11 +378,105 @@ func (h ServicesApisHandler) verifyCode(l *logs.Log, r *http.Request, claims *to
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("code"), nil, http.StatusBadRequest, false)
 	}
 
-	if err := h.coreAPIs.Auth.Verify(id, code, l); err != nil {
+	if err := h.coreAPIs.Auth.VerifyCredential(id, code, l); err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionValidate, "code", nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HttpResponseSuccessMessage("Code verified!")
+}
+
+//Handler for reset password endpoint from client application
+func (h ServicesApisHandler) updateCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	accountID := claims.Subject
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqCredentialUpdateRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password client request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	//params
+	requestParams, err := interfaceToJSON(requestData.Params)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
+	}
+
+	if err := h.coreAPIs.Auth.UpdateCredential(accountID, requestData.AccountAuthTypeId, requestParams, l); err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessMessage("Reset Password from client successfully")
+}
+
+//Handler for reset password endpoint from reset link
+func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqCredentialForgotCompleteRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password link request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	//params
+	requestParams, err := interfaceToJSON(requestData.Params)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
+	}
+
+	if err := h.coreAPIs.Auth.ResetForgotCredential(requestData.CredentialId, requestData.ResetCode, requestParams, l); err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessMessage("Reset Password from link successfully")
+}
+
+//Handler for forgot credential endpoint
+func (h ServicesApisHandler) forgotCredentialInitiate(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqCredentialForgotInitiateRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	if err := h.coreAPIs.Auth.ForgotCredential(string(requestData.AuthType), requestData.AppTypeIdentifier,
+		requestData.OrgId, requestData.ApiKey, requestData.Identifier, l); err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessMessage("Sent forgot password link successfully")
+}
+
+//Handler for resending verify code
+func (h ServicesApisHandler) sendVerifyCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqCredentialSendVerifyRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth resend verify code request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	if err := h.coreAPIs.Auth.SendVerifyCredential(string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.OrgId, requestData.ApiKey, requestData.Identifier, l); err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionSend, "code", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessMessage("Verification code sent")
 }
 
 //NewServicesApisHandler creates new rest services Handler instance
