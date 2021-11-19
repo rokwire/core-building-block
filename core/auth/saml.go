@@ -31,8 +31,8 @@ func (a *samlAuthImpl) getLoginURL(authType model.AuthType, appType model.Applic
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
-func (a *samlAuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (map[string]interface{}, error) {
-	return nil, nil
+func (a *samlAuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
+	return nil, nil, nil
 }
 
 //initSamlAuth initializes and registers a new SAML auth instance
