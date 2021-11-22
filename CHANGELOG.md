@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.13.0] - 2021-11-22
 ### Added
 - Expose resend verification code services API [#287](https://github.com/rokwire/core-building-block/issues/287)
 - Add password reset from client and reset links [#216](https://github.com/rokwire/core-building-block/issues/216)
@@ -164,7 +165,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.12.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.13.0...HEAD
+[1.13.0]: https://github.com/rokwire/core-building-block/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/rokwire/core-building-block/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/rokwire/core-building-block/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/rokwire/core-building-block/compare/v1.9.0...v1.10.0
