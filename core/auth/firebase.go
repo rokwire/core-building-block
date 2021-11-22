@@ -31,6 +31,10 @@ func (a *firebaseAuthImpl) verifyCredential(credential *model.Credential, verifi
 	return nil, errors.New(logutils.Unimplemented)
 }
 
+func (a *firebaseAuthImpl) sendVerifyCredential(credential *model.Credential, l *logs.Log) error {
+	return nil
+}
+
 func (a *firebaseAuthImpl) restartCredentialVerification(credential *model.Credential, l *logs.Log) error {
 	return nil
 }
