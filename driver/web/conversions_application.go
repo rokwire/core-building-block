@@ -15,6 +15,17 @@ func applicationToDef(item *model.Application) *Def.ApplicationFields {
 		RequiresOwnUsers: &item.RequiresOwnUsers, MaxLoginSessionDuration: item.MaxLoginSessionDuration}
 }
 
+//Application organization
+func applicationOrganizationToDef(item *model.ApplicationOrganization) *model.ApplicationOrganization {
+	if item == nil {
+		return nil
+	}
+
+	return &model.ApplicationOrganization{ID: item.ID, Application: item.Application, Organization: item.Organization,
+		ServicesIDs: item.ServicesIDs, IdentityProvidersSettings: item.IdentityProvidersSettings,
+		SupportedAuthTypes: item.SupportedAuthTypes}
+}
+
 //ApplicationPermission
 func applicationPermissionToDef(item model.Permission) Def.PermissionFields {
 	return Def.PermissionFields{Id: item.ID, Name: item.Name}
