@@ -3,6 +3,7 @@ package auth
 import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -320,14 +321,13 @@ func (a *emailAuthImpl) restartCredentialVerification(credential *model.Credenti
 
 func (a *emailAuthImpl) compareCode(credCode string, requestCode string, expiryTime time.Time, l *logs.Log) error {
 	if expiryTime.Before(time.Now()) {
-		return errors.WrapErrorAction(logutils.ActionValidate, typeTime, nil, errors.New("Code has expired"))
+		return errors.New("Code has expired")
 	}
 
-	if credCode != requestCode {
-		return errors.WrapErrorAction(logutils.ActionValidate, typeTime, nil, errors.New("Invalid code"))
+	if subtle.ConstantTimeCompare([]byte(credCode), []byte(requestCode)) == 0 {
+		return errors.ErrorData(logutils.StatusInvalid, "Invalid code", nil)
 	}
 	return nil
-
 }
 
 func (a *emailAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error) {
