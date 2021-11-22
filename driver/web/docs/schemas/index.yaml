@@ -185,6 +185,8 @@ _res_get_Application_Response:
  $ref: "./apis/system/get-application/response/Response.yaml"
 _res_get_Applications_Response:
  $ref: "./apis/system/get-applications/response/Response.yaml"
+_res_get_ApplicationsOrg_Response:
+ $ref: "./apis/admin/get-applications/response/Response.yaml"
  
 ### permissions API
 _req_permissions_Request:
