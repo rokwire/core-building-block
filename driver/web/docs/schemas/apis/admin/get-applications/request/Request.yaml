@@ -1,0 +1,6 @@
+required:
+  - id
+properties:
+  id:
+    readOnly: true
+    type: string
