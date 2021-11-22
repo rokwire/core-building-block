@@ -1563,34 +1563,34 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  '/system/service-accounts/tokens/{id}':
+  '/system/service-accounts/{id}/creds':
     put:
       tags:
         - System
-      summary: Add service account token
+      summary: Add service account credential
       description: |
-        Adds a new static token to an existing service token
+        Adds a new credential to an existing service account
 
-        **Auth:** Requires auth token with permission to add service account tokens
+        **Auth:** Requires auth token with permission to add service account credentials
       security:
         - bearerAuth: []
       parameters:
         - name: id
           in: path
-          description: ID of the service account to which new token should be added
+          description: ID of the service account to which new credential should be added
           required: true
           style: simple
           explode: false
           schema:
             type: string
-        - name: name
-          in: query
-          description: name of the token to be added
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
+      requestBody:
+        description: |
+          Service account
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceAccountCredential'
+        required: true
       responses:
         '200':
           description: Success
@@ -1607,17 +1607,17 @@ paths:
     delete:
       tags:
         - System
-      summary: Remove service account token
+      summary: Remove service account credential
       description: |
-        Removes a static token from an existing service account
+        Removes a credential from an existing service account
 
-        **Auth:** Requires auth token with permission to delete service account tokens
+        **Auth:** Requires auth token with permission to delete service account credentials
       security:
         - bearerAuth: []
       parameters:
         - name: id
           in: path
-          description: ID of the service account from which token should be removed
+          description: ID of the service account from which credential should be removed
           required: true
           style: simple
           explode: false
@@ -1625,7 +1625,7 @@ paths:
             type: string
         - name: name
           in: query
-          description: name of the token to be removed
+          description: name of the credential to be removed
           required: true
           style: form
           explode: false
@@ -2392,10 +2392,32 @@ components:
           type: array
           items:
             type: string
-        tokens:
+        creds:
           type: array
           items:
-            $ref: '#/components/schemas/StaticToken'
+            $ref: '#/components/schemas/ServiceAccountCredential'
+    ServiceAccountCredential:
+      required:
+        - name
+        - type
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - static_token
+            - signature
+        token:
+          type: string
+        pub_key:
+          type: string
+        date_updated:
+          type: string
+          nullable: true
+        date_created:
+          type: string
     ServiceReg:
       required:
         - service_id
@@ -2462,16 +2484,6 @@ components:
           type: boolean
         explanation:
           description: Explanation displayed to users for why this scope is requested/required
-          type: string
-    StaticToken:
-      required:
-        - name
-        - token
-      type: object
-      properties:
-        name:
-          type: string
-        token:
           type: string
     APIKey:
       required:
@@ -3126,6 +3138,9 @@ components:
       properties:
         auth_type:
           type: string
+          enum:
+            - static_token
+            - signature
         creds:
           anyOf:
             - $ref: '#/components/schemas/_req_service-accounts_CredsStaticToken'

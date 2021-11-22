@@ -53,6 +53,13 @@ const (
 	OrganizationFieldsTypeSmall OrganizationFieldsType = "small"
 )
 
+// Defines values for ServiceAccountCredentialType.
+const (
+	ServiceAccountCredentialTypeSignature ServiceAccountCredentialType = "signature"
+
+	ServiceAccountCredentialTypeStaticToken ServiceAccountCredentialType = "static_token"
+)
+
 // Defines values for ReqAccountExistsRequestAuthType.
 const (
 	ReqAccountExistsRequestAuthTypeAnonymous ReqAccountExistsRequestAuthType = "anonymous"
@@ -87,6 +94,13 @@ const (
 // Defines values for ReqCredentialSendVerifyRequestAuthType.
 const (
 	ReqCredentialSendVerifyRequestAuthTypeEmail ReqCredentialSendVerifyRequestAuthType = "email"
+)
+
+// Defines values for ReqServiceAccountsTokenRequestAuthType.
+const (
+	ReqServiceAccountsTokenRequestAuthTypeSignature ReqServiceAccountsTokenRequestAuthType = "signature"
+
+	ReqServiceAccountsTokenRequestAuthTypeStaticToken ReqServiceAccountsTokenRequestAuthType = "static_token"
 )
 
 // Defines values for ReqSharedLoginAuthType.
@@ -445,14 +459,27 @@ type PubKey struct {
 
 // ServiceAccount defines model for ServiceAccount.
 type ServiceAccount struct {
-	AppId       *string        `json:"app_id"`
-	Id          *string        `json:"id,omitempty"`
-	Name        string         `json:"name"`
-	OrgId       *string        `json:"org_id"`
-	Permissions []string       `json:"permissions"`
-	Roles       []string       `json:"roles"`
-	Tokens      *[]StaticToken `json:"tokens,omitempty"`
+	AppId       *string                     `json:"app_id"`
+	Creds       *[]ServiceAccountCredential `json:"creds,omitempty"`
+	Id          *string                     `json:"id,omitempty"`
+	Name        string                      `json:"name"`
+	OrgId       *string                     `json:"org_id"`
+	Permissions []string                    `json:"permissions"`
+	Roles       []string                    `json:"roles"`
 }
+
+// ServiceAccountCredential defines model for ServiceAccountCredential.
+type ServiceAccountCredential struct {
+	DateCreated *string                      `json:"date_created,omitempty"`
+	DateUpdated *string                      `json:"date_updated"`
+	Name        string                       `json:"name"`
+	PubKey      *string                      `json:"pub_key,omitempty"`
+	Token       *string                      `json:"token,omitempty"`
+	Type        ServiceAccountCredentialType `json:"type"`
+}
+
+// ServiceAccountCredentialType defines model for ServiceAccountCredential.Type.
+type ServiceAccountCredentialType string
 
 // Full service registration record
 type ServiceReg struct {
@@ -474,12 +501,6 @@ type ServiceScope struct {
 	Explanation *string `json:"explanation,omitempty"`
 	Required    bool    `json:"required"`
 	Scope       string  `json:"scope"`
-}
-
-// StaticToken defines model for StaticToken.
-type StaticToken struct {
-	Name  string `json:"name"`
-	Token string `json:"token"`
 }
 
 // ReqAccountExistsRequest defines model for _req_account-exists_Request.
@@ -611,9 +632,12 @@ type ReqServiceAccountsCredsStaticToken struct {
 
 // ReqServiceAccountsTokenRequest defines model for _req_service-accounts_TokenRequest.
 type ReqServiceAccountsTokenRequest struct {
-	AuthType string       `json:"auth_type"`
-	Creds    *interface{} `json:"creds,omitempty"`
+	AuthType ReqServiceAccountsTokenRequestAuthType `json:"auth_type"`
+	Creds    *interface{}                           `json:"creds,omitempty"`
 }
+
+// ReqServiceAccountsTokenRequestAuthType defines model for ReqServiceAccountsTokenRequest.AuthType.
+type ReqServiceAccountsTokenRequestAuthType string
 
 // ReqSharedLogin defines model for _req_shared_Login.
 type ReqSharedLogin struct {
@@ -963,19 +987,15 @@ type PostSystemServiceAccountsJSONBody ServiceAccount
 // PutSystemServiceAccountsJSONBody defines parameters for PutSystemServiceAccounts.
 type PutSystemServiceAccountsJSONBody ServiceAccount
 
-// DeleteSystemServiceAccountsTokensIdParams defines parameters for DeleteSystemServiceAccountsTokensId.
-type DeleteSystemServiceAccountsTokensIdParams struct {
+// DeleteSystemServiceAccountsIdCredsParams defines parameters for DeleteSystemServiceAccountsIdCreds.
+type DeleteSystemServiceAccountsIdCredsParams struct {
 
-	// name of the token to be removed
+	// name of the credential to be removed
 	Name string `json:"name"`
 }
 
-// PutSystemServiceAccountsTokensIdParams defines parameters for PutSystemServiceAccountsTokensId.
-type PutSystemServiceAccountsTokensIdParams struct {
-
-	// name of the token to be added
-	Name string `json:"name"`
-}
+// PutSystemServiceAccountsIdCredsJSONBody defines parameters for PutSystemServiceAccountsIdCreds.
+type PutSystemServiceAccountsIdCredsJSONBody ServiceAccountCredential
 
 // DeleteSystemServiceRegsParams defines parameters for DeleteSystemServiceRegs.
 type DeleteSystemServiceRegsParams struct {
@@ -1090,6 +1110,9 @@ type PostSystemServiceAccountsJSONRequestBody PostSystemServiceAccountsJSONBody
 
 // PutSystemServiceAccountsJSONRequestBody defines body for PutSystemServiceAccounts for application/json ContentType.
 type PutSystemServiceAccountsJSONRequestBody PutSystemServiceAccountsJSONBody
+
+// PutSystemServiceAccountsIdCredsJSONRequestBody defines body for PutSystemServiceAccountsIdCreds for application/json ContentType.
+type PutSystemServiceAccountsIdCredsJSONRequestBody PutSystemServiceAccountsIdCredsJSONBody
 
 // PostSystemServiceRegsJSONRequestBody defines body for PostSystemServiceRegs for application/json ContentType.
 type PostSystemServiceRegsJSONRequestBody PostSystemServiceRegsJSONBody

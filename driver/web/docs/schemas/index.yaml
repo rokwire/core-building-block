@@ -49,6 +49,8 @@ CredentialFields:
   $ref: "./auth/CredentialFields.yaml"
 ServiceAccount:
   $ref: "./auth/ServiceAccount.yaml"
+ServiceAccountCredential:
+  $ref: "./auth/ServiceAccountCredential.yaml"
 ServiceReg:
   $ref: "./auth/ServiceReg.yaml"
 AuthServiceReg:
@@ -57,8 +59,6 @@ PubKey:
   $ref: "./auth/PubKey.yaml"
 ServiceScope:
   $ref: "./auth/ServiceScope.yaml"
-StaticToken:
-  $ref: "./auth/StaticToken.yaml"
 
 APIKey:
   $ref: "./auth/APIKey.yaml"

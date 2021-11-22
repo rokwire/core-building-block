@@ -4,6 +4,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
 	"net/http"
+	"time"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
@@ -50,6 +51,28 @@ func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, l *logs.L
 	}
 
 	return nil, account, nil
+}
+
+func (s *staticTokenServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
+	if account == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
+	}
+	if creds == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
+	}
+
+	token, _, err := s.auth.buildRefreshToken()
+	if err != nil {
+		l.Info("error generating service account token")
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+	}
+
+	creds.Token = &token
+	creds.PubKey = nil
+	creds.DateCreated = time.Now().UTC()
+	account.Credentials = append(account.Credentials, *creds)
+
+	return account, nil
 }
 
 //initStaticTokenServiceAuth initializes and registers a new static token service auth instance

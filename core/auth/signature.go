@@ -2,8 +2,12 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"crypto/rsa"
 	"net/http"
+	"strings"
+	"time"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -82,12 +86,38 @@ func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, l *logs.Log
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 	}
 
-	// err = s.auth.SignatureAuth.CheckRequestSignature(r, account.PubKey)
-	// if err != nil {
-	// 	return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "request signature", nil, err)
-	// }
+	//TODO: which pub key to use if there are multiple?
+	var pubKeyPem *string
+	var pubKey *rsa.PublicKey
+	if pubKeyPem != nil {
+		pubKeyPemString := strings.Replace(*pubKeyPem, `\n`, "\n", -1)
+
+		pubKey, err = jwt.ParseRSAPublicKeyFromPEM([]byte(pubKeyPemString))
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction(logutils.ActionParse, "service account public key", nil, err)
+		}
+	}
+
+	err = s.auth.SignatureAuth.CheckRequestSignature(r, pubKey)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "request signature", nil, err)
+	}
 
 	return nil, account, nil
+}
+
+func (s *signatureServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
+	if account == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
+	}
+	if creds == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
+	}
+
+	creds.DateCreated = time.Now().UTC()
+	account.Credentials = append(account.Credentials, *creds)
+
+	return account, nil
 }
 
 //initSignatureServiceAuth initializes and registers a new signature service auth instance

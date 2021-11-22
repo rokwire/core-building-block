@@ -667,9 +667,12 @@ func (a *Auth) DeregisterServiceAccount(id string) error {
 	return nil
 }
 
-//AddServiceToken adds a token to a service account
-func (a *Auth) AddServiceToken(accountID string, name string, l *logs.Log) (string, error) {
+//AddServiceCredential adds a credential to a service account
+func (a *Auth) AddServiceCredential(accountID string, creds *model.ServiceAccountCredential, l *logs.Log) (string, error) {
 	var token string
+	if creds == nil {
+		return "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
+	}
 
 	transaction := func(context storage.TransactionContext) error {
 		//1. find service account
@@ -678,16 +681,19 @@ func (a *Auth) AddServiceToken(accountID string, name string, l *logs.Log) (stri
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 		}
 
-		//2. build new token
-		token, _, err = a.buildRefreshToken()
+		//2. update credentials
+		serviceAuthType, err := a.getServiceAuthTypeImpl(creds.Type)
 		if err != nil {
-			l.Info("error generating service account token")
-			return errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+			l.Info("error getting service auth type on get service access token")
+			return errors.WrapErrorAction("error getting service auth type on get service access token", "", nil, err)
+		}
+
+		account, err = serviceAuthType.addCredentials(account, creds, l)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 		}
 
 		//3. update service account
-		newToken := model.StaticToken{Name: name, Token: token}
-		account.Tokens = append(account.Tokens, newToken)
 		err = a.storage.UpdateServiceAccount(context, account)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
@@ -703,8 +709,8 @@ func (a *Auth) AddServiceToken(accountID string, name string, l *logs.Log) (stri
 	return token, nil
 }
 
-//RemoveServiceToken removes a token from a service account
-func (a *Auth) RemoveServiceToken(accountID string, name string) error {
+//RemoveServiceCredential removes a credential from a service account
+func (a *Auth) RemoveServiceCredential(accountID string, name string) error {
 	transaction := func(context storage.TransactionContext) error {
 		//1. find service account
 		account, err := a.storage.FindServiceAccountByID(context, accountID)
@@ -714,9 +720,9 @@ func (a *Auth) RemoveServiceToken(accountID string, name string) error {
 
 		//2. remove token from token list
 		updated := false
-		for i, t := range account.Tokens {
-			if t.Name == name {
-				account.Tokens = append(account.Tokens[:i], account.Tokens[i+1:]...)
+		for i, cred := range account.Credentials {
+			if cred.Name == name {
+				account.Credentials = append(account.Credentials[:i], account.Credentials[i+1:]...)
 				updated = true
 				break
 			}

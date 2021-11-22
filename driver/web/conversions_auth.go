@@ -92,6 +92,23 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 	return &Def.ServiceAccount{Id: &id, Name: name, OrgId: orgID, AppId: appID, Permissions: permissions, Roles: roles}
 }
 
+func serviceAccountCredentialFromDef(item *Def.ServiceAccountCredential) *model.ServiceAccountCredential {
+	if item == nil {
+		return nil
+	}
+
+	return &model.ServiceAccountCredential{Name: item.Name, Type: string(item.Type), Token: item.Token, PubKey: item.PubKey}
+}
+
+func serviceAccountCredentialToDef(item *model.ServiceAccountCredential) *Def.ServiceAccountCredential {
+	if item == nil {
+		return nil
+	}
+
+	return &Def.ServiceAccountCredential{Name: item.Name, Type: Def.ServiceAccountCredentialType(item.Type), Token: item.Token,
+		PubKey: item.PubKey} //, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
 func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceReg, error) {
 	if item == nil {
 		return nil, nil

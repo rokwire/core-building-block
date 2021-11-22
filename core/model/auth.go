@@ -34,6 +34,8 @@ const (
 	TypeRefreshToken logutils.MessageDataType = "refresh token"
 	//TypeServiceAccount service account type
 	TypeServiceAccount logutils.MessageDataType = "service account"
+	//TypeServiceAccountCredential service account type
+	TypeServiceAccountCredential logutils.MessageDataType = "service account credential"
 	//TypeServiceReg service reg type
 	TypeServiceReg logutils.MessageDataType = "service reg"
 	//TypeServiceScope service scope type
@@ -210,8 +212,7 @@ type ServiceAccount struct {
 	Permissions []Permission
 	Roles       []AccountRole
 
-	Tokens []StaticToken
-	PubKey *rsa.PublicKey
+	Credentials []ServiceAccountCredential
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -245,10 +246,16 @@ func (s ServiceAccount) GetPermissionsMap() map[string]Permission {
 	return permissionsMap
 }
 
-//StaticToken represents a static token entity
-type StaticToken struct {
-	Name  string `bson:"name"`
-	Token string `bson:"token"`
+//ServiceAccountCredential represents a service account credential entity
+type ServiceAccountCredential struct {
+	Name string
+	Type string
+
+	Token  *string
+	PubKey *string
+
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 //ServiceAuthorization represents service authorization entity

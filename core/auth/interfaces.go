@@ -74,6 +74,7 @@ type anonymousAuthType interface {
 //serviceAuthType is the interface for authentication for non-human clients
 type serviceAuthType interface {
 	checkCredentials(r *http.Request, l *logs.Log) (*string, *model.ServiceAccount, error)
+	addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error)
 }
 
 //APIs is the interface which defines the APIs provided by the auth package
@@ -199,11 +200,11 @@ type APIs interface {
 	//DeregisterServiceAccount deregisters a service account
 	DeregisterServiceAccount(id string) error
 
-	//AddServiceToken adds a token to a service account
-	AddServiceToken(accountID string, name string, l *logs.Log) (string, error)
+	//AddServiceCredential adds a credential to a service account
+	AddServiceCredential(accountID string, creds *model.ServiceAccountCredential, l *logs.Log) (string, error)
 
-	//RemoveServiceToken removes a token from a service account
-	RemoveServiceToken(accountID string, name string) error
+	//RemoveServiceCredential removes a credential from a service account
+	RemoveServiceCredential(accountID string, name string) error
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and

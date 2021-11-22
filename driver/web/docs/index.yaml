@@ -97,8 +97,8 @@ paths:
     $ref: "./resources/system/service-accountsId.yaml"
   /system/service-accounts:
     $ref: "./resources/system/service-accounts.yaml"
-  /system/service-accounts/tokens/{id}:
-    $ref: "./resources/system/service-accounts-tokens.yaml"
+  /system/service-accounts/{id}/creds:
+    $ref: "./resources/system/service-accountsId-creds.yaml"
   /system/applications/{id}:
     $ref: "./resources/system/applicationsId.yaml"
   /system/applications:

@@ -338,19 +338,27 @@ func (h SystemApisHandler) deregisterServiceAccount(l *logs.Log, r *http.Request
 	return l.HttpResponseSuccess()
 }
 
-func (h SystemApisHandler) addServiceAccountToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h SystemApisHandler) addServiceAccountCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	id := params["id"]
 	if len(id) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	name := r.URL.Query().Get("name")
-	if name == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("name"), nil, http.StatusBadRequest, false)
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	token, err := h.coreAPIs.Auth.AddServiceToken(id, name, l)
+	var requestData Def.ServiceAccountCredential
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeServiceAccountCredential, nil, err, http.StatusBadRequest, true)
+	}
+
+	creds := serviceAccountCredentialFromDef(&requestData)
+
+	token, err := h.coreAPIs.Auth.AddServiceCredential(id, creds, l)
 	if err != nil {
 		return l.HttpResponseError("Error adding service account token", err, http.StatusInternalServerError, true)
 	}
@@ -358,7 +366,7 @@ func (h SystemApisHandler) addServiceAccountToken(l *logs.Log, r *http.Request, 
 	return l.HttpResponseSuccessMessage(token)
 }
 
-func (h SystemApisHandler) removeServiceAccountToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h SystemApisHandler) removeServiceAccountCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	id := params["id"]
 	if len(id) <= 0 {
@@ -370,7 +378,7 @@ func (h SystemApisHandler) removeServiceAccountToken(l *logs.Log, r *http.Reques
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("name"), nil, http.StatusBadRequest, false)
 	}
 
-	err := h.coreAPIs.Auth.RemoveServiceToken(id, name)
+	err := h.coreAPIs.Auth.RemoveServiceCredential(id, name)
 	if err != nil {
 		return l.HttpResponseError("Error removing service account token", err, http.StatusInternalServerError, true)
 	}
