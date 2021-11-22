@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.12.0
+  version: 1.13.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -2530,7 +2530,11 @@ components:
         auth_type:
           type: string
           enum:
+            - username
             - email
+            - twilio_phone
+            - illinois_oidc
+            - anonymous
         app_type_identifier:
           type: string
         org_id:
@@ -2894,11 +2898,7 @@ components:
         auth_type:
           type: string
           enum:
-            - username
             - email
-            - twilio_phone
-            - illinois_oidc
-            - anonymous
     _req_credential_forgot_initiate_Request:
       required:
         - auth_type
@@ -2911,11 +2911,7 @@ components:
         auth_type:
           type: string
           enum:
-            - username
             - email
-            - twilio_phone
-            - illinois_oidc
-            - api_key
         app_type_identifier:
           type: string
         org_id:
