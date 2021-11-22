@@ -728,6 +728,18 @@ type ResAuthorizeServiceResponse struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResAuthorizeServiceResponseTokenType string
 
+// ResGetApplicationsOrgResponse defines model for _res_get_ApplicationsOrg_Response.
+type ResGetApplicationsOrgResponse struct {
+	ApplicationTypes *ApplicationTypeFields `json:"application_types,omitempty"`
+	Id               string                 `json:"id"`
+
+	// The maximum allowed duration (in hours) of a user's login session for this application
+	MaxLoginSessionDuration *int    `json:"max_login_session_duration,omitempty"`
+	MultiTenant             *bool   `json:"multi_tenant,omitempty"`
+	Name                    *string `json:"name,omitempty"`
+	RequiresOwnUsers        *bool   `json:"requires_own_users,omitempty"`
+}
+
 // ResGetApplicationsResponse defines model for _res_get_Applications_Response.
 type ResGetApplicationsResponse struct {
 	ApplicationTypes *ApplicationTypeFields `json:"application_types,omitempty"`
