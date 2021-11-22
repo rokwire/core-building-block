@@ -416,7 +416,6 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 				//not expired, just notify the client that it is "unverified"
 				return "", nil, errors.ErrorData("", "unverified credential", nil).SetStatus(utils.ErrorStatusUnverified)
 			}
-
 			//expired, first restart the verification and then notify the client that it is unverified and verification is restarted
 
 			//restart credential verification
@@ -746,13 +745,13 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 	var preferences map[string]interface{}
 	var err error
 
-	profileSearch := make(map[string]string)
+	var profileSearch map[string]string
 	if authType.Code == "twilio_phone" {
-		profileSearch["phone"] = identifier
+		profileSearch = map[string]string{"phone": identifier}
+	} else if authType.Code == "illinois_oidc" {
+		profileSearch = map[string]string{"uin": identifier}
 	}
-	if authType.Code == "illinois_oidc" {
-		profileSearch["uin"] = identifier
-	}
+
 	if profileSearch != nil {
 		profile, preferences, err = a.profileBB.GetProfileBBData(profileSearch, l)
 		if err != nil {

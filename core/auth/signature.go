@@ -82,10 +82,10 @@ func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, l *logs.Log
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 	}
 
-	err = s.auth.SignatureAuth.CheckRequestSignature(r, account.PubKey)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "request signature", nil, err)
-	}
+	// err = s.auth.SignatureAuth.CheckRequestSignature(r, account.PubKey)
+	// if err != nil {
+	// 	return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "request signature", nil, err)
+	// }
 
 	return nil, account, nil
 }
