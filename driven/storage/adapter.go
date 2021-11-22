@@ -312,14 +312,14 @@ func (sa *Adapter) getCachedAuthType(key string) (*model.AuthType, error) {
 
 //cacheApplicationsOrganizations caches the applications organizations
 func (sa *Adapter) cacheApplicationsOrganizations() error {
-	sa.logger.Info("cacheApplicationsOrganizations..")
+	/*sa.logger.Info("cacheApplicationsOrganizations..")
 
 	applicationsOrganizations, err := sa.LoadApplicationsOrganizations()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 	}
 
-	sa.setCachedApplicationsOrganizations(applicationsOrganizations)
+	sa.setCachedApplicationsOrganizations(applicationsOrganizations)*/
 
 	return nil
 }
@@ -1378,6 +1378,18 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 	return result, nil
 }
 
+//FindApplicationsByOrgID finds a set of applications organizations
+func (sa *Adapter) FindApplicationsByOrgID(orgID string) ([]model.ApplicationOrganization, error) {
+	applicationsOrgFilter := bson.D{primitive.E{Key: "org_id", Value: bson.M{"$in": orgID}}}
+	var applicationsOrgResult []model.ApplicationOrganization
+	err := sa.db.applicationsOrganizations.Find(applicationsOrgFilter, &applicationsOrgResult, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return applicationsOrgResult, nil
+}
+
 //FindApplicationTypeByIdentifier finds an application type by identifier
 func (sa *Adapter) FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error) {
 	app, appType, err := sa.getCachedApplicationTypeByIdentifier(identifier)
@@ -1392,7 +1404,7 @@ func (sa *Adapter) FindApplicationTypeByIdentifier(identifier string) (*model.Ap
 
 //LoadApplicationsOrganizations loads all applications organizations
 func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error) {
-	filter := bson.D{}
+	/*filter := bson.D{}
 	var list []applicationOrganization
 	err := sa.db.applicationsOrganizations.Find(filter, &list, nil)
 	if err != nil {
@@ -1417,7 +1429,8 @@ func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganizat
 
 		result[i] = applicationOrganizationFromStorage(item, *application, *organization)
 	}
-	return result, nil
+	return result, nil*/
+	return nil, nil
 }
 
 //FindApplicationOrganizations finds application organization
