@@ -30,6 +30,10 @@ func (a *usernameAuthImpl) verifyCredential(credential *model.Credential, verifi
 	return nil, errors.New(logutils.Unimplemented)
 }
 
+func (a *usernameAuthImpl) sendVerifyCredential(credential *model.Credential, l *logs.Log) error {
+	return nil
+}
+
 func (a *usernameAuthImpl) restartCredentialVerification(credential *model.Credential, l *logs.Log) error {
 	return nil
 }

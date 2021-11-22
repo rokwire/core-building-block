@@ -136,15 +136,19 @@ _req_account-exists_Request:
 _res_account-exists_Response:
   $ref: "./apis/services/account-exists/response/Response.yaml"
 
-### credential-update API
+### credential_update API
 _req_credential_update_Request:
   $ref: "./apis/services/credential/update/request/Request.yaml"
 
-### credential-forgot-initiate API
+### credential_send-verify API
+_req_credential_send-verify_Request:
+  $ref: "./apis/services/credential/send-verify/request/Request.yaml"
+
+### credential_forgot_initiate API
 _req_credential_forgot_initiate_Request:
   $ref: "./apis/services/credential/forgot/initiate/request/Request.yaml"
 
-### credential-forgot-complete API
+### credential_forgot_complete API
 _req_credential_forgot_complete_Request:
   $ref: "./apis/services/credential/forgot/complete/request/Request.yaml"
 
