@@ -115,16 +115,18 @@ _req_shared_Profile:
   $ref: "./apis/shared/requests/Profile.yaml"
 _req_shared_ProfileNullable:
   $ref: "./apis/shared/requests/ProfileNullable.yaml"
+_req_shared_ParamsSetEmailCredential:
+  $ref: "./apis/shared/requests/ParamsSetEmailCredential.yaml"
 
 #### responses
 _res_shared_LoginUrl:
   $ref: "./apis/shared/responses/login-url/Response.yaml"
 _res_shared_Login:
   $ref: "./apis/shared/responses/login/Response.yaml"
-_res_shared_Login_Account:
-  $ref: "./apis/shared/responses/login/Account.yaml"
 _res_shared_Refresh:
   $ref: "./apis/shared/responses/refresh/Response.yaml"
+_res_shared_Account:
+  $ref: "./apis/shared/responses/Account.yaml"
 _res_shared_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
 ### end - shared requests and responses
@@ -135,15 +137,31 @@ _req_account-exists_Request:
 _res_account-exists_Response:
   $ref: "./apis/services/account-exists/response/Response.yaml"
 
+### credential_update API
+_req_credential_update_Request:
+  $ref: "./apis/services/credential/update/request/Request.yaml"
+
+### credential_send-verify API
+_req_credential_send-verify_Request:
+  $ref: "./apis/services/credential/send-verify/request/Request.yaml"
+
+### credential_forgot_initiate API
+_req_credential_forgot_initiate_Request:
+  $ref: "./apis/services/credential/forgot/initiate/request/Request.yaml"
+
+### credential_forgot_complete API
+_req_credential_forgot_complete_Request:
+  $ref: "./apis/services/credential/forgot/complete/request/Request.yaml"
+
+### credential_link API
+_req_credential_link_Request:
+  $ref: "./apis/services/credential/link/request/Request.yaml"
+
 ### authorize-service API
 _req_authorize-service_Request:
   $ref: "./apis/services/authorize-service/request/Request.yaml"
 _res_authorize-service_Response:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
-
-### link-creds API
-_req_link-creds_Request:
-  $ref: "./apis/services/link-creds/request/Request.yaml"
 
 ### organization API
 _req_create-Organization_Request:
