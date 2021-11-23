@@ -647,7 +647,7 @@ func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
-//LinkCreds links new credentials to an existing account.
+//LinkCredential links new credentials to an existing account.
 //The authentication method must be one of the supported for the application.
 //	Input:
 //		accountID (string): ID of the account to link the creds to
@@ -658,7 +658,7 @@ func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		message (*string): response message
-func (a *Auth) LinkCreds(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, error) {
+func (a *Auth) LinkCredential(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, error) {
 	message := ""
 
 	account, err := a.storage.FindAccountByID(nil, accountID)
@@ -675,12 +675,12 @@ func (a *Auth) LinkCreds(accountID string, authenticationType string, appTypeIde
 	if authType.IsAnonymous {
 		return nil, errors.New("cannot link anonymous auth type to an account")
 	} else if authType.IsExternal {
-		_, err = a.linkCredsExternalAuthType(*account, *authType, *appType, *appOrg, creds, params, l)
+		_, err = a.linkCredentialExternalAuthType(*account, *authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
 			return nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
 		}
 	} else {
-		message, _, err = a.linkCredsAuthType(*account, *authType, *appType, *appOrg, creds, params, l)
+		message, _, err = a.linkCredentialAuthType(*account, *authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
 			return nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
 		}
