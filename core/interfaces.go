@@ -24,7 +24,7 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	AdmGetApplications(orgID string) ([]model.ApplicationOrganization, error)
+	AdmGetApplications(orgID string) ([]model.Application, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -104,7 +104,7 @@ type Storage interface {
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
-	FindApplicationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
+	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.Application, error)
 }
 
 //StorageListener listenes for change data storage events

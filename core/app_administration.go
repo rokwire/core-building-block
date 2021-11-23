@@ -162,11 +162,11 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admGetApplications(orgID string) ([]model.ApplicationOrganization, error) {
-	getApplications, err := app.storage.FindApplicationsByOrgID(orgID)
+func (app *application) admGetApplications(orgID string) ([]model.Application, error) {
+	getApplicationsOrganizations, err := app.storage.FindApplicationsOrganizationsByOrgID(orgID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplication, nil, err)
 	}
 
-	return getApplications, nil
+	return getApplicationsOrganizations, nil
 }
