@@ -1379,10 +1379,10 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 }
 
 //FindApplicationsByOrgID finds a set of applications organizations
-func (sa *Adapter) FindApplicationsByOrgID(orgID string) ([]model.ApplicationOrganization, error) {
+func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.Application, error) {
 	applicationsOrgFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}}
-	var applicationsOrgResult []model.ApplicationOrganization
-	err := sa.db.applicationsOrganizations.Find(applicationsOrgFilter, &applicationsOrgResult, nil)
+	var applicationsOrgResult []model.Application
+	err := sa.db.applications.Find(applicationsOrgFilter, &applicationsOrgResult, nil)
 	if err != nil {
 		return nil, err
 	}
