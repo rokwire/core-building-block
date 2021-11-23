@@ -209,13 +209,14 @@ func (h AdminApisHandler) adminGetApplications(l *logs.Log, r *http.Request, cla
 
 	applications, err := h.coreAPIs.Administration.AdmGetApplications(claims.OrgID)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}
-	var response []model.ApplicationOrganization
-	for _, appOrg := range applications {
-		r := applicationOrganizationToDef(&appOrg)
-		response = append(response, *r)
-	}
+	/*var response []Def.ApplicationFields
+	for _, app := range applications {
+		appRes := applicationsToDef(applications)
+		response = append(response, app)
+	}*/
+	response := applicationsToDef(applications)
 
 	data, err := json.Marshal(response)
 	if err != nil {
