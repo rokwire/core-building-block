@@ -258,7 +258,6 @@ type Storage interface {
 	DeleteExpiredSessions(now *time.Time) error
 
 	//Accounts
-	FindAccountByID(context storage.TransactionContext, storageid string) (*model.Account, error)
 	FindAccount(appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccount(account model.Account) (*model.Account, error)

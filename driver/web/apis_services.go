@@ -108,7 +108,7 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-func (h ServicesApisHandler) authAccountExists(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h ServicesApisHandler) accountExists(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -211,7 +211,7 @@ func (h ServicesApisHandler) authVerifyCode(l *logs.Log, r *http.Request, claims
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("code"), nil, http.StatusBadRequest, false)
 	}
 
-	if err := h.coreAPIs.Auth.Verify(id, code, l); err != nil {
+	if err := h.coreAPIs.Auth.VerifyCredential(id, code, l); err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionValidate, "code", nil, err, http.StatusInternalServerError, false)
 	}
 
@@ -224,7 +224,7 @@ func (h ServicesApisHandler) linkCredential(l *logs.Log, r *http.Request, claims
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqLinkCredsRequest
+	var requestData Def.ReqCredentialLinkRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login request"), nil, err, http.StatusBadRequest, true)
