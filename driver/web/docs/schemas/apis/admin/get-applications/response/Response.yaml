@@ -1,5 +1,8 @@
 required:
   - id
+  - name
+  - multi_tenant
+  - requires_own_users
 type: object
 properties:
   id:
