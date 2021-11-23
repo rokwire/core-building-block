@@ -1,10 +1,9 @@
  get:
-  deprecated: true
   tags:
   - Admin
   summary: Get applications for an organization
   description: |
-    Getsapplications for an organization
+    Gets applications for an organization
   security:
     - bearerAuth: []
   responses:
