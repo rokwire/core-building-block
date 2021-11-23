@@ -360,7 +360,7 @@ func (h SystemApisHandler) addServiceAccountCredential(l *logs.Log, r *http.Requ
 
 	token, err := h.coreAPIs.Auth.AddServiceCredential(id, creds, l)
 	if err != nil {
-		return l.HttpResponseError("Error adding service account token", err, http.StatusInternalServerError, true)
+		return l.HttpResponseError("Error adding service account credential", err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccessMessage(token)
@@ -380,7 +380,7 @@ func (h SystemApisHandler) removeServiceAccountCredential(l *logs.Log, r *http.R
 
 	err := h.coreAPIs.Auth.RemoveServiceCredential(id, name)
 	if err != nil {
-		return l.HttpResponseError("Error removing service account token", err, http.StatusInternalServerError, true)
+		return l.HttpResponseError("Error removing service account credential", err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()

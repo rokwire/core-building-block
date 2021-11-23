@@ -729,7 +729,18 @@ func (sa *Adapter) FindServiceAccounts() ([]model.ServiceAccount, error) {
 
 //InsertServiceAccount inserts a service account
 func (sa *Adapter) InsertServiceAccount(account *model.ServiceAccount) error {
-	return errors.New(logutils.Unimplemented)
+	if account == nil {
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeServiceAccount, nil)
+	}
+
+	storageAccount := serviceAccountToStorage(*account)
+
+	_, err := sa.db.serviceAccounts.InsertOne(storageAccount)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceAccount, nil, err)
+	}
+
+	return nil
 }
 
 //UpdateServiceAccount updates a service account
@@ -740,14 +751,26 @@ func (sa *Adapter) UpdateServiceAccount(context TransactionContext, account *mod
 
 	storageAccount := serviceAccountToStorage(*account)
 
+	now := time.Now().UTC()
 	filter := bson.D{primitive.E{Key: "_id", Value: account.ID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "name", Value: storageAccount.Name},
+			primitive.E{Key: "app_id", Value: storageAccount.AppID},
+			primitive.E{Key: "org_id", Value: storageAccount.OrgID},
+			primitive.E{Key: "permissions", Value: storageAccount.Permissions},
+			primitive.E{Key: "roles", Value: storageAccount.Roles},
+			primitive.E{Key: "credentials", Value: storageAccount.Credentials},
+			primitive.E{Key: "date_updated", Value: &now},
+		}},
+	}
 
 	var res *mongo.UpdateResult
 	var err error
 	if context != nil {
-		res, err = sa.db.serviceAccounts.UpdateOneWithContext(context, filter, storageAccount, nil)
+		res, err = sa.db.serviceAccounts.UpdateOneWithContext(context, filter, update, nil)
 	} else {
-		res, err = sa.db.serviceAccounts.UpdateOne(filter, storageAccount, nil)
+		res, err = sa.db.serviceAccounts.UpdateOne(filter, update, nil)
 	}
 
 	if err != nil {

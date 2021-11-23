@@ -3,12 +3,14 @@ package auth
 import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
+	"encoding/json"
 	"net/http"
 	"time"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 const (
@@ -29,20 +31,23 @@ type staticTokenServiceAuthImpl struct {
 	serviceAuthType string
 }
 
-func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, l *logs.Log) (*string, *model.ServiceAccount, error) {
-	//TODO: parse tokenCreds from request
+func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, creds interface{}, l *logs.Log) (*string, *model.ServiceAccount, error) {
+	credsData, err := json.Marshal(creds)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionMarshal, TypeStaticTokenCreds, nil, err)
+	}
+
 	var tokenCreds staticTokenCreds
+	err = json.Unmarshal([]byte(credsData), &tokenCreds)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, TypeStaticTokenCreds, nil, err)
+	}
 
-	// err := json.Unmarshal([]byte(creds), &tokenCreds)
-	// if err != nil {
-	// 	return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, TypeStaticTokenCreds, nil, err)
-	// }
-
-	// validate := validator.New()
-	// err = validate.Struct(tokenCreds)
-	// if err != nil {
-	// 	return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, TypeStaticTokenCreds, nil, err)
-	// }
+	validate := validator.New()
+	err = validate.Struct(tokenCreds)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, TypeStaticTokenCreds, nil, err)
+	}
 
 	hashedToken := utils.SHA256Hash([]byte(tokenCreds.Token))
 	account, err := s.auth.storage.FindServiceAccountByToken(string(hashedToken))

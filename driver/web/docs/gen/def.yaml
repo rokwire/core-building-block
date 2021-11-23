@@ -3144,6 +3144,13 @@ components:
         creds:
           anyOf:
             - $ref: '#/components/schemas/_req_service-accounts_CredsStaticToken'
+            - required:
+                - id
+              type: object
+              description: Service account ID for auth_type="signature"
+              properties:
+                id:
+                  type: string
     _req_service-accounts_CredsStaticToken:
       required:
         - token

@@ -38,7 +38,8 @@ type loginSession struct {
 }
 
 type serviceAccount struct {
-	ID string `bson:"_id"`
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
 
 	AppID *string `bson:"app_id"`
 	OrgID *string `bson:"org_id"`
@@ -46,19 +47,8 @@ type serviceAccount struct {
 	Permissions []model.Permission `bson:"permissions"`
 	Roles       []accountRole      `bson:"roles"`
 
-	Credentials []serviceAccountCredential `bson:"credentials,omitempty"`
+	Credentials []model.ServiceAccountCredential `bson:"credentials,omitempty"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type serviceAccountCredential struct {
-	Name string `bson:"name"`
-	Type string `bson:"type"`
-
-	Token  *string `bson:"token,omitempty"`
-	PubKey *string `bson:"pub_key,omitempty"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdate  *time.Time `bson:"date_updated"`
 }

@@ -10,3 +10,4 @@ properties:
   creds:
     anyOf:
       - $ref: "./CredsStaticToken.yaml"
+      - $ref: "./CredsSignature.yaml"

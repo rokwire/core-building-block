@@ -99,10 +99,8 @@ func serviceAccountFromStorage(item serviceAccount, sa *Adapter) (*model.Service
 		roles[i] = accountRoleFromStorage(&role, *appOrg)
 	}
 
-	creds := serviceAccountCredentialsFromStorage(item.Credentials)
-
-	return &model.ServiceAccount{ID: item.ID, Application: application, Organization: organization, Permissions: item.Permissions,
-		Roles: roles, Credentials: creds, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}, nil
+	return &model.ServiceAccount{ID: item.ID, Name: item.Name, Application: application, Organization: organization, Permissions: item.Permissions,
+		Roles: roles, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}, nil
 }
 
 func serviceAccountToStorage(item model.ServiceAccount) *serviceAccount {
@@ -117,8 +115,6 @@ func serviceAccountToStorage(item model.ServiceAccount) *serviceAccount {
 		orgID = &item.Organization.ID
 	}
 
-	creds := serviceAccountCredentialsToStorage(item.Credentials)
-
-	return &serviceAccount{ID: item.ID, AppID: appID, OrgID: orgID, Permissions: item.Permissions, Roles: roles,
-		Credentials: creds, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return &serviceAccount{ID: item.ID, Name: item.Name, AppID: appID, OrgID: orgID, Permissions: item.Permissions, Roles: roles,
+		Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

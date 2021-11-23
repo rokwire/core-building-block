@@ -248,14 +248,20 @@ func (s ServiceAccount) GetPermissionsMap() map[string]Permission {
 
 //ServiceAccountCredential represents a service account credential entity
 type ServiceAccountCredential struct {
-	Name string
-	Type string
+	Name string `bson:"name"`
+	Type string `bson:"type"`
 
-	Token  *string
-	PubKey *string
+	Token  *string `bson:"token,omitempty"`
+	PubKey *string `bson:"pub_key,omitempty"`
 
-	DateCreated time.Time
-	DateUpdated *time.Time
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+// ServiceAccountTokenRequest represents a service account token request entity
+type ServiceAccountTokenRequest struct {
+	AuthType string       `json:"auth_type"`
+	Creds    *interface{} `json:"creds,omitempty"`
 }
 
 //ServiceAuthorization represents service authorization entity

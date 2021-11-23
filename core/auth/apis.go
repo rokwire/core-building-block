@@ -3,6 +3,8 @@ package auth
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -585,16 +587,24 @@ func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier
 
 //GetServiceAccessToken returns an access token for a non-human client
 func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, string, error) {
-	//TODO: get authType from request
-	var authType string
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, "", errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
+	}
 
-	serviceAuthType, err := a.getServiceAuthTypeImpl(authType)
+	var requestData model.ServiceAccountTokenRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return nil, "", errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("service account access token request"), nil, err)
+	}
+
+	serviceAuthType, err := a.getServiceAuthTypeImpl(requestData.AuthType)
 	if err != nil {
 		l.Info("error getting service auth type on get service access token")
 		return nil, "", errors.WrapErrorAction("error getting service auth type on get service access token", "", nil, err)
 	}
 
-	message, account, err := serviceAuthType.checkCredentials(r, l)
+	message, account, err := serviceAuthType.checkCredentials(r, &requestData, l)
 	if err != nil {
 		return message, "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}
@@ -608,12 +618,12 @@ func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, str
 	if account.Organization != nil {
 		orgID = account.Organization.ID
 	}
-	claims := a.getStandardClaims(account.ID, "", "", "", "", "rokwire", orgID, appID, authType, nil, false, true, true)
+	claims := a.getStandardClaims(account.ID, "", "", "", "", "rokwire", orgID, appID, requestData.AuthType, nil, false, true, true)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
-	return nil, accessToken, errors.New(logutils.Unimplemented)
+	return nil, accessToken, nil
 }
 
 //GetServiceAccounts gets all service accounts
@@ -633,6 +643,7 @@ func (a *Auth) RegisterServiceAccount(name string, orgID *string, appID *string,
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 	}
+	newAccount.DateCreated = time.Now().UTC()
 
 	err = a.storage.InsertServiceAccount(newAccount)
 	if err != nil {
@@ -684,8 +695,8 @@ func (a *Auth) AddServiceCredential(accountID string, creds *model.ServiceAccoun
 		//2. update credentials
 		serviceAuthType, err := a.getServiceAuthTypeImpl(creds.Type)
 		if err != nil {
-			l.Info("error getting service auth type on get service access token")
-			return errors.WrapErrorAction("error getting service auth type on get service access token", "", nil, err)
+			l.Info("error getting service auth type on add service credential")
+			return errors.WrapErrorAction("error getting service auth type on add service credential", "", nil, err)
 		}
 
 		account, err = serviceAuthType.addCredentials(account, creds, l)
@@ -704,7 +715,7 @@ func (a *Auth) AddServiceCredential(accountID string, creds *model.ServiceAccoun
 
 	err := a.storage.PerformTransaction(transaction)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
 	}
 	return token, nil
 }
@@ -741,7 +752,7 @@ func (a *Auth) RemoveServiceCredential(accountID string, name string) error {
 
 	err := a.storage.PerformTransaction(transaction)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, nil, err)
 	}
 	return nil
 }
