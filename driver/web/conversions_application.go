@@ -6,13 +6,18 @@ import (
 )
 
 //Application
-func applicationToDef(item *model.Application) *Def.ApplicationFields {
-	if item == nil {
-		return nil
-	}
+func applicationToDef(item model.Application) Def.ApplicationFields {
 
-	return &Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
+	return Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
 		RequiresOwnUsers: &item.RequiresOwnUsers, MaxLoginSessionDuration: item.MaxLoginSessionDuration}
+}
+
+func applicationsToDef(items []model.Application) []Def.ApplicationFields {
+	result := make([]Def.ApplicationFields, len(items))
+	for i, item := range items {
+		result[i] = applicationToDef(item)
+	}
+	return result
 }
 
 //Application organization
