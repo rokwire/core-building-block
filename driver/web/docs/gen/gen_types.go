@@ -311,8 +311,8 @@ type CredentialFields struct {
 
 // Device defines model for Device.
 type Device struct {
-	Accounts *[]Account    `json:"accounts,omitempty"`
-	Fields   *DeviceFields `json:"fields,omitempty"`
+	Account *Account      `json:"account,omitempty"`
+	Fields  *DeviceFields `json:"fields,omitempty"`
 }
 
 // DeviceFields defines model for DeviceFields.
