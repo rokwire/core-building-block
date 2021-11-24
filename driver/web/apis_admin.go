@@ -213,8 +213,8 @@ func (h AdminApisHandler) adminGetApplications(l *logs.Log, r *http.Request, cla
 	}
 	/*var response []Def.ApplicationFields
 	for _, app := range applications {
-		appRes := applicationsToDef(applications)
-		response = append(response, app)
+		appRes := applicationsToDef(app)
+		response = append(response, appRes)
 	}*/
 	response := applicationsToDef(applications)
 

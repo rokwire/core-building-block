@@ -12,23 +12,12 @@ func applicationToDef(item model.Application) Def.ApplicationFields {
 		RequiresOwnUsers: &item.RequiresOwnUsers, MaxLoginSessionDuration: item.MaxLoginSessionDuration}
 }
 
-func applicationsToDef(items []model.Application) []Def.ApplicationFields {
-	result := make([]Def.ApplicationFields, len(items))
-	for i, item := range items {
+func applicationsToDef(item []model.Application) []Def.ApplicationFields {
+	result := make([]Def.ApplicationFields, len(item))
+	for i, item := range item {
 		result[i] = applicationToDef(item)
 	}
 	return result
-}
-
-//Application organization
-func applicationOrganizationToDef(item *model.ApplicationOrganization) *model.ApplicationOrganization {
-	if item == nil {
-		return nil
-	}
-
-	return &model.ApplicationOrganization{ID: item.ID, Application: item.Application, Organization: item.Organization,
-		ServicesIDs: item.ServicesIDs, IdentityProvidersSettings: item.IdentityProvidersSettings,
-		SupportedAuthTypes: item.SupportedAuthTypes}
 }
 
 //ApplicationPermission
