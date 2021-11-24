@@ -23,6 +23,8 @@ const (
 	ErrorStatusInvalid string = "invalid"
 	//ErrorStatusUnverified ...
 	ErrorStatusUnverified string = "unverified"
+	//ErrorStatusVerificationExpired ...
+	ErrorStatusVerificationExpired string = "verification-expired"
 )
 
 // SetRandomSeed sets the seed for random number generation

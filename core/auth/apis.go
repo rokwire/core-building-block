@@ -464,89 +464,8 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 	return nil, loginSession, nil
 }
 
-//GetMFATypes gets all MFA types set up for an account
-//	Input:
-//		accountID (string): Account ID to find MFA types
-//	Returns:
-//		MFA Types ([]model.MFAType): MFA information for all enrolled types
-func (a *Auth) GetMFATypes(accountID string) ([]model.MFAType, error) {
-	mfa, err := a.storage.FindMFATypes(accountID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, nil, err)
-	}
-
-	return mfa, nil
-}
-
-//AddMFAType adds a form of MFA to an account
-//	Input:
-//		accountID (string): Account ID to add MFA
-//		identifier (string): Email, phone, or TOTP device name
-//		mfaType (string): Type of MFA to be added
-//	Returns:
-//		MFA Type (*model.MFAType): MFA information for the specified type
-func (a *Auth) AddMFAType(accountID string, identifier string, mfaType string) (*model.MFAType, error) {
-	mfaImpl, err := a.getMfaTypeImpl(mfaType)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeMfaType, nil, err)
-	}
-
-	newMfa, err := mfaImpl.enroll(identifier)
-	if err != nil {
-		return nil, errors.WrapErrorAction("enrolling", typeMfaType, nil, err)
-	}
-
-	err = a.storage.InsertMFAType(nil, newMfa, accountID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, typeMfaType, &logutils.FieldArgs{"account_id": accountID, "type": mfaType}, err)
-	}
-
-	return newMfa, nil
-}
-
-//RemoveMFAType removes a form of MFA from an account
-//	Input:
-//		accountID (string): Account ID to remove MFA
-//		identifier (string): Email, phone, or TOTP device name
-//		mfaType (string): Type of MFA to remove
-func (a *Auth) RemoveMFAType(accountID string, identifier string, mfaType string) error {
-	transaction := func(context storage.TransactionContext) error {
-		//1. remove mfa type from account
-		err := a.storage.DeleteMFAType(context, accountID, identifier, mfaType)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "identifier": identifier, "type": mfaType}, err)
-		}
-
-		//2. find account
-		account, err := a.storage.FindAccountByID(context, accountID)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-		}
-		if account == nil {
-			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"_id": accountID})
-		}
-
-		//3. check if account only has recovery MFA remaining
-		if len(account.MFATypes) == 1 && account.MFATypes[0].Type == MfaTypeRecovery {
-			err = a.storage.DeleteMFAType(context, accountID, MfaTypeRecovery, MfaTypeRecovery)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "identifier": MfaTypeRecovery, "type": MfaTypeRecovery}, err)
-			}
-		}
-
-		return nil
-	}
-
-	err := a.storage.PerformTransaction(transaction)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, nil, err)
-	}
-
-	return nil
-}
-
-//Verify checks the verification code generated on signup
-func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
+//VerifyCredential verifies credential (checks the verification code in the credentials collection)
+func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) error {
 	credential, err := a.storage.FindCredential(id)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
@@ -561,8 +480,8 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 	if err != nil || authType == nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
 	}
-	if authType.IsExternal {
-		return errors.WrapErrorAction("invalid auth type for verify", model.TypeAuthType, nil, err)
+	if !authType.UseCredentials {
+		return errors.WrapErrorAction("invalid auth type for credential verification", model.TypeAuthType, nil, err)
 	}
 
 	authImpl, err := a.getAuthTypeImpl(*authType)
@@ -570,7 +489,7 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	authTypeCreds, err := authImpl.verify(credential, verification, l)
+	authTypeCreds, err := authImpl.verifyCredential(credential, verification, l)
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "verification code", nil, err)
 	}
@@ -579,6 +498,206 @@ func (a *Auth) Verify(id string, verification string, l *logs.Log) error {
 	credential.Value = authTypeCreds
 	if err = a.storage.UpdateCredential(credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
+
+	return nil
+}
+
+//UpdateCredential updates the credential object with the new value
+//	Input:
+//		accountID: id of the associated account to reset
+//		accountAuthTypeID (string): id of the AccountAuthType
+//		params: specific params for the different auth types
+//	Returns:
+//		error: if any
+//TODO: Clear login sessions using old creds
+// Handle refresh tokens when applicable
+func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, params string, l *logs.Log) error {
+	//Get the user credential from account auth type in accounts collection
+	account, err := a.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	accountAuthType, err := a.findAccountAuthTypeByID(account, accountAuthTypeID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
+	}
+	if accountAuthType.Credential == nil {
+		return errors.New("Invalid account auth type for reset password")
+	}
+
+	credential := accountAuthType.Credential
+	//Determine the auth type for resetPassword
+	authType := accountAuthType.AuthType
+	if !authType.UseCredentials {
+		return errors.WrapErrorAction("invalid auth type for reset password client", model.TypeAuthType, nil, err)
+	}
+
+	authImpl, err := a.getAuthTypeImpl(authType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	authTypeCreds, err := authImpl.resetCredential(credential, nil, params, l)
+	if err != nil || authTypeCreds == nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "reset password", nil, err)
+	}
+	//Update the credential with new password
+	credential.Value = authTypeCreds
+	if err = a.storage.UpdateCredential(credential); err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
+
+	return nil
+}
+
+//ResetForgotCredential resets forgot credential
+//	Input:
+//		credsID: id of the credential object
+//		resetCode: code from the reset link
+//		params: specific params for the different auth types
+//	Returns:
+//		error: if any
+//TODO: Clear login sessions using old creds
+// Handle refresh tokens when applicable
+func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params string, l *logs.Log) error {
+	credential, err := a.storage.FindCredential(credsID)
+	if err != nil || credential == nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+	}
+
+	//Determine the auth type for resetPassword
+	authType, err := a.storage.FindAuthType(credential.AuthType.ID)
+	if err != nil || authType == nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
+	}
+	if !authType.UseCredentials {
+		return errors.WrapErrorAction("invalid auth type for reset password link", model.TypeAuthType, nil, err)
+	}
+
+	authImpl, err := a.getAuthTypeImpl(*authType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	authTypeCreds, err := authImpl.resetCredential(credential, &resetCode, params, l)
+	if err != nil || authTypeCreds == nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "reset password", nil, err)
+	}
+	//Update the credential with new password
+	credential.Value = authTypeCreds
+	if err = a.storage.UpdateCredential(credential); err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
+
+	return nil
+}
+
+//ForgotCredential initiate forgot credential process (generates a reset link and sends to the given identifier for email auth type)
+//	Input:
+//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		identifier: identifier of the account auth type
+//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
+//		orgID (string): ID of the organization that the user is logging in
+//		apiKey (string): API key to validate the specified app
+//	Returns:
+//		error: if any
+func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
+	//validate if the provided auth type is supported by the provided application and organization
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	//check for api key
+	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
+	err = a.validateAPIKey(apiKey, appType.Application.ID)
+	if err != nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+	}
+
+	//check if the auth types uses credentials
+	if !authType.UseCredentials {
+		return errors.WrapErrorAction("invalid auth type for forgot credential", model.TypeAuthType, nil, err)
+	}
+
+	authImpl, err := a.getAuthTypeImpl(*authType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+	authTypeID := authType.ID
+
+	//Find the credential for setting reset code and expiry and sending credID in reset link
+	account, err := a.storage.FindAccount(appOrg.ID, authTypeID, identifier)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	accountAuthType, err := a.findAccountAuthType(account, authType, identifier)
+	if accountAuthType == nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+	}
+	credential := accountAuthType.Credential
+	if credential == nil {
+		return errors.New("Invalid account auth type for reset link")
+	}
+	//do not allow to reset credential for unverified credentials
+	if !credential.Verified {
+		return errors.New("The credential is not verified")
+	}
+
+	authTypeCreds, err := authImpl.forgotCredential(credential, identifier, l)
+	if err != nil || authTypeCreds == nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "forgot password", nil, err)
+	}
+	//Update the credential with reset code and expiry
+	credential.Value = authTypeCreds
+	if err = a.storage.UpdateCredential(credential); err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
+	return nil
+}
+
+//SendVerifyCredential sends the verification code to the identifier
+func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
+	//validate if the provided auth type is supported by the provided application and organization
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+	//validate api key before making db calls
+	err = a.validateAPIKey(apiKey, appType.Application.ID)
+	if err != nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+	}
+
+	if !authType.UseCredentials {
+		return errors.WrapErrorAction("invalid auth type for sending verify code", model.TypeAuthType, nil, err)
+	}
+	authImpl, err := a.getAuthTypeImpl(*authType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, identifier)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	accountAuthType, err := a.findAccountAuthType(account, authType, identifier)
+	if accountAuthType == nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+	}
+	credential := accountAuthType.Credential
+	if credential == nil {
+		return errors.New("Invalid account auth type for reset link")
+	}
+
+	if credential.Verified {
+		return errors.New("credential has already been verified")
+	}
+
+	err = authImpl.sendVerifyCredential(credential, l)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
 	}
 
 	return nil
@@ -674,6 +793,87 @@ func (a *Auth) VerifyMFA(accountID string, identifier string, mfaType string, mf
 	}
 
 	return nil, nil, nil
+}
+
+//GetMFATypes gets all MFA types set up for an account
+//	Input:
+//		accountID (string): Account ID to find MFA types
+//	Returns:
+//		MFA Types ([]model.MFAType): MFA information for all enrolled types
+func (a *Auth) GetMFATypes(accountID string) ([]model.MFAType, error) {
+	mfa, err := a.storage.FindMFATypes(accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, nil, err)
+	}
+
+	return mfa, nil
+}
+
+//AddMFAType adds a form of MFA to an account
+//	Input:
+//		accountID (string): Account ID to add MFA
+//		identifier (string): Email, phone, or TOTP device name
+//		mfaType (string): Type of MFA to be added
+//	Returns:
+//		MFA Type (*model.MFAType): MFA information for the specified type
+func (a *Auth) AddMFAType(accountID string, identifier string, mfaType string) (*model.MFAType, error) {
+	mfaImpl, err := a.getMfaTypeImpl(mfaType)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeMfaType, nil, err)
+	}
+
+	newMfa, err := mfaImpl.enroll(identifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction("enrolling", typeMfaType, nil, err)
+	}
+
+	err = a.storage.InsertMFAType(nil, newMfa, accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, typeMfaType, &logutils.FieldArgs{"account_id": accountID, "type": mfaType}, err)
+	}
+
+	return newMfa, nil
+}
+
+//RemoveMFAType removes a form of MFA from an account
+//	Input:
+//		accountID (string): Account ID to remove MFA
+//		identifier (string): Email, phone, or TOTP device name
+//		mfaType (string): Type of MFA to remove
+func (a *Auth) RemoveMFAType(accountID string, identifier string, mfaType string) error {
+	transaction := func(context storage.TransactionContext) error {
+		//1. remove mfa type from account
+		err := a.storage.DeleteMFAType(context, accountID, identifier, mfaType)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "identifier": identifier, "type": mfaType}, err)
+		}
+
+		//2. find account
+		account, err := a.storage.FindAccountByID(context, accountID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		if account == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"_id": accountID})
+		}
+
+		//3. check if account only has recovery MFA remaining
+		if len(account.MFATypes) == 1 && account.MFATypes[0].Type == MfaTypeRecovery {
+			err = a.storage.DeleteMFAType(context, accountID, MfaTypeRecovery, MfaTypeRecovery)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "identifier": MfaTypeRecovery, "type": MfaTypeRecovery}, err)
+			}
+		}
+
+		return nil
+	}
+
+	err := a.storage.PerformTransaction(transaction)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, nil, err)
+	}
+
+	return nil
 }
 
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or

@@ -6,11 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
 ### Added
 - Add multi-factor authentication support [#19](https://github.com/rokwire/core-building-block/issues/19)
+
+### Security
+- Return verification status on account exists endpoint [#330](https://github.com/rokwire/core-building-block/issues/330)
+
+### Fixed
+- Fix the accounts collection index for app and org [#333](https://github.com/rokwire/core-building-block/issues/333)
+
+## [1.13.0] - 2021-11-22
+### Added
+- Expose resend verification code services API [#287](https://github.com/rokwire/core-building-block/issues/287)
+- Add password reset from client and reset links [#216](https://github.com/rokwire/core-building-block/issues/216)
 - User PII in tokens [#169](https://github.com/rokwire/core-building-block/issues/169)
 - Add authentication required auth wrapper [#250](https://github.com/rokwire/core-building-block/issues/250)
+
+### Security
+- Change string comparisons to constant time comparisons [#317](https://github.com/rokwire/core-building-block/issues/317)
+
+### Fixed
+- Auth types removed from wrong endpoint [#321](https://github.com/rokwire/core-building-block/issues/321)
+- Profile request fails for email sign up [#320](https://github.com/rokwire/core-building-block/issues/320)
 
 ## [1.12.0] - 2021-11-10
 ### Added
@@ -155,7 +172,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.12.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.13.0...HEAD
+[1.13.0]: https://github.com/rokwire/core-building-block/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/rokwire/core-building-block/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/rokwire/core-building-block/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/rokwire/core-building-block/compare/v1.9.0...v1.10.0

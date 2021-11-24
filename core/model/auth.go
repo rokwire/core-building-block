@@ -110,13 +110,14 @@ type APIKey struct {
 //AuthType represents authentication type entity
 //	The system supports different authentication types - username, email, phone, identity providers ones etc
 type AuthType struct {
-	ID          string                 `bson:"_id"`
-	Code        string                 `bson:"code"` //username or email or phone or illinois_oidc etc
-	Description string                 `bson:"description"`
-	IsExternal  bool                   `bson:"is_external"`  //says if the users source is external - identity providers
-	IsAnonymous bool                   `bson:"is_anonymous"` //says if the auth type results in anonymous users
-	IgnoreMFA   bool                   `bson:"ignore_mfa"`   //says if login using this auth type may bypass account MFA
-	Params      map[string]interface{} `bson:"params"`
+	ID             string                 `bson:"_id"`
+	Code           string                 `bson:"code"` //username or email or phone or illinois_oidc etc
+	Description    string                 `bson:"description"`
+	IsExternal     bool                   `bson:"is_external"`     //says if the users source is external - identity providers
+	IsAnonymous    bool                   `bson:"is_anonymous"`    //says if the auth type results in anonymous users
+	UseCredentials bool                   `bson:"use_credentials"` //says if the auth type uses credentials
+	IgnoreMFA      bool                   `bson:"ignore_mfa"`      //says if login using this auth type may bypass account MFA
+	Params         map[string]interface{} `bson:"params"`
 }
 
 //IdentityProvider represents identity provider entity
