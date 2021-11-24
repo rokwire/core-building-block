@@ -192,7 +192,7 @@ type APIs interface {
 	//		Service reg (*model.ServiceReg): The service registration record for the requested service
 	AuthorizeService(claims tokenauth.Claims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceReg, error)
 
-	//LinkCredential links new credentials to an existing account.
+	//LinkAccountAuthType links new credentials to an existing account.
 	//The authentication method must be one of the supported for the application.
 	//	Input:
 	//		accountID (string): ID of the account to link the creds to
@@ -203,7 +203,7 @@ type APIs interface {
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		Message (*string): message
-	LinkCredential(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, error)
+	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, error)
 
 	//GetScopedAccessToken returns a scoped access token with the requested scopes
 	GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scopes []authorization.Scope) (string, error)

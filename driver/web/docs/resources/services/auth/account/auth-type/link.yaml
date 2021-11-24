@@ -12,7 +12,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../../../schemas/apis/services/credential/link/request/Request.yaml"
+          $ref: "../../../../../schemas/apis/services/account/auth-type/link/request/Request.yaml"
         examples:
           email-sign_up:
             summary: Email

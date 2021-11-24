@@ -66,6 +66,17 @@ const (
 	ReqAccountExistsRequestAuthTypeUsername ReqAccountExistsRequestAuthType = "username"
 )
 
+// Defines values for ReqAccountAuthTypeLinkRequestAuthType.
+const (
+	ReqAccountAuthTypeLinkRequestAuthTypeEmail ReqAccountAuthTypeLinkRequestAuthType = "email"
+
+	ReqAccountAuthTypeLinkRequestAuthTypeIllinoisOidc ReqAccountAuthTypeLinkRequestAuthType = "illinois_oidc"
+
+	ReqAccountAuthTypeLinkRequestAuthTypeTwilioPhone ReqAccountAuthTypeLinkRequestAuthType = "twilio_phone"
+
+	ReqAccountAuthTypeLinkRequestAuthTypeUsername ReqAccountAuthTypeLinkRequestAuthType = "username"
+)
+
 // Defines values for ReqCreateOrganizationRequestType.
 const (
 	ReqCreateOrganizationRequestTypeHuge ReqCreateOrganizationRequestType = "huge"
@@ -82,17 +93,6 @@ const (
 // Defines values for ReqCredentialForgotInitiateRequestAuthType.
 const (
 	ReqCredentialForgotInitiateRequestAuthTypeEmail ReqCredentialForgotInitiateRequestAuthType = "email"
-)
-
-// Defines values for ReqCredentialLinkRequestAuthType.
-const (
-	ReqCredentialLinkRequestAuthTypeEmail ReqCredentialLinkRequestAuthType = "email"
-
-	ReqCredentialLinkRequestAuthTypeIllinoisOidc ReqCredentialLinkRequestAuthType = "illinois_oidc"
-
-	ReqCredentialLinkRequestAuthTypeTwilioPhone ReqCredentialLinkRequestAuthType = "twilio_phone"
-
-	ReqCredentialLinkRequestAuthTypeUsername ReqCredentialLinkRequestAuthType = "username"
 )
 
 // Defines values for ReqCredentialSendVerifyRequestAuthType.
@@ -500,6 +500,17 @@ type ReqAccountRolesRequest struct {
 	RoleIds   []string `json:"role_ids"`
 }
 
+// ReqAccountAuthTypeLinkRequest defines model for _req_account_auth-type_link_Request.
+type ReqAccountAuthTypeLinkRequest struct {
+	AppTypeIdentifier string                                `json:"app_type_identifier"`
+	AuthType          ReqAccountAuthTypeLinkRequestAuthType `json:"auth_type"`
+	Creds             interface{}                           `json:"creds"`
+	Params            *interface{}                          `json:"params,omitempty"`
+}
+
+// ReqAccountAuthTypeLinkRequestAuthType defines model for ReqAccountAuthTypeLinkRequest.AuthType.
+type ReqAccountAuthTypeLinkRequestAuthType string
+
 // ReqApplicationRolesRequest defines model for _req_application-roles_Request.
 type ReqApplicationRolesRequest struct {
 	AppId       string   `json:"app_id"`
@@ -560,17 +571,6 @@ type ReqCredentialForgotInitiateRequest struct {
 
 // ReqCredentialForgotInitiateRequestAuthType defines model for ReqCredentialForgotInitiateRequest.AuthType.
 type ReqCredentialForgotInitiateRequestAuthType string
-
-// ReqCredentialLinkRequest defines model for _req_credential_link_Request.
-type ReqCredentialLinkRequest struct {
-	AppTypeIdentifier string                           `json:"app_type_identifier"`
-	AuthType          ReqCredentialLinkRequestAuthType `json:"auth_type"`
-	Creds             interface{}                      `json:"creds"`
-	Params            *interface{}                     `json:"params,omitempty"`
-}
-
-// ReqCredentialLinkRequestAuthType defines model for ReqCredentialLinkRequest.AuthType.
-type ReqCredentialLinkRequestAuthType string
 
 // ReqCredentialSendVerifyRequest defines model for _req_credential_send-verify_Request.
 type ReqCredentialSendVerifyRequest struct {
@@ -848,6 +848,9 @@ type PutServicesAccountPreferencesJSONBody map[string]interface{}
 // PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
 type PutServicesAccountProfileJSONBody ReqSharedProfile
 
+// PostServicesAuthAccountAuthTypeLinkJSONBody defines parameters for PostServicesAuthAccountAuthTypeLink.
+type PostServicesAuthAccountAuthTypeLinkJSONBody ReqAccountAuthTypeLinkRequest
+
 // PostServicesAuthAccountExistsJSONBody defines parameters for PostServicesAuthAccountExists.
 type PostServicesAuthAccountExistsJSONBody ReqAccountExistsRequest
 
@@ -859,9 +862,6 @@ type PostServicesAuthCredentialForgotCompleteJSONBody ReqCredentialForgotComplet
 
 // PostServicesAuthCredentialForgotInitiateJSONBody defines parameters for PostServicesAuthCredentialForgotInitiate.
 type PostServicesAuthCredentialForgotInitiateJSONBody ReqCredentialForgotInitiateRequest
-
-// PostServicesAuthCredentialLinkJSONBody defines parameters for PostServicesAuthCredentialLink.
-type PostServicesAuthCredentialLinkJSONBody ReqCredentialLinkRequest
 
 // PostServicesAuthCredentialSendVerifyJSONBody defines parameters for PostServicesAuthCredentialSendVerify.
 type PostServicesAuthCredentialSendVerifyJSONBody ReqCredentialSendVerifyRequest
@@ -994,6 +994,9 @@ type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJ
 // PutServicesAccountProfileJSONRequestBody defines body for PutServicesAccountProfile for application/json ContentType.
 type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
 
+// PostServicesAuthAccountAuthTypeLinkJSONRequestBody defines body for PostServicesAuthAccountAuthTypeLink for application/json ContentType.
+type PostServicesAuthAccountAuthTypeLinkJSONRequestBody PostServicesAuthAccountAuthTypeLinkJSONBody
+
 // PostServicesAuthAccountExistsJSONRequestBody defines body for PostServicesAuthAccountExists for application/json ContentType.
 type PostServicesAuthAccountExistsJSONRequestBody PostServicesAuthAccountExistsJSONBody
 
@@ -1005,9 +1008,6 @@ type PostServicesAuthCredentialForgotCompleteJSONRequestBody PostServicesAuthCre
 
 // PostServicesAuthCredentialForgotInitiateJSONRequestBody defines body for PostServicesAuthCredentialForgotInitiate for application/json ContentType.
 type PostServicesAuthCredentialForgotInitiateJSONRequestBody PostServicesAuthCredentialForgotInitiateJSONBody
-
-// PostServicesAuthCredentialLinkJSONRequestBody defines body for PostServicesAuthCredentialLink for application/json ContentType.
-type PostServicesAuthCredentialLinkJSONRequestBody PostServicesAuthCredentialLinkJSONBody
 
 // PostServicesAuthCredentialSendVerifyJSONRequestBody defines body for PostServicesAuthCredentialSendVerify for application/json ContentType.
 type PostServicesAuthCredentialSendVerifyJSONRequestBody PostServicesAuthCredentialSendVerifyJSONBody

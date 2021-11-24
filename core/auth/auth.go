@@ -806,7 +806,7 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 	return &accountAuthType, nil
 }
 
-func (a *Auth) linkCredentialAuthType(account model.Account, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
+func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
 	creds string, params string, l *logs.Log) (string, *model.AccountAuthType, error) {
 	authImpl, err := a.getAuthTypeImpl(authType)
 	if err != nil {
@@ -851,7 +851,7 @@ func (a *Auth) linkCredentialAuthType(account model.Account, authType model.Auth
 	return message, accountAuthType, nil
 }
 
-func (a *Auth) linkCredentialExternalAuthType(account model.Account, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
+func (a *Auth) linkAccountAuthTypeExternal(account model.Account, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
 	creds string, params string, l *logs.Log) (*model.AccountAuthType, error) {
 	authImpl, err := a.getExternalAuthTypeImpl(authType)
 	if err != nil {
