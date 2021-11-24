@@ -48,7 +48,9 @@ const (
 	loginStateLength   int = 128
 	loginStateDuration int = 5
 
-	maxMfaAttempts int = 5
+	maxMfaAttempts    int = 5
+	mfaCodeExpiration int = 5
+	mfaCodeMax        int = 1000000
 )
 
 //Auth represents the auth functionality unit
