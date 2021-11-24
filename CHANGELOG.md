@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Service accounts [#306](https://github.com/rokwire/core-building-block/issues/306)
 
+### Security
+- Return verification status on account exists endpoint [#330](https://github.com/rokwire/core-building-block/issues/330)
+
+### Fixed
+- Fix the accounts collection index for app and org [#333](https://github.com/rokwire/core-building-block/issues/333)
+
 ## [1.13.0] - 2021-11-22
 ### Added
 - Expose resend verification code services API [#287](https://github.com/rokwire/core-building-block/issues/287)

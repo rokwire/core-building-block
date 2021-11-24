@@ -402,6 +402,12 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
 
+	//check the credentials
+	message, err = authImpl.checkCredentials(*accountAuthType, creds, l)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
+	}
+
 	//check is verified
 	if authType.UseCredentials {
 		verified, expired, err := authImpl.isCredentialVerified(accountAuthType.Credential, l)
@@ -427,12 +433,6 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 			//notify the client
 			return "", nil, errors.ErrorData("", "credential verification expired", nil).SetStatus(utils.ErrorStatusVerificationExpired)
 		}
-	}
-
-	//now check the credentials
-	message, err = authImpl.checkCredentials(*accountAuthType, creds, l)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
 	}
 
 	return message, accountAuthType, nil
