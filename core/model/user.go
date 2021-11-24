@@ -295,8 +295,7 @@ type Device struct {
 	Type string //mobile, web, desktop, other
 	OS   string
 
-	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
-	Accounts []Account
+	Account Account
 
 	DateCreated time.Time
 	DateUpdated *time.Time

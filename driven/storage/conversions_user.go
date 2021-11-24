@@ -210,13 +210,8 @@ func deviceToStorage(item *model.Device) *device {
 		return nil
 	}
 
-	accounts := make([]string, len(item.Accounts))
-	for i, account := range item.Accounts {
-		accounts[i] = account.ID
-	}
-
 	return &device{ID: item.ID, Type: item.Type, OS: item.OS,
-		Accounts: accounts, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Account: item.Account.ID, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func deviceFromStorage(item device) model.Device {

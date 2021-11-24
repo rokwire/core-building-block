@@ -92,12 +92,12 @@ type userDevice struct {
 }
 
 type device struct {
-	ID   string `bson:"_id"`
+	ID      string `bson:"_id"`
+	Account string `bson:"account_id"`
+
 	Type string `bson:"type"`
 
 	OS string `bson:"os"`
-
-	Accounts []string `bson:"accounts"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
