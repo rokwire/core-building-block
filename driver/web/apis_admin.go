@@ -211,11 +211,7 @@ func (h AdminApisHandler) adminGetApplications(l *logs.Log, r *http.Request, cla
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}
-	/*var response []Def.ApplicationFields
-	for _, app := range applications {
-		appRes := applicationsToDef(app)
-		response = append(response, appRes)
-	}*/
+
 	response := applicationsToDef(applications)
 
 	data, err := json.Marshal(response)

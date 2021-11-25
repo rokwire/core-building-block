@@ -1387,6 +1387,10 @@ func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.A
 		return nil, err
 	}
 
+	if len(applicationsOrgResult) == 0 {
+		//no data
+		return make([]model.Application, 0), nil
+	}
 	return applicationsOrgResult, nil
 }
 
