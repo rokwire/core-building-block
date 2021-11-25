@@ -387,6 +387,12 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
 
+	//check the credentials
+	message, err = authImpl.checkCredentials(*accountAuthType, creds, l)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
+	}
+
 	//check is verified
 	if authType.UseCredentials {
 		verified, expired, err := authImpl.isCredentialVerified(accountAuthType.Credential, l)
@@ -412,12 +418,6 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 			//notify the client
 			return "", nil, errors.ErrorData("", "credential verification expired", nil).SetStatus(utils.ErrorStatusVerificationExpired)
 		}
-	}
-
-	//now check the credentials
-	message, err = authImpl.checkCredentials(*accountAuthType, creds, l)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
 	}
 
 	return message, accountAuthType, nil
@@ -635,25 +635,11 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier string, accountAuthTypeParams map[string]interface{},
 	credentialID *string, credentialValue map[string]interface{},
 	profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*model.AccountAuthType, *model.Credential, *model.Profile, map[string]interface{}, error) {
-	now := time.Now()
 
-	//account auth type
-	accountAuthTypeID, _ := uuid.NewUUID()
-	active := true
-	active2FA := false
-	accountAuthType := &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: authType,
-		Identifier: identifier, Params: accountAuthTypeParams, Credential: nil, Active: active, Active2FA: active2FA, DateCreated: now}
-
-	//credential
-	var credential *model.Credential
-	if credentialID != nil && credentialValue != nil {
-		//there is a credential
-		credential = &model.Credential{ID: *credentialID, AccountsAuthTypes: []model.AccountAuthType{*accountAuthType}, Value: credentialValue, Verified: false,
-			AuthType: authType, DateCreated: now, DateUpdated: &now}
-
-		accountAuthType.Credential = credential
+	accountAuthType, credential, err := a.prepareAccountAuthType(authType, identifier, accountAuthTypeParams, credentialID, credentialValue)
+	if err != nil {
+		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
 	}
-
 	///profile and preferences
 	//get profile BB data
 	gotProfile, gotPreferences, err := a.getProfileBBData(authType, identifier, l)
@@ -694,6 +680,30 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 	///
 
 	return accountAuthType, credential, &readyProfile, readyPreferences, nil
+}
+
+func (a *Auth) prepareAccountAuthType(authType model.AuthType, identifier string, accountAuthTypeParams map[string]interface{},
+	credentialID *string, credentialValue map[string]interface{}) (*model.AccountAuthType, *model.Credential, error) {
+	now := time.Now()
+
+	//account auth type
+	accountAuthTypeID, _ := uuid.NewUUID()
+	active := true
+	active2FA := false
+	accountAuthType := &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: authType,
+		Identifier: identifier, Params: accountAuthTypeParams, Credential: nil, Active: active, Active2FA: active2FA, DateCreated: now}
+
+	//credential
+	var credential *model.Credential
+	if credentialID != nil && credentialValue != nil {
+		//there is a credential
+		credential = &model.Credential{ID: *credentialID, AccountsAuthTypes: []model.AccountAuthType{*accountAuthType}, Value: credentialValue, Verified: false,
+			AuthType: authType, DateCreated: now, DateUpdated: &now}
+
+		accountAuthType.Credential = credential
+	}
+
+	return accountAuthType, credential, nil
 }
 
 func (a *Auth) prepareProfile(clientData model.Profile, profileBBData model.Profile) model.Profile {
@@ -794,6 +804,107 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 	accountAuthType.Account = *insertedAccount
 
 	return &accountAuthType, nil
+}
+
+func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
+	creds string, params string, l *logs.Log) (string, *model.AccountAuthType, error) {
+	authImpl, err := a.getAuthTypeImpl(authType)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	userIdentifier, err := authImpl.getUserIdentifier(creds)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
+	}
+
+	//2. check if the user exists
+	newCredsAccount, err := a.storage.FindAccount(appOrg.ID, authType.ID, userIdentifier)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	//cannot link creds if an account already exists for new creds
+	if newCredsAccount != nil {
+		return "", nil, errors.New("an account already exists for the provided credentials")
+	}
+
+	credentialID, _ := uuid.NewUUID()
+	credID := credentialID.String()
+
+	//apply sign up
+	message, credentialValue, err := authImpl.signUp(authType, appType, appOrg, creds, params, credentialID.String(), l)
+	if err != nil {
+		return "", nil, errors.Wrap("error signing up", err)
+	}
+
+	accountAuthType, credential, err := a.prepareAccountAuthType(authType, userIdentifier, nil, &credID, credentialValue)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
+	}
+	accountAuthType.Account = account
+
+	err = a.registerAccountAuthType(*accountAuthType, credential, l)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccountAuthType, nil, err)
+	}
+
+	return message, accountAuthType, nil
+}
+
+func (a *Auth) linkAccountAuthTypeExternal(account model.Account, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
+	creds string, params string, l *logs.Log) (*model.AccountAuthType, error) {
+	authImpl, err := a.getExternalAuthTypeImpl(authType)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	externalUser, _, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction("logging in", "external user", nil, err)
+	}
+
+	//2. check if the user exists
+	newCredsAccount, err := a.storage.FindAccount(appOrg.ID, authType.ID, externalUser.Identifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	//cannot link creds if an account already exists for new creds
+	if newCredsAccount != nil {
+		return nil, errors.New("an account already exists for the provided credentials")
+	}
+
+	accountAuthTypeParams := map[string]interface{}{}
+	accountAuthTypeParams["user"] = externalUser
+
+	accountAuthType, credential, err := a.prepareAccountAuthType(authType, externalUser.Identifier, accountAuthTypeParams, nil, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
+	}
+	accountAuthType.Account = account
+
+	err = a.registerAccountAuthType(*accountAuthType, credential, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccountAuthType, nil, err)
+	}
+
+	return accountAuthType, nil
+}
+
+func (a *Auth) registerAccountAuthType(accountAuthType model.AccountAuthType, credential *model.Credential, l *logs.Log) error {
+	var err error
+	if credential != nil {
+		//TODO - in one transaction
+		if err = a.storage.InsertCredential(credential); err != nil {
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
+		}
+	}
+
+	err = a.storage.InsertAccountAuthType(accountAuthType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
+	}
+
+	return nil
 }
 
 func (a *Auth) registerAuthType(name string, auth authType) error {
