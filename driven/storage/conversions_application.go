@@ -168,6 +168,18 @@ func applicationOrganizationFromStorage(item applicationOrganization, applicatio
 		SupportedAuthTypes: item.SupportedAuthTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
+func applicationsOrganizationsFromStorage(itemsList []applicationOrganization, application model.Application, organization model.Organization) []model.ApplicationOrganization {
+	if len(itemsList) == 0 {
+		return make([]model.ApplicationOrganization, 0)
+	}
+
+	var items []model.ApplicationOrganization
+	for _, app := range itemsList {
+		items = append(items, applicationOrganizationFromStorage(app, application, organization))
+	}
+	return items
+}
+
 func applicationTypeToStorage(item model.ApplicationType) applicationType {
 	return applicationType{ID: item.ID, Identifier: item.Identifier, Name: item.Name, Versions: item.Versions}
 }

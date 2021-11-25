@@ -1379,19 +1379,34 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 }
 
 //FindApplicationsByOrgID finds a set of applications organizations
-func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.Application, error) {
+func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error) {
 	applicationsOrgFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}}
-	var applicationsOrgResult []model.Application
-	err := sa.db.applications.Find(applicationsOrgFilter, &applicationsOrgResult, nil)
+	var applicationsOrgResult []applicationOrganization
+	err := sa.db.applicationsOrganizations.Find(applicationsOrgFilter, &applicationsOrgResult, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(applicationsOrgResult) == 0 {
 		//no data
-		return make([]model.Application, 0), nil
+		return make([]model.ApplicationOrganization, 0), nil
 	}
-	return applicationsOrgResult, nil
+
+	result := make([]model.ApplicationOrganization, len(applicationsOrgResult))
+	for i, item := range applicationsOrgResult {
+		//we have organizations and applications cached
+		application, err := sa.getCachedApplication(item.AppID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		}
+		organization, err := sa.getCachedOrganization(item.OrgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
+		}
+
+		result[i] = applicationOrganizationFromStorage(item, *application, *organization)
+	}
+	return result, nil
 }
 
 //FindApplicationTypeByIdentifier finds an application type by identifier
