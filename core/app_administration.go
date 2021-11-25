@@ -163,10 +163,20 @@ func (app *application) admGetTestModel() string {
 }
 
 func (app *application) admGetApplications(orgID string) ([]model.Application, error) {
-	getApplicationsOrganizations, err := app.storage.FindApplicationsOrganizationsByOrgID(orgID)
+
+	applicationsOrganizations, err := app.storage.FindApplicationsOrganizationsByOrgID(orgID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplication, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
 
-	return getApplicationsOrganizations, nil
+	if len(applicationsOrganizations) == 0 {
+		return nil, errors.Newf("no application organization found for orgID: %v", orgID)
+	}
+
+	var apps []model.Application
+	for _, appOrg := range applicationsOrganizations {
+		apps = append(apps, appOrg.Application)
+	}
+
+	return apps, nil
 }

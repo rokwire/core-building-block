@@ -104,7 +104,7 @@ type Storage interface {
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
-	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.Application, error)
+	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
 }
 
 //StorageListener listenes for change data storage events
