@@ -206,3 +206,9 @@ _req_account-permissions_Request:
 ### account roles API
 _req_account-roles_Request:
   $ref: "./apis/system/account/roles/request/Request.yaml"
+
+### service iD
+_req_get_serviceIDs_Request:
+  $ref: "./apis/admin/get-serviceIDs/request/Request.yaml"
+_res_get_serviceIDs_Response:
+  $ref: "./apis/admin/get-serviceIDs/response/Response.yaml"

@@ -1,0 +1,11 @@
+required:
+  - id
+type: object
+properties:
+  id:
+    readOnly: true
+    type: string
+  serviceID:
+    type: array
+    
+  
