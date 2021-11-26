@@ -9,7 +9,6 @@ properties:
   auth_type:
     type: string
     enum:
-      - username
       - email
       - twilio_phone
       - illinois_oidc
@@ -22,16 +21,16 @@ properties:
     type: string
   creds:
     anyOf:
-      - $ref: "./CredsEmail.yaml"
-      - $ref: "./CredsTwilioPhone.yaml"
-      - $ref: "./CredsOIDC.yaml"
-      - $ref: "./CredsAPIKey.yaml"
+      - $ref: "../CredsEmail.yaml"
+      - $ref: "../CredsTwilioPhone.yaml"
+      - $ref: "../CredsOIDC.yaml"
+      - $ref: "../CredsAPIKey.yaml"
   params:
     type: object
     anyOf:
-      - $ref: "./ParamsEmail.yaml"
-      - $ref: "./ParamsOIDC.yaml"
-      - $ref: "./ParamsNone.yaml"
+      - $ref: "../ParamsEmail.yaml"
+      - $ref: "../ParamsOIDC.yaml"
+      - $ref: "../ParamsNone.yaml"
   device:
     $ref: "./Device.yaml"
   profile:
