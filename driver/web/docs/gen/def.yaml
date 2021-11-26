@@ -50,7 +50,7 @@ paths:
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
-                      "email": "test@test.com", 
+                      "email": "test@example.com", 
                       "password": "test12345"
                     },
                     "device": {
@@ -68,7 +68,7 @@ paths:
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
-                      "email": "test@test.com", 
+                      "email": "test@example.com", 
                       "password": "test12345"
                     },
                     "params":{
@@ -423,7 +423,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/auth/account-exists:
+  /services/auth/account/exists:
     post:
       tags:
         - Services
@@ -445,6 +445,80 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/_res_account-exists_Response'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/account/auth-type/link:
+    post:
+      tags:
+        - Services
+      summary: Link credentials
+      description: |
+        Link credentials to an existing account
+
+        **Auth:** Requires "authenticated" auth token
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_account_auth-type_link_Request'
+            examples:
+              email-sign_up:
+                summary: Email
+                value: |
+                  {
+                    "auth_type": "email",
+                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": {
+                      "email": "test@example.com", 
+                      "password": "test12345"
+                    },
+                    "params":{
+                        "confirm_password": "test12345"
+                    }
+                  }
+              phone:
+                summary: Phone
+                value: |
+                  {
+                    "auth_type": "twilio_phone",
+                    "app_type_identifier": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": {
+                      "phone": "+12223334444"
+                    }
+                  }
+              illinois_oidc:
+                summary: Illinois OIDC
+                value: |
+                  {
+                    "auth_type": "illinois_oidc",
+                    "app_type_identifier": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
+                    "params": {
+                      "redirect_uri": "https://redirect.example.com",
+                      "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                    }
+                  }
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -746,7 +820,7 @@ paths:
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
-                      "email": "test@test.com", 
+                      "email": "test@example.com", 
                       "password": "test12345"
                     },
                     "device": {
@@ -764,7 +838,7 @@ paths:
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
-                      "email": "test@test.com", 
+                      "email": "test@example.com", 
                       "password": "test12345"
                     },
                     "params":{
@@ -2552,7 +2626,6 @@ components:
         auth_type:
           type: string
           enum:
-            - username
             - email
             - twilio_phone
             - illinois_oidc
@@ -2565,16 +2638,16 @@ components:
           type: string
         creds:
           anyOf:
-            - $ref: '#/components/schemas/_req_shared_Login_CredsEmail'
-            - $ref: '#/components/schemas/_req_shared_Login_CredsTwilioPhone'
-            - $ref: '#/components/schemas/_req_shared_Login_CredsOIDC'
-            - $ref: '#/components/schemas/_req_shared_Login_CredsAPIKey'
+            - $ref: '#/components/schemas/_req_shared_CredsEmail'
+            - $ref: '#/components/schemas/_req_shared_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_req_shared_CredsOIDC'
+            - $ref: '#/components/schemas/_req_shared_CredsAPIKey'
         params:
           type: object
           anyOf:
-            - $ref: '#/components/schemas/_req_shared_Login_ParamsEmail'
-            - $ref: '#/components/schemas/_req_shared_Login_ParamsOIDC'
-            - $ref: '#/components/schemas/_req_shared_Login_ParamsNone'
+            - $ref: '#/components/schemas/_req_shared_ParamsEmail'
+            - $ref: '#/components/schemas/_req_shared_ParamsOIDC'
+            - $ref: '#/components/schemas/_req_shared_ParamsNone'
         device:
           $ref: '#/components/schemas/_req_shared_Login_Device'
         profile:
@@ -2582,60 +2655,6 @@ components:
         preferences:
           type: object
           nullable: true
-    _req_shared_Login_CredsEmail:
-      required:
-        - email
-        - password
-      type: object
-      description: Auth login creds for auth_type="email"
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-    _req_shared_Login_CredsTwilioPhone:
-      type: object
-      description: Auth login creds for auth_type="twilio_phone"
-      required:
-        - phone
-      properties:
-        phone:
-          type: string
-        code:
-          type: string
-    _req_shared_Login_CredsOIDC:
-      type: string
-      description: |
-        Auth login creds for auth_type="oidc" (or variants)
-          - full redirect URI received from OIDC provider
-    _req_shared_Login_CredsAPIKey:
-      type: object
-      description: Auth login creds for auth_type="anonymous"
-      properties:
-        anonymous_id:
-          type: string
-    _req_shared_Login_ParamsEmail:
-      type: object
-      description: Auth login params for auth_type="email"
-      properties:
-        confirm_password:
-          type: string
-          description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
-        sign_up:
-          type: boolean
-          default: false
-    _req_shared_Login_ParamsOIDC:
-      type: object
-      description: Auth login params for auth_type="oidc" (or variants)
-      properties:
-        redirect_uri:
-          type: string
-        pkce_verifier:
-          type: string
-    _req_shared_Login_ParamsNone:
-      type: object
-      description: Auth login request params for unlisted auth_types (None)
-      nullable: true
     _req_shared_Login_Device:
       required:
         - type
@@ -2684,6 +2703,60 @@ components:
           type: string
         refresh_token:
           type: string
+    _req_shared_CredsEmail:
+      required:
+        - email
+        - password
+      type: object
+      description: Auth login creds for auth_type="email"
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    _req_shared_CredsTwilioPhone:
+      type: object
+      description: Auth login creds for auth_type="twilio_phone"
+      required:
+        - phone
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+    _req_shared_CredsOIDC:
+      type: string
+      description: |
+        Auth login creds for auth_type="oidc" (or variants)
+          - full redirect URI received from OIDC provider
+    _req_shared_CredsAPIKey:
+      type: object
+      description: Auth login creds for auth_type="anonymous"
+      properties:
+        anonymous_id:
+          type: string
+    _req_shared_ParamsEmail:
+      type: object
+      description: Auth login params for auth_type="email"
+      properties:
+        confirm_password:
+          type: string
+          description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+        sign_up:
+          type: boolean
+          default: false
+    _req_shared_ParamsOIDC:
+      type: object
+      description: Auth login params for auth_type="oidc" (or variants)
+      properties:
+        redirect_uri:
+          type: string
+        pkce_verifier:
+          type: string
+    _req_shared_ParamsNone:
+      type: object
+      description: Auth login request params for unlisted auth_types (None)
+      nullable: true
     _req_shared_Profile:
       type: object
       properties:
@@ -2796,8 +2869,8 @@ components:
                       type: string
                     token_type:
                       type: string
-                    redirect_uri:
-                      type: string
+                redirect_uri:
+                  type: string
             - type: object
               description: Auth login response params for auth_type="anonymous"
               properties:
@@ -2889,6 +2962,33 @@ components:
           type: string
     _res_account-exists_Response:
       type: boolean
+    _req_account_auth-type_link_Request:
+      required:
+        - auth_type
+        - app_type_identifier
+        - creds
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - email
+            - twilio_phone
+            - illinois_oidc
+            - username
+        app_type_identifier:
+          type: string
+        creds:
+          anyOf:
+            - $ref: '#/components/schemas/_req_shared_CredsEmail'
+            - $ref: '#/components/schemas/_req_shared_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_req_shared_CredsOIDC'
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/_req_shared_ParamsEmail'
+            - $ref: '#/components/schemas/_req_shared_ParamsOIDC'
+            - $ref: '#/components/schemas/_req_shared_ParamsNone'
     _req_credential_update_Request:
       required:
         - account_auth_type_id
