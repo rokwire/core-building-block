@@ -111,6 +111,10 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
+func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Application, error) {
+	return s.app.admGetApplications(orgID)
+}
+
 ///
 
 //encryptionImpl

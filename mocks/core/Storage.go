@@ -205,8 +205,8 @@ func (_m *Storage) FindApplications() ([]model.Application, error) {
 	return r0, r1
 }
 
-// FindApplicationsOrganizationsByOrgID provides a mock function with given fields: orgID
-func (_m *Storage) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error) {
+// FindApplicationsByOrgID provides a mock function with given fields: orgID
+func (_m *Storage) FindApplicationsByOrgID(orgID string) ([]model.ApplicationOrganization, error) {
 	ret := _m.Called(orgID)
 
 	var r0 []model.ApplicationOrganization
