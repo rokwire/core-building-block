@@ -1514,11 +1514,19 @@ func (sa *Adapter) FindApplicationOrganizations(appID string, orgID string) (*mo
 	return sa.getCachedApplicationOrganization(appID, orgID)
 }
 
-//FindDevice finds a device
-func (sa *Adapter) FindDevice(ID string) (*model.Device, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	var result []model.Device
-	err := sa.db.devices.Find(filter, &result, nil)
+//FindDevice finds a device by device id and account id
+func (sa *Adapter) FindDevice(context TransactionContext, deviceID string, accountID string) (*model.Device, error) {
+	filter := bson.D{primitive.E{Key: "device_id", Value: deviceID},
+		primitive.E{Key: "account_id", Value: accountID}}
+	var result []device
+
+	var err error
+	if context != nil {
+		err = sa.db.devices.FindWithContext(context, filter, &result, nil)
+	} else {
+		err = sa.db.devices.Find(filter, &result, nil)
+	}
+
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)
 	}
@@ -1526,16 +1534,22 @@ func (sa *Adapter) FindDevice(ID string) (*model.Device, error) {
 		//no record
 		return nil, nil
 	}
+	device := result[0]
 
-	deviceRes := result[0]
+	deviceRes := deviceFromStorage(device)
 	return &deviceRes, nil
 }
 
 //InsertDevice inserts a device
-func (sa *Adapter) InsertDevice(device model.Device) (*model.Device, error) {
+func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device) (*model.Device, error) {
 	storageDevice := deviceToStorage(&device)
 
-	_, err := sa.db.devices.InsertOne(storageDevice)
+	var err error
+	if context != nil {
+		_, err = sa.db.devices.InsertOneWithContext(context, storageDevice)
+	} else {
+		_, err = sa.db.devices.InsertOne(storageDevice)
+	}
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeDevice, nil, err)
 	}

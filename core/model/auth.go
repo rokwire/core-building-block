@@ -67,7 +67,7 @@ type LoginSession struct {
 	Identifier      string           //it is the account id(anonymous id for anonymous logins)
 	AccountAuthType *AccountAuthType //it is nil for anonymous logins
 
-	Device Device
+	Device *Device
 
 	IPAddress     string
 	AccessToken   string

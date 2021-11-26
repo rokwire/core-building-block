@@ -533,21 +533,32 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 
 	transaction := func(context storage.TransactionContext) error {
 		///assign device to session and account
-		//device := &model.Device{ID: deviceID, Type: deviceType, OS: *deviceOS}
-		device, err := a.storage.FindDevice(deviceID)
-		if err != nil || device == nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)
-		}
+		var device *model.Device
+		if !anonymous {
+			//1. check if the device exists
+			device, err = a.storage.FindDevice(context, deviceID, sub)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)
+			}
+			if device != nil {
+				//2.1 device exists, so do nothing
+			} else {
+				//2.2 device does not exist, we need to assign it to the account
 
-		insertedDevice, err := a.storage.InsertDevice(*device)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeDevice, nil, err)
+				device, err = a.createDevice(sub, deviceType, deviceOS, deviceID, l)
+				if err != nil {
+					return errors.WrapErrorAction("error creating device", model.TypeDevice, nil, err)
+				}
+				_, err := a.storage.InsertDevice(context, *device)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeDevice, nil, err)
+				}
+			}
 		}
-		device = insertedDevice
 		///
 
 		///create login session entity
-		loginSession, err = a.createLoginSession(anonymous, sub, authType, appOrg, accountAuthType, appType, ipAddress, params, *device, l)
+		loginSession, err = a.createLoginSession(anonymous, sub, authType, appOrg, accountAuthType, appType, ipAddress, params, device, l)
 		if err != nil {
 			return errors.WrapErrorAction("error creating a session", "", nil, err)
 		}
@@ -589,9 +600,21 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 	return loginSession, nil
 }
 
+func (a *Auth) createDevice(accountID string, deviceType string, deviceOS *string, deviceID string, l *logs.Log) (*model.Device, error) {
+	//id
+	idUUID, _ := uuid.NewUUID()
+	id := idUUID.String()
+
+	//account
+	account := model.Account{ID: accountID}
+
+	return &model.Device{ID: id, DeviceID: deviceID, Account: account,
+		Type: deviceType, OS: *deviceOS, DateCreated: time.Now()}, nil
+}
+
 func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.AuthType,
 	appOrg model.ApplicationOrganization, accountAuthType *model.AccountAuthType, appType model.ApplicationType,
-	ipAddress string, params map[string]interface{}, device model.Device, l *logs.Log) (*model.LoginSession, error) {
+	ipAddress string, params map[string]interface{}, device *model.Device, l *logs.Log) (*model.LoginSession, error) {
 
 	//id
 	idUUID, _ := uuid.NewUUID()
