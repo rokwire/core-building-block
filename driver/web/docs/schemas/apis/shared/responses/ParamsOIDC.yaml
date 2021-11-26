@@ -12,5 +12,5 @@ properties:
         type: string
       token_type:
         type: string
-      redirect_uri:
-        type: string
+  redirect_uri:
+    type: string
