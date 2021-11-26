@@ -791,6 +791,95 @@ func (sa *Adapter) UpdateAccountGroups(accountID string, groups []model.AccountG
 	return nil
 }
 
+//InsertAccountAuthType inserts am account auth type
+func (sa *Adapter) InsertAccountAuthType(item model.AccountAuthType) error {
+	storageItem := accountAuthTypeToStorage(item)
+
+	//3. first find the account record
+	filter := bson.M{"_id": item.Account.ID}
+	update := bson.D{
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "auth_types", Value: storageItem},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountAuthType, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+//UpdateAccountAuthType updates account auth type
+func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
+	// transaction
+	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+		err := sessionContext.StartTransaction()
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
+		}
+
+		//1. set time updated to the item
+		now := time.Now()
+		item.DateUpdated = &now
+
+		//2 convert to storage item
+		storageItem := accountAuthTypeToStorage(item)
+
+		//3. first find the account record
+		findFilter := bson.M{"auth_types.id": item.ID}
+		var accounts []account
+		err = sa.db.accounts.FindWithContext(sessionContext, findFilter, &accounts, nil)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeUserAuth, &logutils.FieldArgs{"account auth type id": item.ID}, err)
+		}
+		if len(accounts) == 0 {
+			sa.abortTransaction(sessionContext)
+			return errors.ErrorAction(logutils.ActionFind, "for some reasons account is nil for account auth type", &logutils.FieldArgs{"acccount auth type id": item.ID})
+		}
+		account := accounts[0]
+
+		//4. update the account auth type in the account record
+		accountAuthTypes := account.AuthTypes
+		newAccountAuthTypes := make([]accountAuthType, len(accountAuthTypes))
+		for j, aAuthType := range accountAuthTypes {
+			if aAuthType.ID == storageItem.ID {
+				newAccountAuthTypes[j] = storageItem
+			} else {
+				newAccountAuthTypes[j] = aAuthType
+			}
+		}
+		account.AuthTypes = newAccountAuthTypes
+
+		//4. update the account record
+		replaceFilter := bson.M{"_id": account.ID}
+		err = sa.db.accounts.ReplaceOneWithContext(sessionContext, replaceFilter, account, nil)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionReplace, model.TypeAccount, nil, err)
+		}
+
+		//commit the transaction
+		err = sessionContext.CommitTransaction(sessionContext)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 //FindCredential finds a credential by ID
 func (sa *Adapter) FindCredential(ID string) (*model.Credential, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
