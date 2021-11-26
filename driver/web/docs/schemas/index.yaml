@@ -206,3 +206,9 @@ _req_account-permissions_Request:
 ### account roles API
 _req_account-roles_Request:
   $ref: "./apis/system/account/roles/request/Request.yaml"
+
+### building-blocks
+_req_biulding-blocks_Request:
+  $ref: "./apis/admin/building-blocks/request/Request.yaml"
+_res_biulding-blocks_Request:
+  $ref: "./apis/admin/building-blocks/response/Response.yaml"
