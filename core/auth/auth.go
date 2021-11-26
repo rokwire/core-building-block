@@ -528,27 +528,32 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 	accountAuthType *model.AccountAuthType, appType model.ApplicationType, ipAddress string, deviceType string,
 	deviceOS *string, deviceID string, params map[string]interface{}, l *logs.Log) (*model.LoginSession, error) {
 
-	//device := &model.Device{ID: deviceID, Type: deviceType, OS: *deviceOS}
-	device, err := a.storage.FindDevice(deviceID)
-	if err != nil || device == nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)
-	}
-
-	insertedDevice, err := a.storage.InsertDevice(*device)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeDevice, nil, err)
-	}
-	device = insertedDevice
-
-	//create login session entity
-	loginSession, err := a.createLoginSession(anonymous, sub, authType, appOrg, accountAuthType, appType, ipAddress, params, *device, l)
-	if err != nil {
-		return nil, errors.WrapErrorAction("error creating a session", "", nil, err)
-	}
+	var err error
+	var loginSession *model.LoginSession
 
 	transaction := func(context storage.TransactionContext) error {
+		///assign device to session and account
+		//device := &model.Device{ID: deviceID, Type: deviceType, OS: *deviceOS}
+		device, err := a.storage.FindDevice(deviceID)
+		if err != nil || device == nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)
+		}
+
+		insertedDevice, err := a.storage.InsertDevice(*device)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeDevice, nil, err)
+		}
+		device = insertedDevice
+		///
+
+		///create login session entity
+		loginSession, err = a.createLoginSession(anonymous, sub, authType, appOrg, accountAuthType, appType, ipAddress, params, *device, l)
+		if err != nil {
+			return errors.WrapErrorAction("error creating a session", "", nil, err)
+		}
+
 		//1. store login session
-		err := a.storage.InsertLoginSession(context, *loginSession)
+		err = a.storage.InsertLoginSession(context, *loginSession)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
 		}
@@ -571,6 +576,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 				}
 			}
 		}
+		///
 
 		return nil
 	}
