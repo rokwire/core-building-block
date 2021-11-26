@@ -291,11 +291,13 @@ func (p Profile) GetFullName() string {
 
 //Device represents user devices entity.
 type Device struct {
-	ID   string
+	ID string
+
+	DeviceID string //provided by client
+	Account  Account
+
 	Type string //mobile, web, desktop, other
 	OS   string
-
-	Account Account
 
 	DateCreated time.Time
 	DateUpdated *time.Time
