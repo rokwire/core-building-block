@@ -156,13 +156,13 @@ func (_m *Storage) FindAccountByAuthTypeID(context storage.TransactionContext, i
 	return r0, r1
 }
 
-// FindAccountByID provides a mock function with given fields: context, storageid
-func (_m *Storage) FindAccountByID(context storage.TransactionContext, storageid string) (*model.Account, error) {
-	ret := _m.Called(context, storageid)
+// FindAccountByID provides a mock function with given fields: context, id
+func (_m *Storage) FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error) {
+	ret := _m.Called(context, id)
 
 	var r0 *model.Account
 	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) *model.Account); ok {
-		r0 = rf(context, storageid)
+		r0 = rf(context, id)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Account)
@@ -171,7 +171,7 @@ func (_m *Storage) FindAccountByID(context storage.TransactionContext, storageid
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
-		r1 = rf(context, storageid)
+		r1 = rf(context, id)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -524,6 +524,20 @@ func (_m *Storage) InsertAccount(account model.Account) (*model.Account, error) 
 	return r0, r1
 }
 
+// InsertAccountAuthType provides a mock function with given fields: item
+func (_m *Storage) InsertAccountAuthType(item model.AccountAuthType) error {
+	ret := _m.Called(item)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.AccountAuthType) error); ok {
+		r0 = rf(item)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // InsertCredential provides a mock function with given fields: creds
 func (_m *Storage) InsertCredential(creds *model.Credential) error {
 	ret := _m.Called(creds)
@@ -726,6 +740,20 @@ func (_m *Storage) UpdateAPIKey(apiKey model.APIKey) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(model.APIKey) error); ok {
 		r0 = rf(apiKey)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateAccountAuthType provides a mock function with given fields: item
+func (_m *Storage) UpdateAccountAuthType(item model.AccountAuthType) error {
+	ret := _m.Called(item)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.AccountAuthType) error); ok {
+		r0 = rf(item)
 	} else {
 		r0 = ret.Error(0)
 	}

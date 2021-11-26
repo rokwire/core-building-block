@@ -300,6 +300,29 @@ func (_m *APIs) GetServiceRegistrations(serviceIDs []string) ([]model.ServiceReg
 	return r0, r1
 }
 
+// LinkAccountAuthType provides a mock function with given fields: accountID, authenticationType, appTypeIdentifier, creds, params, l
+func (_m *APIs) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, error) {
+	ret := _m.Called(accountID, authenticationType, appTypeIdentifier, creds, params, l)
+
+	var r0 *string
+	if rf, ok := ret.Get(0).(func(string, string, string, string, string, *logs.Log) *string); ok {
+		r0 = rf(accountID, authenticationType, appTypeIdentifier, creds, params, l)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*string)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string, string, string, string, *logs.Log) error); ok {
+		r1 = rf(accountID, authenticationType, appTypeIdentifier, creds, params, l)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Login provides a mock function with given fields: ipAddress, deviceType, deviceOS, deviceID, authenticationType, creds, apiKey, appTypeIdentifier, orgID, params, profile, preferences, l
 func (_m *APIs) Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string, profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, error) {
 	ret := _m.Called(ipAddress, deviceType, deviceOS, deviceID, authenticationType, creds, apiKey, appTypeIdentifier, orgID, params, profile, preferences, l)
