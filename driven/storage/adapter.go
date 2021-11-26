@@ -577,6 +577,22 @@ func (sa *Adapter) FindAccountByAuthTypeID(context TransactionContext, id string
 }
 
 func (sa *Adapter) findAccount(context TransactionContext, key string, id string) (*model.Account, error) {
+	account, err := sa.findStorageAccount(context, key, id)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	//application organization - from cache
+	appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+	}
+
+	modelAccount := accountFromStorage(*account, sa, *appOrg)
+	return &modelAccount, nil
+}
+
+func (sa *Adapter) findStorageAccount(context TransactionContext, key string, id string) (*account, error) {
 	filter := bson.M{key: id}
 	var accounts []account
 	var err error
@@ -595,15 +611,7 @@ func (sa *Adapter) findAccount(context TransactionContext, key string, id string
 	}
 
 	account := accounts[0]
-
-	//application organization - from cache
-	appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-	}
-
-	modelAccount := accountFromStorage(account, sa, *appOrg)
-	return &modelAccount, nil
+	return &account, nil
 }
 
 //InsertAccount inserts an account
@@ -1542,8 +1550,8 @@ func (sa *Adapter) FindDevice(context TransactionContext, deviceID string, accou
 
 //InsertDevice inserts a device
 func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device) (*model.Device, error) {
+	//insert in devices
 	storageDevice := deviceToStorage(&device)
-
 	var err error
 	if context != nil {
 		_, err = sa.db.devices.InsertOneWithContext(context, storageDevice)
@@ -1552,6 +1560,30 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 	}
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeDevice, nil, err)
+	}
+
+	//insert in account record - we keep a device copy there too
+	account, err := sa.findStorageAccount(context, "_id", device.Account.ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if account == nil {
+		return nil, errors.New("there is no account for id - " + device.Account.ID)
+	}
+	accountDevices := account.Devices
+	if accountDevices == nil {
+		accountDevices = []userDevice{}
+	}
+	accountDevices = append(accountDevices, accountDeviceToStorage(device))
+	account.Devices = accountDevices
+	filter := bson.M{"_id": account.ID}
+	if context != nil {
+		err = sa.db.accounts.ReplaceOneWithContext(context, filter, account, nil)
+	} else {
+		err = sa.db.accounts.ReplaceOne(filter, account, nil)
+	}
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, &logutils.FieldArgs{"_id": account.ID}, nil)
 	}
 
 	return &device, nil
