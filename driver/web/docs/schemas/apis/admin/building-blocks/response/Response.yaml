@@ -6,4 +6,4 @@ properties:
     readOnly: true
     type: string
   services_ids:
-    type: array
+    type: string
