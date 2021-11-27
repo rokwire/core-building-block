@@ -1055,7 +1055,7 @@
           {
             "name": "id",
             "in": "path",
-            "description": "ID of the organization",
+            "description": "ID of the application",
             "required": true,
             "style": "simple",
             "explode": false,
@@ -1069,7 +1069,8 @@
             "description": "successful operation",
             "content": {
               "application/json": {
-                "schema": {
+                "type": "array",
+                "items": {
                   "$ref": "#/components/schemas/_req_biulding-blocks_Request"
                 }
               }
@@ -4336,9 +4337,24 @@
           "id"
         ],
         "properties": {
+          "service_id": {
+            "readOnly": true,
+            "type": "string"
+          }
+        }
+      },
+      "_res_biulding-blocks_Request": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
           "id": {
             "readOnly": true,
             "type": "string"
+          },
+          "services_ids": {
+            "type": "array"
           }
         }
       }

@@ -1,7 +1,7 @@
 required:
   - id
 properties:
-  id:
+  service_id:
     readOnly: true
     type: string
  

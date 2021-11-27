@@ -523,11 +523,6 @@ type ReqAuthorizeServiceRequest struct {
 	ServiceId      string    `json:"service_id"`
 }
 
-// ReqBiuldingBlocksRequest defines model for _req_biulding-blocks_Request.
-type ReqBiuldingBlocksRequest struct {
-	Id string `json:"id"`
-}
-
 // ReqCreateOrganizationRequest defines model for _req_create-Organization_Request.
 type ReqCreateOrganizationRequest struct {
 	Config *OrganizationConfigFields        `json:"config,omitempty"`
