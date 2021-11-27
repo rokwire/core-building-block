@@ -54,6 +54,11 @@ func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroupFields {
 	return result
 }
 
+//AppOrgGroup
+func applicationOrganizationToDef(item model.ApplicationOrganization) model.ApplicationOrganization {
+	return model.ApplicationOrganization{ID: item.Application.ID, ServicesIDs: item.ServicesIDs}
+}
+
 //Organization
 func organizationToDef(item *model.Organization) *Def.OrganizationFields {
 	if item == nil {
