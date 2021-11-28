@@ -1,8 +1,8 @@
 required:
-  - id
+  - app_id
 type: object
 properties:
-  id:
+  app_id:
     readOnly: true
     type: string
   services_ids:

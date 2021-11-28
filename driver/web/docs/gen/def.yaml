@@ -1045,7 +1045,7 @@
           "Admin"
         ],
         "summary": "Get the building blocks",
-        "description": "Gets the building blocks\n\n**Auth:** Requires auth token with `org_admin` \n",
+        "description": "Gets the building blocks\n",
         "security": [
           {
             "bearerAuth": []
@@ -1055,7 +1055,7 @@
           {
             "name": "id",
             "in": "path",
-            "description": "ID of the application",
+            "description": "app_id",
             "required": true,
             "style": "simple",
             "explode": false,
@@ -4334,8 +4334,9 @@
       },
       "_req_biulding-blocks_Request": {
         "required": [
-          "id"
+          "app_id"
         ],
+        "type": "string",
         "properties": {
           "app_id": {
             "readOnly": true,
@@ -4345,11 +4346,11 @@
       },
       "_res_biulding-blocks_Request": {
         "required": [
-          "id"
+          "app_id"
         ],
         "type": "object",
         "properties": {
-          "id": {
+          "app_id": {
             "readOnly": true,
             "type": "string"
           },

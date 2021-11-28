@@ -4,14 +4,12 @@ get:
   summary: Get the building blocks
   description: |
     Gets the building blocks
-
-    **Auth:** Requires auth token with `org_admin` 
   security:
     - bearerAuth: []
   parameters:
   - name: id
     in: path
-    description: ID of the application
+    description: app_id
     required: true
     style: simple
     explode: false

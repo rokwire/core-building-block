@@ -1,7 +1,8 @@
+
 required:
-  - id
+  - app_id
+type: string
 properties:
   app_id:
     readOnly: true
     type: string
- 
