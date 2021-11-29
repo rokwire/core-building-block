@@ -220,6 +220,19 @@ type APIs interface {
 	//		Service reg (*model.ServiceReg): The service registration record for the requested service
 	AuthorizeService(claims tokenauth.Claims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceReg, error)
 
+	//LinkAccountAuthType links new credentials to an existing account.
+	//The authentication method must be one of the supported for the application.
+	//	Input:
+	//		accountID (string): ID of the account to link the creds to
+	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
+	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
+	//		params (string): JSON encoded params defined by specified auth type
+	//		l (*logs.Log): Log object pointer for request
+	//	Returns:
+	//		Message (*string): message
+	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, error)
+
 	//GetScopedAccessToken returns a scoped access token with the requested scopes
 	GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scopes []authorization.Scope) (string, error)
 
@@ -273,9 +286,8 @@ type Storage interface {
 	DeleteExpiredSessions(now *time.Time) error
 
 	//Accounts
-	FindAccountByID(context storage.TransactionContext, storageid string) (*model.Account, error)
 	FindAccount(appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
-	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
+	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccount(account model.Account) (*model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 
@@ -286,6 +298,11 @@ type Storage interface {
 	InsertServiceAccount(account *model.ServiceAccount) error
 	UpdateServiceAccount(context storage.TransactionContext, account *model.ServiceAccount) error
 	DeleteServiceAccount(id string) error
+
+	//AccountAuthTypes
+	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
+	InsertAccountAuthType(item model.AccountAuthType) error
+	UpdateAccountAuthType(item model.AccountAuthType) error
 
 	//Applications
 	FindApplication(ID string) (*model.Application, error)

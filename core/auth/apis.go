@@ -823,6 +823,48 @@ func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
+//LinkAccountAuthType links new credentials to an existing account.
+//The authentication method must be one of the supported for the application.
+//	Input:
+//		accountID (string): ID of the account to link the creds to
+//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
+//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
+//		params (string): JSON encoded params defined by specified auth type
+//		l (*logs.Log): Log object pointer for request
+//	Returns:
+//		message (*string): response message
+func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, error) {
+	message := ""
+
+	account, err := a.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	//validate if the provided auth type is supported by the provided application and organization
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, account.AppOrg.Organization.ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	if authType.IsAnonymous {
+		return nil, errors.New("cannot link anonymous auth type to an account")
+	} else if authType.IsExternal {
+		_, err = a.linkAccountAuthTypeExternal(*account, *authType, *appType, *appOrg, creds, params, l)
+		if err != nil {
+			return nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
+		}
+	} else {
+		message, _, err = a.linkAccountAuthType(*account, *authType, *appType, *appOrg, creds, params, l)
+		if err != nil {
+			return nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
+		}
+	}
+
+	return &message, nil
+}
+
 //GetServiceRegistrations retrieves all service registrations
 func (a *Auth) GetServiceRegistrations(serviceIDs []string) ([]model.ServiceReg, error) {
 	return a.storage.FindServiceRegs(serviceIDs)

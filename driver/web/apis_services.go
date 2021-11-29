@@ -199,6 +199,42 @@ func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request, claims *
 	return l.HttpResponseSuccessJSON(respData)
 }
 
+func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqAccountAuthTypeLinkRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account auth type link request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	//creds
+	requestCreds, err := interfaceToJSON(requestData.Creds)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
+	//params
+	requestParams, err := interfaceToJSON(requestData.Params)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
+	}
+
+	message, err := h.coreAPIs.Auth.LinkAccountAuthType(claims.Subject, string(requestData.AuthType), requestData.AppTypeIdentifier, requestCreds, requestParams, l)
+	if err != nil {
+		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
+	}
+
+	if message != nil {
+		return l.HttpResponseSuccessMessage(*message)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
