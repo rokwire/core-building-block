@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Add multi-factor authentication support [#19](https://github.com/rokwire/core-building-block/issues/19)
+- Handle multiple authentication methods linking to one account [#64](https://github.com/rokwire/core-building-block/issues/64)
 
 ### Security
 - Return verification status on account exists endpoint [#330](https://github.com/rokwire/core-building-block/issues/330)

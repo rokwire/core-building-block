@@ -89,61 +89,65 @@ DeviceFields:
 
 #### requests
 _req_shared_Login:
-  $ref: "../schemas/apis/shared/requests/login/Request.yaml"
+  $ref: "./apis/shared/requests/login/Request.yaml"
 _req_shared_Login_Mfa:
   $ref: "../schemas/apis/shared/requests/login/MfaRequest.yaml"
-_req_shared_Login_CredsEmail:
-  $ref: "../schemas/apis/shared/requests/login/CredsEmail.yaml"
-_req_shared_Login_CredsTwilioPhone:
-  $ref: "../schemas/apis/shared/requests/login/CredsTwilioPhone.yaml"
-_req_shared_Login_CredsOIDC:
-  $ref: "../schemas/apis/shared/requests/login/CredsOIDC.yaml"
-_req_shared_Login_CredsAPIKey:
-  $ref: "../schemas/apis/shared/requests/login/CredsAPIKey.yaml"
-_req_shared_Login_ParamsEmail:
-  $ref: "../schemas/apis/shared/requests/login/ParamsEmail.yaml"
-_req_shared_Login_ParamsOIDC:
-  $ref: "../schemas/apis/shared/requests/login/ParamsOIDC.yaml"
-_req_shared_Login_ParamsNone:
-  $ref: "../schemas/apis/shared/requests/login/ParamsNone.yaml"
 _req_shared_Login_Device:
-  $ref: "../schemas/apis/shared/requests/login/Device.yaml"
+  $ref: "./apis/shared/requests/login/Device.yaml"
 _req_shared_LoginUrl:
-  $ref: "../schemas/apis/shared/requests/login-url/Request.yaml"
+  $ref: "./apis/shared/requests/login-url/Request.yaml"
 _req_shared_Refresh:
-  $ref: "../schemas/apis/shared/requests/refresh/Request.yaml"
+  $ref: "./apis/shared/requests/refresh/Request.yaml"
 _req_shared_Mfa:
-  $ref: "../schemas/apis/shared/requests/mfa/Request.yaml"
+  $ref: "./apis/shared/requests/mfa/Request.yaml"
+
+_req_shared_CredsEmail:
+  $ref: "./apis/shared/requests/CredsEmail.yaml"
+_req_shared_CredsTwilioPhone:
+  $ref: "./apis/shared/requests/CredsTwilioPhone.yaml"
+_req_shared_CredsOIDC:
+  $ref: "./apis/shared/requests/CredsOIDC.yaml"
+_req_shared_CredsAPIKey:
+  $ref: "./apis/shared/requests/CredsAPIKey.yaml"
+_req_shared_ParamsEmail:
+  $ref: "./apis/shared/requests/ParamsEmail.yaml"
+_req_shared_ParamsOIDC:
+  $ref: "./apis/shared/requests/ParamsOIDC.yaml"
+_req_shared_ParamsNone:
+  $ref: "./apis/shared/requests/ParamsNone.yaml"
 _req_shared_Profile:
-  $ref: "../schemas/apis/shared/requests/Profile.yaml"
+  $ref: "./apis/shared/requests/Profile.yaml"
 _req_shared_ProfileNullable:
-  $ref: "../schemas/apis/shared/requests/ProfileNullable.yaml"
+  $ref: "./apis/shared/requests/ProfileNullable.yaml"
 _req_shared_ParamsSetEmailCredential:
-  $ref: "../schemas/apis/shared/requests/ParamsSetEmailCredential.yaml"
+  $ref: "./apis/shared/requests/ParamsSetEmailCredential.yaml"
 
 #### responses
-_res_shared_LoginUrl:
-  $ref: "../schemas/apis/shared/responses/login-url/Response.yaml"
 _res_shared_Login:
-  $ref: "../schemas/apis/shared/responses/login/Response.yaml"
+  $ref: "./apis/shared/responses/login/Response.yaml"
 _res_shared_Login_Mfa:
-  $ref: "../schemas/apis/shared/responses/login/MfaResponse.yaml"
+  $ref: "./apis/shared/responses/login/MfaResponse.yaml"
+_res_shared_LoginUrl:
+  $ref: "./apis/shared/responses/login-url/Response.yaml"
 _res_shared_Refresh:
-  $ref: "../schemas/apis/shared/responses/refresh/Response.yaml"
+  $ref: "./apis/shared/responses/refresh/Response.yaml"
 _res_shared_Account:
-  $ref: "../schemas/apis/shared/responses/Account.yaml"
+  $ref: "./apis/shared/responses/Account.yaml"
 _res_shared_Mfa:
-  $ref: "../schemas/apis/shared/responses/mfa/Response.yaml"
+  $ref: "./apis/shared/responses/mfa/Response.yaml"
 _res_shared_RokwireToken:
-  $ref: "../schemas/apis/shared/responses/RokwireToken.yaml"
-
+  $ref: "./apis/shared/responses/RokwireToken.yaml"
 ### end - shared requests and responses
 
-### account-exists API
+### account exists API
 _req_account-exists_Request:
-  $ref: "./apis/services/account-exists/request/Request.yaml"
+  $ref: "./apis/services/account/exists/request/Request.yaml"
 _res_account-exists_Response:
-  $ref: "./apis/services/account-exists/response/Response.yaml"
+  $ref: "./apis/services/account/exists/response/Response.yaml"
+
+### account auth-type link API
+_req_account_auth-type_link_Request:
+  $ref: "./apis/services/account/auth-type/link/request/Request.yaml"
 
 ### credential_update API
 _req_credential_update_Request:
