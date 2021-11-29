@@ -205,25 +205,6 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-func (h AdminApisHandler) adminGetBuildingBlocks(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	appID := r.URL.Query().Get("app_id")
-	if appID == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
-	}
-
-	serviceID, err := h.coreAPIs.Administration.AdmGetServiceIDs(claims.OrgID, appID)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
-	}
-
-	responseData := applicationOrganizationToDef(*serviceID)
-	data, err := json.Marshal(responseData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, false)
-	}
-	return l.HttpResponseSuccessJSON(data)
-}
-
 //NewAdminApisHandler creates new admin rest Handler instance
 func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
 	return AdminApisHandler{coreAPIs: coreAPIs}

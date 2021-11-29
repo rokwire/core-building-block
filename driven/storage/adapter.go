@@ -1514,19 +1514,6 @@ func (sa *Adapter) FindApplicationOrganizations(appID string, orgID string) (*mo
 	return sa.getCachedApplicationOrganization(appID, orgID)
 }
 
-//FindServiceIDs finds application serviceIDs
-func (sa *Adapter) FindServiceIDs(appID string, orgID string) (*model.ApplicationOrganization, error) {
-	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
-		primitive.E{Key: "org_id", Value: orgID}}
-	var result *model.ApplicationOrganization
-	err := sa.db.applicationsOrganizations.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
-	}
-
-	return result, nil
-}
-
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records
