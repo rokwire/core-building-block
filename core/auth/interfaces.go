@@ -103,6 +103,7 @@ type APIs interface {
 	//		params (string): JSON encoded params defined by specified auth type
 	//		profile (Profile): Account profile
 	//		preferences (map): Account preferences
+	//		admin (bool): Is this an admin login?
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		Message (*string): message
@@ -115,7 +116,7 @@ type APIs interface {
 	//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
 	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
 		authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
-		profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
+		profile model.Profile, preferences map[string]interface{}, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
 
 	//AccountExists checks if a user is already registered
 	//The authentication method must be one of the supported for the application.

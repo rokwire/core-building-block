@@ -1259,12 +1259,16 @@ paths:
         '500':
           description: Internal error
   /admin/auth/app-token:
-    post:
+    get:
       tags:
         - Admin
       summary: App token
       description: |
         Retrieve an admin token for the specified application
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
       parameters:
         - name: app_id
           in: query

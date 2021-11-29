@@ -45,6 +45,7 @@ func (a *Auth) GetHost() string {
 //		params (string): JSON encoded params defined by specified auth type
 //		profile (Profile): Account profile
 //		preferences (map): Account preferences
+//		admin (bool): Is this an admin login?
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		Message (*string): message
@@ -57,13 +58,20 @@ func (a *Auth) GetHost() string {
 //		MFA types ([]model.MFAType): list of MFA types account is enrolled in
 func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
 	authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
-	profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error) {
+	profile model.Profile, preferences map[string]interface{}, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	if appOrg.Application.Admin != admin {
+		if admin {
+			return nil, nil, nil, errors.New("use services login endpoint")
+		}
+		return nil, nil, nil, errors.New("use admin login endpoint")
 	}
 
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID

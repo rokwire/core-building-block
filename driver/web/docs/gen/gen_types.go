@@ -907,8 +907,8 @@ type PostAdminAccountMfaParams struct {
 	Type string `json:"type"`
 }
 
-// PostAdminAuthAppTokenParams defines parameters for PostAdminAuthAppToken.
-type PostAdminAuthAppTokenParams struct {
+// GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.
+type GetAdminAuthAppTokenParams struct {
 
 	// The application ID of the token to return
 	AppId string `json:"app_id"`
