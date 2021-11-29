@@ -1,5 +1,12 @@
 package core
 
+import (
+	"core-building-block/core/model"
+
+	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logutils"
+)
+
 func (app *application) admGetTest() string {
 	return "Admin - test"
 }
@@ -153,4 +160,13 @@ func (app *application) admGetTestModel() string {
 	return res
 	*/
 	return ""
+}
+
+func (app *application) admGetBuildingBlocks(appID string) (*model.ApplicationOrganization, error) {
+	serviceID, err := app.storage.FindServiceID(appID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	return serviceID, nil
 }
