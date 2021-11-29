@@ -1066,7 +1066,7 @@ paths:
   /admin/auth/mfa:
     post:
       tags:
-        - Services
+        - Admin
       summary: MFA
       description: |
         Verify multi-factor authentication credentials to complete login
@@ -1157,7 +1157,7 @@ paths:
   /admin/auth/verify-mfa:
     post:
       tags:
-        - Services
+        - Admin
       summary: MFA
       description: |
         Verify multi-factor authentication credentials to complete MFA registration
