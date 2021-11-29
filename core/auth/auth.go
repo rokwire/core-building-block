@@ -31,6 +31,8 @@ const (
 	authKeyAlg     string = "RS256"
 	rokwireKeyword string = "ROKWIRE"
 
+	rokwireTokenAud string = "rokwire"
+
 	typeMail              logutils.MessageDataType = "mail"
 	typeAuthType          logutils.MessageDataType = "auth type"
 	typeExternalAuthType  logutils.MessageDataType = "external auth type"
@@ -626,7 +628,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, name, email, phone, "rokwire", orgID, appID, authType.Code, nil, anonymous, true)
+	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType.Code, nil, anonymous, true, appOrg.Application.Admin)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -1074,8 +1076,26 @@ func (a *Auth) buildRefreshToken() (string, *time.Time, error) {
 	return newToken, &expireTime, nil
 }
 
+//getScopedAccessToken returns a scoped access token with the requested scopes
+func (a *Auth) getScopedAccessToken(claims tokenauth.Claims, serviceID string, scopes []authorization.Scope) (string, error) {
+	scopeStrings := []string{}
+	services := []string{serviceID}
+	for _, scope := range scopes {
+		scopeStrings = append(scopeStrings, scope.String())
+		if !authutils.ContainsString(services, scope.ServiceID) {
+			services = append(services, scope.ServiceID)
+		}
+	}
+
+	aud := strings.Join(services, ",")
+	scope := strings.Join(scopeStrings, " ")
+
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false)
+	return a.buildAccessToken(scopedClaims, "", scope)
+}
+
 func (a *Auth) getStandardClaims(sub string, uid string, name string, email string, phone string, aud string, orgID string, appID string,
-	authType string, exp *int64, anonymous bool, authenticated bool) tokenauth.Claims {
+	authType string, exp *int64, anonymous bool, authenticated bool, admin bool) tokenauth.Claims {
 	return tokenauth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			Audience:  aud,
@@ -1083,7 +1103,8 @@ func (a *Auth) getStandardClaims(sub string, uid string, name string, email stri
 			ExpiresAt: a.getExp(exp),
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    a.host,
-		}, OrgID: orgID, AppID: appID, AuthType: authType, UID: uid, Name: name, Email: email, Phone: phone, Anonymous: anonymous, Authenticated: authenticated,
+		}, OrgID: orgID, AppID: appID, AuthType: authType, UID: uid, Name: name, Email: email, Phone: phone,
+		Anonymous: anonymous, Authenticated: authenticated, Admin: admin,
 	}
 }
 

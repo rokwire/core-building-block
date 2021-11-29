@@ -271,8 +271,8 @@ type APIs interface {
 	//		Message (*string): message
 	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, error)
 
-	//GetScopedAccessToken returns a scoped access token with the requested scopes
-	GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scopes []authorization.Scope) (string, error)
+	//GetAdminToken returns an admin token for the specified application
+	GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error)
 
 	//GetAuthKeySet generates a JSON Web Key Set for auth service registration
 	GetAuthKeySet() (*model.JSONWebKeySet, error)

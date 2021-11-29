@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rokwire/core-auth-library-go/authorization"
-	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -288,7 +287,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, name, email, phone, "rokwire", orgID, appID, authType, nil, anonymous, false)
+	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, nil, anonymous, false, loginSession.AppOrg.Application.Admin)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
@@ -916,7 +915,7 @@ func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, appro
 		}
 	}
 
-	token, err := a.GetScopedAccessToken(claims, serviceID, authorization.Scopes)
+	token, err := a.getScopedAccessToken(claims, serviceID, authorization.Scopes)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction("build", logutils.TypeToken, nil, err)
 	}
@@ -924,22 +923,17 @@ func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, appro
 	return token, authorization.Scopes, nil, nil
 }
 
-//GetScopedAccessToken returns a scoped access token with the requested scopes
-func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scopes []authorization.Scope) (string, error) {
-	scopeStrings := []string{}
-	services := []string{serviceID}
-	for _, scope := range scopes {
-		scopeStrings = append(scopeStrings, scope.String())
-		if !authutils.ContainsString(services, scope.ServiceID) {
-			services = append(services, scope.ServiceID)
-		}
+//GetAdminToken returns an admin token for the specified application
+func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error) {
+	//verify that the provided appID is valid for the organization
+	_, err := a.storage.FindApplicationOrganizations(appID, claims.OrgID)
+	if err != nil {
+		return "", errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": claims.OrgID, "app_id": appID}, err)
 	}
 
-	aud := strings.Join(services, ",")
-	scope := strings.Join(scopeStrings, " ")
-
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, nil, claims.Anonymous, claims.Authenticated)
-	return a.buildAccessToken(scopedClaims, "", scope)
+	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, claims.OrgID, appID, claims.AuthType,
+		&claims.ExpiresAt, false, false, true)
+	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }
 
 //LinkAccountAuthType links new credentials to an existing account.
