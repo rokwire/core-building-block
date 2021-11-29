@@ -1039,7 +1039,7 @@
         }
       }
     },
-    "/admin/{id}/building-blocks": {
+    "/admin/application/{app_id}/building-blocks": {
       "get": {
         "tags": [
           "Admin"
@@ -1053,7 +1053,7 @@
         ],
         "parameters": [
           {
-            "name": "id",
+            "name": "app_id",
             "in": "path",
             "description": "app_id",
             "required": true,
@@ -1069,9 +1069,9 @@
             "description": "successful operation",
             "content": {
               "application/json": {
-                "type": "array",
+                "type": "string",
                 "items": {
-                  "$ref": "#/components/schemas/_req_biulding-blocks_Request"
+                  "$ref": "#/components/schemas/_res_shared_BuildingBlocks"
                 }
               }
             }
@@ -3697,6 +3697,22 @@
           }
         }
       },
+      "_res_shared_BuildingBlocks": {
+        "required": [
+          "id",
+          "host"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "readOnly": true,
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          }
+        }
+      },
       "_req_account-exists_Request": {
         "required": [
           "auth_type",
@@ -4329,33 +4345,6 @@
             "items": {
               "type": "string"
             }
-          }
-        }
-      },
-      "_req_biulding-blocks_Request": {
-        "required": [
-          "app_id"
-        ],
-        "type": "string",
-        "properties": {
-          "app_id": {
-            "readOnly": true,
-            "type": "string"
-          }
-        }
-      },
-      "_res_biulding-blocks_Request": {
-        "required": [
-          "app_id"
-        ],
-        "type": "object",
-        "properties": {
-          "app_id": {
-            "readOnly": true,
-            "type": "string"
-          },
-          "services_ids": {
-            "type": "string"
           }
         }
       }

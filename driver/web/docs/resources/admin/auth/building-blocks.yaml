@@ -7,7 +7,7 @@ get:
   security:
     - bearerAuth: []
   parameters:
-  - name: id
+  - name: app_id
     in: path
     description: app_id
     required: true
@@ -20,9 +20,9 @@ get:
       description: successful operation
       content:
         application/json:
-            type: array
+            type: string
             items: 
-              $ref: "../../../schemas/apis/admin/building-blocks/request/Request.yaml"
+              $ref: "../../../schemas/apis/shared/responses/building-blocks/Response.yaml"
     400:
       description: Bad request
     401:

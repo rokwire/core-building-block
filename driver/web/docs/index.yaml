@@ -67,7 +67,7 @@ paths:
     $ref: "./resources/admin/auth/refresh.yaml"
   /admin/auth/login-url:
     $ref: "./resources/admin/auth/login-url.yaml"
-  /admin/{id}/building-blocks:
+  /admin/application/{app_id}/building-blocks:
     $ref: "./resources/admin/auth/building-blocks.yaml"
 
   #enc

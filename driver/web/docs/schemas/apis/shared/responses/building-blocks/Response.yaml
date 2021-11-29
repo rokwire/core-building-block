@@ -1,9 +1,10 @@
 required:
-  - app_id
+  - id
+  - host
 type: object
 properties:
-  app_id:
+  id:
     readOnly: true
     type: string
-  services_ids:
+  host:
     type: string

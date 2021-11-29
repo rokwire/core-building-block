@@ -129,6 +129,8 @@ _res_shared_Account:
   $ref: "./apis/shared/responses/Account.yaml"
 _res_shared_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
+_res_shared_BuildingBlocks:
+  $ref: "./apis/shared/responses/building-blocks/Response.yaml"
 ### end - shared requests and responses
 
 ### account exists API
@@ -207,8 +209,3 @@ _req_account-permissions_Request:
 _req_account-roles_Request:
   $ref: "./apis/system/account/roles/request/Request.yaml"
 
-### building-blocks
-_req_biulding-blocks_Request:
-  $ref: "./apis/admin/building-blocks/request/Request.yaml"
-_res_biulding-blocks_Request:
-  $ref: "./apis/admin/building-blocks/response/Response.yaml"
