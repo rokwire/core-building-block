@@ -11,12 +11,13 @@ func accountFromStorage(item account, sa *Adapter, appOrg model.ApplicationOrgan
 	roles := accountRolesFromStorage(item.Roles, appOrg)
 	groups := accountGroupsFromStorage(item.Groups, appOrg)
 	authTypes := accountAuthTypesFromStorage(item.AuthTypes)
+	mfaTypes := mfaTypesFromStorage(item.MFATypes)
 	profile := profileFromStorage(item.Profile)
 	devices := accountDevicesFromStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 	return model.Account{ID: id, AppOrg: appOrg, Permissions: permissions,
-		Roles: roles, Groups: groups, AuthTypes: authTypes, Preferences: item.Preferences, Profile: profile,
+		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile,
 		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
@@ -27,13 +28,14 @@ func accountToStorage(item *model.Account) *account {
 	roles := accountRolesToStorage(item.Roles)
 	groups := accountGroupsToStorage(item.Groups)
 	authTypes := accountAuthTypesToStorage(item.AuthTypes)
+	mfaTypes := mfaTypesToStorage(item.MFATypes)
 	profile := profileToStorage(item.Profile)
 	devices := accountDevicesToStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
 	return &account{ID: id, AppOrgID: appOrgID, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
-		Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+		MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountDevicesFromStorage(item account) []model.Device {
@@ -75,9 +77,8 @@ func accountAuthTypeFromStorage(item accountAuthType) model.AccountAuthType {
 		credential = &model.Credential{ID: *item.CredentialID}
 	}
 	active := item.Active
-	active2FA := item.Active2FA
 	return model.AccountAuthType{ID: id, AuthType: authType, Identifier: identifier, Params: params, Credential: credential,
-		Active: active, Active2FA: active2FA, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Active: active, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func accountAuthTypesFromStorage(items []accountAuthType) []model.AccountAuthType {
@@ -98,7 +99,7 @@ func accountAuthTypeToStorage(item model.AccountAuthType) accountAuthType {
 		credentialID = &item.Credential.ID
 	}
 	return accountAuthType{ID: item.ID, AuthTypeID: item.AuthType.ID, AuthTypeCode: item.AuthType.Code, Identifier: item.Identifier,
-		Params: item.Params, CredentialID: credentialID, Active: item.Active, Active2FA: item.Active2FA, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Params: item.Params, CredentialID: credentialID, Active: item.Active, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func accountAuthTypesToStorage(items []model.AccountAuthType) []accountAuthType {
@@ -241,4 +242,39 @@ func credentialToStorage(item *model.Credential) *credential {
 	}
 	return &credential{ID: item.ID, AuthTypeID: item.AuthType.ID, AccountsAuthTypes: accountAuthTypes, Verified: item.Verified,
 		Value: item.Value, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+//MFA
+func mfaTypesFromStorage(items []mfaType) []model.MFAType {
+	res := make([]model.MFAType, len(items))
+	for i, mfa := range items {
+		res[i] = mfaTypeFromStorage(mfa)
+	}
+	return res
+}
+
+func mfaTypeFromStorage(item mfaType) model.MFAType {
+	return model.MFAType{ID: item.ID, Type: item.Type, Verified: item.Verified, Params: item.Params, DateCreated: item.DateCreated,
+		DateUpdated: item.DateUpdated}
+}
+
+func mfaTypesToStorage(items []model.MFAType) []mfaType {
+	res := make([]mfaType, len(items))
+	for i, mfa := range items {
+		res[i] = mfaTypeToStorage(&mfa)
+	}
+	return res
+}
+
+func mfaTypeToStorage(item *model.MFAType) mfaType {
+	//don't store totp qr code
+	params := make(map[string]interface{})
+	for k, v := range item.Params {
+		if k != "qr_code" {
+			params[k] = v
+		}
+	}
+
+	return mfaType{ID: item.ID, Type: item.Type, Verified: item.Verified, Params: params, DateCreated: item.DateCreated,
+		DateUpdated: item.DateUpdated}
 }
