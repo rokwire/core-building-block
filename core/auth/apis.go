@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"bytes"
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"encoding/json"
@@ -591,11 +592,16 @@ func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, str
 	if err != nil {
 		return nil, "", errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
 	}
+	r.Body.Close()
 
 	var requestData model.ServiceAccountTokenRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return nil, "", errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("service account access token request"), nil, err)
+	}
+
+	if requestData.Creds == nil {
+		return nil, "", errors.ErrorData(logutils.StatusMissing, "service account creds", nil)
 	}
 
 	serviceAuthType, err := a.getServiceAuthTypeImpl(requestData.AuthType)
@@ -604,7 +610,8 @@ func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, str
 		return nil, "", errors.WrapErrorAction("error getting service auth type on get service access token", "", nil, err)
 	}
 
-	message, account, err := serviceAuthType.checkCredentials(r, &requestData, l)
+	r.Body = ioutil.NopCloser(bytes.NewReader(data))
+	message, account, err := serviceAuthType.checkCredentials(r, requestData.Creds, l)
 	if err != nil {
 		return message, "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}

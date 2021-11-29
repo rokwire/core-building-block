@@ -26,9 +26,9 @@ post:
     200:
       description: Success
       content:
-        text/plain:
+        application/json:
           schema:
-            type: string
+            $ref: "../../schemas/apis/shared/responses/RokwireToken.yaml"
     400:
       description: Bad request
     401:

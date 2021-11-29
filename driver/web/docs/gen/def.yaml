@@ -1158,9 +1158,9 @@ paths:
         '200':
           description: Success
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/_res_shared_RokwireToken'
         '400':
           description: Bad request
         '401':

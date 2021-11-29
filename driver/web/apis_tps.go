@@ -3,6 +3,7 @@ package web
 import (
 	"core-building-block/core"
 	"core-building-block/core/model"
+	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -64,7 +65,15 @@ func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, clai
 		return l.HttpResponseError("Error getting access token", err, http.StatusInternalServerError, true)
 	}
 
-	return l.HttpResponseSuccessMessage(accessToken)
+	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
+	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, TokenType: &tokenType}
+
+	respData, err := json.Marshal(rokwireToken)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service access token response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
 }
 
 //NewTPSApisHandler creates new tps Handler instance

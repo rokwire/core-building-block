@@ -124,6 +124,8 @@ func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, creds inter
 			if err == nil {
 				return nil, account, nil
 			}
+
+			l.WarnError("error checking request signature", err)
 		}
 	}
 
