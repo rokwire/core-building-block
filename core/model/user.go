@@ -18,6 +18,8 @@ const (
 	TypeAccountPermissions logutils.MessageDataType = "account permissions"
 	//TypeAccountRoles account roles
 	TypeAccountRoles logutils.MessageDataType = "account roles"
+	//TypeMFAType mfa type
+	TypeMFAType logutils.MessageDataType = "mfa type"
 	//TypeAccountGroups account groups
 	TypeAccountGroups logutils.MessageDataType = "account groups"
 	//TypeProfile profile
@@ -41,6 +43,8 @@ type Account struct {
 	Groups      []AccountGroup
 
 	AuthTypes []AccountAuthType
+
+	MFATypes []MFAType
 
 	Preferences map[string]interface{}
 	Profile     Profile //one account has one profile, one profile can be shared between many accounts
@@ -127,6 +131,17 @@ func (a Account) GetPermissionsMap() map[string]Permission {
 		}
 	}
 	return permissionsMap
+}
+
+//GetVerifiedMFATypes returns a list of only verified MFA types for this account
+func (a Account) GetVerifiedMFATypes() []MFAType {
+	mfaTypes := make([]MFAType, 0)
+	for _, mfa := range a.MFATypes {
+		if mfa.Verified {
+			mfaTypes = append(mfaTypes, mfa)
+		}
+	}
+	return mfaTypes
 }
 
 //GetPermission returns the permission for an ID if the account has it
@@ -235,8 +250,7 @@ type AccountAuthType struct {
 
 	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
 
-	Active    bool
-	Active2FA bool
+	Active bool
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -250,6 +264,18 @@ type Credential struct {
 	AccountsAuthTypes []AccountAuthType //one credential can be used for more than one account auth type
 	Verified          bool
 	Value             map[string]interface{} //credential value
+
+	DateCreated time.Time
+	DateUpdated *time.Time
+}
+
+//MFAType represents a MFA type used by an account
+type MFAType struct {
+	ID   string
+	Type string
+
+	Verified bool
+	Params   map[string]interface{} //mfa type params
 
 	DateCreated time.Time
 	DateUpdated *time.Time
