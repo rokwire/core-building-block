@@ -21,7 +21,8 @@ import (
 
 const (
 	//AuthTypeTwilioPhone phone auth type
-	AuthTypeTwilioPhone      string                   = "twilio_phone"
+	AuthTypeTwilioPhone string = "twilio_phone"
+
 	servicesPathPart                                  = "https://verify.twilio.com/v2/Services"
 	verificationsPathPart                             = "Verifications"
 	verificationCheckPart                             = "VerificationCheck"
@@ -269,6 +270,10 @@ func (a *twilioPhoneAuthImpl) getUserIdentifier(creds string) (string, error) {
 
 func (a *twilioPhoneAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, errors.New(logutils.Unimplemented)
+}
+
+func (a *twilioPhoneAuthImpl) sendVerifyCredential(credential *model.Credential, l *logs.Log) error {
+	return nil
 }
 
 func (a *twilioPhoneAuthImpl) restartCredentialVerification(credential *model.Credential, l *logs.Log) error {

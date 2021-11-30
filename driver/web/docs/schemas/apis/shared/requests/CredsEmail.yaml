@@ -8,3 +8,7 @@ properties:
     type: string
   password:
     type: string
+  mfa_code:
+    type: string
+  mfa_type:
+    type: string
