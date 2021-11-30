@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -303,6 +304,28 @@ func (h AdminApisHandler) adminVerifyMFA(l *logs.Log, r *http.Request, claims *t
 	}
 
 	return l.HttpResponseSuccessJSON(response)
+}
+
+func (h AdminApisHandler) adminGetBuildingBlocks(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	appID := params["app_id"]
+	if len(appID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	}
+
+	var getServiceID Def.ApplicationOrganization
+
+	//serviceIDs
+	serviceIDs, err := interfaceToJSON(getServiceID.ServicesIds)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeServiceIDs, nil, err, http.StatusBadRequest, true)
+	}
+
+	data, err := json.Marshal(serviceIDs)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance

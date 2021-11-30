@@ -24,6 +24,8 @@ const (
 	TypeApplicationType logutils.MessageDataType = "application type"
 	//TypeApplicationUserRelations ...
 	TypeApplicationUserRelations logutils.MessageDataType = "app user relations"
+	//TypeServiceIDs ...
+	TypeServiceIDs logutils.MessageDataType = "application organization serviceIDs"
 )
 
 //Permission represents permission entity
