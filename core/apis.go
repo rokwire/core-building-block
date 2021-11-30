@@ -111,10 +111,6 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
-func (s *administrationImpl) AdmGetBuildingBlocks(appID string) (*model.ApplicationOrganization, error) {
-	return s.app.admGetBuildingBlocks(appID)
-}
-
 ///
 
 //encryptionImpl
