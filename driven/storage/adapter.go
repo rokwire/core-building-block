@@ -624,14 +624,19 @@ func (sa *Adapter) findAccount(context TransactionContext, key string, id string
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	//application organization - from cache
-	appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+	var modelAccount *model.Account
+	if account != nil {
+		//application organization - from cache
+		appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		}
+
+		modelAccountVal := accountFromStorage(*account, sa, *appOrg)
+		modelAccount = &modelAccountVal
 	}
 
-	modelAccount := accountFromStorage(*account, sa, *appOrg)
-	return &modelAccount, nil
+	return modelAccount, nil
 }
 
 func (sa *Adapter) findStorageAccount(context TransactionContext, key string, id string) (*account, error) {
