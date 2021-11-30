@@ -1,8 +1,10 @@
 package utils
 
 import (
+	crand "crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"math/rand"
 	"net/http"
@@ -26,6 +28,18 @@ const (
 	ErrorStatusVerificationExpired string = "verification-expired"
 )
 
+// SetRandomSeed sets the seed for random number generation
+func SetRandomSeed() error {
+	seed := make([]byte, 8)
+	_, err := crand.Read(seed)
+	if err != nil {
+		return errors.WrapErrorAction("generating", "math/rand seed", nil, err)
+	}
+
+	rand.Seed(int64(binary.LittleEndian.Uint64(seed)))
+	return nil
+}
+
 // GenerateRandomBytes returns securely generated random bytes
 func GenerateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
@@ -41,6 +55,11 @@ func GenerateRandomBytes(n int) ([]byte, error) {
 func GenerateRandomString(s int) (string, error) {
 	b, err := GenerateRandomBytes(s)
 	return base64.URLEncoding.EncodeToString(b), err
+}
+
+// GenerateRandomInt returns a random integer between 0 and max
+func GenerateRandomInt(max int) int {
+	return rand.Intn(max)
 }
 
 // ConvertToJSON converts to json
