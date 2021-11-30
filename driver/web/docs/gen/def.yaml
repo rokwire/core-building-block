@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.13.0
+  version: 1.14.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -50,7 +50,7 @@ paths:
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
-                      "email": "test@test.com", 
+                      "email": "test@example.com", 
                       "password": "test12345"
                     },
                     "device": {
@@ -68,7 +68,7 @@ paths:
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
-                      "email": "test@test.com", 
+                      "email": "test@example.com", 
                       "password": "test12345"
                     },
                     "params":{
@@ -190,7 +190,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Login'
+                anyOf:
+                  - $ref: '#/components/schemas/_res_shared_Login_Mfa'
+                  - $ref: '#/components/schemas/_res_shared_Login'
         '400':
           description: Bad request
         '401':
@@ -220,6 +222,43 @@ paths:
                       - `internal-server-error`: An undefined error occurred
                   message:
                     type: string
+  /services/auth/mfa:
+    post:
+      tags:
+        - Services
+      summary: MFA
+      description: |
+        Verify multi-factor authentication credentials to complete login
+      parameters:
+        - name: state
+          in: query
+          description: Login state
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: |
+          MFA credentials and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_shared_Login_Mfa'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_shared_Login'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/auth/refresh:
     post:
       tags:
@@ -423,7 +462,37 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/auth/account-exists:
+  /services/auth/verify-mfa:
+    post:
+      tags:
+        - Services
+      summary: MFA
+      description: |
+        Verify multi-factor authentication credentials to complete MFA registration
+      requestBody:
+        description: |
+          MFA credentials and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_shared_Mfa'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/account/exists:
     post:
       tags:
         - Services
@@ -445,6 +514,80 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/_res_account-exists_Response'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/account/auth-type/link:
+    post:
+      tags:
+        - Services
+      summary: Link credentials
+      description: |
+        Link credentials to an existing account
+
+        **Auth:** Requires "authenticated" auth token
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_account_auth-type_link_Request'
+            examples:
+              email-sign_up:
+                summary: Email
+                value: |
+                  {
+                    "auth_type": "email",
+                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": {
+                      "email": "test@example.com", 
+                      "password": "test12345"
+                    },
+                    "params":{
+                        "confirm_password": "test12345"
+                    }
+                  }
+              phone:
+                summary: Phone
+                value: |
+                  {
+                    "auth_type": "twilio_phone",
+                    "app_type_identifier": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": {
+                      "phone": "+12223334444"
+                    }
+                  }
+              illinois_oidc:
+                summary: Illinois OIDC
+                value: |
+                  {
+                    "auth_type": "illinois_oidc",
+                    "app_type_identifier": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
+                    "params": {
+                      "redirect_uri": "https://redirect.example.com",
+                      "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                    }
+                  }
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -599,6 +742,105 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/account/mfa:
+    get:
+      tags:
+        - Services
+      summary: Get account MFA types
+      description: |
+        Get MFA types set up for an account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/_res_shared_Mfa'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      tags:
+        - Services
+      summary: Enroll in MFA type
+      description: |
+        Add MFA type to an account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          MFA enrollment params
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_shared_Mfa'
+            examples:
+              email:
+                summary: Enroll in email MFA
+                value: |
+                  {
+                    "identifier": "test@test.com",
+                    "type": "email"
+                  }
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_shared_Mfa'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      tags:
+        - Services
+      summary: Remove MFA type
+      description: |
+        Remove MFA type from an account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          MFA params
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_shared_Mfa'
+            examples:
+              email:
+                summary: Unenroll in email MFA
+                value: |
+                  {
+                    "identifier": "test@test.com",
+                    "type": "email"
+                  }
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/account/preferences:
     put:
       tags:
@@ -746,7 +988,7 @@ paths:
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
-                      "email": "test@test.com", 
+                      "email": "test@example.com", 
                       "password": "test12345"
                     },
                     "device": {
@@ -764,7 +1006,7 @@ paths:
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
-                      "email": "test@test.com", 
+                      "email": "test@example.com", 
                       "password": "test12345"
                     },
                     "params":{
@@ -886,6 +1128,45 @@ paths:
           content:
             application/json:
               schema:
+                anyOf:
+                  - $ref: '#/components/schemas/_res_shared_Login_Mfa'
+                  - $ref: '#/components/schemas/_res_shared_Login'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/auth/mfa:
+    post:
+      tags:
+        - Admin
+      summary: MFA
+      description: |
+        Verify multi-factor authentication credentials to complete login
+      parameters:
+        - name: state
+          in: query
+          description: Login state
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: |
+          MFA credentials and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_shared_Login_Mfa'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
                 $ref: '#/components/schemas/_res_shared_Login'
         '400':
           description: Bad request
@@ -941,6 +1222,122 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/_res_shared_LoginUrl'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/auth/verify-mfa:
+    post:
+      tags:
+        - Admin
+      summary: MFA
+      description: |
+        Verify multi-factor authentication credentials to complete MFA registration
+      requestBody:
+        description: |
+          MFA credentials and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_shared_Mfa'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/account/mfa:
+    get:
+      tags:
+        - Admin
+      summary: Get account MFA types
+      description: |
+        Get MFA types set up for an account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/_res_shared_Mfa'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      tags:
+        - Admin
+      summary: Enroll in MFA type
+      description: |
+        Add MFA type to an account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: MFA type
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_shared_Mfa'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      tags:
+        - Admin
+      summary: Remove MFA type
+      description: |
+        Remove MFA type from an account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: MFA type
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
         '400':
           description: Bad request
         '401':
@@ -1711,6 +2108,95 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /system/account/mfa:
+    get:
+      deprecated: true
+      tags:
+        - System
+      summary: Get account MFA types
+      description: |
+        Get MFA types set up for an account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/_res_shared_Mfa'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      deprecated: true
+      tags:
+        - System
+      summary: Enroll in MFA type
+      description: |
+        Add MFA type to an account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: MFA type
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_shared_Mfa'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      deprecated: true
+      tags:
+        - System
+      summary: Remove MFA type
+      description: |
+        Remove MFA type from an account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: MFA type
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /system/api-keys:
     get:
       deprecated: true
@@ -2122,6 +2608,8 @@ components:
           type: string
         is_external:
           type: boolean
+        ignore_mfa:
+          type: boolean
         params:
           type: object
           additionalProperties: true
@@ -2382,17 +2870,13 @@ components:
           nullable: true
         active:
           type: boolean
-        active_2fa:
-          type: boolean
     Device:
       type: object
       properties:
         fields:
           $ref: '#/components/schemas/DeviceFields'
-        accounts:
-          type: array
-          items:
-            $ref: '#/components/schemas/Account'
+        account:
+          $ref: '#/components/schemas/Account'
     DeviceFields:
       required:
         - id
@@ -2422,7 +2906,6 @@ components:
         auth_type:
           type: string
           enum:
-            - username
             - email
             - twilio_phone
             - illinois_oidc
@@ -2435,16 +2918,16 @@ components:
           type: string
         creds:
           anyOf:
-            - $ref: '#/components/schemas/_req_shared_Login_CredsEmail'
-            - $ref: '#/components/schemas/_req_shared_Login_CredsTwilioPhone'
-            - $ref: '#/components/schemas/_req_shared_Login_CredsOIDC'
-            - $ref: '#/components/schemas/_req_shared_Login_CredsAPIKey'
+            - $ref: '#/components/schemas/_req_shared_CredsEmail'
+            - $ref: '#/components/schemas/_req_shared_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_req_shared_CredsOIDC'
+            - $ref: '#/components/schemas/_req_shared_CredsAPIKey'
         params:
           type: object
           anyOf:
-            - $ref: '#/components/schemas/_req_shared_Login_ParamsEmail'
-            - $ref: '#/components/schemas/_req_shared_Login_ParamsOIDC'
-            - $ref: '#/components/schemas/_req_shared_Login_ParamsNone'
+            - $ref: '#/components/schemas/_req_shared_ParamsEmail'
+            - $ref: '#/components/schemas/_req_shared_ParamsOIDC'
+            - $ref: '#/components/schemas/_req_shared_ParamsNone'
         device:
           $ref: '#/components/schemas/_req_shared_Login_Device'
         profile:
@@ -2452,60 +2935,36 @@ components:
         preferences:
           type: object
           nullable: true
-    _req_shared_Login_CredsEmail:
+    _req_shared_Login_Mfa:
       required:
-        - email
-        - password
+        - api_key
+        - account_id
+        - session_id
+        - state
+        - identifier
+        - type
+        - code
       type: object
-      description: Auth login creds for auth_type="email"
       properties:
-        email:
+        api_key:
           type: string
-        password:
+        account_id:
           type: string
-    _req_shared_Login_CredsTwilioPhone:
-      type: object
-      description: Auth login creds for auth_type="twilio_phone"
-      required:
-        - phone
-      properties:
-        phone:
+        session_id:
           type: string
+        state:
+          type: string
+        identifier:
+          type: string
+        type:
+          type: string
+          enum:
+            - email
+            - phone
+            - totp
+            - recovery
         code:
           type: string
-    _req_shared_Login_CredsOIDC:
-      type: string
-      description: |
-        Auth login creds for auth_type="oidc" (or variants)
-          - full redirect URI received from OIDC provider
-    _req_shared_Login_CredsAPIKey:
-      type: object
-      description: Auth login creds for auth_type="anonymous"
-      properties:
-        anonymous_id:
-          type: string
-    _req_shared_Login_ParamsEmail:
-      type: object
-      description: Auth login params for auth_type="email"
-      properties:
-        confirm_password:
-          type: string
-          description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
-        sign_up:
-          type: boolean
-          default: false
-    _req_shared_Login_ParamsOIDC:
-      type: object
-      description: Auth login params for auth_type="oidc" (or variants)
-      properties:
-        redirect_uri:
-          type: string
-        pkce_verifier:
-          type: string
-    _req_shared_Login_ParamsNone:
-      type: object
-      description: Auth login request params for unlisted auth_types (None)
-      nullable: true
     _req_shared_Login_Device:
       required:
         - type
@@ -2554,6 +3013,80 @@ components:
           type: string
         refresh_token:
           type: string
+    _req_shared_Mfa:
+      required:
+        - identifier
+        - type
+      type: object
+      properties:
+        identifier:
+          type: string
+        type:
+          type: string
+          enum:
+            - email
+            - phone
+            - totp
+        code:
+          type: string
+    _req_shared_CredsEmail:
+      required:
+        - email
+        - password
+      type: object
+      description: Auth login creds for auth_type="email"
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        mfa_code:
+          type: string
+        mfa_type:
+          type: string
+    _req_shared_CredsTwilioPhone:
+      type: object
+      description: Auth login creds for auth_type="twilio_phone"
+      required:
+        - phone
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+    _req_shared_CredsOIDC:
+      type: string
+      description: |
+        Auth login creds for auth_type="oidc" (or variants)
+          - full redirect URI received from OIDC provider
+    _req_shared_CredsAPIKey:
+      type: object
+      description: Auth login creds for auth_type="anonymous"
+      properties:
+        anonymous_id:
+          type: string
+    _req_shared_ParamsEmail:
+      type: object
+      description: Auth login params for auth_type="email"
+      properties:
+        confirm_password:
+          type: string
+          description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+        sign_up:
+          type: boolean
+          default: false
+    _req_shared_ParamsOIDC:
+      type: object
+      description: Auth login params for auth_type="oidc" (or variants)
+      properties:
+        redirect_uri:
+          type: string
+        pkce_verifier:
+          type: string
+    _req_shared_ParamsNone:
+      type: object
+      description: Auth login request params for unlisted auth_types (None)
+      nullable: true
     _req_shared_Profile:
       type: object
       properties:
@@ -2631,16 +3164,6 @@ components:
           type: string
         confirm_password:
           type: string
-    _res_shared_LoginUrl:
-      required:
-        - login_url
-      type: object
-      properties:
-        login_url:
-          type: string
-        params:
-          type: object
-          description: Params to be submitted with 'login' request (if necessary)
     _res_shared_Login:
       type: object
       properties:
@@ -2666,8 +3189,8 @@ components:
                       type: string
                     token_type:
                       type: string
-                    redirect_uri:
-                      type: string
+                redirect_uri:
+                  type: string
             - type: object
               description: Auth login response params for auth_type="anonymous"
               properties:
@@ -2678,6 +3201,41 @@ components:
               nullable: true
         message:
           type: string
+    _res_shared_Login_Mfa:
+      required:
+        - enrolled
+        - account_id
+        - session_id
+        - state
+      type: object
+      properties:
+        enrolled:
+          type: array
+          items:
+            $ref: '#/components/schemas/_res_shared_Mfa'
+        account_id:
+          type: string
+        session_id:
+          type: string
+        state:
+          type: string
+        params:
+          type: object
+          nullable: true
+          anyOf:
+            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/0'
+            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/1'
+            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/2'
+    _res_shared_LoginUrl:
+      required:
+        - login_url
+      type: object
+      properties:
+        login_url:
+          type: string
+        params:
+          type: object
+          description: Params to be submitted with 'login' request (if necessary)
     _res_shared_Refresh:
       type: object
       properties:
@@ -2718,6 +3276,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
+    _res_shared_Mfa:
+      type: object
+      properties:
+        type:
+          type: string
+        verified:
+          type: boolean
+        params:
+          type: object
     _res_shared_RokwireToken:
       type: object
       properties:
@@ -2759,6 +3326,33 @@ components:
           type: string
     _res_account-exists_Response:
       type: boolean
+    _req_account_auth-type_link_Request:
+      required:
+        - auth_type
+        - app_type_identifier
+        - creds
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - email
+            - twilio_phone
+            - illinois_oidc
+            - username
+        app_type_identifier:
+          type: string
+        creds:
+          anyOf:
+            - $ref: '#/components/schemas/_req_shared_CredsEmail'
+            - $ref: '#/components/schemas/_req_shared_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_req_shared_CredsOIDC'
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/_req_shared_ParamsEmail'
+            - $ref: '#/components/schemas/_req_shared_ParamsOIDC'
+            - $ref: '#/components/schemas/_req_shared_ParamsNone'
     _req_credential_update_Request:
       required:
         - account_auth_type_id

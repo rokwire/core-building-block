@@ -1,0 +1,24 @@
+required:
+  - enrolled
+  - account_id
+  - session_id
+  - state
+type: object
+properties:
+  enrolled:
+    type: array
+    items:
+      $ref: "../../../shared/responses/mfa/Response.yaml"
+  account_id:
+    type: string
+  session_id:
+    type: string
+  state:
+    type: string
+  params:
+    type: object
+    nullable: true
+    anyOf:
+      - $ref: "../../../shared/responses/ParamsOIDC.yaml"
+      - $ref: "../../../shared/responses/ParamsAPIKey.yaml"
+      - $ref: "../../../shared/responses/ParamsNone.yaml"  

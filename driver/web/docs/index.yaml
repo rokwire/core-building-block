@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.13.0
+  version: 1.14.0
 servers:
   - url: https://api.rokwire.illinois.edu/core
     description: Production server
@@ -29,6 +29,8 @@ paths:
   #services
   /services/auth/login:
     $ref: "./resources/services/auth/login.yaml"
+  /services/auth/mfa:
+    $ref: "./resources/services/auth/mfa.yaml"
   /services/auth/refresh:
     $ref: "./resources/services/auth/refresh.yaml"
   /services/auth/login-url:
@@ -43,14 +45,20 @@ paths:
     $ref: "./resources/services/auth/credential/forgot/complete.yaml"
   /services/auth/credential/update:
     $ref: "./resources/services/auth/credential/update.yaml"
-  /services/auth/account-exists:
-    $ref: "./resources/services/auth/account-exists.yaml"
+  /services/auth/verify-mfa:
+    $ref: "./resources/services/auth/verify-mfa.yaml"
+  /services/auth/account/exists:
+    $ref: "./resources/services/auth/account/exists.yaml"
+  /services/auth/account/auth-type/link:
+    $ref: "./resources/services/auth/account/auth-type/link.yaml"
   /services/auth/authorize-service:
     $ref: "./resources/services/auth/authorize-service.yaml"
   /services/auth/service-regs:
     $ref: "./resources/services/auth/service-regs.yaml"
   /services/account:
     $ref: "./resources/services/accounts/account.yaml"
+  /services/account/mfa:
+    $ref: "./resources/services/accounts/mfa.yaml"
   /services/account/preferences:
     $ref: "./resources/services/accounts/preferences.yaml"
   /services/account/profile:
@@ -61,10 +69,17 @@ paths:
   #admin
   /admin/auth/login:
     $ref: "./resources/admin/auth/login.yaml"
+  /admin/auth/mfa:
+    $ref: "./resources/admin/auth/mfa.yaml"
   /admin/auth/refresh:
     $ref: "./resources/admin/auth/refresh.yaml"
   /admin/auth/login-url:
     $ref: "./resources/admin/auth/login-url.yaml"
+  /admin/auth/verify-mfa:
+    $ref: "./resources/admin/auth/verify-mfa.yaml"
+
+  /admin/account/mfa:
+    $ref: "./resources/admin/account/mfa.yaml"
 
   #enc
   /enc/test:
@@ -105,6 +120,8 @@ paths:
     $ref: "./resources/system/account/permissions.yaml"
   /system/account/roles:
     $ref: "./resources/system/account/roles.yaml"
+  /system/account/mfa:
+    $ref: "./resources/system/account/mfa.yaml"
   /system/api-keys:
     $ref: "./resources/system/api-keys.yaml"
 

@@ -8,6 +8,8 @@ properties:
     type: string
   is_external:
     type: boolean
+  ignore_mfa:
+    type: boolean
   params:
     type: object
     additionalProperties: true
