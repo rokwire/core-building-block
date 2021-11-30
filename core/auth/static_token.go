@@ -3,6 +3,7 @@ package auth
 import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -49,8 +50,9 @@ func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, creds int
 		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, TypeStaticTokenCreds, nil, err)
 	}
 
-	hashedToken := utils.SHA256Hash([]byte(tokenCreds.Token))
-	account, err := s.auth.storage.FindServiceAccountByToken(string(hashedToken))
+	encodedToken := s.hashAndEncodeToken(tokenCreds.Token)
+
+	account, err := s.auth.storage.FindServiceAccountByToken(string(encodedToken))
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 	}
@@ -58,26 +60,33 @@ func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, creds int
 	return nil, account, nil
 }
 
-func (s *staticTokenServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
+func (s *staticTokenServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, string, error) {
 	if account == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
+		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
 	}
 	if creds == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
+		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
 	}
 
 	token, _, err := s.auth.buildRefreshToken()
 	if err != nil {
 		l.Info("error generating service account token")
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
-	creds.Token = &token
+	encodedToken := s.hashAndEncodeToken(token)
+
+	creds.Token = &encodedToken
 	creds.PubKey = nil
 	creds.DateCreated = time.Now().UTC()
 	account.Credentials = append(account.Credentials, *creds)
 
-	return account, nil
+	return account, token, nil
+}
+
+func (s *staticTokenServiceAuthImpl) hashAndEncodeToken(token string) string {
+	hashedToken := utils.SHA256Hash([]byte(token))
+	return base64.StdEncoding.EncodeToString(hashedToken)
 }
 
 //initStaticTokenServiceAuth initializes and registers a new static token service auth instance

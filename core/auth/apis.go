@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"bytes"
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"encoding/json"
@@ -610,7 +609,7 @@ func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, str
 		return nil, "", errors.WrapErrorAction("error getting service auth type on get service access token", "", nil, err)
 	}
 
-	r.Body = ioutil.NopCloser(bytes.NewReader(data))
+	authutils.ResetRequestBody(r, data)
 	message, account, err := serviceAuthType.checkCredentials(r, requestData.Creds, l)
 	if err != nil {
 		return message, "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
@@ -706,7 +705,7 @@ func (a *Auth) AddServiceCredential(accountID string, creds *model.ServiceAccoun
 			return errors.WrapErrorAction("error getting service auth type on add service credential", "", nil, err)
 		}
 
-		account, err = serviceAuthType.addCredentials(account, creds, l)
+		account, token, err = serviceAuthType.addCredentials(account, creds, l)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 		}

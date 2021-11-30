@@ -363,7 +363,11 @@ func (h SystemApisHandler) addServiceAccountCredential(l *logs.Log, r *http.Requ
 		return l.HttpResponseError("Error adding service account credential", err, http.StatusInternalServerError, true)
 	}
 
-	return l.HttpResponseSuccessMessage(token)
+	if token != "" {
+		return l.HttpResponseSuccessMessage(token)
+	}
+
+	return l.HttpResponseSuccess()
 }
 
 func (h SystemApisHandler) removeServiceAccountCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
