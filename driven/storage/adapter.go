@@ -1764,27 +1764,23 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 	}
 
 	//insert in account record - we keep a device copy there too
-	account, err := sa.findStorageAccount(context, "_id", device.Account.ID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	filter := bson.M{"_id": device.Account.ID}
+	update := bson.D{
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "devices", Value: storageDevice},
+		}},
 	}
-	if account == nil {
-		return nil, errors.New("there is no account for id - " + device.Account.ID)
-	}
-	accountDevices := account.Devices
-	if accountDevices == nil {
-		accountDevices = []userDevice{}
-	}
-	accountDevices = append(accountDevices, accountDeviceToStorage(device))
-	account.Devices = accountDevices
-	filter := bson.M{"_id": account.ID}
+	var res *mongo.UpdateResult
 	if context != nil {
-		err = sa.db.accounts.ReplaceOneWithContext(context, filter, account, nil)
+		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	} else {
-		err = sa.db.accounts.ReplaceOne(filter, account, nil)
+		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
 	}
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, &logutils.FieldArgs{"_id": account.ID}, nil)
+		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("inserting device"), err)
+	}
+	if res.ModifiedCount != 1 {
+		return nil, errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return &device, nil
