@@ -73,32 +73,26 @@ type profile struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-type userMembership struct {
+type userDevice struct {
 	ID string `bson:"_id"`
 
-	OrgID string `bson:"org_id"`
+	DeviceID string `bson:"device_id"`
 
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type userDevice struct {
-	ID   string `bson:"_id"`
 	Type string `bson:"type"`
-
-	OS string `bson:"os"`
+	OS   string `bson:"os"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 type device struct {
-	ID   string `bson:"_id"`
+	ID string `bson:"_id"`
+
+	DeviceID string `bson:"device_id"`
+	Account  string `bson:"account_id"`
+
 	Type string `bson:"type"`
-
-	OS string `bson:"os"`
-
-	Accounts []string `bson:"accounts"`
+	OS   string `bson:"os"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

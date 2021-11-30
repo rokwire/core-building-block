@@ -62,7 +62,7 @@ func accountDevicesToStorage(item *model.Account) []userDevice {
 }
 
 func accountDeviceToStorage(item model.Device) userDevice {
-	return userDevice{ID: item.ID, Type: item.Type, OS: item.OS,
+	return userDevice{ID: item.ID, DeviceID: item.DeviceID, Type: item.Type, OS: item.OS,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
@@ -211,13 +211,12 @@ func deviceToStorage(item *model.Device) *device {
 		return nil
 	}
 
-	accounts := make([]string, len(item.Accounts))
-	for i, account := range item.Accounts {
-		accounts[i] = account.ID
-	}
+	return &device{ID: item.ID, DeviceID: item.DeviceID, Type: item.Type, OS: item.OS,
+		Account: item.Account.ID, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
 
-	return &device{ID: item.ID, Type: item.Type, OS: item.OS,
-		Accounts: accounts, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+func deviceFromStorage(item device) model.Device {
+	return model.Device{ID: item.ID, DeviceID: item.DeviceID, Type: item.Type, OS: item.OS, DateUpdated: item.DateUpdated}
 }
 
 //Credential

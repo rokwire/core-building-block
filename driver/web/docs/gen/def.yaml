@@ -2875,10 +2875,8 @@ components:
       properties:
         fields:
           $ref: '#/components/schemas/DeviceFields'
-        accounts:
-          type: array
-          items:
-            $ref: '#/components/schemas/Account'
+        account:
+          $ref: '#/components/schemas/Account'
     DeviceFields:
       required:
         - id

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Assign device to the account on login [#245](https://github.com/rokwire/core-building-block/issues/245)
 - Add multi-factor authentication support [#19](https://github.com/rokwire/core-building-block/issues/19)
 - Handle multiple authentication methods linking to one account [#64](https://github.com/rokwire/core-building-block/issues/64)
 

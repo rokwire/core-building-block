@@ -49,8 +49,6 @@ type Account struct {
 	Preferences map[string]interface{}
 	Profile     Profile //one account has one profile, one profile can be shared between many accounts
 
-	// Anonymous bool
-
 	Devices []Device
 
 	DateCreated time.Time
@@ -319,12 +317,13 @@ func (p Profile) GetFullName() string {
 
 //Device represents user devices entity.
 type Device struct {
-	ID   string
+	ID string
+
+	DeviceID string //provided by client
+	Account  Account
+
 	Type string //mobile, web, desktop, other
 	OS   string
-
-	//sometime one device could be used by more than one users - someone sells his/her smartphone, using the same browser computer etc
-	Accounts []Account
 
 	DateCreated time.Time
 	DateUpdated *time.Time
