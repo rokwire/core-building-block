@@ -283,6 +283,7 @@ type ApplicationOrganization struct {
 	Application  *Application  `json:"application,omitempty"`
 	Id           *string       `json:"id,omitempty"`
 	Organization *Organization `json:"organization,omitempty"`
+	ServicesIds  *[]string     `json:"services_ids,omitempty"`
 }
 
 // ApplicationType defines model for ApplicationType.
@@ -883,14 +884,12 @@ type ResSharedRokwireTokenTokenType string
 
 // DeleteAdminAccountMfaParams defines parameters for DeleteAdminAccountMfa.
 type DeleteAdminAccountMfaParams struct {
-
 	// MFA type
 	Type string `json:"type"`
 }
 
 // PostAdminAccountMfaParams defines parameters for PostAdminAccountMfa.
 type PostAdminAccountMfaParams struct {
-
 	// MFA type
 	Type string `json:"type"`
 }
@@ -906,7 +905,6 @@ type PostAdminAuthMfaJSONBody ReqSharedLoginMfa
 
 // PostAdminAuthMfaParams defines parameters for PostAdminAuthMfa.
 type PostAdminAuthMfaParams struct {
-
 	// Login state
 	State *string `json:"state,omitempty"`
 }
@@ -976,7 +974,6 @@ type PostServicesAuthMfaJSONBody ReqSharedLoginMfa
 
 // PostServicesAuthMfaParams defines parameters for PostServicesAuthMfa.
 type PostServicesAuthMfaParams struct {
-
 	// Login state
 	State *string `json:"state,omitempty"`
 }
@@ -995,14 +992,12 @@ type PostServicesAuthVerifyMfaJSONBody ReqSharedMfa
 
 // DeleteSystemAccountMfaParams defines parameters for DeleteSystemAccountMfa.
 type DeleteSystemAccountMfaParams struct {
-
 	// MFA type
 	Type string `json:"type"`
 }
 
 // PostSystemAccountMfaParams defines parameters for PostSystemAccountMfa.
 type PostSystemAccountMfaParams struct {
-
 	// MFA type
 	Type string `json:"type"`
 }

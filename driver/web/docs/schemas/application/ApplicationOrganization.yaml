@@ -6,5 +6,9 @@ properties:
     $ref: "./Application.yaml"
   organization:
     $ref: "./Organization.yaml"
+  services_ids:
+    type: array
+    items:
+      type: string
   TODO:
     type: string
