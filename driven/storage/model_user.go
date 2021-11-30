@@ -17,6 +17,8 @@ type account struct {
 
 	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
 
+	MFATypes []mfaType `bson:"mfa_types,omitempty"`
+
 	Preferences map[string]interface{} `bson:"preferences"`
 	Profile     profile                `bson:"profile"`
 
@@ -48,7 +50,6 @@ type accountAuthType struct {
 	Params       map[string]interface{} `bson:"params"`
 	CredentialID *string                `bson:"credential_id"`
 	Active       bool                   `bson:"active"`
-	Active2FA    bool                   `bson:"active_2fa"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -72,32 +73,26 @@ type profile struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-type userMembership struct {
+type userDevice struct {
 	ID string `bson:"_id"`
 
-	OrgID string `bson:"org_id"`
+	DeviceID string `bson:"device_id"`
 
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
-type userDevice struct {
-	ID   string `bson:"_id"`
 	Type string `bson:"type"`
-
-	OS string `bson:"os"`
+	OS   string `bson:"os"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 type device struct {
-	ID   string `bson:"_id"`
+	ID string `bson:"_id"`
+
+	DeviceID string `bson:"device_id"`
+	Account  string `bson:"account_id"`
+
 	Type string `bson:"type"`
-
-	OS string `bson:"os"`
-
-	Accounts []string `bson:"accounts"`
+	OS   string `bson:"os"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -110,6 +105,17 @@ type credential struct {
 	AccountsAuthTypes []string               `bson:"account_auth_types"`
 	Verified          bool                   `bson:"verified"`
 	Value             map[string]interface{} `bson:"value"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type mfaType struct {
+	ID   string `bson:"id"`
+	Type string `bson:"type"`
+
+	Verified bool                   `bson:"verified"`
+	Params   map[string]interface{} `bson:"params"` //mfa type params
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

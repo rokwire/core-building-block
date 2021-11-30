@@ -6,7 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.14.0] - 2021-11-30
 ### Added
+- Assign device to the account on login [#245](https://github.com/rokwire/core-building-block/issues/245)
+- Add multi-factor authentication support [#19](https://github.com/rokwire/core-building-block/issues/19)
 - Handle multiple authentication methods linking to one account [#64](https://github.com/rokwire/core-building-block/issues/64)
 
 ### Security
@@ -43,7 +47,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - 502 error on login when missing preferences [#299](https://github.com/rokwire/core-building-block/issues/299)
-
 
 ## [1.11.0] - 2021-11-04
 ### Added
