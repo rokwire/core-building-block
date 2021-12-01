@@ -2,7 +2,5 @@ type: object
 properties:
   fields:
      $ref: "./DeviceFields.yaml"
-  accounts:
-    type: array
-    items:
-      $ref: "./Account.yaml"
+  account:
+    $ref: "./Account.yaml"

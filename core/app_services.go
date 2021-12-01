@@ -3,7 +3,6 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
-	"time"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
@@ -71,26 +70,11 @@ func (app *application) serDeleteAccount(id string) error {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 		}
 
-		//3. save or delete device records
+		//3. delete devices records
 		for _, device := range account.Devices {
-			if len(device.Accounts) > 1 {
-				for i, deviceAccount := range device.Accounts {
-					if deviceAccount.ID == id {
-						device.Accounts = append(device.Accounts[:i], device.Accounts[i+1:]...)
-						break
-					}
-				}
-				*device.DateUpdated = time.Now().UTC()
-
-				err = app.storage.SaveDevice(context, &device)
-				if err != nil {
-					return errors.WrapErrorAction(logutils.ActionSave, model.TypeDevice, nil, err)
-				}
-			} else {
-				err = app.storage.DeleteDevice(context, device.ID)
-				if err != nil {
-					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeDevice, nil, err)
-				}
+			err = app.storage.DeleteDevice(context, device.ID)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeDevice, nil, err)
 			}
 		}
 
