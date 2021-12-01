@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Admin APIs issue [#326](https://github.com/rokwire/core-building-block/issues/326)
 
 ## [1.15.0] - 2021-12-01
 ### Fixed
@@ -21,7 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Return verification status on account exists endpoint [#330](https://github.com/rokwire/core-building-block/issues/330)
 
 ### Fixed
-- Admin APIs issue [#326](https://github.com/rokwire/core-building-block/issues/326)
 - Fix the accounts collection index for app and org [#333](https://github.com/rokwire/core-building-block/issues/333)
 
 ## [1.13.0] - 2021-11-22
