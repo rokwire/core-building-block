@@ -45,6 +45,8 @@ github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuy
 github.com/aws/aws-sdk-go v1.39.4/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=
 github.com/aws/aws-sdk-go v1.40.19 h1:eqjo8yqijqgO2LctbSTRWrpZ1FFMuVtAC1H4T4qwsVE=
 github.com/aws/aws-sdk-go v1.40.19/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=
+github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc h1:biVzkmvwrH8WK8raXaxBx6fRVTlJILwEwQGL1I/ByEI=
+github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc/go.mod h1:paBWMcWSl3LHKBqUq+rly7CNSldXjb2rDl3JlRe0mD8=
 github.com/casbin/casbin/v2 v2.31.10/go.mod h1:vByNa/Fchek0KZUgG5wEsl7iFsiviAYKRtgrQfcJqHg=
 github.com/casbin/casbin/v2 v2.35.1 h1:NU3QysW3AK9k31+xql1d7EuGtBTrc853j1CjIALTYAY=
 github.com/casbin/casbin/v2 v2.35.1/go.mod h1:vByNa/Fchek0KZUgG5wEsl7iFsiviAYKRtgrQfcJqHg=
@@ -232,12 +234,14 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pquerna/cachecontrol v0.1.0 h1:yJMy84ti9h/+OEWa752kBTKv4XC30OtVVHYv/8cTqKc=
 github.com/pquerna/cachecontrol v0.1.0/go.mod h1:NrUG3Z7Rdu85UNR3vm7SOsl1nFIeSiQnrHV5K9mBcUI=
+github.com/pquerna/otp v1.3.0 h1:oJV/SkzR33anKXwQU3Of42rL4wbrffP4uvUf1SvS5Xs=
+github.com/pquerna/otp v1.3.0/go.mod h1:dkJfzwRKNiegxyNb54X/3fLwhCynbMspSyWKnvi1AEg=
 github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=
 github.com/rogpeppe/go-internal v1.1.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.2.2/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
-github.com/rokwire/core-auth-library-go v1.0.2 h1:S5JpP71D5k2vY1MCCpQfNsulR/JVDcpsdNS0sbPKU5U=
-github.com/rokwire/core-auth-library-go v1.0.2/go.mod h1:y5XiXjTD52DDX0iHAR8J0kWls/xCgUtqyBFWjp/cmQo=
+github.com/rokwire/core-auth-library-go v1.0.3 h1:vGV27czEJwaIy1o35OBJnxN6XNwPGZCwkx/WGOGjxVg=
+github.com/rokwire/core-auth-library-go v1.0.3/go.mod h1:y5XiXjTD52DDX0iHAR8J0kWls/xCgUtqyBFWjp/cmQo=
 github.com/rokwire/logging-library-go v1.0.0/go.mod h1:yntksZF2TDmxid9MwDnAAt95TeLMYo6chL0VUyIaFHk=
 github.com/rokwire/logging-library-go v1.0.2 h1:R9L3tJVNQbZMP3fK18WvqCTNZdYVpRcQjkhwI2prV+I=
 github.com/rokwire/logging-library-go v1.0.2/go.mod h1:yntksZF2TDmxid9MwDnAAt95TeLMYo6chL0VUyIaFHk=

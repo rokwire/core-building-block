@@ -1,0 +1,32 @@
+get:
+  tags:
+  - Admin
+  summary: App token
+  description: |
+    Retrieve an admin token for the specified application
+
+    **Auth:** Requires user auth token
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: app_id
+      in: query
+      description: The application ID of the token to return
+      required: true
+      style: form
+      explode: false
+      schema:
+        type: string
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schemas/apis/admin/app-token/response/Response.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
