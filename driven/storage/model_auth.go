@@ -20,12 +20,16 @@ type loginSession struct {
 	AccountAuthTypeID         *string `bson:"account_auth_type_id"`
 	AccountAuthTypeIdentifier *string `bson:"account_auth_type_identifier"`
 
-	DeviceID string `bson:"device_id"`
+	DeviceID *string `bson:"device_id"`
 
 	IPAddress     string                 `bson:"ip_address"`
 	AccessToken   string                 `bson:"access_token"`
 	RefreshTokens []string               `bson:"refresh_tokens"`
 	Params        map[string]interface{} `bson:"params"`
+
+	State        *string    `bson:"state,omitempty"`
+	StateExpires *time.Time `bson:"state_expires,omitempty"`
+	MfaAttempts  *int       `bson:"mfa_attempts,omitempty"`
 
 	Expires      time.Time  `bson:"expires"`
 	ForceExpires *time.Time `bson:"force_expires,omitempty"`
