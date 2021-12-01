@@ -240,8 +240,8 @@ github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:
 github.com/rogpeppe/go-internal v1.1.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.2.2/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
-github.com/rokwire/core-auth-library-go v1.0.2 h1:S5JpP71D5k2vY1MCCpQfNsulR/JVDcpsdNS0sbPKU5U=
-github.com/rokwire/core-auth-library-go v1.0.2/go.mod h1:y5XiXjTD52DDX0iHAR8J0kWls/xCgUtqyBFWjp/cmQo=
+github.com/rokwire/core-auth-library-go v1.0.3 h1:vGV27czEJwaIy1o35OBJnxN6XNwPGZCwkx/WGOGjxVg=
+github.com/rokwire/core-auth-library-go v1.0.3/go.mod h1:y5XiXjTD52DDX0iHAR8J0kWls/xCgUtqyBFWjp/cmQo=
 github.com/rokwire/logging-library-go v1.0.0/go.mod h1:yntksZF2TDmxid9MwDnAAt95TeLMYo6chL0VUyIaFHk=
 github.com/rokwire/logging-library-go v1.0.2 h1:R9L3tJVNQbZMP3fK18WvqCTNZdYVpRcQjkhwI2prV+I=
 github.com/rokwire/logging-library-go v1.0.2/go.mod h1:yntksZF2TDmxid9MwDnAAt95TeLMYo6chL0VUyIaFHk=
