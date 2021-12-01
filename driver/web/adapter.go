@@ -228,7 +228,7 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization Authorization) htt
 		if we.env != "production" {
 			err = we.validateResponse(requestValidationInput, response)
 			if err != nil {
-				logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeResponse, nil, err, http.StatusInternalServerError, true)
+				logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeResponse, &logutils.FieldArgs{"code": response.ResponseCode, "headers": response.Headers, "body": string(response.Body)}, err, http.StatusInternalServerError, true)
 				return
 			}
 		}
