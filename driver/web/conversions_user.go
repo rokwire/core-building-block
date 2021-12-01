@@ -27,7 +27,8 @@ func accountToDef(item model.Account) *Def.ResSharedAccount {
 func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthTypeFields {
 	params := &Def.AccountAuthTypeFields_Params{}
 	params.AdditionalProperties = item.Params
-	return Def.AccountAuthTypeFields{Id: &item.ID, Code: &item.AuthType.Code, Identifier: &item.Identifier, Active: &item.Active, Active2fa: &item.Active2FA, Params: params}
+
+	return Def.AccountAuthTypeFields{Id: &item.ID, Code: &item.AuthType.Code, Identifier: &item.Identifier, Active: &item.Active, Params: params}
 }
 
 func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeFields {
@@ -113,6 +114,40 @@ func profileFromDef(item *Def.ReqSharedProfile) model.Profile {
 	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
 		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
 		State: state, Country: country}
+}
+
+func mfaDataListToDef(items []model.MFAType) []Def.ResSharedMfa {
+	out := make([]Def.ResSharedMfa, len(items))
+	for i, item := range items {
+		defItem := mfaDataToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.ResSharedMfa{}
+		}
+	}
+	return out
+}
+
+func mfaDataToDef(item *model.MFAType) *Def.ResSharedMfa {
+	if item == nil {
+		return nil
+	}
+
+	mfaType := item.Type
+	verified := item.Verified
+	params := item.Params
+	delete(params, "expires")
+	//TODO: mask identifier
+
+	//email and phone
+	delete(params, "code")
+	//totp
+	delete(params, "secret")
+	//recovery
+	delete(params, "codes")
+
+	return &Def.ResSharedMfa{Type: &mfaType, Verified: &verified, Params: &params}
 }
 
 func profileToDef(item *model.Profile) *Def.ProfileFields {

@@ -1,0 +1,15 @@
+required:
+  - identifier
+  - type
+type: object
+properties:
+  identifier:
+    type: string
+  type:
+    type: string
+    enum:
+      - email
+      - phone
+      - totp
+  code:
+    type: string
