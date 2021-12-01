@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Panic on nil dereference during anonymous login [#338](https://github.com/rokwire/core-building-block/issues/338)
+
 ## [1.14.0] - 2021-11-30
 ### Added
 - Assign device to the account on login [#245](https://github.com/rokwire/core-building-block/issues/245)
