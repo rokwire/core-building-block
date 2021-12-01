@@ -20,7 +20,7 @@ type loginSession struct {
 	AccountAuthTypeID         *string `bson:"account_auth_type_id"`
 	AccountAuthTypeIdentifier *string `bson:"account_auth_type_identifier"`
 
-	DeviceID string `bson:"device_id"`
+	DeviceID *string `bson:"device_id"`
 
 	IPAddress     string                 `bson:"ip_address"`
 	AccessToken   string                 `bson:"access_token"`

@@ -619,6 +619,27 @@ func (sa *Adapter) FindAccountByAuthTypeID(context TransactionContext, id string
 }
 
 func (sa *Adapter) findAccount(context TransactionContext, key string, id string) (*model.Account, error) {
+	account, err := sa.findStorageAccount(context, key, id)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	if account == nil {
+		return nil, nil
+	}
+
+	//application organization - from cache
+	appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+	}
+
+	modelAccount := accountFromStorage(*account, sa, *appOrg)
+
+	return &modelAccount, nil
+}
+
+func (sa *Adapter) findStorageAccount(context TransactionContext, key string, id string) (*account, error) {
 	filter := bson.M{key: id}
 	var accounts []account
 	var err error
@@ -637,15 +658,7 @@ func (sa *Adapter) findAccount(context TransactionContext, key string, id string
 	}
 
 	account := accounts[0]
-
-	//application organization - from cache
-	appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-	}
-
-	modelAccount := accountFromStorage(account, sa, *appOrg)
-	return &modelAccount, nil
+	return &account, nil
 }
 
 //InsertAccount inserts an account
@@ -1713,6 +1726,69 @@ func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganizat
 //FindApplicationOrganizations finds application organization
 func (sa *Adapter) FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error) {
 	return sa.getCachedApplicationOrganization(appID, orgID)
+}
+
+//FindDevice finds a device by device id and account id
+func (sa *Adapter) FindDevice(context TransactionContext, deviceID string, accountID string) (*model.Device, error) {
+	filter := bson.D{primitive.E{Key: "device_id", Value: deviceID},
+		primitive.E{Key: "account_id", Value: accountID}}
+	var result []device
+
+	var err error
+	if context != nil {
+		err = sa.db.devices.FindWithContext(context, filter, &result, nil)
+	} else {
+		err = sa.db.devices.Find(filter, &result, nil)
+	}
+
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)
+	}
+	if len(result) == 0 {
+		//no record
+		return nil, nil
+	}
+	device := result[0]
+
+	deviceRes := deviceFromStorage(device)
+	return &deviceRes, nil
+}
+
+//InsertDevice inserts a device
+func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device) (*model.Device, error) {
+	//insert in devices
+	storageDevice := deviceToStorage(&device)
+	var err error
+	if context != nil {
+		_, err = sa.db.devices.InsertOneWithContext(context, storageDevice)
+	} else {
+		_, err = sa.db.devices.InsertOne(storageDevice)
+	}
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeDevice, nil, err)
+	}
+
+	//insert in account record - we keep a device copy there too
+	filter := bson.M{"_id": device.Account.ID}
+	update := bson.D{
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "devices", Value: storageDevice},
+		}},
+	}
+	var res *mongo.UpdateResult
+	if context != nil {
+		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	} else {
+		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
+	}
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("inserting device"), err)
+	}
+	if res.ModifiedCount != 1 {
+		return nil, errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return &device, nil
 }
 
 // ============================== ServiceRegs ==============================

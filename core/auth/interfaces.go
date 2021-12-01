@@ -383,6 +383,10 @@ type Storage interface {
 	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
 	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
 
+	//Device
+	FindDevice(context storage.TransactionContext, deviceID string, accountID string) (*model.Device, error)
+	InsertDevice(context storage.TransactionContext, device model.Device) (*model.Device, error)
+
 	//ApplicationRoles
 	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	//AccountRoles

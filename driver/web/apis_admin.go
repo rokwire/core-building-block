@@ -85,6 +85,18 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
 
+	///prepare response
+
+	//message
+	if message != nil {
+		responseData := &Def.ResSharedLogin{Message: message}
+		respData, err := json.Marshal(responseData)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
+		}
+		return l.HttpResponseSuccessJSON(respData)
+	}
+
 	if loginSession.State != "" {
 		//params
 		var paramsRes interface{}
@@ -95,18 +107,6 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 		mfaResp := mfaDataListToDef(mfaTypes)
 		responseData := &Def.ResSharedLoginMfa{AccountId: loginSession.Identifier, Enrolled: mfaResp, Params: &paramsRes,
 			SessionId: loginSession.ID, State: loginSession.State}
-		respData, err := json.Marshal(responseData)
-		if err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
-		}
-		return l.HttpResponseSuccessJSON(respData)
-	}
-
-	///prepare response
-
-	//message
-	if message != nil {
-		responseData := &Def.ResSharedLogin{Message: message}
 		respData, err := json.Marshal(responseData)
 		if err != nil {
 			return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
