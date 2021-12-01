@@ -10,7 +10,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/admin/account/account-exists/request/Request.yaml"
+          $ref: "../../../schemas/apis/admin/exists/request/Request.yaml"
     required: true
   responses:
     200:
@@ -18,7 +18,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/apis/admin/account/account-exists/response/Response.yaml"
+            $ref: "../../../schemas/apis/admin/exists/response/Response.yaml"
     400:
       description: Bad request
     401:

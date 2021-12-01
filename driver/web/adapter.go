@@ -75,19 +75,24 @@ func (we Adapter) Start() {
 	///services ///
 	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
 	servicesSubRouter.HandleFunc("/auth/login", we.wrapFunc(we.servicesApisHandler.authLogin, nil)).Methods("POST")              //Requires API key in request
+	servicesSubRouter.HandleFunc("/auth/mfa", we.wrapFunc(we.servicesApisHandler.authLoginMFA, nil)).Methods("POST")             //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL, nil)).Methods("POST")       //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh, nil)).Methods("POST")          //Requires API key in request
-	servicesSubRouter.HandleFunc("/auth/account/exists", we.wrapFunc(we.servicesApisHandler.accountExists, nil)).Methods("POST") //Requires API key in request
+	servicesSubRouter.HandleFunc("/auth/account-exists", we.wrapFunc(we.servicesApisHandler.accountExists, nil)).Methods("POST") //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/account/auth-type/link", we.wrapFunc(we.servicesApisHandler.linkAccountAuthType, we.auth.servicesAuthenticatedAuth)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/credential/verify", we.wrapFunc(we.servicesApisHandler.verifyCredential, nil)).Methods("GET")                   //Public (validates code)
 	servicesSubRouter.HandleFunc("/auth/credential/send-verify", we.wrapFunc(we.servicesApisHandler.sendVerifyCredential, nil)).Methods("POST")         //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/credential/forgot/initiate", we.wrapFunc(we.servicesApisHandler.forgotCredentialInitiate, nil)).Methods("POST") //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/credential/forgot/complete", we.wrapFunc(we.servicesApisHandler.forgotCredentialComplete, nil)).Methods("POST") //Public
 	servicesSubRouter.HandleFunc("/auth/credential/update", we.wrapFunc(we.servicesApisHandler.updateCredential, we.auth.servicesAuthenticatedAuth)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.servicesApisHandler.verifyMFA, we.auth.servicesUserAuth)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService, we.auth.servicesUserAuth)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations, we.auth.servicesAuth)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.deleteAccount, we.auth.servicesUserAuth)).Methods("DELETE")
 	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.getAccount, we.auth.servicesUserAuth)).Methods("GET")
+	servicesSubRouter.HandleFunc("/account/mfa", we.wrapFunc(we.servicesApisHandler.getMFATypes, we.auth.servicesUserAuth)).Methods("GET")
+	servicesSubRouter.HandleFunc("/account/mfa", we.wrapFunc(we.servicesApisHandler.addMFAType, we.auth.servicesAuthenticatedAuth)).Methods("POST")
+	servicesSubRouter.HandleFunc("/account/mfa", we.wrapFunc(we.servicesApisHandler.removeMFAType, we.auth.servicesAuthenticatedAuth)).Methods("DELETE")
 	servicesSubRouter.HandleFunc("/account/preferences", we.wrapFunc(we.servicesApisHandler.updateAccountPreferences, we.auth.servicesUserAuth)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/account/preferences", we.wrapFunc(we.servicesApisHandler.getPreferences, we.auth.servicesUserAuth)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.getProfile, we.auth.servicesUserAuth)).Methods("GET")
@@ -101,12 +106,18 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/test-model", we.wrapFunc(we.adminApisHandler.getTestModel, we.auth.adminAuth)).Methods("GET")
 
 	adminSubrouter.HandleFunc("/auth/login", we.wrapFunc(we.adminApisHandler.adminLogin, nil)).Methods("POST")
+	adminSubrouter.HandleFunc("/auth/mfa", we.wrapFunc(we.adminApisHandler.adminLoginMFA, nil)).Methods("POST")
 	adminSubrouter.HandleFunc("/auth/login-url", we.wrapFunc(we.adminApisHandler.adminLoginURL, nil)).Methods("POST")
 	adminSubrouter.HandleFunc("/auth/refresh", we.wrapFunc(we.adminApisHandler.adminRefresh, nil)).Methods("POST")
 
 	adminSubrouter.HandleFunc("/account", we.wrapFunc(we.adminApisHandler.getAccount, we.auth.adminAuth)).Methods("GET")
 	adminSubrouter.HandleFunc("/accounts", we.wrapFunc(we.adminApisHandler.getAccounts, nil)).Methods("GET")
 	adminSubrouter.HandleFunc("/auth/account-exists", we.wrapFunc(we.adminApisHandler.accountExists, nil)).Methods("POST")
+	adminSubrouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.adminApisHandler.adminVerifyMFA, we.auth.servicesUserAuth)).Methods("POST")
+
+	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.getMFATypes, we.auth.servicesUserAuth)).Methods("GET")
+	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.addMFAType, we.auth.servicesAuthenticatedAuth)).Methods("POST")
+	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.removeMFAType, we.auth.servicesAuthenticatedAuth)).Methods("DELETE")
 	///
 
 	///enc ///
@@ -150,6 +161,9 @@ func (we Adapter) Start() {
 
 		systemSubrouter.HandleFunc("/account/permissions", we.wrapFunc(we.systemApisHandler.grantAccountPermissions, we.auth.systemAuth)).Methods("PUT")
 		systemSubrouter.HandleFunc("/account/roles", we.wrapFunc(we.systemApisHandler.grantAccountRoles, we.auth.systemAuth)).Methods("PUT")
+		systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.getMFATypes, we.auth.servicesUserAuth)).Methods("GET")
+		systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.addMFAType, we.auth.servicesAuthenticatedAuth)).Methods("POST")
+		systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.removeMFAType, we.auth.servicesAuthenticatedAuth)).Methods("DELETE")
 
 		systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.getServiceRegistrations, we.auth.systemAuth)).Methods("GET")
 		systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.registerService, we.auth.systemAuth)).Methods("POST")
