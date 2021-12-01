@@ -21,7 +21,8 @@ import (
 
 const (
 	//AuthTypeTwilioPhone phone auth type
-	AuthTypeTwilioPhone      string                   = "twilio_phone"
+	AuthTypeTwilioPhone string = "twilio_phone"
+
 	servicesPathPart                                  = "https://verify.twilio.com/v2/Services"
 	verificationsPathPart                             = "Verifications"
 	verificationCheckPart                             = "VerificationCheck"

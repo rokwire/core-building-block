@@ -1,0 +1,98 @@
+get:
+  tags:
+  - Services
+  summary: Get account MFA types
+  description: |
+    Get MFA types set up for an account
+
+    **Auth:** Requires user auth token
+  security:
+    - bearerAuth: []
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "../../../schemas/apis/shared/responses/mfa/Response.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
+post:
+  tags:
+  - Services
+  summary: Enroll in MFA type
+  description: |
+    Add MFA type to an account
+
+    **Auth:** Requires user auth token
+  security:
+    - bearerAuth: []
+  requestBody:
+    description: |
+      MFA enrollment params
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schemas/apis/shared/requests/mfa/Request.yaml"
+        examples:
+          email:
+            summary: Enroll in email MFA
+            value: |
+              {
+                "identifier": "test@test.com",
+                "type": "email"
+              }
+    required: true
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schemas/apis/shared/responses/mfa/Response.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
+delete:
+  tags:
+  - Services
+  summary: Remove MFA type
+  description: |
+    Remove MFA type from an account
+
+    **Auth:** Requires user auth token
+  security:
+    - bearerAuth: []
+  requestBody:
+    description: |
+      MFA params
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schemas/apis/shared/requests/mfa/Request.yaml"
+        examples:
+          email:
+            summary: Unenroll in email MFA
+            value: |
+              {
+                "identifier": "test@test.com",
+                "type": "email"
+              }
+  responses:
+    200:
+      description: Success
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
