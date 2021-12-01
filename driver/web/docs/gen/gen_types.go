@@ -528,6 +528,11 @@ type ReqAccountAuthTypeLinkRequest struct {
 // ReqAccountAuthTypeLinkRequestAuthType defines model for ReqAccountAuthTypeLinkRequest.AuthType.
 type ReqAccountAuthTypeLinkRequestAuthType string
 
+// ReqAdminAppTokenResponse defines model for _req_admin_app-token_Response.
+type ReqAdminAppTokenResponse struct {
+	Token string `json:"token"`
+}
+
 // ReqApplicationRolesRequest defines model for _req_application-roles_Request.
 type ReqApplicationRolesRequest struct {
 	AppId       string   `json:"app_id"`
@@ -893,8 +898,12 @@ type PostAdminAccountMfaParams struct {
 	Type string `json:"type"`
 }
 
-// PostAdminAuthAccountExistsJSONBody defines parameters for PostAdminAuthAccountExists.
-type PostAdminAuthAccountExistsJSONBody ReqAccountExistsRequest
+// GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.
+type GetAdminAuthAppTokenParams struct {
+
+	// The application ID of the token to return
+	AppId string `json:"app_id"`
+}
 
 // PostAdminAuthLoginJSONBody defines parameters for PostAdminAuthLogin.
 type PostAdminAuthLoginJSONBody ReqSharedLogin
@@ -1081,9 +1090,6 @@ type GetTpsServiceRegsParams struct {
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
-
-// PostAdminAuthAccountExistsJSONRequestBody defines body for PostAdminAuthAccountExists for application/json ContentType.
-type PostAdminAuthAccountExistsJSONRequestBody PostAdminAuthAccountExistsJSONBody
 
 // PostAdminAuthLoginJSONRequestBody defines body for PostAdminAuthLogin for application/json ContentType.
 type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody
