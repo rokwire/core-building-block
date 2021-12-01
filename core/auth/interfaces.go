@@ -70,6 +70,16 @@ type anonymousAuthType interface {
 	checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, map[string]interface{}, error)
 }
 
+//mfaType is the interface for multi-factor authentication
+type mfaType interface {
+	//verify verifies the code based on stored mfa params
+	verify(context storage.TransactionContext, mfa *model.MFAType, accountID string, code string) (*string, error)
+	//enroll creates a mfa type to be added to an account
+	enroll(identifier string) (*model.MFAType, error)
+	//sendCode generates a mfa code and expiration time and sends the code to the user
+	sendCode(identifier string) (string, *time.Time, error)
+}
+
 //APIs is the interface which defines the APIs provided by the auth package
 type APIs interface {
 	//Start starts the auth service
@@ -93,6 +103,7 @@ type APIs interface {
 	//		params (string): JSON encoded params defined by specified auth type
 	//		profile (Profile): Account profile
 	//		preferences (map): Account preferences
+	//		admin (bool): Is this an admin login?
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		Message (*string): message
@@ -101,9 +112,11 @@ type APIs interface {
 	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
 	//			Params (interface{}): authType-specific set of parameters passed back to client
+	//			State (string): login state used if account is enrolled in MFA
+	//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
 	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
 		authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
-		profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, error)
+		profile model.Profile, preferences map[string]interface{}, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
 
 	//AccountExists checks if a user is already registered
 	//The authentication method must be one of the supported for the application.
@@ -129,6 +142,38 @@ type APIs interface {
 	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//			Params (interface{}): authType-specific set of parameters passed back to client
 	Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.LoginSession, error)
+
+	//GetLoginURL returns a pre-formatted login url for SSO providers
+	//	Input:
+	//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
+	//		orgID (string): ID of the organization that the user is logging in
+	//		redirectURI (string): Registered redirect URI where client will receive response
+	//		apiKey (string): API key to validate the specified app
+	//		l (*loglib.Log): Log object pointer for request
+	//	Returns:
+	//		Login URL (string): SSO provider login URL to be launched in a browser
+	//		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
+	GetLoginURL(authType string, appTypeIdentifier string, orgID string, redirectURI string, apiKey string, l *logs.Log) (string, map[string]interface{}, error)
+
+	//LoginMFA verifies a code sent by a user as a final login step for enrolled accounts.
+	//The MFA type must be one of the supported for the application.
+	//	Input:
+	//		apiKey (string): API key to validate the specified app
+	//		accountID (string): ID of account user is trying to access
+	//		sessionID (string): ID of login session generated during login
+	//		identifier (string): Email, phone, or TOTP device name
+	//		mfaType (string): Type of MFA code sent
+	//		mfaCode (string): Code that must be verified
+	//		state (string): Variable used to verify user has already passed credentials check
+	//		l (*logs.Log): Log object pointer for request
+	//	Returns:
+	//		Message (*string): message
+	//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
+	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
+	LoginMFA(apiKey string, accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
 
 	//VerifyCredential verifies credential (checks the verification code in the credentials collection)
 	VerifyCredential(id string, verification string, l *logs.Log) error
@@ -165,18 +210,40 @@ type APIs interface {
 	//		error: if any
 	ResetForgotCredential(credsID string, resetCode string, params string, l *logs.Log) error
 
-	//GetLoginURL returns a pre-formatted login url for SSO providers
+	//VerifyMFA verifies a code sent by a user as a final MFA enrollment step.
+	//The MFA type must be one of the supported for the application.
 	//	Input:
-	//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
-	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
-	//		orgID (string): ID of the organization that the user is logging in
-	//		redirectURI (string): Registered redirect URI where client will receive response
-	//		apiKey (string): API key to validate the specified app
-	//		l (*loglib.Log): Log object pointer for request
+	//		accountID (string): ID of account for which user is trying to verify MFA
+	//		identifier (string): Email, phone, or TOTP device name
+	//		mfaType (string): Type of MFA code sent
+	//		mfaCode (string): Code that must be verified
 	//	Returns:
-	//		Login URL (string): SSO provider login URL to be launched in a browser
-	//		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
-	GetLoginURL(authType string, appTypeIdentifier string, orgID string, redirectURI string, apiKey string, l *logs.Log) (string, map[string]interface{}, error)
+	//		Message (*string): message
+	//		Recovery codes ([]string): List of account recovery codes returned if enrolling in MFA for first time
+	VerifyMFA(accountID string, identifier string, mfaType string, mfaCode string) (*string, []string, error)
+
+	//GetMFATypes gets all MFA types set up for an account
+	//	Input:
+	//		accountID (string): Account ID to find MFA types
+	//	Returns:
+	//		MFA Types ([]model.MFAType): MFA information for all enrolled types
+	GetMFATypes(accountID string) ([]model.MFAType, error)
+
+	//AddMFAType adds a form of MFA to an account
+	//	Input:
+	//		accountID (string): Account ID to add MFA
+	//		identifier (string): Email, phone, or TOTP device name
+	//		mfaType (string): Type of MFA to be added
+	//	Returns:
+	//		MFA Type (*model.MFAType): MFA information for the specified type
+	AddMFAType(accountID string, identifier string, mfaType string) (*model.MFAType, error)
+
+	//RemoveMFAType removes a form of MFA from an account
+	//	Input:
+	//		accountID (string): Account ID to remove MFA
+	//		identifier (string): Email, phone, or TOTP device name
+	//		mfaType (string): Type of MFA to remove
+	RemoveMFAType(accountID string, identifier string, mfaType string) error
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
@@ -205,8 +272,8 @@ type APIs interface {
 	//		Message (*string): message
 	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, error)
 
-	//GetScopedAccessToken returns a scoped access token with the requested scopes
-	GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scopes []authorization.Scope) (string, error)
+	//GetAdminToken returns an admin token for the specified application
+	GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error)
 
 	//GetAuthKeySet generates a JSON Web Key Set for auth service registration
 	GetAuthKeySet() (*model.JSONWebKeySet, error)
@@ -253,7 +320,8 @@ type Storage interface {
 	InsertLoginSession(context storage.TransactionContext, session model.LoginSession) error
 	FindLoginSessions(context storage.TransactionContext, identifier string) ([]model.LoginSession, error)
 	FindLoginSession(refreshToken string) (*model.LoginSession, error)
-	UpdateLoginSession(loginSession model.LoginSession) error
+	FindAndUpdateLoginSession(context storage.TransactionContext, id string) (*model.LoginSession, error)
+	UpdateLoginSession(context storage.TransactionContext, loginSession model.LoginSession) error
 	DeleteLoginSession(context storage.TransactionContext, id string) error
 	DeleteExpiredSessions(now *time.Time) error
 
@@ -276,6 +344,13 @@ type Storage interface {
 	FindCredential(ID string) (*model.Credential, error)
 	UpdateCredential(creds *model.Credential) error
 	UpdateCredentialValue(ID string, value map[string]interface{}) error
+
+	//MFA
+	FindMFAType(context storage.TransactionContext, accountID string, identifier string, mfaType string) (*model.MFAType, error)
+	FindMFATypes(accountID string) ([]model.MFAType, error)
+	InsertMFAType(context storage.TransactionContext, mfa *model.MFAType, accountID string) error
+	UpdateMFAType(context storage.TransactionContext, mfa *model.MFAType, accountID string) error
+	DeleteMFAType(context storage.TransactionContext, accountID string, identifier string, mfaType string) error
 
 	//ServiceRegs
 	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)
@@ -307,6 +382,10 @@ type Storage interface {
 	//ApplicationsOrganizations
 	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
 	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
+
+	//Device
+	FindDevice(context storage.TransactionContext, deviceID string, accountID string) (*model.Device, error)
+	InsertDevice(context storage.TransactionContext, device model.Device) (*model.Device, error)
 
 	//ApplicationRoles
 	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)

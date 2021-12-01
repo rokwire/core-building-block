@@ -1,0 +1,29 @@
+required:
+  - api_key
+  - account_id
+  - session_id
+  - state
+  - identifier
+  - type
+  - code
+type: object
+properties:
+  api_key:
+    type: string
+  account_id:
+    type: string
+  session_id:
+    type: string
+  state:
+    type: string
+  identifier:
+    type: string
+  type:
+    type: string
+    enum:
+      - email
+      - phone
+      - totp
+      - recovery
+  code:
+    type: string
