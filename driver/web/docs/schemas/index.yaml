@@ -90,12 +90,16 @@ DeviceFields:
 #### requests
 _req_shared_Login:
   $ref: "./apis/shared/requests/login/Request.yaml"
+_req_shared_Login_Mfa:
+  $ref: "../schemas/apis/shared/requests/login/MfaRequest.yaml"
 _req_shared_Login_Device:
   $ref: "./apis/shared/requests/login/Device.yaml"
 _req_shared_LoginUrl:
   $ref: "./apis/shared/requests/login-url/Request.yaml"
 _req_shared_Refresh:
   $ref: "./apis/shared/requests/refresh/Request.yaml"
+_req_shared_Mfa:
+  $ref: "./apis/shared/requests/mfa/Request.yaml"
 
 _req_shared_CredsEmail:
   $ref: "./apis/shared/requests/CredsEmail.yaml"
@@ -115,30 +119,32 @@ _req_shared_Profile:
   $ref: "./apis/shared/requests/Profile.yaml"
 _req_shared_ProfileNullable:
  $ref: "./apis/shared/requests/ProfileNullable.yaml"
-_req_account-exists_Request:
- $ref: "../schemas/apis/shared/requests/account-exists/Request.yaml"
 
 _req_shared_ParamsSetEmailCredential:
   $ref: "./apis/shared/requests/ParamsSetEmailCredential.yaml"
 
 #### responses
-_res_shared_LoginUrl:
-  $ref: "./apis/shared/responses/login-url/Response.yaml"
 _res_shared_Login:
   $ref: "./apis/shared/responses/login/Response.yaml"
+_res_shared_Login_Mfa:
+  $ref: "./apis/shared/responses/login/MfaResponse.yaml"
+_res_shared_LoginUrl:
+  $ref: "./apis/shared/responses/login-url/Response.yaml"
 _res_shared_Refresh:
   $ref: "./apis/shared/responses/refresh/Response.yaml"
 _res_shared_Account:
   $ref: "./apis/shared/responses/Account.yaml"
+_res_shared_Mfa:
+  $ref: "./apis/shared/responses/mfa/Response.yaml"
 _res_shared_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
 ### end - shared requests and responses
 
 ### account exists API
 _req_account-exists_Request:
-  $ref: "./apis/services/account/exists/request/Request.yaml"
+  $ref: "./apis/admin/exists/request/Request.yaml"
 _res_account-exists_Response:
-  $ref: "./apis/services/account/exists/response/Response.yaml"
+  $ref: "./apis/admin/exists/response/Response.yaml"
 
 ### account auth-type link API
 _req_account_auth-type_link_Request:

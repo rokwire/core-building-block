@@ -1,0 +1,88 @@
+get:
+  deprecated: true
+  tags:
+  - System
+  summary: Get account MFA types
+  description: |
+    Get MFA types set up for an account
+
+    **Auth:** Requires user auth token
+  security:
+    - bearerAuth: []
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "../../../schemas/apis/shared/responses/mfa/Response.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
+post:
+  deprecated: true
+  tags:
+  - System
+  summary: Enroll in MFA type
+  description: |
+    Add MFA type to an account
+
+    **Auth:** Requires user auth token
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: type
+      in: query
+      description: MFA type
+      required: true
+      style: form
+      explode: false
+      schema:
+        type: string
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schemas/apis/shared/responses/mfa/Response.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
+delete:
+  deprecated: true
+  tags:
+  - System
+  summary: Remove MFA type
+  description: |
+    Remove MFA type from an account
+
+    **Auth:** Requires user auth token
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: type
+      in: query
+      description: MFA type
+      required: true
+      style: form
+      explode: false
+      schema:
+        type: string
+  responses:
+    200:
+      description: Success
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
