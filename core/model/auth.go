@@ -67,12 +67,16 @@ type LoginSession struct {
 	Identifier      string           //it is the account id(anonymous id for anonymous logins)
 	AccountAuthType *AccountAuthType //it is nil for anonymous logins
 
-	Device Device
+	Device *Device
 
 	IPAddress     string
 	AccessToken   string
 	RefreshTokens []string
 	Params        map[string]interface{} //authType-specific set of parameters passed back to client
+
+	State        string
+	StateExpires *time.Time
+	MfaAttempts  int
 
 	Expires      time.Time
 	ForceExpires *time.Time
@@ -112,6 +116,7 @@ type AuthType struct {
 	IsExternal     bool                   `bson:"is_external"`     //says if the users source is external - identity providers
 	IsAnonymous    bool                   `bson:"is_anonymous"`    //says if the auth type results in anonymous users
 	UseCredentials bool                   `bson:"use_credentials"` //says if the auth type uses credentials
+	IgnoreMFA      bool                   `bson:"ignore_mfa"`      //says if login using this auth type may bypass account MFA
 	Params         map[string]interface{} `bson:"params"`
 }
 
