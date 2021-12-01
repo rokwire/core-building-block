@@ -2,12 +2,14 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
+	"core-building-block/utils"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/rokwire/core-auth-library-go/authorization"
-	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -43,6 +45,7 @@ func (a *Auth) GetHost() string {
 //		params (string): JSON encoded params defined by specified auth type
 //		profile (Profile): Account profile
 //		preferences (map): Account preferences
+//		admin (bool): Is this an admin login?
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		Message (*string): message
@@ -51,30 +54,40 @@ func (a *Auth) GetHost() string {
 //			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
 //			Params (interface{}): authType-specific set of parameters passed back to client
+//			State (string): login state used if account is enrolled in MFA
+//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
 func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
 	authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
-	profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, error) {
+	profile model.Profile, preferences map[string]interface{}, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	if appOrg.Application.Admin != admin {
+		if admin {
+			return nil, nil, nil, errors.New("use services login endpoint")
+		}
+		return nil, nil, nil, errors.New("use admin login endpoint")
 	}
 
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
 	err = a.validateAPIKey(apiKey, appType.Application.ID)
 	if err != nil {
-		return nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+		return nil, nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
-
-	var message string
 
 	anonymous := false
 	sub := ""
 
+	var message string
 	var accountAuthType *model.AccountAuthType
 	var responseParams map[string]interface{}
+	var mfaTypes []model.MFAType
+	var state string
 
 	//get the auth type implementation for the auth type
 	if authType.IsAnonymous {
@@ -83,14 +96,14 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		anonymousID := ""
 		anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
+			return nil, nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
 		}
 		sub = anonymousID
 
 	} else if authType.IsExternal {
-		accountAuthType, responseParams, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+		accountAuthType, responseParams, mfaTypes, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
-			return nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
+			return nil, nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 
 		}
 
@@ -98,13 +111,13 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 
 		//TODO groups mapping
 	} else {
-		message, accountAuthType, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+		message, accountAuthType, mfaTypes, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
-			return nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
+			return nil, nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
 		//message
 		if len(message) > 0 {
-			return &message, nil, nil
+			return &message, nil, nil, nil
 		}
 
 		sub = accountAuthType.Account.ID
@@ -112,13 +125,25 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		//the credentials are valid
 	}
 
-	//now we are ready to apply login for the user or anonymous
-	loginSession, err := a.applyLogin(anonymous, sub, *authType, *appOrg, accountAuthType, *appType, ipAddress, deviceType, deviceOS, deviceID, responseParams, l)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+	//check if account is enrolled in MFA
+	if !authType.IgnoreMFA && len(mfaTypes) > 0 {
+		state, err = utils.GenerateRandomString(loginStateLength)
+		if err != nil {
+			return nil, nil, nil, errors.WrapErrorAction("generate", "login state", nil, err)
+		}
 	}
 
-	return nil, loginSession, nil
+	//now we are ready to apply login for the user or anonymous
+	loginSession, err := a.applyLogin(anonymous, sub, *authType, *appOrg, accountAuthType, *appType, ipAddress, deviceType, deviceOS, deviceID, responseParams, state, l)
+	if err != nil {
+		return nil, nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+	}
+
+	if loginSession.State == "" {
+		return nil, loginSession, nil, nil
+	}
+
+	return nil, &model.LoginSession{ID: loginSession.ID, Identifier: loginSession.Identifier, Params: responseParams, State: loginSession.State}, mfaTypes, nil
 }
 
 //AccountExists checks if a user is already registered
@@ -270,7 +295,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, name, email, phone, "rokwire", orgID, appID, authType, nil, anonymous, false)
+	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, nil, anonymous, false, loginSession.AppOrg.Application.Admin)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
@@ -293,7 +318,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 	//store the updated session
 	now := time.Now()
 	loginSession.DateUpdated = &now
-	err = a.storage.UpdateLoginSession(*loginSession)
+	err = a.storage.UpdateLoginSession(nil, *loginSession)
 	if err != nil {
 		l.Infof("error updating login session on refresh - %s", refreshToken)
 		return nil, errors.WrapErrorAction("error updating login session on refresh", "", nil, err)
@@ -340,6 +365,110 @@ func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, 
 	}
 
 	return loginURL, params, nil
+}
+
+//LoginMFA verifies a code sent by a user as a final login step for enrolled accounts.
+//The MFA type must be one of the supported for the application.
+//	Input:
+//		apiKey (string): API key to validate the specified app
+//		accountID (string): ID of account user is trying to access
+//		sessionID (string): ID of login session generated during login
+//		identifier (string): Email, phone, or TOTP device name
+//		mfaType (string): Type of MFA code sent
+//		mfaCode (string): Code that must be verified
+//		state (string): Variable used to verify user has already passed credentials check
+//		l (*logs.Log): Log object pointer for request
+//	Returns:
+//		Message (*string): message
+//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
+//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
+func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error) {
+	var message string
+	var loginSession *model.LoginSession
+	var err error
+	transaction := func(context storage.TransactionContext) error {
+		//1. find mfa type in account
+		loginSession, err = a.storage.FindAndUpdateLoginSession(context, sessionID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"session_id": sessionID}, err)
+		}
+
+		if loginSession.MfaAttempts >= maxMfaAttempts {
+			a.deleteLoginSession(context, sessionID, l)
+			message = fmt.Sprintf("max mfa attempts reached: %d", maxMfaAttempts)
+			return errors.New(message)
+		}
+
+		//2. check api key
+		err = a.validateAPIKey(apiKey, loginSession.AppOrg.Application.ID)
+		if err != nil {
+			return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, logutils.StringArgs(apiKey), err)
+		}
+
+		//3. find mfa type in account
+		errFields := &logutils.FieldArgs{"account_id": accountID, "type": mfaType}
+		mfa, err := a.storage.FindMFAType(context, accountID, identifier, mfaType)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, errFields, err)
+		}
+		if mfa == nil {
+			message = "account not enrolled"
+			return errors.ErrorData(logutils.StatusMissing, model.TypeMFAType, errFields)
+		}
+		if !mfa.Verified {
+			message = "mfa type not verified"
+			return errors.ErrorData(logutils.StatusMissing, model.TypeMFAType, errFields)
+		}
+		if mfa.Params == nil {
+			return errors.ErrorData(logutils.StatusMissing, "mfa params", errFields)
+		}
+
+		//4. check state variable
+		if state != loginSession.State {
+			message = "invalid login state"
+			return errors.ErrorData(logutils.StatusInvalid, "login state", errFields)
+		}
+		if loginSession.StateExpires != nil && time.Now().UTC().After(*loginSession.StateExpires) {
+			a.deleteLoginSession(context, sessionID, l)
+			message = "expired state"
+			return errors.ErrorData(logutils.StatusInvalid, "expired state", nil)
+		}
+
+		//5. verify code
+		mfaImpl, err := a.getMfaTypeImpl(mfaType)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionLoadCache, typeMfaType, nil, err)
+		}
+		verifyMsg, err := mfaImpl.verify(context, mfa, accountID, mfaCode)
+		if err != nil {
+			if verifyMsg != nil {
+				message = *verifyMsg
+			}
+			return errors.WrapErrorAction("verifying", "mfa code", errFields, err)
+		}
+
+		loginSession.State = ""
+		loginSession.StateExpires = nil
+		loginSession.MfaAttempts = 0
+		err = a.storage.UpdateLoginSession(context, *loginSession)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, nil, err)
+		}
+
+		return nil
+	}
+
+	err = a.storage.PerformTransaction(transaction)
+	if err != nil {
+		if message != "" {
+			return &message, nil, errors.WrapErrorAction("verifying", model.TypeMFAType, nil, err)
+		}
+		return nil, nil, errors.WrapErrorAction("verifying", model.TypeMFAType, nil, err)
+	}
+
+	return nil, loginSession, nil
 }
 
 //VerifyCredential verifies credential (checks the verification code in the credentials collection)
@@ -581,6 +710,179 @@ func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier
 	return nil
 }
 
+//VerifyMFA verifies a code sent by a user as a final MFA enrollment step.
+//The MFA type must be one of the supported for the application.
+//	Input:
+//		accountID (string): ID of account for which user is trying to verify MFA
+//		identifier (string): Email, phone, or TOTP device name
+//		mfaType (string): Type of MFA code sent
+//		mfaCode (string): Code that must be verified
+//	Returns:
+//		Message (*string): message
+//		Recovery codes ([]string): List of account recovery codes returned if enrolling in MFA for first time
+func (a *Auth) VerifyMFA(accountID string, identifier string, mfaType string, mfaCode string) (*string, []string, error) {
+	var recoveryMfa *model.MFAType
+	var message *string
+	transaction := func(context storage.TransactionContext) error {
+		errFields := &logutils.FieldArgs{"account_id": accountID, "type": mfaType}
+		//1. find mfa type in account
+		mfa, err := a.storage.FindMFAType(context, accountID, identifier, mfaType)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, errFields, err)
+		}
+		if mfa == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeMFAType, errFields)
+		}
+
+		if mfa.Verified {
+			return errors.New("mfa type already verified")
+		}
+		if mfa.Params == nil {
+			return errors.ErrorData(logutils.StatusMissing, "mfa params", errFields)
+		}
+
+		//2. get mfa type implementation
+		mfaImpl, err := a.getMfaTypeImpl(mfaType)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionLoadCache, typeMfaType, nil, err)
+		}
+		message, err = mfaImpl.verify(context, mfa, accountID, mfaCode)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, typeMfaType, errFields, err)
+		}
+
+		//3. update existing MFA type
+		mfa.Verified = true
+		err = a.storage.UpdateMFAType(context, mfa, accountID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "id": mfa.ID}, err)
+		}
+
+		//4. find account
+		account, err := a.storage.FindAccountByID(context, accountID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": accountID}, err)
+		}
+
+		//5. only mfa type just been verified, so enroll in recovery mfa automatically
+		if len(account.MFATypes) == 1 {
+			mfaImpl, err := a.getMfaTypeImpl(MfaTypeRecovery)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionLoadCache, typeMfaType, nil, err)
+			}
+			recoveryMfa, err = mfaImpl.enroll(MfaTypeRecovery)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionValidate, typeMfaType, &logutils.FieldArgs{"account_id": accountID, "type": MfaTypeRecovery}, err)
+			}
+
+			// insert recovery mfa type
+			err = a.storage.InsertMFAType(context, recoveryMfa, accountID)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "type": MfaTypeRecovery}, err)
+			}
+		}
+
+		return nil
+	}
+
+	err := a.storage.PerformTransaction(transaction)
+	if err != nil {
+		return message, nil, errors.WrapErrorAction("verifying", model.TypeMFAType, nil, err)
+	}
+
+	if recoveryMfa != nil && recoveryMfa.Params != nil {
+		recoveryCodes, ok := recoveryMfa.Params["codes"].([]string)
+		if !ok {
+			return nil, nil, errors.ErrorAction(logutils.ActionCast, "recovery codes", nil)
+		}
+
+		return nil, recoveryCodes, nil
+	}
+
+	return nil, nil, nil
+}
+
+//GetMFATypes gets all MFA types set up for an account
+//	Input:
+//		accountID (string): Account ID to find MFA types
+//	Returns:
+//		MFA Types ([]model.MFAType): MFA information for all enrolled types
+func (a *Auth) GetMFATypes(accountID string) ([]model.MFAType, error) {
+	mfa, err := a.storage.FindMFATypes(accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, nil, err)
+	}
+
+	return mfa, nil
+}
+
+//AddMFAType adds a form of MFA to an account
+//	Input:
+//		accountID (string): Account ID to add MFA
+//		identifier (string): Email, phone, or TOTP device name
+//		mfaType (string): Type of MFA to be added
+//	Returns:
+//		MFA Type (*model.MFAType): MFA information for the specified type
+func (a *Auth) AddMFAType(accountID string, identifier string, mfaType string) (*model.MFAType, error) {
+	mfaImpl, err := a.getMfaTypeImpl(mfaType)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeMfaType, nil, err)
+	}
+
+	newMfa, err := mfaImpl.enroll(identifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction("enrolling", typeMfaType, nil, err)
+	}
+
+	err = a.storage.InsertMFAType(nil, newMfa, accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, typeMfaType, &logutils.FieldArgs{"account_id": accountID, "type": mfaType}, err)
+	}
+
+	return newMfa, nil
+}
+
+//RemoveMFAType removes a form of MFA from an account
+//	Input:
+//		accountID (string): Account ID to remove MFA
+//		identifier (string): Email, phone, or TOTP device name
+//		mfaType (string): Type of MFA to remove
+func (a *Auth) RemoveMFAType(accountID string, identifier string, mfaType string) error {
+	transaction := func(context storage.TransactionContext) error {
+		//1. remove mfa type from account
+		err := a.storage.DeleteMFAType(context, accountID, identifier, mfaType)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "identifier": identifier, "type": mfaType}, err)
+		}
+
+		//2. find account
+		account, err := a.storage.FindAccountByID(context, accountID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		if account == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"_id": accountID})
+		}
+
+		//3. check if account only has recovery MFA remaining
+		if len(account.MFATypes) == 1 && account.MFATypes[0].Type == MfaTypeRecovery {
+			err = a.storage.DeleteMFAType(context, accountID, MfaTypeRecovery, MfaTypeRecovery)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "identifier": MfaTypeRecovery, "type": MfaTypeRecovery}, err)
+			}
+		}
+
+		return nil
+	}
+
+	err := a.storage.PerformTransaction(transaction)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, nil, err)
+	}
+
+	return nil
+}
+
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 //	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
 //	return a scoped access token which reflects this change.
@@ -621,7 +923,7 @@ func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, appro
 		}
 	}
 
-	token, err := a.GetScopedAccessToken(claims, serviceID, authorization.Scopes)
+	token, err := a.getScopedAccessToken(claims, serviceID, authorization.Scopes)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction("build", logutils.TypeToken, nil, err)
 	}
@@ -629,22 +931,17 @@ func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, appro
 	return token, authorization.Scopes, nil, nil
 }
 
-//GetScopedAccessToken returns a scoped access token with the requested scopes
-func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scopes []authorization.Scope) (string, error) {
-	scopeStrings := []string{}
-	services := []string{serviceID}
-	for _, scope := range scopes {
-		scopeStrings = append(scopeStrings, scope.String())
-		if !authutils.ContainsString(services, scope.ServiceID) {
-			services = append(services, scope.ServiceID)
-		}
+//GetAdminToken returns an admin token for the specified application
+func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error) {
+	//verify that the provided appID is valid for the organization
+	_, err := a.storage.FindApplicationOrganizations(appID, claims.OrgID)
+	if err != nil {
+		return "", errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": claims.OrgID, "app_id": appID}, err)
 	}
 
-	aud := strings.Join(services, ",")
-	scope := strings.Join(scopeStrings, " ")
-
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, nil, claims.Anonymous, claims.Authenticated)
-	return a.buildAccessToken(scopedClaims, "", scope)
+	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, claims.OrgID, appID, claims.AuthType,
+		&claims.ExpiresAt, false, false, true)
+	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }
 
 //LinkAccountAuthType links new credentials to an existing account.
