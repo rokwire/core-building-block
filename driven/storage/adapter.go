@@ -566,6 +566,27 @@ func (sa *Adapter) DeleteLoginSession(context TransactionContext, id string) err
 	return nil
 }
 
+//DeleteLoginSessions deletes all login sessions with the identifier
+func (sa *Adapter) DeleteLoginSessions(context TransactionContext, identifier string) error {
+	filter := bson.M{"identifier": identifier}
+
+	var res *mongo.DeleteResult
+	var err error
+	if context != nil {
+		res, err = sa.db.loginsSessions.DeleteManyWithContext(context, filter, nil)
+	} else {
+		res, err = sa.db.loginsSessions.DeleteMany(filter, nil)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, &logutils.FieldArgs{"identifier": identifier}, err)
+	}
+	if res.DeletedCount < 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("unexpected deleted count"))
+	}
+	return nil
+}
+
 //DeleteExpiredSessions deletes expired sessions
 func (sa *Adapter) DeleteExpiredSessions(now *time.Time) error {
 	filter := bson.D{primitive.E{Key: "$or", Value: []interface{}{
@@ -936,16 +957,22 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 }
 
 //FindCredential finds a credential by ID
-func (sa *Adapter) FindCredential(ID string) (*model.Credential, error) {
+func (sa *Adapter) FindCredential(context TransactionContext, ID string) (*model.Credential, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 
 	var creds credential
-	err := sa.db.credentials.FindOne(filter, &creds, nil)
+	var err error
+	if context != nil {
+		err = sa.db.credentials.FindOneWithContext(context, filter, &creds, nil)
+	} else {
+		err = sa.db.credentials.FindOne(filter, &creds, nil)
+	}
+
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			return nil, nil
 		}
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, &logutils.FieldArgs{"_id": ID}, err)
 	}
 
 	modelCreds := credentialFromStorage(creds)
@@ -969,7 +996,7 @@ func (sa *Adapter) InsertCredential(creds *model.Credential) error {
 }
 
 //UpdateCredential updates a set of credentials
-func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
+func (sa *Adapter) UpdateCredential(context TransactionContext, creds *model.Credential) error {
 	storageCreds := credentialToStorage(creds)
 
 	if storageCreds == nil {
@@ -977,7 +1004,13 @@ func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
 	}
 
 	filter := bson.D{primitive.E{Key: "_id", Value: storageCreds.ID}}
-	err := sa.db.credentials.ReplaceOne(filter, storageCreds, nil)
+	var err error
+	if context != nil {
+		err = sa.db.credentials.ReplaceOneWithContext(context, filter, storageCreds, nil)
+	} else {
+		err = sa.db.credentials.ReplaceOne(filter, storageCreds, nil)
+	}
+
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"_id": storageCreds.ID}, err)
 	}
@@ -1000,6 +1033,28 @@ func (sa *Adapter) UpdateCredentialValue(ID string, value map[string]interface{}
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+//DeleteCredential deletes a credential
+func (sa *Adapter) DeleteCredential(context TransactionContext, ID string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+
+	var res *mongo.DeleteResult
+	var err error
+	if context != nil {
+		res, err = sa.db.credentials.DeleteOneWithContext(context, filter, nil)
+	} else {
+		res, err = sa.db.credentials.DeleteOne(filter, nil)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, &logutils.FieldArgs{"_id": ID}, err)
+	}
+	if res.DeletedCount != 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeCredential, &logutils.FieldArgs{"unexpected deleted count": res.DeletedCount})
 	}
 
 	return nil

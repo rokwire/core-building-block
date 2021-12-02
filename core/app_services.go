@@ -70,7 +70,38 @@ func (app *application) serDeleteAccount(id string) error {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 		}
 
-		//3. delete devices records
+		//3. remove account auth type from credentials
+		for _, aat := range account.AuthTypes {
+			if aat.Credential != nil {
+				credential, err := app.storage.FindCredential(context, aat.Credential.ID)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+				}
+
+				if len(credential.AccountsAuthTypes) > 1 {
+					for i, credAat := range credential.AccountsAuthTypes {
+						if credAat.ID == aat.ID {
+							credential.AccountsAuthTypes = append(credential.AccountsAuthTypes[:i], credential.AccountsAuthTypes[i+1:]...)
+							err = app.storage.UpdateCredential(context, credential)
+							if err != nil {
+								return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+							}
+							break
+						}
+					}
+				} else {
+					err = app.storage.DeleteCredential(context, credential.ID)
+					if err != nil {
+						return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
+					}
+				}
+			}
+		}
+
+		//4. delete login sessions
+		err = app.storage.DeleteLoginSessions(context, id)
+
+		//5. delete devices records
 		for _, device := range account.Devices {
 			err = app.storage.DeleteDevice(context, device.ID)
 			if err != nil {
