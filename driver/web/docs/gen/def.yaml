@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.15.0
+  version: 1.16.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -1252,6 +1252,39 @@ paths:
                 type: array
                 items:
                   type: string
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/auth/app-token:
+    get:
+      tags:
+        - Admin
+      summary: App token
+      description: |
+        Retrieve an admin token for the specified application
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: app_id
+          in: query
+          description: The application ID of the token to return
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_req_admin_app-token_Response'
         '400':
           description: Bad request
         '401':
@@ -3448,6 +3481,13 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
+    _req_admin_app-token_Response:
+      required:
+        - token
+      type: object
+      properties:
+        token:
+          type: string
     _req_create-Organization_Request:
       required:
         - name

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.16.0] - 2021-12-02
+### Fixed
+- Panic on nil conversion during OIDC refresh [#344](https://github.com/rokwire/core-building-block/issues/344)
+- Account exists endpoint documentation incorrect [#342](https://github.com/rokwire/core-building-block/issues/342)
+- Admin APIs issue [#326](https://github.com/rokwire/core-building-block/issues/326)
+
 ## [1.15.0] - 2021-12-01
 ### Fixed
 - Panic on nil dereference during anonymous login [#338](https://github.com/rokwire/core-building-block/issues/338)
@@ -180,7 +186,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.15.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.16.0...HEAD
+[1.16.0]: https://github.com/rokwire/core-building-block/compare/v1.15.0...v1.16.0
 [1.15.0]: https://github.com/rokwire/core-building-block/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/rokwire/core-building-block/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/rokwire/core-building-block/compare/v1.12.0...v1.13.0
