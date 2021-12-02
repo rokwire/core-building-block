@@ -321,7 +321,15 @@ func (h AdminApisHandler) adminGetBuildingBlocks(l *logs.Log, r *http.Request, c
 		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID}, nil, http.StatusNotFound, false)
 	}
 
-	data, err := json.Marshal(serviceIDs)
+	serviceReg, err := h.coreAPIs.Administration.AdmGetServiceRegs(serviceIDs)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
+	}
+	if serviceReg == nil {
+		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeServiceReg, &logutils.FieldArgs{"services_ids": serviceIDs}, nil, http.StatusNotFound, false)
+	}
+
+	data, err := json.Marshal(serviceReg)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
 	}

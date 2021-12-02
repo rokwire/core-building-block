@@ -162,11 +162,20 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) AdmGetServiceID(appID string) ([]model.ApplicationOrganization, error) {
+func (app *application) admGetServiceID(appID string) ([]model.ApplicationOrganization, error) {
 	getServiceIDs, err := app.storage.FindServiceIDs(appID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
 
 	return getServiceIDs, nil
+}
+
+func (app *application) admGetServiceRegs(serviceID []string) ([]model.ServiceReg, error) {
+	getServiceRegs, err := app.storage.FindServiceRegistrations(serviceID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err)
+	}
+
+	return getServiceRegs, nil
 }

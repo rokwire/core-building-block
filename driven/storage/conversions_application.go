@@ -191,7 +191,7 @@ func applicationToStorage(item *model.Application) *application {
 		MaxLoginSessionDuration: item.MaxLoginSessionDuration, Types: applicationTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-//Organization
+//ServiceID
 func serviceIDFromStorage(item *applicationOrganization) model.ApplicationOrganization {
 
 	return model.ApplicationOrganization{ServicesIDs: item.ServicesIDs}

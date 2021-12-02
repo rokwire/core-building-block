@@ -83,3 +83,8 @@ type appOrgRole struct {
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
+
+type servicereg struct {
+	ServiceID string `json:"service_id" bson:"service_id" validate:"required"`
+	Host      string `json:"host" bson:"host" validate:"required"`
+}

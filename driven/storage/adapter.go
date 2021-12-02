@@ -1900,6 +1900,32 @@ func (sa *Adapter) DeleteServiceReg(serviceID string) error {
 	return nil
 }
 
+//FindServiceRegs fetches the requested service registration records
+func (sa *Adapter) FindServiceRegistrations(serviceIDs []string) ([]model.ServiceReg, error) {
+	var filter bson.M
+	for _, serviceID := range serviceIDs {
+		if serviceID == "all" {
+			filter = bson.M{}
+			break
+		}
+	}
+	if filter == nil {
+		filter = bson.M{"registration.service_id": bson.M{"$in": serviceIDs}}
+	}
+
+	var result []model.ServiceReg
+	err := sa.db.serviceRegs.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"service_id": serviceIDs}, err)
+	}
+
+	if result == nil {
+		result = []model.ServiceReg{}
+	}
+
+	return result, nil
+}
+
 //FindServiceAuthorization finds the service authorization in storage
 func (sa *Adapter) FindServiceAuthorization(userID string, serviceID string) (*model.ServiceAuthorization, error) {
 	filter := bson.M{"user_id": userID, "service_id": serviceID}
