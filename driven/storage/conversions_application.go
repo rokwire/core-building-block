@@ -190,3 +190,21 @@ func applicationToStorage(item *model.Application) *application {
 	return &application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, RequiresOwnUsers: item.RequiresOwnUsers, Admin: item.Admin,
 		MaxLoginSessionDuration: item.MaxLoginSessionDuration, Types: applicationTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
+
+//Organization
+func serviceIDFromStorage(item *applicationOrganization) model.ApplicationOrganization {
+
+	return model.ApplicationOrganization{ServicesIDs: item.ServicesIDs}
+}
+
+func serviceIDsFromStorage(itemsList []applicationOrganization) []model.ApplicationOrganization {
+	if len(itemsList) == 0 {
+		return make([]model.ApplicationOrganization, 0)
+	}
+
+	var items []model.ApplicationOrganization
+	for _, serviceIDs := range itemsList {
+		items = append(items, serviceIDFromStorage(&serviceIDs))
+	}
+	return items
+}
