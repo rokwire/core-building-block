@@ -3073,10 +3073,6 @@ components:
           type: string
         password:
           type: string
-        mfa_code:
-          type: string
-        mfa_type:
-          type: string
     _req_shared_CredsTwilioPhone:
       type: object
       description: Auth login creds for auth_type="twilio_phone"

@@ -307,7 +307,7 @@ func (sa *Adapter) getCachedAuthType(key string) (*model.AuthType, error) {
 		}
 		return &authType, nil
 	}
-	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, errArgs)
+	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthType, errArgs)
 }
 
 //cacheApplicationsOrganizations caches the applications organizations
