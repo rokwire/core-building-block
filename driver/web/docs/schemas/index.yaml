@@ -173,6 +173,10 @@ _req_authorize-service_Request:
 _res_authorize-service_Response:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
 
+### admin app-roken API
+_req_admin_app-token_Response:
+  $ref: "./apis/admin/app-token/response/Response.yaml"
+
 ### organization API
 _req_create-Organization_Request:
   $ref: "./apis/system/create-organization/request/Request.yaml"
