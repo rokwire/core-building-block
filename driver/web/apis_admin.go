@@ -313,11 +313,11 @@ func (h AdminApisHandler) adminGetBuildingBlocks(l *logs.Log, r *http.Request, c
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
 	}
 
-	serviceIDs, err := h.coreAPIs.Administration.AdmGetServiceID(appID)
+	appOrg, err := h.coreAPIs.Administration.AdmGetServiceID(appID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
 	}
-	if serviceIDs == nil {
+	if appOrg == nil {
 		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID}, nil, http.StatusNotFound, false)
 	}
 

@@ -111,7 +111,7 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
-func (s *administrationImpl) AdmGetServiceID(appID string) ([]model.ApplicationOrganization, error) {
+func (s *administrationImpl) AdmGetServiceID(appID string) (*model.ApplicationOrganization, error) {
 	return s.app.admGetServiceID(appID)
 }
 

@@ -162,7 +162,7 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admGetServiceID(appID string) ([]model.ApplicationOrganization, error) {
+func (app *application) admGetServiceID(appID string) (*model.ApplicationOrganization, error) {
 	getServiceIDs, err := app.storage.FindServiceIDs(appID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
