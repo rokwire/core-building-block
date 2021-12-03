@@ -13,38 +13,41 @@ import (
 )
 
 const (
-	typeCheckAdminPermission          logutils.MessageActionType = "checking admin permission"
+	typeCheckPermission               logutils.MessageActionType = "checking permission"
+	typeCheckScope                    logutils.MessageActionType = "checking scope"
 	typeCheckAdminAuthRequestToken    logutils.MessageActionType = "checking admin auth"
-	typeCheckServicesScope            logutils.MessageActionType = "checking services scope"
 	typeCheckServicesAuthRequestToken logutils.MessageActionType = "checking services auth"
 )
 
 //Auth handler
 type Auth struct {
-	servicesAuth              *ServicesAuth
-	servicesUserAuth          *ServicesUserAuth
-	servicesAuthenticatedAuth *ServicesAuthenticatedAuth
-	adminAuth                 *AdminAuth
-	encAuth                   *EncAuth
-	bbsAuth                   *BBsAuth
-	systemAuth                *SystemAuth
+	services   *TokenAuthHandlers
+	admin      *TokenAuthHandlers
+	encAuth    *EncAuth
+	bbsAuth    *BBsAuth
+	systemAuth *SystemAuth
 
 	logger *logs.Logger
 }
 
-// Authorization is an interface for auth types
+//Authorization is an interface for auth types
 type Authorization interface {
 	check(req *http.Request) (int, *tokenauth.Claims, error)
+	start()
+}
+
+//TokenAuthorization is an interface for auth types
+type TokenAuthorization interface {
+	Authorization
+	getTokenAuth() *tokenauth.TokenAuth
 }
 
 //Start starts the auth module
 func (auth *Auth) Start() error {
 	auth.logger.Info("Auth -> start")
 
-	auth.servicesAuth.start()
-	auth.servicesUserAuth.start()
-	auth.servicesAuthenticatedAuth.start()
-	auth.adminAuth.start()
+	auth.services.start()
+	auth.admin.start()
 	auth.encAuth.start()
 	auth.bbsAuth.start()
 	auth.systemAuth.start()
@@ -56,15 +59,22 @@ func (auth *Auth) Start() error {
 func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.AuthService, logger *logs.Logger) (*Auth, error) {
 	servicesAuth, err := newServicesAuth(coreAPIs, authService, serviceID, logger)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionStart, "auth handler", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, "services auth", nil, err)
 	}
-	servicesUserAuth := newServicesUserAuth(*servicesAuth)
-	servicesAuthenticatedAuth := newServicesAuthenticatedAuth(*servicesUserAuth)
+	serviceHandlers, err := newTokenAuthHandlers(servicesAuth)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "services auth handlers", nil, err)
+	}
 
 	adminAuth, err := newAdminAuth(coreAPIs, authService, logger)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionStart, "auth handler", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "admin auth", nil, err)
 	}
+	adminHandlers, err := newTokenAuthHandlers(adminAuth)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "admin auth handlers", nil, err)
+	}
+
 	encAuth := newEncAuth(coreAPIs, logger)
 	bbsAuth := newBBsAuth(coreAPIs, logger)
 	systemAuth, err := newSystemAuth(authService, logger)
@@ -72,9 +82,34 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "auth handler", nil, err)
 	}
 
-	auth := Auth{servicesAuth: servicesAuth, servicesUserAuth: servicesUserAuth, servicesAuthenticatedAuth: servicesAuthenticatedAuth, adminAuth: adminAuth, encAuth: encAuth, bbsAuth: bbsAuth, systemAuth: systemAuth, logger: logger}
+	auth := Auth{services: serviceHandlers, admin: adminHandlers, encAuth: encAuth, bbsAuth: bbsAuth, systemAuth: systemAuth, logger: logger}
 
 	return &auth, nil
+}
+
+//TokenAuthHandlers represents token auth handlers
+type TokenAuthHandlers struct {
+	standard      TokenAuthorization
+	permissions   *PermissionsAuth
+	user          *UserAuth
+	authenticated *AuthenticatedAuth
+}
+
+func (auth *TokenAuthHandlers) start() {
+	auth.standard.start()
+	auth.permissions.start()
+	auth.user.start()
+	auth.authenticated.start()
+}
+
+//newTokenAuthHandlers creates new auth handlers for a
+func newTokenAuthHandlers(auth TokenAuthorization) (*TokenAuthHandlers, error) {
+	permissionsAuth := newPermissionsAuth(auth)
+	userAuth := newUserAuth(auth)
+	authenticatedAuth := newAuthenticatedAuth(*userAuth)
+
+	authWrappers := TokenAuthHandlers{standard: auth, permissions: permissionsAuth, user: userAuth, authenticated: authenticatedAuth}
+	return &authWrappers, nil
 }
 
 //ServicesAuth entity
@@ -94,12 +129,20 @@ func (auth *ServicesAuth) check(req *http.Request) (int, *tokenauth.Claims, erro
 		return http.StatusUnauthorized, nil, errors.WrapErrorAction(typeCheckServicesAuthRequestToken, logutils.TypeToken, nil, err)
 	}
 
+	if claims.Admin {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
+	}
+
 	err = auth.tokenAuth.AuthorizeRequestScope(claims, req)
 	if err != nil {
-		return http.StatusForbidden, nil, errors.WrapErrorAction(typeCheckServicesScope, logutils.TypeRequest, nil, err)
+		return http.StatusForbidden, nil, errors.WrapErrorAction(typeCheckScope, logutils.TypeRequest, nil, err)
 	}
 
 	return http.StatusOK, claims, nil
+}
+
+func (auth *ServicesAuth) getTokenAuth() *tokenauth.TokenAuth {
+	return auth.tokenAuth
 }
 
 func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, serviceID string, logger *logs.Logger) (*ServicesAuth, error) {
@@ -113,62 +156,6 @@ func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, 
 
 	auth := ServicesAuth{coreAPIs: coreAPIs, tokenAuth: servicesTokenAuth, logger: logger}
 	return &auth, nil
-}
-
-//ServicesUserAuth entity
-type ServicesUserAuth struct {
-	servicesAuth ServicesAuth
-}
-
-func (auth *ServicesUserAuth) start() {
-	auth.servicesAuth.logger.Info("ServicesUserAuth -> start")
-}
-
-func (auth *ServicesUserAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
-	status, claims, err := auth.servicesAuth.check(req)
-
-	if err == nil && claims != nil {
-		if claims.Anonymous {
-			return http.StatusForbidden, nil, errors.New("token must not be anonymous")
-		}
-	}
-
-	return status, claims, err
-}
-
-func newServicesUserAuth(servicesAuth ServicesAuth) *ServicesUserAuth {
-	auth := ServicesUserAuth{servicesAuth: servicesAuth}
-	return &auth
-}
-
-//ServicesAuthenticatedAuth entity
-// This enforces that the token was the result of direct user authentication. It should be used to protect sensitive account settings
-type ServicesAuthenticatedAuth struct {
-	servicesUserAuth ServicesUserAuth
-}
-
-func (auth *ServicesAuthenticatedAuth) start() {
-	auth.servicesUserAuth.servicesAuth.logger.Info("ServicesAuthenticatedAuth -> start")
-}
-
-func (auth *ServicesAuthenticatedAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
-	status, claims, err := auth.servicesUserAuth.check(req)
-
-	if err == nil && claims != nil {
-		if !claims.Service {
-			return http.StatusForbidden, nil, errors.New("must be a service account")
-		}
-		if !claims.Authenticated {
-			return http.StatusForbidden, nil, errors.New("service must authenticate again")
-		}
-	}
-
-	return status, claims, err
-}
-
-func newServicesAuthenticatedAuth(servicesUserAuth ServicesUserAuth) *ServicesAuthenticatedAuth {
-	auth := ServicesAuthenticatedAuth{servicesUserAuth: servicesUserAuth}
-	return &auth
 }
 
 //AdminAuth entity
@@ -187,12 +174,16 @@ func (auth *AdminAuth) check(req *http.Request) (int, *tokenauth.Claims, error) 
 	if err != nil {
 		return http.StatusUnauthorized, nil, errors.WrapErrorAction(typeCheckAdminAuthRequestToken, logutils.TypeToken, nil, err)
 	}
-	err = auth.tokenAuth.AuthorizeRequestPermissions(claims, req)
-	if err != nil {
-		return http.StatusForbidden, nil, errors.WrapErrorAction(typeCheckAdminPermission, logutils.TypeRequest, nil, err)
+
+	if !claims.Admin {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
 	}
 
 	return http.StatusOK, claims, nil
+}
+
+func (auth *AdminAuth) getTokenAuth() *tokenauth.TokenAuth {
+	return auth.tokenAuth
 }
 
 func newAdminAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) (*AdminAuth, error) {
@@ -264,4 +255,80 @@ func newSystemAuth(authService *authservice.AuthService, logger *logs.Logger) (*
 
 	auth := SystemAuth{tokenAuth: systemTokenAuth, logger: logger}
 	return &auth, nil
+}
+
+//PermissionsAuth entity
+//This enforces that the user has permissions matching the policy
+type PermissionsAuth struct {
+	auth TokenAuthorization
+}
+
+func (a *PermissionsAuth) start() {}
+
+func (a *PermissionsAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
+	status, claims, err := a.auth.check(req)
+
+	if err == nil && claims != nil {
+		err = a.auth.getTokenAuth().AuthorizeRequestPermissions(claims, req)
+		if err != nil {
+			return http.StatusForbidden, nil, errors.WrapErrorAction(typeCheckPermission, logutils.TypeRequest, nil, err)
+		}
+	}
+
+	return status, claims, err
+}
+
+func newPermissionsAuth(auth TokenAuthorization) *PermissionsAuth {
+	permissionsAuth := PermissionsAuth{auth: auth}
+	return &permissionsAuth
+}
+
+//UserAuth entity
+// This enforces that the user is not anonymous
+type UserAuth struct {
+	auth Authorization
+}
+
+func (a *UserAuth) start() {}
+
+func (a *UserAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
+	status, claims, err := a.auth.check(req)
+
+	if err == nil && claims != nil {
+		if claims.Anonymous {
+			return http.StatusForbidden, nil, errors.New("token must not be anonymous")
+		}
+	}
+
+	return status, claims, err
+}
+
+func newUserAuth(auth Authorization) *UserAuth {
+	userAuth := UserAuth{auth: auth}
+	return &userAuth
+}
+
+//AuthenticatedAuth entity
+// This enforces that the token was the result of direct user authentication. It should be used to protect sensitive account settings
+type AuthenticatedAuth struct {
+	userAuth UserAuth
+}
+
+func (auth *AuthenticatedAuth) start() {}
+
+func (auth *AuthenticatedAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
+	status, claims, err := auth.userAuth.check(req)
+
+	if err == nil && claims != nil {
+		if !claims.Authenticated {
+			return http.StatusForbidden, nil, errors.New("user must login again")
+		}
+	}
+
+	return status, claims, err
+}
+
+func newAuthenticatedAuth(userAuth UserAuth) *AuthenticatedAuth {
+	auth := AuthenticatedAuth{userAuth: userAuth}
+	return &auth
 }

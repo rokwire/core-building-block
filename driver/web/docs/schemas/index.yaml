@@ -175,6 +175,10 @@ _req_authorize-service_Request:
 _res_authorize-service_Response:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
 
+### admin app-token API
+_req_admin_app-token_Response:
+  $ref: "./apis/admin/app-token/response/Response.yaml"
+
 ### service-accounts API
 _req_service-accounts_TokenRequest:
   $ref: "./apis/services/service-accounts/TokenRequest.yaml"

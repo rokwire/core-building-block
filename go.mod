@@ -19,8 +19,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/cachecontrol v0.1.0 // indirect
 	github.com/pquerna/otp v1.3.0
-	github.com/rokwire/core-auth-library-go v1.0.2
-	github.com/rokwire/logging-library-go v1.0.2
+	github.com/rokwire/core-auth-library-go v1.0.4
+	github.com/rokwire/logging-library-go v1.0.3
 	github.com/stretchr/testify v1.6.1
 	github.com/swaggo/http-swagger v1.0.0
 	go.mongodb.org/mongo-driver v1.7.1

@@ -11,6 +11,7 @@ type application struct {
 
 	MultiTenant      bool `bson:"multi_tenant"`
 	RequiresOwnUsers bool `bson:"requires_own_users"`
+	Admin            bool `bson:"admin"`
 
 	MaxLoginSessionDuration *int `bson:"max_login_session_duration,omitempty"`
 

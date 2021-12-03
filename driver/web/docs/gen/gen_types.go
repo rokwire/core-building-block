@@ -569,6 +569,11 @@ type ReqAccountAuthTypeLinkRequest struct {
 // ReqAccountAuthTypeLinkRequestAuthType defines model for ReqAccountAuthTypeLinkRequest.AuthType.
 type ReqAccountAuthTypeLinkRequestAuthType string
 
+// ReqAdminAppTokenResponse defines model for _req_admin_app-token_Response.
+type ReqAdminAppTokenResponse struct {
+	Token string `json:"token"`
+}
+
 // ReqApplicationRolesRequest defines model for _req_application-roles_Request.
 type ReqApplicationRolesRequest struct {
 	AppId       string   `json:"app_id"`
@@ -952,6 +957,13 @@ type PostAdminAccountMfaParams struct {
 
 	// MFA type
 	Type string `json:"type"`
+}
+
+// GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.
+type GetAdminAuthAppTokenParams struct {
+
+	// The application ID of the token to return
+	AppId string `json:"app_id"`
 }
 
 // PostAdminAuthLoginJSONBody defines parameters for PostAdminAuthLogin.

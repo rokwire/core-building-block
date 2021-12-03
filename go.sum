@@ -240,11 +240,11 @@ github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:
 github.com/rogpeppe/go-internal v1.1.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.2.2/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
-github.com/rokwire/core-auth-library-go v1.0.2 h1:S5JpP71D5k2vY1MCCpQfNsulR/JVDcpsdNS0sbPKU5U=
-github.com/rokwire/core-auth-library-go v1.0.2/go.mod h1:y5XiXjTD52DDX0iHAR8J0kWls/xCgUtqyBFWjp/cmQo=
+github.com/rokwire/core-auth-library-go v1.0.4 h1:dr6Ve9I1tqWqfr93MLBo3iT4h9JAwjROo0edl7cBkdQ=
+github.com/rokwire/core-auth-library-go v1.0.4/go.mod h1:y5XiXjTD52DDX0iHAR8J0kWls/xCgUtqyBFWjp/cmQo=
 github.com/rokwire/logging-library-go v1.0.0/go.mod h1:yntksZF2TDmxid9MwDnAAt95TeLMYo6chL0VUyIaFHk=
-github.com/rokwire/logging-library-go v1.0.2 h1:R9L3tJVNQbZMP3fK18WvqCTNZdYVpRcQjkhwI2prV+I=
-github.com/rokwire/logging-library-go v1.0.2/go.mod h1:yntksZF2TDmxid9MwDnAAt95TeLMYo6chL0VUyIaFHk=
+github.com/rokwire/logging-library-go v1.0.3 h1:ONaEJO0NbBYtG+gV7+fn2zQqtPDkpSCif+nMuXvJFBA=
+github.com/rokwire/logging-library-go v1.0.3/go.mod h1:yntksZF2TDmxid9MwDnAAt95TeLMYo6chL0VUyIaFHk=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/shurcooL/sanitized_anchor_name v1.0.0/go.mod h1:1NzhyTcUVG4SuEtjjoZeVRXNmyL/1OwPU0+IJeTBvfc=
 github.com/sirupsen/logrus v1.4.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
