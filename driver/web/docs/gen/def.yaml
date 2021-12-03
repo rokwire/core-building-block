@@ -1,104 +1,57 @@
-{
-  "openapi": "3.0.3",
-  "info": {
-    "title": "Rokwire Core Building Block API",
-    "description": "Core Building Block API Documentation",
-    "version": "1.15.0"
-  },
-  "servers": [
-    {
-      "url": "https://api.rokwire.illinois.edu/core",
-      "description": "Production server"
-    },
-    {
-      "url": "https://api-test.rokwire.illinois.edu/core",
-      "description": "Test server"
-    },
-    {
-      "url": "https://api-dev.rokwire.illinois.edu/core",
-      "description": "Development server"
-    },
-    {
-      "url": "http://localhost/core",
-      "description": "Local server"
-    }
-  ],
-  "tags": [
-    {
-      "name": "Services",
-      "description": "Clients applications APIs."
-    },
-    {
-      "name": "Admin",
-      "description": "Clients administration applications APIs."
-    },
-    {
-      "name": "Enc",
-      "description": "APIs consumed by the Encryption building block."
-    },
-    {
-      "name": "BBs",
-      "description": "APIs consumed by the platform building blocks."
-    },
-    {
-      "name": "Third-Party Services",
-      "description": "APIs consumed by third-party services."
-    },
-    {
-      "name": "System",
-      "description": "System APIs."
-    }
-  ],
-  "paths": {
-    "/services/auth/login": {
-      "post": {
-        "tags": [
-          "Services"
-        ],
-        "summary": "Login",
-        "description": "Login using credentials to retrieve access token, refresh token, and user data\n",
-        "requestBody": {
-          "description": "User credential details and parameters\n",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/_req_shared_Login"
-              },
-              "examples": {
-                "email-sign_in": {
-                  "summary": "Email - sign in",
-                  "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"email\": \"test@example.com\", \n    \"password\": \"test12345\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
-                },
-                "email-sign_up": {
-                  "summary": "Email - sign up",
-                  "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"email\": \"test@example.com\", \n    \"password\": \"test12345\"\n  },\n  \"params\":{\n      \"sign_up\":true,\n      \"confirm_password\": \"test12345\"\n  },\n  \"preferences\":{\n      \"key1\":\"value1\",\n      \"key2\":\"value2\"\n  },\n  \"profile\":{\n    \"address\": \"address\",\n    \"birth_year\": 1990,\n    \"country\": \"county\",\n    \"email\": \"email\",\n    \"first_name\": \"first name\",\n    \"last_name\": \"last name\",\n    \"phone\": \"+000000000000\",\n    \"photo_url\": \"photo url\",\n    \"state\": \"state\",\n    \"zip_code\": \"zip code\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
-                },
-                "phone": {
-                  "summary": "Phone - sign in OR sign up",
-                  "value": "{\n  \"auth_type\": \"twilio_phone\",\n  \"app_type_identifier\": \"edu.illinois.rokwire\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"phone\": \"+12223334444\", \n    \"code\": \"123456\"\n  },\n  \"preferences\":{\n      \"key1\":\"value1\",\n      \"key2\":\"value2\"\n  },\n  \"profile\":{\n    \"address\": \"address\",\n    \"birth_year\": 1990,\n    \"country\": \"county\",\n    \"email\": \"email\",\n    \"first_name\": \"first name\",\n    \"last_name\": \"last name\",\n    \"phone\": \"+000000000000\",\n    \"photo_url\": \"photo url\",\n    \"state\": \"state\",\n    \"zip_code\": \"zip code\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
-                },
-                "illinois_oidc": {
-                  "summary": "Illinois OIDC login",
-                  "value": "{\n  \"auth_type\": \"illinois_oidc\",\n  \"app_type_identifier\": \"edu.illinois.rokwire\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": \"https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43\",\n  \"params\": {\n    \"redirect_uri\": \"https://redirect.example.com\",\n    \"pkce_verifier\": \"w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia\"\n  },\n  \"preferences\":{\n      \"key1\":\"value1\",\n      \"key2\":\"value2\"\n  },\n  \"profile\":{\n    \"address\": \"address\",\n    \"birth_year\": 1990,\n    \"country\": \"county\",\n    \"email\": \"email\",\n    \"first_name\": \"first name\",\n    \"last_name\": \"last name\",\n    \"phone\": \"+000000000000\",\n    \"photo_url\": \"photo url\",\n    \"state\": \"state\",\n    \"zip_code\": \"zip code\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
-                },
-                "anonymous": {
-                  "summary": "Anonymous login",
-                  "value": "{\n  \"auth_type\": \"anonymous\",\n  \"app_type_identifier\": \"edu.illinois.rokwire\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"anonymous_id\": \"dbb5ea5d-6c6c-44b8-9952-7ebf0e844beb\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
-                }
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/_res_shared_Login_Mfa"
+openapi: 3.0.3
+info:
+  title: Rokwire Core Building Block API
+  description: Core Building Block API Documentation
+  version: 1.16.0
+servers:
+  - url: 'https://api.rokwire.illinois.edu/core'
+    description: Production server
+  - url: 'https://api-test.rokwire.illinois.edu/core'
+    description: Test server
+  - url: 'https://api-dev.rokwire.illinois.edu/core'
+    description: Development server
+  - url: 'http://localhost/core'
+    description: Local server
+tags:
+  - name: Services
+    description: Clients applications APIs.
+  - name: Admin
+    description: Clients administration applications APIs.
+  - name: Enc
+    description: APIs consumed by the Encryption building block.
+  - name: BBs
+    description: APIs consumed by the platform building blocks.
+  - name: Third-Party Services
+    description: APIs consumed by third-party services.
+  - name: System
+    description: System APIs.
+paths:
+  /services/auth/login:
+    post:
+      tags:
+        - Services
+      summary: Login
+      description: |
+        Login using credentials to retrieve access token, refresh token, and user data
+      requestBody:
+        description: |
+          User credential details and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_shared_Login'
+            examples:
+              email-sign_in:
+                summary: Email - sign in
+                value: |
+                  {
+                    "auth_type": "email",
+                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": {
+                      "email": "test@example.com", 
+                      "password": "test12345"
                     },
                     {
                       "$ref": "#/components/schemas/_res_shared_Login"
