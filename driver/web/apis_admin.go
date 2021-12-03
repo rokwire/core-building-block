@@ -207,7 +207,7 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 }
 
 func (h AdminApisHandler) adminGetPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	//var serviceID []string
+
 	req, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
