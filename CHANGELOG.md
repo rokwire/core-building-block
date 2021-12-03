@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.16.0] - 2021-12-02
 ### Fixed
+- Upgrade logging library for error JSON fix [#347](https://github.com/rokwire/core-building-block/issues/347)
 - Panic on nil conversion during OIDC refresh [#344](https://github.com/rokwire/core-building-block/issues/344)
 - Account exists endpoint documentation incorrect [#342](https://github.com/rokwire/core-building-block/issues/342)
 - Admin APIs issue [#326](https://github.com/rokwire/core-building-block/issues/326)
