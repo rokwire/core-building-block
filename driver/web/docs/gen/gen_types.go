@@ -898,9 +898,11 @@ type PostAdminAccountMfaParams struct {
 	Type string `json:"type"`
 }
 
+// PostAdminAuthAccountExistsJSONBody defines parameters for PostAdminAuthAccountExists.
+type PostAdminAuthAccountExistsJSONBody ReqAccountExistsRequest
+
 // GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.
 type GetAdminAuthAppTokenParams struct {
-
 	// The application ID of the token to return
 	AppId string `json:"app_id"`
 }
@@ -1090,6 +1092,9 @@ type GetTpsServiceRegsParams struct {
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
+
+// PostAdminAuthAccountExistsJSONRequestBody defines body for PostAdminAuthAccountExists for application/json ContentType.
+type PostAdminAuthAccountExistsJSONRequestBody PostAdminAuthAccountExistsJSONBody
 
 // PostAdminAuthLoginJSONRequestBody defines body for PostAdminAuthLogin for application/json ContentType.
 type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody
