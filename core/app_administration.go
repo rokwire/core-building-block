@@ -162,7 +162,21 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admGetServiceID(appID string) (*model.ApplicationOrganization, error) {
+func (app *application) admGetBuildingBlocks(appID string, serviceID []string) ([]model.ServiceReg, *model.ApplicationOrganization, error) {
+	getServiceIDs, err := app.storage.FindServiceIDs(appID)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	getServiceRegs, err := app.storage.FindServiceRegistrations(getServiceIDs.ServicesIDs)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err)
+	}
+
+	return getServiceRegs, getServiceIDs, nil
+}
+
+/*func (app *application) admGetServiceID(appID string) (*model.ApplicationOrganization, error) {
 	getServiceIDs, err := app.storage.FindServiceIDs(appID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
@@ -178,4 +192,4 @@ func (app *application) admGetServiceRegs(serviceID []string) ([]model.ServiceRe
 	}
 
 	return getServiceRegs, nil
-}
+}*/

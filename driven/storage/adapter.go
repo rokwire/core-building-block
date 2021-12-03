@@ -1792,7 +1792,7 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 }
 
 //FindServiceID finds applications organization service ids
-func (sa *Adapter) FindServiceIDs(appID string) ([]model.ApplicationOrganization, error) {
+func (sa *Adapter) FindServiceIDs(appID string) (*model.ApplicationOrganization, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID}}
 	var result []applicationOrganization
 	err := sa.db.applicationsOrganizations.Find(filter, &result, nil)
@@ -1916,7 +1916,7 @@ func (sa *Adapter) FindServiceRegistrations(serviceIDs []string) ([]model.Servic
 	var result []model.ServiceReg
 	err := sa.db.serviceRegs.Find(filter, &result, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"service_id": serviceIDs}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"services_ids": serviceIDs}, err)
 	}
 
 	if result == nil {
