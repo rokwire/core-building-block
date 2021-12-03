@@ -469,6 +469,23 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 	return sa.buildLoginSession(&loginSession)
 }
 
+//FindAccounts finds accounts
+func (sa *Adapter) FindAccounts(id string, identifier string, appID *string, orgID *string) ([]model.Account, error) {
+	filter := bson.D{}
+	var result []model.Account
+	err := sa.db.accounts.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	if len(result) == 0 {
+		//no data
+		return make([]model.Account, 0), nil
+	}
+
+	return result, nil
+}
+
 //FindAndUpdateLoginSession finds and updates a login session
 func (sa *Adapter) FindAndUpdateLoginSession(context TransactionContext, id string) (*model.LoginSession, error) {
 	//find loggin session
@@ -659,58 +676,6 @@ func (sa *Adapter) findStorageAccount(context TransactionContext, key string, id
 
 	account := accounts[0]
 	return &account, nil
-}
-
-/*//FindApplications finds applications
-func (sa *Adapter) FindApplications() ([]model.Application, error) {
-	filter := bson.D{}
-	var result []model.Application
-	err := sa.db.applications.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-	}
-
-	if len(result) == 0 {
-		//no data
-		return make([]model.Application, 0), nil
-	}
-
-	return result, nil
-}*/
-
-//FindAccounts finds accounts
-func (sa *Adapter) FindAccounts(accountID string, identifier string, appID *string, orgID *string) ([]model.Account, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID},
-		primitive.E{Key: "auth_types.identifier", Value: identifier},
-		primitive.E{Key: "app_id", Value: appID}}
-	//filter := bson.M{}
-	var accounts []model.Account
-	err := sa.db.accounts.Find(filter, &accounts, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-
-	if len(accounts) == 0 {
-		//not found
-		return make([]model.Account, 0), nil
-	}
-	//account := accounts[0]
-
-	//application - from cache
-	/*application, err := sa.getCachedApplication(account.Application.ID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-	}
-
-	//organization - from cache
-	organization, err := sa.getCachedOrganization(account.Organization.ID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
-	}*/
-
-	//getAccounts := getAccountsListToStorage(accounts)
-	//return getAccounts, nil
-	return accounts, nil
 }
 
 //InsertAccount inserts an account
@@ -1932,6 +1897,32 @@ func (sa *Adapter) DeleteServiceReg(serviceID string) error {
 	}
 
 	return nil
+}
+
+//FindServiceRegs fetches the requested service registration records
+func (sa *Adapter) FindServiceRegistrations(serviceIDs []string) ([]model.ServiceReg, error) {
+	var filter bson.M
+	for _, serviceID := range serviceIDs {
+		if serviceID == "all" {
+			filter = bson.M{}
+			break
+		}
+	}
+	if filter == nil {
+		filter = bson.M{"registration.service_id": bson.M{"$in": serviceIDs}}
+	}
+
+	var result []model.ServiceReg
+	err := sa.db.serviceRegs.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"service_id": serviceIDs}, err)
+	}
+
+	if result == nil {
+		result = []model.ServiceReg{}
+	}
+
+	return result, nil
 }
 
 //FindServiceAuthorization finds the service authorization in storage

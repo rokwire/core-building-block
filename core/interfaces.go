@@ -25,7 +25,6 @@ type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
 
-	AdmGetAccount(accountID string) (*model.Account, error)
 	AdmGetAccounts(accountID string, identifier string, appID *string, orgID *string) ([]model.Account, error)
 }
 

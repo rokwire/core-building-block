@@ -110,7 +110,6 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/auth/login-url", we.wrapFunc(we.adminApisHandler.adminLoginURL, nil)).Methods("POST")
 	adminSubrouter.HandleFunc("/auth/refresh", we.wrapFunc(we.adminApisHandler.adminRefresh, nil)).Methods("POST")
 
-	adminSubrouter.HandleFunc("/account", we.wrapFunc(we.adminApisHandler.getAccount, nil)).Methods("GET")
 	adminSubrouter.HandleFunc("/accounts", we.wrapFunc(we.adminApisHandler.getAccounts, nil)).Methods("GET")
 
 	adminSubrouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.adminApisHandler.adminVerifyMFA, we.auth.admin.user)).Methods("POST")

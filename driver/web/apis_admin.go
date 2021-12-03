@@ -230,60 +230,6 @@ func (h AdminApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *toke
 	return l.HttpResponseSuccessJSON(data)
 }
 
-//getAccount gets the account
-func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	account, err := h.coreAPIs.Administration.AdmGetAccount(claims.Subject)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
-	}
-
-	var accountData *Def.ResSharedAccount
-	if account != nil {
-		profile := profileToDef(&account.Profile)
-		//permissions
-		permissions := applicationPermissionsToDef(account.Permissions)
-		//roles
-		roles := appOrgRolesToDef(nil)
-		//groups
-		groups := appOrgGroupsToDef(nil)
-		//account auth types
-		authTypes := accountAuthTypesToDef(account.AuthTypes)
-		accountData = &Def.ResSharedAccount{Id: account.ID, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile}
-	}
-
-	data, err := json.Marshal(accountData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
-	}
-
-	return l.HttpResponseSuccessJSON(data)
-}
-
-func (h AdminApisHandler) accountExists(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.ReqAccountExistsRequest
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
-	}
-
-	accountExists, err := h.coreAPIs.Auth.AccountExists(string(requestData.AuthType), requestData.UserIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, l)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, logutils.MessageDataType("account exists"), nil, err, http.StatusInternalServerError, false)
-	}
-
-	respData, err := json.Marshal(accountExists)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.TypeResponse, nil, err, http.StatusInternalServerError, false)
-	}
-
-	return l.HttpResponseSuccessJSON(respData)
-}
-
 func (h AdminApisHandler) getMFATypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	mfaDataList, err := h.coreAPIs.Auth.GetMFATypes(claims.Subject)
 	if err != nil {

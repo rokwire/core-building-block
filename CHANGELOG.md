@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Expose get accounts admin API [#283] (https://github.com/rokwire/core-building-block/issues/283)
 
 ## [1.16.0] - 2021-12-02
 ### Fixed
@@ -117,10 +118,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
-- Expose get accounts admin API [#283] (https://github.com/rokwire/core-building-block/issues/283)
-- Expose get account admin API [#270] (https://github.com/rokwire/core-building-block/issues/270)
-- Expose does account exist admin API [#271](https://github.com/rokwire/core-building-block/issues/271)
-- Extract IP address from request [#246](https://github.com/rokwire/core-building-block/issues/246)
 - Populate profile data automatically from ROKWIRE 2.0 Profile BB [#185](https://github.com/rokwire/core-building-block/issues/185)
 - Add phone authentication support [#24](https://github.com/rokwire/core-building-block/issues/24)
 - Handle anonymous ID conversion [#204](https://github.com/rokwire/core-building-block/issues/204)

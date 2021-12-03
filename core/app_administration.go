@@ -162,15 +162,6 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admGetAccount(accountID string) (*model.Account, error) {
-	//find the account
-	account, err := app.storage.FindAccountByID(nil, accountID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-	return account, nil
-}
-
 func (app *application) admGetAccounts(accountID string, identifier string, appID *string, orgID *string) ([]model.Account, error) {
 	//find the accounts
 	findAccounts, err := app.storage.FindAccounts(accountID, identifier, appID, orgID)
