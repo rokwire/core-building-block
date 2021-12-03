@@ -251,6 +251,29 @@ func (_m *Storage) FindPermissionsByName(names []string) ([]model.Permission, er
 	return r0, r1
 }
 
+// FindPermissionsByServiceID provides a mock function with given fields: serviceID
+func (_m *Storage) FindPermissionsByServiceID(serviceID []string) ([]model.Permission, error) {
+	ret := _m.Called(serviceID)
+
+	var r0 []model.Permission
+	if rf, ok := ret.Get(0).(func([]string) []model.Permission); ok {
+		r0 = rf(serviceID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Permission)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func([]string) error); ok {
+		r1 = rf(serviceID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetGlobalConfig provides a mock function with given fields:
 func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	ret := _m.Called()
