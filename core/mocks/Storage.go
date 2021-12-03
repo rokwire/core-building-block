@@ -136,6 +136,29 @@ func (_m *Storage) FindAccountByID(context storage.TransactionContext, id string
 	return r0, r1
 }
 
+// FindAccounts provides a mock function with given fields: id, identifier, appID, orgID
+func (_m *Storage) FindAccounts(id string, identifier string, appID *string, orgID *string) ([]model.Account, error) {
+	ret := _m.Called(id, identifier, appID, orgID)
+
+	var r0 []model.Account
+	if rf, ok := ret.Get(0).(func(string, string, *string, *string) []model.Account); ok {
+		r0 = rf(id, identifier, appID, orgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Account)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string, *string, *string) error); ok {
+		r1 = rf(id, identifier, appID, orgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindAppOrgRoles provides a mock function with given fields: ids, appOrgID
 func (_m *Storage) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error) {
 	ret := _m.Called(ids, appOrgID)
