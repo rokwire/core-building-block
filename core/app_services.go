@@ -3,6 +3,7 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"time"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
@@ -79,9 +80,11 @@ func (app *application) serDeleteAccount(id string) error {
 				}
 
 				if len(credential.AccountsAuthTypes) > 1 {
+					now := time.Now().UTC()
 					for i, credAat := range credential.AccountsAuthTypes {
 						if credAat.ID == aat.ID {
 							credential.AccountsAuthTypes = append(credential.AccountsAuthTypes[:i], credential.AccountsAuthTypes[i+1:]...)
+							credential.DateUpdated = &now
 							err = app.storage.UpdateCredential(context, credential)
 							if err != nil {
 								return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
