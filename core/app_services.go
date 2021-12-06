@@ -65,8 +65,10 @@ func (app *application) serDeleteAccount(id string) error {
 			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 		}
 
-		//2. delete the account record
-		err = app.storage.DeleteAccount(context, id)
+		//2. mark account deleted and remove data in storage
+		now := time.Now().UTC()
+		deletedAccount := model.Account{ID: account.ID, Deleted: true, DateCreated: account.DateCreated, DateUpdated: &now}
+		err = app.storage.SaveAccount(context, &deletedAccount)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 		}
@@ -80,7 +82,6 @@ func (app *application) serDeleteAccount(id string) error {
 				}
 
 				if len(credential.AccountsAuthTypes) > 1 {
-					now := time.Now().UTC()
 					for i, credAat := range credential.AccountsAuthTypes {
 						if credAat.ID == aat.ID {
 							credential.AccountsAuthTypes = append(credential.AccountsAuthTypes[:i], credential.AccountsAuthTypes[i+1:]...)

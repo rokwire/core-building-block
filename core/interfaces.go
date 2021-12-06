@@ -33,6 +33,8 @@ type Encryption interface {
 
 //BBs exposes users related APIs used by the platform building blocks
 type BBs interface {
+	BBsGetDeletedAccounts() ([]string, error)
+
 	BBsGetTest() string
 }
 
@@ -67,7 +69,10 @@ type Storage interface {
 	PerformTransaction(func(context storage.TransactionContext) error) error
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
+	FindDeletedAccounts(context storage.TransactionContext) ([]model.Account, error)
+	SaveAccount(context storage.TransactionContext, account *model.Account) error
 	DeleteAccount(context storage.TransactionContext, id string) error
+	DeleteFlaggedAccounts(context storage.TransactionContext) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error

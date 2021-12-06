@@ -5,7 +5,7 @@ import (
 )
 
 //Account
-func accountFromStorage(item account, sa *Adapter, appOrg model.ApplicationOrganization) model.Account {
+func accountFromStorage(item account, appOrg model.ApplicationOrganization) model.Account {
 	id := item.ID
 	permissions := item.Permissions
 	roles := accountRolesFromStorage(item.Roles, appOrg)
@@ -16,9 +16,15 @@ func accountFromStorage(item account, sa *Adapter, appOrg model.ApplicationOrgan
 	devices := accountDevicesFromStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
+
+	var deleted bool
+	if item.Deleted != nil {
+		deleted = *item.Deleted
+	}
+
 	return model.Account{ID: id, AppOrg: appOrg, Permissions: permissions,
 		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile,
-		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+		Devices: devices, Deleted: deleted, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountToStorage(item *model.Account) *account {
@@ -34,8 +40,14 @@ func accountToStorage(item *model.Account) *account {
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
+	var deleted *bool
+	if item.Deleted {
+		deleted = &item.Deleted
+	}
+
 	return &account{ID: id, AppOrgID: appOrgID, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
-		MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+		MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile, Devices: devices, Deleted: deleted,
+		DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountDevicesFromStorage(item account) []model.Device {

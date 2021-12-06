@@ -99,6 +99,20 @@ func (_m *Storage) DeleteDevice(context storage.TransactionContext, id string) e
 	return r0
 }
 
+// DeleteFlaggedAccounts provides a mock function with given fields: context
+func (_m *Storage) DeleteFlaggedAccounts(context storage.TransactionContext) error {
+	ret := _m.Called(context)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext) error); ok {
+		r0 = rf(context)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DeleteGlobalConfig provides a mock function with given fields: context
 func (_m *Storage) DeleteGlobalConfig(context storage.TransactionContext) error {
 	ret := _m.Called(context)
@@ -249,6 +263,29 @@ func (_m *Storage) FindCredential(context storage.TransactionContext, ID string)
 	var r1 error
 	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
 		r1 = rf(context, ID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindDeletedAccounts provides a mock function with given fields: context
+func (_m *Storage) FindDeletedAccounts(context storage.TransactionContext) ([]model.Account, error) {
+	ret := _m.Called(context)
+
+	var r0 []model.Account
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext) []model.Account); ok {
+		r0 = rf(context)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Account)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext) error); ok {
+		r1 = rf(context)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -504,6 +541,20 @@ func (_m *Storage) PerformTransaction(_a0 func(storage.TransactionContext) error
 // RegisterStorageListener provides a mock function with given fields: storageListener
 func (_m *Storage) RegisterStorageListener(storageListener storage.Listener) {
 	_m.Called(storageListener)
+}
+
+// SaveAccount provides a mock function with given fields: context, account
+func (_m *Storage) SaveAccount(context storage.TransactionContext, account *model.Account) error {
+	ret := _m.Called(context, account)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *model.Account) error); ok {
+		r0 = rf(context, account)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // SaveDevice provides a mock function with given fields: context, device

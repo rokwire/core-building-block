@@ -131,6 +131,10 @@ type bbsImpl struct {
 	app *application
 }
 
+func (s *bbsImpl) BBsGetDeletedAccounts() ([]string, error) {
+	return s.app.bbsGetDeletedAccounts()
+}
+
 func (s *bbsImpl) BBsGetTest() string {
 	return s.app.bbsGetTest()
 }

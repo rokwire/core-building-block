@@ -51,6 +51,8 @@ type Account struct {
 
 	Devices []Device
 
+	Deleted bool
+
 	DateCreated time.Time
 	DateUpdated *time.Time
 }
