@@ -3,7 +3,7 @@
   "info": {
     "title": "Rokwire Core Building Block API",
     "description": "Core Building Block API Documentation",
-    "version": "1.16.0"
+    "version": "1.17.0"
   },
   "servers": [
     {
@@ -4170,12 +4170,6 @@
             "type": "string"
           },
           "password": {
-            "type": "string"
-          },
-          "mfa_code": {
-            "type": "string"
-          },
-          "mfa_type": {
             "type": "string"
           }
         }
