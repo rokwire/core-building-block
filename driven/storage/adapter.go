@@ -1176,6 +1176,23 @@ func (sa *Adapter) FindPermissions(ids []string) ([]model.Permission, error) {
 	return permissionsResult, nil
 }
 
+//FindPermissionsByServiceID finds permissions
+func (sa *Adapter) FindPermissionsByServiceID(serviceID []string) ([]model.Permission, error) {
+	filter := bson.D{primitive.E{Key: "services_ids", Value: serviceID}}
+	var result []model.Permission
+	err := sa.db.permissions.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+	}
+
+	if len(result) == 0 {
+		//no data
+		return make([]model.Permission, 0), nil
+	}
+
+	return result, nil
+}
+
 //FindPermissionsByName finds a set of permissions
 func (sa *Adapter) FindPermissionsByName(names []string) ([]model.Permission, error) {
 	permissionsFilter := bson.D{primitive.E{Key: "name", Value: bson.M{"$in": names}}}
@@ -1728,6 +1745,49 @@ func (sa *Adapter) FindApplicationOrganizations(appID string, orgID string) (*mo
 	return sa.getCachedApplicationOrganization(appID, orgID)
 }
 
+//FindServiceID finds applications organization service ids
+func (sa *Adapter) FindBuildingBlocks(appID string) (*model.ApplicationOrganization, error) {
+	filter := bson.D{primitive.E{Key: "app_id", Value: appID}}
+	var result []model.ApplicationOrganization
+	err := sa.db.applicationsOrganizations.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
+	if len(result) == 0 {
+		//no record
+		return nil, nil
+	}
+
+	appOrgRes := result[0]
+	return &appOrgRes, nil
+}
+
+//FindServiceRegistrations fetches the requested service registration records
+func (sa *Adapter) FindServiceRegistrations(serviceIDs []string) ([]model.ServiceReg, error) {
+	var filter bson.M
+	for _, serviceID := range serviceIDs {
+		if serviceID == "all" {
+			filter = bson.M{}
+			break
+		}
+	}
+	if filter == nil {
+		filter = bson.M{"registration.service_id": bson.M{"$in": serviceIDs}}
+	}
+
+	var result []model.ServiceReg
+	err := sa.db.serviceRegs.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"service_id": serviceIDs}, err)
+	}
+
+	if result == nil {
+		result = []model.ServiceReg{}
+	}
+
+	return result, nil
+}
+
 //FindDevice finds a device by device id and account id
 func (sa *Adapter) FindDevice(context TransactionContext, deviceID string, accountID string) (*model.Device, error) {
 	filter := bson.D{primitive.E{Key: "device_id", Value: deviceID},
@@ -1789,24 +1849,6 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 	}
 
 	return &device, nil
-}
-
-//FindServiceID finds applications organization service ids
-func (sa *Adapter) FindServiceIDs(appID string) (*model.ApplicationOrganization, error) {
-	filter := bson.D{primitive.E{Key: "app_id", Value: appID}}
-	var result []applicationOrganization
-	err := sa.db.applicationsOrganizations.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-	}
-	if len(result) == 0 {
-		//no record
-		return nil, nil
-	}
-
-	serviceID := serviceIDsFromStorage(result)
-
-	return serviceID, nil
 }
 
 // ============================== ServiceRegs ==============================
@@ -1898,32 +1940,6 @@ func (sa *Adapter) DeleteServiceReg(serviceID string) error {
 	}
 
 	return nil
-}
-
-//FindServiceRegs fetches the requested service registration records
-func (sa *Adapter) FindServiceRegistrations(serviceIDs []string) ([]model.ServiceReg, error) {
-	var filter bson.M
-	for _, serviceID := range serviceIDs {
-		if serviceID == "all" {
-			filter = bson.M{}
-			break
-		}
-	}
-	if filter == nil {
-		filter = bson.M{"registration.service_id": bson.M{"$in": serviceIDs}}
-	}
-
-	var result []model.ServiceReg
-	err := sa.db.serviceRegs.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"services_ids": serviceIDs}, err)
-	}
-
-	if result == nil {
-		result = []model.ServiceReg{}
-	}
-
-	return result, nil
 }
 
 //FindServiceAuthorization finds the service authorization in storage

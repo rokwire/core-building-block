@@ -162,18 +162,16 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admGetBuildingBlocks(appID string, serviceID []string) ([]model.ServiceReg, *model.ApplicationOrganization, error) {
-	getServiceIDs, err := app.storage.FindServiceIDs(appID)
+func (app *application) admGetBuildingBlocks(appID string) (*model.ApplicationOrganization, error) {
+	getAppOrg, err := app.storage.FindBuildingBlocks(appID)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
-
-	getServiceRegs, err := app.storage.FindServiceRegistrations(getServiceIDs.ServicesIDs)
+	/*getServiceRegs, err := app.storage.FindServiceRegistrations(getAppOrg.ServicesIDs)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err)
-	}
-
-	return getServiceRegs, getServiceIDs, nil
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err)
+	}*/
+	return getAppOrg, nil
 }
 
 /*func (app *application) admGetServiceID(appID string) (*model.ApplicationOrganization, error) {

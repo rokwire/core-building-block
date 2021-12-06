@@ -312,37 +312,39 @@ func (h AdminApisHandler) adminGetBuildingBlocks(l *logs.Log, r *http.Request, c
 	if len(appID) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
 	}
-	var serviceID []string
-	buildingBlocks, _, err := h.coreAPIs.Administration.AdmGetBuildingBlocks(appID, serviceID)
+
+	adminGetBuildingBlocks, err := h.coreAPIs.Administration.AdmGetBuildingBlocks(appID)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeServiceReg, &logutils.FieldArgs{"app_id": appID, "org_id": claims.OrgID}, nil, http.StatusNotFound, false)
+	}
+
+	if adminGetBuildingBlocks == nil {
+		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeServiceReg, nil, nil, http.StatusNotFound, false)
+	}
+
+	/*appOrg, err := h.coreAPIs.Administration.AdmGetServiceID(appID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+	if appOrg == nil {
+		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID}, nil, http.StatusNotFound, false)
+	}
+
+	serviceReg, err := h.coreAPIs.Administration.AdmGetServiceRegs(appOrg.ServicesIDs)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
 	}
-	if buildingBlocks == nil {
-		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeServiceReg, &logutils.FieldArgs{"app_id": appID}, nil, http.StatusNotFound, false)
-	}
+	if serviceReg == nil {
+		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeServiceReg, &logutils.FieldArgs{"services_ids": appOrg.ServicesIDs}, nil, http.StatusNotFound, false)
+	}*/
 
-	/*	appOrg, err := h.coreAPIs.Administration.AdmGetServiceID(appID)
-		if err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
-		}
-		if appOrg == nil {
-			return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID}, nil, http.StatusNotFound, false)
-		}
-
-		serviceReg, err := h.coreAPIs.Administration.AdmGetServiceRegs(serviceIDs)
-		if err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
-		}
-		if serviceReg == nil {
-			return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeServiceReg, &logutils.FieldArgs{"services_ids": serviceIDs}, nil, http.StatusNotFound, false)
-		}*/
-
-	data, err := json.Marshal(buildingBlocks)
+	data, err := json.Marshal(adminGetBuildingBlocks)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeServiceReg, nil, err, http.StatusInternalServerError, false)
 	}
 	return l.HttpResponseSuccessJSON(data)
 }
+
 func (h AdminApisHandler) getAppToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	appID := r.URL.Query().Get("app_id")
 	if appID == "" {

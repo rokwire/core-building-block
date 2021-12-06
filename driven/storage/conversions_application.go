@@ -192,19 +192,19 @@ func applicationToStorage(item *model.Application) *application {
 }
 
 //ServiceID
-func serviceIDFromStorage(item *applicationOrganization) model.ApplicationOrganization {
+func serviceIDFromStorage(item *applicationOrganization) *model.ApplicationOrganization {
 
-	return model.ApplicationOrganization{ServicesIDs: item.ServicesIDs}
+	return &model.ApplicationOrganization{ServicesIDs: item.ServicesIDs}
 }
 
-func serviceIDsFromStorage(itemsList []applicationOrganization) []model.ApplicationOrganization {
+/*func serviceIDsFromStorage(itemsList []applicationOrganization) []applicationOrganization {
 	if len(itemsList) == 0 {
-		return make([]model.ApplicationOrganization, 0)
+		return make([]applicationOrganization, 0)
 	}
 
-	var items []model.ApplicationOrganization
+	var items []applicationOrganization
 	for _, serviceIDs := range itemsList {
 		items = append(items, serviceIDFromStorage(&serviceIDs))
 	}
 	return items
-}
+}*/

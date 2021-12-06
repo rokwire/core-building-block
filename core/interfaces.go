@@ -24,7 +24,7 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	AdmGetBuildingBlocks(appID string, serviceID []string) ([]model.ServiceReg, *model.ApplicationOrganization, error)
+	AdmGetBuildingBlocks(appID string) (*model.ApplicationOrganization, error)
 	/*AdmGetServiceID(appID string) (*model.ApplicationOrganization, error)
 	AdmGetServiceRegs(serviceID []string) ([]model.ServiceReg, error)*/
 }
@@ -107,7 +107,7 @@ type Storage interface {
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 
-	FindServiceIDs(appID string) (*model.ApplicationOrganization, error)
+	FindBuildingBlocks(appID string) (*model.ApplicationOrganization, error)
 	FindServiceRegistrations(serviceID []string) ([]model.ServiceReg, error)
 }
 
