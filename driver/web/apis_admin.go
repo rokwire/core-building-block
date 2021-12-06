@@ -312,8 +312,8 @@ func (h AdminApisHandler) adminGetBuildingBlocks(l *logs.Log, r *http.Request, c
 	if len(appID) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
 	}
-	orgID := "0a2eff20-e2cd-11eb-af68-60f81db5ecc0"
-	adminGetBuildingBlocks, err := h.coreAPIs.Administration.AdmGetBuildingBlocks(appID, orgID)
+
+	adminGetBuildingBlocks, err := h.coreAPIs.Administration.AdmGetBuildingBlocks(appID, claims.OrgID)
 	if err != nil {
 		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeServiceReg, nil, nil, http.StatusNotFound, false)
 	}
