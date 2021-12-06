@@ -1800,23 +1800,6 @@ func (sa *Adapter) FindApplicationOrganizations(appID string, orgID string) (*mo
 	return sa.getCachedApplicationOrganization(appID, orgID)
 }
 
-//FindServiceID finds applications organization service ids
-func (sa *Adapter) FindBuildingBlocks(appID string) (*model.ApplicationOrganization, error) {
-	filter := bson.D{primitive.E{Key: "app_id", Value: appID}}
-	var result []model.ApplicationOrganization
-	err := sa.db.applicationsOrganizations.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
-	}
-	if len(result) == 0 {
-		//no record
-		return nil, nil
-	}
-
-	appOrgRes := result[0]
-	return &appOrgRes, nil
-}
-
 //FindServiceRegistrations fetches the requested service registration records
 func (sa *Adapter) FindServiceRegistrations(serviceIDs []string) ([]model.ServiceReg, error) {
 	var filter bson.M

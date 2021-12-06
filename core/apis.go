@@ -111,19 +111,9 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
-func (s *administrationImpl) AdmGetBuildingBlocks(appID string) (*model.ApplicationOrganization, error) {
-	return s.app.admGetBuildingBlocks(appID)
+func (s *administrationImpl) AdmGetBuildingBlocks(appID string, orgID string) ([]model.ServiceReg, error) {
+	return s.app.admGetBuildingBlocks(appID, orgID)
 }
-
-/*func (s *administrationImpl) AdmGetServiceID(appID string) (*model.ApplicationOrganization, error) {
-	return s.app.admGetServiceID(appID)
-}
-
-func (s *administrationImpl) AdmGetServiceRegs(servieceID []string) ([]model.ServiceReg, error) {
-	return s.app.admGetServiceRegs(servieceID)
-}*/
-
-///
 
 //encryptionImpl
 

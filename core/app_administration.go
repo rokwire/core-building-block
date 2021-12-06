@@ -162,32 +162,14 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admGetBuildingBlocks(appID string) (*model.ApplicationOrganization, error) {
-	getAppOrg, err := app.storage.FindBuildingBlocks(appID)
+func (app *application) admGetBuildingBlocks(appID string, orgID string) ([]model.ServiceReg, error) {
+	getAppOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
-	/*getServiceRegs, err := app.storage.FindServiceRegistrations(getAppOrg.ServicesIDs)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err)
-	}*/
-	return getAppOrg, nil
-}
-
-/*func (app *application) admGetServiceID(appID string) (*model.ApplicationOrganization, error) {
-	getServiceIDs, err := app.storage.FindServiceIDs(appID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
-	}
-
-	return getServiceIDs, nil
-}
-
-func (app *application) admGetServiceRegs(serviceID []string) ([]model.ServiceReg, error) {
-	getServiceRegs, err := app.storage.FindServiceRegistrations(serviceID)
+	getServiceRegs, err := app.storage.FindServiceRegistrations(getAppOrg.ServicesIDs)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err)
 	}
-
 	return getServiceRegs, nil
-}*/
+}

@@ -24,9 +24,7 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	AdmGetBuildingBlocks(appID string) (*model.ApplicationOrganization, error)
-	/*AdmGetServiceID(appID string) (*model.ApplicationOrganization, error)
-	AdmGetServiceRegs(serviceID []string) ([]model.ServiceReg, error)*/
+	AdmGetBuildingBlocks(appID string, orgID string) ([]model.ServiceReg, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -113,7 +111,7 @@ type Storage interface {
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 
-	FindBuildingBlocks(appID string) (*model.ApplicationOrganization, error)
+	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
 	FindServiceRegistrations(serviceID []string) ([]model.ServiceReg, error)
 }
 

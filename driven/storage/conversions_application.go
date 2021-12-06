@@ -192,7 +192,7 @@ func applicationToStorage(item *model.Application) *application {
 }
 
 //ServiceID
-func serviceIDFromStorage(item *applicationOrganization) *model.ApplicationOrganization {
+func serviceIDFromStorage(item *model.ApplicationOrganization) *model.ApplicationOrganization {
 
 	return &model.ApplicationOrganization{ServicesIDs: item.ServicesIDs}
 }
