@@ -477,7 +477,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 
 //VerifyCredential verifies credential (checks the verification code in the credentials collection)
 func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) error {
-	credential, err := a.storage.FindCredential(id)
+	credential, err := a.storage.FindCredential(nil, id)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
@@ -507,7 +507,7 @@ func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) err
 
 	credential.Verified = true
 	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(credential); err != nil {
+	if err = a.storage.UpdateCredential(nil, credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 
@@ -555,7 +555,7 @@ func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, para
 	}
 	//Update the credential with new password
 	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(credential); err != nil {
+	if err = a.storage.UpdateCredential(nil, credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 
@@ -572,7 +572,7 @@ func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, para
 //TODO: Clear login sessions using old creds
 // Handle refresh tokens when applicable
 func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params string, l *logs.Log) error {
-	credential, err := a.storage.FindCredential(credsID)
+	credential, err := a.storage.FindCredential(nil, credsID)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
@@ -597,7 +597,7 @@ func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params st
 	}
 	//Update the credential with new password
 	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(credential); err != nil {
+	if err = a.storage.UpdateCredential(nil, credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 
@@ -663,7 +663,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	}
 	//Update the credential with reset code and expiry
 	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(credential); err != nil {
+	if err = a.storage.UpdateCredential(nil, credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 	return nil

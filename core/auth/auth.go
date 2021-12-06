@@ -518,7 +518,7 @@ func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthT
 
 	if accountAuthType.Credential != nil {
 		//populate credentials in accountAuthType
-		credential, err := a.storage.FindCredential(accountAuthType.Credential.ID)
+		credential, err := a.storage.FindCredential(nil, accountAuthType.Credential.ID)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 		}
@@ -552,7 +552,7 @@ func (a *Auth) findAccountAuthTypeByID(account *model.Account, accountAuthTypeID
 
 	if accountAuthType.Credential != nil {
 		//populate credentials in accountAuthType
-		credential, err := a.storage.FindCredential(accountAuthType.Credential.ID)
+		credential, err := a.storage.FindCredential(nil, accountAuthType.Credential.ID)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 		}
