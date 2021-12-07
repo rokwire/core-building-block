@@ -132,6 +132,19 @@ func serviceAccountFromStorage(item serviceAccount, sa *Adapter) (*model.Service
 		Roles: roles, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}, nil
 }
 
+func serviceAccountListFromStorage(items []serviceAccount, sa *Adapter) []model.ServiceAccount {
+	accountList := make([]model.ServiceAccount, len(items))
+
+	for i, account := range items {
+		modelAccount, err := serviceAccountFromStorage(account, sa)
+		if err != nil {
+			sa.logger.Warn(err.Error())
+		}
+		accountList[i] = *modelAccount
+	}
+	return accountList
+}
+
 func serviceAccountToStorage(item model.ServiceAccount) *serviceAccount {
 	roles := accountRolesToStorage(item.Roles)
 

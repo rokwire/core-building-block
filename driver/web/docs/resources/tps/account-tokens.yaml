@@ -16,9 +16,18 @@ post:
             summary: Static token
             value: |
               {
-                "auth_type": "static_token"
+                "auth_type": "static_token",
                 "creds": {
                   "token": "account_token"
+                }
+              }
+          signature:
+            summary: Signature
+            value: |
+              {
+                "auth_type": "signature",
+                "creds": {
+                  "id": "service_account_id"
                 }
               }
     required: true

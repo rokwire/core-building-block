@@ -60,28 +60,31 @@ func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, creds int
 	return nil, account, nil
 }
 
-func (s *staticTokenServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, string, error) {
+func (s *staticTokenServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
 	if account == nil {
-		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
 	}
 	if creds == nil {
-		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
 	}
 
 	token, _, err := s.auth.buildRefreshToken()
 	if err != nil {
 		l.Info("error generating service account token")
-		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
 	encodedToken := s.hashAndEncodeToken(token)
 
-	creds.Token = &encodedToken
-	creds.PubKey = nil
-	creds.DateCreated = time.Now().UTC()
+	now := time.Now().UTC()
+	creds.Params = map[string]interface{}{
+		"token": encodedToken,
+	}
+	creds.DateCreated = now
 	account.Credentials = append(account.Credentials, *creds)
+	account.DateUpdated = &now
 
-	return account, token, nil
+	return account, nil
 }
 
 func (s *staticTokenServiceAuthImpl) hashAndEncodeToken(token string) string {

@@ -500,10 +500,8 @@ type ServiceAccount struct {
 // ServiceAccountCredential defines model for ServiceAccountCredential.
 type ServiceAccountCredential struct {
 	DateCreated *string                      `json:"date_created,omitempty"`
-	DateUpdated *string                      `json:"date_updated"`
 	Name        string                       `json:"name"`
-	PubKey      *string                      `json:"pub_key,omitempty"`
-	Token       *string                      `json:"token,omitempty"`
+	Params      *map[string]interface{}      `json:"params,omitempty"`
 	Type        ServiceAccountCredentialType `json:"type"`
 }
 
@@ -1149,8 +1147,8 @@ type DeleteSystemServiceAccountsIdCredsParams struct {
 	Name string `json:"name"`
 }
 
-// PutSystemServiceAccountsIdCredsJSONBody defines parameters for PutSystemServiceAccountsIdCreds.
-type PutSystemServiceAccountsIdCredsJSONBody ServiceAccountCredential
+// PostSystemServiceAccountsIdCredsJSONBody defines parameters for PostSystemServiceAccountsIdCreds.
+type PostSystemServiceAccountsIdCredsJSONBody ServiceAccountCredential
 
 // DeleteSystemServiceRegsParams defines parameters for DeleteSystemServiceRegs.
 type DeleteSystemServiceRegsParams struct {
@@ -1287,8 +1285,8 @@ type PostSystemServiceAccountsJSONRequestBody PostSystemServiceAccountsJSONBody
 // PutSystemServiceAccountsJSONRequestBody defines body for PutSystemServiceAccounts for application/json ContentType.
 type PutSystemServiceAccountsJSONRequestBody PutSystemServiceAccountsJSONBody
 
-// PutSystemServiceAccountsIdCredsJSONRequestBody defines body for PutSystemServiceAccountsIdCreds for application/json ContentType.
-type PutSystemServiceAccountsIdCredsJSONRequestBody PutSystemServiceAccountsIdCredsJSONBody
+// PostSystemServiceAccountsIdCredsJSONRequestBody defines body for PostSystemServiceAccountsIdCreds for application/json ContentType.
+type PostSystemServiceAccountsIdCredsJSONRequestBody PostSystemServiceAccountsIdCredsJSONBody
 
 // PostSystemServiceRegsJSONRequestBody defines body for PostSystemServiceRegs for application/json ContentType.
 type PostSystemServiceRegsJSONRequestBody PostSystemServiceRegsJSONBody

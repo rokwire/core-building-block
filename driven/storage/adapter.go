@@ -772,7 +772,7 @@ func (sa *Adapter) FindServiceAccountByID(context TransactionContext, id string)
 
 //FindServiceAccountByToken finds a service account by token
 func (sa *Adapter) FindServiceAccountByToken(tokenHash string) (*model.ServiceAccount, error) {
-	return sa.findServiceAccount(nil, "tokens.token", tokenHash)
+	return sa.findServiceAccount(nil, "credentials.params.token", tokenHash)
 }
 
 func (sa *Adapter) findServiceAccount(context TransactionContext, key string, value string) (*model.ServiceAccount, error) {
@@ -800,7 +800,17 @@ func (sa *Adapter) findServiceAccount(context TransactionContext, key string, va
 
 //FindServiceAccounts gets all service accounts
 func (sa *Adapter) FindServiceAccounts() ([]model.ServiceAccount, error) {
-	return nil, errors.New(logutils.Unimplemented)
+	filter := bson.D{}
+
+	var accounts []serviceAccount
+	err := sa.db.serviceAccounts.Find(filter, &accounts, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+	}
+
+	modelAccounts := serviceAccountListFromStorage(accounts, sa)
+
+	return modelAccounts, nil
 }
 
 //InsertServiceAccount inserts a service account
@@ -827,7 +837,6 @@ func (sa *Adapter) UpdateServiceAccount(context TransactionContext, account *mod
 
 	storageAccount := serviceAccountToStorage(*account)
 
-	now := time.Now().UTC()
 	filter := bson.D{primitive.E{Key: "_id", Value: account.ID}}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
@@ -836,8 +845,7 @@ func (sa *Adapter) UpdateServiceAccount(context TransactionContext, account *mod
 			primitive.E{Key: "org_id", Value: storageAccount.OrgID},
 			primitive.E{Key: "permissions", Value: storageAccount.Permissions},
 			primitive.E{Key: "roles", Value: storageAccount.Roles},
-			primitive.E{Key: "credentials", Value: storageAccount.Credentials},
-			primitive.E{Key: "date_updated", Value: &now},
+			primitive.E{Key: "date_updated", Value: storageAccount.DateUpdated},
 		}},
 	}
 
@@ -861,7 +869,17 @@ func (sa *Adapter) UpdateServiceAccount(context TransactionContext, account *mod
 
 //DeleteServiceAccount deletes a service account
 func (sa *Adapter) DeleteServiceAccount(id string) error {
-	return errors.New(logutils.Unimplemented)
+	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+
+	res, err := sa.db.serviceAccounts.DeleteOne(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"_id": id}, err)
+	}
+	if res.DeletedCount != 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, logutils.StringArgs("unexpected deleted count"))
+	}
+
+	return nil
 }
 
 //UpdateAccountPreferences updates account preferences

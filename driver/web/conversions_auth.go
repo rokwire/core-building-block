@@ -89,7 +89,9 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 		roles[i] = r.Role.ID
 	}
 
-	return &Def.ServiceAccount{Id: &id, Name: name, OrgId: orgID, AppId: appID, Permissions: permissions, Roles: roles}
+	creds := serviceAccountCredentialListToDef(item.Credentials)
+
+	return &Def.ServiceAccount{Id: &id, Name: name, OrgId: orgID, AppId: appID, Permissions: permissions, Roles: roles, Creds: &creds}
 }
 
 func serviceAccountCredentialFromDef(item *Def.ServiceAccountCredential) *model.ServiceAccountCredential {
@@ -97,7 +99,20 @@ func serviceAccountCredentialFromDef(item *Def.ServiceAccountCredential) *model.
 		return nil
 	}
 
-	return &model.ServiceAccountCredential{Name: item.Name, Type: string(item.Type), Token: item.Token, PubKey: item.PubKey}
+	return &model.ServiceAccountCredential{Name: item.Name, Type: string(item.Type), Params: *item.Params}
+}
+
+func serviceAccountCredentialListFromDef(items []Def.ServiceAccountCredential) []model.ServiceAccountCredential {
+	out := make([]model.ServiceAccountCredential, len(items))
+	for i, item := range items {
+		defItem := serviceAccountCredentialFromDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = model.ServiceAccountCredential{}
+		}
+	}
+	return out
 }
 
 func serviceAccountCredentialToDef(item *model.ServiceAccountCredential) *Def.ServiceAccountCredential {
@@ -105,8 +120,23 @@ func serviceAccountCredentialToDef(item *model.ServiceAccountCredential) *Def.Se
 		return nil
 	}
 
-	return &Def.ServiceAccountCredential{Name: item.Name, Type: Def.ServiceAccountCredentialType(item.Type), Token: item.Token,
-		PubKey: item.PubKey} //, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	dateCreated := item.DateCreated.Format("2006-01-02T15:04:05.000Z")
+
+	return &Def.ServiceAccountCredential{Name: item.Name, Type: Def.ServiceAccountCredentialType(item.Type),
+		Params: &item.Params, DateCreated: &dateCreated}
+}
+
+func serviceAccountCredentialListToDef(items []model.ServiceAccountCredential) []Def.ServiceAccountCredential {
+	out := make([]Def.ServiceAccountCredential, len(items))
+	for i, item := range items {
+		defItem := serviceAccountCredentialToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.ServiceAccountCredential{}
+		}
+	}
+	return out
 }
 
 func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceReg, error) {

@@ -1528,9 +1528,18 @@ paths:
                 summary: Static token
                 value: |
                   {
-                    "auth_type": "static_token"
+                    "auth_type": "static_token",
                     "creds": {
                       "token": "account_token"
+                    }
+                  }
+              signature:
+                summary: Signature
+                value: |
+                  {
+                    "auth_type": "signature",
+                    "creds": {
+                      "id": "service_account_id"
                     }
                   }
         required: true
@@ -1909,7 +1918,41 @@ paths:
         '500':
           description: Internal error
   '/system/service-accounts/{id}':
+    get:
+      deprecated: true
+      tags:
+        - System
+      summary: Get service account
+      description: |
+        Get service account by ID
+
+        **Auth:** Requires auth token with permission to read service accounts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the service account to return
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
     delete:
+      deprecated: true
       tags:
         - System
       summary: Deregister service account
@@ -1939,6 +1982,7 @@ paths:
           description: Internal error
   /system/service-accounts:
     get:
+      deprecated: true
       tags:
         - System
       summary: Get service accounts
@@ -1964,6 +2008,7 @@ paths:
         '500':
           description: Internal error
     post:
+      deprecated: true
       tags:
         - System
       summary: Register service account
@@ -1980,10 +2025,48 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ServiceAccount'
+            examples:
+              initial_creds:
+                summary: Register account with initial credentials
+                value: |
+                  {
+                    "name": "test_account",
+                    "app_id": "9766",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "permissions": ["permission1", "permission2"],
+                    "roles": ["role1", "role2"],
+                    "creds": [
+                      {
+                        "name": "initial_token",
+                        "type": "static_token"
+                      },
+                      {
+                        "name": "initial_signature",
+                        "type": "signature",
+                        "params": {
+                          "pub_key": "public_key_pem"
+                        }
+                      }
+                    ]
+                  }
+              no_initial_creds:
+                summary: Register account without initial credentials
+                value: |
+                  {
+                    "name": "test_account",
+                    "app_id": "9766",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "permissions": ["permission1", "permission2"],
+                    "roles": ["role1", "role2"],
+                  }
         required: true
       responses:
         '200':
           description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceAccount'
         '400':
           description: Bad request
         '401':
@@ -1991,6 +2074,7 @@ paths:
         '500':
           description: Internal error
     put:
+      deprecated: true
       tags:
         - System
       summary: Update service account
@@ -2007,6 +2091,18 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ServiceAccount'
+            examples:
+              update_account:
+                summary: Update service account
+                value: |
+                  {
+                    "id": "accc8988-4cb0-11ec-8fc7-00155d05ea4a",
+                    "name": "updated_name",
+                    "app_id": "9766",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "permissions": ["permission1", "new_permission1"],
+                    "roles": ["role1", "role2", "new_role1"]
+                  }
         required: true
       responses:
         '200':
@@ -2018,7 +2114,8 @@ paths:
         '500':
           description: Internal error
   '/system/service-accounts/{id}/creds':
-    put:
+    post:
+      deprecated: true
       tags:
         - System
       summary: Add service account credential
@@ -2039,19 +2136,37 @@ paths:
             type: string
       requestBody:
         description: |
-          Service account
+          Service account credentials
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ServiceAccountCredential'
+            examples:
+              static_token:
+                summary: Add static token credential
+                value: |
+                  {
+                    "name": "token_cred",
+                    "type": "static_token"
+                  }
+              signature:
+                summary: Add signature credential
+                value: |
+                  {
+                    "name": "signature_cred",
+                    "type": "signature",
+                    "params": {
+                      "pub_key": "public_key_pem"
+                    }
+                  }
         required: true
       responses:
         '200':
           description: Success
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/ServiceAccountCredential'
         '400':
           description: Bad request
         '401':
@@ -2059,6 +2174,7 @@ paths:
         '500':
           description: Internal error
     delete:
+      deprecated: true
       tags:
         - System
       summary: Remove service account credential
@@ -2954,13 +3070,8 @@ components:
           enum:
             - static_token
             - signature
-        token:
-          type: string
-        pub_key:
-          type: string
-        date_updated:
-          type: string
-          nullable: true
+        params:
+          type: object
         date_created:
           type: string
     ServiceReg:

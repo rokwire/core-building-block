@@ -256,11 +256,9 @@ type ServiceAccountCredential struct {
 	Name string `bson:"name"`
 	Type string `bson:"type"`
 
-	Token  *string `bson:"token,omitempty"`
-	PubKey *string `bson:"pub_key,omitempty"`
+	Params map[string]interface{} `bson:"params"`
 
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
+	DateCreated time.Time `bson:"date_created"`
 }
 
 // ServiceAccountTokenRequest represents a service account token request entity

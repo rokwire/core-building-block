@@ -74,7 +74,7 @@ type anonymousAuthType interface {
 //serviceAuthType is the interface for authentication for non-human clients
 type serviceAuthType interface {
 	checkCredentials(r *http.Request, creds interface{}, l *logs.Log) (*string, *model.ServiceAccount, error)
-	addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, string, error)
+	addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error)
 }
 
 //mfaType is the interface for multi-factor authentication
@@ -255,11 +255,14 @@ type APIs interface {
 	//GetServiceAccessToken returns an access token for a non-human client
 	GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, string, error)
 
+	//GetServiceAccount gets a service account by ID
+	GetServiceAccount(id string) (*model.ServiceAccount, error)
+
 	//GetServiceAccounts gets all service accounts
 	GetServiceAccounts() ([]model.ServiceAccount, error)
 
 	//RegisterServiceAccount registers a service account
-	RegisterServiceAccount(name string, orgID *string, appID *string, permissions []string, roles []string) error
+	RegisterServiceAccount(name string, orgID *string, appID *string, permissions []string, roles []string, creds []model.ServiceAccountCredential) (*model.ServiceAccount, error)
 
 	//UpdateServiceAccount updates a service account
 	UpdateServiceAccount(id string, name string, orgID *string, appID *string, permissions []string, roles []string) error
@@ -268,7 +271,7 @@ type APIs interface {
 	DeregisterServiceAccount(id string) error
 
 	//AddServiceCredential adds a credential to a service account
-	AddServiceCredential(accountID string, creds *model.ServiceAccountCredential, l *logs.Log) (string, error)
+	AddServiceCredential(accountID string, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccountCredential, error)
 
 	//RemoveServiceCredential removes a credential from a service account
 	RemoveServiceCredential(accountID string, name string) error

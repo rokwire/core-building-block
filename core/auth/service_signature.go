@@ -56,10 +56,14 @@ func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, creds inter
 	}
 
 	for _, credential := range account.Credentials {
-		if credential.Type == ServiceAuthTypeSignature && credential.PubKey != nil {
-			pubKeyPemString := strings.Replace(*credential.PubKey, `\n`, "\n", -1)
+		if credential.Type == ServiceAuthTypeSignature && credential.Params != nil {
+			pubKeyPem, ok := credential.Params["pub_key"].(string)
+			if !ok || pubKeyPem == "" {
+				continue
+			}
+			pubKeyPem = strings.Replace(pubKeyPem, `\n`, "\n", -1)
 
-			pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(pubKeyPemString))
+			pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(pubKeyPem))
 			if err != nil {
 				return nil, nil, errors.WrapErrorAction(logutils.ActionParse, "service account public key", nil, err)
 			}
@@ -76,18 +80,20 @@ func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, creds inter
 	return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "request signature", nil, err)
 }
 
-func (s *signatureServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, string, error) {
+func (s *signatureServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
 	if account == nil {
-		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
 	}
 	if creds == nil {
-		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
 	}
 
-	creds.DateCreated = time.Now().UTC()
+	now := time.Now().UTC()
+	creds.DateCreated = now
 	account.Credentials = append(account.Credentials, *creds)
+	account.DateUpdated = &now
 
-	return account, "", nil
+	return account, nil
 }
 
 //initSignatureServiceAuth initializes and registers a new signature service auth instance
