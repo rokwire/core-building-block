@@ -2,9 +2,6 @@ package core
 
 import (
 	"core-building-block/core/model"
-
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
 )
 
 func (app *application) admGetTest() string {
@@ -163,10 +160,5 @@ func (app *application) admGetTestModel() string {
 }
 
 func (app *application) admGetAccount(accountID string) (*model.Account, error) {
-	//find the account
-	account, err := app.storage.FindAccountByID(nil, accountID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-	return account, nil
+	return app.getAccount(accountID)
 }
