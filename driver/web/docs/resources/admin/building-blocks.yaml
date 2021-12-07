@@ -22,7 +22,7 @@ get:
         application/json:
             type: string
             items: 
-              $ref: "../../../schemas/apis/shared/responses/building-blocks/Response.yaml"
+              $ref: "../../schemas/apis/shared/responses/BuildingBlocks.yaml" 
     400:
       description: Bad request
     401:

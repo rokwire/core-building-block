@@ -76,7 +76,7 @@ paths:
   /admin/auth/login-url:
     $ref: "./resources/admin/auth/login-url.yaml"
   /admin/application/{app_id}/building-blocks:
-    $ref: "./resources/admin/auth/building-blocks.yaml"
+     $ref: "./resources/admin/building-blocks.yaml"
   /admin/auth/verify-mfa:
     $ref: "./resources/admin/auth/verify-mfa.yaml"
   /admin/auth/app-token:

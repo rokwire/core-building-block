@@ -138,7 +138,7 @@ _res_shared_Mfa:
 _res_shared_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
 _res_shared_BuildingBlocks:
-  $ref: "./apis/shared/responses/building-blocks/Response.yaml"
+  $ref: "./apis/shared/responses/BuildingBlocks.yaml"
 ### end - shared requests and responses
 
 ### account exists API
