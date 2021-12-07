@@ -173,3 +173,7 @@ func (app *application) admGetBuildingBlocks(appID string, orgID string) ([]mode
 	}
 	return getServiceRegs, nil
 }
+
+func (app *application) admGetAccount(accountID string) (*model.Account, error) {
+	return app.getAccount(accountID)
+}

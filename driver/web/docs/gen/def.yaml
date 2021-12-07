@@ -1479,6 +1479,41 @@
         }
       }
     },
+    "/admin/account": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get user account",
+        "description": "Get the user account\n\n**Auth:** Requires user auth token\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_res_shared_Account"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/admin/account/mfa": {
       "get": {
         "tags": [

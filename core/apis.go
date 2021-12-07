@@ -115,6 +115,12 @@ func (s *administrationImpl) AdmGetBuildingBlocks(appID string, orgID string) ([
 	return s.app.admGetBuildingBlocks(appID, orgID)
 }
 
+func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
+	return s.app.admGetAccount(accountID)
+}
+
+///
+
 //encryptionImpl
 
 type encryptionImpl struct {
