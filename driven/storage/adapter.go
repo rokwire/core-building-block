@@ -1823,7 +1823,9 @@ func (sa *Adapter) FindServiceRegistrations(serviceIDs []string) ([]model.Servic
 		result = []model.ServiceReg{}
 	}
 
-	return result, nil
+	serveRegs := serviceRegListToStorage(result)
+
+	return serveRegs, nil
 }
 
 //FindDevice finds a device by device id and account id

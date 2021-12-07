@@ -4493,13 +4493,12 @@
       },
       "_res_shared_BuildingBlocks": {
         "required": [
-          "id",
+          "service_id",
           "host"
         ],
         "type": "object",
         "properties": {
-          "id": {
-            "readOnly": true,
+          "service_id": {
             "type": "string"
           },
           "host": {

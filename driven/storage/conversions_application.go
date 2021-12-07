@@ -2,6 +2,8 @@ package storage
 
 import (
 	"core-building-block/core/model"
+
+	"github.com/rokwire/core-auth-library-go/authservice"
 )
 
 //Application
@@ -197,14 +199,22 @@ func serviceIDFromStorage(item *model.ApplicationOrganization) *model.Applicatio
 	return &model.ApplicationOrganization{ServicesIDs: item.ServicesIDs}
 }
 
-/*func serviceIDsFromStorage(itemsList []applicationOrganization) []applicationOrganization {
-	if len(itemsList) == 0 {
-		return make([]applicationOrganization, 0)
+func serviceRegToStorage(item *model.ServiceReg) *model.ServiceReg {
+	if item == nil {
+		return nil
 	}
+	return &model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: item.Registration.ServiceID, Host: item.Registration.Host}}
+}
 
-	var items []applicationOrganization
-	for _, serviceIDs := range itemsList {
-		items = append(items, serviceIDFromStorage(&serviceIDs))
+func serviceRegListToStorage(items []model.ServiceReg) []model.ServiceReg {
+	out := make([]model.ServiceReg, len(items))
+	for i, item := range items {
+		servRegItems := serviceRegToStorage(&item)
+		if servRegItems != nil {
+			out[i] = *servRegItems
+		} else {
+			out[i] = model.ServiceReg{}
+		}
 	}
-	return items
-}*/
+	return out
+}

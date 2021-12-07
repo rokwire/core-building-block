@@ -210,6 +210,29 @@ func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	return r0, r1
 }
 
+// FindApplicationOrganizations provides a mock function with given fields: appID, orgID
+func (_m *Storage) FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error) {
+	ret := _m.Called(appID, orgID)
+
+	var r0 *model.ApplicationOrganization
+	if rf, ok := ret.Get(0).(func(string, string) *model.ApplicationOrganization); ok {
+		r0 = rf(appID, orgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.ApplicationOrganization)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(appID, orgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindApplications provides a mock function with given fields:
 func (_m *Storage) FindApplications() ([]model.Application, error) {
 	ret := _m.Called()
@@ -295,6 +318,29 @@ func (_m *Storage) FindPermissionsByName(names []string) ([]model.Permission, er
 	var r1 error
 	if rf, ok := ret.Get(1).(func([]string) error); ok {
 		r1 = rf(names)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindServiceRegistrations provides a mock function with given fields: serviceID
+func (_m *Storage) FindServiceRegistrations(serviceID []string) ([]model.ServiceReg, error) {
+	ret := _m.Called(serviceID)
+
+	var r0 []model.ServiceReg
+	if rf, ok := ret.Get(0).(func([]string) []model.ServiceReg); ok {
+		r0 = rf(serviceID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.ServiceReg)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func([]string) error); ok {
+		r1 = rf(serviceID)
 	} else {
 		r1 = ret.Error(1)
 	}
