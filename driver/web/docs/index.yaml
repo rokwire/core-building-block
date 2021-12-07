@@ -56,13 +56,13 @@ paths:
   /services/auth/service-regs:
     $ref: "./resources/services/auth/service-regs.yaml"
   /services/account:
-    $ref: "./resources/services/accounts/account.yaml"
+    $ref: "./resources/services/account.yaml"
   /services/account/mfa:
-    $ref: "./resources/services/accounts/mfa.yaml"
+    $ref: "./resources/services/account/mfa.yaml"
   /services/account/preferences:
-    $ref: "./resources/services/accounts/preferences.yaml"
+    $ref: "./resources/services/account/preferences.yaml"
   /services/account/profile:
-    $ref: "./resources/services/accounts/profile.yaml"
+    $ref: "./resources/services/account/profile.yaml"
   /services/test:
     $ref: "./resources/services/test.yaml"
 
@@ -82,7 +82,7 @@ paths:
   /admin/auth/app-token:
     $ref: "./resources/admin/auth/app-token.yaml"
   /admin/account:
-    $ref: "./resources/admin/account/account.yaml"
+    $ref: "./resources/admin/account.yaml"
   /admin/account/mfa:
     $ref: "./resources/admin/account/mfa.yaml"
 
@@ -98,9 +98,9 @@ paths:
 
   #third-party services
   /tps/service-regs:
-    $ref: "./resources/third-party-services/service-regs.yaml"
+    $ref: "./resources/tps/service-regs.yaml"
   /tps/auth-keys:
-    $ref: "./resources/third-party-services/auth-keys.yaml"
+    $ref: "./resources/tps/auth-keys.yaml"
 
   #system
   /system/global-config:
