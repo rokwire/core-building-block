@@ -79,7 +79,8 @@ paths:
     $ref: "./resources/admin/auth/verify-mfa.yaml"
   /admin/auth/app-token:
     $ref: "./resources/admin/auth/app-token.yaml"
-
+  /admin/account:
+    $ref: "./resources/admin/account/account.yaml"
   /admin/account/mfa:
     $ref: "./resources/admin/account/mfa.yaml"
 
