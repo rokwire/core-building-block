@@ -132,7 +132,7 @@ func main() {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, logger)
 	coreAPIs.Start()
 
 	//web adapter
