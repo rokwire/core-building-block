@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Remove account from the system - all BBs [#335](https://github.com/rokwire/core-building-block/issues/335)
+- Expose get account admin API [#270](https://github.com/rokwire/core-building-block/issues/270)
+
+### Fixed
+- Fix yaml files paths [#352](https://github.com/rokwire/core-building-block/issues/352)
 
 ## [1.17.0] - 2021-12-06
 ### Fixed
