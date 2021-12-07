@@ -342,7 +342,9 @@ func (h AdminApisHandler) adminGetBuildingBlocks(l *logs.Log, r *http.Request, c
 		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeServiceReg, nil, nil, http.StatusNotFound, false)
 	}
 
-	data, err := json.Marshal(adminGetBuildingBlocks)
+	response := authServiceRegListToDef(adminGetBuildingBlocks)
+
+	data, err := json.Marshal(response)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeServiceReg, nil, err, http.StatusInternalServerError, false)
 	}
