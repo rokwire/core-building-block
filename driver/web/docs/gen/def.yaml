@@ -3,7 +3,7 @@
   "info": {
     "title": "Rokwire Core Building Block API",
     "description": "Core Building Block API Documentation",
-    "version": "1.16.0"
+    "version": "1.17.0"
   },
   "servers": [
     {
@@ -1450,6 +1450,41 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/_req_admin_app-token_Response"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/admin/account": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get user account",
+        "description": "Get the user account\n\n**Auth:** Requires user auth token\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_res_shared_Account"
                 }
               }
             }
@@ -4053,12 +4088,6 @@
             "type": "string"
           },
           "password": {
-            "type": "string"
-          },
-          "mfa_code": {
-            "type": "string"
-          },
-          "mfa_type": {
             "type": "string"
           }
         }

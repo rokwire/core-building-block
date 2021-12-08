@@ -170,3 +170,7 @@ func (app *application) admGetPermissions(serviceID []string) ([]model.Permissio
 
 	return getPermissions, nil
 }
+
+func (app *application) admGetAccount(accountID string) (*model.Account, error) {
+	return app.getAccount(accountID)
+}
