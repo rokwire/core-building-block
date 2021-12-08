@@ -471,7 +471,7 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 
 //FindAccounts finds accounts
 func (sa *Adapter) FindAccounts(id string, identifier string, appID *string, orgID *string) ([]model.Account, error) {
-	filter := bson.D{}
+	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
 	var result []model.Account
 	err := sa.db.accounts.Find(filter, &result, nil)
 	if err != nil {
