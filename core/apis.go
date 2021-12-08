@@ -114,6 +114,10 @@ func (s *administrationImpl) AdmGetApplicationOrgRoles() ([]model.AppOrgRole, er
 	return s.app.admGetApplicationOrgRoles()
 }
 
+func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
+	return s.app.admGetAccount(accountID)
+}
+
 ///
 
 //encryptionImpl

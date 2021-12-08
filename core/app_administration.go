@@ -170,3 +170,7 @@ func (app *application) admGetApplicationOrgRoles() ([]model.AppOrgRole, error) 
 
 	return getAppOrgRoles, nil
 }
+
+func (app *application) admGetAccount(accountID string) (*model.Account, error) {
+	return app.getAccount(accountID)
+}
