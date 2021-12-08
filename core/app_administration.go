@@ -170,3 +170,7 @@ func (app *application) admGetAccounts(accountID string, identifier string, appI
 	}
 	return findAccounts, nil
 }
+
+func (app *application) admGetAccount(accountID string) (*model.Account, error) {
+	return app.getAccount(accountID)
+}

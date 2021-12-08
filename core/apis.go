@@ -115,6 +115,10 @@ func (s *administrationImpl) AdmGetAccounts(accountID string, identifier string,
 	return s.app.admGetAccounts(accountID, identifier, appID, orgID)
 }
 
+func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
+	return s.app.admGetAccount(accountID)
+}
+
 ///
 
 //encryptionImpl

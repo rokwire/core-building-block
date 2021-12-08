@@ -26,6 +26,7 @@ type Administration interface {
 	AdmGetTestModel() string
 
 	AdmGetAccounts(accountID string, identifier string, appID *string, orgID *string) ([]model.Account, error)
+	AdmGetAccount(accountID string) (*model.Account, error)
 }
 
 //Encryption exposes APIs for the Encryption building block

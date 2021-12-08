@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Expose get accounts admin API [#283] (https://github.com/rokwire/core-building-block/issues/283)
+### Added
+- Expose get account admin API [#270](https://github.com/rokwire/core-building-block/issues/270)
+
+### Fixed
+- Fix yaml files paths [#352](https://github.com/rokwire/core-building-block/issues/352)
+
 
 ## [1.17.0] - 2021-12-06
 ### Fixed
