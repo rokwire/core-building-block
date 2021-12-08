@@ -282,7 +282,7 @@ func (a *emailAuthImpl) sendVerifyCredential(credential *model.Credential, l *lo
 	}
 
 	credential.Value = credsMap
-	if err = a.auth.storage.UpdateCredential(credential); err != nil {
+	if err = a.auth.storage.UpdateCredential(nil, credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 

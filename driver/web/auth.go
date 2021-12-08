@@ -87,6 +87,7 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 	return &auth, nil
 }
 
+//TokenAuthHandlers represents token auth handlers
 type TokenAuthHandlers struct {
 	standard      TokenAuthorization
 	permissions   *PermissionsAuth
@@ -257,12 +258,12 @@ func newSystemAuth(authService *authservice.AuthService, logger *logs.Logger) (*
 }
 
 //PermissionsAuth entity
-// This enforces that the user has permissions matching the policy
+//This enforces that the user has permissions matching the policy
 type PermissionsAuth struct {
 	auth TokenAuthorization
 }
 
-func (auth *PermissionsAuth) start() {}
+func (a *PermissionsAuth) start() {}
 
 func (a *PermissionsAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
 	status, claims, err := a.auth.check(req)
@@ -288,7 +289,7 @@ type UserAuth struct {
 	auth Authorization
 }
 
-func (auth *UserAuth) start() {}
+func (a *UserAuth) start() {}
 
 func (a *UserAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
 	status, claims, err := a.auth.check(req)
