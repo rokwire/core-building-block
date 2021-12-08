@@ -265,16 +265,25 @@ func (h SystemApisHandler) deregisterService(l *logs.Log, r *http.Request, claim
 }
 
 func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	params := mux.Vars(r)
-	searchParams := map[string]interface{}{
-		"name":        params["name"],
-		"app_id":      params["app_id"],
-		"org_id":      params["org_id"],
-		"permissions": strings.Split(params["permissions"], ","),
-		"roles":       strings.Split(params["roles"], ","),
+	searchParams := make(map[string]interface{})
+	query := r.URL.Query()
+	if query.Get("name") != "" {
+		searchParams["name"] = query.Get("name")
+	}
+	if query.Get("app_id") != "" {
+		searchParams["app_id"] = query.Get("app_id")
+	}
+	if query.Get("org_id") != "" {
+		searchParams["org_id"] = query.Get("org_id")
+	}
+	if query.Get("permissions") != "" {
+		searchParams["permissions"] = strings.Split(query.Get("permissions"), ",")
+	}
+	if query.Get("roles") != "" {
+		searchParams["roles"] = strings.Split(query.Get("roles"), ",")
 	}
 
-	serviceAccounts, err := h.coreAPIs.Auth.GetServiceAccounts(searchParams)
+	serviceAccounts, err := h.coreAPIs.Auth.GetServiceAccounts(searchParams, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -306,7 +315,7 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 		creds = serviceAccountCredentialListFromDef(*requestData.Creds)
 	}
 
-	serviceAccount, err := h.coreAPIs.Auth.RegisterServiceAccount(requestData.Name, requestData.OrgId, requestData.AppId, requestData.Permissions, requestData.Roles, creds)
+	serviceAccount, err := h.coreAPIs.Auth.RegisterServiceAccount(requestData.Name, requestData.OrgId, requestData.AppId, requestData.Permissions, requestData.Roles, creds, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRegister, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -321,7 +330,35 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 	return l.HttpResponseSuccessJSON(data)
 }
 
+func (h SystemApisHandler) getServiceAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	id := params["id"]
+	if len(id) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	serviceAccount, err := h.coreAPIs.Auth.GetServiceAccount(id, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	serviceAccountResp := serviceAccountToDef(serviceAccount)
+
+	data, err := json.Marshal(serviceAccountResp)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
 func (h SystemApisHandler) updateServiceAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	id := params["id"]
+	if len(id) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -333,32 +370,14 @@ func (h SystemApisHandler) updateServiceAccount(l *logs.Log, r *http.Request, cl
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeServiceAccount, nil, err, http.StatusBadRequest, true)
 	}
 
-	if requestData.Id == nil {
-		return l.HttpResponseErrorData(logutils.StatusMissing, "request body param", logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
-	}
-	err = h.coreAPIs.Auth.UpdateServiceAccount(*requestData.Id, requestData.Name, requestData.OrgId, requestData.AppId, requestData.Permissions, requestData.Roles)
+	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccount(id, requestData.Name, requestData.OrgId, requestData.AppId, requestData.Permissions, requestData.Roles, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	return l.HttpResponseSuccess()
-}
-
-func (h SystemApisHandler) getServiceAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	params := mux.Vars(r)
-	id := params["id"]
-	if len(id) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
-	}
-
-	serviceAccount, err := h.coreAPIs.Auth.GetServiceAccount(id)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
-	}
-
 	serviceAccountResp := serviceAccountToDef(serviceAccount)
 
-	data, err := json.Marshal(serviceAccountResp)
+	data, err = json.Marshal(serviceAccountResp)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, false)
 	}
@@ -423,12 +442,12 @@ func (h SystemApisHandler) removeServiceAccountCredential(l *logs.Log, r *http.R
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	name := r.URL.Query().Get("name")
-	if name == "" {
+	credID := r.URL.Query().Get("cred_id")
+	if credID == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("name"), nil, http.StatusBadRequest, false)
 	}
 
-	err := h.coreAPIs.Auth.RemoveServiceCredential(id, name)
+	err := h.coreAPIs.Auth.RemoveServiceCredential(id, credID)
 	if err != nil {
 		return l.HttpResponseError("Error removing service account credential", err, http.StatusInternalServerError, true)
 	}

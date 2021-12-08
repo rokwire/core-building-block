@@ -935,34 +935,55 @@ func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, str
 }
 
 //GetServiceAccount gets a service account by ID
-func (a *Auth) GetServiceAccount(id string) (*model.ServiceAccount, error) {
+func (a *Auth) GetServiceAccount(id string, l *logs.Log) (*model.ServiceAccount, error) {
 	serviceAccount, err := a.storage.FindServiceAccountByID(nil, id)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 	}
 
+	a.hideServiceCredentialParams(serviceAccount.Credentials, l)
+
 	return serviceAccount, nil
 }
 
 //GetServiceAccounts gets all service accounts
-func (a *Auth) GetServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error) {
+func (a *Auth) GetServiceAccounts(params map[string]interface{}, l *logs.Log) ([]model.ServiceAccount, error) {
 	serviceAccounts, err := a.storage.FindServiceAccounts(params)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+	}
+
+	for _, account := range serviceAccounts {
+		a.hideServiceCredentialParams(account.Credentials, l)
 	}
 
 	return serviceAccounts, nil
 }
 
 //RegisterServiceAccount registers a service account
-func (a *Auth) RegisterServiceAccount(name string, orgID *string, appID *string, permissions []string, roles []string, creds []model.ServiceAccountCredential) (*model.ServiceAccount, error) {
+func (a *Auth) RegisterServiceAccount(name string, orgID *string, appID *string, permissions []string, roles []string, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
 	id, _ := uuid.NewUUID()
 	newAccount, err := a.constructServiceAccount(id.String(), name, orgID, appID, permissions, roles)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 	}
 
-	newAccount.Credentials = creds
+	var rawToken string
+	rawTokens := make([]string, len(creds))
+	for i, cred := range creds {
+		serviceAuthType, err := a.getServiceAuthTypeImpl(cred.Type)
+		if err != nil {
+			l.Infof("error getting service auth type on register service account: %s", err.Error())
+			continue
+		}
+
+		newAccount, rawToken, err = serviceAuthType.addCredentials(newAccount, &cred, l)
+		if err != nil {
+			l.Warnf("error adding %s credential on register service account: %s", cred.Type, err.Error())
+		}
+
+		rawTokens[i] = rawToken
+	}
 	newAccount.DateCreated = time.Now().UTC()
 
 	err = a.storage.InsertServiceAccount(newAccount)
@@ -970,25 +991,52 @@ func (a *Auth) RegisterServiceAccount(name string, orgID *string, appID *string,
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceAccount, nil, err)
 	}
 
+	for i, token := range rawTokens {
+		if token != "" {
+			newAccount.Credentials[i].Params["token"] = token
+		}
+	}
+
 	return newAccount, nil
 }
 
 //UpdateServiceAccount updates a service account
-func (a *Auth) UpdateServiceAccount(id string, name string, orgID *string, appID *string, permissions []string, roles []string) error {
-	updatedAccount, err := a.constructServiceAccount(id, name, orgID, appID, permissions, roles)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
+func (a *Auth) UpdateServiceAccount(id string, name string, orgID *string, appID *string, permissions []string, roles []string, l *logs.Log) (*model.ServiceAccount, error) {
+	var updatedAccount *model.ServiceAccount
+	transaction := func(context storage.TransactionContext) error {
+		//1. find service account
+		account, err := a.storage.FindServiceAccountByID(context, id)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+		}
+
+		//2. update account
+		updatedAccount, err = a.constructServiceAccount(id, name, orgID, appID, permissions, roles)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
+		}
+
+		now := time.Now().UTC()
+		updatedAccount.Credentials = account.Credentials
+		updatedAccount.DateCreated = account.DateCreated
+		updatedAccount.DateUpdated = &now
+
+		err = a.storage.SaveServiceAccount(context, updatedAccount)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
+		}
+
+		return nil
 	}
 
-	now := time.Now().UTC()
-	updatedAccount.DateUpdated = &now
-
-	err = a.storage.UpdateServiceAccount(nil, updatedAccount)
+	err := a.storage.PerformTransaction(transaction)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
 	}
 
-	return nil
+	a.hideServiceCredentialParams(updatedAccount.Credentials, l)
+
+	return updatedAccount, nil
 }
 
 //DeregisterServiceAccount deregisters a service account
@@ -1007,6 +1055,7 @@ func (a *Auth) AddServiceCredential(accountID string, creds *model.ServiceAccoun
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
 	}
 
+	var rawToken string
 	transaction := func(context storage.TransactionContext) error {
 		//1. find service account
 		account, err := a.storage.FindServiceAccountByID(context, accountID)
@@ -1021,13 +1070,16 @@ func (a *Auth) AddServiceCredential(accountID string, creds *model.ServiceAccoun
 			return errors.WrapErrorAction("error getting service auth type on add service credential", "", nil, err)
 		}
 
-		account, err = serviceAuthType.addCredentials(account, creds, l)
+		account, rawToken, err = serviceAuthType.addCredentials(account, creds, l)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
+			return errors.WrapErrorAction(logutils.ActionInsert, "service account creds", nil, err)
 		}
 
+		now := time.Now().UTC()
+		account.DateUpdated = &now
+
 		//3. update service account
-		err = a.storage.UpdateServiceAccount(context, account)
+		err = a.storage.SaveServiceAccount(context, account)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
 		}
@@ -1040,11 +1092,14 @@ func (a *Auth) AddServiceCredential(accountID string, creds *model.ServiceAccoun
 		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
 	}
 
+	if rawToken != "" {
+		creds.Params["token"] = rawToken
+	}
 	return creds, nil
 }
 
 //RemoveServiceCredential removes a credential from a service account
-func (a *Auth) RemoveServiceCredential(accountID string, name string) error {
+func (a *Auth) RemoveServiceCredential(accountID string, credID string) error {
 	transaction := func(context storage.TransactionContext) error {
 		//1. find service account
 		account, err := a.storage.FindServiceAccountByID(context, accountID)
@@ -1055,8 +1110,10 @@ func (a *Auth) RemoveServiceCredential(accountID string, name string) error {
 		//2. remove token from token list
 		updated := false
 		for i, cred := range account.Credentials {
-			if cred.Name == name {
+			if cred.ID == credID {
+				now := time.Now().UTC()
 				account.Credentials = append(account.Credentials[:i], account.Credentials[i+1:]...)
+				account.DateUpdated = &now
 				updated = true
 				break
 			}
@@ -1064,13 +1121,15 @@ func (a *Auth) RemoveServiceCredential(accountID string, name string) error {
 
 		//3. update account
 		if updated {
-			err = a.storage.UpdateServiceAccount(context, account)
+			err = a.storage.SaveServiceAccount(context, account)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
 			}
+
+			return nil
 		}
 
-		return nil
+		return errors.ErrorAction(logutils.ActionFind, model.TypeServiceAccountCredential, &logutils.FieldArgs{"cred_id": credID})
 	}
 
 	err := a.storage.PerformTransaction(transaction)

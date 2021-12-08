@@ -253,6 +253,7 @@ func (s ServiceAccount) GetPermissionsMap() map[string]Permission {
 
 //ServiceAccountCredential represents a service account credential entity
 type ServiceAccountCredential struct {
+	ID   string `bson:"id"`
 	Name string `bson:"name"`
 	Type string `bson:"type"`
 

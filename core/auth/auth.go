@@ -1032,6 +1032,23 @@ func (a *Auth) constructServiceAccount(id string, name string, orgID *string, ap
 		Permissions: permissionList, Roles: rolesList}, nil
 }
 
+func (a *Auth) hideServiceCredentialParams(creds []model.ServiceAccountCredential, l *logs.Log) {
+	for _, cred := range creds {
+		if creds == nil {
+			continue
+		}
+
+		serviceAuthType, err := a.getServiceAuthTypeImpl(cred.Type)
+		if err != nil {
+			l.Infof("error getting service auth type on hide service credential params: %s", err.Error())
+		}
+
+		for _, hidden := range serviceAuthType.hiddenParams() {
+			delete(cred.Params, hidden)
+		}
+	}
+}
+
 func (a *Auth) registerAuthType(name string, auth authType) error {
 	if _, ok := a.authTypes[name]; ok {
 		return errors.Newf("the requested auth type name has already been registered: %s", name)

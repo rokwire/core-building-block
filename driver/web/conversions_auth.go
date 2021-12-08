@@ -99,7 +99,17 @@ func serviceAccountCredentialFromDef(item *Def.ServiceAccountCredential) *model.
 		return nil
 	}
 
-	return &model.ServiceAccountCredential{Name: item.Name, Type: string(item.Type), Params: *item.Params}
+	var id string
+	if item.Id != nil {
+		id = *item.Id
+	}
+
+	var params map[string]interface{}
+	if item.Params != nil {
+		params = *item.Params
+	}
+
+	return &model.ServiceAccountCredential{ID: id, Name: item.Name, Type: string(item.Type), Params: params}
 }
 
 func serviceAccountCredentialListFromDef(items []Def.ServiceAccountCredential) []model.ServiceAccountCredential {
@@ -120,10 +130,12 @@ func serviceAccountCredentialToDef(item *model.ServiceAccountCredential) *Def.Se
 		return nil
 	}
 
+	id := item.ID
+	params := item.Params
 	dateCreated := item.DateCreated.Format("2006-01-02T15:04:05.000Z")
 
-	return &Def.ServiceAccountCredential{Name: item.Name, Type: Def.ServiceAccountCredentialType(item.Type),
-		Params: &item.Params, DateCreated: &dateCreated}
+	return &Def.ServiceAccountCredential{Id: &id, Name: item.Name, Type: Def.ServiceAccountCredentialType(item.Type),
+		Params: &params, DateCreated: &dateCreated}
 }
 
 func serviceAccountCredentialListToDef(items []model.ServiceAccountCredential) []Def.ServiceAccountCredential {

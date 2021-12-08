@@ -500,8 +500,9 @@ type ServiceAccount struct {
 // ServiceAccountCredential defines model for ServiceAccountCredential.
 type ServiceAccountCredential struct {
 	DateCreated *string                      `json:"date_created,omitempty"`
+	Id          *string                      `json:"id,omitempty"`
 	Name        string                       `json:"name"`
-	Params      *map[string]interface{}      `json:"params,omitempty"`
+	Params      *map[string]interface{}      `json:"params"`
 	Type        ServiceAccountCredentialType `json:"type"`
 }
 
@@ -1156,14 +1157,14 @@ type GetSystemServiceAccountsParams struct {
 // PostSystemServiceAccountsJSONBody defines parameters for PostSystemServiceAccounts.
 type PostSystemServiceAccountsJSONBody ServiceAccount
 
-// PutSystemServiceAccountsJSONBody defines parameters for PutSystemServiceAccounts.
-type PutSystemServiceAccountsJSONBody ServiceAccount
+// PutSystemServiceAccountsIdJSONBody defines parameters for PutSystemServiceAccountsId.
+type PutSystemServiceAccountsIdJSONBody ServiceAccount
 
 // DeleteSystemServiceAccountsIdCredsParams defines parameters for DeleteSystemServiceAccountsIdCreds.
 type DeleteSystemServiceAccountsIdCredsParams struct {
 
-	// name of the credential to be removed
-	Name string `json:"name"`
+	// id of the credential to be removed
+	CredId string `json:"cred_id"`
 }
 
 // PostSystemServiceAccountsIdCredsJSONBody defines parameters for PostSystemServiceAccountsIdCreds.
@@ -1301,8 +1302,8 @@ type PutSystemPermissionsJSONRequestBody PutSystemPermissionsJSONBody
 // PostSystemServiceAccountsJSONRequestBody defines body for PostSystemServiceAccounts for application/json ContentType.
 type PostSystemServiceAccountsJSONRequestBody PostSystemServiceAccountsJSONBody
 
-// PutSystemServiceAccountsJSONRequestBody defines body for PutSystemServiceAccounts for application/json ContentType.
-type PutSystemServiceAccountsJSONRequestBody PutSystemServiceAccountsJSONBody
+// PutSystemServiceAccountsIdJSONRequestBody defines body for PutSystemServiceAccountsId for application/json ContentType.
+type PutSystemServiceAccountsIdJSONRequestBody PutSystemServiceAccountsIdJSONBody
 
 // PostSystemServiceAccountsIdCredsJSONRequestBody defines body for PostSystemServiceAccountsIdCreds for application/json ContentType.
 type PostSystemServiceAccountsIdCredsJSONRequestBody PostSystemServiceAccountsIdCredsJSONBody

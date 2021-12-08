@@ -48,8 +48,8 @@ type serviceAccount struct {
 	AppID *string `bson:"app_id"`
 	OrgID *string `bson:"org_id"`
 
-	Permissions []model.Permission `bson:"permissions"`
-	Roles       []accountRole      `bson:"roles"`
+	Permissions []model.Permission `bson:"permissions,omitempty"`
+	Roles       []accountRole      `bson:"roles,omitempty"`
 
 	Credentials []model.ServiceAccountCredential `bson:"credentials,omitempty"`
 

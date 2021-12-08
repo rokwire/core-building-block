@@ -139,6 +139,14 @@ func (we Adapter) Start() {
 
 	///system ///
 	//TODO - disable until we implement the system accounts login so that to protect them
+	systemSubrouter := subRouter.PathPrefix("/system").Subrouter()
+	systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.getServiceAccounts, we.auth.systemAuth)).Methods("GET")
+	systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.registerServiceAccount, we.auth.systemAuth)).Methods("POST")
+	systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.getServiceAccount, we.auth.systemAuth)).Methods("GET")
+	systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.updateServiceAccount, we.auth.systemAuth)).Methods("PUT")
+	systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.deregisterServiceAccount, we.auth.systemAuth)).Methods("DELETE")
+	systemSubrouter.HandleFunc("/service-accounts/{id}/creds", we.wrapFunc(we.systemApisHandler.addServiceAccountCredential, we.auth.systemAuth)).Methods("POST")
+	systemSubrouter.HandleFunc("/service-accounts/{id}/creds", we.wrapFunc(we.systemApisHandler.removeServiceAccountCredential, we.auth.systemAuth)).Methods("DELETE")
 	/*
 		systemSubrouter := subRouter.PathPrefix("/system").Subrouter()
 		systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.createGlobalConfig, we.auth.systemAuth)).Methods("POST")
@@ -172,8 +180,8 @@ func (we Adapter) Start() {
 
 		systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.getServiceAccounts, we.auth.systemAuth)).Methods("GET")
 		systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.registerServiceAccount, we.auth.systemAuth)).Methods("POST")
-		systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.updateServiceAccount, we.auth.systemAuth)).Methods("PUT")
 		systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.getServiceAccount, we.auth.systemAuth)).Methods("GET")
+		systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.updateServiceAccount, we.auth.systemAuth)).Methods("PUT")
 		systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.deregisterServiceAccount, we.auth.systemAuth)).Methods("DELETE")
 		systemSubrouter.HandleFunc("/service-accounts/{id}/creds", we.wrapFunc(we.systemApisHandler.addServiceAccountCredential, we.auth.systemAuth)).Methods("POST")
 		systemSubrouter.HandleFunc("/service-accounts/{id}/creds", we.wrapFunc(we.systemApisHandler.removeServiceAccountCredential, we.auth.systemAuth)).Methods("DELETE")

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -80,20 +81,27 @@ func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, creds inter
 	return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "request signature", nil, err)
 }
 
-func (s *signatureServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
+func (s *signatureServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, string, error) {
 	if account == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
+		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
 	}
 	if creds == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
+		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
 	}
 
 	now := time.Now().UTC()
+	id, _ := uuid.NewUUID()
+
+	creds.ID = id.String()
 	creds.DateCreated = now
 	account.Credentials = append(account.Credentials, *creds)
-	account.DateUpdated = &now
 
-	return account, nil
+	return account, "", nil
+}
+
+// no hidden params for signature service auth
+func (s *signatureServiceAuthImpl) hiddenParams() []string {
+	return nil
 }
 
 //initSignatureServiceAuth initializes and registers a new signature service auth instance

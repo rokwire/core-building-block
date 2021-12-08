@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -60,31 +61,37 @@ func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, creds int
 	return nil, account, nil
 }
 
-func (s *staticTokenServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
+func (s *staticTokenServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, string, error) {
 	if account == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
+		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
 	}
 	if creds == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
+		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
 	}
 
 	token, _, err := s.auth.buildRefreshToken()
 	if err != nil {
 		l.Info("error generating service account token")
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
 	encodedToken := s.hashAndEncodeToken(token)
 
 	now := time.Now().UTC()
+	id, _ := uuid.NewUUID()
+
+	creds.ID = id.String()
 	creds.Params = map[string]interface{}{
 		"token": encodedToken,
 	}
 	creds.DateCreated = now
 	account.Credentials = append(account.Credentials, *creds)
-	account.DateUpdated = &now
 
-	return account, nil
+	return account, token, nil
+}
+
+func (s *staticTokenServiceAuthImpl) hiddenParams() []string {
+	return []string{"token"}
 }
 
 func (s *staticTokenServiceAuthImpl) hashAndEncodeToken(token string) string {
