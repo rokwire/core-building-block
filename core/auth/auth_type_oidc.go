@@ -110,25 +110,20 @@ type oidcRefreshParams struct {
 	RedirectURI  string `json:"redirect_uri" bson:"redirect_uri" validate:"required"`
 }
 
-func (o *oidcRefreshParams) toMap() map[string]interface{} {
-	if o == nil {
-		return map[string]interface{}{}
-	}
-
-	return map[string]interface{}{
-		"refresh_token": o.RefreshToken,
-		"redirect_uri":  o.RedirectURI,
-	}
-}
-
 func oidcRefreshParamsFromMap(val map[string]interface{}) (*oidcRefreshParams, error) {
 	oidcToken, ok := val["oidc_token"].(map[string]interface{})
 	if !ok {
-		return nil, errors.ErrorData(logutils.StatusMissing, "refresh token", nil)
+		return nil, errors.ErrorData(logutils.StatusMissing, "oidc token", nil)
 	}
 
-	refreshToken := oidcToken["refresh_token"].(string)
-	redirectURI := oidcToken["redirect_uri"].(string)
+	refreshToken, ok := oidcToken["refresh_token"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "refresh token", nil)
+	}
+	redirectURI, ok := val["redirect_uri"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "redirect uri", nil)
+	}
 
 	return &oidcRefreshParams{RefreshToken: refreshToken, RedirectURI: redirectURI}, nil
 }

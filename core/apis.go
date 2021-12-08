@@ -118,6 +118,10 @@ func (s *administrationImpl) AdmGetApplicationOrgGroups() ([]model.AppOrgGroup, 
 	return s.app.admGetApplicationOrgGroups()
 }
 
+func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
+	return s.app.admGetAccount(accountID)
+}
+
 ///
 
 //encryptionImpl

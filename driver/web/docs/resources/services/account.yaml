@@ -38,7 +38,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/apis/shared/responses/Account.yaml" 
+            $ref: "../../schemas/apis/shared/responses/Account.yaml" 
     400:
       description: Bad request
     401:
