@@ -945,8 +945,8 @@ func (a *Auth) GetServiceAccount(id string) (*model.ServiceAccount, error) {
 }
 
 //GetServiceAccounts gets all service accounts
-func (a *Auth) GetServiceAccounts() ([]model.ServiceAccount, error) {
-	serviceAccounts, err := a.storage.FindServiceAccounts()
+func (a *Auth) GetServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error) {
+	serviceAccounts, err := a.storage.FindServiceAccounts(params)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 	}

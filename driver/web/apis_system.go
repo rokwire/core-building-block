@@ -265,7 +265,16 @@ func (h SystemApisHandler) deregisterService(l *logs.Log, r *http.Request, claim
 }
 
 func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	serviceAccounts, err := h.coreAPIs.Auth.GetServiceAccounts()
+	params := mux.Vars(r)
+	searchParams := map[string]interface{}{
+		"name":        params["name"],
+		"app_id":      params["app_id"],
+		"org_id":      params["org_id"],
+		"permissions": strings.Split(params["permissions"], ","),
+		"roles":       strings.Split(params["roles"], ","),
+	}
+
+	serviceAccounts, err := h.coreAPIs.Auth.GetServiceAccounts(searchParams)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}

@@ -259,7 +259,7 @@ type APIs interface {
 	GetServiceAccount(id string) (*model.ServiceAccount, error)
 
 	//GetServiceAccounts gets all service accounts
-	GetServiceAccounts() ([]model.ServiceAccount, error)
+	GetServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
 
 	//RegisterServiceAccount registers a service account
 	RegisterServiceAccount(name string, orgID *string, appID *string, permissions []string, roles []string, creds []model.ServiceAccountCredential) (*model.ServiceAccount, error)
@@ -365,7 +365,7 @@ type Storage interface {
 	//ServiceAccounts
 	FindServiceAccountByID(context storage.TransactionContext, id string) (*model.ServiceAccount, error)
 	FindServiceAccountByToken(tokenHash string) (*model.ServiceAccount, error)
-	FindServiceAccounts() ([]model.ServiceAccount, error)
+	FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
 	InsertServiceAccount(account *model.ServiceAccount) error
 	UpdateServiceAccount(context storage.TransactionContext, account *model.ServiceAccount) error
 	DeleteServiceAccount(id string) error

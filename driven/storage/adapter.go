@@ -799,8 +799,15 @@ func (sa *Adapter) findServiceAccount(context TransactionContext, key string, va
 }
 
 //FindServiceAccounts gets all service accounts
-func (sa *Adapter) FindServiceAccounts() ([]model.ServiceAccount, error) {
+func (sa *Adapter) FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error) {
 	filter := bson.D{}
+	for k, v := range params {
+		if k == "permissions" || k == "roles" {
+			filter = append(filter, primitive.E{Key: k + ".name", Value: bson.M{"$in": v}})
+		} else {
+			filter = append(filter, primitive.E{Key: k, Value: v})
+		}
+	}
 
 	var accounts []serviceAccount
 	err := sa.db.serviceAccounts.Find(filter, &accounts, nil)

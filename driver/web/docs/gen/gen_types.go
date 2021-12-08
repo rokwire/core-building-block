@@ -1134,6 +1134,25 @@ type PostSystemPermissionsJSONBody ReqPermissionsRequest
 // PutSystemPermissionsJSONBody defines parameters for PutSystemPermissions.
 type PutSystemPermissionsJSONBody ReqPermissionsRequest
 
+// GetSystemServiceAccountsParams defines parameters for GetSystemServiceAccounts.
+type GetSystemServiceAccountsParams struct {
+
+	// Service account name to search for
+	Name *string `json:"name,omitempty"`
+
+	// Service account app ID to search for
+	AppId *string `json:"app_id,omitempty"`
+
+	// Service account org ID to search for
+	OrgId *string `json:"org_id,omitempty"`
+
+	// A comma-separated list of service account permissions to search for
+	Permissions *string `json:"permissions,omitempty"`
+
+	// A comma-separated list of service account roles to search for
+	Roles *string `json:"roles,omitempty"`
+}
+
 // PostSystemServiceAccountsJSONBody defines parameters for PostSystemServiceAccounts.
 type PostSystemServiceAccountsJSONBody ServiceAccount
 
