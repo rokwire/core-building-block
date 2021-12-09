@@ -24,11 +24,8 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	AdmGetApplicationOrgRoles() ([]model.AppOrgRole, error)
-	AdmCreateAppOrgRole(name string, addID string, description string, permissionID []string) (*model.AppOrgRole, error)
-	AdmCreateAppOrgGroup(name string, ID string, permissionID []string, rolesID []string) (*model.AppOrgGroup, error)
-	AdmGetApplicationOrgGroups() ([]model.AppOrgGroup, error)
 	AdmDeleteAppOrgGroup(ID string) error
+	AdmGetAccount(accountID string) (*model.Account, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -77,6 +74,12 @@ type Storage interface {
 	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
+
+	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
+	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
+	DeleteCredential(context storage.TransactionContext, ID string) error
+
+	DeleteLoginSessions(context storage.TransactionContext, identifier string) error
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error

@@ -2,9 +2,7 @@ package core
 
 import (
 	"core-building-block/core/model"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -164,64 +162,7 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admGetApplicationOrgRoles() ([]model.AppOrgRole, error) {
-	getAppOrgRoles, err := app.storage.FindAppOrgRolesList()
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err)
-	}
-
-	return getAppOrgRoles, nil
-}
-
-func (app *application) admCreateAppOrgRole(name string, appID string, description string, permissionID []string) (*model.AppOrgRole, error) {
-	permissions, err := app.storage.FindPermissionsByID(permissionID)
-	if err != nil {
-		return nil, err
-	}
-
-	id, _ := uuid.NewUUID()
-	now := time.Now()
-	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: permissions, DateCreated: now}
-	err = app.storage.InsertAdmAppOrgRole(role)
-	if err != nil {
-		return nil, err
-	}
-	return &role, nil
-}
-
-func (app *application) admGetApplicationOrgGroups() ([]model.AppOrgGroup, error) {
-	getAppOrgGroups, err := app.storage.FindAppOrgGroupsList()
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err)
-	}
-
-	return getAppOrgGroups, nil
-}
-
-func (app *application) admCreateAppOrgGroup(name string, ID string, permissionID []string, rolesID []string) (*model.AppOrgGroup, error) {
-
-	permissions, err := app.storage.FindPermissionsByID(permissionID)
-	if err != nil {
-		return nil, err
-	}
-
-	role, err := app.storage.FindAppOrgRolesByID(rolesID)
-	if err != nil {
-		return nil, err
-	}
-
-	id, _ := uuid.NewUUID()
-	now := time.Now()
-	group := model.AppOrgGroup{ID: id.String(), Name: name, Roles: role, Permissions: permissions, DateCreated: now}
-	err = app.storage.InsertAdmAppOrgGroup(group)
-	if err != nil {
-		return nil, err
-	}
-	return &group, nil
-}
-
 func (app *application) admDeleteAppOrgGroup(ID string) error {
-
 	appOrgGroup, err := app.storage.FindAppOrgGroupByID(ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
@@ -235,6 +176,9 @@ func (app *application) admDeleteAppOrgGroup(ID string) error {
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgGroup, nil, err)
 	}
-
 	return nil
+}
+
+func (app *application) admGetAccount(accountID string) (*model.Account, error) {
+	return app.getAccount(accountID)
 }
