@@ -125,9 +125,9 @@ func (we Adapter) Start() {
 
 	///bbs ///
 	bbsSubrouter := subRouter.PathPrefix("/bbs").Subrouter()
-	bbsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.bbsApisHandler.getServiceRegistrations, nil)).Methods("GET") //Public
-	bbsSubrouter.HandleFunc("/deleted-accounts", we.wrapFunc(we.bbsApisHandler.getDeletedAccounts, nil)).Methods("GET")  //Public
-	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.getTest, nil)).Methods("GET")                         //Public
+	bbsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.bbsApisHandler.getServiceRegistrations, nil)).Methods("GET")                    //Public
+	bbsSubrouter.HandleFunc("/deleted-accounts", we.wrapFunc(we.bbsApisHandler.getDeletedAccounts, we.auth.bbs.permissions)).Methods("GET") //Public
+	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.getTest, nil)).Methods("GET")                                            //Public
 	///
 
 	///third-party services ///

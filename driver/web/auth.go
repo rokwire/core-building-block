@@ -15,6 +15,7 @@ import (
 const (
 	typeCheckPermission               logutils.MessageActionType = "checking permission"
 	typeCheckScope                    logutils.MessageActionType = "checking scope"
+	typeCheckBBsAuthRequestToken      logutils.MessageActionType = "checking bbs auth"
 	typeCheckAdminAuthRequestToken    logutils.MessageActionType = "checking admin auth"
 	typeCheckServicesAuthRequestToken logutils.MessageActionType = "checking services auth"
 )
@@ -24,7 +25,7 @@ type Auth struct {
 	services   *TokenAuthHandlers
 	admin      *TokenAuthHandlers
 	encAuth    *EncAuth
-	bbsAuth    *BBsAuth
+	bbs        *TokenAuthHandlers
 	systemAuth *SystemAuth
 
 	logger *logs.Logger
@@ -49,7 +50,7 @@ func (auth *Auth) Start() error {
 	auth.services.start()
 	auth.admin.start()
 	auth.encAuth.start()
-	auth.bbsAuth.start()
+	auth.bbs.start()
 	auth.systemAuth.start()
 
 	return nil
@@ -76,13 +77,22 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 	}
 
 	encAuth := newEncAuth(coreAPIs, logger)
-	bbsAuth := newBBsAuth(coreAPIs, logger)
+
+	bbsAuth, err := newBBsAuth(coreAPIs, authService, logger)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "bbs auth", nil, err)
+	}
+	bbsHandlers, err := newTokenAuthHandlers(bbsAuth)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "bbs auth handlers", nil, err)
+	}
+
 	systemAuth, err := newSystemAuth(authService, logger)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "auth handler", nil, err)
 	}
 
-	auth := Auth{services: serviceHandlers, admin: adminHandlers, encAuth: encAuth, bbsAuth: bbsAuth, systemAuth: systemAuth, logger: logger}
+	auth := Auth{services: serviceHandlers, admin: adminHandlers, encAuth: encAuth, bbs: bbsHandlers, systemAuth: systemAuth, logger: logger}
 
 	return &auth, nil
 }
@@ -216,18 +226,42 @@ func newEncAuth(coreAPIs *core.APIs, logger *logs.Logger) *EncAuth {
 
 //BBsAuth entity
 type BBsAuth struct {
-	coreAPIs *core.APIs
-
-	logger *logs.Logger
+	coreAPIs  *core.APIs
+	tokenAuth *tokenauth.TokenAuth
+	logger    *logs.Logger
 }
 
 func (auth *BBsAuth) start() {
 	auth.logger.Info("BBsAuth -> start")
 }
 
-func newBBsAuth(coreAPIs *core.APIs, logger *logs.Logger) *BBsAuth {
-	auth := BBsAuth{coreAPIs: coreAPIs, logger: logger}
-	return &auth
+func (auth *BBsAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
+	claims, err := auth.tokenAuth.CheckRequestTokens(req)
+	if err != nil {
+		return http.StatusUnauthorized, nil, errors.WrapErrorAction(typeCheckBBsAuthRequestToken, logutils.TypeToken, nil, err)
+	}
+
+	if !claims.Service {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "service claim", nil)
+	}
+
+	return http.StatusOK, claims, nil
+}
+
+func (auth *BBsAuth) getTokenAuth() *tokenauth.TokenAuth {
+	return auth.tokenAuth
+}
+
+func newBBsAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) (*BBsAuth, error) {
+	bbsPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_bbs_policy.csv")
+	bbsTokenAuth, err := tokenauth.NewTokenAuth(true, authService, bbsPermissionAuth, nil)
+
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for bbsAuth", nil, err)
+	}
+
+	auth := BBsAuth{coreAPIs: coreAPIs, tokenAuth: bbsTokenAuth, logger: logger}
+	return &auth, nil
 }
 
 //SystemAuth entity

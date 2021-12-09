@@ -3,6 +3,7 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"time"
 
 	"github.com/rokwire/logging-library-go/logs"
 )
@@ -73,7 +74,7 @@ type Storage interface {
 	FindDeletedAccounts() ([]model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 	DeleteAccount(context storage.TransactionContext, id string) error
-	DeleteFlaggedAccounts() error
+	DeleteFlaggedAccounts(cutoff time.Time) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error

@@ -37,12 +37,12 @@ func (c *APIs) GetVersion() string {
 }
 
 //NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, deleteAccountsPeriod *uint64, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
 
 	timerDone := make(chan bool)
-	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners, timerDone: timerDone, logger: logger}
+	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners, deleteAccountsPeriod: deleteAccountsPeriod, timerDone: timerDone, logger: logger}
 
 	//add coreAPIs instance
 	servicesImpl := &servicesImpl{app: &application}

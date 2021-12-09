@@ -763,12 +763,12 @@ func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
 }
 
 //DeleteFlaggedAccounts deletes accounts flagged for deletion
-func (sa *Adapter) DeleteFlaggedAccounts() error {
-	filter := bson.M{"deleted": true}
+func (sa *Adapter) DeleteFlaggedAccounts(cutoff time.Time) error {
+	filter := bson.D{primitive.E{Key: "deleted", Value: true}, primitive.E{Key: "date_updated", Value: bson.M{"$lt": cutoff}}}
 
 	_, err := sa.db.accounts.DeleteMany(filter, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, &logutils.FieldArgs{"date_updated": cutoff.Format("2006-01-02T15:04:05.000Z")}, err)
 	}
 
 	return nil

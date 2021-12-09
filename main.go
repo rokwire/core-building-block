@@ -131,8 +131,18 @@ func main() {
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
+
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, logger)
+	deleteAccountsPeriodStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_DELETE_ACCOUNTS_PERIOD", false, false)
+	var deleteAccountsPeriod *uint64
+	deleteAccountsPeriodVal, err := strconv.ParseUint(deleteAccountsPeriodStr, 10, 64)
+	if err == nil {
+		deleteAccountsPeriod = &deleteAccountsPeriodVal
+	} else {
+		logger.Infof("Error parsing delete account period, applying defaults: %v", err)
+	}
+
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, deleteAccountsPeriod, logger)
 	coreAPIs.Start()
 
 	//web adapter

@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	accountsDeletePeriod int = 2
+	deleteAccountsPeriodDefault uint = 2
 )
 
 //application represents the core application code based on hexagonal architecture
@@ -26,8 +26,9 @@ type application struct {
 	listeners []ApplicationListener
 
 	//delete accounts timer
-	deleteAccountsTimer *time.Timer
-	timerDone           chan bool
+	deleteAccountsPeriod *uint64
+	deleteAccountsTimer  *time.Timer
+	timerDone            chan bool
 
 	logger *logs.Logger
 }
@@ -83,12 +84,17 @@ func (app *application) deleteAccounts() {
 		app.logger.Info("deleteAccounts")
 	}
 
-	err := app.storage.DeleteFlaggedAccounts()
+	deletePeriod := uint64(deleteAccountsPeriodDefault)
+	if app.deleteAccountsPeriod != nil {
+		deletePeriod = *app.deleteAccountsPeriod
+	}
+	duration := time.Minute * time.Duration(deletePeriod)
+
+	err := app.storage.DeleteFlaggedAccounts(time.Now().UTC().Add(-duration))
 	if err != nil {
 		app.logger.Error(err.Error())
 	}
 
-	duration := time.Hour * time.Duration(accountsDeletePeriod)
 	app.deleteAccountsTimer = time.NewTimer(duration)
 	select {
 	case <-app.deleteAccountsTimer.C:
