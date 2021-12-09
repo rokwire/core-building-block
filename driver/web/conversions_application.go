@@ -41,22 +41,6 @@ func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRoleFields {
 	return result
 }
 
-// func appOrgRoleFromDef(item Def.AppOrgRoleFields) model.AppOrgRole {
-// 	var system bool
-// 	if item.System != nil {
-// 		system = *item.System
-// 	}
-// 	return model.AppOrgRole{ID: item.Id, Name: item.Name, System: system}
-// }
-
-// func appOrgRolesFromDef(items []Def.AppOrgRoleFields) []model.AppOrgRole {
-// 	result := make([]model.AppOrgRole, len(items))
-// 	for i, item := range items {
-// 		result[i] = appOrgRoleFromDef(item)
-// 	}
-// 	return result
-// }
-
 //AppOrgGroup
 func appOrgGroupToDef(item model.AppOrgGroup) Def.AppOrgGroupFields {
 	return Def.AppOrgGroupFields{Id: item.ID, Name: item.Name}
