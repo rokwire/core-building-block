@@ -8,15 +8,14 @@ import (
 )
 
 func (app *application) bbsGetDeletedAccounts() ([]string, error) {
-	var deletedAccounts []string
-
 	accounts, err := app.storage.FindDeletedAccounts()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	for _, account := range accounts {
-		deletedAccounts = append(deletedAccounts, account.ID)
+	deletedAccounts := make([]string, len(accounts))
+	for i, account := range accounts {
+		deletedAccounts[i] = account.ID
 	}
 
 	return deletedAccounts, nil
