@@ -18,8 +18,7 @@ func (app *application) serGetProfile(accountID string) (*model.Profile, error) 
 	}
 
 	//get the profile for the account
-	profile := account.Profile
-	return &profile, nil
+	return account.Profile, nil
 }
 
 func (app *application) serGetAccount(accountID string) (*model.Account, error) {

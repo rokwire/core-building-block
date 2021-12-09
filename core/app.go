@@ -88,7 +88,7 @@ func (app *application) deleteAccounts() {
 	if app.deleteAccountsPeriod != nil {
 		deletePeriod = *app.deleteAccountsPeriod
 	}
-	duration := time.Minute * time.Duration(deletePeriod)
+	duration := time.Hour * time.Duration(deletePeriod)
 
 	err := app.storage.DeleteFlaggedAccounts(time.Now().UTC().Add(-duration))
 	if err != nil {

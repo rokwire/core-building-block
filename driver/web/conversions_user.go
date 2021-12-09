@@ -8,7 +8,7 @@ import (
 //Account
 func accountToDef(item model.Account) *Def.ResSharedAccount {
 	//profile
-	profile := profileToDef(&item.Profile)
+	profile := profileToDef(item.Profile)
 	//preferences
 	preferences := &item.Preferences
 	//permissions
@@ -116,41 +116,11 @@ func profileFromDef(item *Def.ReqSharedProfile) model.Profile {
 		State: state, Country: country}
 }
 
-func mfaDataListToDef(items []model.MFAType) []Def.ResSharedMfa {
-	out := make([]Def.ResSharedMfa, len(items))
-	for i, item := range items {
-		defItem := mfaDataToDef(&item)
-		if defItem != nil {
-			out[i] = *defItem
-		} else {
-			out[i] = Def.ResSharedMfa{}
-		}
-	}
-	return out
-}
-
-func mfaDataToDef(item *model.MFAType) *Def.ResSharedMfa {
+func profileToDef(item *model.Profile) *Def.ProfileFields {
 	if item == nil {
 		return nil
 	}
 
-	mfaType := item.Type
-	verified := item.Verified
-	params := item.Params
-	delete(params, "expires")
-	//TODO: mask identifier
-
-	//email and phone
-	delete(params, "code")
-	//totp
-	delete(params, "secret")
-	//recovery
-	delete(params, "codes")
-
-	return &Def.ResSharedMfa{Type: &mfaType, Verified: &verified, Params: &params}
-}
-
-func profileToDef(item *model.Profile) *Def.ProfileFields {
 	birthYear := int(item.BirthYear)
 	return &Def.ProfileFields{Id: &item.ID, PhotoUrl: &item.PhotoURL, FirstName: &item.FirstName, LastName: &item.LastName,
 		Email: &item.Email, Phone: &item.Phone, BirthYear: &birthYear, Address: &item.Address, ZipCode: &item.ZipCode,
@@ -205,6 +175,41 @@ func profileFromDefNullable(item *Def.ReqSharedProfileNullable) model.Profile {
 	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
 		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
 		State: state, Country: country}
+}
+
+//MFA
+func mfaDataListToDef(items []model.MFAType) []Def.ResSharedMfa {
+	out := make([]Def.ResSharedMfa, len(items))
+	for i, item := range items {
+		defItem := mfaDataToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.ResSharedMfa{}
+		}
+	}
+	return out
+}
+
+func mfaDataToDef(item *model.MFAType) *Def.ResSharedMfa {
+	if item == nil {
+		return nil
+	}
+
+	mfaType := item.Type
+	verified := item.Verified
+	params := item.Params
+	delete(params, "expires")
+	//TODO: mask identifier
+
+	//email and phone
+	delete(params, "code")
+	//totp
+	delete(params, "secret")
+	//recovery
+	delete(params, "codes")
+
+	return &Def.ResSharedMfa{Type: &mfaType, Verified: &verified, Params: &params}
 }
 
 //Device

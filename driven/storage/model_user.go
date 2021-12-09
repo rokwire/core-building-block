@@ -19,8 +19,8 @@ type account struct {
 
 	MFATypes []mfaType `bson:"mfa_types,omitempty"`
 
-	Preferences map[string]interface{} `bson:"preferences"`
-	Profile     profile                `bson:"profile"`
+	Preferences map[string]interface{} `bson:"preferences,omitempty"`
+	Profile     *profile               `bson:"profile,omitempty"`
 
 	Devices []userDevice `bson:"devices,omitempty"`
 
