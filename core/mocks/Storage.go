@@ -99,13 +99,13 @@ func (_m *Storage) DeleteDevice(context storage.TransactionContext, id string) e
 	return r0
 }
 
-// DeleteFlaggedAccounts provides a mock function with given fields: context
-func (_m *Storage) DeleteFlaggedAccounts(context storage.TransactionContext) error {
-	ret := _m.Called(context)
+// DeleteFlaggedAccounts provides a mock function with given fields:
+func (_m *Storage) DeleteFlaggedAccounts() error {
+	ret := _m.Called()
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext) error); ok {
-		r0 = rf(context)
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -270,13 +270,13 @@ func (_m *Storage) FindCredential(context storage.TransactionContext, ID string)
 	return r0, r1
 }
 
-// FindDeletedAccounts provides a mock function with given fields: context
-func (_m *Storage) FindDeletedAccounts(context storage.TransactionContext) ([]model.Account, error) {
-	ret := _m.Called(context)
+// FindDeletedAccounts provides a mock function with given fields:
+func (_m *Storage) FindDeletedAccounts() ([]model.Account, error) {
+	ret := _m.Called()
 
 	var r0 []model.Account
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext) []model.Account); ok {
-		r0 = rf(context)
+	if rf, ok := ret.Get(0).(func() []model.Account); ok {
+		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Account)
@@ -284,8 +284,8 @@ func (_m *Storage) FindDeletedAccounts(context storage.TransactionContext) ([]mo
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext) error); ok {
-		r1 = rf(context)
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
 	} else {
 		r1 = ret.Error(1)
 	}

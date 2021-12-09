@@ -640,16 +640,11 @@ func (sa *Adapter) FindAccountByAuthTypeID(context TransactionContext, id string
 }
 
 //FindDeletedAccounts finds accounts flagged for deletion
-func (sa *Adapter) FindDeletedAccounts(context TransactionContext) ([]model.Account, error) {
+func (sa *Adapter) FindDeletedAccounts() ([]model.Account, error) {
 	filter := bson.M{"deleted": true}
-	var accounts []account
-	var err error
-	if context != nil {
-		err = sa.db.accounts.FindWithContext(context, filter, &accounts, nil)
-	} else {
-		err = sa.db.accounts.Find(filter, &accounts, nil)
-	}
 
+	var accounts []account
+	err := sa.db.accounts.Find(filter, &accounts, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"deleted": true}, err)
 	}
@@ -768,15 +763,10 @@ func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
 }
 
 //DeleteFlaggedAccounts deletes accounts flagged for deletion
-func (sa *Adapter) DeleteFlaggedAccounts(context TransactionContext) error {
+func (sa *Adapter) DeleteFlaggedAccounts() error {
 	filter := bson.M{"deleted": true}
-	var err error
-	if context != nil {
-		_, err = sa.db.accounts.DeleteManyWithContext(context, filter, nil)
-	} else {
-		_, err = sa.db.accounts.DeleteMany(filter, nil)
-	}
 
+	_, err := sa.db.accounts.DeleteMany(filter, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 	}

@@ -1,0 +1,21 @@
+get:
+  tags:
+    - BBs
+  summary: Get deleted accounts
+  description: |
+    Returns a list of deleted account IDs
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: array
+            items: 
+              type: string
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error

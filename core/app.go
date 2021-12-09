@@ -83,7 +83,7 @@ func (app *application) deleteAccounts() {
 		app.logger.Info("deleteAccounts")
 	}
 
-	err := app.storage.DeleteFlaggedAccounts(nil)
+	err := app.storage.DeleteFlaggedAccounts()
 	if err != nil {
 		app.logger.Error(err.Error())
 	}
