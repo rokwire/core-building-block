@@ -177,6 +177,9 @@ func (app *application) admGetApplications(orgID string) ([]model.Application, e
 	for _, appOrg := range applicationsOrganizations {
 		apps = append(apps, appOrg.Application)
 	}
-
 	return apps, nil
+}
+
+func (app *application) admGetAccount(accountID string) (*model.Account, error) {
+	return app.getAccount(accountID)
 }
