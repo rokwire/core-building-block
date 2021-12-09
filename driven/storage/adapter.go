@@ -230,6 +230,31 @@ func (sa *Adapter) getCachedApplication(appID string) (*model.Application, error
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplication, errArgs)
 }
 
+func (sa *Adapter) getCachedApplications() ([]model.Application, error) {
+	sa.applicationsLock.RLock()
+	defer sa.applicationsLock.RUnlock()
+
+	var err error
+	applicationList := make([]model.Application, 0)
+	sa.cachedApplications.Range(func(key, item interface{}) bool {
+		errArgs := &logutils.FieldArgs{"app_id": key}
+		if item == nil {
+			err = errors.ErrorData(logutils.StatusInvalid, model.TypeApplication, errArgs)
+			return false
+		}
+
+		application, ok := item.(model.Application)
+		if !ok {
+			err = errors.ErrorAction(logutils.ActionCast, model.TypeApplication, errArgs)
+			return false
+		}
+		applicationList = append(applicationList, application)
+		return true
+	})
+
+	return applicationList, err
+}
+
 func (sa *Adapter) getCachedApplicationTypeByIdentifier(appTypeIdentifier string) (*model.Application, *model.ApplicationType, error) {
 	sa.applicationsLock.RLock()
 	defer sa.applicationsLock.RUnlock()
@@ -774,6 +799,119 @@ func (sa *Adapter) DeleteFlaggedAccounts(cutoff time.Time) error {
 	return nil
 }
 
+//FindServiceAccountByID finds a service account by id
+func (sa *Adapter) FindServiceAccountByID(context TransactionContext, id string) (*model.ServiceAccount, error) {
+	return sa.findServiceAccount(context, "_id", id)
+}
+
+//FindServiceAccountByToken finds a service account by token
+func (sa *Adapter) FindServiceAccountByToken(tokenHash string) (*model.ServiceAccount, error) {
+	return sa.findServiceAccount(nil, "credentials.params.token", tokenHash)
+}
+
+func (sa *Adapter) findServiceAccount(context TransactionContext, key string, value string) (*model.ServiceAccount, error) {
+	filter := bson.D{primitive.E{Key: key, Value: value}}
+
+	var account serviceAccount
+	var err error
+	if context != nil {
+		err = sa.db.serviceAccounts.FindOneWithContext(context, filter, &account, nil)
+	} else {
+		err = sa.db.serviceAccounts.FindOne(filter, &account, nil)
+	}
+
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &logutils.FieldArgs{key: value}, err)
+	}
+
+	modelAccount, err := serviceAccountFromStorage(account, sa)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCast, model.TypeServiceAccount, &logutils.FieldArgs{key: value}, err)
+	}
+
+	return modelAccount, nil
+}
+
+//FindServiceAccounts gets all service accounts
+func (sa *Adapter) FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error) {
+	filter := bson.D{}
+	for k, v := range params {
+		if k == "permissions" || k == "roles" {
+			filter = append(filter, primitive.E{Key: k + ".name", Value: bson.M{"$in": v}})
+		} else {
+			filter = append(filter, primitive.E{Key: k, Value: v})
+		}
+	}
+
+	var accounts []serviceAccount
+	err := sa.db.serviceAccounts.Find(filter, &accounts, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+	}
+
+	modelAccounts := serviceAccountListFromStorage(accounts, sa)
+
+	return modelAccounts, nil
+}
+
+//InsertServiceAccount inserts a service account
+func (sa *Adapter) InsertServiceAccount(account *model.ServiceAccount) error {
+	if account == nil {
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeServiceAccount, nil)
+	}
+
+	storageAccount := serviceAccountToStorage(*account)
+
+	_, err := sa.db.serviceAccounts.InsertOne(storageAccount)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceAccount, nil, err)
+	}
+
+	return nil
+}
+
+//SaveServiceAccount saves a service account
+func (sa *Adapter) SaveServiceAccount(context TransactionContext, account *model.ServiceAccount) error {
+	if account == nil {
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeServiceAccount, nil)
+	}
+
+	storageAccount := serviceAccountToStorage(*account)
+
+	filter := bson.D{primitive.E{Key: "_id", Value: account.ID}}
+
+	var err error
+	if context != nil {
+		err = sa.db.serviceAccounts.ReplaceOneWithContext(context, filter, storageAccount, nil)
+	} else {
+		err = sa.db.serviceAccounts.ReplaceOne(filter, storageAccount, nil)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, &logutils.FieldArgs{"_id": account.ID}, err)
+	}
+
+	return nil
+}
+
+//DeleteServiceAccount deletes a service account
+func (sa *Adapter) DeleteServiceAccount(id string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+
+	res, err := sa.db.serviceAccounts.DeleteOne(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"_id": id}, err)
+	}
+	if res.DeletedCount == 0 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, nil)
+	}
+	if res.DeletedCount != 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, logutils.StringArgs("unexpected deleted count"))
+	}
+
+	return nil
+}
+
 //UpdateAccountPreferences updates account preferences
 func (sa *Adapter) UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
@@ -785,7 +923,7 @@ func (sa *Adapter) UpdateAccountPreferences(accountID string, preferences map[st
 
 	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountPreferences, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, nil, err)
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
@@ -1738,36 +1876,12 @@ func (sa *Adapter) InsertApplication(application model.Application) (*model.Appl
 
 //FindApplication finds application
 func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	var result []model.Application
-	err := sa.db.applications.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-	}
-	if len(result) == 0 {
-		//no record
-		return nil, nil
-	}
-
-	appRes := result[0]
-	return &appRes, nil
+	return sa.getCachedApplication(ID)
 }
 
 //FindApplications finds applications
 func (sa *Adapter) FindApplications() ([]model.Application, error) {
-	filter := bson.D{}
-	var result []model.Application
-	err := sa.db.applications.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-	}
-
-	if len(result) == 0 {
-		//no data
-		return make([]model.Application, 0), nil
-	}
-
-	return result, nil
+	return sa.getCachedApplications()
 }
 
 //FindApplicationTypeByIdentifier finds an application type by identifier

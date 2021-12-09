@@ -53,6 +53,13 @@ const (
 	OrganizationFieldsTypeSmall OrganizationFieldsType = "small"
 )
 
+// Defines values for ServiceAccountCredentialType.
+const (
+	ServiceAccountCredentialTypeSignature ServiceAccountCredentialType = "signature"
+
+	ServiceAccountCredentialTypeStaticToken ServiceAccountCredentialType = "static_token"
+)
+
 // Defines values for ReqAccountExistsRequestAuthType.
 const (
 	ReqAccountExistsRequestAuthTypeAnonymous ReqAccountExistsRequestAuthType = "anonymous"
@@ -98,6 +105,13 @@ const (
 // Defines values for ReqCredentialSendVerifyRequestAuthType.
 const (
 	ReqCredentialSendVerifyRequestAuthTypeEmail ReqCredentialSendVerifyRequestAuthType = "email"
+)
+
+// Defines values for ReqServiceAccountsTokenRequestAuthType.
+const (
+	ReqServiceAccountsTokenRequestAuthTypeSignature ReqServiceAccountsTokenRequestAuthType = "signature"
+
+	ReqServiceAccountsTokenRequestAuthTypeStaticToken ReqServiceAccountsTokenRequestAuthType = "static_token"
 )
 
 // Defines values for ReqSharedLoginAuthType.
@@ -472,6 +486,29 @@ type PubKey struct {
 	KeyPem string `json:"key_pem"`
 }
 
+// ServiceAccount defines model for ServiceAccount.
+type ServiceAccount struct {
+	AppId       *string                     `json:"app_id"`
+	Creds       *[]ServiceAccountCredential `json:"creds,omitempty"`
+	Id          *string                     `json:"id,omitempty"`
+	Name        string                      `json:"name"`
+	OrgId       *string                     `json:"org_id"`
+	Permissions []string                    `json:"permissions"`
+	Roles       []string                    `json:"roles"`
+}
+
+// ServiceAccountCredential defines model for ServiceAccountCredential.
+type ServiceAccountCredential struct {
+	DateCreated *string                      `json:"date_created,omitempty"`
+	Id          *string                      `json:"id,omitempty"`
+	Name        string                       `json:"name"`
+	Params      *map[string]interface{}      `json:"params"`
+	Type        ServiceAccountCredentialType `json:"type"`
+}
+
+// ServiceAccountCredentialType defines model for ServiceAccountCredential.Type.
+type ServiceAccountCredentialType string
+
 // Full service registration record
 type ServiceReg struct {
 	Description string          `json:"description"`
@@ -631,6 +668,20 @@ type ReqPermissionsRequest struct {
 	Name      string    `json:"name"`
 	ServiceId *string   `json:"service_id,omitempty"`
 }
+
+// Service account token for auth_type="static_token"
+type ReqServiceAccountsCredsStaticToken struct {
+	Token string `json:"token"`
+}
+
+// ReqServiceAccountsTokenRequest defines model for _req_service-accounts_TokenRequest.
+type ReqServiceAccountsTokenRequest struct {
+	AuthType ReqServiceAccountsTokenRequestAuthType `json:"auth_type"`
+	Creds    *interface{}                           `json:"creds,omitempty"`
+}
+
+// ReqServiceAccountsTokenRequestAuthType defines model for ReqServiceAccountsTokenRequest.AuthType.
+type ReqServiceAccountsTokenRequestAuthType string
 
 // Auth login creds for auth_type="anonymous"
 type ReqSharedCredsAPIKey struct {
@@ -1084,6 +1135,41 @@ type PostSystemPermissionsJSONBody ReqPermissionsRequest
 // PutSystemPermissionsJSONBody defines parameters for PutSystemPermissions.
 type PutSystemPermissionsJSONBody ReqPermissionsRequest
 
+// GetSystemServiceAccountsParams defines parameters for GetSystemServiceAccounts.
+type GetSystemServiceAccountsParams struct {
+
+	// Service account name to search for
+	Name *string `json:"name,omitempty"`
+
+	// Service account app ID to search for
+	AppId *string `json:"app_id,omitempty"`
+
+	// Service account org ID to search for
+	OrgId *string `json:"org_id,omitempty"`
+
+	// A comma-separated list of service account permissions to search for
+	Permissions *string `json:"permissions,omitempty"`
+
+	// A comma-separated list of service account roles to search for
+	Roles *string `json:"roles,omitempty"`
+}
+
+// PostSystemServiceAccountsJSONBody defines parameters for PostSystemServiceAccounts.
+type PostSystemServiceAccountsJSONBody ServiceAccount
+
+// PutSystemServiceAccountsIdJSONBody defines parameters for PutSystemServiceAccountsId.
+type PutSystemServiceAccountsIdJSONBody ServiceAccount
+
+// DeleteSystemServiceAccountsIdCredsParams defines parameters for DeleteSystemServiceAccountsIdCreds.
+type DeleteSystemServiceAccountsIdCredsParams struct {
+
+	// id of the credential to be removed
+	CredId string `json:"cred_id"`
+}
+
+// PostSystemServiceAccountsIdCredsJSONBody defines parameters for PostSystemServiceAccountsIdCreds.
+type PostSystemServiceAccountsIdCredsJSONBody ServiceAccountCredential
+
 // DeleteSystemServiceRegsParams defines parameters for DeleteSystemServiceRegs.
 type DeleteSystemServiceRegsParams struct {
 
@@ -1103,6 +1189,9 @@ type PostSystemServiceRegsJSONBody ServiceReg
 
 // PutSystemServiceRegsJSONBody defines parameters for PutSystemServiceRegs.
 type PutSystemServiceRegsJSONBody ServiceReg
+
+// PostTpsAccountTokenJSONBody defines parameters for PostTpsAccountToken.
+type PostTpsAccountTokenJSONBody ReqServiceAccountsTokenRequest
 
 // GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
 type GetTpsServiceRegsParams struct {
@@ -1210,11 +1299,23 @@ type PostSystemPermissionsJSONRequestBody PostSystemPermissionsJSONBody
 // PutSystemPermissionsJSONRequestBody defines body for PutSystemPermissions for application/json ContentType.
 type PutSystemPermissionsJSONRequestBody PutSystemPermissionsJSONBody
 
+// PostSystemServiceAccountsJSONRequestBody defines body for PostSystemServiceAccounts for application/json ContentType.
+type PostSystemServiceAccountsJSONRequestBody PostSystemServiceAccountsJSONBody
+
+// PutSystemServiceAccountsIdJSONRequestBody defines body for PutSystemServiceAccountsId for application/json ContentType.
+type PutSystemServiceAccountsIdJSONRequestBody PutSystemServiceAccountsIdJSONBody
+
+// PostSystemServiceAccountsIdCredsJSONRequestBody defines body for PostSystemServiceAccountsIdCreds for application/json ContentType.
+type PostSystemServiceAccountsIdCredsJSONRequestBody PostSystemServiceAccountsIdCredsJSONBody
+
 // PostSystemServiceRegsJSONRequestBody defines body for PostSystemServiceRegs for application/json ContentType.
 type PostSystemServiceRegsJSONRequestBody PostSystemServiceRegsJSONBody
 
 // PutSystemServiceRegsJSONRequestBody defines body for PutSystemServiceRegs for application/json ContentType.
 type PutSystemServiceRegsJSONRequestBody PutSystemServiceRegsJSONBody
+
+// PostTpsAccountTokenJSONRequestBody defines body for PostTpsAccountToken for application/json ContentType.
+type PostTpsAccountTokenJSONRequestBody PostTpsAccountTokenJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found

@@ -47,6 +47,10 @@ Credential:
   $ref: "./auth/Credential.yaml"
 CredentialFields:
   $ref: "./auth/CredentialFields.yaml"
+ServiceAccount:
+  $ref: "./auth/ServiceAccount.yaml"
+ServiceAccountCredential:
+  $ref: "./auth/ServiceAccountCredential.yaml"
 ServiceReg:
   $ref: "./auth/ServiceReg.yaml"
 AuthServiceReg:
@@ -171,9 +175,15 @@ _req_authorize-service_Request:
 _res_authorize-service_Response:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
 
-### admin app-roken API
+### admin app-token API
 _req_admin_app-token_Response:
   $ref: "./apis/admin/app-token/response/Response.yaml"
+
+### service-accounts API
+_req_service-accounts_TokenRequest:
+  $ref: "./apis/services/service-accounts/TokenRequest.yaml"
+_req_service-accounts_CredsStaticToken:
+  $ref: "./apis/services/service-accounts/CredsStaticToken.yaml"
 
 ### organization API
 _req_create-Organization_Request:

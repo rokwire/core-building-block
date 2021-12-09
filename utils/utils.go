@@ -2,6 +2,7 @@ package utils
 
 import (
 	crand "crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
@@ -98,4 +99,10 @@ func GetIP(l *logs.Log, r *http.Request) string {
 		IPAddress = r.RemoteAddr
 	}
 	return IPAddress
+}
+
+//SHA256Hash computes the SHA256 hash of a byte slice
+func SHA256Hash(data []byte) []byte {
+	hash := sha256.Sum256(data)
+	return hash[:]
 }

@@ -1531,6 +1531,53 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /tps/account/token:
+    post:
+      tags:
+        - Third-Party Services
+      summary: Get service account access token
+      description: |
+        Returns a new service account access token
+      requestBody:
+        description: |
+          Service account credentials
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_service-accounts_TokenRequest'
+            examples:
+              static_token:
+                summary: Static token
+                value: |
+                  {
+                    "auth_type": "static_token",
+                    "creds": {
+                      "token": "account_token"
+                    }
+                  }
+              signature:
+                summary: Signature
+                value: |
+                  {
+                    "auth_type": "signature",
+                    "creds": {
+                      "id": "service_account_id"
+                    }
+                  }
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_shared_RokwireToken'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /system/global-config:
     get:
       deprecated: true
@@ -1886,6 +1933,352 @@ paths:
               schema:
                 type: string
                 example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  '/system/service-accounts/{id}':
+    get:
+      deprecated: true
+      tags:
+        - System
+      summary: Get service account
+      description: |
+        Get service account by ID
+
+        **Auth:** Requires auth token with permission to read service accounts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the service account to return
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      deprecated: true
+      tags:
+        - System
+      summary: Update service account
+      description: |
+        Updates a service account
+
+        **Auth:** Requires auth token with permission to update service accounts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the service account to update
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: |
+          Service account
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceAccount'
+            examples:
+              update_account:
+                summary: Update service account
+                value: |
+                  {
+                    "name": "updated_name",
+                    "app_id": "9766",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "permissions": ["permission1", "new_permission1"],
+                    "roles": ["role1", "role2", "new_role1"]
+                  }
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      deprecated: true
+      tags:
+        - System
+      summary: Deregister service account
+      description: |
+        Removes a service account
+
+        **Auth:** Requires auth token with permission to delete service accounts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the service account that needs to be deleted
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/service-accounts:
+    get:
+      deprecated: true
+      tags:
+        - System
+      summary: Get service accounts
+      description: |
+        Get list of all service accounts
+
+        **Auth:** Requires auth token with permission to read service accounts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: name
+          in: query
+          description: Service account name to search for
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: app_id
+          in: query
+          description: Service account app ID to search for
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: org_id
+          in: query
+          description: Service account org ID to search for
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: permissions
+          in: query
+          description: A comma-separated list of service account permissions to search for
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: roles
+          in: query
+          description: A comma-separated list of service account roles to search for
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      deprecated: true
+      tags:
+        - System
+      summary: Register service account
+      description: |
+        Creates a new service account
+
+        **Auth:** Requires auth token with permission to create service accounts
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          Service account
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceAccount'
+            examples:
+              initial_creds:
+                summary: Register account with initial credentials
+                value: |
+                  {
+                    "name": "test_account",
+                    "app_id": "9766",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "permissions": ["permission1", "permission2"],
+                    "roles": ["role1", "role2"],
+                    "creds": [
+                      {
+                        "name": "initial_token",
+                        "type": "static_token"
+                      },
+                      {
+                        "name": "initial_signature",
+                        "type": "signature",
+                        "params": {
+                          "pub_key": "public_key_pem"
+                        }
+                      }
+                    ]
+                  }
+              no_initial_creds:
+                summary: Register account without initial credentials
+                value: |
+                  {
+                    "name": "test_account",
+                    "app_id": "9766",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "permissions": ["permission1", "permission2"],
+                    "roles": ["role1", "role2"],
+                  }
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  '/system/service-accounts/{id}/creds':
+    post:
+      deprecated: true
+      tags:
+        - System
+      summary: Add service account credential
+      description: |
+        Adds a new credential to an existing service account
+
+        **Auth:** Requires auth token with permission to add service account credentials
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the service account to which new credential should be added
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: |
+          Service account credentials
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceAccountCredential'
+            examples:
+              static_token:
+                summary: Add static token credential
+                value: |
+                  {
+                    "name": "token_cred",
+                    "type": "static_token"
+                  }
+              signature:
+                summary: Add signature credential
+                value: |
+                  {
+                    "name": "signature_cred",
+                    "type": "signature",
+                    "params": {
+                      "pub_key": "public_key_pem"
+                    }
+                  }
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceAccountCredential'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      deprecated: true
+      tags:
+        - System
+      summary: Remove service account credential
+      description: |
+        Removes a credential from an existing service account
+
+        **Auth:** Requires auth token with permission to delete service account credentials
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the service account from which credential should be removed
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: cred_id
+          in: query
+          description: id of the credential to be removed
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
         '400':
           description: Bad request
         '401':
@@ -2708,6 +3101,57 @@ components:
           type: string
         value:
           type: object
+    ServiceAccount:
+      required:
+        - name
+        - app_id
+        - org_id
+        - permissions
+        - roles
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        app_id:
+          type: string
+          nullable: true
+        org_id:
+          type: string
+          nullable: true
+        permissions:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            type: string
+        creds:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceAccountCredential'
+    ServiceAccountCredential:
+      required:
+        - name
+        - type
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - static_token
+            - signature
+        params:
+          type: object
+          nullable: true
+        date_created:
+          type: string
     ServiceReg:
       required:
         - service_id
@@ -3527,6 +3971,34 @@ components:
       required:
         - token
       type: object
+      properties:
+        token:
+          type: string
+    _req_service-accounts_TokenRequest:
+      required:
+        - auth_type
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - static_token
+            - signature
+        creds:
+          anyOf:
+            - $ref: '#/components/schemas/_req_service-accounts_CredsStaticToken'
+            - required:
+                - id
+              type: object
+              description: Service account ID for auth_type="signature"
+              properties:
+                id:
+                  type: string
+    _req_service-accounts_CredsStaticToken:
+      required:
+        - token
+      type: object
+      description: Service account token for auth_type="static_token"
       properties:
         token:
           type: string
