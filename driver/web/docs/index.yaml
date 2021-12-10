@@ -67,11 +67,6 @@ paths:
     $ref: "./resources/services/test.yaml"
 
   #admin
-  /admin/account:
-    $ref: "./resources/admin/account/account.yaml"
-  /admin/accounts:
-    $ref: "./resources/admin/account/accounts.yaml"
-
   /admin/auth/login:
     $ref: "./resources/admin/auth/login.yaml"
   /admin/auth/mfa:
@@ -80,12 +75,12 @@ paths:
     $ref: "./resources/admin/auth/refresh.yaml"
   /admin/auth/login-url:
     $ref: "./resources/admin/auth/login-url.yaml"
-  /admin/auth/account-exists:
-    $ref: "./resources/admin/auth/account-exists.yaml"
   /admin/auth/verify-mfa:
     $ref: "./resources/admin/auth/verify-mfa.yaml"
   /admin/auth/app-token:
     $ref: "./resources/admin/auth/app-token.yaml"
+  /admin/account:
+    $ref: "./resources/admin/account.yaml"
   /admin/account/mfa:
     $ref: "./resources/admin/account/mfa.yaml"
 

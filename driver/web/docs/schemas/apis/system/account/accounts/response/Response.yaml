@@ -1,7 +1,0 @@
-required:
-  - id
-  - type
-type: object
-properties:
-  account:
-    $ref: "../../../../shared/responses/Account.yaml"  

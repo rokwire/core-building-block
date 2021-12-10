@@ -87,10 +87,6 @@ DeviceFields:
 
 ### shared requests and responses
 
-### login API
-_res_get_Accounts_Response:
- $ref: "./apis/shared/responses/login/Account.yaml"
-
 #### requests
 _req_shared_Login:
   $ref: "./apis/shared/requests/login/Request.yaml"
@@ -145,9 +141,9 @@ _res_shared_RokwireToken:
 
 ### account exists API
 _req_account-exists_Request:
-  $ref: "./apis/admin/exists/request/Request.yaml"
+  $ref: "./apis/services/account/exists/request/Request.yaml"
 _res_account-exists_Response:
-  $ref: "./apis/admin/exists/response/Response.yaml"
+  $ref: "./apis/services/account/exists/response/Response.yaml"
 
 ### account auth-type link API
 _req_account_auth-type_link_Request:
