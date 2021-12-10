@@ -155,23 +155,34 @@ func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceReg, error) {
 	if item == nil {
 		return nil, nil
 	}
+
+	var serviceAccountID string
+	if item.ServiceAccountId != nil {
+		serviceAccountID = *item.ServiceAccountId
+	}
 	pubKey := pubKeyFromDef(item.PubKey)
 	scopes, err := serviceScopeListFromDef(item.Scopes)
 	if err != nil {
 		return nil, err
 	}
-	return &model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: item.ServiceId, Host: item.Host, PubKey: pubKey}, Name: item.Name,
-		Description: item.Description, InfoURL: defString(item.InfoUrl), LogoURL: defString(item.LogoUrl), Scopes: scopes, FirstParty: item.FirstParty}, nil
+	return &model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: item.ServiceId, ServiceAccountID: serviceAccountID, Host: item.Host, PubKey: pubKey},
+		Name: item.Name, Description: item.Description, InfoURL: defString(item.InfoUrl), LogoURL: defString(item.LogoUrl), Scopes: scopes, FirstParty: item.FirstParty}, nil
 }
 
 func serviceRegToDef(item *model.ServiceReg) *Def.ServiceReg {
 	if item == nil {
 		return nil
 	}
+
+	var serviceAccountID *string
+	if item.Registration.ServiceAccountID != "" {
+		serviceAccountID = &item.Registration.ServiceAccountID
+	}
 	pubKey := pubKeyToDef(item.Registration.PubKey)
 	scopes := serviceScopeListToDef(item.Scopes)
-	return &Def.ServiceReg{ServiceId: item.Registration.ServiceID, Host: item.Registration.Host, PubKey: pubKey, Name: item.Name, Description: item.Description,
-		InfoUrl: &item.InfoURL, LogoUrl: &item.LogoURL, Scopes: &scopes, FirstParty: item.FirstParty}
+	return &Def.ServiceReg{ServiceId: item.Registration.ServiceID, ServiceAccountId: serviceAccountID, Host: item.Registration.Host,
+		PubKey: pubKey, Name: item.Name, Description: item.Description, InfoUrl: &item.InfoURL, LogoUrl: &item.LogoURL,
+		Scopes: &scopes, FirstParty: item.FirstParty}
 }
 
 func serviceRegListToDef(items []model.ServiceReg) []Def.ServiceReg {
@@ -191,8 +202,13 @@ func authServiceRegToDef(item *authservice.ServiceReg) *Def.AuthServiceReg {
 	if item == nil {
 		return nil
 	}
+
+	var serviceAccountID *string
+	if item.ServiceAccountID != "" {
+		serviceAccountID = &item.ServiceAccountID
+	}
 	pubKey := pubKeyToDef(item.PubKey)
-	return &Def.AuthServiceReg{ServiceId: item.ServiceID, Host: item.Host, PubKey: pubKey}
+	return &Def.AuthServiceReg{ServiceId: item.ServiceID, ServiceAccountId: serviceAccountID, Host: item.Host, PubKey: pubKey}
 }
 
 func authServiceRegListToDef(items []model.ServiceReg) []Def.AuthServiceReg {
