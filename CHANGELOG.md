@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.12.0] - 2021-11-10
 ### Added
+- Expose Admin API with the currently logged in accounts [#355](https://github.com/rokwire/core-building-block/issues/355)
 - Login session duration policies [#258](https://github.com/rokwire/core-building-block/issues/258)
 - Handle groups mappings from OIDC integration [#276](https://github.com/rokwire/core-building-block/issues/276)
 - Expose get account services API [#217](https://github.com/rokwire/core-building-block/issues/217)
