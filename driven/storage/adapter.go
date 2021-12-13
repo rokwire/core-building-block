@@ -469,23 +469,6 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 	return sa.buildLoginSession(&loginSession)
 }
 
-//FindAccounts finds accounts
-func (sa *Adapter) FindAccounts(id string, identifier string, appID *string, orgID *string) ([]model.Account, error) {
-	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
-	var result []model.Account
-	err := sa.db.accounts.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-
-	if len(result) == 0 {
-		//no data
-		return make([]model.Account, 0), nil
-	}
-
-	return result, nil
-}
-
 //FindAndUpdateLoginSession finds and updates a login session
 func (sa *Adapter) FindAndUpdateLoginSession(context TransactionContext, id string) (*model.LoginSession, error) {
 	//find loggin session
@@ -642,8 +625,29 @@ func (sa *Adapter) FindAccount(appOrgID string, authTypeID string, accountAuthTy
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 	}
 
-	modelAccount := accountFromStorage(account, sa, *appOrg)
+	modelAccount := accountFromStorage(account, *appOrg)
 	return &modelAccount, nil
+}
+
+//FindAccounts finds accounts
+func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
+	//find app org id
+	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error getting cached application organization", "", nil, err)
+	}
+
+	//find the accounts
+	//TODO filter
+	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrg.ID}}
+	var list []account
+	err = sa.db.accounts.Find(filter, &list, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	accounts := accountsFromStorage(list, *appOrg)
+	return accounts, nil
 }
 
 //FindAccountByID finds an account by id
@@ -672,7 +676,7 @@ func (sa *Adapter) findAccount(context TransactionContext, key string, id string
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 	}
 
-	modelAccount := accountFromStorage(*account, sa, *appOrg)
+	modelAccount := accountFromStorage(*account, *appOrg)
 
 	return &modelAccount, nil
 }

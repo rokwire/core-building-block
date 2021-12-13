@@ -5,7 +5,7 @@ import (
 )
 
 //Account
-func accountFromStorage(item account, sa *Adapter, appOrg model.ApplicationOrganization) model.Account {
+func accountFromStorage(item account, appOrg model.ApplicationOrganization) model.Account {
 	id := item.ID
 	permissions := item.Permissions
 	roles := accountRolesFromStorage(item.Roles, appOrg)
@@ -19,6 +19,18 @@ func accountFromStorage(item account, sa *Adapter, appOrg model.ApplicationOrgan
 	return model.Account{ID: id, AppOrg: appOrg, Permissions: permissions,
 		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile,
 		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+}
+
+func accountsFromStorage(items []account, appOrg model.ApplicationOrganization) []model.Account {
+	if len(items) == 0 {
+		return make([]model.Account, 0)
+	}
+
+	res := make([]model.Account, len(items))
+	for i, item := range items {
+		res[i] = accountFromStorage(item, appOrg)
+	}
+	return res
 }
 
 func accountToStorage(item *model.Account) *account {
@@ -36,35 +48,6 @@ func accountToStorage(item *model.Account) *account {
 
 	return &account{ID: id, AppOrgID: appOrgID, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
 		MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
-}
-
-func getAccountsListToStorage(item []model.Account) []account {
-	out := make([]account, len(item))
-	for i, item := range item {
-		defItem := accountToStorage(&item)
-		if defItem != nil {
-			out[i] = *defItem
-		} else {
-			out[i] = account{}
-		}
-	}
-	return out
-}
-
-func getAccountsFromStorage(item *model.Account) *model.Account {
-	if item == nil {
-		return nil
-	}
-	/*profile := profileToStorage(item.Profile)
-	//permissions
-	permissions := applicationPermissionsToStorage(item.Permissions)
-	//roles
-	roles := applicationRolesToStorage(item.Roles)
-	//groups
-	groups := applicationGroupsToStorage(item.Groups)
-	//account auth types
-	authTypes := accountAuthTypesToStorage(item.AuthTypes)*/
-	return &model.Account{ID: item.ID, Permissions: item.Permissions, Roles: item.Roles, Groups: item.Groups, AuthTypes: item.AuthTypes}
 }
 
 func accountDevicesFromStorage(item account) []model.Device {

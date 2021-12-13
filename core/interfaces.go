@@ -70,7 +70,7 @@ type Storage interface {
 	PerformTransaction(func(context storage.TransactionContext) error) error
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
-	FindAccounts(id string, identifier string, appID *string, orgID *string) ([]model.Account, error)
+	FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error
