@@ -1413,7 +1413,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - name: account_id
+        - name: account-id
           in: query
           description: The account ID
           required: false
@@ -1421,7 +1421,7 @@ paths:
           explode: false
           schema:
             type: string
-        - name: auth_type_identifier
+        - name: auth-type-identifier
           in: query
           description: The authentication type identifier
           required: false

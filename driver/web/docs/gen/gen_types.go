@@ -909,10 +909,10 @@ type PostAdminAccountMfaParams struct {
 type GetAdminApplicationAccountsParams struct {
 
 	// The account ID
-	AccountId *string `json:"account_id,omitempty"`
+	AccountId *string `json:"account-id,omitempty"`
 
 	// The authentication type identifier
-	AuthTypeIdentifier *string `json:"auth_type_identifier,omitempty"`
+	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
 }
 
 // GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.
