@@ -207,22 +207,25 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 }
 
 func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	//TODO
-	accountID := r.URL.Query().Get("id")
-	if accountID == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
+	//account ID
+	var accountID *string
+	accountIDParam := r.URL.Query().Get("account-id")
+	if len(accountIDParam) > 0 {
+		accountID = &accountIDParam
 	}
 
-	identifier := r.URL.Query().Get("auth_type_identifier")
-	if identifier == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	//auth type identifier
+	var authTypeIdentifier *string
+	authTypeIdentifierParam := r.URL.Query().Get("auth-type-identifier")
+	if len(authTypeIdentifierParam) > 0 {
+		authTypeIdentifier = &authTypeIdentifierParam
 	}
 
-	getAccounts, err := h.coreAPIs.Administration.AdmGetAccounts(accountID, identifier, &claims.AppID, &claims.OrgID)
+	accounts, err := h.coreAPIs.Administration.AdmGetAccounts(claims.AppID, claims.OrgID, accountID, authTypeIdentifier)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
-	response := getAccountsListToDef(getAccounts)
+	response := аccountsToDef(accounts)
 
 	data, err := json.Marshal(response)
 	if err != nil {
