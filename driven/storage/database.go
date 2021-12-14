@@ -211,7 +211,7 @@ func (m *database) applyIdentityProvidersChecks(identityProviders *collectionWra
 func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 	m.logger.Info("apply accounts checks.....")
 
-	//add compound unique index - id + app_org_id
+	/*//add compound unique index - id + app_org_id
 	err := accounts.AddIndex(bson.D{primitive.E{Key: "_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
 	if err != nil {
 		return err
@@ -227,7 +227,7 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 	err = accounts.AddIndex(bson.D{primitive.E{Key: "auth_types.id", Value: 1}}, false)
 	if err != nil {
 		return err
-	}
+	}*/
 
 	m.logger.Info("accounts check passed")
 	return nil
@@ -236,11 +236,11 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 func (m *database) applyDevicesChecks(devices *collectionWrapper) error {
 	m.logger.Info("apply devices checks.....")
 
-	//add compound unique index - device_id + account_id
+	/*//add compound unique index - device_id + account_id
 	err := devices.AddIndex(bson.D{primitive.E{Key: "device_id", Value: 1}, primitive.E{Key: "account_id", Value: 1}}, true)
 	if err != nil {
 		return err
-	}
+	}*/
 
 	m.logger.Info("devices check passed")
 	return nil
@@ -371,13 +371,13 @@ func (m *database) applyApplicationsChecks(applications *collectionWrapper) erro
 func (m *database) applyApplicationsOrganizationsChecks(applicationsOrganizations *collectionWrapper) error {
 	m.logger.Info("apply applications organizations checks.....")
 
-	//add compound unique index - application + auth type + auth type identifier
+	/*//add compound unique index - application + auth type + auth type identifier
 	err := applicationsOrganizations.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1},
 		primitive.E{Key: "org_id", Value: 1}},
 		true)
 	if err != nil {
 		return err
-	}
+	}*/
 
 	m.logger.Info("applications organizations checks passed")
 	return nil
