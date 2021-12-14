@@ -920,6 +920,15 @@ type PostAdminAccountMfaParams struct {
 // PostAdminAppOrgRolesJSONBody defines parameters for PostAdminAppOrgRoles.
 type PostAdminAppOrgRolesJSONBody ReqCreateAppOrgRolesRequest
 
+// GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
+type GetAdminApplicationAccountsParams struct {
+	// The account ID
+	AccountId *string `json:"account-id,omitempty"`
+
+	// The authentication type identifier
+	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
+}
+
 // GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.
 type GetAdminAuthAppTokenParams struct {
 	// The application ID of the token to return

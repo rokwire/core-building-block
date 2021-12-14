@@ -115,6 +115,10 @@ func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string
 	return s.app.admCreateAppOrgRole(name, description, permissionID)
 }
 
+func (s *administrationImpl) AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
+	return s.app.admGetAccounts(appID, orgID, accountID, authTypeIdentifier)
+}
+
 func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
 	return s.app.admGetAccount(accountID)
 }
