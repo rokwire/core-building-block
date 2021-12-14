@@ -638,8 +638,15 @@ func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, a
 	}
 
 	//find the accounts
-	//TODO filter
 	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrg.ID}}
+
+	if accountID != nil {
+		filter = append(filter, primitive.E{Key: "_id", Value: *accountID})
+	}
+	if authTypeIdentifier != nil {
+		filter = append(filter, primitive.E{Key: "auth_types.identifier", Value: *authTypeIdentifier})
+	}
+
 	var list []account
 	err = sa.db.accounts.Find(filter, &list, nil)
 	if err != nil {
