@@ -5,7 +5,7 @@ import (
 )
 
 //Account
-func accountFromStorage(item account, sa *Adapter, appOrg model.ApplicationOrganization) model.Account {
+func accountFromStorage(item account, appOrg model.ApplicationOrganization) model.Account {
 	id := item.ID
 	permissions := item.Permissions
 	roles := accountRolesFromStorage(item.Roles, appOrg)
@@ -19,6 +19,18 @@ func accountFromStorage(item account, sa *Adapter, appOrg model.ApplicationOrgan
 	return model.Account{ID: id, AppOrg: appOrg, Permissions: permissions,
 		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile,
 		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+}
+
+func accountsFromStorage(items []account, appOrg model.ApplicationOrganization) []model.Account {
+	if len(items) == 0 {
+		return make([]model.Account, 0)
+	}
+
+	res := make([]model.Account, len(items))
+	for i, item := range items {
+		res[i] = accountFromStorage(item, appOrg)
+	}
+	return res
 }
 
 func accountToStorage(item *model.Account) *account {
