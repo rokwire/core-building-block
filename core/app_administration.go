@@ -167,8 +167,16 @@ func (app *application) admGetPermissions(serviceID []string) ([]model.Permissio
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypePermission, nil, err)
 	}
-
 	return getPermissions, nil
+}
+
+func (app *application) admGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
+	//find the accounts
+	accounts, err := app.storage.FindAccounts(appID, orgID, accountID, authTypeIdentifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	return accounts, nil
 }
 
 func (app *application) admGetAccount(accountID string) (*model.Account, error) {
