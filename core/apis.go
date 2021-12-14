@@ -119,6 +119,10 @@ func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, er
 	return s.app.admGetAccount(accountID)
 }
 
+func (s *administrationImpl) AdmGetLoginSessions(appID string, orgID string) ([]model.LoginSession, error) {
+	return s.app.admGetLoginSessions(appID, orgID)
+}
+
 ///
 
 //encryptionImpl

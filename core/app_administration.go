@@ -171,6 +171,15 @@ func (app *application) admGetAccounts(appID string, orgID string, accountID *st
 	return accounts, nil
 }
 
+func (app *application) admGetLoginSessions(appID string, orgID string) ([]model.LoginSession, error) {
+	//find the login sessions
+	loginSessions, err := app.storage.FindAdmLoginSessions(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+	}
+	return loginSessions, nil
+}
+
 func (app *application) admGetAccount(accountID string) (*model.Account, error) {
 	return app.getAccount(accountID)
 }
