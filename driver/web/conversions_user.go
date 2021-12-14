@@ -124,6 +124,23 @@ func profileFromDef(item *Def.ReqSharedProfile) model.Profile {
 		State: state, Country: country}
 }
 
+//LoginSessions
+func loginSessionToDef(item model.LoginSession) model.LoginSession {
+	return model.LoginSession{AppOrg: item.AppOrg, AuthType: item.AuthType, AppType: item.AppType,
+		Anonymous: item.Anonymous, Identifier: item.Identifier, Device: item.Device, IPAddress: item.IPAddress,
+		AccessToken: item.AccessToken, RefreshTokens: item.RefreshTokens, Params: item.Params, State: item.State,
+		StateExpires: item.StateExpires, MfaAttempts: item.MfaAttempts,
+		Expires: item.Expires, ForceExpires: item.ForceExpires, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func loginSessionsToDef(items []model.LoginSession) []model.LoginSession {
+	result := make([]model.LoginSession, len(items))
+	for i, item := range items {
+		result[i] = loginSessionToDef(item)
+	}
+	return result
+}
+
 func mfaDataListToDef(items []model.MFAType) []Def.ResSharedMfa {
 	out := make([]Def.ResSharedMfa, len(items))
 	for i, item := range items {
