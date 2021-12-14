@@ -119,6 +119,7 @@ func (we Adapter) Start() {
 
 	adminSubrouter.HandleFunc("/appOrgRoles", we.wrapFunc(we.adminApisHandler.adminDeleteApplicationOrgRoles, nil)).Methods("DELETE")
 
+	adminSubrouter.HandleFunc("/application/accounts", we.wrapFunc(we.adminApisHandler.getApplicationAccounts, we.auth.admin.user)).Methods("GET")
 	///
 
 	///enc ///
