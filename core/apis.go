@@ -115,6 +115,10 @@ func (s *administrationImpl) AdmGetApplicationOrgGroups() ([]model.AppOrgGroup, 
 	return s.app.admGetApplicationOrgGroups()
 }
 
+func (s *administrationImpl) AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
+	return s.app.admGetAccounts(appID, orgID, accountID, authTypeIdentifier)
+}
+
 func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
 	return s.app.admGetAccount(accountID)
 }
