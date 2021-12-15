@@ -394,6 +394,35 @@ type JWKS struct {
 	Keys []JWK `json:"keys"`
 }
 
+// LoginSession defines model for LoginSession.
+type LoginSession struct {
+	AccountAuthType *AccountAuthType         `json:"account_auth_type,omitempty"`
+	AppOrg          *ApplicationOrganization `json:"app_org,omitempty"`
+	AppType         *ApplicationType         `json:"app_type,omitempty"`
+	AuthType        *AuthType                `json:"auth_type,omitempty"`
+	Device          *Device                  `json:"device,omitempty"`
+	Fields          *LoginSessionFields      `json:"fields,omitempty"`
+}
+
+// LoginSessionFields defines model for LoginSessionFields.
+type LoginSessionFields struct {
+	AccessToken  *string                    `json:"access_token,omitempty"`
+	Anonymous    *bool                      `json:"anonymous,omitempty"`
+	DateCreated  *string                    `json:"date_created,omitempty"`
+	DateUpdated  *string                    `json:"date_updated"`
+	Expires      *string                    `json:"expires,omitempty"`
+	Id           *string                    `json:"id,omitempty"`
+	IdAddress    *string                    `json:"id_address,omitempty"`
+	Identifier   *string                    `json:"identifier,omitempty"`
+	Params       *LoginSessionFields_Params `json:"params,omitempty"`
+	RefreshToken *string                    `json:"refresh_token,omitempty"`
+}
+
+// LoginSessionFields_Params defines model for LoginSessionFields.Params.
+type LoginSessionFields_Params struct {
+	AdditionalProperties map[string]interface{} `json:"-"`
+}
+
 // OpenID Connect Discovery Metadata
 type OIDCDiscovery struct {
 	Issuer  string `json:"issuer"`
@@ -884,25 +913,6 @@ type ResSharedRokwireToken struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResSharedRokwireTokenTokenType string
 
-// ResSharedLoginSessions defines model for _res_shared_login-sessions.
-type ResSharedLoginSessions struct {
-	AccessToken  *string                        `json:"access_token,omitempty"`
-	Anonymous    *bool                          `json:"anonymous,omitempty"`
-	DateCreated  *string                        `json:"date_created,omitempty"`
-	DateUpdated  *string                        `json:"date_updated"`
-	Expires      *string                        `json:"expires,omitempty"`
-	Id           *string                        `json:"id,omitempty"`
-	IdAddress    *string                        `json:"id_address,omitempty"`
-	Identifier   *string                        `json:"identifier,omitempty"`
-	Params       *ResSharedLoginSessions_Params `json:"params,omitempty"`
-	RefreshToken *string                        `json:"refresh_token,omitempty"`
-}
-
-// ResSharedLoginSessions_Params defines model for ResSharedLoginSessions.Params.
-type ResSharedLoginSessions_Params struct {
-	AdditionalProperties map[string]interface{} `json:"-"`
-}
-
 // DeleteAdminAccountMfaParams defines parameters for DeleteAdminAccountMfa.
 type DeleteAdminAccountMfaParams struct {
 	// MFA type
@@ -1327,25 +1337,25 @@ func (a AuthTypeFields_Params) MarshalJSON() ([]byte, error) {
 	return json.Marshal(object)
 }
 
-// Getter for additional properties for ResSharedLoginSessions_Params. Returns the specified
+// Getter for additional properties for LoginSessionFields_Params. Returns the specified
 // element and whether it was found
-func (a ResSharedLoginSessions_Params) Get(fieldName string) (value interface{}, found bool) {
+func (a LoginSessionFields_Params) Get(fieldName string) (value interface{}, found bool) {
 	if a.AdditionalProperties != nil {
 		value, found = a.AdditionalProperties[fieldName]
 	}
 	return
 }
 
-// Setter for additional properties for ResSharedLoginSessions_Params
-func (a *ResSharedLoginSessions_Params) Set(fieldName string, value interface{}) {
+// Setter for additional properties for LoginSessionFields_Params
+func (a *LoginSessionFields_Params) Set(fieldName string, value interface{}) {
 	if a.AdditionalProperties == nil {
 		a.AdditionalProperties = make(map[string]interface{})
 	}
 	a.AdditionalProperties[fieldName] = value
 }
 
-// Override default JSON handling for ResSharedLoginSessions_Params to handle AdditionalProperties
-func (a *ResSharedLoginSessions_Params) UnmarshalJSON(b []byte) error {
+// Override default JSON handling for LoginSessionFields_Params to handle AdditionalProperties
+func (a *LoginSessionFields_Params) UnmarshalJSON(b []byte) error {
 	object := make(map[string]json.RawMessage)
 	err := json.Unmarshal(b, &object)
 	if err != nil {
@@ -1366,8 +1376,8 @@ func (a *ResSharedLoginSessions_Params) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// Override default JSON handling for ResSharedLoginSessions_Params to handle AdditionalProperties
-func (a ResSharedLoginSessions_Params) MarshalJSON() ([]byte, error) {
+// Override default JSON handling for LoginSessionFields_Params to handle AdditionalProperties
+func (a LoginSessionFields_Params) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 

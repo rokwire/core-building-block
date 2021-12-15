@@ -173,7 +173,7 @@ func (app *application) admGetAccounts(appID string, orgID string, accountID *st
 
 func (app *application) admGetLoginSessions(appID string, orgID string) ([]model.LoginSession, error) {
 	//find the login sessions
-	loginSessions, err := app.storage.FindAdmLoginSessions(appID, orgID)
+	loginSessions, err := app.storage.FindLogSession(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 	}

@@ -234,15 +234,14 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h AdminApisHandler) getLoginSessions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 
 	loginSessions, err := h.coreAPIs.Administration.AdmGetLoginSessions(claims.AppID, claims.OrgID)
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding login sessions", model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
 	}
-	response := loginSessionsToDef(loginSessions)
 
-	data, err := json.Marshal(response)
+	data, err := json.Marshal(loginSessions)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeLoginSession, nil, err, http.StatusInternalServerError, false)
 	}

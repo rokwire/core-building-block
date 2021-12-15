@@ -1605,7 +1605,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/_res_shared_login-sessions"
+                    "$ref": "#/components/schemas/LoginSession"
                   }
                 }
               }
@@ -4529,43 +4529,6 @@
             "enum": [
               "Bearer"
             ]
-          }
-        }
-      },
-      "_res_shared_login-sessions": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "anonymous": {
-            "type": "boolean"
-          },
-          "identifier": {
-            "type": "string"
-          },
-          "id_address": {
-            "type": "string"
-          },
-          "access_token": {
-            "type": "string"
-          },
-          "refresh_token": {
-            "type": "string"
-          },
-          "params": {
-            "type": "object",
-            "additionalProperties": true
-          },
-          "expires": {
-            "type": "string"
-          },
-          "date_updated": {
-            "type": "string",
-            "nullable": true
-          },
-          "date_created": {
-            "type": "string"
           }
         }
       },

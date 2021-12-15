@@ -14,7 +14,7 @@ get:
           schema:
             type: array
             items:
-              $ref: "../../schemas/apis/shared/responses/login-sessions/Response.yaml"
+              $ref: "../../../schemas/auth/LoginSession.yaml"
     400:
       description: Bad request
     401:

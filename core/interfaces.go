@@ -84,7 +84,7 @@ type Storage interface {
 	DeleteCredential(context storage.TransactionContext, ID string) error
 
 	DeleteLoginSessions(context storage.TransactionContext, identifier string) error
-	FindAdmLoginSessions(appID string, orgID string) ([]model.LoginSession, error)
+	FindLogSession(appID string, orgID string) ([]model.LoginSession, error)
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error
