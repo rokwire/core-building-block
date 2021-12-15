@@ -176,6 +176,9 @@ _res_authorize-service_Response:
 ### app-configs API
 _req_app-configs_Request:
   $ref: "./apis/services/appconfigs/request/Request.yaml"
+### admin app-roken API
+_req_admin_app-token_Response:
+  $ref: "./apis/admin/app-token/response/Response.yaml"
 
 ### organization API
 _req_create-Organization_Request:

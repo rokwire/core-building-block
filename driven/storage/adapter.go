@@ -316,7 +316,7 @@ func (sa *Adapter) getCachedAuthType(key string) (*model.AuthType, error) {
 		}
 		return &authType, nil
 	}
-	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, errArgs)
+	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthType, errArgs)
 }
 
 //cacheApplicationsOrganizations caches the applications organizations
@@ -397,25 +397,28 @@ func (sa *Adapter) setCachedApplicationConfigs(applicationConfigs *[]model.Appli
 	sa.cachedApplicationConfigs = &syncmap.Map{}
 	validate := validator.New()
 
-	var currentAppID string
+	var currentKey string
 	var currentConfigList []model.ApplicationConfig
 	for _, config := range *applicationConfigs {
+
 		err := validate.Struct(config)
 		if err != nil {
-			sa.logger.Errorf("failed to validate and cache application config with appID-version %s-%s: %s", config.AppID, config.VersionNumbers.String(), err.Error())
+			sa.logger.Errorf("failed to validate and cache application config with appID-version %s-%s: %s", config.AppOrg.ID, config.Version.VersionNumbers.String(), err.Error())
 		} else {
 			// key 1 - ID
 			sa.cachedApplicationConfigs.Store(config.ID, config)
 
-			// key 2 - cahce pair {appID: []model.ApplicationConfigs}
-			appID := config.AppID
-			if currentAppID == "" {
-				currentAppID = appID
-			} else if currentAppID != appID {
+			// key 2 - cahce pair {appTypeID_orgID: []model.ApplicationConfigs}
+			appTypeID := config.ApplicationType.ID
+			orgID := config.AppOrg.ID
+			key := fmt.Sprintf("%s-%s", appTypeID, orgID)
+			if currentKey == "" {
+				currentKey = key
+			} else if currentKey != key {
 				// cache processed list
-				sa.cachedApplicationConfigs.Store(currentAppID, currentConfigList)
-				// init new appID and configList
-				currentAppID = appID
+				sa.cachedApplicationConfigs.Store(currentKey, currentConfigList)
+				// init new key and configList
+				currentKey = key
 				currentConfigList = make([]model.ApplicationConfig, 0)
 			}
 
@@ -423,18 +426,19 @@ func (sa *Adapter) setCachedApplicationConfigs(applicationConfigs *[]model.Appli
 		}
 	}
 
-	sa.cachedApplicationConfigs.Store(currentAppID, currentConfigList)
+	sa.cachedApplicationConfigs.Store(currentKey, currentConfigList)
 }
 
-func (sa *Adapter) getCachedApplicationConfigByAppIDAndVersion(appID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+func (sa *Adapter) getCachedApplicationConfigByAppIDAndVersion(appTypeID string, orgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
 	sa.applicationConfigsLock.RLock()
 	defer sa.applicationConfigsLock.RUnlock()
 
 	var err error
 	appConfigs := make([]model.ApplicationConfig, 0)
 
-	errArgs := &logutils.FieldArgs{"appID": appID, "version": versionNumbers.String()}
-	item, ok := sa.cachedApplicationConfigs.Load(appID)
+	key := fmt.Sprintf("%s-%s", appTypeID, orgID)
+	errArgs := &logutils.FieldArgs{"appTypeID-orgID": key, "version": versionNumbers.String()}
+	item, ok := sa.cachedApplicationConfigs.Load(key)
 	if !ok {
 		return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeApplicationConfigs, errArgs)
 	}
@@ -451,7 +455,7 @@ func (sa *Adapter) getCachedApplicationConfigByAppIDAndVersion(appID string, ver
 
 		// return highest version <= versionNumbers
 		for _, config := range configList {
-			if config.VersionNumbers.LessThanOrEqualTo(versionNumbers) {
+			if config.Version.VersionNumbers.LessThanOrEqualTo(versionNumbers) {
 				appConfigs = append(appConfigs, config)
 				break
 			}
@@ -680,6 +684,27 @@ func (sa *Adapter) DeleteLoginSession(context TransactionContext, id string) err
 	return nil
 }
 
+//DeleteLoginSessions deletes all login sessions with the identifier
+func (sa *Adapter) DeleteLoginSessions(context TransactionContext, identifier string) error {
+	filter := bson.M{"identifier": identifier}
+
+	var res *mongo.DeleteResult
+	var err error
+	if context != nil {
+		res, err = sa.db.loginsSessions.DeleteManyWithContext(context, filter, nil)
+	} else {
+		res, err = sa.db.loginsSessions.DeleteMany(filter, nil)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, &logutils.FieldArgs{"identifier": identifier}, err)
+	}
+	if res.DeletedCount < 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("unexpected deleted count"))
+	}
+	return nil
+}
+
 //DeleteExpiredSessions deletes expired sessions
 func (sa *Adapter) DeleteExpiredSessions(now *time.Time) error {
 	filter := bson.D{primitive.E{Key: "$or", Value: []interface{}{
@@ -738,6 +763,10 @@ func (sa *Adapter) findAccount(context TransactionContext, key string, id string
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
+	if account == nil {
+		return nil, nil
+	}
+
 	//application organization - from cache
 	appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
 	if err != nil {
@@ -745,6 +774,7 @@ func (sa *Adapter) findAccount(context TransactionContext, key string, id string
 	}
 
 	modelAccount := accountFromStorage(*account, sa, *appOrg)
+
 	return &modelAccount, nil
 }
 
@@ -1045,16 +1075,22 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 }
 
 //FindCredential finds a credential by ID
-func (sa *Adapter) FindCredential(ID string) (*model.Credential, error) {
+func (sa *Adapter) FindCredential(context TransactionContext, ID string) (*model.Credential, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 
 	var creds credential
-	err := sa.db.credentials.FindOne(filter, &creds, nil)
+	var err error
+	if context != nil {
+		err = sa.db.credentials.FindOneWithContext(context, filter, &creds, nil)
+	} else {
+		err = sa.db.credentials.FindOne(filter, &creds, nil)
+	}
+
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			return nil, nil
 		}
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, &logutils.FieldArgs{"_id": ID}, err)
 	}
 
 	modelCreds := credentialFromStorage(creds)
@@ -1078,7 +1114,7 @@ func (sa *Adapter) InsertCredential(creds *model.Credential) error {
 }
 
 //UpdateCredential updates a set of credentials
-func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
+func (sa *Adapter) UpdateCredential(context TransactionContext, creds *model.Credential) error {
 	storageCreds := credentialToStorage(creds)
 
 	if storageCreds == nil {
@@ -1086,7 +1122,13 @@ func (sa *Adapter) UpdateCredential(creds *model.Credential) error {
 	}
 
 	filter := bson.D{primitive.E{Key: "_id", Value: storageCreds.ID}}
-	err := sa.db.credentials.ReplaceOne(filter, storageCreds, nil)
+	var err error
+	if context != nil {
+		err = sa.db.credentials.ReplaceOneWithContext(context, filter, storageCreds, nil)
+	} else {
+		err = sa.db.credentials.ReplaceOne(filter, storageCreds, nil)
+	}
+
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"_id": storageCreds.ID}, err)
 	}
@@ -1109,6 +1151,28 @@ func (sa *Adapter) UpdateCredentialValue(ID string, value map[string]interface{}
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+//DeleteCredential deletes a credential
+func (sa *Adapter) DeleteCredential(context TransactionContext, ID string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+
+	var res *mongo.DeleteResult
+	var err error
+	if context != nil {
+		res, err = sa.db.credentials.DeleteOneWithContext(context, filter, nil)
+	} else {
+		res, err = sa.db.credentials.DeleteOne(filter, nil)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, &logutils.FieldArgs{"_id": ID}, err)
+	}
+	if res.DeletedCount != 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeCredential, &logutils.FieldArgs{"unexpected deleted count": res.DeletedCount})
 	}
 
 	return nil
@@ -1794,30 +1858,39 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 func (sa *Adapter) LoadAppConfigs() ([]model.ApplicationConfig, error) {
 	filter := bson.D{}
 	options := options.Find()
-	options.SetSort(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "version_numbers.major", Value: -1}, primitive.E{Key: "version_numbers.minor", Value: -1}, primitive.E{Key: "version_numbers.patch", Value: -1}}) //sort by version numbers
-	var result []model.ApplicationConfig
+	options.SetSort(bson.D{primitive.E{Key: "app_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version_numbers.major", Value: -1}, primitive.E{Key: "version_numbers.minor", Value: -1}, primitive.E{Key: "version_numbers.patch", Value: -1}}) //sort by version numbers
+	var list []applicationConfig
 
-	err := sa.db.applicationConfigs.Find(filter, &result, options)
+	err := sa.db.applicationConfigs.Find(filter, &list, options)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
 	}
 
-	if len(result) == 0 {
+	if len(list) == 0 {
 		//no data
 		return make([]model.ApplicationConfig, 0), nil
+	}
+
+	result := make([]model.ApplicationConfig, len(list))
+	for i, item := range list {
+		appOrg, err := sa.getCachedApplicationOrganizationByKey(item.AppOrgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+		}
+		result[i] = appConfigFromStorage(&item, *appOrg)
 	}
 
 	return result, nil
 }
 
 //FindAppConfigs finds appconfigs
-func (sa *Adapter) FindAppConfigs(appID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
-	return sa.getCachedApplicationConfigByAppIDAndVersion(appID, versionNumbers)
+func (sa *Adapter) FindAppConfigs(appTypeID string, orgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+	return sa.getCachedApplicationConfigByAppIDAndVersion(appTypeID, orgID, versionNumbers)
 }
 
 //FindAppConfigByVersion finds the most recent app config for the specified version
-func (sa *Adapter) FindAppConfigByVersion(appID string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	configs, err := sa.getCachedApplicationConfigByAppIDAndVersion(appID, &versionNumbers)
+func (sa *Adapter) FindAppConfigByVersion(appTypeID string, orgID string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
+	configs, err := sa.getCachedApplicationConfigByAppIDAndVersion(appTypeID, orgID, &versionNumbers)
 	if err != nil {
 		return nil, err
 	}
@@ -1833,13 +1906,14 @@ func (sa *Adapter) FindAppConfigByID(ID string) (*model.ApplicationConfig, error
 }
 
 // InsertAppConfig inserts an appconfig
-func (sa *Adapter) InsertAppConfig(appConfig model.ApplicationConfig) (*model.ApplicationConfig, error) {
+func (sa *Adapter) InsertAppConfig(item model.ApplicationConfig) (*model.ApplicationConfig, error) {
+	appConfig := appConfigToStorage(item)
 	_, err := sa.db.applicationConfigs.InsertOne(appConfig)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplicationConfigs, nil, err)
 	}
 
-	return &appConfig, nil
+	return &item, nil
 }
 
 // UpdateAppConfig updates an appconfig

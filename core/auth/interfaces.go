@@ -103,6 +103,7 @@ type APIs interface {
 	//		params (string): JSON encoded params defined by specified auth type
 	//		profile (Profile): Account profile
 	//		preferences (map): Account preferences
+	//		admin (bool): Is this an admin login?
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		Message (*string): message
@@ -115,7 +116,7 @@ type APIs interface {
 	//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
 	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
 		authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
-		profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
+		profile model.Profile, preferences map[string]interface{}, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
 
 	//AccountExists checks if a user is already registered
 	//The authentication method must be one of the supported for the application.
@@ -271,8 +272,8 @@ type APIs interface {
 	//		Message (*string): message
 	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, error)
 
-	//GetScopedAccessToken returns a scoped access token with the requested scopes
-	GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scopes []authorization.Scope) (string, error)
+	//GetAdminToken returns an admin token for the specified application
+	GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error)
 
 	//GetAuthKeySet generates a JSON Web Key Set for auth service registration
 	GetAuthKeySet() (*model.JSONWebKeySet, error)
@@ -343,8 +344,8 @@ type Storage interface {
 
 	//Credentials
 	InsertCredential(creds *model.Credential) error
-	FindCredential(ID string) (*model.Credential, error)
-	UpdateCredential(creds *model.Credential) error
+	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
+	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
 	UpdateCredentialValue(ID string, value map[string]interface{}) error
 
 	//MFA

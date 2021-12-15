@@ -1,5 +1,9 @@
 package core
 
+import (
+	"core-building-block/core/model"
+)
+
 func (app *application) admGetTest() string {
 	return "Admin - test"
 }
@@ -153,4 +157,8 @@ func (app *application) admGetTestModel() string {
 	return res
 	*/
 	return ""
+}
+
+func (app *application) admGetAccount(accountID string) (*model.Account, error) {
+	return app.getAccount(accountID)
 }

@@ -495,18 +495,21 @@ func (h SystemApisHandler) createApplicationRole(l *logs.Log, r *http.Request, c
 }
 
 func (h SystemApisHandler) getAppConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	appID := r.URL.Query().Get("app_id")
-	if appID == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	appTypeID := r.URL.Query().Get("app_type_id")
+	if appTypeID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_type_id"), nil, http.StatusBadRequest, false)
 	}
-
+	appOrgID := r.URL.Query().Get("app_org_id")
+	if appOrgID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_org_id"), nil, http.StatusBadRequest, false)
+	}
 	version := r.URL.Query().Get("version")
 	versionNumbers := model.VersionNumbersFromString(version)
 	if version != "" && versionNumbers == nil {
 		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeQueryParam, logutils.StringArgs("version"), nil, http.StatusBadRequest, false)
 	}
 
-	appConfigs, err := h.coreAPIs.System.SysGetAppConfigs(appID, versionNumbers)
+	appConfigs, err := h.coreAPIs.System.SysGetAppConfigs(appTypeID, appOrgID, versionNumbers)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
 	}
@@ -563,7 +566,7 @@ func (h SystemApisHandler) createAppConfig(l *logs.Log, r *http.Request, claims 
 		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeVersionNumbers, nil, nil, http.StatusBadRequest, false)
 	}
 
-	_, err = h.coreAPIs.System.SysCreateAppConfig(requestData.Version, requestData.AppId, requestData.Data, *version)
+	_, err = h.coreAPIs.System.SysCreateAppConfig(requestData.Version, requestData.AppTypeId, requestData.AppOrgId, requestData.Data, *version)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplicationConfigs, nil, err, http.StatusBadRequest, true)
 	}
@@ -601,7 +604,7 @@ func (h SystemApisHandler) updateAppConfig(l *logs.Log, r *http.Request, claims 
 		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeVersionNumbers, nil, nil, http.StatusBadRequest, false)
 	}
 
-	err = h.coreAPIs.System.SysUpdateAppConfig(ID, requestData.Version, requestData.Data, *version)
+	err = h.coreAPIs.System.SysUpdateAppConfig(ID, requestData.Version, requestData.AppTypeId, requestData.Data, *version)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, true)
 	}

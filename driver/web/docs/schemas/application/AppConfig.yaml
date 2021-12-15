@@ -1,12 +1,15 @@
 required:
-  - app_id
+  - app_type_id
+  - app_org_id
   - version
   - data
 type: object
 properties:
   id:
     type: string
-  app_id:
+  app_type_id:
+    type: string
+  app_org_id:
     type: string
   version:
     type: string

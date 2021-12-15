@@ -232,9 +232,10 @@ type AccountFields struct {
 
 // AppConfig defines model for AppConfig.
 type AppConfig struct {
-	AppId string                 `json:"app_id"`
-	Data  map[string]interface{} `json:"data"`
-	Id    *string                `json:"id,omitempty"`
+	AppOrgId  string                 `json:"app_org_id"`
+	AppTypeId string                 `json:"app_type_id"`
+	Data      map[string]interface{} `json:"data"`
+	Id        *string                `json:"id,omitempty"`
 
 	// conforms major.minor.patch format
 	Version string `json:"version"`
@@ -538,10 +539,16 @@ type ReqAccountAuthTypeLinkRequest struct {
 // ReqAccountAuthTypeLinkRequestAuthType defines model for ReqAccountAuthTypeLinkRequest.AuthType.
 type ReqAccountAuthTypeLinkRequestAuthType string
 
+// ReqAdminAppTokenResponse defines model for _req_admin_app-token_Response.
+type ReqAdminAppTokenResponse struct {
+	Token string `json:"token"`
+}
+
 // ReqAppConfigsRequest defines model for _req_app-configs_Request.
 type ReqAppConfigsRequest struct {
 	ApiKey            string `json:"api_key"`
 	AppTypeIdentifier string `json:"app_type_identifier"`
+	OrgId             string `json:"org_id"`
 
 	// conforms major.minor.patch format
 	Version string `json:"version"`
@@ -648,10 +655,8 @@ type ReqSharedCredsAPIKey struct {
 
 // Auth login creds for auth_type="email"
 type ReqSharedCredsEmail struct {
-	Email    string  `json:"email"`
-	MfaCode  *string `json:"mfa_code,omitempty"`
-	MfaType  *string `json:"mfa_type,omitempty"`
-	Password string  `json:"password"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 // Auth login creds for auth_type="oidc" (or variants)
@@ -912,6 +917,12 @@ type PostAdminAccountMfaParams struct {
 	Type string `json:"type"`
 }
 
+// GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.
+type GetAdminAuthAppTokenParams struct {
+	// The application ID of the token to return
+	AppId string `json:"app_id"`
+}
+
 // PostAdminAuthLoginJSONBody defines parameters for PostAdminAuthLogin.
 type PostAdminAuthLoginJSONBody ReqSharedLogin
 
@@ -1049,10 +1060,13 @@ type PutSystemApiKeysJSONBody APIKey
 
 // GetSystemAppConfigsParams defines parameters for GetSystemAppConfigs.
 type GetSystemAppConfigsParams struct {
-	// query by app version and app_id, results contain all app configs that match the given app_id.
-	AppId string `json:"app_id"`
+	// query by app version, app_type_id, and org_id, results contain all app configs that match the given app_type_id and org_id.
+	AppTypeId string `json:"app_type_id"`
 
-	// query by app version and app_id. If given version and app_id, it will return the closest app config that is less than or equal to the given version.
+	// query by app version, app_type_id, and org_id, results contain all app configs that match the given app_type_id and org_id.
+	OrgId string `json:"org_id"`
+
+	// query by app version, app_type_id, and org_id. If given version, app_type_id, and org_id, it will return the closest app config that is less than or equal to the given version.
 	Version *string `json:"version,omitempty"`
 }
 

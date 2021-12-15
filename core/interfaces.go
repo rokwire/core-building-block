@@ -19,13 +19,14 @@ type Services interface {
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
 
-	SerGetAppConfig(appTypeIdentifier string, versionNumbers model.VersionNumbers, apiKey string) (*model.ApplicationConfig, error)
+	SerGetAppConfig(appTypeIdentifier string, orgID string, versionNumbers model.VersionNumbers, apiKey string) (*model.ApplicationConfig, error)
 }
 
 //Administration exposes administration APIs for the driver adapters
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
+	AdmGetAccount(accountID string) (*model.Account, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -58,10 +59,10 @@ type System interface {
 
 	SysCreateAppOrgRole(name string, appID string, description string, permissionNames []string) (*model.AppOrgRole, error)
 
-	SysGetAppConfigs(appID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
+	SysGetAppConfigs(appTypeID string, appOrgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	SysGetAppConfig(id string) (*model.ApplicationConfig, error)
-	SysCreateAppConfig(version string, appID string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
-	SysUpdateAppConfig(id string, version string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
+	SysCreateAppConfig(version string, appTypeID string, appOrgID string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
+	SysUpdateAppConfig(id string, version string, appTypeIdentifier string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
 	SysDeleteAppConfig(id string) error
 
 	SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
@@ -80,6 +81,12 @@ type Storage interface {
 	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
+
+	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
+	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
+	DeleteCredential(context storage.TransactionContext, ID string) error
+
+	DeleteLoginSessions(context storage.TransactionContext, identifier string) error
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error
@@ -114,8 +121,8 @@ type Storage interface {
 
 	FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error)
 
-	FindAppConfigs(appID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
-	FindAppConfigByVersion(appID string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
+	FindAppConfigs(appID string, orgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
+	FindAppConfigByVersion(appID string, orgID string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
 	FindAppConfigByID(ID string) (*model.ApplicationConfig, error)
 	InsertAppConfig(appConfig model.ApplicationConfig) (*model.ApplicationConfig, error)
 	UpdateAppConfig(ID string, version string, data map[string]interface{}, versionNumbers model.VersionNumbers) error

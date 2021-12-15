@@ -23,10 +23,14 @@ const (
 	TypeApplicationOrganization logutils.MessageDataType = "application organization"
 	//TypeApplicationType ...
 	TypeApplicationType logutils.MessageDataType = "application type"
+	//TypeApplicationTypeVersionList ...
+	TypeApplicationTypeVersionList logutils.MessageDataType = "application type supported version list"
 	//TypeApplicationUserRelations ...
 	TypeApplicationUserRelations logutils.MessageDataType = "app user relations"
 	//TypeApplicationConfigs ...
 	TypeApplicationConfigs logutils.MessageDataType = "app configs"
+	//TypeApplicationConfigsVersion ...
+	TypeApplicationConfigsVersion logutils.MessageDataType = "app config version number"
 	//TypeVersionNumbers ...
 	TypeVersionNumbers logutils.MessageDataType = "version numbers"
 )
@@ -93,6 +97,7 @@ type Application struct {
 	Name string //safer community, uuic, etc
 
 	MultiTenant bool //safer community is multi-tenant
+	Admin       bool //is this an admin app?
 
 	//if true the service will always require the user to create profile for the application, otherwise he/she could use his/her already created profile from another platform application
 	RequiresOwnUsers bool
@@ -206,9 +211,9 @@ type IdentityProviderSetting struct {
 //ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc
 type ApplicationType struct {
 	ID         string
-	Identifier string   //edu.illinois.rokwire etc
-	Name       string   //safer community android, safer community ios, safer community web, uuic android etc
-	Versions   []string //1.1.0, 1.2.0 etc
+	Identifier string    //edu.illinois.rokwire etc
+	Name       string    //safer community android, safer community ios, safer community web, uuic android etc
+	Versions   []Version //1.1.0, 1.2.0 etc
 
 	Application Application
 }
@@ -225,10 +230,22 @@ type AuthTypesSupport struct {
 
 //ApplicationConfig represents mobile app configs
 type ApplicationConfig struct {
-	ID             string                 `json:"id" bson:"_id"`
-	AppID          string                 `json:"app_id" bson:"app_id"`
-	VersionNumbers VersionNumbers         `json:"version_numbers" bson:"version_numbers"`
-	Data           map[string]interface{} `json:"data" bson:"data"`
+	ID              string
+	ApplicationType ApplicationType
+	Version         Version
+	AppOrg          ApplicationOrganization
+	Data            map[string]interface{}
+
+	DateCreated time.Time
+	DateUpdated *time.Time
+}
+
+// Version represents mobile app config version information
+type Version struct {
+	ID             string         `json:"id" bson:"_id"`
+	VersionNumbers VersionNumbers `json:"version_numbers" bson:"version_numbers"`
+
+	ApplicationType ApplicationType `json:"app_type" bson:"app_type"`
 
 	DateCreated time.Time  `json:"date_created" bson:"date_created"`
 	DateUpdated *time.Time `json:"date_updated" bson:"date_updated"`

@@ -5,15 +5,23 @@ get:
   summary: Reads app configuration
   description: |
     If version is provided, the app config for the highest version that is equal to or less than this value will be returned as the only item in the list.
-    Otherwise it will return a list of all app config versions for the given app_id.
+    Otherwise it will return a list of all app config versions for the given app_type_id.
 
     **Auth:** Requires user auth token with 'all_appconfigs' or 'get_appconfig' permission
   security:
     - bearerAuth: []
   parameters:
-    - name: app_id
+    - name: app_type_id
       in: query
-      description: query by app version and app_id, results contain all app configs that match the given app_id.
+      description: query by app version, app_type_id, and app_org_id, results contain all app configs that match the given app_type_id and app_org_id.
+      required: true
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: app_org_id
+      in: query
+      description: query by app version, app_type_id, and app_org_id, results contain all app configs that match the given app_type_id and app_org_id.
       required: true
       style: form
       explode: false
@@ -21,7 +29,7 @@ get:
         type: string
     - name: version
       in: query
-      description: query by app version and app_id. If given version and app_id, it will return the closest app config that is less than or equal to the given version.
+      description: query by app version, app_type_id, and app_org_id. If given version, app_type_id, and app_org_id, it will return the closest app config that is less than or equal to the given version.
       style: form
       explode: false
       schema:
@@ -62,7 +70,7 @@ post:
           $ref: "../../schemas/application/AppConfig.yaml"
         example:
           version: "1.0.0"
-          app_id: "9766"
+          app_type_id: "9766"
           data: {}
     required: true
   responses:

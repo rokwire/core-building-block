@@ -80,7 +80,7 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 	requestDevice := requestData.Device
 
 	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId,
-		string(requestData.AuthType), requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, requestProfile, requestPreferences, l)
+		string(requestData.AuthType), requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, requestProfile, requestPreferences, true, l)
 	if err != nil {
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
@@ -206,6 +206,25 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 	return l.HttpResponseSuccessJSON(respData)
 }
 
+func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	account, err := h.coreAPIs.Administration.AdmGetAccount(claims.Subject)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	var accountData *Def.ResSharedAccount
+	if account != nil {
+		accountData = accountToDef(*account)
+	}
+
+	data, err := json.Marshal(accountData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
 func (h AdminApisHandler) getMFATypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	mfaDataList, err := h.coreAPIs.Auth.GetMFATypes(claims.Subject)
 	if err != nil {
@@ -303,6 +322,26 @@ func (h AdminApisHandler) adminVerifyMFA(l *logs.Log, r *http.Request, claims *t
 	}
 
 	return l.HttpResponseSuccessJSON(response)
+}
+
+func (h AdminApisHandler) getAppToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	appID := r.URL.Query().Get("app_id")
+	if appID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	}
+
+	token, err := h.coreAPIs.Auth.GetAdminToken(*claims, appID, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, "app token", nil, err, http.StatusInternalServerError, true)
+	}
+
+	response := Def.ReqAdminAppTokenResponse{Token: token}
+	responseJSON, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "app token", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(responseJSON)
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance

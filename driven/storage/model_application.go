@@ -11,6 +11,7 @@ type application struct {
 
 	MultiTenant      bool `bson:"multi_tenant"`
 	RequiresOwnUsers bool `bson:"requires_own_users"`
+	Admin            bool `bson:"admin"`
 
 	MaxLoginSessionDuration *int `bson:"max_login_session_duration,omitempty"`
 
@@ -21,10 +22,31 @@ type application struct {
 }
 
 type applicationType struct {
-	ID         string   `bson:"id"`
-	Identifier string   `bson:"identifier"`
-	Name       string   `bson:"name"`
-	Versions   []string `bson:"versions"`
+	ID         string    `bson:"id"`
+	Identifier string    `bson:"identifier"`
+	Name       string    `bson:"name"`
+	Versions   []version `bson:"versions"`
+}
+
+type version struct {
+	ID             string               `json:"id" bson:"_id"`
+	VersionNumbers model.VersionNumbers `json:"version_numbers" bson:"version_numbers"`
+	// ApplicationType applicationType `json:"app_type" bson:"app_type"`
+
+	DateCreated time.Time  `json:"date_created" bson:"date_created"`
+	DateUpdated *time.Time `json:"date_updated" bson:"date_updated"`
+}
+
+type applicationConfig struct {
+	ID              string          `json:"id" bson:"_id"`
+	ApplicationType applicationType `json:"app_type" bson:"app_type"`
+	Version         version         `json:"version" bson:"version"`
+	AppOrgID        string          `bson:"app_org_id"`
+
+	Data map[string]interface{} `json:"data" bson:"data"`
+
+	DateCreated time.Time  `json:"date_created" bson:"date_created"`
+	DateUpdated *time.Time `json:"date_updated" bson:"date_updated"`
 }
 
 type organization struct {
@@ -53,6 +75,7 @@ type applicationOrganization struct {
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
+
 type appOrgGroup struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`

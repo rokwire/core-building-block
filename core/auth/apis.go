@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rokwire/core-auth-library-go/authorization"
-	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -46,6 +45,7 @@ func (a *Auth) GetHost() string {
 //		params (string): JSON encoded params defined by specified auth type
 //		profile (Profile): Account profile
 //		preferences (map): Account preferences
+//		admin (bool): Is this an admin login?
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		Message (*string): message
@@ -58,13 +58,20 @@ func (a *Auth) GetHost() string {
 //		MFA types ([]model.MFAType): list of MFA types account is enrolled in
 func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
 	authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
-	profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error) {
+	profile model.Profile, preferences map[string]interface{}, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	if appOrg.Application.Admin != admin {
+		if admin {
+			return nil, nil, nil, errors.New("use services login endpoint")
+		}
+		return nil, nil, nil, errors.New("use admin login endpoint")
 	}
 
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
@@ -288,7 +295,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, name, email, phone, "rokwire", orgID, appID, authType, nil, anonymous, false)
+	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, nil, anonymous, false, loginSession.AppOrg.Application.Admin)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
@@ -466,7 +473,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 
 //VerifyCredential verifies credential (checks the verification code in the credentials collection)
 func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) error {
-	credential, err := a.storage.FindCredential(id)
+	credential, err := a.storage.FindCredential(nil, id)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
@@ -496,7 +503,7 @@ func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) err
 
 	credential.Verified = true
 	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(credential); err != nil {
+	if err = a.storage.UpdateCredential(nil, credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 
@@ -544,7 +551,7 @@ func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, para
 	}
 	//Update the credential with new password
 	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(credential); err != nil {
+	if err = a.storage.UpdateCredential(nil, credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 
@@ -561,7 +568,7 @@ func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, para
 //TODO: Clear login sessions using old creds
 // Handle refresh tokens when applicable
 func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params string, l *logs.Log) error {
-	credential, err := a.storage.FindCredential(credsID)
+	credential, err := a.storage.FindCredential(nil, credsID)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
@@ -586,7 +593,7 @@ func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params st
 	}
 	//Update the credential with new password
 	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(credential); err != nil {
+	if err = a.storage.UpdateCredential(nil, credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 
@@ -652,7 +659,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	}
 	//Update the credential with reset code and expiry
 	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(credential); err != nil {
+	if err = a.storage.UpdateCredential(nil, credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 	return nil
@@ -916,7 +923,7 @@ func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, appro
 		}
 	}
 
-	token, err := a.GetScopedAccessToken(claims, serviceID, authorization.Scopes)
+	token, err := a.getScopedAccessToken(claims, serviceID, authorization.Scopes)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction("build", logutils.TypeToken, nil, err)
 	}
@@ -924,22 +931,17 @@ func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, appro
 	return token, authorization.Scopes, nil, nil
 }
 
-//GetScopedAccessToken returns a scoped access token with the requested scopes
-func (a *Auth) GetScopedAccessToken(claims tokenauth.Claims, serviceID string, scopes []authorization.Scope) (string, error) {
-	scopeStrings := []string{}
-	services := []string{serviceID}
-	for _, scope := range scopes {
-		scopeStrings = append(scopeStrings, scope.String())
-		if !authutils.ContainsString(services, scope.ServiceID) {
-			services = append(services, scope.ServiceID)
-		}
+//GetAdminToken returns an admin token for the specified application
+func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error) {
+	//verify that the provided appID is valid for the organization
+	_, err := a.storage.FindApplicationOrganizations(appID, claims.OrgID)
+	if err != nil {
+		return "", errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": claims.OrgID, "app_id": appID}, err)
 	}
 
-	aud := strings.Join(services, ",")
-	scope := strings.Join(scopeStrings, " ")
-
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, nil, claims.Anonymous, claims.Authenticated)
-	return a.buildAccessToken(scopedClaims, "", scope)
+	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, claims.OrgID, appID, claims.AuthType,
+		&claims.ExpiresAt, false, false, true)
+	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }
 
 //LinkAccountAuthType links new credentials to an existing account.
