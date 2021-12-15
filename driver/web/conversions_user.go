@@ -23,6 +23,14 @@ func accountToDef(item model.Account) *Def.ResSharedAccount {
 		AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 }
 
+func аccountsToDef(items []model.Account) []Def.ResSharedAccount {
+	result := make([]Def.ResSharedAccount, len(items))
+	for i, item := range items {
+		result[i] = *accountToDef(item)
+	}
+	return result
+}
+
 //AccountAuthType
 func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthTypeFields {
 	params := &Def.AccountAuthTypeFields_Params{}

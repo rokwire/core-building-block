@@ -2,6 +2,9 @@ package core
 
 import (
 	"core-building-block/core/model"
+
+	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logutils"
 )
 
 func (app *application) admGetTest() string {
@@ -157,6 +160,15 @@ func (app *application) admGetTestModel() string {
 	return res
 	*/
 	return ""
+}
+
+func (app *application) admGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
+	//find the accounts
+	accounts, err := app.storage.FindAccounts(appID, orgID, accountID, authTypeIdentifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	return accounts, nil
 }
 
 func (app *application) admGetAccount(accountID string) (*model.Account, error) {

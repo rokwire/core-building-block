@@ -1432,6 +1432,49 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /admin/application/accounts:
+    get:
+      tags:
+        - Admin
+      summary: Finds application accounts
+      description: |
+        Finds accounts for the specified application
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: account-id
+          in: query
+          description: The account ID
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: auth-type-identifier
+          in: query
+          description: The authentication type identifier
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content: null
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/_res_shared_Account'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /enc/test:
     get:
       tags:
