@@ -95,3 +95,32 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 		Params: params, State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
 		Expires: expires, ForceExpires: forceExpires, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
+
+func loginSessionsFromStorage(item *model.LoginSession) *model.LoginSession {
+
+	ipAddress := item.IPAddress
+	accessToken := item.AccessToken
+	refreshTokens := item.RefreshTokens
+	params := item.Params
+
+	var state *string
+	if item.State != "" {
+		state = &item.State
+	}
+	stateExpires := item.StateExpires
+	var mfaAttempts *int
+	if item.MfaAttempts != 0 {
+		mfaAttempts = &item.MfaAttempts
+	}
+
+	expires := item.Expires
+	forceExpires := item.ForceExpires
+
+	dateUpdated := item.DateUpdated
+	dateCreated := item.DateCreated
+
+	return &model.LoginSession{AppOrg: item.AppOrg, AuthType: item.AuthType, AppType: item.AppType, Anonymous: item.Anonymous,
+		Identifier: item.Identifier, AccountAuthType: item.AccountAuthType, Device: item.Device, IPAddress: ipAddress,
+		AccessToken: accessToken, Params: params, RefreshTokens: refreshTokens, State: *state, StateExpires: stateExpires,
+		MfaAttempts: *mfaAttempts, Expires: expires, ForceExpires: forceExpires, DateUpdated: dateUpdated, DateCreated: dateCreated}
+}

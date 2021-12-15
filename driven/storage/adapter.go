@@ -1885,10 +1885,9 @@ func (sa *Adapter) FindLogSession(appID string, orgID string) ([]model.LoginSess
 	}
 
 	if len(result) == 0 {
-		//no data
+		//no record
 		return make([]model.LoginSession, 0), nil
 	}
-
 	return result, nil
 }
 
