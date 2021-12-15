@@ -187,29 +187,6 @@ func (_m *Storage) FindAccounts(appID string, orgID string, accountID *string, a
 	return r0, r1
 }
 
-// FindAdmLoginSessions provides a mock function with given fields: appID, orgID
-func (_m *Storage) FindAdmLoginSessions(appID string, orgID string) ([]model.LoginSession, error) {
-	ret := _m.Called(appID, orgID)
-
-	var r0 []model.LoginSession
-	if rf, ok := ret.Get(0).(func(string, string) []model.LoginSession); ok {
-		r0 = rf(appID, orgID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.LoginSession)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(appID, orgID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // FindAppOrgRoles provides a mock function with given fields: ids, appOrgID
 func (_m *Storage) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error) {
 	ret := _m.Called(ids, appOrgID)
@@ -295,6 +272,29 @@ func (_m *Storage) FindCredential(context storage.TransactionContext, ID string)
 	var r1 error
 	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
 		r1 = rf(context, ID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindLogSession provides a mock function with given fields: appID, orgID
+func (_m *Storage) FindLogSession(appID string, orgID string) ([]model.LoginSession, error) {
+	ret := _m.Called(appID, orgID)
+
+	var r0 []model.LoginSession
+	if rf, ok := ret.Get(0).(func(string, string) []model.LoginSession); ok {
+		r0 = rf(appID, orgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.LoginSession)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(appID, orgID)
 	} else {
 		r1 = ret.Error(1)
 	}
