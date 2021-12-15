@@ -1878,15 +1878,10 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 func (sa *Adapter) FindLogSession(appID string, orgID string) ([]model.LoginSession, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
 		primitive.E{Key: "org_id", Value: orgID}}
-	var result []model.LoginSession
+	var result []loginSession
 	err := sa.db.loginsSessions.Find(filter, &result, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
-	}
-
-	if len(result) == 0 {
-		//no record
-		return make([]model.LoginSession, 0), nil
 	}
 
 	log := logSessionsFromStorage(result)

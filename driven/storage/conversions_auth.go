@@ -96,16 +96,25 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 		Expires: expires, ForceExpires: forceExpires, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
 
-func logSessionFromStorage(items *model.LoginSession) model.LoginSession {
-
-	return model.LoginSession{ID: items.ID, AppOrg: items.AppOrg, AuthType: items.AuthType, AppType: items.AppType,
-		Anonymous: items.Anonymous, Identifier: items.Identifier, AccountAuthType: items.AccountAuthType,
-		Device: items.Device, IPAddress: items.IPAddress, AccessToken: items.AccessToken, RefreshTokens: items.RefreshTokens, Params: items.Params,
-		State: items.State, StateExpires: items.StateExpires, MfaAttempts: items.MfaAttempts,
-		Expires: items.Expires, ForceExpires: items.ForceExpires, DateUpdated: items.DateUpdated, DateCreated: items.DateCreated}
+func logSessionFromStorage(items *loginSession) model.LoginSession {
+	return model.LoginSession{ID: items.ID,
+		Anonymous: items.Anonymous, Identifier: items.Identifier,
+		IPAddress: items.IPAddress, AccessToken: items.AccessToken, RefreshTokens: items.RefreshTokens, Params: items.Params,
+		StateExpires: items.StateExpires,
+		Expires:      items.Expires, ForceExpires: items.ForceExpires, DateUpdated: items.DateUpdated, DateCreated: items.DateCreated}
 }
 
-func logSessionsFromStorage(itemsList []model.LoginSession) []model.LoginSession {
+/*func logSessionToStorage(item *loginSession) loginSession {
+
+	return loginSession{ID: item.ID, AppID: item.AppID, OrgID: item.OrgID, AuthTypeCode: item.AuthTypeCode,
+		AppTypeID: item.AppTypeID, AppTypeIdentifier: item.AppTypeIdentifier, Anonymous: item.Anonymous,
+		Identifier: item.Identifier, AccountAuthTypeID: item.AccountAuthTypeID, AccountAuthTypeIdentifier: item.AccountAuthTypeIdentifier,
+		DeviceID: item.DeviceID, IPAddress: item.IPAddress, AccessToken: item.AccessToken, RefreshTokens: item.RefreshTokens,
+		Params: item.Params, State: item.State, StateExpires: item.StateExpires, MfaAttempts: item.MfaAttempts,
+		Expires: item.Expires, ForceExpires: item.ForceExpires, DateUpdated: item.DateUpdated, DateCreated: item.DateCreated}
+}*/
+
+func logSessionsFromStorage(itemsList []loginSession) []model.LoginSession {
 	if len(itemsList) == 0 {
 		return make([]model.LoginSession, 0)
 	}
