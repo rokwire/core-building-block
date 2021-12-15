@@ -241,9 +241,9 @@ func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Reque
 		return l.HttpResponseErrorAction("error finding login sessions", model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
 	}
 
-	response := loginSessionsToDef(loginSessions)
+	//response := loginSessionsToDef(loginSessions)
 
-	data, err := json.Marshal(response)
+	data, err := json.Marshal(loginSessions)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeLoginSession, nil, err, http.StatusInternalServerError, false)
 	}

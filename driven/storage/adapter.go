@@ -1888,7 +1888,9 @@ func (sa *Adapter) FindLogSession(appID string, orgID string) ([]model.LoginSess
 		//no record
 		return make([]model.LoginSession, 0), nil
 	}
-	return result, nil
+
+	log := logSessionsFromStorage(result)
+	return log, nil
 }
 
 // ============================== ServiceRegs ==============================

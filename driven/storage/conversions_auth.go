@@ -96,31 +96,23 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 		Expires: expires, ForceExpires: forceExpires, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
 
-func loginSessionsFromStorage(item *model.LoginSession) *model.LoginSession {
+func logSessionFromStorage(items *model.LoginSession) model.LoginSession {
 
-	ipAddress := item.IPAddress
-	accessToken := item.AccessToken
-	refreshTokens := item.RefreshTokens
-	params := item.Params
+	return model.LoginSession{ID: items.ID, AppOrg: items.AppOrg, AuthType: items.AuthType, AppType: items.AppType,
+		Anonymous: items.Anonymous, Identifier: items.Identifier, AccountAuthType: items.AccountAuthType,
+		Device: items.Device, IPAddress: items.IPAddress, AccessToken: items.AccessToken, RefreshTokens: items.RefreshTokens, Params: items.Params,
+		State: items.State, StateExpires: items.StateExpires, MfaAttempts: items.MfaAttempts,
+		Expires: items.Expires, ForceExpires: items.ForceExpires, DateUpdated: items.DateUpdated, DateCreated: items.DateCreated}
+}
 
-	var state *string
-	if item.State != "" {
-		state = &item.State
-	}
-	stateExpires := item.StateExpires
-	var mfaAttempts *int
-	if item.MfaAttempts != 0 {
-		mfaAttempts = &item.MfaAttempts
+func logSessionsFromStorage(itemsList []model.LoginSession) []model.LoginSession {
+	if len(itemsList) == 0 {
+		return make([]model.LoginSession, 0)
 	}
 
-	expires := item.Expires
-	forceExpires := item.ForceExpires
-
-	dateUpdated := item.DateUpdated
-	dateCreated := item.DateCreated
-
-	return &model.LoginSession{AppOrg: item.AppOrg, AuthType: item.AuthType, AppType: item.AppType, Anonymous: item.Anonymous,
-		Identifier: item.Identifier, AccountAuthType: item.AccountAuthType, Device: item.Device, IPAddress: ipAddress,
-		AccessToken: accessToken, Params: params, RefreshTokens: refreshTokens, State: *state, StateExpires: stateExpires,
-		MfaAttempts: *mfaAttempts, Expires: expires, ForceExpires: forceExpires, DateUpdated: dateUpdated, DateCreated: dateCreated}
+	var items []model.LoginSession
+	for _, ls := range itemsList {
+		items = append(items, logSessionFromStorage(&ls))
+	}
+	return items
 }
