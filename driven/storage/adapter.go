@@ -80,7 +80,7 @@ func (sa *Adapter) Start() error {
 	// cache application configs
 	err = sa.cacheApplicationConfigs()
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionCache, model.TypeApplicationConfigs, nil, err)
+		return errors.WrapErrorAction(logutils.ActionCache, model.TypeApplicationConfig, nil, err)
 	}
 
 	return err
@@ -382,7 +382,7 @@ func (sa *Adapter) cacheApplicationConfigs() error {
 
 	applicationConfigs, err := sa.LoadAppConfigs()
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
 	}
 
 	sa.setCachedApplicationConfigs(&applicationConfigs)
@@ -410,8 +410,8 @@ func (sa *Adapter) setCachedApplicationConfigs(applicationConfigs *[]model.Appli
 
 			// key 2 - cahce pair {appTypeID_orgID: []model.ApplicationConfigs}
 			appTypeID := config.ApplicationType.ID
-			orgID := config.AppOrg.ID
-			key := fmt.Sprintf("%s-%s", appTypeID, orgID)
+			appOrgID := config.AppOrg.ID
+			key := fmt.Sprintf("%s-%s", appTypeID, appOrgID)
 			if currentKey == "" {
 				currentKey = key
 			} else if currentKey != key {
@@ -429,24 +429,24 @@ func (sa *Adapter) setCachedApplicationConfigs(applicationConfigs *[]model.Appli
 	sa.cachedApplicationConfigs.Store(currentKey, currentConfigList)
 }
 
-func (sa *Adapter) getCachedApplicationConfigByAppIDAndVersion(appTypeID string, orgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+func (sa *Adapter) getCachedApplicationConfigByAppIDAndVersion(appTypeID string, appOrgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
 	sa.applicationConfigsLock.RLock()
 	defer sa.applicationConfigsLock.RUnlock()
 
 	var err error
 	appConfigs := make([]model.ApplicationConfig, 0)
 
-	key := fmt.Sprintf("%s-%s", appTypeID, orgID)
-	errArgs := &logutils.FieldArgs{"appTypeID-orgID": key, "version": versionNumbers.String()}
+	key := fmt.Sprintf("%s-%s", appTypeID, appOrgID)
+	errArgs := &logutils.FieldArgs{"appTypeID-appOrgID": key, "version": versionNumbers.String()}
 	item, ok := sa.cachedApplicationConfigs.Load(key)
 	if !ok {
-		return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeApplicationConfigs, errArgs)
+		return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeApplicationConfig, errArgs)
 	}
 
 	if item != nil {
 		configList, ok := item.([]model.ApplicationConfig)
 		if !ok {
-			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplicationConfigs, errArgs)
+			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplicationConfig, errArgs)
 		}
 
 		if versionNumbers == nil {
@@ -474,17 +474,17 @@ func (sa *Adapter) getCachedApplicationConfigByID(id string) (*model.Application
 
 	item, ok := sa.cachedApplicationConfigs.Load(id)
 	if !ok {
-		return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeApplicationConfigs, errArgs)
+		return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeApplicationConfig, errArgs)
 	}
 	if item != nil {
 		config, ok := item.(model.ApplicationConfig)
 		if !ok {
-			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplicationConfigs, errArgs)
+			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplicationConfig, errArgs)
 		}
 		return &config, nil
 	}
 
-	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationConfigs, errArgs)
+	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationConfig, errArgs)
 }
 
 //LoadAuthTypes loads all auth types
@@ -1886,12 +1886,12 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 func (sa *Adapter) LoadAppConfigs() ([]model.ApplicationConfig, error) {
 	filter := bson.D{}
 	options := options.Find()
-	options.SetSort(bson.D{primitive.E{Key: "app_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version_numbers.major", Value: -1}, primitive.E{Key: "version_numbers.minor", Value: -1}, primitive.E{Key: "version_numbers.patch", Value: -1}}) //sort by version numbers
+	options.SetSort(bson.D{primitive.E{Key: "app_type.id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version_numbers.major", Value: -1}, primitive.E{Key: "version_numbers.minor", Value: -1}, primitive.E{Key: "version_numbers.patch", Value: -1}}) //sort by version numbers
 	var list []applicationConfig
 
 	err := sa.db.applicationConfigs.Find(filter, &list, options)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
 	}
 
 	if len(list) == 0 {
@@ -1938,7 +1938,7 @@ func (sa *Adapter) InsertAppConfig(item model.ApplicationConfig) (*model.Applica
 	appConfig := appConfigToStorage(item)
 	_, err := sa.db.applicationConfigs.InsertOne(appConfig)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplicationConfigs, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplicationConfig, nil, err)
 	}
 
 	return &item, nil
@@ -1962,10 +1962,10 @@ func (sa *Adapter) UpdateAppConfig(ID string, version string, data map[string]in
 	}
 	result, err := sa.db.applicationConfigs.UpdateOne(updatAppConfigFilter, updateAppConfig, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigs, &logutils.FieldArgs{"id": ID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, &logutils.FieldArgs{"id": ID}, err)
 	}
 	if result.MatchedCount == 0 {
-		return errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationConfigs, &logutils.FieldArgs{"id": ID}, err)
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationConfig, &logutils.FieldArgs{"id": ID}, err)
 	}
 
 	return nil
@@ -1976,14 +1976,14 @@ func (sa *Adapter) DeleteAppConfig(ID string) error {
 	filter := bson.M{"_id": ID}
 	result, err := sa.db.applicationConfigs.DeleteOne(filter, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeApplicationConfigs, &logutils.FieldArgs{"_id": ID}, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeApplicationConfig, &logutils.FieldArgs{"_id": ID}, err)
 	}
 	if result == nil {
 		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"_id": ID}, err)
 	}
 	deletedCount := result.DeletedCount
 	if deletedCount == 0 {
-		return errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationConfigs, &logutils.FieldArgs{"_id": ID}, err)
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationConfig, &logutils.FieldArgs{"_id": ID}, err)
 	}
 
 	return nil

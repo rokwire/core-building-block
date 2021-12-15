@@ -980,6 +980,11 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/_req_app-configs_Request'
+            example:
+              version: 1.0.1
+              app_type_identifier: com.rokmetro.safercommunity
+              app_org_id: 61ba5ba90b80517a5801bf9e
+              api_key: ''
       responses:
         '200':
           description: successfully read app configuration
@@ -2189,15 +2194,15 @@ paths:
       parameters:
         - name: app_type_id
           in: query
-          description: 'query by app version, app_type_id, and org_id, results contain all app configs that match the given app_type_id and org_id.'
+          description: 'query by app version, app_type_id, and app_org_id, results contain all app configs that match the given app_type_id and app_org_id.'
           required: true
           style: form
           explode: false
           schema:
             type: string
-        - name: org_id
+        - name: app_org_id
           in: query
-          description: 'query by app version, app_type_id, and org_id, results contain all app configs that match the given app_type_id and org_id.'
+          description: 'query by app version, app_type_id, and app_org_id, results contain all app configs that match the given app_type_id and app_org_id.'
           required: true
           style: form
           explode: false
@@ -2205,7 +2210,7 @@ paths:
             type: string
         - name: version
           in: query
-          description: 'query by app version, app_type_id, and org_id. If given version, app_type_id, and org_id, it will return the closest app config that is less than or equal to the given version.'
+          description: 'query by app version, app_type_id, and app_org_id. If given version, app_type_id, and app_org_id, it will return the closest app config that is less than or equal to the given version.'
           style: form
           explode: false
           schema:
@@ -2243,10 +2248,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AppConfig'
+              $ref: '#/components/schemas/_req_create_ApplicationConfig_Request'
             example:
-              version: 1.0.0
-              app_type_id: '9766'
+              version: 1.0.1
+              app_type_identifier: com.rokmetro.safercommunity
+              app_org_id: 61ba5ba90b80517a5801bf9e
               data: {}
         required: true
       responses:
@@ -3791,14 +3797,14 @@ components:
     _req_app-configs_Request:
       required:
         - app_type_identifier
-        - org_id
+        - app_org_id
         - version
         - api_key
       type: object
       properties:
         app_type_identifier:
           type: string
-        org_id:
+        app_org_id:
           type: string
         version:
           type: string
@@ -4097,3 +4103,20 @@ components:
           type: array
           items:
             type: string
+    _req_create_ApplicationConfig_Request:
+      required:
+        - app_type_identifier
+        - app_org_id
+        - version
+        - data
+      type: object
+      properties:
+        app_type_identifier:
+          type: string
+        app_org_id:
+          type: string
+        version:
+          type: string
+          description: conforms major.minor.patch format
+        data:
+          type: object

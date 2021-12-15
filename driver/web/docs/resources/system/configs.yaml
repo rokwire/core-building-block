@@ -67,10 +67,11 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/application/AppConfig.yaml"
+          $ref: "../../schemas/apis/system/application-config/request/Request.yaml"
         example:
-          version: "1.0.0"
-          app_type_id: "9766"
+          version: "1.0.1"
+          app_type_identifier: "com.rokmetro.safercommunity"
+          app_org_id: "61ba5ba90b80517a5801bf9e"
           data: {}
     required: true
   responses:

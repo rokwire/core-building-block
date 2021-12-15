@@ -13,6 +13,11 @@ post:
       application/json:
         schema:
           $ref: "../../../schemas/apis/services/appconfigs/request/Request.yaml"
+        example:
+          version: "1.0.1"
+          app_type_identifier: "com.rokmetro.safercommunity"
+          app_org_id: "61ba5ba90b80517a5801bf9e"
+          api_key: ""
   responses:
     200:
       description: successfully read app configuration

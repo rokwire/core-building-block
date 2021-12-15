@@ -199,7 +199,7 @@ func (app *application) sysCreateAppOrgRole(name string, appOrgID string, descri
 func (app *application) sysGetAppConfigs(appID string, orgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
 	appConfigs, err := app.storage.FindAppConfigs(appID, orgID, versionNumbers)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
 	}
 
 	return appConfigs, nil
@@ -208,7 +208,7 @@ func (app *application) sysGetAppConfigs(appID string, orgID string, versionNumb
 func (app *application) sysGetAppConfig(id string) (*model.ApplicationConfig, error) {
 	appConfig, err := app.storage.FindAppConfigByID(id)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
 	}
 
 	return appConfig, nil
@@ -221,7 +221,7 @@ func (app *application) sysCreateAppConfig(version string, appType model.Applica
 
 	insertedConfig, err := app.storage.InsertAppConfig(applicationConfig)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeApplicationConfigs, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeApplicationConfig, nil, err)
 	}
 
 	return insertedConfig, nil
@@ -230,7 +230,7 @@ func (app *application) sysCreateAppConfig(version string, appType model.Applica
 func (app *application) sysUpdateAppConfig(id string, version string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
 	err := app.storage.UpdateAppConfig(id, version, data, versionNumbers)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigs, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, nil, err)
 	}
 
 	return nil
@@ -239,7 +239,7 @@ func (app *application) sysUpdateAppConfig(id string, version string, data map[s
 func (app *application) sysDeleteAppConfig(id string) error {
 	err := app.storage.DeleteAppConfig(id)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeApplicationConfigs, nil, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeApplicationConfig, nil, err)
 	}
 
 	return nil

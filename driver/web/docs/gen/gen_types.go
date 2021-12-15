@@ -547,8 +547,8 @@ type ReqAdminAppTokenResponse struct {
 // ReqAppConfigsRequest defines model for _req_app-configs_Request.
 type ReqAppConfigsRequest struct {
 	ApiKey            string `json:"api_key"`
+	AppOrgId          string `json:"app_org_id"`
 	AppTypeIdentifier string `json:"app_type_identifier"`
-	OrgId             string `json:"org_id"`
 
 	// conforms major.minor.patch format
 	Version string `json:"version"`
@@ -579,6 +579,16 @@ type ReqCreateOrganizationRequest struct {
 
 // ReqCreateOrganizationRequestType defines model for ReqCreateOrganizationRequest.Type.
 type ReqCreateOrganizationRequestType string
+
+// ReqCreateApplicationConfigRequest defines model for _req_create_ApplicationConfig_Request.
+type ReqCreateApplicationConfigRequest struct {
+	AppOrgId          string                 `json:"app_org_id"`
+	AppTypeIdentifier string                 `json:"app_type_identifier"`
+	Data              map[string]interface{} `json:"data"`
+
+	// conforms major.minor.patch format
+	Version string `json:"version"`
+}
 
 // ReqCreateApplicationRequest defines model for _req_create_Application_Request.
 type ReqCreateApplicationRequest struct {
@@ -919,7 +929,6 @@ type PostAdminAccountMfaParams struct {
 
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {
-
 	// The account ID
 	AccountId *string `json:"account-id,omitempty"`
 
@@ -1070,18 +1079,18 @@ type PutSystemApiKeysJSONBody APIKey
 
 // GetSystemAppConfigsParams defines parameters for GetSystemAppConfigs.
 type GetSystemAppConfigsParams struct {
-	// query by app version, app_type_id, and org_id, results contain all app configs that match the given app_type_id and org_id.
+	// query by app version, app_type_id, and app_org_id, results contain all app configs that match the given app_type_id and app_org_id.
 	AppTypeId string `json:"app_type_id"`
 
-	// query by app version, app_type_id, and org_id, results contain all app configs that match the given app_type_id and org_id.
-	OrgId string `json:"org_id"`
+	// query by app version, app_type_id, and app_org_id, results contain all app configs that match the given app_type_id and app_org_id.
+	AppOrgId string `json:"app_org_id"`
 
-	// query by app version, app_type_id, and org_id. If given version, app_type_id, and org_id, it will return the closest app config that is less than or equal to the given version.
+	// query by app version, app_type_id, and app_org_id. If given version, app_type_id, and app_org_id, it will return the closest app config that is less than or equal to the given version.
 	Version *string `json:"version,omitempty"`
 }
 
 // PostSystemAppConfigsJSONBody defines parameters for PostSystemAppConfigs.
-type PostSystemAppConfigsJSONBody AppConfig
+type PostSystemAppConfigsJSONBody ReqCreateApplicationConfigRequest
 
 // PutSystemAppConfigsIdJSONBody defines parameters for PutSystemAppConfigsId.
 type PutSystemAppConfigsIdJSONBody AppConfig

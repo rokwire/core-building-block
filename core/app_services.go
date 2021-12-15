@@ -127,14 +127,14 @@ func (app *application) serGetCommonTest(l *logs.Log) string {
 	return "Services - Common - test"
 }
 
-func (app *application) serGetAppConfig(appID string, appOrgID string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	appConfigs, err := app.storage.FindAppConfigByVersion(appID, appOrgID, versionNumbers)
+func (app *application) serGetAppConfig(appTypeID string, appOrgID string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
+	appConfigs, err := app.storage.FindAppConfigByVersion(appTypeID, appOrgID, versionNumbers)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfigs, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
 	}
 
 	if appConfigs == nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationConfigs, nil, err)
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationConfig, nil, err)
 	}
 
 	return appConfigs, nil

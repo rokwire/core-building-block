@@ -124,8 +124,8 @@ type Storage interface {
 
 	FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error)
 
-	FindAppConfigs(appID string, orgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
-	FindAppConfigByVersion(appID string, orgID string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
+	FindAppConfigs(appTypeID string, orgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
+	FindAppConfigByVersion(appTypeID string, orgID string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
 	FindAppConfigByID(ID string) (*model.ApplicationConfig, error)
 	InsertAppConfig(appConfig model.ApplicationConfig) (*model.ApplicationConfig, error)
 	UpdateAppConfig(ID string, version string, data map[string]interface{}, versionNumbers model.VersionNumbers) error

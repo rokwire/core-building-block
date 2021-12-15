@@ -116,7 +116,7 @@ func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, appOrgID string
 		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
 
-	return s.app.serGetAppConfig(appID, appOrgID, versionNumbers)
+	return s.app.serGetAppConfig(applicationType.ID, appOrgID, versionNumbers)
 }
 
 ///
@@ -255,7 +255,7 @@ func (s *systemImpl) SysCreateAppConfig(version string, appTypeIdentifier string
 		}
 	}
 
-	return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigsVersion, logutils.StringArgs(appTypeIdentifier))
+	return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigsVersion, logutils.StringArgs(version+" for app_type_identifier: "+appTypeIdentifier))
 }
 
 func (s *systemImpl) SysUpdateAppConfig(id string, version string, appTypeIdentifier string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
