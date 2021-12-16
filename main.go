@@ -136,6 +136,7 @@ func main() {
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, serviceID, auth.AuthService, port, coreAPIs, host, logger)
+	rokwireOrgID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_ROKWIRE_ORG_ID", true, true)
+	webAdapter := web.NewWebAdapter(env, serviceID, rokwireOrgID, auth.AuthService, port, coreAPIs, host, logger)
 	webAdapter.Start()
 }
