@@ -217,7 +217,10 @@ func (app *application) sysGetAppConfig(id string) (*model.ApplicationConfig, er
 func (app *application) sysCreateAppConfig(version string, appType model.ApplicationType, appOrgID string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
 	now := time.Now()
 	appConfigID, _ := uuid.NewUUID()
-	applicationConfig := model.ApplicationConfig{ID: appConfigID.String(), ApplicationType: appType, AppOrg: model.ApplicationOrganization{ID: appOrgID}, Version: model.Version{VersionNumbers: versionNumbers, ApplicationType: appType}, Data: data, DateCreated: now}
+	applicationConfig := model.ApplicationConfig{ID: appConfigID.String(), ApplicationType: appType, AppOrg: model.ApplicationOrganization{ID: appOrgID}, Data: data, DateCreated: now}
+
+	appConfigVersionID, _ := uuid.NewUUID()
+	applicationConfig.Version = model.Version{ID: appConfigVersionID.String(), VersionNumbers: versionNumbers, ApplicationType: appType, DateCreated: now}
 
 	insertedConfig, err := app.storage.InsertAppConfig(applicationConfig)
 	if err != nil {
@@ -227,8 +230,8 @@ func (app *application) sysCreateAppConfig(version string, appType model.Applica
 	return insertedConfig, nil
 }
 
-func (app *application) sysUpdateAppConfig(id string, version string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
-	err := app.storage.UpdateAppConfig(id, version, data, versionNumbers)
+func (app *application) sysUpdateAppConfig(id string, version string, appType model.ApplicationType, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
+	err := app.storage.UpdateAppConfig(id, version, appType, data, versionNumbers)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, nil, err)
 	}

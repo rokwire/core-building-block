@@ -2326,7 +2326,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AppConfig'
+              $ref: '#/components/schemas/_req_create_ApplicationConfig_Request'
         required: true
       responses:
         '200':

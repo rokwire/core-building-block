@@ -29,9 +29,9 @@ type applicationType struct {
 }
 
 type version struct {
-	ID             string               `json:"id" bson:"_id"`
-	VersionNumbers model.VersionNumbers `json:"version_numbers" bson:"version_numbers"`
-	// ApplicationType applicationType `json:"app_type" bson:"app_type"`
+	ID              string               `json:"id" bson:"_id"`
+	VersionNumbers  model.VersionNumbers `json:"version_numbers" bson:"version_numbers"`
+	ApplicationType applicationType      `json:"app_type" bson:"app_type"`
 
 	DateCreated time.Time  `json:"date_created" bson:"date_created"`
 	DateUpdated *time.Time `json:"date_updated" bson:"date_updated"`

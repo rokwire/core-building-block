@@ -1886,7 +1886,7 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 func (sa *Adapter) LoadAppConfigs() ([]model.ApplicationConfig, error) {
 	filter := bson.D{}
 	options := options.Find()
-	options.SetSort(bson.D{primitive.E{Key: "app_type.id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version_numbers.major", Value: -1}, primitive.E{Key: "version_numbers.minor", Value: -1}, primitive.E{Key: "version_numbers.patch", Value: -1}}) //sort by version numbers
+	options.SetSort(bson.D{primitive.E{Key: "app_type.id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}) //sort by version numbers
 	var list []applicationConfig
 
 	err := sa.db.applicationConfigs.Find(filter, &list, options)
@@ -1945,13 +1945,13 @@ func (sa *Adapter) InsertAppConfig(item model.ApplicationConfig) (*model.Applica
 }
 
 // UpdateAppConfig updates an appconfig
-func (sa *Adapter) UpdateAppConfig(ID string, version string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
+func (sa *Adapter) UpdateAppConfig(ID string, version string, appType model.ApplicationType, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
 	now := time.Now()
 	//TODO - use pointers and update only what not nil
 	updatAppConfigFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	updateItem := bson.D{primitive.E{Key: "date_updated", Value: now}}
+	updateItem := bson.D{primitive.E{Key: "date_updated", Value: now}, primitive.E{Key: "app_type", Value: appType}}
 	if version != "" {
-		updateItem = append(updateItem, primitive.E{Key: "version", Value: version}, primitive.E{Key: "version_numbers", Value: versionNumbers})
+		updateItem = append(updateItem, primitive.E{Key: "version.date_updated", Value: now}, primitive.E{Key: "version.version_numbers", Value: versionNumbers}, primitive.E{Key: "version.app_type", Value: appType})
 	}
 	if data != nil {
 		updateItem = append(updateItem, primitive.E{Key: "data", Value: data})

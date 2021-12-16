@@ -273,11 +273,11 @@ func (s *systemImpl) SysUpdateAppConfig(id string, version string, appTypeIdenti
 
 	for _, supportedVersion := range applicationType.Versions {
 		if versionNumbers == supportedVersion.VersionNumbers {
-			return s.app.sysUpdateAppConfig(id, version, data, versionNumbers)
+			return s.app.sysUpdateAppConfig(id, version, *applicationType, data, versionNumbers)
 		}
 	}
 
-	return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigsVersion, logutils.StringArgs(appTypeIdentifier))
+	return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigsVersion, logutils.StringArgs(version+" for app_type_identifier: "+appTypeIdentifier))
 }
 
 func (s *systemImpl) SysDeleteAppConfig(id string) error {

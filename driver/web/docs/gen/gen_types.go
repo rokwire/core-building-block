@@ -1093,7 +1093,7 @@ type GetSystemAppConfigsParams struct {
 type PostSystemAppConfigsJSONBody ReqCreateApplicationConfigRequest
 
 // PutSystemAppConfigsIdJSONBody defines parameters for PutSystemAppConfigsId.
-type PutSystemAppConfigsIdJSONBody AppConfig
+type PutSystemAppConfigsIdJSONBody ReqCreateApplicationConfigRequest
 
 // GetSystemApplicationApiKeysParams defines parameters for GetSystemApplicationApiKeys.
 type GetSystemApplicationApiKeysParams struct {
