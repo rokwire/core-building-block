@@ -174,3 +174,12 @@ func (app *application) admGetAccounts(appID string, orgID string, accountID *st
 func (app *application) admGetAccount(accountID string) (*model.Account, error) {
 	return app.getAccount(accountID)
 }
+
+func (app *application) admGetAccountDevice(ID string) (*model.Device, error) {
+	//find the device
+	device, err := app.storage.FindAccountDeviceByID(ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)
+	}
+	return device, nil
+}
