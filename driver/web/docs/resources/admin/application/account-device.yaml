@@ -1,0 +1,30 @@
+get:
+  tags:
+  - Admin
+  summary: Finds account device
+  description: |
+    Finds device for the specified account
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      description: The account ID
+      required: true
+      schema:
+        type: string
+  responses:
+    200:
+      description: Success
+      content:
+      application/json:
+        schema:
+          type: array
+          items:
+            $ref: "../../../schemas/apis/shared/responses/Account-Device.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
