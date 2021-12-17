@@ -375,20 +375,24 @@ func (h AdminApisHandler) getAppToken(l *logs.Log, r *http.Request, claims *toke
 
 func (h AdminApisHandler) getApplicationAccountsDevice(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
-	ID := params["id"]
-	if len(ID) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	accountID := params["_id"]
+
+	if len(accountID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("_id"), nil, http.StatusBadRequest, false)
 	}
-	device, err := h.coreAPIs.Administration.AdmGetAccountDevice(ID)
+	device, err := h.coreAPIs.Administration.AdmGetAccountDevice(accountID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeDevice, nil, err, http.StatusInternalServerError, true)
 	}
 	if device == nil {
-		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeDevice, &logutils.FieldArgs{"id": ID}, nil, http.StatusNotFound, false)
+		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeDevice, &logutils.FieldArgs{"_id": accountID}, nil, http.StatusNotFound, false)
 	}
 
-	//responseData := accountDeviceToDef(device)
-	data, err := json.Marshal(device)
+	devices := deviceListToDef(device)
+	if len(devices) == 0 {
+		devices = append(devices)
+	}
+	data, err := json.Marshal(devices)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
 	}
