@@ -85,7 +85,7 @@ paths:
     $ref: "./resources/admin/account/mfa.yaml"
   /admin/application/accounts:
     $ref: "./resources/admin/application/accounts.yaml"
-  /admin/application/account/{id}/device:
+  /admin/application/account/{account_id}/device:
     $ref: "./resources/admin/application/account-device.yaml"
 
   #enc
