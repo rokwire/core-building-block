@@ -2,6 +2,7 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -175,11 +176,12 @@ func (app *application) admGetAccount(accountID string) (*model.Account, error) 
 	return app.getAccount(accountID)
 }
 
-func (app *application) admGetAccountDevice(ID string) (*model.Device, error) {
+func (app *application) admGetAccountDevice(context storage.TransactionContext, ID string) ([]model.Device, error) {
 	//find the device
-	device, err := app.storage.FindAccountDeviceByID(ID)
+	device, err := app.storage.FindAccountDeviceByID(context, ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)
 	}
+
 	return device, nil
 }

@@ -119,8 +119,8 @@ func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, er
 	return s.app.admGetAccount(accountID)
 }
 
-func (s *administrationImpl) AdmGetAccountDevice(ID string) (*model.Device, error) {
-	return s.app.admGetAccountDevice(ID)
+func (s *administrationImpl) AdmGetAccountDevice(ID string) ([]model.Device, error) {
+	return s.app.admGetAccountDevice(nil, ID)
 }
 
 ///

@@ -27,7 +27,7 @@ type Administration interface {
 
 	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
-	AdmGetAccountDevice(ID string) (*model.Device, error)
+	AdmGetAccountDevice(ID string) ([]model.Device, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -72,7 +72,7 @@ type Storage interface {
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
-	FindAccountDeviceByID(ID string) (*model.Device, error)
+	FindAccountDeviceByID(context storage.TransactionContext, ID string) ([]model.Device, error)
 	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error
