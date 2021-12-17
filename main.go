@@ -131,12 +131,15 @@ func main() {
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
+
+	rokwireAdminAppID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_ROKWIRE_ADMIN_APP_ID", true, true)
+	rokwireOrgID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_ROKWIRE_ORG_ID", true, true)
+
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, rokwireAdminAppID, rokwireOrgID)
 	coreAPIs.Start()
 
 	//web adapter
-	rokwireOrgID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_ROKWIRE_ORG_ID", true, true)
-	webAdapter := web.NewWebAdapter(env, serviceID, rokwireOrgID, auth.AuthService, port, coreAPIs, host, logger)
+	webAdapter := web.NewWebAdapter(env, serviceID, auth.AuthService, port, coreAPIs, host, logger)
 	webAdapter.Start()
 }

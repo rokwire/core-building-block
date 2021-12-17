@@ -3,8 +3,12 @@ package core
 import (
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
+	"time"
 
+	"github.com/google/uuid"
+	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/logutils"
 )
 
 //APIs exposes to the drivers adapters access to the core functionality
@@ -17,6 +21,9 @@ type APIs struct {
 
 	Auth auth.APIs //expose to the drivers auth
 
+	RokwireOrgID      string
+	RokwireAdminAppID string
+
 	app *application
 }
 
@@ -24,6 +31,8 @@ type APIs struct {
 func (c *APIs) Start() {
 	c.app.start()
 	c.Auth.Start()
+
+	c.storeSystemData()
 }
 
 //AddListener adds application listener
@@ -36,8 +45,50 @@ func (c *APIs) GetVersion() string {
 	return c.app.version
 }
 
+func (c *APIs) storeSystemData() error {
+	//TODO: add app types
+	id, _ := uuid.NewUUID()
+	androidAppType := model.ApplicationType{ID: id.String()}
+	rokwireAdminApp := model.Application{ID: c.RokwireAdminAppID, Name: "ROKWIRE Admin Application", MultiTenant: false, Admin: true,
+		RequiresOwnUsers: false, Types: []model.ApplicationType{androidAppType}, DateCreated: time.Now().UTC()}
+	err := c.app.storage.SaveApplication(rokwireAdminApp)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplication, nil, err)
+	}
+
+	id, _ = uuid.NewUUID()
+	rokwireOrgConfig := model.OrganizationConfig{ID: id.String(), Domains: []string{"rokwire.com"}, DateCreated: time.Now().UTC()}
+	rokwireOrg := model.Organization{ID: c.RokwireOrgID, Name: "ROKWIRE", Type: "small", Config: rokwireOrgConfig, DateCreated: time.Now().UTC()}
+	err = c.app.storage.SaveOrganization(rokwireOrg)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplication, nil, err)
+	}
+
+	id, _ = uuid.NewUUID()
+	emailAuthType, err := c.app.storage.FindAuthType("email")
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
+	}
+	emailSupport := []struct {
+		AuthTypeID string                 `bson:"auth_type_id"`
+		Params     map[string]interface{} `bson:"params"`
+	}{
+		{emailAuthType.ID, nil},
+	}
+	authSupport := model.AuthTypesSupport{AppTypeID: androidAppType.ID, SupportedAuthTypes: emailSupport}
+
+	rokwireAdminAppOrg := model.ApplicationOrganization{ID: id.String(), Application: rokwireAdminApp, Organization: rokwireOrg,
+		SupportedAuthTypes: []model.AuthTypesSupport{authSupport}, DateCreated: time.Now().UTC()}
+	err = c.app.storage.SaveApplicationOrganization(rokwireAdminAppOrg)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplicationOrganization, nil, err)
+	}
+
+	return nil
+}
+
 //NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, rokwireAdminAppID string, rokwireOrgID string) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
 	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners}
@@ -51,7 +102,8 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 
 	//+ auth
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
-		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application}
+		BBs: bbsImpl, System: systemImpl, Auth: auth, RokwireAdminAppID: rokwireAdminAppID, RokwireOrgID: rokwireOrgID,
+		app: &application}
 
 	return &coreAPIs
 }

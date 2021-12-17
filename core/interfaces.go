@@ -69,6 +69,8 @@ type Storage interface {
 
 	PerformTransaction(func(context storage.TransactionContext) error) error
 
+	FindAuthType(codeOrID string) (*model.AuthType, error)
+
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	DeleteAccount(context storage.TransactionContext, id string) error
@@ -106,13 +108,17 @@ type Storage interface {
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
+	SaveOrganization(organization model.Organization) error
 	LoadOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)
 
 	LoadApplications() ([]model.Application, error)
 	InsertApplication(application model.Application) (*model.Application, error)
+	SaveApplication(application model.Application) error
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
+
+	SaveApplicationOrganization(applicationOrganization model.ApplicationOrganization) error
 }
 
 //StorageListener listenes for change data storage events
