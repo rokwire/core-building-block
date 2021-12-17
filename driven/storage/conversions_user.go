@@ -78,6 +78,23 @@ func accountDeviceToStorage(item model.Device) userDevice {
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
+func accDeviceFromStorage(item model.Device) model.Device {
+	return model.Device{ID: item.ID, DeviceID: item.DeviceID, Type: item.Type, OS: item.OS,
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func accDevicesFromStorage(item []model.Device) []model.Device {
+	if len(item) == 0 {
+		return make([]model.Device, 0)
+	}
+
+	var items []model.Device
+	for _, device := range item {
+		items = append(items, accDeviceFromStorage(device))
+	}
+	return items
+}
+
 //AccountAuthType
 func accountAuthTypeFromStorage(item accountAuthType) model.AccountAuthType {
 	id := item.ID
@@ -229,6 +246,14 @@ func deviceToStorage(item *model.Device) *device {
 
 func deviceFromStorage(item device) model.Device {
 	return model.Device{ID: item.ID, DeviceID: item.DeviceID, Type: item.Type, OS: item.OS, DateUpdated: item.DateUpdated}
+}
+
+func devicesFromStorage(items []device) []model.Device {
+	res := make([]model.Device, len(items))
+	for i, devices := range items {
+		res[i] = deviceFromStorage(devices)
+	}
+	return res
 }
 
 //Credential
