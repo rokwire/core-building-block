@@ -1,16 +1,18 @@
 get:
   tags:
   - Admin
-  summary: Finds account device
+  summary: Finds application accounts
   description: |
-    Finds device for the specified account
+    Finds accounts for the specified application
+
+    **Auth:** Requires user auth token
   security:
     - bearerAuth: []
   parameters:
-    - name: id
+    - name: account_id
       in: path
       description: The account ID
-      required: true
+      required: false
       schema:
         type: string
   responses:

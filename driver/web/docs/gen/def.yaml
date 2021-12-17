@@ -1646,13 +1646,13 @@
         }
       }
     },
-    "/admin/application/account/{id}/device": {
+    "/admin/application/account/{account_id}/device": {
       "get": {
         "tags": [
           "Admin"
         ],
-        "summary": "Finds account device",
-        "description": "Finds device for the specified account\n",
+        "summary": "Finds application accounts",
+        "description": "Finds accounts for the specified application\n\n**Auth:** Requires user auth token\n",
         "security": [
           {
             "bearerAuth": []
@@ -1660,10 +1660,10 @@
         ],
         "parameters": [
           {
-            "name": "id",
+            "name": "account_id",
             "in": "path",
             "description": "The account ID",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -4544,8 +4544,7 @@
       },
       "_res_shared_Account-Device": {
         "required": [
-          "id",
-          "type"
+          "id"
         ],
         "type": "object",
         "properties": {

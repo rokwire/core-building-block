@@ -1,6 +1,5 @@
 required:
   - id
-  - type
 type: object
 properties:
   id:
