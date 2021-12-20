@@ -233,6 +233,29 @@ func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	return r0, r1
 }
 
+// FindApplicationOrganizations provides a mock function with given fields: appID, orgID
+func (_m *Storage) FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error) {
+	ret := _m.Called(appID, orgID)
+
+	var r0 *model.ApplicationOrganization
+	if rf, ok := ret.Get(0).(func(string, string) *model.ApplicationOrganization); ok {
+		r0 = rf(appID, orgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.ApplicationOrganization)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(appID, orgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindApplications provides a mock function with given fields:
 func (_m *Storage) FindApplications() ([]model.Application, error) {
 	ret := _m.Called()
@@ -450,6 +473,29 @@ func (_m *Storage) InsertApplication(application model.Application) (*model.Appl
 	return r0, r1
 }
 
+// InsertApplicationOrganization provides a mock function with given fields: applicationOrganization
+func (_m *Storage) InsertApplicationOrganization(applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error) {
+	ret := _m.Called(applicationOrganization)
+
+	var r0 *model.ApplicationOrganization
+	if rf, ok := ret.Get(0).(func(model.ApplicationOrganization) *model.ApplicationOrganization); ok {
+		r0 = rf(applicationOrganization)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.ApplicationOrganization)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(model.ApplicationOrganization) error); ok {
+		r1 = rf(applicationOrganization)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // InsertOrganization provides a mock function with given fields: organization
 func (_m *Storage) InsertOrganization(organization model.Organization) (*model.Organization, error) {
 	ret := _m.Called(organization)
@@ -552,34 +598,6 @@ func (_m *Storage) RegisterStorageListener(storageListener storage.Listener) {
 	_m.Called(storageListener)
 }
 
-// SaveApplication provides a mock function with given fields: application
-func (_m *Storage) SaveApplication(application model.Application) error {
-	ret := _m.Called(application)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(model.Application) error); ok {
-		r0 = rf(application)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// SaveApplicationOrganization provides a mock function with given fields: applicationOrganization
-func (_m *Storage) SaveApplicationOrganization(applicationOrganization model.ApplicationOrganization) error {
-	ret := _m.Called(applicationOrganization)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(model.ApplicationOrganization) error); ok {
-		r0 = rf(applicationOrganization)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // SaveDevice provides a mock function with given fields: context, device
 func (_m *Storage) SaveDevice(context storage.TransactionContext, device *model.Device) error {
 	ret := _m.Called(context, device)
@@ -587,20 +605,6 @@ func (_m *Storage) SaveDevice(context storage.TransactionContext, device *model.
 	var r0 error
 	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *model.Device) error); ok {
 		r0 = rf(context, device)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// SaveOrganization provides a mock function with given fields: organization
-func (_m *Storage) SaveOrganization(organization model.Organization) error {
-	ret := _m.Called(organization)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(model.Organization) error); ok {
-		r0 = rf(organization)
 	} else {
 		r0 = ret.Error(0)
 	}

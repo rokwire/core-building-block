@@ -3,6 +3,7 @@ package core
 import (
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 	"time"
 
 	"github.com/google/uuid"
@@ -46,45 +47,78 @@ func (c *APIs) GetVersion() string {
 }
 
 func (c *APIs) storeSystemData() error {
-	//TODO: add app types
-	id, _ := uuid.NewUUID()
-	androidAppType := model.ApplicationType{ID: id.String()}
-	rokwireAdminApp := model.Application{ID: c.RokwireAdminAppID, Name: "ROKWIRE Admin Application", MultiTenant: false, Admin: true,
-		RequiresOwnUsers: false, Types: []model.ApplicationType{androidAppType}, DateCreated: time.Now().UTC()}
-	err := c.app.storage.SaveApplication(rokwireAdminApp)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplication, nil, err)
+	transaction := func(context storage.TransactionContext) error {
+		//1. insert rokwire admin app if doesn't exist
+		rokwireAdminApp, err := c.app.storage.FindApplication(c.RokwireAdminAppID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		}
+		if rokwireAdminApp == nil {
+			id, _ := uuid.NewUUID()
+			newAndroidAppType := model.ApplicationType{ID: id.String(), Identifier: "edu.illinois.rokwire.admin",
+				Name: "ROKWIRE Admin Android", Versions: []string{"1.0.0"}}
+			newRokwireAdminApp := model.Application{ID: c.RokwireAdminAppID, Name: "ROKWIRE Admin Application", MultiTenant: false, Admin: true,
+				RequiresOwnUsers: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
+			_, err = c.app.storage.InsertApplication(newRokwireAdminApp)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, nil, err)
+			}
+
+			rokwireAdminApp = &newRokwireAdminApp
+		}
+
+		//2. insert rokwire org if doesn't exist
+		rokwireOrg, err := c.app.storage.FindOrganization(c.RokwireOrgID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
+		}
+		if rokwireOrg == nil {
+			id, _ := uuid.NewUUID()
+			rokwireOrgConfig := model.OrganizationConfig{ID: id.String(), Domains: []string{"rokwire.com"}, DateCreated: time.Now().UTC()}
+			newRokwireOrg := model.Organization{ID: c.RokwireOrgID, Name: "ROKWIRE", Type: "small", Config: rokwireOrgConfig, DateCreated: time.Now().UTC()}
+			_, err = c.app.storage.InsertOrganization(newRokwireOrg)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganization, nil, err)
+			}
+
+			rokwireOrg = &newRokwireOrg
+		}
+
+		//3. insert rokwire appOrg if doesn't exist
+		rokwireAdminAppOrg, err := c.app.storage.FindApplicationOrganizations(c.RokwireAdminAppID, c.RokwireOrgID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+		}
+		if rokwireAdminAppOrg == nil {
+			id, _ := uuid.NewUUID()
+
+			emailAuthType, err := c.app.storage.FindAuthType("email")
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
+			}
+			emailSupport := []struct {
+				AuthTypeID string                 `bson:"auth_type_id"`
+				Params     map[string]interface{} `bson:"params"`
+			}{
+				{emailAuthType.ID, nil},
+			}
+			supportedAuthTypes := make([]model.AuthTypesSupport, len(rokwireAdminApp.Types))
+			for i, appType := range rokwireAdminApp.Types {
+				supportedAuthTypes[i] = model.AuthTypesSupport{AppTypeID: appType.ID, SupportedAuthTypes: emailSupport}
+			}
+
+			newRokwireAdminAppOrg := model.ApplicationOrganization{ID: id.String(), Application: *rokwireAdminApp, Organization: *rokwireOrg,
+				SupportedAuthTypes: supportedAuthTypes, DateCreated: time.Now().UTC()}
+			_, err = c.app.storage.InsertApplicationOrganization(newRokwireAdminAppOrg)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplicationOrganization, nil, err)
+			}
+		}
+
+		return nil
 	}
 
-	id, _ = uuid.NewUUID()
-	rokwireOrgConfig := model.OrganizationConfig{ID: id.String(), Domains: []string{"rokwire.com"}, DateCreated: time.Now().UTC()}
-	rokwireOrg := model.Organization{ID: c.RokwireOrgID, Name: "ROKWIRE", Type: "small", Config: rokwireOrgConfig, DateCreated: time.Now().UTC()}
-	err = c.app.storage.SaveOrganization(rokwireOrg)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplication, nil, err)
-	}
-
-	id, _ = uuid.NewUUID()
-	emailAuthType, err := c.app.storage.FindAuthType("email")
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
-	}
-	emailSupport := []struct {
-		AuthTypeID string                 `bson:"auth_type_id"`
-		Params     map[string]interface{} `bson:"params"`
-	}{
-		{emailAuthType.ID, nil},
-	}
-	authSupport := model.AuthTypesSupport{AppTypeID: androidAppType.ID, SupportedAuthTypes: emailSupport}
-
-	rokwireAdminAppOrg := model.ApplicationOrganization{ID: id.String(), Application: rokwireAdminApp, Organization: rokwireOrg,
-		SupportedAuthTypes: []model.AuthTypesSupport{authSupport}, DateCreated: time.Now().UTC()}
-	err = c.app.storage.SaveApplicationOrganization(rokwireAdminAppOrg)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplicationOrganization, nil, err)
-	}
-
-	return nil
+	return c.app.storage.PerformTransaction(transaction)
 }
 
 //NewCoreAPIs creates new CoreAPIs

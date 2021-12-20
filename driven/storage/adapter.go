@@ -1672,20 +1672,6 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 	return nil
 }
 
-//SaveOrganization saves an organization
-func (sa *Adapter) SaveOrganization(organization model.Organization) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: organization.ID}}
-	opts := options.Replace().SetUpsert(true)
-
-	org := organizationToStorage(&organization)
-	err := sa.db.organizations.ReplaceOne(filter, org, opts)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionReplace, model.TypeOrganization, &logutils.FieldArgs{"_id": organization.ID}, err)
-	}
-
-	return nil
-}
-
 //LoadOrganizations gets the organizations
 func (sa *Adapter) LoadOrganizations() ([]model.Organization, error) {
 	//1. check the cached organizations
@@ -1744,27 +1730,13 @@ func (sa *Adapter) InsertApplication(application model.Application) (*model.Appl
 	return &application, nil
 }
 
-//SaveApplication saves an application
-func (sa *Adapter) SaveApplication(application model.Application) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: application.ID}}
-	opts := options.Replace().SetUpsert(true)
-
-	app := applicationToStorage(&application)
-	err := sa.db.applications.ReplaceOne(filter, app, opts)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionReplace, model.TypeApplication, &logutils.FieldArgs{"_id": application.ID}, err)
-	}
-
-	return nil
-}
-
 //FindApplication finds application
 func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	var result []model.Application
 	err := sa.db.applications.Find(filter, &result, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, &logutils.FieldArgs{"_id": ID}, err)
 	}
 	if len(result) == 0 {
 		//no record
@@ -1839,21 +1811,15 @@ func (sa *Adapter) FindApplicationOrganizations(appID string, orgID string) (*mo
 	return sa.getCachedApplicationOrganization(appID, orgID)
 }
 
-// SaveApplicationOrganization saves an application organization
-func (sa *Adapter) SaveApplicationOrganization(applicationOrganization model.ApplicationOrganization) error {
-	filter := bson.D{
-		primitive.E{Key: "app_id", Value: applicationOrganization.Application.ID},
-		primitive.E{Key: "org_id", Value: applicationOrganization.Organization.ID},
-	}
-	opts := options.Replace().SetUpsert(true)
-
+// InsertApplicationOrganization inserts an application organization
+func (sa *Adapter) InsertApplicationOrganization(applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error) {
 	appOrg := applicationOrganizationToStorage(applicationOrganization)
-	err := sa.db.applicationsOrganizations.ReplaceOne(filter, appOrg, opts)
+	_, err := sa.db.applicationsOrganizations.InsertOne(appOrg)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionReplace, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": applicationOrganization.Application.ID, "org_id": applicationOrganization.Organization.ID}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplicationOrganization, nil, err)
 	}
 
-	return nil
+	return &applicationOrganization, nil
 }
 
 //FindDevice finds a device by device id and account id

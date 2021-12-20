@@ -108,17 +108,16 @@ type Storage interface {
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
-	SaveOrganization(organization model.Organization) error
 	LoadOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)
 
 	LoadApplications() ([]model.Application, error)
 	InsertApplication(application model.Application) (*model.Application, error)
-	SaveApplication(application model.Application) error
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 
-	SaveApplicationOrganization(applicationOrganization model.ApplicationOrganization) error
+	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
+	InsertApplicationOrganization(applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
 }
 
 //StorageListener listenes for change data storage events
