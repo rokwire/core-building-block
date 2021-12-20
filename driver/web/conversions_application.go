@@ -17,7 +17,7 @@ func applicationToDef(item *model.Application) *Def.ApplicationFields {
 
 //ApplicationPermission
 func applicationPermissionToDef(item model.Permission) Def.PermissionFields {
-	return Def.PermissionFields{Id: item.ID, Name: item.Name, ServiceId: &item.ServiceID}
+	return Def.PermissionFields{Id: item.ID, Name: item.Name, ServiceId: &item.ServiceID, Assigners: &item.Assigners}
 }
 
 func applicationPermissionsToDef(items []model.Permission) []Def.PermissionFields {

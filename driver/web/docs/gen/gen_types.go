@@ -865,10 +865,9 @@ type ResSharedMfa struct {
 
 // ResSharedPermissions defines model for _res_shared_Permissions.
 type ResSharedPermissions struct {
-	Assigners *[]string `json:"assigners,omitempty"`
-	Id        *string   `json:"id,omitempty"`
-	Name      *string   `json:"name,omitempty"`
-	ServiceId *string   `json:"service_id,omitempty"`
+	Id        *string `json:"id,omitempty"`
+	Name      *string `json:"name,omitempty"`
+	ServiceId *string `json:"service_id,omitempty"`
 }
 
 // ResSharedRefresh defines model for _res_shared_Refresh.

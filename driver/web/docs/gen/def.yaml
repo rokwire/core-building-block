@@ -4536,6 +4536,7 @@
         "type": "object",
         "properties": {
           "id": {
+            "readOnly": true,
             "type": "string"
           },
           "name": {
@@ -4543,12 +4544,6 @@
           },
           "service_id": {
             "type": "string"
-          },
-          "assigners": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           }
         }
       },

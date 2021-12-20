@@ -115,6 +115,10 @@ func (s *administrationImpl) AdmGetApplicationPermissions(serviceIDs []string, a
 	return s.app.admGetApplicationPermissions(serviceIDs, appID, orgID)
 }
 
+func (s *administrationImpl) AdmGetServicesIDs(appID string, orgID string) (*model.ApplicationOrganization, error) {
+	return s.app.admGetServicesIDs(appID, orgID)
+}
+
 func (s *administrationImpl) AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
 	return s.app.admGetAccounts(appID, orgID, accountID, authTypeIdentifier)
 }

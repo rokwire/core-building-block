@@ -208,9 +208,12 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 
 func (h AdminApisHandler) adminGetPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 
-	var getsServiceIDs model.ApplicationOrganization
-	serviceIDs := getsServiceIDs.ServicesIDs
-	permissions, err := h.coreAPIs.Administration.AdmGetApplicationPermissions(serviceIDs, claims.AppID, claims.OrgID)
+	get, err := h.coreAPIs.Administration.AdmGetServicesIDs(claims.AppID, claims.OrgID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+
+	permissions, err := h.coreAPIs.Administration.AdmGetApplicationPermissions(get.ServicesIDs, claims.AppID, claims.OrgID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}

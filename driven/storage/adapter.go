@@ -320,7 +320,6 @@ func (sa *Adapter) cacheApplicationsOrganizations() error {
 	}
 
 	sa.setCachedApplicationsOrganizations(applicationsOrganizations)
-
 	return nil
 }
 
@@ -1261,20 +1260,14 @@ func (sa *Adapter) FindPermissions(ids []string) ([]model.Permission, error) {
 
 //FindPermissionsByServiceID finds permissions
 func (sa *Adapter) FindPermissionsByServiceIDs(serviceIDs []string, appID string, orgID string) ([]model.Permission, error) {
-	filter := bson.D{primitive.E{Key: "service_id", Value: serviceIDs},
-		primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
-	var result []model.Permission
-	err := sa.db.permissions.Find(filter, &result, nil)
+	filter := bson.D{primitive.E{Key: "service_id", Value: bson.M{"$in": serviceIDs}}}
+	var permissionsResult []model.Permission
+	err := sa.db.permissions.Find(filter, &permissionsResult, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+		return nil, err
 	}
 
-	if len(result) == 0 {
-		//no data
-		return make([]model.Permission, 0), nil
-	}
-
-	return result, nil
+	return permissionsResult, nil
 }
 
 //FindPermissionsByName finds a set of permissions
@@ -1891,6 +1884,25 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 	}
 
 	return &device, nil
+}
+
+//FindApplication finds application
+func (sa *Adapter) FindServicesIDs(appID string, orgID string) (*model.ApplicationOrganization, error) {
+	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
+	var result []applicationOrganization
+	err := sa.db.applicationsOrganizations.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
+
+	if len(result) == 0 {
+		//no record
+		return nil, nil
+	}
+
+	get := result[0]
+
+	return &model.ApplicationOrganization{ServicesIDs: get.ServicesIDs}, nil
 }
 
 // ============================== ServiceRegs ==============================

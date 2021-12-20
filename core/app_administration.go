@@ -163,11 +163,21 @@ func (app *application) admGetTestModel() string {
 }
 
 func (app *application) admGetApplicationPermissions(serviceIDs []string, appID string, orgID string) ([]model.Permission, error) {
+
 	getPermissions, err := app.storage.FindPermissionsByServiceIDs(serviceIDs, appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypePermission, nil, err)
 	}
 	return getPermissions, nil
+}
+
+func (app *application) admGetServicesIDs(appID string, orgID string) (*model.ApplicationOrganization, error) {
+	getServiceIDs, err := app.storage.FindServicesIDs(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypePermission, nil, err)
+	}
+
+	return getServiceIDs, nil
 }
 
 func (app *application) admGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {

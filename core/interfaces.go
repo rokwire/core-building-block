@@ -25,6 +25,7 @@ type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
 	AdmGetApplicationPermissions(serviceIDs []string, appID string, orgID string) ([]model.Permission, error)
+	AdmGetServicesIDs(appID string, orgID string) (*model.ApplicationOrganization, error)
 
 	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
@@ -115,6 +116,8 @@ type Storage interface {
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
+
+	FindServicesIDs(appID string, orgID string) (*model.ApplicationOrganization, error)
 }
 
 //StorageListener listenes for change data storage events
