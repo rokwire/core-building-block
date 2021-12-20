@@ -24,7 +24,7 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	AdmGetPermissions(serviceID []string) ([]model.Permission, error)
+	AdmGetApplicationPermissions(serviceIDs []string, appID string, orgID string) ([]model.Permission, error)
 
 	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
@@ -92,7 +92,7 @@ type Storage interface {
 	DeleteGlobalConfig(context storage.TransactionContext) error
 
 	FindPermissionsByName(names []string) ([]model.Permission, error)
-	FindPermissionsByServiceID(serviceID []string) ([]model.Permission, error)
+	FindPermissionsByServiceIDs(serviceIDs []string, appID string, orgID string) ([]model.Permission, error)
 	InsertPermission(item model.Permission) error
 	UpdatePermission(item model.Permission) error
 	DeletePermission(id string) error

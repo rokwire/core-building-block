@@ -627,13 +627,6 @@ type ReqPermissionsRequest struct {
 	ServiceId *string   `json:"service_id,omitempty"`
 }
 
-// ReqPermissionsAdminRequest defines model for _req_permissions_admin_Request.
-type ReqPermissionsAdminRequest struct {
-	Assigners *[]string `json:"assigners,omitempty"`
-	Name      string    `json:"name"`
-	ServiceId string    `json:"service_id"`
-}
-
 // Auth login creds for auth_type="anonymous"
 type ReqSharedCredsAPIKey struct {
 	AnonymousId *string `json:"anonymous_id,omitempty"`
@@ -868,6 +861,14 @@ type ResSharedMfa struct {
 	Params   *map[string]interface{} `json:"params,omitempty"`
 	Type     *string                 `json:"type,omitempty"`
 	Verified *bool                   `json:"verified,omitempty"`
+}
+
+// ResSharedPermissions defines model for _res_shared_Permissions.
+type ResSharedPermissions struct {
+	Assigners *[]string `json:"assigners,omitempty"`
+	Id        *string   `json:"id,omitempty"`
+	Name      *string   `json:"name,omitempty"`
+	ServiceId *string   `json:"service_id,omitempty"`
 }
 
 // ResSharedRefresh defines model for _res_shared_Refresh.

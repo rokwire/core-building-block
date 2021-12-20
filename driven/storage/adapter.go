@@ -1260,8 +1260,9 @@ func (sa *Adapter) FindPermissions(ids []string) ([]model.Permission, error) {
 }
 
 //FindPermissionsByServiceID finds permissions
-func (sa *Adapter) FindPermissionsByServiceID(serviceID []string) ([]model.Permission, error) {
-	filter := bson.D{primitive.E{Key: "service_id", Value: serviceID}}
+func (sa *Adapter) FindPermissionsByServiceIDs(serviceIDs []string, appID string, orgID string) ([]model.Permission, error) {
+	filter := bson.D{primitive.E{Key: "service_id", Value: serviceIDs},
+		primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
 	var result []model.Permission
 	err := sa.db.permissions.Find(filter, &result, nil)
 	if err != nil {
@@ -1821,6 +1822,7 @@ func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganizat
 		result[i] = applicationOrganizationFromStorage(item, *application, *organization)
 	}
 	return result, nil
+
 }
 
 //FindApplicationOrganizations finds application organization

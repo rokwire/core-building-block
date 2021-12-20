@@ -1335,45 +1335,6 @@
         }
       }
     },
-    "/admin/permissions": {
-      "get": {
-        "deprecated": true,
-        "tags": [
-          "Admin"
-        ],
-        "summary": "Get permissions",
-        "description": "Gets permissions\n",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/_req_permissions_admin_Request"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Internal error"
-          }
-        }
-      }
-    },
     "/admin/auth/verify-mfa": {
       "post": {
         "tags": [
@@ -1669,6 +1630,44 @@
                 "type": "array",
                 "items": {
                   "$ref": "#/components/schemas/_res_shared_Account"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/admin/application/permissions": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get application permissions",
+        "description": "Get application permissions\n\n**Auth:** Requires user auth token\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/_res_shared_Permissions"
+                  }
                 }
               }
             }
@@ -4533,6 +4532,26 @@
           }
         }
       },
+      "_res_shared_Permissions": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "service_id": {
+            "type": "string"
+          },
+          "assigners": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "_req_account-exists_Request": {
         "required": [
           "auth_type",
@@ -5103,27 +5122,6 @@
           "assigners": {
             "type": "array",
             "description": "permissions that could assign current permission to accounts",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "_req_permissions_admin_Request": {
-        "required": [
-          "name",
-          "service_id"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "service_id": {
-            "type": "string"
-          },
-          "assigners": {
-            "type": "array",
             "items": {
               "type": "string"
             }

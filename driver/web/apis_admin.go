@@ -208,17 +208,9 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 
 func (h AdminApisHandler) adminGetPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 
-	req, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-	var requestData model.ApplicationOrganization
-	err = json.Unmarshal(req, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
-	}
-
-	permissions, err := h.coreAPIs.Administration.AdmGetPermissions(requestData.ServicesIDs)
+	var getsServiceIDs model.ApplicationOrganization
+	serviceIDs := getsServiceIDs.ServicesIDs
+	permissions, err := h.coreAPIs.Administration.AdmGetApplicationPermissions(serviceIDs, claims.AppID, claims.OrgID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}

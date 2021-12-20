@@ -111,8 +111,8 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
-func (s *administrationImpl) AdmGetPermissions(serviceID []string) ([]model.Permission, error) {
-	return s.app.admGetPermissions(serviceID)
+func (s *administrationImpl) AdmGetApplicationPermissions(serviceIDs []string, appID string, orgID string) ([]model.Permission, error) {
+	return s.app.admGetApplicationPermissions(serviceIDs, appID, orgID)
 }
 
 func (s *administrationImpl) AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
