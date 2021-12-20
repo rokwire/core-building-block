@@ -366,7 +366,7 @@ func (sa *Adapter) getCachedApplicationOrganizationByKey(key string) (*model.App
 		}
 		return &appOrg, nil
 	}
-	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, errArgs)
+	return nil, nil
 }
 
 //LoadAuthTypes loads all auth types
@@ -1611,11 +1611,15 @@ func (sa *Adapter) FindOrganization(id string) (*model.Organization, error) {
 
 	//1. find organization
 	orgFilter := bson.D{primitive.E{Key: "_id", Value: id}}
-	var org organization
+	var result []organization
 
-	err = sa.db.organizations.FindOne(orgFilter, &org, nil)
+	err = sa.db.organizations.Find(orgFilter, &result, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"id": id}, err)
+	}
+
+	if len(result) == 0 {
+		return nil, nil
 	}
 
 	//TODO
@@ -1631,7 +1635,9 @@ func (sa *Adapter) FindOrganization(id string) (*model.Organization, error) {
 
 		organization := organizationFromStorage(&org, applications)
 		return &organization, nil */
-	return nil, nil
+
+	org := organizationFromStorage(&result[0])
+	return &org, nil
 }
 
 //InsertOrganization inserts an organization
