@@ -24,7 +24,8 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	AdmGetApplicationOrgRoles() ([]model.AppOrgRole, error)
+	AdmGetApplicationRoles(appID string, orgID string, appOrgID string) ([]model.AppOrgRole, error)
+	AdmGetAppOrg(appID string, orgID string) (*model.ApplicationOrganization, error)
 
 	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
@@ -100,7 +101,7 @@ type Storage interface {
 	InsertAppOrgRole(item model.AppOrgRole) error
 	UpdateAppOrgRole(item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
-	FindAppOrgRolesList() ([]model.AppOrgRole, error)
+	FindAppOrgRole(appOrgID string) ([]model.AppOrgRole, error)
 
 	InsertAppOrgGroup(item model.AppOrgGroup) error
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
@@ -115,6 +116,8 @@ type Storage interface {
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
+
+	FindAppOrg(appID string, orgID string) (*model.ApplicationOrganization, error)
 }
 
 //StorageListener listenes for change data storage events

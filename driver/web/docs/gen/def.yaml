@@ -1335,7 +1335,7 @@
         }
       }
     },
-    "/admin/appOrgRoles": {
+    "/admin/application/roles": {
       "get": {
         "tags": [
           "Admin"

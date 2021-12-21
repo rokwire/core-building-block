@@ -162,13 +162,22 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admGetApplicationOrgRoles() ([]model.AppOrgRole, error) {
-	getAppOrgRoles, err := app.storage.FindAppOrgRolesList()
+func (app *application) admGetApplicationRoles(appID string, orgID string, appOrgID string) ([]model.AppOrgRole, error) {
+	getAppOrgRoles, err := app.storage.FindAppOrgRole(appOrgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err)
 	}
 
 	return getAppOrgRoles, nil
+}
+
+func (app *application) admGetAppOrg(appID string, orgID string) (*model.ApplicationOrganization, error) {
+	getAppOrg, err := app.storage.FindAppOrg(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	return getAppOrg, nil
 }
 
 func (app *application) admGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {

@@ -13,7 +13,7 @@ type Administration struct {
 	mock.Mock
 }
 
-// AdmGetApplicationOrgRoles provides a mock function with given fields:
+// AdmGetApplicationRolesprovides a mock function with given fields:
 func (_m *Administration) AdmGetApplicationOrgRoles() ([]model.AppOrgRole, error) {
 	ret := _m.Called()
 
