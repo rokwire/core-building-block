@@ -162,13 +162,22 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admGetApplicationOrgGroups() ([]model.AppOrgGroup, error) {
-	getAppOrgGroups, err := app.storage.FindAppOrgGroupsList()
+func (app *application) admGetApplicationGroups(appID string, orgID string, appOrgID string) ([]model.AppOrgGroup, error) {
+	getAppOrgGroups, err := app.storage.FindAppGroups(appOrgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err)
 	}
 
 	return getAppOrgGroups, nil
+}
+
+func (app *application) admGetAppOrg(appID string, orgID string) (*model.ApplicationOrganization, error) {
+	getAppOrg, err := app.storage.FindAppOrg(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	return getAppOrg, nil
 }
 
 func (app *application) admGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {

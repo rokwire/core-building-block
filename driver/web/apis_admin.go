@@ -206,8 +206,14 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-func (h AdminApisHandler) adminGetApplicationOrgGroups(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	getAppOrgGroups, err := h.coreAPIs.Administration.AdmGetApplicationOrgGroups()
+func (h AdminApisHandler) adminGetApplicationGroups(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+
+	get, err := h.coreAPIs.Administration.AdmGetAppOrg(claims.AppID, claims.OrgID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+
+	getAppOrgGroups, err := h.coreAPIs.Administration.AdmGetApplicationGroups(claims.AppID, claims.OrgID, get.ID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
 	}
