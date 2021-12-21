@@ -38,10 +38,10 @@ type version struct {
 }
 
 type applicationConfig struct {
-	ID              string          `json:"id" bson:"_id"`
-	ApplicationType applicationType `json:"app_type" bson:"app_type"`
-	Version         version         `json:"version" bson:"version"`
-	AppOrgID        string          `bson:"app_org_id"`
+	ID        string  `json:"id" bson:"_id"`
+	AppTypeID string  `json:"app_type_id" bson:"app_type_id"`
+	Version   version `json:"version" bson:"version"`
+	AppOrgID  *string `bson:"app_org_id"`
 
 	Data map[string]interface{} `json:"data" bson:"data"`
 

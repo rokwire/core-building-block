@@ -2,7 +2,7 @@ get:
   deprecated: true
   tags:
   - System
-  summary: Reads mobile app configuration by given id
+  summary: Reads app configs by given id
   description: |
     **Auth:** Requires user auth token  with 'all_appconfigs' or 'get_appconfig' permission
   security:
@@ -18,24 +18,22 @@ get:
         type: string
   responses:
     200:
-      description: successfully read mobile app configuration
+      description: Success
       content:
         application/json:
           schema:
-            $ref: "../../schemas/application/AppConfig.yaml"
+            $ref: "../../schemas/application/ApplicationConfig.yaml"
     400:
       description: Bad request.
     401:
       description: Unauthorized
-    404:
-      description: AppConfig not found
     500:
       description: Internal error
 put:
   deprecated: true
   tags:
   - System
-  summary: Updates mobile app configuration
+  summary: Updates app configs
   description: |
     **Auth:** Requires user auth token with 'all_appconfigs' or 'update_appconfig' permission
   security:
@@ -43,14 +41,13 @@ put:
   parameters:
   - name: id
     in: path
-    description: app config id to update
     required: true
     style: simple
     explode: false
     schema:
       type: string
   requestBody:
-    description: update AppConfig object
+    description: updated app config
     content:
       application/json:
         schema:
@@ -58,7 +55,7 @@ put:
     required: true
   responses:
     200:
-      description: successfully updated mobile app configuration
+      description: Success
       content:
         text/plain:
           schema:
@@ -68,15 +65,13 @@ put:
       description: Bad request
     401:
       description: Unauthorized
-    405:
-      description: Invalid input
     500:
       description: Internal error
 delete:
   deprecated: true
   tags:
   - System
-  summary: Deletes mobile app configuration
+  summary: Deletes app configs
   description: |
      **Auth:** Requires user auth token with 'all_appconfigs' or 'update_appconfig' permission
   security:
@@ -84,7 +79,6 @@ delete:
   parameters:
   - name: id
     in: path
-    description: app config id to delete
     required: true
     style: simple
     explode: false
@@ -92,12 +86,10 @@ delete:
       type: string
   responses:
     200:
-      description: AppConfig deleted
+      description: Success
     400:
       description: Bad request
     401:
       description: Unauthorized
-    404:
-      description: AppConfig not found
     500:
       description: Internal error

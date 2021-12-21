@@ -19,7 +19,7 @@ type Services interface {
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
 
-	SerGetAppConfig(appTypeIdentifier string, orgID string, versionNumbers model.VersionNumbers, apiKey string) (*model.ApplicationConfig, error)
+	SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
 }
 
 //Administration exposes administration APIs for the driver adapters
@@ -61,10 +61,10 @@ type System interface {
 
 	SysCreateAppOrgRole(name string, appID string, description string, permissionNames []string) (*model.AppOrgRole, error)
 
-	SysGetAppConfigs(appTypeID string, appOrgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
+	SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	SysGetAppConfig(id string) (*model.ApplicationConfig, error)
-	SysCreateAppConfig(version string, appTypeID string, appOrgID string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
-	SysUpdateAppConfig(id string, version string, appTypeIdentifier string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
+	SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
+	SysUpdateAppConfig(id string, version string, appTypeID string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
 	SysDeleteAppConfig(id string) error
 
 	SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
@@ -90,6 +90,8 @@ type Storage interface {
 	DeleteCredential(context storage.TransactionContext, ID string) error
 
 	DeleteLoginSessions(context storage.TransactionContext, identifier string) error
+
+	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error
@@ -122,10 +124,10 @@ type Storage interface {
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 
-	FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error)
+	FindApplicationType(id string) (*model.ApplicationType, error)
 
-	FindAppConfigs(appTypeID string, orgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
-	FindAppConfigByVersion(appTypeID string, orgID string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
+	FindAppConfigs(appTypeIdentifier string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
+	FindAppConfigByVersion(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
 	FindAppConfigByID(ID string) (*model.ApplicationConfig, error)
 	InsertAppConfig(appConfig model.ApplicationConfig) (*model.ApplicationConfig, error)
 	UpdateAppConfig(ID string, version string, appType model.ApplicationType, data map[string]interface{}, versionNumbers model.VersionNumbers) error

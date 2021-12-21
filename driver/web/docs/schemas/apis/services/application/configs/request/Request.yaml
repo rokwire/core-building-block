@@ -1,18 +1,13 @@
 required:
-  - app_type_id
-  - app_org_id
+  - app_type_identifier
   - version
-  - data
+  - api_key
 type: object
 properties:
-  id:
-    type: string
-  app_type_id:
-    type: string
-  app_org_id:
+  app_type_identifier:
     type: string
   version:
     type: string
     description: conforms major.minor.patch format
-  data:
-    type: object
+  api_key:
+    type: string

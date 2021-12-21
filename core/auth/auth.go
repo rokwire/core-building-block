@@ -1025,7 +1025,7 @@ func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier str
 	}
 
 	//get the app type
-	applicationType, err := a.storage.FindApplicationTypeByIdentifier(appTypeIdentifier)
+	applicationType, err := a.storage.FindApplicationType(appTypeIdentifier)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
 
@@ -1036,7 +1036,7 @@ func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier str
 
 	//get the app org
 	applicationID := applicationType.Application.ID
-	appOrg, err := a.storage.FindApplicationOrganizations(applicationID, orgID)
+	appOrg, err := a.storage.FindApplicationOrganization(applicationID, orgID)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, logutils.StringArgs(orgID), err)
 	}

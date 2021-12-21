@@ -196,8 +196,8 @@ func (app *application) sysCreateAppOrgRole(name string, appOrgID string, descri
 	return &role, nil
 }
 
-func (app *application) sysGetAppConfigs(appID string, orgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
-	appConfigs, err := app.storage.FindAppConfigs(appID, orgID, versionNumbers)
+func (app *application) sysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+	appConfigs, err := app.storage.FindAppConfigs(appTypeID, orgID, versionNumbers)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
 	}
@@ -214,13 +214,10 @@ func (app *application) sysGetAppConfig(id string) (*model.ApplicationConfig, er
 	return appConfig, nil
 }
 
-func (app *application) sysCreateAppConfig(version string, appType model.ApplicationType, appOrgID string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
+func (app *application) sysCreateAppConfig(appType model.ApplicationType, version model.Version, appOrg *model.ApplicationOrganization, data map[string]interface{}) (*model.ApplicationConfig, error) {
 	now := time.Now()
 	appConfigID, _ := uuid.NewUUID()
-	applicationConfig := model.ApplicationConfig{ID: appConfigID.String(), ApplicationType: appType, AppOrg: model.ApplicationOrganization{ID: appOrgID}, Data: data, DateCreated: now}
-
-	appConfigVersionID, _ := uuid.NewUUID()
-	applicationConfig.Version = model.Version{ID: appConfigVersionID.String(), VersionNumbers: versionNumbers, ApplicationType: appType, DateCreated: now}
+	applicationConfig := model.ApplicationConfig{ID: appConfigID.String(), Version: version, ApplicationType: appType, AppOrg: appOrg, Data: data, DateCreated: now}
 
 	insertedConfig, err := app.storage.InsertAppConfig(applicationConfig)
 	if err != nil {

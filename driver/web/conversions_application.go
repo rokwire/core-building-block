@@ -72,12 +72,12 @@ func organizationsToDef(items []model.Organization) []Def.OrganizationFields {
 }
 
 //App Config
-func appConfigToDef(item model.ApplicationConfig) Def.AppConfig {
-	return Def.AppConfig{Id: &item.ID, AppOrgId: item.AppOrg.ID, AppTypeId: item.AppOrg.ID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
+func appConfigToDef(item model.ApplicationConfig) Def.ApplicationConfig {
+	return Def.ApplicationConfig{Id: item.ID, OrgId: &item.AppOrg.Organization.ID, AppTypeId: item.ApplicationType.ID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
 }
 
-func appConfigsToDef(items []model.ApplicationConfig) []Def.AppConfig {
-	result := make([]Def.AppConfig, len(items))
+func appConfigsToDef(items []model.ApplicationConfig) []Def.ApplicationConfig {
+	result := make([]Def.ApplicationConfig, len(items))
 	for i, item := range items {
 		result[i] = appConfigToDef(item)
 	}

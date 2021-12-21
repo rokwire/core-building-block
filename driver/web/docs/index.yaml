@@ -65,11 +65,11 @@ paths:
     $ref: "./resources/services/account/profile.yaml"
   /services/test:
     $ref: "./resources/services/test.yaml"
-  
-  #appconfigs
   /services/app/configs:
-    $ref: "./resources/services/app/configs.yaml"
-  
+    $ref: "./resources/services/application/configs.yaml"
+  /services/app/org-configs:
+    $ref: "./resources/services/application/org-configs.yaml"
+
   #admin
   /admin/auth/login:
     $ref: "./resources/admin/auth/login.yaml"
@@ -126,9 +126,9 @@ paths:
   /system/application-api-keys:
     $ref: "./resources/system/application-api-keys.yaml"
   /system/app/configs:
-    $ref: "./resources/system/configs.yaml"
+    $ref: "./resources/system/application-configs.yaml"
   /system/app/configs/{id}:
-    $ref: "./resources/system/configsId.yaml"
+    $ref: "./resources/system/application-configsId.yaml"
   /system/account/permissions:
     $ref: "./resources/system/account/permissions.yaml"
   /system/account/roles:

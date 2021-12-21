@@ -239,7 +239,7 @@ func (sa *Adapter) getCachedApplication(appID string) (*model.Application, error
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplication, errArgs)
 }
 
-func (sa *Adapter) getCachedApplicationTypeByIdentifier(appTypeIdentifier string) (*model.Application, *model.ApplicationType, error) {
+func (sa *Adapter) getCachedApplicationType(id string) (*model.Application, *model.ApplicationType, error) {
 	sa.applicationsLock.RLock()
 	defer sa.applicationsLock.RUnlock()
 
@@ -252,7 +252,7 @@ func (sa *Adapter) getCachedApplicationTypeByIdentifier(appTypeIdentifier string
 			return false //break the iteration
 		}
 
-		applicationType := application.FindApplicationType(appTypeIdentifier)
+		applicationType := application.FindApplicationType(id)
 		if applicationType != nil {
 			app = &application
 			appType = applicationType
@@ -267,7 +267,7 @@ func (sa *Adapter) getCachedApplicationTypeByIdentifier(appTypeIdentifier string
 		return app, appType, nil
 	}
 
-	return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, &logutils.FieldArgs{"identifier": appTypeIdentifier})
+	return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, &logutils.FieldArgs{"id": id})
 }
 
 //cacheAuthTypes caches the auth types
@@ -429,14 +429,14 @@ func (sa *Adapter) setCachedApplicationConfigs(applicationConfigs *[]model.Appli
 	sa.cachedApplicationConfigs.Store(currentKey, currentConfigList)
 }
 
-func (sa *Adapter) getCachedApplicationConfigByAppIDAndVersion(appTypeID string, appOrgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+func (sa *Adapter) getCachedApplicationConfigByAppIDAndVersion(appTypeID string, orgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
 	sa.applicationConfigsLock.RLock()
 	defer sa.applicationConfigsLock.RUnlock()
 
 	var err error
 	appConfigs := make([]model.ApplicationConfig, 0)
 
-	key := fmt.Sprintf("%s-%s", appTypeID, appOrgID)
+	key := fmt.Sprintf("%s-%s", appTypeID, orgID)
 	errArgs := &logutils.FieldArgs{"appTypeID-appOrgID": key, "version": versionNumbers.String()}
 	item, ok := sa.cachedApplicationConfigs.Load(key)
 	if !ok {
@@ -1901,24 +1901,40 @@ func (sa *Adapter) LoadAppConfigs() ([]model.ApplicationConfig, error) {
 
 	result := make([]model.ApplicationConfig, len(list))
 	for i, item := range list {
-		appOrg, err := sa.getCachedApplicationOrganizationByKey(item.AppOrgID)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+		var appOrg *model.ApplicationOrganization
+		if item.AppOrgID != nil {
+			appOrg, err = sa.getCachedApplicationOrganizationByKey(*item.AppOrgID)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+			}
 		}
-		result[i] = appConfigFromStorage(&item, *appOrg)
+
+		_, appType, err := sa.getCachedApplicationType(item.AppTypeID)
+		if err != nil || appType == nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, nil, err)
+		}
+		result[i] = appConfigFromStorage(&item, appOrg, *appType)
 	}
 
 	return result, nil
 }
 
 //FindAppConfigs finds appconfigs
-func (sa *Adapter) FindAppConfigs(appTypeID string, orgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
-	return sa.getCachedApplicationConfigByAppIDAndVersion(appTypeID, orgID, versionNumbers)
+func (sa *Adapter) FindAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+	orgIDString := ""
+	if orgID != nil {
+		orgIDString = *orgID
+	}
+	return sa.getCachedApplicationConfigByAppIDAndVersion(appTypeID, orgIDString, versionNumbers)
 }
 
 //FindAppConfigByVersion finds the most recent app config for the specified version
-func (sa *Adapter) FindAppConfigByVersion(appTypeID string, orgID string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	configs, err := sa.getCachedApplicationConfigByAppIDAndVersion(appTypeID, orgID, &versionNumbers)
+func (sa *Adapter) FindAppConfigByVersion(appTypeID string, orgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
+	orgIDString := ""
+	if orgID != nil {
+		orgIDString = *orgID
+	}
+	configs, err := sa.getCachedApplicationConfigByAppIDAndVersion(appTypeID, orgIDString, &versionNumbers)
 	if err != nil {
 		return nil, err
 	}
@@ -1989,9 +2005,9 @@ func (sa *Adapter) DeleteAppConfig(ID string) error {
 	return nil
 }
 
-//FindApplicationTypeByIdentifier finds an application type by identifier
-func (sa *Adapter) FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error) {
-	app, appType, err := sa.getCachedApplicationTypeByIdentifier(identifier)
+//FindApplicationType finds an application type by ID or identifier
+func (sa *Adapter) FindApplicationType(id string) (*model.ApplicationType, error) {
+	app, appType, err := sa.getCachedApplicationType(id)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, nil, err)
 	}
@@ -2031,8 +2047,8 @@ func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganizat
 	return result, nil
 }
 
-//FindApplicationOrganizations finds application organization
-func (sa *Adapter) FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error) {
+//FindApplicationOrganization finds application organization
+func (sa *Adapter) FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
 	return sa.getCachedApplicationOrganization(appID, orgID)
 }
 

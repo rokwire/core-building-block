@@ -224,13 +224,13 @@ func (_m *Storage) FindAppConfigByID(ID string) (*model.ApplicationConfig, error
 	return r0, r1
 }
 
-// FindAppConfigByVersion provides a mock function with given fields: appTypeID, orgID, versionNumbers
-func (_m *Storage) FindAppConfigByVersion(appTypeID string, orgID string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	ret := _m.Called(appTypeID, orgID, versionNumbers)
+// FindAppConfigByVersion provides a mock function with given fields: appTypeIdentifier, orgID, versionNumbers
+func (_m *Storage) FindAppConfigByVersion(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
+	ret := _m.Called(appTypeIdentifier, orgID, versionNumbers)
 
 	var r0 *model.ApplicationConfig
-	if rf, ok := ret.Get(0).(func(string, string, model.VersionNumbers) *model.ApplicationConfig); ok {
-		r0 = rf(appTypeID, orgID, versionNumbers)
+	if rf, ok := ret.Get(0).(func(string, *string, model.VersionNumbers) *model.ApplicationConfig); ok {
+		r0 = rf(appTypeIdentifier, orgID, versionNumbers)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.ApplicationConfig)
@@ -238,8 +238,8 @@ func (_m *Storage) FindAppConfigByVersion(appTypeID string, orgID string, versio
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string, model.VersionNumbers) error); ok {
-		r1 = rf(appTypeID, orgID, versionNumbers)
+	if rf, ok := ret.Get(1).(func(string, *string, model.VersionNumbers) error); ok {
+		r1 = rf(appTypeIdentifier, orgID, versionNumbers)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -247,13 +247,13 @@ func (_m *Storage) FindAppConfigByVersion(appTypeID string, orgID string, versio
 	return r0, r1
 }
 
-// FindAppConfigs provides a mock function with given fields: appTypeID, orgID, versionNumbers
-func (_m *Storage) FindAppConfigs(appTypeID string, orgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
-	ret := _m.Called(appTypeID, orgID, versionNumbers)
+// FindAppConfigs provides a mock function with given fields: appTypeIdentifier, orgID, versionNumbers
+func (_m *Storage) FindAppConfigs(appTypeIdentifier string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+	ret := _m.Called(appTypeIdentifier, orgID, versionNumbers)
 
 	var r0 []model.ApplicationConfig
-	if rf, ok := ret.Get(0).(func(string, string, *model.VersionNumbers) []model.ApplicationConfig); ok {
-		r0 = rf(appTypeID, orgID, versionNumbers)
+	if rf, ok := ret.Get(0).(func(string, *string, *model.VersionNumbers) []model.ApplicationConfig); ok {
+		r0 = rf(appTypeIdentifier, orgID, versionNumbers)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.ApplicationConfig)
@@ -261,8 +261,8 @@ func (_m *Storage) FindAppConfigs(appTypeID string, orgID string, versionNumbers
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string, *model.VersionNumbers) error); ok {
-		r1 = rf(appTypeID, orgID, versionNumbers)
+	if rf, ok := ret.Get(1).(func(string, *string, *model.VersionNumbers) error); ok {
+		r1 = rf(appTypeIdentifier, orgID, versionNumbers)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -316,13 +316,36 @@ func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	return r0, r1
 }
 
-// FindApplicationTypeByIdentifier provides a mock function with given fields: identifier
-func (_m *Storage) FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error) {
-	ret := _m.Called(identifier)
+// FindApplicationOrganization provides a mock function with given fields: appID, orgID
+func (_m *Storage) FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
+	ret := _m.Called(appID, orgID)
+
+	var r0 *model.ApplicationOrganization
+	if rf, ok := ret.Get(0).(func(string, string) *model.ApplicationOrganization); ok {
+		r0 = rf(appID, orgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.ApplicationOrganization)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(appID, orgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindApplicationType provides a mock function with given fields: id
+func (_m *Storage) FindApplicationType(id string) (*model.ApplicationType, error) {
+	ret := _m.Called(id)
 
 	var r0 *model.ApplicationType
 	if rf, ok := ret.Get(0).(func(string) *model.ApplicationType); ok {
-		r0 = rf(identifier)
+		r0 = rf(id)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.ApplicationType)
@@ -331,7 +354,7 @@ func (_m *Storage) FindApplicationTypeByIdentifier(identifier string) (*model.Ap
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(identifier)
+		r1 = rf(id)
 	} else {
 		r1 = ret.Error(1)
 	}

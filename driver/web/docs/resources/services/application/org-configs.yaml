@@ -1,0 +1,35 @@
+post:
+  tags:
+  - Services
+  summary: Gets organization-specific app configs
+  description: |
+    Returns the app config for the highest version that is equal to or less than the provided version for the currently authenticated organization
+
+    **Auth:** Requires auth token
+  security:
+  - bearerAuth: []
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schemas/apis/services/application/org-configs/request/Request.yaml"
+        example:
+          version: "1.0.1"
+          app_type_identifier: "edu.illinois.rokwire.android"
+          org_id: "0a2eff20-e2cd-11eb-af68-60f81db5ecc0"
+          api_key: ""
+  responses:
+    200:
+      description: successfully read app configuration
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schemas/application/ApplicationConfig.yaml"
+    400:
+      description: Bad request.
+    401:
+      description: Unauthorized
+    404:
+      description: AppConfig not found
+    500:
+      description: Internal error

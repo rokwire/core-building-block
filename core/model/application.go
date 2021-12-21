@@ -112,10 +112,10 @@ type Application struct {
 	DateUpdated *time.Time
 }
 
-//FindApplicationType finds app type for identifier
-func (a Application) FindApplicationType(identifier string) *ApplicationType {
+//FindApplicationType finds app type
+func (a Application) FindApplicationType(id string) *ApplicationType {
 	for _, appType := range a.Types {
-		if appType.Identifier == identifier {
+		if appType.Identifier == id || appType.ID == id {
 			return &appType
 		}
 	}
@@ -233,7 +233,7 @@ type ApplicationConfig struct {
 	ID              string
 	ApplicationType ApplicationType
 	Version         Version
-	AppOrg          ApplicationOrganization
+	AppOrg          *ApplicationOrganization
 	Data            map[string]interface{}
 
 	DateCreated time.Time

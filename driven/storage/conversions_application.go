@@ -133,30 +133,28 @@ func versionsToStorage(itemList []model.Version) []version {
 }
 
 // AppConfig
-func appConfigFromStorage(item *applicationConfig, appOrg model.ApplicationOrganization) model.ApplicationConfig {
+func appConfigFromStorage(item *applicationConfig, appOrg *model.ApplicationOrganization, appType model.ApplicationType) model.ApplicationConfig {
 	if item == nil {
 		return model.ApplicationConfig{}
 	}
-
-	appType := applicationTypeFromStorage(&item.ApplicationType)
 	return model.ApplicationConfig{ID: item.ID, AppOrg: appOrg, ApplicationType: appType, Data: item.Data, Version: versionFromStorage(&item.Version, appType), DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-func appConfigsFromStorage(itemList []applicationConfig, appOrg model.ApplicationOrganization) []model.ApplicationConfig {
+func appConfigsFromStorage(itemList []applicationConfig, appOrg *model.ApplicationOrganization, appType model.ApplicationType) []model.ApplicationConfig {
 	if len(itemList) == 0 {
 		return make([]model.ApplicationConfig, 0)
 	}
 
 	res := make([]model.ApplicationConfig, len(itemList))
 	for i, appConfig := range itemList {
-		res[i] = appConfigFromStorage(&appConfig, appOrg)
+		res[i] = appConfigFromStorage(&appConfig, appOrg, appType)
 	}
 
 	return res
 }
 
 func appConfigToStorage(item model.ApplicationConfig) applicationConfig {
-	return applicationConfig{ID: item.ID, ApplicationType: applicationTypeToStorage(item.ApplicationType), AppOrgID: item.AppOrg.ID, Version: versionToStorage(item.Version), Data: item.Data, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return applicationConfig{ID: item.ID, AppTypeID: item.ApplicationType.ID, AppOrgID: &item.AppOrg.ID, Version: versionToStorage(item.Version), Data: item.Data, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 //AppOrgGroup

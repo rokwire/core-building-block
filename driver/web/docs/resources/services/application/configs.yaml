@@ -1,9 +1,9 @@
 post:
   tags:
   - Services
-  summary: Gets app config
+  summary: Gets default app config
   description: |
-    Returns the app config for the highest version that is equal to or less than the provided version
+    Returns the default app config for the highest version that is equal to or less than the provided version
 
     **Auth:** Requires a valid API Key for access.
   requestBody:
@@ -12,11 +12,10 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/services/appconfigs/request/Request.yaml"
+          $ref: "../../../schemas/apis/services/application/configs/request/Request.yaml"
         example:
           version: "1.0.1"
-          app_type_identifier: "com.rokmetro.safercommunity"
-          app_org_id: "61ba5ba90b80517a5801bf9e"
+          app_type_identifier: "edu.illinois.rokwire.android"
           api_key: ""
   responses:
     200:
@@ -24,7 +23,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/application/AppConfig.yaml"
+            $ref: "../../../schemas/application/ApplicationConfig.yaml"
     400:
       description: Bad request.
     401:
