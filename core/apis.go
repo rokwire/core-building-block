@@ -55,7 +55,7 @@ func (c *APIs) storeSystemData() error {
 		}
 		if rokwireAdminApp == nil {
 			id, _ := uuid.NewUUID()
-			newAndroidAppType := model.ApplicationType{ID: id.String(), Identifier: "edu.illinois.rokwire.admin",
+			newAndroidAppType := model.ApplicationType{ID: id.String(), Identifier: "edu.illinois.rokwire.admin.android",
 				Name: "ROKWIRE Admin Android", Versions: []string{"1.0.0"}}
 			newRokwireAdminApp := model.Application{ID: c.RokwireAdminAppID, Name: "ROKWIRE Admin Application", MultiTenant: false, Admin: true,
 				RequiresOwnUsers: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}

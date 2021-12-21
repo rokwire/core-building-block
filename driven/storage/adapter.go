@@ -444,6 +444,9 @@ func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier stri
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": session.AppID, "org_id": session.OrgID}, err)
 		}
+		if appOrg == nil {
+			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": session.AppID, "org_id": session.OrgID})
+		}
 
 		sessions[i] = loginSessionFromStorage(session, *authType, account, *appOrg)
 	}
@@ -520,6 +523,9 @@ func (sa *Adapter) buildLoginSession(ls *loginSession) (*model.LoginSession, err
 	appOrg, err := sa.getCachedApplicationOrganization(ls.AppID, ls.OrgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": ls.AppID, "org_id": ls.OrgID}, err)
+	}
+	if appOrg == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": ls.AppID, "org_id": ls.OrgID})
 	}
 
 	modelLoginSession := loginSessionFromStorage(*ls, *authType, account, *appOrg)
@@ -622,7 +628,10 @@ func (sa *Adapter) FindAccount(appOrgID string, authTypeID string, accountAuthTy
 	//application organization - from cache
 	appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
+	if appOrg == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
 	}
 
 	modelAccount := accountFromStorage(account, *appOrg)
@@ -635,6 +644,9 @@ func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, a
 	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error getting cached application organization", "", nil, err)
+	}
+	if appOrg == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
 	}
 
 	//find the accounts
@@ -680,7 +692,10 @@ func (sa *Adapter) findAccount(context TransactionContext, key string, id string
 	//application organization - from cache
 	appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
+	if appOrg == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
 	}
 
 	modelAccount := accountFromStorage(*account, *appOrg)
@@ -1336,7 +1351,10 @@ func (sa *Adapter) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOr
 	//get the application organization from the cached ones
 	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
 	if err != nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+	}
+	if appOrg == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": appOrg})
 	}
 
 	result := appOrgRolesFromStorage(rolesResult, *appOrg)
@@ -1346,9 +1364,12 @@ func (sa *Adapter) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOr
 
 //InsertAppOrgRole inserts a new application organization role
 func (sa *Adapter) InsertAppOrgRole(item model.AppOrgRole) error {
-	_, err := sa.getCachedApplicationOrganizationByKey(item.AppOrg.ID)
+	appOrg, err := sa.getCachedApplicationOrganizationByKey(item.AppOrg.ID)
 	if err != nil {
-		return errors.WrapErrorData(logutils.StatusMissing, model.TypeApplication, &logutils.FieldArgs{"app_org_id": item.AppOrg.ID}, err)
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": item.AppOrg.ID}, err)
+	}
+	if appOrg == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": item.AppOrg.ID})
 	}
 
 	role := appOrgRoleToStorage(item)
@@ -1390,7 +1411,10 @@ func (sa *Adapter) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppO
 
 	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
 	if err != nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+	}
+	if appOrg == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": appOrg})
 	}
 
 	result := appOrgGroupsFromStorage(groupsResult, *appOrg)

@@ -1040,6 +1040,9 @@ func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier str
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, logutils.StringArgs(orgID), err)
 	}
+	if appOrg == nil {
+		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, logutils.StringArgs(orgID))
+	}
 
 	//check if the auth type is supported for this application and organization
 	if !appOrg.IsAuthTypeSupported(*applicationType, *authType) {
