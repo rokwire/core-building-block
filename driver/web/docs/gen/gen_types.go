@@ -509,7 +509,6 @@ type ReqAccountExistsRequestAuthType string
 // ReqAccountPermissionsRequest defines model for _req_account-permissions_Request.
 type ReqAccountPermissionsRequest struct {
 	AccountId   string   `json:"account_id"`
-	AppId       string   `json:"app_id"`
 	Permissions []string `json:"permissions"`
 }
 

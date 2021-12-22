@@ -3,6 +3,7 @@ package core
 import (
 	"core-building-block/core/model"
 
+	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -173,4 +174,83 @@ func (app *application) admGetAccounts(appID string, orgID string, accountID *st
 
 func (app *application) admGetAccount(accountID string) (*model.Account, error) {
 	return app.getAccount(accountID)
+}
+
+func (app *application) admGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
+	if assignerPermissions == nil {
+		return errors.New("no permissions from admin assigner")
+	}
+
+	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	if err != nil {
+		return err
+	}
+
+	if len(permissions) == 0 {
+		return errors.Newf("no permissions found for names: %v", permissionNames)
+	}
+
+	var authorizedPermissions []model.Permission
+	for _, permission := range permissions {
+		authorizedAssigners := permission.Assigners
+		for _, authorizedAssigner := range authorizedAssigners {
+			if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
+				authorizedPermissions = append(authorizedPermissions, permission)
+				break
+			}
+		}
+	}
+	if authorizedPermissions == nil {
+		return errors.Newf("Assigner is not authorized to assign permissions for names: %v", permissionNames)
+	}
+
+	err = app.storage.InsertAccountPermissions(accountID, authorizedPermissions)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (app *application) admGrantAccountRoles(accountID string, appOrgID string, roleIDs []string, assignerPermissions []string) error {
+	if assignerPermissions == nil {
+		return errors.New("no permissions from admin assigner")
+	}
+
+	roles, err := app.storage.FindAppOrgRoles(roleIDs, appOrgID)
+	if err != nil {
+		return err
+	}
+
+	if len(roles) == 0 {
+		return errors.Newf("no roles found for IDs: %v", roleIDs)
+	}
+
+	var authorizedRoles []model.AppOrgRole
+	for _, role := range roles {
+		allPermissionsAuthorized := true
+		for _, permission := range role.Permissions {
+			authorizedAssigners := permission.Assigners
+			for _, authorizedAssigner := range authorizedAssigners {
+				if !authutils.ContainsString(assignerPermissions, authorizedAssigner) {
+					allPermissionsAuthorized = false
+					break
+				}
+			}
+			if !allPermissionsAuthorized {
+				break
+			}
+		}
+		if allPermissionsAuthorized {
+			authorizedRoles = append(authorizedRoles, role)
+		}
+	}
+	if authorizedRoles == nil {
+		return errors.Newf("Assigner is not authorized to assign roles for ids: %v", roleIDs)
+	}
+
+	err = app.storage.InsertAccountRoles(accountID, appOrgID, model.AccountRolesFromAppOrgRoles(authorizedRoles, true, true))
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -27,6 +27,8 @@ type Administration interface {
 
 	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
+	AdmGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
+	AdmGrantAccountRoles(accountID string, appID string, roleIDs []string, assignerPermissions []string) error
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -60,7 +62,7 @@ type System interface {
 	SysCreateAppOrgRole(name string, appID string, description string, permissionNames []string) (*model.AppOrgRole, error)
 
 	SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
-	SysGrantAccountRoles(accountID string, appID string, roleIDs []string) error
+	SysGrantAccountRoles(accountID string, appID string, roleIDs []string, assignerPermissions []string) error
 }
 
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc

@@ -119,6 +119,14 @@ func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, er
 	return s.app.admGetAccount(accountID)
 }
 
+func (s *administrationImpl) AdmGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
+	return s.app.admGrantAccountPermissions(accountID, permissionNames, assignerPermissions)
+}
+
+func (s *administrationImpl) AdmGrantAccountRoles(accountID string, appID string, roleIDs []string, assignerPermissions []string) error {
+	return s.app.admGrantAccountRoles(accountID, appID, roleIDs, assignerPermissions)
+}
+
 ///
 
 //encryptionImpl
@@ -207,8 +215,8 @@ func (s *systemImpl) SysGrantAccountPermissions(accountID string, permissionName
 	return s.app.sysGrantAccountPermissions(accountID, permissionNames, assignerPermissions)
 }
 
-func (s *systemImpl) SysGrantAccountRoles(accountID string, appID string, roleIDs []string) error {
-	return s.app.sysGrantAccountRoles(accountID, appID, roleIDs)
+func (s *systemImpl) SysGrantAccountRoles(accountID string, appID string, roleIDs []string, assignerPermissions []string) error {
+	return s.app.sysGrantAccountRoles(accountID, appID, roleIDs, assignerPermissions)
 }
 
 ///

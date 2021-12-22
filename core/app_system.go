@@ -216,6 +216,7 @@ func (app *application) sysGrantAccountPermissions(accountID string, permissionN
 		for _, authorizedAssigner := range authorizedAssigners {
 			if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
 				authorizedPermissions = append(authorizedPermissions, permission)
+				break
 			}
 		}
 	}
@@ -230,7 +231,11 @@ func (app *application) sysGrantAccountPermissions(accountID string, permissionN
 	return nil
 }
 
-func (app *application) sysGrantAccountRoles(accountID string, appOrgID string, roleIDs []string) error {
+func (app *application) sysGrantAccountRoles(accountID string, appOrgID string, roleIDs []string, assignerPermissions []string) error {
+	if assignerPermissions == nil {
+		return errors.New("no permissions from admin assigner")
+	}
+
 	roles, err := app.storage.FindAppOrgRoles(roleIDs, appOrgID)
 	if err != nil {
 		return err
@@ -240,7 +245,30 @@ func (app *application) sysGrantAccountRoles(accountID string, appOrgID string, 
 		return errors.Newf("no roles found for IDs: %v", roleIDs)
 	}
 
-	err = app.storage.InsertAccountRoles(accountID, appOrgID, model.AccountRolesFromAppOrgRoles(roles, true, true))
+	var authorizedRoles []model.AppOrgRole
+	for _, role := range roles {
+		allPermissionsAuthorized := true
+		for _, permission := range role.Permissions {
+			authorizedAssigners := permission.Assigners
+			for _, authorizedAssigner := range authorizedAssigners {
+				if !authutils.ContainsString(assignerPermissions, authorizedAssigner) {
+					allPermissionsAuthorized = false
+					break
+				}
+			}
+			if !allPermissionsAuthorized {
+				break
+			}
+		}
+		if allPermissionsAuthorized {
+			authorizedRoles = append(authorizedRoles, role)
+		}
+	}
+	if authorizedRoles == nil {
+		return errors.Newf("Assigner is not authorized to assign roles for ids: %v", roleIDs)
+	}
+
+	err = app.storage.InsertAccountRoles(accountID, appOrgID, model.AccountRolesFromAppOrgRoles(authorizedRoles, true, true))
 	if err != nil {
 		return err
 	}
