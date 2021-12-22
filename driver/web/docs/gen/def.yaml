@@ -634,6 +634,7 @@ paths:
                     {
                       "service_reg": {
                         "service_id": "string",
+                        "service_account_id": "string",
                         "host": "string",
                         "pub_key": {
                           "key_pem": "string",
@@ -3164,6 +3165,8 @@ components:
       properties:
         service_id:
           type: string
+        service_account_id:
+          type: string
         host:
           type: string
         pub_key:
@@ -3191,6 +3194,8 @@ components:
       description: Service registration record used for auth
       properties:
         service_id:
+          type: string
+        service_account_id:
           type: string
         host:
           type: string

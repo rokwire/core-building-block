@@ -315,9 +315,10 @@ type ApplicationTypeFields struct {
 
 // Service registration record used for auth
 type AuthServiceReg struct {
-	Host      string  `json:"host"`
-	PubKey    *PubKey `json:"pub_key,omitempty"`
-	ServiceId string  `json:"service_id"`
+	Host             string  `json:"host"`
+	PubKey           *PubKey `json:"pub_key,omitempty"`
+	ServiceAccountId *string `json:"service_account_id,omitempty"`
+	ServiceId        string  `json:"service_id"`
 }
 
 // AuthType defines model for AuthType.
@@ -511,15 +512,16 @@ type ServiceAccountCredentialType string
 
 // Full service registration record
 type ServiceReg struct {
-	Description string          `json:"description"`
-	FirstParty  bool            `json:"first_party"`
-	Host        string          `json:"host"`
-	InfoUrl     *string         `json:"info_url,omitempty"`
-	LogoUrl     *string         `json:"logo_url,omitempty"`
-	Name        string          `json:"name"`
-	PubKey      *PubKey         `json:"pub_key,omitempty"`
-	Scopes      *[]ServiceScope `json:"scopes"`
-	ServiceId   string          `json:"service_id"`
+	Description      string          `json:"description"`
+	FirstParty       bool            `json:"first_party"`
+	Host             string          `json:"host"`
+	InfoUrl          *string         `json:"info_url,omitempty"`
+	LogoUrl          *string         `json:"logo_url,omitempty"`
+	Name             string          `json:"name"`
+	PubKey           *PubKey         `json:"pub_key,omitempty"`
+	Scopes           *[]ServiceScope `json:"scopes"`
+	ServiceAccountId *string         `json:"service_account_id,omitempty"`
+	ServiceId        string          `json:"service_id"`
 }
 
 // ServiceScope defines model for ServiceScope.

@@ -9,6 +9,8 @@ description: Full service registration record
 properties:
   service_id:
     type: string
+  service_account_id:
+    type: string
   host:
     type: string
   pub_key:

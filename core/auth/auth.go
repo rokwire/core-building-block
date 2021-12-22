@@ -135,9 +135,9 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 		return nil, errors.WrapErrorAction(logutils.ActionSave, "reg", nil, err)
 	}
 
-	serviceLoader := NewLocalServiceRegLoader(storage)
+	dataLoader := NewLocalDataLoader(storage)
 
-	authService, err := authservice.NewAuthService(serviceID, host, serviceLoader)
+	authService, err := authservice.NewAuthService(serviceID, host, dataLoader)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "auth service", nil, err)
 	}
@@ -1512,14 +1512,25 @@ func (a *Auth) deleteExpiredSessions() {
 	}
 }
 
-//LocalServiceRegLoaderImpl provides a local implementation for ServiceRegLoader
-type LocalServiceRegLoaderImpl struct {
+//LocalDataLoaderImpl provides a local implementation for AuthDataLoader
+type LocalDataLoaderImpl struct {
 	storage Storage
 	*authservice.ServiceRegSubscriptions
 }
 
+//GetAccessToken implements AuthDataLoader interface
+func (l *LocalDataLoaderImpl) GetAccessToken() error {
+	return nil
+}
+
+//GetDeletedAccounts implements AuthDataLoader interface
+func (l *LocalDataLoaderImpl) GetDeletedAccounts() ([]string, error) {
+	//TODO: get deleted accounts from storage here
+	return nil, nil
+}
+
 //LoadServices implements ServiceRegLoader interface
-func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, error) {
+func (l *LocalDataLoaderImpl) LoadServices() ([]authservice.ServiceReg, error) {
 	regs, err := l.storage.FindServiceRegs(l.GetSubscribedServices())
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, nil, err)
@@ -1535,10 +1546,10 @@ func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, er
 	return authRegs, nil
 }
 
-//NewLocalServiceRegLoader creates and configures a new LocalServiceRegLoaderImpl instance
-func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
+//NewLocalDataLoader creates and configures a new LocalDataLoaderImpl instance
+func NewLocalDataLoader(storage Storage) *LocalDataLoaderImpl {
 	subscriptions := authservice.NewServiceRegSubscriptions([]string{"all"})
-	return &LocalServiceRegLoaderImpl{storage: storage, ServiceRegSubscriptions: subscriptions}
+	return &LocalDataLoaderImpl{storage: storage, ServiceRegSubscriptions: subscriptions}
 }
 
 //StorageListener represents storage listener implementation for the auth package
