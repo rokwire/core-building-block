@@ -1525,8 +1525,17 @@ func (l *LocalDataLoaderImpl) GetAccessToken() error {
 
 //GetDeletedAccounts implements AuthDataLoader interface
 func (l *LocalDataLoaderImpl) GetDeletedAccounts() ([]string, error) {
-	//TODO: get deleted accounts from storage here
-	return nil, nil
+	accounts, err := l.storage.FindDeletedAccounts()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, "deleted accounts", nil, err)
+	}
+
+	accountIDs := make([]string, len(accounts))
+	for i, account := range accounts {
+		accountIDs[i] = account.ID
+	}
+
+	return accountIDs, nil
 }
 
 //LoadServices implements ServiceRegLoader interface
