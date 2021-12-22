@@ -176,12 +176,12 @@ func (app *application) admGetAccount(accountID string) (*model.Account, error) 
 	return app.getAccount(accountID)
 }
 
-func (app *application) admGetAccountDevice(context storage.TransactionContext, ID string) ([]model.Device, error) {
+func (app *application) admGetApplicationAccountDevices(context storage.TransactionContext, ID string) ([]model.Device, error) {
 	//find the device
-	device, err := app.storage.FindAccountDeviceByID(context, ID)
+	account, err := app.storage.FindAccountByID(context, ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)
 	}
 
-	return device, nil
+	return account.Devices, nil
 }

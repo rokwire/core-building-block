@@ -164,29 +164,6 @@ func (_m *Storage) FindAccountByID(context storage.TransactionContext, id string
 	return r0, r1
 }
 
-// FindAccountDeviceByID provides a mock function with given fields: context, ID
-func (_m *Storage) FindAccountDeviceByID(context storage.TransactionContext, ID string) ([]model.Device, error) {
-	ret := _m.Called(context, ID)
-
-	var r0 []model.Device
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) []model.Device); ok {
-		r0 = rf(context, ID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.Device)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
-		r1 = rf(context, ID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // FindAccounts provides a mock function with given fields: appID, orgID, accountID, authTypeIdentifier
 func (_m *Storage) FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
 	ret := _m.Called(appID, orgID, accountID, authTypeIdentifier)

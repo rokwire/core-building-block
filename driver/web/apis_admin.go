@@ -373,14 +373,14 @@ func (h AdminApisHandler) getAppToken(l *logs.Log, r *http.Request, claims *toke
 	return l.HttpResponseSuccessJSON(responseJSON)
 }
 
-func (h AdminApisHandler) getApplicationAccountsDevice(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h AdminApisHandler) getApplicationAccountDevices(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	accountID := params["_id"]
 
 	if len(accountID) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("_id"), nil, http.StatusBadRequest, false)
 	}
-	device, err := h.coreAPIs.Administration.AdmGetAccountDevice(accountID)
+	device, err := h.coreAPIs.Administration.AdmGetApplicationAccountDevices(accountID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeDevice, nil, err, http.StatusInternalServerError, true)
 	}

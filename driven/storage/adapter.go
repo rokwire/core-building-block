@@ -451,28 +451,6 @@ func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier stri
 	return sessions, nil
 }
 
-//FindAccountDeviceByID finds application
-func (sa *Adapter) FindAccountDeviceByID(context TransactionContext, ID string) ([]model.Device, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	var result []model.Device
-	err := sa.db.devices.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)
-	}
-
-	if len(result) == 0 {
-		//no data
-		return make([]model.Device, 0), nil
-	}
-
-	deviceRes := accDevicesFromStorage(result)
-	if len(deviceRes) == 0 {
-		deviceRes = append(deviceRes)
-	}
-
-	return deviceRes, nil
-}
-
 //FindLoginSession finds a login session
 func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, error) {
 	//find loggin session

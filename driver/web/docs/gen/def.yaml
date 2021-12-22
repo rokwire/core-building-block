@@ -1677,7 +1677,7 @@
               "schema": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/_res_shared_Account-Device"
+                  "$ref": "#/components/schemas/_res_shared_Device"
                 }
               }
             }
@@ -4542,7 +4542,7 @@
           }
         }
       },
-      "_res_shared_Account-Device": {
+      "_res_shared_Device": {
         "required": [
           "id"
         ],
