@@ -52,6 +52,11 @@ put:
       application/json:
         schema:
           $ref: "../../schemas/apis/system/application-config/request/Request.yaml"
+        example:
+          version: "1.0.1"
+          app_type_id: "7e037f2d-b423-4b4d-a1bc-18507f81c6d1"
+          org_id: "0a2eff20-e2cd-11eb-af68-60f81db5ecc0"
+          data: {"url" : "rokmetro.dev"}
     required: true
   responses:
     200:

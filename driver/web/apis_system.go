@@ -495,9 +495,9 @@ func (h SystemApisHandler) createApplicationRole(l *logs.Log, r *http.Request, c
 }
 
 func (h SystemApisHandler) getApplicationConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	appTypeIdentifier := r.URL.Query().Get("app_type_identifier")
+	appTypeIdentifier := r.URL.Query().Get("app_type_id")
 	if appTypeIdentifier == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_type_identifier"), nil, http.StatusBadRequest, false)
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_type_id"), nil, http.StatusBadRequest, false)
 	}
 
 	var orgIDRef *string
@@ -607,7 +607,7 @@ func (h SystemApisHandler) updateApplicationConfig(l *logs.Log, r *http.Request,
 		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeVersionNumbers, nil, nil, http.StatusBadRequest, false)
 	}
 
-	err = h.coreAPIs.System.SysUpdateAppConfig(ID, requestData.Version, requestData.AppTypeId, requestData.Data, *version)
+	err = h.coreAPIs.System.SysUpdateAppConfig(ID, requestData.AppTypeId, requestData.Data, *version)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, nil, err, http.StatusInternalServerError, true)
 	}

@@ -154,7 +154,12 @@ func appConfigsFromStorage(itemList []applicationConfig, appOrg *model.Applicati
 }
 
 func appConfigToStorage(item model.ApplicationConfig) applicationConfig {
-	return applicationConfig{ID: item.ID, AppTypeID: item.ApplicationType.ID, AppOrgID: &item.AppOrg.ID, Version: versionToStorage(item.Version), Data: item.Data, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	appConfig := applicationConfig{ID: item.ID, AppTypeID: item.ApplicationType.ID, Version: versionToStorage(item.Version), Data: item.Data, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	if item.AppOrg != nil {
+		appConfig.AppOrgID = &item.AppOrg.ID
+	}
+
+	return appConfig
 }
 
 //AppOrgGroup

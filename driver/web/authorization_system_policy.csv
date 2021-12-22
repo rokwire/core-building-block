@@ -12,9 +12,9 @@ p, all_applications, /core/system/applications, (GET)|(POST)|(DELETE)|(PUT)
 p, get_applications, /core/system/applications, (GET)
 p, update_applications, /core/system/applications, (POST)
 
-p, all_appconfigs, /core/system/app/configs, (GET)|(POST)|(PUT)|(DELETE)
-p, get_appconfig, /core/system/app/configs, (GET)
-p, update_appconfig, /core/system/app/configs, (POST)|(PUT)|(DELETE)
+p, all_appconfigs, /core/system/application/configs, (GET)|(POST)|(PUT)|(DELETE)
+p, get_appconfig, /core/system/application/configs, (GET)
+p, update_appconfig, /core/system/application/configs, (POST)|(PUT)|(DELETE)
 
 p, all_api-keys, /core/system/api-keys, (GET)|(POST)|(DELETE)|(PUT)
 p, all_api-keys, /core/system/application-api-keys, (GET)

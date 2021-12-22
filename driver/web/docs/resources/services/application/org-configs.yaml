@@ -16,8 +16,6 @@ post:
         example:
           version: "1.0.1"
           app_type_identifier: "edu.illinois.rokwire.android"
-          org_id: "0a2eff20-e2cd-11eb-af68-60f81db5ecc0"
-          api_key: ""
   responses:
     200:
       description: successfully read app configuration

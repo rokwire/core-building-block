@@ -227,8 +227,8 @@ func (app *application) sysCreateAppConfig(appType model.ApplicationType, versio
 	return insertedConfig, nil
 }
 
-func (app *application) sysUpdateAppConfig(id string, version string, appType model.ApplicationType, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
-	err := app.storage.UpdateAppConfig(id, version, appType, data, versionNumbers)
+func (app *application) sysUpdateAppConfig(id string, appType model.ApplicationType, version model.Version, data map[string]interface{}) error {
+	err := app.storage.UpdateAppConfig(id, appType, version, data)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, nil, err)
 	}

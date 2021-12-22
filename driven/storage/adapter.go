@@ -403,15 +403,19 @@ func (sa *Adapter) setCachedApplicationConfigs(applicationConfigs *[]model.Appli
 
 		err := validate.Struct(config)
 		if err != nil {
-			sa.logger.Errorf("failed to validate and cache application config with appID-version %s-%s: %s", config.AppOrg.ID, config.Version.VersionNumbers.String(), err.Error())
+			sa.logger.Errorf("failed to validate and cache application config with appID_version %s_%s: %s", config.AppOrg.ID, config.Version.VersionNumbers.String(), err.Error())
 		} else {
 			// key 1 - ID
 			sa.cachedApplicationConfigs.Store(config.ID, config)
 
 			// key 2 - cahce pair {appTypeID_orgID: []model.ApplicationConfigs}
 			appTypeID := config.ApplicationType.ID
-			appOrgID := config.AppOrg.ID
-			key := fmt.Sprintf("%s-%s", appTypeID, appOrgID)
+			key := appTypeID
+			if config.AppOrg != nil {
+				appOrgID := config.AppOrg.ID
+				key = fmt.Sprintf("%s_%s", appTypeID, appOrgID)
+			}
+
 			if currentKey == "" {
 				currentKey = key
 			} else if currentKey != key {
@@ -436,8 +440,13 @@ func (sa *Adapter) getCachedApplicationConfigByAppIDAndVersion(appTypeID string,
 	var err error
 	appConfigs := make([]model.ApplicationConfig, 0)
 
-	key := fmt.Sprintf("%s-%s", appTypeID, orgID)
-	errArgs := &logutils.FieldArgs{"appTypeID-appOrgID": key, "version": versionNumbers.String()}
+	key := appTypeID
+	errArgs := &logutils.FieldArgs{"appTypeID": key, "version": versionNumbers.String()}
+	if orgID != "" {
+		key = fmt.Sprintf("%s_%s", appTypeID, orgID)
+		errArgs = &logutils.FieldArgs{"appTypeID_orgID": key, "version": versionNumbers.String()}
+	}
+
 	item, ok := sa.cachedApplicationConfigs.Load(key)
 	if !ok {
 		return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeApplicationConfig, errArgs)
@@ -1961,14 +1970,14 @@ func (sa *Adapter) InsertAppConfig(item model.ApplicationConfig) (*model.Applica
 }
 
 // UpdateAppConfig updates an appconfig
-func (sa *Adapter) UpdateAppConfig(ID string, version string, appType model.ApplicationType, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
+func (sa *Adapter) UpdateAppConfig(ID string, appType model.ApplicationType, version model.Version, data map[string]interface{}) error {
 	now := time.Now()
 	//TODO - use pointers and update only what not nil
 	updatAppConfigFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	updateItem := bson.D{primitive.E{Key: "date_updated", Value: now}, primitive.E{Key: "app_type", Value: appType}}
-	if version != "" {
-		updateItem = append(updateItem, primitive.E{Key: "version.date_updated", Value: now}, primitive.E{Key: "version.version_numbers", Value: versionNumbers}, primitive.E{Key: "version.app_type", Value: appType})
-	}
+	updateItem := bson.D{primitive.E{Key: "date_updated", Value: now}, primitive.E{Key: "app_type", Value: appType}, primitive.E{Key: "version", Value: version}}
+	// if version != "" {
+	// 	updateItem = append(updateItem, primitive.E{Key: "version.date_updated", Value: now}, primitive.E{Key: "version.version_numbers", Value: versionNumbers}, primitive.E{Key: "version.app_type", Value: appType})
+	// }
 	if data != nil {
 		updateItem = append(updateItem, primitive.E{Key: "data", Value: data})
 	}

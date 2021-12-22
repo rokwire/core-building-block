@@ -709,13 +709,13 @@ func (_m *Storage) UpdateAccountPreferences(accountID string, preferences map[st
 	return r0
 }
 
-// UpdateAppConfig provides a mock function with given fields: ID, version, appType, data, versionNumbers
-func (_m *Storage) UpdateAppConfig(ID string, version string, appType model.ApplicationType, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
-	ret := _m.Called(ID, version, appType, data, versionNumbers)
+// UpdateAppConfig provides a mock function with given fields: ID, appType, version, data
+func (_m *Storage) UpdateAppConfig(ID string, appType model.ApplicationType, version model.Version, data map[string]interface{}) error {
+	ret := _m.Called(ID, appType, version, data)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string, model.ApplicationType, map[string]interface{}, model.VersionNumbers) error); ok {
-		r0 = rf(ID, version, appType, data, versionNumbers)
+	if rf, ok := ret.Get(0).(func(string, model.ApplicationType, model.Version, map[string]interface{}) error); ok {
+		r0 = rf(ID, appType, version, data)
 	} else {
 		r0 = ret.Error(0)
 	}

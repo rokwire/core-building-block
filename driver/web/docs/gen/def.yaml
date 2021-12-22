@@ -964,7 +964,7 @@ paths:
               schema:
                 type: string
                 example: Echooo
-  /services/app/configs:
+  /services/application/configs:
     post:
       tags:
         - Services
@@ -999,7 +999,7 @@ paths:
           description: AppConfig not found
         '500':
           description: Internal error
-  /services/app/org-configs:
+  /services/application/org-configs:
     post:
       tags:
         - Services
@@ -1018,8 +1018,6 @@ paths:
             example:
               version: 1.0.1
               app_type_identifier: edu.illinois.rokwire.android
-              org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
-              api_key: ''
       responses:
         '200':
           description: successfully read app configuration
@@ -2213,7 +2211,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /system/app/configs:
+  /system/application/configs:
     get:
       deprecated: true
       tags:
@@ -2297,7 +2295,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  '/system/app/configs/{id}':
+  '/system/application/configs/{id}':
     get:
       deprecated: true
       tags:
@@ -2352,6 +2350,12 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/_req_create_ApplicationConfig_Request'
+            example:
+              version: 1.0.1
+              app_type_id: 7e037f2d-b423-4b4d-a1bc-18507f81c6d1
+              org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+              data:
+                url: rokmetro.dev
         required: true
       responses:
         '200':

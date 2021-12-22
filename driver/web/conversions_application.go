@@ -73,7 +73,12 @@ func organizationsToDef(items []model.Organization) []Def.OrganizationFields {
 
 //App Config
 func appConfigToDef(item model.ApplicationConfig) Def.ApplicationConfig {
-	return Def.ApplicationConfig{Id: item.ID, OrgId: &item.AppOrg.Organization.ID, AppTypeId: item.ApplicationType.ID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
+	defConfig := Def.ApplicationConfig{Id: item.ID, AppTypeId: item.ApplicationType.ID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
+	if item.AppOrg != nil {
+		defConfig.OrgId = &item.AppOrg.Organization.ID
+	}
+
+	return defConfig
 }
 
 func appConfigsToDef(items []model.ApplicationConfig) []Def.ApplicationConfig {
