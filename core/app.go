@@ -15,7 +15,8 @@ type application struct {
 
 	storage Storage
 
-	listeners []ApplicationListener
+	listeners       []ApplicationListener
+	requestExecutor HTTPRequestExecutor
 }
 
 //start starts the core part of the application

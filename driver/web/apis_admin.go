@@ -360,21 +360,16 @@ func (h AdminApisHandler) adminGetBuildingBlocks(l *logs.Log, r *http.Request, c
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
 	}
 
-	adminGetBuildingBlocks, err := h.coreAPIs.Administration.AdmGetBuildingBlocks(appID, claims.OrgID)
+	buildingBlocks, err := h.coreAPIs.Administration.AdmGetBuildingBlocks(claims.AppID, claims.OrgID)
 	if err != nil {
-		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeServiceReg, nil, nil, http.StatusNotFound, false)
+		return l.HttpResponseErrorAction(logutils.ActionGet, "Error on getting the building blocks", nil, err, http.StatusInternalServerError, true)
 	}
 
-	if adminGetBuildingBlocks == nil {
-		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeServiceReg, nil, nil, http.StatusNotFound, false)
-	}
-
-	response := authServiceRegListToDef(adminGetBuildingBlocks)
-
-	data, err := json.Marshal(response)
+	data, err := json.Marshal(buildingBlocks)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeServiceReg, nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(logutils.ActionGet, "Error on marshal the building blocks", nil, err, http.StatusInternalServerError, true)
 	}
+
 	return l.HttpResponseSuccessJSON(data)
 }
 

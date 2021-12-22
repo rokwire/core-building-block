@@ -24,7 +24,7 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	AdmGetBuildingBlocks(appID string, orgID string) ([]model.ServiceReg, error)
+	AdmGetBuildingBlocks(appID string, orgID string) ([]*model.BuildingBlock, error)
 
 	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
@@ -116,7 +116,7 @@ type Storage interface {
 	FindApplications() ([]model.Application, error)
 
 	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
-	FindServiceRegistrations(serviceID []string) ([]model.ServiceReg, error)
+	ReadAllBuildingBlocks(appID string, orgID string) ([]*model.BuildingBlock, error)
 }
 
 //StorageListener listenes for change data storage events
@@ -127,4 +127,8 @@ type StorageListener struct {
 
 //ApplicationListener represents application listener
 type ApplicationListener interface {
+}
+
+type HTTPRequestExecutor interface {
+	Get(url string) (*string, *int, error)
 }

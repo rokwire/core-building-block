@@ -1828,32 +1828,16 @@ func (sa *Adapter) FindApplicationOrganizations(appID string, orgID string) (*mo
 	return sa.getCachedApplicationOrganization(appID, orgID)
 }
 
-//FindServiceRegistrations fetches the requested service registration records
-func (sa *Adapter) FindServiceRegistrations(serviceIDs []string) ([]model.ServiceReg, error) {
-	var filter bson.M
-	for _, serviceID := range serviceIDs {
-		if serviceID == "all" {
-			filter = bson.M{}
-			break
-		}
-	}
-	if filter == nil {
-		filter = bson.M{"registration.service_id": bson.M{"$in": serviceIDs}}
-	}
-
-	var result []model.ServiceReg
-	err := sa.db.serviceRegs.Find(filter, &result, nil)
+//ReadAllBuildingBlocks reads all the building blocks
+func (sa *Adapter) ReadAllBuildingBlocks(appID string, orgID string) ([]*model.BuildingBlock, error) {
+	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
+		primitive.E{Key: "org_id", Value: orgID}}
+	var result []*model.BuildingBlock
+	err := sa.db.buildingblocks.Find(filter, &result, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"service_id": serviceIDs}, err)
+		return nil, err
 	}
-
-	if result == nil {
-		result = []model.ServiceReg{}
-	}
-
-	serveRegs := serviceRegListToStorage(result)
-
-	return serveRegs, nil
+	return result, nil
 }
 
 //FindDevice finds a device by device id and account id

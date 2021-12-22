@@ -23,6 +23,7 @@ type database struct {
 
 	apiKeys                         *collectionWrapper
 	authTypes                       *collectionWrapper
+	buildingblocks                  *collectionWrapper
 	identityProviders               *collectionWrapper
 	accounts                        *collectionWrapper
 	devices                         *collectionWrapper

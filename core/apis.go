@@ -111,7 +111,7 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
-func (s *administrationImpl) AdmGetBuildingBlocks(appID string, orgID string) ([]model.ServiceReg, error) {
+func (s *administrationImpl) AdmGetBuildingBlocks(appID string, orgID string) ([]*model.BuildingBlock, error) {
 	return s.app.admGetBuildingBlocks(appID, orgID)
 }
 

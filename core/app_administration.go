@@ -2,6 +2,10 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"fmt"
+	"log"
+	"strings"
+	"sync"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -162,16 +166,73 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admGetBuildingBlocks(appID string, orgID string) ([]model.ServiceReg, error) {
-	getAppOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+func (app *application) admGetBuildingBlocks(appID string, orgID string) ([]*model.BuildingBlock, error) {
+	buildingBlocks, err := app.storage.ReadAllBuildingBlocks(appID, orgID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+		return nil, err
 	}
-	getServiceRegs, err := app.storage.FindServiceRegistrations(getAppOrg.ServicesIDs)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err)
+
+	wg := sync.WaitGroup{}
+	for _, bb := range buildingBlocks {
+		//check if can get the version
+		if bb.VersionURL != nil {
+			wg.Add(1)
+			go func(bb *model.BuildingBlock) {
+				app.updateBuildingBlock(bb)
+				wg.Done()
+			}(bb)
+		}
 	}
-	return getServiceRegs, nil
+	wg.Wait()
+
+	return buildingBlocks, nil
+}
+
+func (app *application) updateBuildingBlock(buildingBlock *model.BuildingBlock) {
+	wg := sync.WaitGroup{}
+
+	updatedEnvs := make([]model.BuildingBlockEnvironment, len(buildingBlock.Environments))
+	for index, environment := range buildingBlock.Environments {
+		wg.Add(1)
+		go func(i int, bb *model.BuildingBlock, env model.BuildingBlockEnvironment) {
+			updatedEnv := app.updateBuildingBlockEnvironment(bb, env)
+			updatedEnvs[i] = updatedEnv
+
+			wg.Done()
+		}(index, buildingBlock, environment)
+
+	}
+	wg.Wait()
+
+	buildingBlock.Environments = updatedEnvs
+}
+
+func (app *application) updateBuildingBlockEnvironment(buildingBlock *model.BuildingBlock, environment model.BuildingBlockEnvironment) model.BuildingBlockEnvironment {
+	versionURL := *buildingBlock.VersionURL
+	index := strings.Index(versionURL, "}")
+
+	hostKey := versionURL[1:index]
+	path := versionURL[index+1:]
+
+	var url string
+	switch hostKey {
+	case "apis_url":
+		url = fmt.Sprintf("%s%s", *environment.ApisURL, path)
+	case "web_url":
+		url = fmt.Sprintf("%s%s", *environment.WebURL, path)
+	}
+
+	content, statusCode, err := app.requestExecutor.Get(url)
+	if err != nil || *statusCode != 200 {
+		log.Printf("error getting version for %s - %s - %d", url, err, *statusCode)
+
+		environment.HealthStatus = "down"
+	} else {
+		environment.HealthStatus = "working"
+		environment.Version = *content
+	}
+
+	return environment
 }
 
 func (app *application) admGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
