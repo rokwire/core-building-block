@@ -233,6 +233,29 @@ func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	return r0, r1
 }
 
+// FindApplicationLoginSessions provides a mock function with given fields: appID, orgID
+func (_m *Storage) FindApplicationLoginSessions(appID string, orgID string) ([]model.LoginSession, error) {
+	ret := _m.Called(appID, orgID)
+
+	var r0 []model.LoginSession
+	if rf, ok := ret.Get(0).(func(string, string) []model.LoginSession); ok {
+		r0 = rf(appID, orgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.LoginSession)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(appID, orgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindApplications provides a mock function with given fields:
 func (_m *Storage) FindApplications() ([]model.Application, error) {
 	ret := _m.Called()
@@ -272,29 +295,6 @@ func (_m *Storage) FindCredential(context storage.TransactionContext, ID string)
 	var r1 error
 	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
 		r1 = rf(context, ID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// FindLogSession provides a mock function with given fields: appID, orgID
-func (_m *Storage) FindLogSession(appID string, orgID string) ([]model.LoginSession, error) {
-	ret := _m.Called(appID, orgID)
-
-	var r0 []model.LoginSession
-	if rf, ok := ret.Get(0).(func(string, string) []model.LoginSession); ok {
-		r0 = rf(appID, orgID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.LoginSession)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(appID, orgID)
 	} else {
 		r1 = ret.Error(1)
 	}
