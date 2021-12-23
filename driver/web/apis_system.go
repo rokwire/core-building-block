@@ -607,7 +607,7 @@ func (h SystemApisHandler) updateApplicationConfig(l *logs.Log, r *http.Request,
 		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeVersionNumbers, nil, nil, http.StatusBadRequest, false)
 	}
 
-	err = h.coreAPIs.System.SysUpdateAppConfig(ID, requestData.AppTypeId, requestData.Data, *version)
+	err = h.coreAPIs.System.SysUpdateAppConfig(ID, requestData.AppTypeId, requestData.OrgId, requestData.Data, *version)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, nil, err, http.StatusInternalServerError, true)
 	}

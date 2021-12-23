@@ -266,7 +266,7 @@ func (s *systemImpl) SysCreateAppConfig(appTypeID string, orgID *string, data ma
 	return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigsVersion, logutils.StringArgs(versionNumbers.String()+" for app_type_id: "+appTypeID))
 }
 
-func (s *systemImpl) SysUpdateAppConfig(id string, appTypeID string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
+func (s *systemImpl) SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
 	applicationType, err := s.app.storage.FindApplicationType(appTypeID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeID), err)
@@ -279,9 +279,17 @@ func (s *systemImpl) SysUpdateAppConfig(id string, appTypeID string, data map[st
 		return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationTypeVersionList, logutils.StringArgs(appTypeID))
 	}
 
+	var appOrg *model.ApplicationOrganization
+	if orgID != nil {
+		appOrg, err = s.app.storage.FindApplicationOrganization(applicationType.Application.ID, *orgID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": applicationType.Application.ID, "org_id": *orgID}, err)
+		}
+	}
+
 	for _, supportedVersion := range applicationType.Versions {
 		if versionNumbers == supportedVersion.VersionNumbers {
-			return s.app.sysUpdateAppConfig(id, *applicationType, supportedVersion, data)
+			return s.app.sysUpdateAppConfig(id, *applicationType, supportedVersion, appOrg, data)
 		}
 	}
 

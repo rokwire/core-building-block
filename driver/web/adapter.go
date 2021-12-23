@@ -141,48 +141,48 @@ func (we Adapter) Start() {
 
 	///system ///
 	//TODO - disable until we implement the system accounts login so that to protect them
+	/*
+		systemSubrouter := subRouter.PathPrefix("/system").Subrouter()
+		systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.createGlobalConfig, we.auth.systemAuth)).Methods("POST")
+		systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.getGlobalConfig, we.auth.systemAuth)).Methods("GET")
+		systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.updateGlobalConfig, we.auth.systemAuth)).Methods("PUT")
 
-	systemSubrouter := subRouter.PathPrefix("/system").Subrouter()
-	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.createGlobalConfig, we.auth.systemAuth)).Methods("POST")
-	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.getGlobalConfig, we.auth.systemAuth)).Methods("GET")
-	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.updateGlobalConfig, we.auth.systemAuth)).Methods("PUT")
+		systemSubrouter.HandleFunc("/organizations", we.wrapFunc(we.systemApisHandler.createOrganization, we.auth.systemAuth)).Methods("POST")
+		systemSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.systemApisHandler.updateOrganization, we.auth.systemAuth)).Methods("PUT")
+		systemSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.systemApisHandler.getOrganization, we.auth.systemAuth)).Methods("GET")
+		systemSubrouter.HandleFunc("/organizations", we.wrapFunc(we.systemApisHandler.getOrganizations, we.auth.systemAuth)).Methods("GET")
 
-	systemSubrouter.HandleFunc("/organizations", we.wrapFunc(we.systemApisHandler.createOrganization, we.auth.systemAuth)).Methods("POST")
-	systemSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.systemApisHandler.updateOrganization, we.auth.systemAuth)).Methods("PUT")
-	systemSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.systemApisHandler.getOrganization, we.auth.systemAuth)).Methods("GET")
-	systemSubrouter.HandleFunc("/organizations", we.wrapFunc(we.systemApisHandler.getOrganizations, we.auth.systemAuth)).Methods("GET")
+		systemSubrouter.HandleFunc("/applications", we.wrapFunc(we.systemApisHandler.createApplication, we.auth.systemAuth)).Methods("POST")
+		systemSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.systemApisHandler.getApplication, we.auth.systemAuth)).Methods("GET")
+		systemSubrouter.HandleFunc("/applications", we.wrapFunc(we.systemApisHandler.getApplications, we.auth.systemAuth)).Methods("GET")
 
-	systemSubrouter.HandleFunc("/applications", we.wrapFunc(we.systemApisHandler.createApplication, we.auth.systemAuth)).Methods("POST")
-	systemSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.systemApisHandler.getApplication, we.auth.systemAuth)).Methods("GET")
-	systemSubrouter.HandleFunc("/applications", we.wrapFunc(we.systemApisHandler.getApplications, we.auth.systemAuth)).Methods("GET")
+		systemSubrouter.HandleFunc("/permissions", we.wrapFunc(we.systemApisHandler.createPermission, we.auth.systemAuth)).Methods("POST")
+		systemSubrouter.HandleFunc("/permissions", we.wrapFunc(we.systemApisHandler.updatePermission, we.auth.systemAuth)).Methods("PUT")
+		systemSubrouter.HandleFunc("/application-roles", we.wrapFunc(we.systemApisHandler.createApplicationRole, we.auth.systemAuth)).Methods("POST")
+		systemSubrouter.HandleFunc("/application-api-keys", we.wrapFunc(we.systemApisHandler.getApplicationAPIKeys, we.auth.systemAuth)).Methods("GET")
 
-	systemSubrouter.HandleFunc("/permissions", we.wrapFunc(we.systemApisHandler.createPermission, we.auth.systemAuth)).Methods("POST")
-	systemSubrouter.HandleFunc("/permissions", we.wrapFunc(we.systemApisHandler.updatePermission, we.auth.systemAuth)).Methods("PUT")
-	systemSubrouter.HandleFunc("/application-roles", we.wrapFunc(we.systemApisHandler.createApplicationRole, we.auth.systemAuth)).Methods("POST")
-	systemSubrouter.HandleFunc("/application-api-keys", we.wrapFunc(we.systemApisHandler.getApplicationAPIKeys, we.auth.systemAuth)).Methods("GET")
+		systemSubrouter.HandleFunc("/application/configs", we.wrapFunc(we.systemApisHandler.getApplicationConfigs, we.auth.systemAuth)).Methods("GET")
+		systemSubrouter.HandleFunc("/application/configs", we.wrapFunc(we.systemApisHandler.createApplicationConfig, we.auth.systemAuth)).Methods("POST")
+		systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.getApplicationConfig, we.auth.systemAuth)).Methods("GET")
+		systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.updateApplicationConfig, we.auth.systemAuth)).Methods("PUT")
+		systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.deleteApplicationConfig, we.auth.systemAuth)).Methods("DELETE")
 
-	systemSubrouter.HandleFunc("/application/configs", we.wrapFunc(we.systemApisHandler.getApplicationConfigs, we.auth.systemAuth)).Methods("GET")
-	systemSubrouter.HandleFunc("/application/configs", we.wrapFunc(we.systemApisHandler.createApplicationConfig, we.auth.systemAuth)).Methods("POST")
-	systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.getApplicationConfig, we.auth.systemAuth)).Methods("GET")
-	systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.updateApplicationConfig, we.auth.systemAuth)).Methods("PUT")
-	systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.deleteApplicationConfig, we.auth.systemAuth)).Methods("DELETE")
+		systemSubrouter.HandleFunc("/account/permissions", we.wrapFunc(we.systemApisHandler.grantAccountPermissions, we.auth.systemAuth)).Methods("PUT")
+		systemSubrouter.HandleFunc("/account/roles", we.wrapFunc(we.systemApisHandler.grantAccountRoles, we.auth.systemAuth)).Methods("PUT")
+		// systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.getMFATypes, we.auth.servicesUserAuth)).Methods("GET")
+		// systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.addMFAType, we.auth.servicesAuthenticatedAuth)).Methods("POST")
+		// systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.removeMFAType, we.auth.servicesAuthenticatedAuth)).Methods("DELETE")
 
-	systemSubrouter.HandleFunc("/account/permissions", we.wrapFunc(we.systemApisHandler.grantAccountPermissions, we.auth.systemAuth)).Methods("PUT")
-	systemSubrouter.HandleFunc("/account/roles", we.wrapFunc(we.systemApisHandler.grantAccountRoles, we.auth.systemAuth)).Methods("PUT")
-	// systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.getMFATypes, we.auth.servicesUserAuth)).Methods("GET")
-	// systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.addMFAType, we.auth.servicesAuthenticatedAuth)).Methods("POST")
-	// systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.removeMFAType, we.auth.servicesAuthenticatedAuth)).Methods("DELETE")
+		systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.getServiceRegistrations, we.auth.systemAuth)).Methods("GET")
+		systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.registerService, we.auth.systemAuth)).Methods("POST")
+		systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.updateServiceRegistration, we.auth.systemAuth)).Methods("PUT")
+		systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.deregisterService, we.auth.systemAuth)).Methods("DELETE")
 
-	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.getServiceRegistrations, we.auth.systemAuth)).Methods("GET")
-	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.registerService, we.auth.systemAuth)).Methods("POST")
-	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.updateServiceRegistration, we.auth.systemAuth)).Methods("PUT")
-	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.deregisterService, we.auth.systemAuth)).Methods("DELETE")
-
-	systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.getAPIKey, we.auth.systemAuth)).Methods("GET")
-	systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.createAPIKey, we.auth.systemAuth)).Methods("POST")
-	systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.updateAPIKey, we.auth.systemAuth)).Methods("PUT")
-	systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.deleteAPIKey, we.auth.systemAuth)).Methods("DELETE")
-
+		systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.getAPIKey, we.auth.systemAuth)).Methods("GET")
+		systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.createAPIKey, we.auth.systemAuth)).Methods("POST")
+		systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.updateAPIKey, we.auth.systemAuth)).Methods("PUT")
+		systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.deleteAPIKey, we.auth.systemAuth)).Methods("DELETE")
+	*/
 	///
 
 	err := http.ListenAndServe(":"+we.port, router)

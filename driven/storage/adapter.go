@@ -433,7 +433,7 @@ func (sa *Adapter) setCachedApplicationConfigs(applicationConfigs *[]model.Appli
 	sa.cachedApplicationConfigs.Store(currentKey, currentConfigList)
 }
 
-func (sa *Adapter) getCachedApplicationConfigByAppIDAndVersion(appTypeID string, orgID string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+func (sa *Adapter) getCachedApplicationConfigByAppTypeIDAndVersion(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
 	sa.applicationConfigsLock.RLock()
 	defer sa.applicationConfigsLock.RUnlock()
 
@@ -442,8 +442,8 @@ func (sa *Adapter) getCachedApplicationConfigByAppIDAndVersion(appTypeID string,
 
 	key := appTypeID
 	errArgs := &logutils.FieldArgs{"appTypeID": key, "version": versionNumbers.String()}
-	if orgID != "" {
-		key = fmt.Sprintf("%s_%s", appTypeID, orgID)
+	if orgID != nil {
+		key = fmt.Sprintf("%s_%s", appTypeID, *orgID)
 		errArgs = &logutils.FieldArgs{"appTypeID_orgID": key, "version": versionNumbers.String()}
 	}
 
@@ -1895,7 +1895,7 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 func (sa *Adapter) LoadAppConfigs() ([]model.ApplicationConfig, error) {
 	filter := bson.D{}
 	options := options.Find()
-	options.SetSort(bson.D{primitive.E{Key: "app_type.id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}) //sort by version numbers
+	options.SetSort(bson.D{primitive.E{Key: "app_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}) //sort by version numbers
 	var list []applicationConfig
 
 	err := sa.db.applicationConfigs.Find(filter, &list, options)
@@ -1930,20 +1930,12 @@ func (sa *Adapter) LoadAppConfigs() ([]model.ApplicationConfig, error) {
 
 //FindAppConfigs finds appconfigs
 func (sa *Adapter) FindAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
-	orgIDString := ""
-	if orgID != nil {
-		orgIDString = *orgID
-	}
-	return sa.getCachedApplicationConfigByAppIDAndVersion(appTypeID, orgIDString, versionNumbers)
+	return sa.getCachedApplicationConfigByAppTypeIDAndVersion(appTypeID, orgID, versionNumbers)
 }
 
 //FindAppConfigByVersion finds the most recent app config for the specified version
 func (sa *Adapter) FindAppConfigByVersion(appTypeID string, orgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	orgIDString := ""
-	if orgID != nil {
-		orgIDString = *orgID
-	}
-	configs, err := sa.getCachedApplicationConfigByAppIDAndVersion(appTypeID, orgIDString, &versionNumbers)
+	configs, err := sa.getCachedApplicationConfigByAppTypeIDAndVersion(appTypeID, orgID, &versionNumbers)
 	if err != nil {
 		return nil, err
 	}
@@ -1970,14 +1962,20 @@ func (sa *Adapter) InsertAppConfig(item model.ApplicationConfig) (*model.Applica
 }
 
 // UpdateAppConfig updates an appconfig
-func (sa *Adapter) UpdateAppConfig(ID string, appType model.ApplicationType, version model.Version, data map[string]interface{}) error {
+func (sa *Adapter) UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error {
 	now := time.Now()
 	//TODO - use pointers and update only what not nil
 	updatAppConfigFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	updateItem := bson.D{primitive.E{Key: "date_updated", Value: now}, primitive.E{Key: "app_type", Value: appType}, primitive.E{Key: "version", Value: version}}
+	updateItem := bson.D{primitive.E{Key: "date_updated", Value: now}, primitive.E{Key: "app_type_id", Value: appType.ID}, primitive.E{Key: "version", Value: version}}
 	// if version != "" {
 	// 	updateItem = append(updateItem, primitive.E{Key: "version.date_updated", Value: now}, primitive.E{Key: "version.version_numbers", Value: versionNumbers}, primitive.E{Key: "version.app_type", Value: appType})
 	// }
+	if appOrg != nil {
+		updateItem = append(updateItem, primitive.E{Key: "app_org_id", Value: appOrg.ID})
+	} else {
+		updateItem = append(updateItem, primitive.E{Key: "app_org_id", Value: nil})
+	}
+
 	if data != nil {
 		updateItem = append(updateItem, primitive.E{Key: "data", Value: data})
 	}

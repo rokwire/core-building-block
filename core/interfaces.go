@@ -64,7 +64,7 @@ type System interface {
 	SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	SysGetAppConfig(id string) (*model.ApplicationConfig, error)
 	SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
-	SysUpdateAppConfig(id string, appTypeID string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
+	SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
 	SysDeleteAppConfig(id string) error
 
 	SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
@@ -129,8 +129,8 @@ type Storage interface {
 	FindAppConfigs(appTypeIdentifier string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	FindAppConfigByVersion(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
 	FindAppConfigByID(ID string) (*model.ApplicationConfig, error)
-	InsertAppConfig(appConfig model.ApplicationConfig) (*model.ApplicationConfig, error)
-	UpdateAppConfig(ID string, appType model.ApplicationType, version model.Version, data map[string]interface{}) error
+	InsertAppConfig(item model.ApplicationConfig) (*model.ApplicationConfig, error)
+	UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error
 	DeleteAppConfig(ID string) error
 }
 

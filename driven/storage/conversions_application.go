@@ -116,7 +116,7 @@ func versionsFromStorage(itemList []version, appType model.ApplicationType) []mo
 }
 
 func versionToStorage(item model.Version) version {
-	return version{ID: item.ID, VersionNumbers: item.VersionNumbers, ApplicationType: applicationTypeToStorage(item.ApplicationType), DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return version{ID: item.ID, VersionNumbers: item.VersionNumbers, AppTypeID: item.ApplicationType.ID, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func versionsToStorage(itemList []model.Version) []version {

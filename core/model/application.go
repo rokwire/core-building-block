@@ -2,7 +2,8 @@ package model
 
 import (
 	"fmt"
-	"regexp"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/rokwire/logging-library-go/logutils"
@@ -253,16 +254,16 @@ type Version struct {
 
 //VersionNumbers represents mobile app config version numbers
 type VersionNumbers struct {
-	Major string `json:"major" bson:"major"`
-	Minor string `json:"minor" bson:"minor"`
-	Patch string `json:"patch" bson:"patch"`
+	Major int `json:"major" bson:"major"`
+	Minor int `json:"minor" bson:"minor"`
+	Patch int `json:"patch" bson:"patch"`
 }
 
 func (v *VersionNumbers) String() string {
 	if v == nil {
 		return ""
 	}
-	return fmt.Sprintf("%s.%s.%s", v.Major, v.Minor, v.Patch)
+	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
 }
 
 // LessThanOrEqualTo evaluates if v1 is less than or equal to v
@@ -286,17 +287,23 @@ func (v VersionNumbers) LessThanOrEqualTo(v1 *VersionNumbers) bool {
 
 //VersionNumbersFromString parses a string into a VersionNumbers struct. Returns nil if invalid format.
 func VersionNumbersFromString(version string) *VersionNumbers {
-	validVersionRegex := regexp.MustCompile(`^(?P<major>\d+).(?P<minor>\d+).(?P<patch>\d+)$`)
-	if !validVersionRegex.MatchString(version) {
+	parts := strings.Split(version, ".")
+	if len(parts) != 3 {
 		return nil
 	}
 
-	n1 := validVersionRegex.SubexpNames()
-	r2 := validVersionRegex.FindAllStringSubmatch(version, -1)[0]
-	md := map[string]string{}
-	for i, n := range r2 {
-		md[n1[i]] = n
+	major, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return nil
+	}
+	minor, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return nil
+	}
+	patch, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return nil
 	}
 
-	return &VersionNumbers{Major: md["major"], Minor: md["minor"], Patch: md["patch"]}
+	return &VersionNumbers{Major: major, Minor: minor, Patch: patch}
 }
