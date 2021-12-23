@@ -25,6 +25,8 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
+
+	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
 }
 
@@ -71,6 +73,7 @@ type Storage interface {
 	PerformTransaction(func(context storage.TransactionContext) error) error
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
+	FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	FindDeletedAccounts() ([]model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 	DeleteAccount(context storage.TransactionContext, id string) error

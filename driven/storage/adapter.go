@@ -654,6 +654,34 @@ func (sa *Adapter) FindAccount(appOrgID string, authTypeID string, accountAuthTy
 	return &modelAccount, nil
 }
 
+//FindAccounts finds accounts
+func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
+	//find app org id
+	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error getting cached application organization", "", nil, err)
+	}
+
+	//find the accounts
+	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrg.ID}}
+
+	if accountID != nil {
+		filter = append(filter, primitive.E{Key: "_id", Value: *accountID})
+	}
+	if authTypeIdentifier != nil {
+		filter = append(filter, primitive.E{Key: "auth_types.identifier", Value: *authTypeIdentifier})
+	}
+
+	var list []account
+	err = sa.db.accounts.Find(filter, &list, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	accounts := accountsFromStorage(list, *appOrg)
+	return accounts, nil
+}
+
 //FindAccountByID finds an account by id
 func (sa *Adapter) FindAccountByID(context TransactionContext, id string) (*model.Account, error) {
 	return sa.findAccount(context, "_id", id)

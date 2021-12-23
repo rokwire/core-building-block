@@ -27,6 +27,18 @@ func accountFromStorage(item account, appOrg model.ApplicationOrganization) mode
 		Devices: devices, Deleted: deleted, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
+func accountsFromStorage(items []account, appOrg model.ApplicationOrganization) []model.Account {
+	if len(items) == 0 {
+		return make([]model.Account, 0)
+	}
+
+	res := make([]model.Account, len(items))
+	for i, item := range items {
+		res[i] = accountFromStorage(item, appOrg)
+	}
+	return res
+}
+
 func accountToStorage(item *model.Account) *account {
 	id := item.ID
 	appOrgID := item.AppOrg.ID
