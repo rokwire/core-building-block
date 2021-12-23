@@ -603,6 +603,32 @@ func (h SystemApisHandler) removeMFAType(l *logs.Log, r *http.Request, claims *t
 	return l.HttpResponseSuccess()
 }
 
+//createOrganization creates organization
+func (h SystemApisHandler) createAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqCreateAuthTypeRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
+	}
+
+	code := requestData.Code
+	description := requestData.Description
+	isExternal := requestData.IsExternal
+
+	_, err = h.coreAPIs.System.SysCreateAuthTypes(*code, *description, *isExternal)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAuthType, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 //NewSystemApisHandler creates new system Handler instance
 func NewSystemApisHandler(coreAPIs *core.APIs) SystemApisHandler {
 	return SystemApisHandler{coreAPIs: coreAPIs}

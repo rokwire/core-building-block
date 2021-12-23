@@ -1874,6 +1874,17 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 	return &device, nil
 }
 
+//InsertAuthType inserts an organization
+func (sa *Adapter) InsertAuthType(authType model.AuthType) (*model.AuthType, error) {
+	at := authTypeToStorage(&authType)
+	_, err := sa.db.authTypes.InsertOne(at)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, nil, err)
+	}
+
+	return &authType, nil
+}
+
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records

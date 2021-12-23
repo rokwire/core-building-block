@@ -574,6 +574,13 @@ type ReqCreateApplicationRequest struct {
 	RequiresOwnUsers        bool   `json:"requires_own_users"`
 }
 
+// ReqCreateAuthTypeRequest defines model for _req_create_Auth_Type_Request.
+type ReqCreateAuthTypeRequest struct {
+	Code        *string `json:"code,omitempty"`
+	Description *string `json:"description,omitempty"`
+	IsExternal  *bool   `json:"is_external,omitempty"`
+}
+
 // ReqCredentialForgotCompleteRequest defines model for _req_credential_forgot_complete_Request.
 type ReqCredentialForgotCompleteRequest struct {
 	CredentialId string       `json:"credential_id"`
@@ -1055,6 +1062,9 @@ type PostSystemApplicationRolesJSONBody ReqApplicationRolesRequest
 // PostSystemApplicationsJSONBody defines parameters for PostSystemApplications.
 type PostSystemApplicationsJSONBody ReqCreateApplicationRequest
 
+// PostSystemAuthTypesJSONBody defines parameters for PostSystemAuthTypes.
+type PostSystemAuthTypesJSONBody ReqCreateAuthTypeRequest
+
 // PostSystemGlobalConfigJSONBody defines parameters for PostSystemGlobalConfig.
 type PostSystemGlobalConfigJSONBody GlobalConfig
 
@@ -1177,6 +1187,9 @@ type PostSystemApplicationRolesJSONRequestBody PostSystemApplicationRolesJSONBod
 
 // PostSystemApplicationsJSONRequestBody defines body for PostSystemApplications for application/json ContentType.
 type PostSystemApplicationsJSONRequestBody PostSystemApplicationsJSONBody
+
+// PostSystemAuthTypesJSONRequestBody defines body for PostSystemAuthTypes for application/json ContentType.
+type PostSystemAuthTypesJSONRequestBody PostSystemAuthTypesJSONBody
 
 // PostSystemGlobalConfigJSONRequestBody defines body for PostSystemGlobalConfig for application/json ContentType.
 type PostSystemGlobalConfigJSONRequestBody PostSystemGlobalConfigJSONBody

@@ -246,3 +246,15 @@ func (app *application) sysGrantAccountRoles(accountID string, appOrgID string, 
 	}
 	return nil
 }
+
+func (app *application) sysCreateAuthTypes(code string, description string, isExternal bool) (*model.AuthType, error) {
+
+	authTypeID, _ := uuid.NewUUID()
+	authType := model.AuthType{ID: authTypeID.String(), Code: code, Description: description, IsExternal: isExternal}
+
+	insertedAuthType, err := app.storage.InsertAuthType(authType)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
+	}
+	return insertedAuthType, nil
+}

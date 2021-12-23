@@ -211,4 +211,8 @@ func (s *systemImpl) SysGrantAccountRoles(accountID string, appID string, roleID
 	return s.app.sysGrantAccountRoles(accountID, appID, roleIDs)
 }
 
+func (s *systemImpl) SysCreateAuthTypes(code string, description string, isExternal bool) (*model.AuthType, error) {
+	return s.app.sysCreateAuthTypes(code, description, isExternal)
+}
+
 ///

@@ -1,6 +1,7 @@
 type: object
 properties:
   id:
+    readOnly: true
     type: string
   code:
     type: string
