@@ -32,7 +32,8 @@ OrganizationFields:
 OrganizationConfig:
   $ref: "./application/OrganizationConfig.yaml"
 OrganizationConfigFields:
-  $ref: "./application/OrganizationConfigFields.yaml"
+  $ref: "./application/OrganizationConfigFields.yaml" 
+  
 
 # auth
 LoginSession:
@@ -218,3 +219,7 @@ _req_account-permissions_Request:
 ### account roles API
 _req_account-roles_Request:
   $ref: "./apis/system/account/roles/request/Request.yaml"
+
+### auth_type API
+_req_create_Auth_Type_Request:
+  $ref: "./apis/system/create-auth-type/request/Request.yaml"

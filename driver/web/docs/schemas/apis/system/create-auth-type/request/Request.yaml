@@ -1,0 +1,10 @@
+type: object
+properties:
+  id:
+    type: string
+  code:
+    type: string
+  description:
+    type: string
+  is_external:
+    type: boolean
