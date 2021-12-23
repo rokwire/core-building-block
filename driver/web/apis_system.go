@@ -603,7 +603,7 @@ func (h SystemApisHandler) removeMFAType(l *logs.Log, r *http.Request, claims *t
 	return l.HttpResponseSuccess()
 }
 
-//createOrganization creates organization
+//createAuthTypes creates auth-type
 func (h SystemApisHandler) createAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 
 	data, err := ioutil.ReadAll(r.Body)
@@ -627,6 +627,22 @@ func (h SystemApisHandler) createAuthTypes(l *logs.Log, r *http.Request, claims 
 	}
 
 	return l.HttpResponseSuccess()
+}
+
+//getAuthTypes gets auth-types
+func (h SystemApisHandler) getAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	authTypes, err := h.coreAPIs.System.SysGetAuthTypes()
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+
+	response := authTypesToDef(authTypes)
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeOrganization, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
 }
 
 //NewSystemApisHandler creates new system Handler instance

@@ -3112,6 +3112,64 @@
             "description": "Internal error"
           }
         }
+      },
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Get auth-types",
+        "description": "Gets auth-types\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "readOnly": true,
+                        "type": "string"
+                      },
+                      "code": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "is_external": {
+                        "type": "boolean"
+                      },
+                      "ignore_mfa": {
+                        "type": "boolean"
+                      },
+                      "params": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
       }
     },
     "/version": {

@@ -215,4 +215,8 @@ func (s *systemImpl) SysCreateAuthTypes(code string, description string, isExter
 	return s.app.sysCreateAuthTypes(code, description, isExternal)
 }
 
+func (s *systemImpl) SysGetAuthTypes() ([]model.AuthType, error) {
+	return s.app.sysGetAuthTypes()
+}
+
 ///

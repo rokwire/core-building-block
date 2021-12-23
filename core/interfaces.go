@@ -63,6 +63,7 @@ type System interface {
 	SysGrantAccountRoles(accountID string, appID string, roleIDs []string) error
 
 	SysCreateAuthTypes(code string, description string, isExternal bool) (*model.AuthType, error)
+	SysGetAuthTypes() ([]model.AuthType, error)
 }
 
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
@@ -117,6 +118,7 @@ type Storage interface {
 	FindApplications() ([]model.Application, error)
 
 	InsertAuthType(authType model.AuthType) (*model.AuthType, error)
+	LoadAuthTypes() ([]model.AuthType, error)
 }
 
 //StorageListener listenes for change data storage events

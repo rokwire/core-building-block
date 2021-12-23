@@ -258,3 +258,12 @@ func (app *application) sysCreateAuthTypes(code string, description string, isEx
 	}
 	return insertedAuthType, nil
 }
+
+func (app *application) sysGetAuthTypes() ([]model.AuthType, error) {
+	getAuthTypes, err := app.storage.LoadAuthTypes()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAuthType, nil, err)
+	}
+
+	return getAuthTypes, nil
+}

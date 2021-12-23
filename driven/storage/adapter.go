@@ -1874,7 +1874,7 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 	return &device, nil
 }
 
-//InsertAuthType inserts an organization
+//InsertAuthType inserts an auth type
 func (sa *Adapter) InsertAuthType(authType model.AuthType) (*model.AuthType, error) {
 	at := authTypeToStorage(&authType)
 	_, err := sa.db.authTypes.InsertOne(at)
