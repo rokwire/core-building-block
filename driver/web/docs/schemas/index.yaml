@@ -100,6 +100,10 @@ _req_shared_Refresh:
   $ref: "./apis/shared/requests/refresh/Request.yaml"
 _req_shared_Mfa:
   $ref: "./apis/shared/requests/mfa/Request.yaml"
+_req_shared_AccountPermissions:
+  $ref: "./apis/shared/requests/account/permissions/Request.yaml"
+_req_shared-AccountRoles:
+  $ref: "./apis/shared/requests/account/roles/Request.yaml"
 
 _req_shared_CredsEmail:
   $ref: "./apis/shared/requests/CredsEmail.yaml"
@@ -210,11 +214,3 @@ _req_permissions_Request:
 ### application-roles API
 _req_application-roles_Request:
   $ref: "./apis/system/application-roles/request/Request.yaml"
-
-### account permissions API
-_req_account-permissions_Request:
-  $ref: "./apis/system/account/permissions/request/Request.yaml"
-
-### account roles API
-_req_account-roles_Request:
-  $ref: "./apis/system/account/roles/request/Request.yaml"

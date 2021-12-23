@@ -14,7 +14,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/system/account/permissions/request/Request.yaml"
+          $ref: "../../../schemas/apis/shared/requests/account/permissions/Request.yaml"
     required: true
   responses:
     200:

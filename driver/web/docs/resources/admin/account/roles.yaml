@@ -1,7 +1,6 @@
 put:
-  deprecated: true
   tags:
-  - System
+  - Admin
   summary: Grant account roles
   description: |
     Grant account roles

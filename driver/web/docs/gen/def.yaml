@@ -2159,7 +2159,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_account-permissions_Request'
+              $ref: '#/components/schemas/_req_shared_AccountPermissions'
         required: true
       responses:
         '200':
@@ -2192,7 +2192,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_account-roles_Request'
+              $ref: '#/components/schemas/_req_shared-AccountRoles'
         required: true
       responses:
         '200':
@@ -3129,6 +3129,33 @@ components:
             - totp
         code:
           type: string
+    _req_shared_AccountPermissions:
+      required:
+        - account_id
+        - permissions
+      type: object
+      properties:
+        account_id:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+    _req_shared-AccountRoles:
+      required:
+        - account_id
+        - app_id
+        - role_ids
+      type: object
+      properties:
+        account_id:
+          type: string
+        app_id:
+          type: string
+        role_ids:
+          type: array
+          items:
+            type: string
     _req_shared_CredsEmail:
       required:
         - email
@@ -3803,33 +3830,6 @@ components:
         description:
           type: string
         permissions:
-          type: array
-          items:
-            type: string
-    _req_account-permissions_Request:
-      required:
-        - account_id
-        - permissions
-      type: object
-      properties:
-        account_id:
-          type: string
-        permissions:
-          type: array
-          items:
-            type: string
-    _req_account-roles_Request:
-      required:
-        - account_id
-        - app_id
-        - role_ids
-      type: object
-      properties:
-        account_id:
-          type: string
-        app_id:
-          type: string
-        role_ids:
           type: array
           items:
             type: string

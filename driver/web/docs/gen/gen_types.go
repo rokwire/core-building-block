@@ -506,19 +506,6 @@ type ReqAccountExistsRequest struct {
 // ReqAccountExistsRequestAuthType defines model for ReqAccountExistsRequest.AuthType.
 type ReqAccountExistsRequestAuthType string
 
-// ReqAccountPermissionsRequest defines model for _req_account-permissions_Request.
-type ReqAccountPermissionsRequest struct {
-	AccountId   string   `json:"account_id"`
-	Permissions []string `json:"permissions"`
-}
-
-// ReqAccountRolesRequest defines model for _req_account-roles_Request.
-type ReqAccountRolesRequest struct {
-	AccountId string   `json:"account_id"`
-	AppId     string   `json:"app_id"`
-	RoleIds   []string `json:"role_ids"`
-}
-
 // ReqAccountAuthTypeLinkRequest defines model for _req_account_auth-type_link_Request.
 type ReqAccountAuthTypeLinkRequest struct {
 	AppTypeIdentifier string                                `json:"app_type_identifier"`
@@ -629,6 +616,19 @@ type ReqPermissionsRequest struct {
 	Assigners *[]string `json:"assigners,omitempty"`
 	Name      string    `json:"name"`
 	ServiceId *string   `json:"service_id,omitempty"`
+}
+
+// ReqSharedAccountRoles defines model for _req_shared-AccountRoles.
+type ReqSharedAccountRoles struct {
+	AccountId string   `json:"account_id"`
+	AppId     string   `json:"app_id"`
+	RoleIds   []string `json:"role_ids"`
+}
+
+// ReqSharedAccountPermissions defines model for _req_shared_AccountPermissions.
+type ReqSharedAccountPermissions struct {
+	AccountId   string   `json:"account_id"`
+	Permissions []string `json:"permissions"`
 }
 
 // Auth login creds for auth_type="anonymous"
@@ -1037,10 +1037,10 @@ type PostSystemAccountMfaParams struct {
 }
 
 // PutSystemAccountPermissionsJSONBody defines parameters for PutSystemAccountPermissions.
-type PutSystemAccountPermissionsJSONBody ReqAccountPermissionsRequest
+type PutSystemAccountPermissionsJSONBody ReqSharedAccountPermissions
 
 // PutSystemAccountRolesJSONBody defines parameters for PutSystemAccountRoles.
-type PutSystemAccountRolesJSONBody ReqAccountRolesRequest
+type PutSystemAccountRolesJSONBody ReqSharedAccountRoles
 
 // DeleteSystemApiKeysParams defines parameters for DeleteSystemApiKeys.
 type DeleteSystemApiKeysParams struct {
