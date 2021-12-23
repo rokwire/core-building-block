@@ -505,13 +505,13 @@ func (_m *Storage) InsertAccountRoles(accountID string, appOrgID string, roles [
 	return r0
 }
 
-// InsertAppConfig provides a mock function with given fields: appConfig
-func (_m *Storage) InsertAppConfig(appConfig model.ApplicationConfig) (*model.ApplicationConfig, error) {
-	ret := _m.Called(appConfig)
+// InsertAppConfig provides a mock function with given fields: item
+func (_m *Storage) InsertAppConfig(item model.ApplicationConfig) (*model.ApplicationConfig, error) {
+	ret := _m.Called(item)
 
 	var r0 *model.ApplicationConfig
 	if rf, ok := ret.Get(0).(func(model.ApplicationConfig) *model.ApplicationConfig); ok {
-		r0 = rf(appConfig)
+		r0 = rf(item)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.ApplicationConfig)
@@ -520,7 +520,7 @@ func (_m *Storage) InsertAppConfig(appConfig model.ApplicationConfig) (*model.Ap
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(model.ApplicationConfig) error); ok {
-		r1 = rf(appConfig)
+		r1 = rf(item)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -709,13 +709,13 @@ func (_m *Storage) UpdateAccountPreferences(accountID string, preferences map[st
 	return r0
 }
 
-// UpdateAppConfig provides a mock function with given fields: ID, appType, version, data
-func (_m *Storage) UpdateAppConfig(ID string, appType model.ApplicationType, version model.Version, data map[string]interface{}) error {
-	ret := _m.Called(ID, appType, version, data)
+// UpdateAppConfig provides a mock function with given fields: ID, appType, appOrg, version, data
+func (_m *Storage) UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error {
+	ret := _m.Called(ID, appType, appOrg, version, data)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, model.ApplicationType, model.Version, map[string]interface{}) error); ok {
-		r0 = rf(ID, appType, version, data)
+	if rf, ok := ret.Get(0).(func(string, model.ApplicationType, *model.ApplicationOrganization, model.Version, map[string]interface{}) error); ok {
+		r0 = rf(ID, appType, appOrg, version, data)
 	} else {
 		r0 = ret.Error(0)
 	}
