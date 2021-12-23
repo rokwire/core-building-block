@@ -219,4 +219,8 @@ func (s *systemImpl) SysGetAuthTypes() ([]model.AuthType, error) {
 	return s.app.sysGetAuthTypes()
 }
 
+func (s *systemImpl) SysUpdateAuthTypes(ID string, code string, description string) error {
+	return s.app.SysUpdateAuthTypes(ID, code, description)
+}
+
 ///

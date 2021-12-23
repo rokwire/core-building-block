@@ -645,6 +645,35 @@ func (h SystemApisHandler) getAuthTypes(l *logs.Log, r *http.Request, claims *to
 	return l.HttpResponseSuccessJSON(data)
 }
 
+//updateAuthTypes updates auth type
+func (h SystemApisHandler) updateAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+	var requestData Def.ReqUpdateAuthTypeRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
+	}
+
+	code := requestData.Code
+	description := requestData.Description
+
+	err = h.coreAPIs.System.SysUpdateAuthTypes(ID, *code, *description)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAuthType, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 //NewSystemApisHandler creates new system Handler instance
 func NewSystemApisHandler(coreAPIs *core.APIs) SystemApisHandler {
 	return SystemApisHandler{coreAPIs: coreAPIs}

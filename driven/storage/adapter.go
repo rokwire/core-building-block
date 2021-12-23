@@ -1885,6 +1885,30 @@ func (sa *Adapter) InsertAuthType(authType model.AuthType) (*model.AuthType, err
 	return &authType, nil
 }
 
+//UpdateAuthTypes updates an auth type
+func (sa *Adapter) UpdateAuthTypes(ID string, code string, description string) error {
+
+	now := time.Now()
+	updateAuthTypeFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	updateAuthType := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "code", Value: code},
+			primitive.E{Key: "description", Value: description},
+			primitive.E{Key: "date_updated", Value: now},
+		}},
+	}
+
+	result, err := sa.db.authTypes.UpdateOne(updateAuthTypeFilter, updateAuthType, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthType, &logutils.FieldArgs{"id": ID}, err)
+	}
+	if result.MatchedCount == 0 {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeAuthType, &logutils.FieldArgs{"id": ID}, err)
+	}
+
+	return nil
+}
+
 // ============================== ServiceRegs ==============================
 
 //FindServiceRegs fetches the requested service registration records

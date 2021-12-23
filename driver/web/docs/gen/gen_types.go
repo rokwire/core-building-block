@@ -775,6 +775,21 @@ type ReqSharedRefresh struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+// ReqUpdateAuthTypeRequest defines model for _req_update_Auth_Type_Request.
+type ReqUpdateAuthTypeRequest struct {
+	Code        *string                          `json:"code,omitempty"`
+	Description *string                          `json:"description,omitempty"`
+	Id          *string                          `json:"id,omitempty"`
+	IgnoreMfa   *bool                            `json:"ignore_mfa,omitempty"`
+	IsExternal  *bool                            `json:"is_external,omitempty"`
+	Params      *ReqUpdateAuthTypeRequest_Params `json:"params,omitempty"`
+}
+
+// ReqUpdateAuthTypeRequest_Params defines model for ReqUpdateAuthTypeRequest.Params.
+type ReqUpdateAuthTypeRequest_Params struct {
+	AdditionalProperties map[string]interface{} `json:"-"`
+}
+
 // ReqUpdateOrganizationRequest defines model for _req_update_Organization_Request.
 type ReqUpdateOrganizationRequest struct {
 	Config *OrganizationConfigFields        `json:"config,omitempty"`
@@ -1065,6 +1080,9 @@ type PostSystemApplicationsJSONBody ReqCreateApplicationRequest
 // PostSystemAuthTypesJSONBody defines parameters for PostSystemAuthTypes.
 type PostSystemAuthTypesJSONBody ReqCreateAuthTypeRequest
 
+// PutSystemAuthTypesIdJSONBody defines parameters for PutSystemAuthTypesId.
+type PutSystemAuthTypesIdJSONBody ReqUpdateAuthTypeRequest
+
 // PostSystemGlobalConfigJSONBody defines parameters for PostSystemGlobalConfig.
 type PostSystemGlobalConfigJSONBody GlobalConfig
 
@@ -1191,6 +1209,9 @@ type PostSystemApplicationsJSONRequestBody PostSystemApplicationsJSONBody
 // PostSystemAuthTypesJSONRequestBody defines body for PostSystemAuthTypes for application/json ContentType.
 type PostSystemAuthTypesJSONRequestBody PostSystemAuthTypesJSONBody
 
+// PutSystemAuthTypesIdJSONRequestBody defines body for PutSystemAuthTypesId for application/json ContentType.
+type PutSystemAuthTypesIdJSONRequestBody PutSystemAuthTypesIdJSONBody
+
 // PostSystemGlobalConfigJSONRequestBody defines body for PostSystemGlobalConfig for application/json ContentType.
 type PostSystemGlobalConfigJSONRequestBody PostSystemGlobalConfigJSONBody
 
@@ -1309,6 +1330,59 @@ func (a *AuthTypeFields_Params) UnmarshalJSON(b []byte) error {
 
 // Override default JSON handling for AuthTypeFields_Params to handle AdditionalProperties
 func (a AuthTypeFields_Params) MarshalJSON() ([]byte, error) {
+	var err error
+	object := make(map[string]json.RawMessage)
+
+	for fieldName, field := range a.AdditionalProperties {
+		object[fieldName], err = json.Marshal(field)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("error marshaling '%s'", fieldName))
+		}
+	}
+	return json.Marshal(object)
+}
+
+// Getter for additional properties for ReqUpdateAuthTypeRequest_Params. Returns the specified
+// element and whether it was found
+func (a ReqUpdateAuthTypeRequest_Params) Get(fieldName string) (value interface{}, found bool) {
+	if a.AdditionalProperties != nil {
+		value, found = a.AdditionalProperties[fieldName]
+	}
+	return
+}
+
+// Setter for additional properties for ReqUpdateAuthTypeRequest_Params
+func (a *ReqUpdateAuthTypeRequest_Params) Set(fieldName string, value interface{}) {
+	if a.AdditionalProperties == nil {
+		a.AdditionalProperties = make(map[string]interface{})
+	}
+	a.AdditionalProperties[fieldName] = value
+}
+
+// Override default JSON handling for ReqUpdateAuthTypeRequest_Params to handle AdditionalProperties
+func (a *ReqUpdateAuthTypeRequest_Params) UnmarshalJSON(b []byte) error {
+	object := make(map[string]json.RawMessage)
+	err := json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if len(object) != 0 {
+		a.AdditionalProperties = make(map[string]interface{})
+		for fieldName, fieldBuf := range object {
+			var fieldVal interface{}
+			err := json.Unmarshal(fieldBuf, &fieldVal)
+			if err != nil {
+				return errors.Wrap(err, fmt.Sprintf("error unmarshaling field %s", fieldName))
+			}
+			a.AdditionalProperties[fieldName] = fieldVal
+		}
+	}
+	return nil
+}
+
+// Override default JSON handling for ReqUpdateAuthTypeRequest_Params to handle AdditionalProperties
+func (a ReqUpdateAuthTypeRequest_Params) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 

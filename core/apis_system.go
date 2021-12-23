@@ -267,3 +267,13 @@ func (app *application) sysGetAuthTypes() ([]model.AuthType, error) {
 
 	return getAuthTypes, nil
 }
+
+func (app *application) SysUpdateAuthTypes(ID string, code string, description string) error {
+	err := app.storage.UpdateAuthTypes(ID, code, description)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthType, nil, err)
+	}
+
+	return err
+
+}

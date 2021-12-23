@@ -223,3 +223,5 @@ _req_account-roles_Request:
 ### auth_type API
 _req_create_Auth_Type_Request:
   $ref: "./apis/system/create-auth-type/request/Request.yaml"
+_req_update_Auth_Type_Request:
+  $ref: "./apis/system/update-auth-types/request/Request.yaml"
