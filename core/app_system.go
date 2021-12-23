@@ -196,7 +196,7 @@ func (app *application) sysCreateAppOrgRole(name string, appOrgID string, descri
 	return &role, nil
 }
 
-func (app *application) sysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
+func (app *application) sysGrantAccountPermissions(accountID string, appOrgID string, permissionNames []string, assignerPermissions []string) error {
 	if assignerPermissions == nil {
 		return errors.New("no permissions from admin assigner")
 	}
@@ -224,7 +224,7 @@ func (app *application) sysGrantAccountPermissions(accountID string, permissionN
 		return errors.Newf("Assigner is not authorized to assign permissions for names: %v", permissionNames)
 	}
 
-	err = app.storage.InsertAccountPermissions(accountID, authorizedPermissions)
+	err = app.storage.InsertAccountPermissions(accountID, appOrgID, authorizedPermissions)
 	if err != nil {
 		return err
 	}

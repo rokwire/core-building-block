@@ -267,7 +267,7 @@ func (h AdminApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, 
 	}
 
 	assignerPermissions := strings.Split(claims.Permissions, ",")
-	err = h.coreAPIs.Administration.AdmGrantAccountPermissions(requestData.AccountId, requestData.Permissions, assignerPermissions)
+	err = h.coreAPIs.Administration.AdmGrantAccountPermissions(requestData.AccountId, requestData.AppOrgId, requestData.Permissions, assignerPermissions)
 	if err != nil {
 		return l.HttpResponseErrorAction(actionGrant, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
@@ -288,7 +288,7 @@ func (h AdminApisHandler) grantAccountRoles(l *logs.Log, r *http.Request, claims
 	}
 
 	assignerPermissions := strings.Split(claims.Permissions, ",")
-	err = h.coreAPIs.Administration.AdmGrantAccountRoles(requestData.AccountId, requestData.AppId, requestData.RoleIds, assignerPermissions)
+	err = h.coreAPIs.Administration.AdmGrantAccountRoles(requestData.AccountId, requestData.AppOrgId, requestData.RoleIds, assignerPermissions)
 	if err != nil {
 		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}

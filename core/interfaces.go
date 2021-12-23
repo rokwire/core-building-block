@@ -27,8 +27,8 @@ type Administration interface {
 
 	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
-	AdmGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
-	AdmGrantAccountRoles(accountID string, appID string, roleIDs []string, assignerPermissions []string) error
+	AdmGrantAccountPermissions(accountID string, appOrgID string, permissionNames []string, assignerPermissions []string) error
+	AdmGrantAccountRoles(accountID string, appOrgID string, roleIDs []string, assignerPermissions []string) error
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -61,8 +61,8 @@ type System interface {
 
 	SysCreateAppOrgRole(name string, appID string, description string, permissionNames []string) (*model.AppOrgRole, error)
 
-	SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
-	SysGrantAccountRoles(accountID string, appID string, roleIDs []string, assignerPermissions []string) error
+	SysGrantAccountPermissions(accountID string, appOrgID string, permissionNames []string, assignerPermissions []string) error
+	SysGrantAccountRoles(accountID string, appOrgID string, roleIDs []string, assignerPermissions []string) error
 }
 
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
@@ -76,7 +76,7 @@ type Storage interface {
 	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error
-	InsertAccountPermissions(accountID string, permissions []model.Permission) error
+	InsertAccountPermissions(accountID string, appOrgID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
 
 	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)

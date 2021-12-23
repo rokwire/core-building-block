@@ -1,9 +1,12 @@
 required:
   - account_id
+  - app_org_id
   - permissions
 type: object
 properties:
   account_id:
+    type: string
+  app_org_id:
     type: string
   permissions:
     type: array

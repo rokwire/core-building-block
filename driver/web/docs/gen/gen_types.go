@@ -621,13 +621,14 @@ type ReqPermissionsRequest struct {
 // ReqSharedAccountRoles defines model for _req_shared-AccountRoles.
 type ReqSharedAccountRoles struct {
 	AccountId string   `json:"account_id"`
-	AppId     string   `json:"app_id"`
+	AppOrgId  string   `json:"app_org_id"`
 	RoleIds   []string `json:"role_ids"`
 }
 
 // ReqSharedAccountPermissions defines model for _req_shared_AccountPermissions.
 type ReqSharedAccountPermissions struct {
 	AccountId   string   `json:"account_id"`
+	AppOrgId    string   `json:"app_org_id"`
 	Permissions []string `json:"permissions"`
 }
 
