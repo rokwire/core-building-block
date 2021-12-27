@@ -618,6 +618,13 @@ type ReqPermissionsRequest struct {
 	ServiceId *string   `json:"service_id,omitempty"`
 }
 
+// ReqSharedAccountGroups defines model for _req_shared-AccountGroups.
+type ReqSharedAccountGroups struct {
+	AccountId string   `json:"account_id"`
+	AppOrgId  string   `json:"app_org_id"`
+	GroupIds  []string `json:"group_ids"`
+}
+
 // ReqSharedAccountRoles defines model for _req_shared-AccountRoles.
 type ReqSharedAccountRoles struct {
 	AccountId string   `json:"account_id"`
@@ -891,6 +898,9 @@ type ResSharedRokwireToken struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResSharedRokwireTokenTokenType string
 
+// PutAdminAccountGroupsJSONBody defines parameters for PutAdminAccountGroups.
+type PutAdminAccountGroupsJSONBody ReqSharedAccountGroups
+
 // DeleteAdminAccountMfaParams defines parameters for DeleteAdminAccountMfa.
 type DeleteAdminAccountMfaParams struct {
 
@@ -904,6 +914,12 @@ type PostAdminAccountMfaParams struct {
 	// MFA type
 	Type string `json:"type"`
 }
+
+// PutAdminAccountPermissionsJSONBody defines parameters for PutAdminAccountPermissions.
+type PutAdminAccountPermissionsJSONBody ReqSharedAccountPermissions
+
+// PutAdminAccountRolesJSONBody defines parameters for PutAdminAccountRoles.
+type PutAdminAccountRolesJSONBody ReqSharedAccountRoles
 
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {
@@ -1120,6 +1136,15 @@ type GetTpsServiceRegsParams struct {
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
+
+// PutAdminAccountGroupsJSONRequestBody defines body for PutAdminAccountGroups for application/json ContentType.
+type PutAdminAccountGroupsJSONRequestBody PutAdminAccountGroupsJSONBody
+
+// PutAdminAccountPermissionsJSONRequestBody defines body for PutAdminAccountPermissions for application/json ContentType.
+type PutAdminAccountPermissionsJSONRequestBody PutAdminAccountPermissionsJSONBody
+
+// PutAdminAccountRolesJSONRequestBody defines body for PutAdminAccountRoles for application/json ContentType.
+type PutAdminAccountRolesJSONRequestBody PutAdminAccountRolesJSONBody
 
 // PostAdminAuthLoginJSONRequestBody defines body for PostAdminAuthLogin for application/json ContentType.
 type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody

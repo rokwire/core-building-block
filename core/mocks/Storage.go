@@ -187,6 +187,29 @@ func (_m *Storage) FindAccounts(appID string, orgID string, accountID *string, a
 	return r0, r1
 }
 
+// FindAppOrgGroups provides a mock function with given fields: ids, appOrgID
+func (_m *Storage) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
+	ret := _m.Called(ids, appOrgID)
+
+	var r0 []model.AppOrgGroup
+	if rf, ok := ret.Get(0).(func([]string, string) []model.AppOrgGroup); ok {
+		r0 = rf(ids, appOrgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.AppOrgGroup)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func([]string, string) error); ok {
+		r1 = rf(ids, appOrgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindAppOrgRoles provides a mock function with given fields: ids, appOrgID
 func (_m *Storage) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error) {
 	ret := _m.Called(ids, appOrgID)
@@ -346,6 +369,20 @@ func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	}
 
 	return r0, r1
+}
+
+// InsertAccountGroups provides a mock function with given fields: accountID, appOrgID, groups
+func (_m *Storage) InsertAccountGroups(accountID string, appOrgID string, groups []model.AccountGroup) error {
+	ret := _m.Called(accountID, appOrgID, groups)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string, []model.AccountGroup) error); ok {
+		r0 = rf(accountID, appOrgID, groups)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // InsertAccountPermissions provides a mock function with given fields: accountID, appOrgID, permissions

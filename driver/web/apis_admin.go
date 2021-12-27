@@ -297,22 +297,22 @@ func (h AdminApisHandler) grantAccountRoles(l *logs.Log, r *http.Request, claims
 }
 
 func (h AdminApisHandler) grantAccountGroups(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	// data, err := ioutil.ReadAll(r.Body)
-	// if err != nil {
-	// 	return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	// }
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
 
-	// var requestData Def.ReqSharedAccountRoles
-	// err = json.Unmarshal(data, &requestData)
-	// if err != nil {
-	// 	return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)
-	// }
+	var requestData Def.ReqSharedAccountGroups
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgGroup, nil, err, http.StatusBadRequest, true)
+	}
 
-	// assignerPermissions := strings.Split(claims.Permissions, ",")
-	// err = h.coreAPIs.Administration.AdmGrantAccountRoles(requestData.AccountId, requestData.AppOrgId, requestData.RoleIds, assignerPermissions)
-	// if err != nil {
-	// 	return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
-	// }
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	err = h.coreAPIs.Administration.AdmGrantAccountGroups(requestData.AccountId, requestData.AppOrgId, requestData.GroupIds, assignerPermissions)
+	if err != nil {
+		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
+	}
 
 	return l.HttpResponseSuccess()
 }

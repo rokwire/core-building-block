@@ -104,6 +104,8 @@ _req_shared_AccountPermissions:
   $ref: "./apis/shared/requests/account/permissions/Request.yaml"
 _req_shared-AccountRoles:
   $ref: "./apis/shared/requests/account/roles/Request.yaml"
+_req_shared-AccountGroups:
+  $ref: "./apis/shared/requests/account/groups/Request.yaml"
 
 _req_shared_CredsEmail:
   $ref: "./apis/shared/requests/CredsEmail.yaml"

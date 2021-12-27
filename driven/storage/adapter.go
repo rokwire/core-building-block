@@ -873,6 +873,29 @@ func (sa *Adapter) DeleteAccountRoles(accountID string, roleIDs []string) error 
 	return nil
 }
 
+//InsertAccountGroups inserts account groups
+func (sa *Adapter) InsertAccountGroups(accountID string, appOrgID string, groups []model.AccountGroup) error {
+	stgGroups := accountGroupsToStorage(groups)
+
+	//appID included in search to prevent accidentally assigning permissions to account from different application
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}, primitive.E{Key: "app_org_id", Value: appOrgID}}
+	update := bson.D{
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "groups", Value: bson.M{"$each": stgGroups}},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
 //UpdateAccountGroups updates the account groups
 func (sa *Adapter) UpdateAccountGroups(accountID string, groups []model.AccountGroup) error {
 	stgGroups := accountGroupsToStorage(groups)

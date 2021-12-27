@@ -127,6 +127,10 @@ func (s *administrationImpl) AdmGrantAccountRoles(accountID string, appOrgID str
 	return s.app.admGrantAccountRoles(accountID, appOrgID, roleIDs, assignerPermissions)
 }
 
+func (s *administrationImpl) AdmGrantAccountGroups(accountID string, appOrgID string, groupIDs []string, assignerPermissions []string) error {
+	return s.app.admGrantAccountGroups(accountID, appOrgID, groupIDs, assignerPermissions)
+}
+
 ///
 
 //encryptionImpl

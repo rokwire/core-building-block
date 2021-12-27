@@ -29,6 +29,7 @@ type Administration interface {
 	AdmGetAccount(accountID string) (*model.Account, error)
 	AdmGrantAccountPermissions(accountID string, appOrgID string, permissionNames []string, assignerPermissions []string) error
 	AdmGrantAccountRoles(accountID string, appOrgID string, roleIDs []string, assignerPermissions []string) error
+	AdmGrantAccountGroups(accountID string, appOrgID string, groupIDs []string, assignerPermissions []string) error
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -78,6 +79,7 @@ type Storage interface {
 	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, appOrgID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
+	InsertAccountGroups(accountID string, appOrgID string, groups []model.AccountGroup) error
 
 	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
 	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
@@ -102,6 +104,7 @@ type Storage interface {
 	UpdateAppOrgRole(item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
 
+	FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	InsertAppOrgGroup(item model.AppOrgGroup) error
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error

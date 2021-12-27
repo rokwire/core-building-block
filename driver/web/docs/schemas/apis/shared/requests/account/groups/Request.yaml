@@ -1,0 +1,14 @@
+required:
+  - account_id
+  - app_org_id
+  - group_ids
+type: object
+properties:
+  account_id:
+    type: string
+  app_org_id:
+    type: string
+  group_ids:
+    type: array
+    items:
+      type: string

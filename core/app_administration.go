@@ -227,20 +227,7 @@ func (app *application) admGrantAccountRoles(accountID string, appOrgID string, 
 
 	var authorizedRoles []model.AppOrgRole
 	for _, role := range roles {
-		allPermissionsAuthorized := true
-		for _, permission := range role.Permissions {
-			authorizedAssigners := permission.Assigners
-			for _, authorizedAssigner := range authorizedAssigners {
-				if !authutils.ContainsString(assignerPermissions, authorizedAssigner) {
-					allPermissionsAuthorized = false
-					break
-				}
-			}
-			if !allPermissionsAuthorized {
-				break
-			}
-		}
-		if allPermissionsAuthorized {
+		if isRoleAuthorized(role, assignerPermissions) {
 			authorizedRoles = append(authorizedRoles, role)
 		}
 	}
@@ -253,4 +240,75 @@ func (app *application) admGrantAccountRoles(accountID string, appOrgID string, 
 		return err
 	}
 	return nil
+}
+
+func (app *application) admGrantAccountGroups(accountID string, appOrgID string, groupIDs []string, assignerPermissions []string) error {
+	if assignerPermissions == nil {
+		return errors.New("no permissions from admin assigner")
+	}
+
+	groups, err := app.storage.FindAppOrgGroups(groupIDs, appOrgID)
+	if err != nil {
+		return err
+	}
+
+	if len(groups) == 0 {
+		return errors.Newf("no groups found for IDs: %v", groupIDs)
+	}
+
+	var authorizedGroups []model.AppOrgGroup
+	for _, group := range groups {
+		allPermissionsAuthorized := true
+		for _, permission := range group.Permissions {
+			authorizedAssigners := permission.Assigners
+			for _, authorizedAssigner := range authorizedAssigners {
+				if !authutils.ContainsString(assignerPermissions, authorizedAssigner) {
+					allPermissionsAuthorized = false
+					break
+				}
+			}
+			if !allPermissionsAuthorized {
+				break
+			}
+		}
+		if allPermissionsAuthorized {
+			allRolesAuthorized := true
+			for _, role := range group.Roles {
+				if !isRoleAuthorized(role, assignerPermissions) {
+					allRolesAuthorized = false
+					break
+				}
+			}
+			if allRolesAuthorized {
+				authorizedGroups = append(authorizedGroups, group)
+			}
+		}
+	}
+	if authorizedGroups == nil {
+		return errors.Newf("Assigner is not authorized to assign groups for ids: %v", groupIDs)
+	}
+
+	err = app.storage.InsertAccountGroups(accountID, appOrgID, model.AccountGroupsFromAppOrgGroups(authorizedGroups, true, true))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func isRoleAuthorized(role model.AppOrgRole, assignerPermissions []string) bool {
+	allPermissionsAuthorized := true
+	for _, permission := range role.Permissions {
+		authorizedAssigners := permission.Assigners
+		for _, authorizedAssigner := range authorizedAssigners {
+			if !authutils.ContainsString(assignerPermissions, authorizedAssigner) {
+				allPermissionsAuthorized = false
+				break
+			}
+		}
+		if !allPermissionsAuthorized {
+			break
+		}
+	}
+
+	return allPermissionsAuthorized
 }
