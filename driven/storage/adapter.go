@@ -1258,7 +1258,7 @@ func (sa *Adapter) FindPermissions(ids []string) ([]model.Permission, error) {
 	return permissionsResult, nil
 }
 
-//FindPermissionsByServiceID finds permissions
+//FindPermissionsByServiceIDs finds permissions
 func (sa *Adapter) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error) {
 	filter := bson.D{primitive.E{Key: "service_id", Value: bson.M{"$in": serviceIDs}}}
 	var permissionsResult []model.Permission
