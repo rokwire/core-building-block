@@ -206,6 +206,20 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 	return l.HttpResponseSuccessJSON(respData)
 }
 
+func (h AdminApisHandler) getApplicationPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	permissions, err := h.coreAPIs.Administration.AdmGetApplicationPermissions(claims.AppID, claims.OrgID, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypePermission, nil, err, http.StatusInternalServerError, false)
+	}
+
+	response := applicationPermissionsToDef(permissions)
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypePermission, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
 func (h AdminApisHandler) adminGetApplicationOrgRoles(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 
 	get, err := h.coreAPIs.Administration.AdmGetAppOrg(claims.AppID, claims.OrgID)
