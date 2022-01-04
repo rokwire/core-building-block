@@ -217,11 +217,8 @@ func (h AdminApisHandler) getApplicationPermissions(l *logs.Log, r *http.Request
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
-	var response []Def.PermissionFields
-	for _, permission := range permissions {
-		r := applicationPermissionToDef(permission)
-		response = append(response, r)
-	}
+
+	response := applicationPermissionsToDef(permissions)
 
 	data, err := json.Marshal(response)
 	if err != nil {
