@@ -1935,7 +1935,6 @@
     },
     "/system/organizations/{id}": {
       "put": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
