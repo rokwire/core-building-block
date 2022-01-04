@@ -1889,7 +1889,6 @@
         }
       },
       "put": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
@@ -5171,6 +5170,28 @@
             "readOnly": true,
             "type": "string"
           },
+          "setting": {
+            "type": "string"
+          }
+        }
+      },
+      "_req_update_GlobalConfig_Request": {
+        "required": [
+          "setting"
+        ],
+        "type": "object",
+        "properties": {
+          "setting": {
+            "type": "string"
+          }
+        }
+      },
+      "_res_update_GlobalConfig_Response": {
+        "required": [
+          "setting"
+        ],
+        "type": "object",
+        "properties": {
           "setting": {
             "type": "string"
           }
