@@ -206,7 +206,7 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-func (h AdminApisHandler) adminGetPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h AdminApisHandler) getApplicationPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 
 	get, err := h.coreAPIs.Administration.AdmGetServicesIDs(claims.AppID, claims.OrgID)
 	if err != nil {
