@@ -218,3 +218,7 @@ _req_account-permissions_Request:
 ### account roles API
 _req_account-roles_Request:
   $ref: "./apis/system/account/roles/request/Request.yaml"
+
+### global-config API
+_res_get_GlobalConfig_Response:
+  $ref: "./apis/system/get-global-config/response/Response.yaml"
