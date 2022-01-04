@@ -118,7 +118,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.removeMFAType, we.auth.admin.authenticated)).Methods("DELETE")
 
 	adminSubrouter.HandleFunc("/application/accounts", we.wrapFunc(we.adminApisHandler.getApplicationAccounts, we.auth.admin.user)).Methods("GET")
-	adminSubrouter.HandleFunc("/application/account/{id}/device", we.wrapFunc(we.adminApisHandler.getApplicationAccountDevices, nil)).Methods("GET")
+	adminSubrouter.HandleFunc("/application/account/{id}/device", we.wrapFunc(we.adminApisHandler.getApplicationAccountDevices, we.auth.admin.user)).Methods("GET")
 	///
 
 	///enc ///
