@@ -1994,7 +1994,6 @@
         }
       },
       "get": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
