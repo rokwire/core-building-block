@@ -2319,7 +2319,6 @@
     },
     "/system/applications/{id}": {
       "get": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
