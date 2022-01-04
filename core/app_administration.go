@@ -162,9 +162,9 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admGetApplicationPermissions(serviceIDs []string, appID string, orgID string) ([]model.Permission, error) {
+func (app *application) admGetApplicationPermissions(serviceIDs []string) ([]model.Permission, error) {
 
-	getPermissions, err := app.storage.FindPermissionsByServiceIDs(serviceIDs, appID, orgID)
+	getPermissions, err := app.storage.FindPermissionsByServiceIDs(serviceIDs)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypePermission, nil, err)
 	}
@@ -172,7 +172,7 @@ func (app *application) admGetApplicationPermissions(serviceIDs []string, appID 
 }
 
 func (app *application) admGetServicesIDs(appID string, orgID string) (*model.ApplicationOrganization, error) {
-	getServiceIDs, err := app.storage.FindServicesIDs(appID, orgID)
+	getServiceIDs, err := app.storage.AdmGetApplicationOrganization(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypePermission, nil, err)
 	}

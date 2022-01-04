@@ -15,6 +15,29 @@ type Storage struct {
 	mock.Mock
 }
 
+// AdmGetApplicationOrganization provides a mock function with given fields: appID, orgID
+func (_m *Storage) AdmGetApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
+	ret := _m.Called(appID, orgID)
+
+	var r0 *model.ApplicationOrganization
+	if rf, ok := ret.Get(0).(func(string, string) *model.ApplicationOrganization); ok {
+		r0 = rf(appID, orgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.ApplicationOrganization)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(appID, orgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CreateGlobalConfig provides a mock function with given fields: context, globalConfig
 func (_m *Storage) CreateGlobalConfig(context storage.TransactionContext, globalConfig *model.GlobalConfig) error {
 	ret := _m.Called(context, globalConfig)
@@ -325,13 +348,13 @@ func (_m *Storage) FindPermissionsByName(names []string) ([]model.Permission, er
 	return r0, r1
 }
 
-// FindPermissionsByServiceIDs provides a mock function with given fields: serviceIDs, appID, orgID
-func (_m *Storage) FindPermissionsByServiceIDs(serviceIDs []string, appID string, orgID string) ([]model.Permission, error) {
-	ret := _m.Called(serviceIDs, appID, orgID)
+// FindPermissionsByServiceIDs provides a mock function with given fields: serviceIDs
+func (_m *Storage) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error) {
+	ret := _m.Called(serviceIDs)
 
 	var r0 []model.Permission
-	if rf, ok := ret.Get(0).(func([]string, string, string) []model.Permission); ok {
-		r0 = rf(serviceIDs, appID, orgID)
+	if rf, ok := ret.Get(0).(func([]string) []model.Permission); ok {
+		r0 = rf(serviceIDs)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Permission)
@@ -339,31 +362,8 @@ func (_m *Storage) FindPermissionsByServiceIDs(serviceIDs []string, appID string
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func([]string, string, string) error); ok {
-		r1 = rf(serviceIDs, appID, orgID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// FindServicesIDs provides a mock function with given fields: appID, orgID
-func (_m *Storage) FindServicesIDs(appID string, orgID string) (*model.ApplicationOrganization, error) {
-	ret := _m.Called(appID, orgID)
-
-	var r0 *model.ApplicationOrganization
-	if rf, ok := ret.Get(0).(func(string, string) *model.ApplicationOrganization); ok {
-		r0 = rf(appID, orgID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.ApplicationOrganization)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(appID, orgID)
+	if rf, ok := ret.Get(1).(func([]string) error); ok {
+		r1 = rf(serviceIDs)
 	} else {
 		r1 = ret.Error(1)
 	}

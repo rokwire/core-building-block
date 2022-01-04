@@ -24,7 +24,7 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	AdmGetApplicationPermissions(serviceIDs []string, appID string, orgID string) ([]model.Permission, error)
+	AdmGetApplicationPermissions(serviceIDs []string) ([]model.Permission, error)
 	AdmGetServicesIDs(appID string, orgID string) (*model.ApplicationOrganization, error)
 
 	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
@@ -93,7 +93,7 @@ type Storage interface {
 	DeleteGlobalConfig(context storage.TransactionContext) error
 
 	FindPermissionsByName(names []string) ([]model.Permission, error)
-	FindPermissionsByServiceIDs(serviceIDs []string, appID string, orgID string) ([]model.Permission, error)
+	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)
 	InsertPermission(item model.Permission) error
 	UpdatePermission(item model.Permission) error
 	DeletePermission(id string) error
@@ -117,7 +117,7 @@ type Storage interface {
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 
-	FindServicesIDs(appID string, orgID string) (*model.ApplicationOrganization, error)
+	AdmGetApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 }
 
 //StorageListener listenes for change data storage events

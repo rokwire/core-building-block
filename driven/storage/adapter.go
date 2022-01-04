@@ -1259,7 +1259,7 @@ func (sa *Adapter) FindPermissions(ids []string) ([]model.Permission, error) {
 }
 
 //FindPermissionsByServiceID finds permissions
-func (sa *Adapter) FindPermissionsByServiceIDs(serviceIDs []string, appID string, orgID string) ([]model.Permission, error) {
+func (sa *Adapter) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error) {
 	filter := bson.D{primitive.E{Key: "service_id", Value: bson.M{"$in": serviceIDs}}}
 	var permissionsResult []model.Permission
 	err := sa.db.permissions.Find(filter, &permissionsResult, nil)
@@ -1886,8 +1886,8 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 	return &device, nil
 }
 
-//FindApplication finds application
-func (sa *Adapter) FindServicesIDs(appID string, orgID string) (*model.ApplicationOrganization, error) {
+// AdmGetApplicationOrganization finds service IDs
+func (sa *Adapter) AdmGetApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
 	var result []applicationOrganization
 	err := sa.db.applicationsOrganizations.Find(filter, &result, nil)

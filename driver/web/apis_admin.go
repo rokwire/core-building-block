@@ -213,7 +213,7 @@ func (h AdminApisHandler) adminGetPermissions(l *logs.Log, r *http.Request, clai
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
 	}
 
-	permissions, err := h.coreAPIs.Administration.AdmGetApplicationPermissions(get.ServicesIDs, claims.AppID, claims.OrgID)
+	permissions, err := h.coreAPIs.Administration.AdmGetApplicationPermissions(get.ServicesIDs)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
