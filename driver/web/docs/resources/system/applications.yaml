@@ -24,7 +24,6 @@
       500:
         description: Internal error
  post:
-  deprecated: true
   tags:
   - System
   summary: Create application
