@@ -2046,7 +2046,6 @@
     },
     "/system/organizations": {
       "get": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
