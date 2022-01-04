@@ -1845,7 +1845,6 @@
         }
       },
       "post": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
@@ -5145,6 +5144,33 @@
         ],
         "type": "object",
         "properties": {
+          "setting": {
+            "type": "string"
+          }
+        }
+      },
+      "_req_create_GlobalConfig_Request": {
+        "required": [
+          "setting"
+        ],
+        "type": "object",
+        "properties": {
+          "setting": {
+            "type": "string"
+          }
+        }
+      },
+      "_res_create_GlobalConfig_Response": {
+        "required": [
+          "id",
+          "setting"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "readOnly": true,
+            "type": "string"
+          },
           "setting": {
             "type": "string"
           }

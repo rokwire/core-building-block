@@ -222,3 +222,7 @@ _req_account-roles_Request:
 ### global-config API
 _res_get_GlobalConfig_Response:
   $ref: "./apis/system/get-global-config/response/Response.yaml"
+_req_create_GlobalConfig_Request:
+  $ref: "./apis/system/create-global-config/request/Request.yaml"
+_res_create_GlobalConfig_Response:
+  $ref: "./apis/system/create-global-config/response/Response.yaml"
