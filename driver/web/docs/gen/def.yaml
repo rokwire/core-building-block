@@ -2859,7 +2859,6 @@
     },
     "/system/api-keys": {
       "get": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
