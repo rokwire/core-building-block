@@ -2951,7 +2951,6 @@
         }
       },
       "put": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
