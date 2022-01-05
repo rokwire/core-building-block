@@ -1373,7 +1373,6 @@
         }
       },
       "post": {
-        "deprecated": true,
         "tags": [
           "Admin"
         ],

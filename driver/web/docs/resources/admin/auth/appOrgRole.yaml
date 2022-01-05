@@ -22,7 +22,6 @@
       500:
         description: Internal error
  post:
-  deprecated: true
   tags:
   - Admin
   summary: Create application_organization_role
