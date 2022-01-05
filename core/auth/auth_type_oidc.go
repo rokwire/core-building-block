@@ -328,6 +328,11 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	identityProviderID, _ := authType.Params["identity_provider"].(string)
 	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
 
+	externalIDs := make(map[string]string)
+	for k, v := range identityProviderSetting.ExternalIDFields {
+		externalIDs[k] = userClaims[v].(string)
+	}
+
 	//identifier
 	identifier, _ := userClaims[identityProviderSetting.UserIdentifierField].(string)
 	//first name
@@ -362,8 +367,8 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 		}
 	}
 
-	externalUser := model.ExternalSystemUser{Identifier: identifier, FirstName: firstName, MiddleName: middleName, LastName: lastName,
-		Email: email, Roles: roles, Groups: groups, SystemSpecific: systemSpecific}
+	externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs, FirstName: firstName,
+		MiddleName: middleName, LastName: lastName, Email: email, Roles: roles, Groups: groups, SystemSpecific: systemSpecific}
 
 	oidcParams := map[string]interface{}{}
 	oidcParams["id_token"] = token.IDToken

@@ -46,6 +46,7 @@ type Account struct {
 
 	MFATypes []MFAType
 
+	ExternalIDs map[string]string
 	Preferences map[string]interface{}
 	Profile     Profile //one account has one profile, one profile can be shared between many accounts
 
@@ -331,7 +332,8 @@ type Device struct {
 
 //ExternalSystemUser represents external system user
 type ExternalSystemUser struct {
-	Identifier string `json:"identifier" bson:"identifier"` //this is the identifier used in our system to map the user
+	Identifier  string            `json:"identifier" bson:"identifier"` //this is the identifier used in our system to map the user
+	ExternalIDs map[string]string `json:"external_ids" bson:"external_ids"`
 
 	//these are common fields which should be popuated by the external system
 	FirstName  string   `json:"first_name" bson:"first_name"`
@@ -348,6 +350,9 @@ type ExternalSystemUser struct {
 //Equals checks if two external system users are equals
 func (esu ExternalSystemUser) Equals(other ExternalSystemUser) bool {
 	if esu.Identifier != other.Identifier {
+		return false
+	}
+	if !utils.DeepEqual(esu.ExternalIDs, other.ExternalIDs) {
 		return false
 	}
 	if esu.FirstName != other.FirstName {

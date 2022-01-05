@@ -184,7 +184,8 @@ func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, a
 type IdentityProviderSetting struct {
 	IdentityProviderID string `bson:"identity_provider_id"`
 
-	UserIdentifierField string `bson:"user_identifier_field"`
+	UserIdentifierField string            `bson:"user_identifier_field"`
+	ExternalIDFields    map[string]string `bson:"external_id_fields"`
 
 	FirstNameField  string `bson:"first_name_field"`
 	MiddleNameField string `bson:"middle_name_field"`
