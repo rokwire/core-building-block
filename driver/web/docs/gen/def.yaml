@@ -2996,7 +2996,6 @@
         }
       },
       "delete": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
