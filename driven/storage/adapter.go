@@ -312,14 +312,14 @@ func (sa *Adapter) getCachedAuthType(key string) (*model.AuthType, error) {
 
 //cacheApplicationsOrganizations caches the applications organizations
 func (sa *Adapter) cacheApplicationsOrganizations() error {
-	/*	sa.logger.Info("cacheApplicationsOrganizations..")
+	sa.logger.Info("cacheApplicationsOrganizations..")
 
-		applicationsOrganizations, err := sa.LoadApplicationsOrganizations()
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
-		}
+	applicationsOrganizations, err := sa.LoadApplicationsOrganizations()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
 
-		sa.setCachedApplicationsOrganizations(applicationsOrganizations)*/
+	sa.setCachedApplicationsOrganizations(applicationsOrganizations)
 
 	return nil
 }
@@ -1259,6 +1259,18 @@ func (sa *Adapter) FindPermissions(ids []string) ([]model.Permission, error) {
 	return permissionsResult, nil
 }
 
+//FindPermissionsByServiceIDs finds permissions
+func (sa *Adapter) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error) {
+	filter := bson.D{primitive.E{Key: "service_id", Value: bson.M{"$in": serviceIDs}}}
+	var permissionsResult []model.Permission
+	err := sa.db.permissions.Find(filter, &permissionsResult, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return permissionsResult, nil
+}
+
 //FindPermissionsByName finds a set of permissions
 func (sa *Adapter) FindPermissionsByName(names []string) ([]model.Permission, error) {
 	permissionsFilter := bson.D{primitive.E{Key: "name", Value: bson.M{"$in": names}}}
@@ -1853,33 +1865,32 @@ func (sa *Adapter) FindApplicationTypeByIdentifier(identifier string) (*model.Ap
 
 //LoadApplicationsOrganizations loads all applications organizations
 func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error) {
-	/*	filter := bson.D{}
-		var list []applicationOrganization
-		err := sa.db.applicationsOrganizations.Find(filter, &list, nil)
+	filter := bson.D{}
+	var list []applicationOrganization
+	err := sa.db.applicationsOrganizations.Find(filter, &list, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
+	if len(list) == 0 {
+		//no data
+		return nil, nil
+	}
+
+	result := make([]model.ApplicationOrganization, len(list))
+	for i, item := range list {
+		//we have organizations and applications cached
+		application, err := sa.getCachedApplication(item.AppID)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 		}
-		if len(list) == 0 {
-			//no data
-			return nil, nil
+		organization, err := sa.getCachedOrganization(item.OrgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 		}
 
-		result := make([]model.ApplicationOrganization, len(list))
-		for i, item := range list {
-			//we have organizations and applications cached
-			application, err := sa.getCachedApplication(item.AppID)
-			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-			}
-			organization, err := sa.getCachedOrganization(item.OrgID)
-			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
-			}
-
-			result[i] = applicationOrganizationFromStorage(item, *application, *organization)
-		}
-		return result, nil*/
-	return nil, nil
+		result[i] = applicationOrganizationFromStorage(item, *application, *organization)
+	}
+	return result, nil
 }
 
 //FindApplicationOrganizations finds application organization
