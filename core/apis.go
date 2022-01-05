@@ -110,11 +110,8 @@ func (s *administrationImpl) AdmGetTest() string {
 func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
-func (s *administrationImpl) AdmGetApplicationRoles(appID string, orgID string, appOrgID string) ([]model.AppOrgRole, error) {
-	return s.app.admGetApplicationRoles(appID, orgID, appOrgID)
-}
 
-func (s *administrationImpl) AdmGetAppOrg(appID string, orgID string) (*model.ApplicationOrganization, error) {
+func (s *administrationImpl) AdmGetAppOrg(appID string, orgID string) ([]model.AppOrgRole, error) {
 	return s.app.admGetAppOrg(appID, orgID)
 }
 

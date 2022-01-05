@@ -221,18 +221,12 @@ func (h AdminApisHandler) getApplicationPermissions(l *logs.Log, r *http.Request
 }
 
 func (h AdminApisHandler) adminGetApplicationOrgRoles(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-
-	get, err := h.coreAPIs.Administration.AdmGetAppOrg(claims.AppID, claims.OrgID)
+	appOrgRoles, err := h.coreAPIs.Administration.AdmGetAppOrg(claims.AppID, claims.OrgID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
 	}
-
-	getAppOrgRoles, err := h.coreAPIs.Administration.AdmGetApplicationRoles(claims.AppID, claims.OrgID, get.ID)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
-	}
 	var response []Def.AppOrgRoleFields
-	for _, appOrgRole := range getAppOrgRoles {
+	for _, appOrgRole := range appOrgRoles {
 		r := appOrgRoleToDef(appOrgRole)
 		response = append(response, r)
 	}
