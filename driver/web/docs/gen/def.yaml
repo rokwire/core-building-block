@@ -2127,7 +2127,6 @@
     },
     "/system/service-regs": {
       "get": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
