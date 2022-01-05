@@ -320,7 +320,6 @@ func (sa *Adapter) cacheApplicationsOrganizations() error {
 	}
 
 	sa.setCachedApplicationsOrganizations(applicationsOrganizations)
-
 	return nil
 }
 
@@ -1259,6 +1258,18 @@ func (sa *Adapter) FindPermissions(ids []string) ([]model.Permission, error) {
 	return permissionsResult, nil
 }
 
+//FindPermissionsByServiceIDs finds permissions
+func (sa *Adapter) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error) {
+	filter := bson.D{primitive.E{Key: "service_id", Value: bson.M{"$in": serviceIDs}}}
+	var permissionsResult []model.Permission
+	err := sa.db.permissions.Find(filter, &permissionsResult, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return permissionsResult, nil
+}
+
 //FindPermissionsByName finds a set of permissions
 func (sa *Adapter) FindPermissionsByName(names []string) ([]model.Permission, error) {
 	permissionsFilter := bson.D{primitive.E{Key: "name", Value: bson.M{"$in": names}}}
@@ -1858,6 +1869,7 @@ func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganizat
 		result[i] = applicationOrganizationFromStorage(item, *application, *organization)
 	}
 	return result, nil
+
 }
 
 //FindApplicationOrganizations finds application organization
