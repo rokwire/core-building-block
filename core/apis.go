@@ -111,11 +111,7 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
-func (s *administrationImpl) AdmGetApplicationGroups(appID string, orgID string, appOrgID string) ([]model.AppOrgGroup, error) {
-	return s.app.admGetApplicationGroups(appID, orgID, appOrgID)
-}
-
-func (s *administrationImpl) AdmGetAppOrg(appID string, orgID string) (*model.ApplicationOrganization, error) {
+func (s *administrationImpl) AdmGetAppOrg(appID string, orgID string) ([]model.AppOrgGroup, error) {
 	return s.app.admGetAppOrg(appID, orgID)
 }
 

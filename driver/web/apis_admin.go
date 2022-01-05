@@ -213,12 +213,8 @@ func (h AdminApisHandler) adminGetApplicationGroups(l *logs.Log, r *http.Request
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
 	}
 
-	getAppOrgGroups, err := h.coreAPIs.Administration.AdmGetApplicationGroups(claims.AppID, claims.OrgID, get.ID)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
-	}
 	var response []Def.AppOrgGroupFields
-	for _, appOrgGroup := range getAppOrgGroups {
+	for _, appOrgGroup := range get {
 		r := appOrgGroupToDef(appOrgGroup)
 		response = append(response, r)
 	}

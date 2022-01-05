@@ -24,8 +24,7 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	AdmGetApplicationGroups(appID string, orgID string, appOrgID string) ([]model.AppOrgGroup, error)
-	AdmGetAppOrg(appID string, orgID string) (*model.ApplicationOrganization, error)
+	AdmGetAppOrg(appID string, orgID string) ([]model.AppOrgGroup, error)
 	AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error)
 
 	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
