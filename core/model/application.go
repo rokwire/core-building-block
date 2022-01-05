@@ -144,6 +144,8 @@ type ApplicationOrganization struct {
 
 	SupportedAuthTypes []AuthTypesSupport //supported auth types for this organization in this application
 
+	LoginsSessionsSetting LoginsSessionsSetting
+
 	DateCreated time.Time
 	DateUpdated *time.Time
 }
@@ -197,6 +199,33 @@ type IdentityProviderSetting struct {
 
 	Roles  map[string]string `bson:"roles"`  //map[identity_provider_role]app_role_id
 	Groups map[string]string `bson:"groups"` //map[identity_provider_group]app_group_id
+}
+
+//LoginsSessionsSetting represents logins sessions setting for an organization in an application
+type LoginsSessionsSetting struct {
+	MaxConcurrentSessions int `bson:"max_concurrent_sessions"`
+
+	InactivityExpirePolicy InactivityExpirePolicy `bson:"inactivity_expire_policy"`
+	TSLExpirePolicy        TSLExpirePolicy        `bson:"time_since_login_expire_policy"`
+	FDExpirePolicy         FDExpirePolicy         `bson:"fixed_date_expire_policy"`
+}
+
+//InactivityExpirePolicy represents expires policy based on inactivity
+type InactivityExpirePolicy struct {
+	Active           bool `bson:"active"`
+	InactivityPeriod int  `bson:"inactivity_period"` //in minutes
+}
+
+//TSLExpirePolicy represents expires policy based on the time since login
+type TSLExpirePolicy struct {
+	Active               bool `bson:"active"`
+	TimeSinceLoginPeriod int  `bson:"time_since_login_period"` //in minutes
+}
+
+//FDExpirePolicy represents expires policy based on fixed date
+type FDExpirePolicy struct {
+	Active    bool      `bson:"active"`
+	FixedDate time.Time `bson:"fixed_date"`
 }
 
 //ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc
