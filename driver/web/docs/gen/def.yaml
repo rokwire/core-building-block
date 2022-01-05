@@ -2639,7 +2639,6 @@
     },
     "/system/account/permissions": {
       "put": {
-        "deprecated": true,
         "tags": [
           "System"
         ],

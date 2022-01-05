@@ -1,5 +1,4 @@
 put:
-  deprecated: true
   tags:
   - System
   summary: Grant account permissions
