@@ -2541,7 +2541,6 @@
     },
     "/system/application-roles": {
       "post": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
