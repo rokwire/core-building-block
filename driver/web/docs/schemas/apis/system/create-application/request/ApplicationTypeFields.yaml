@@ -1,7 +1,11 @@
 required:
+  - id
   - identifier
 type: object
 properties:
+  id:
+    readOnly: true
+    type: string
   identifier:
     type: string
   name:

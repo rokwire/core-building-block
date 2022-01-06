@@ -562,6 +562,7 @@ type ReqCreateOrganizationRequestType string
 // ReqCreateApplicationRequest defines model for _req_create_Application_Request.
 type ReqCreateApplicationRequest struct {
 	ApplicationTypes *[]struct {
+		Id         string    `json:"id"`
 		Identifier string    `json:"identifier"`
 		Name       *string   `json:"name,omitempty"`
 		Versions   *[]string `json:"versions,omitempty"`
