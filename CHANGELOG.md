@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Expose delete app org role admin API [#313](https://github.com/rokwire/core-building-block/issues/313)
+- Expose get permissions list admin API [#296](https://github.com/rokwire/core-building-block/issues/296)
 - Expose get accounts admin API [#283](https://github.com/rokwire/core-building-block/issues/283)
 - Expose get account admin API [#270](https://github.com/rokwire/core-building-block/issues/270)
 
@@ -128,12 +130,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix Mongo driver vulnerability [#123](https://github.com/rokwire/core-building-block/issues/123)
 
 ### Added
-- Expose delete app org role admin API [#313](https://github.com/rokwire/core-building-block/issues/313)
-- Expose delete app org group admin API [#312](https://github.com/rokwire/core-building-block/issues/312)
-- Expose create app org group admin API [#309](https://github.com/rokwire/core-building-block/issues/309)
-- Expose create app org role admin API  [#308](https://github.com/rokwire/core-building-block/issues/308)
-- Expose get application organization groups admin API [#302](https://github.com/rokwire/core-building-block/issues/302)
-- Expose get application organization roles admin API [#301](https://github.com/rokwire/core-building-block/issues/301)
 - Extract IP address from reques [#246](https://github.com/rokwire/core-building-block/issues/246)
 - Populate profile data automatically from ROKWIRE 2.0 Profile BB [#185](https://github.com/rokwire/core-building-block/issues/185)
 - Add phone authentication support [#24](https://github.com/rokwire/core-building-block/issues/24)
