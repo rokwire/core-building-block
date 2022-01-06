@@ -1396,7 +1396,8 @@ func (a *Auth) deleteExpiredSessions() {
 	a.logger.Info("deleteExpiredSessions")
 
 	now := time.Now().UTC()
-	err := a.storage.DeleteExpiredSessions(&now)
+	//TODO
+	err := a.storage.DeleteMFAExpiredSessions(&now)
 	if err != nil {
 		a.logger.Error(err.Error())
 	}

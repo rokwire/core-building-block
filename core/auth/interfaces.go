@@ -323,7 +323,7 @@ type Storage interface {
 	FindAndUpdateLoginSession(context storage.TransactionContext, id string) (*model.LoginSession, error)
 	UpdateLoginSession(context storage.TransactionContext, loginSession model.LoginSession) error
 	DeleteLoginSession(context storage.TransactionContext, id string) error
-	DeleteExpiredSessions(now *time.Time) error
+	DeleteMFAExpiredSessions(now *time.Time) error
 
 	//Accounts
 	FindAccount(appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
