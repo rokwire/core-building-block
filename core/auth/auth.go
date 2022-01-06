@@ -1393,10 +1393,15 @@ func (a *Auth) setupDeleteSessionsTimer() {
 }
 
 func (a *Auth) deleteExpiredSessions() {
+
+	//TODO
+	// to delete:
+	// - not compelted MFA
+	// - expired sessions
+
 	a.logger.Info("deleteExpiredSessions")
 
 	now := time.Now().UTC()
-	//TODO
 	err := a.storage.DeleteMFAExpiredSessions(&now)
 	if err != nil {
 		a.logger.Error(err.Error())
