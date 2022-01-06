@@ -983,6 +983,28 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	return nil
 }
 
+//InsertAccountExternalIDs inserts external IDs into an account
+func (sa *Adapter) InsertAccountExternalIDs(accountID string, externalIDs map[string]string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	now := time.Now().UTC()
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "external_ids", Value: externalIDs},
+			primitive.E{Key: "date_updated", Value: &now},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, "account external IDs", &logutils.FieldArgs{"_id": accountID}, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionInsert, "account external IDs", &logutils.FieldArgs{"_id": accountID, "unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
 //FindCredential finds a credential by ID
 func (sa *Adapter) FindCredential(context TransactionContext, ID string) (*model.Credential, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}

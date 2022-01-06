@@ -336,6 +336,8 @@ type Storage interface {
 	InsertAccountAuthType(item model.AccountAuthType) error
 	UpdateAccountAuthType(item model.AccountAuthType) error
 
+	InsertAccountExternalIDs(accountID string, externalIDs map[string]string) error
+
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)
 

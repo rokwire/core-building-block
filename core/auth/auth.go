@@ -7,7 +7,6 @@ import (
 	"core-building-block/utils"
 	"crypto/rsa"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -235,6 +234,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 			l.WarnAction(logutils.ActionGet, "external authorization", err)
 		}
 
+		externalIDs = externalUser.ExternalIDs
 		accountAuthType, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, externalUser.ExternalIDs, *profile, preferences, roles, groups, l)
 		if err != nil {
 			return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
@@ -851,11 +851,6 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 	accountID, _ := uuid.NewUUID()
 	authTypes := []model.AccountAuthType{accountAuthType}
 
-	accountExternalIDs := make(map[string]string)
-	for k, v := range externalIDs {
-		accountExternalIDs[fmt.Sprintf("%s.%s", accountAuthType.AuthType.Code, k)] = v
-	}
-
 	roles, err := a.storage.FindAppOrgRoles(roleIDs, appOrg.ID)
 	if err != nil {
 		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgRole, nil), err)
@@ -867,7 +862,7 @@ func (a *Auth) registerUser(appOrg model.ApplicationOrganization, accountAuthTyp
 
 	account := model.Account{ID: accountID.String(), AppOrg: appOrg,
 		Permissions: nil, Roles: model.AccountRolesFromAppOrgRoles(roles, true, false), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, false),
-		AuthTypes: authTypes, ExternalIDs: accountExternalIDs, Preferences: preferences, Profile: profile, DateCreated: time.Now()} // Anonymous: accountAuthType.AuthType.IsAnonymous
+		AuthTypes: authTypes, ExternalIDs: externalIDs, Preferences: preferences, Profile: profile, DateCreated: time.Now()} // Anonymous: accountAuthType.AuthType.IsAnonymous
 
 	insertedAccount, err := a.storage.InsertAccount(account)
 	if err != nil {
@@ -923,7 +918,7 @@ func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthTyp
 	}
 	accountAuthType.Account = account
 
-	err = a.registerAccountAuthType(*accountAuthType, credential, l)
+	err = a.registerAccountAuthType(*accountAuthType, credential, nil, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccountAuthType, nil, err)
 	}
@@ -962,7 +957,11 @@ func (a *Auth) linkAccountAuthTypeExternal(account model.Account, authType model
 	}
 	accountAuthType.Account = account
 
-	err = a.registerAccountAuthType(*accountAuthType, credential, l)
+	for k, v := range externalUser.ExternalIDs {
+		account.ExternalIDs[k] = v
+	}
+
+	err = a.registerAccountAuthType(*accountAuthType, credential, account.ExternalIDs, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccountAuthType, nil, err)
 	}
@@ -970,7 +969,7 @@ func (a *Auth) linkAccountAuthTypeExternal(account model.Account, authType model
 	return accountAuthType, nil
 }
 
-func (a *Auth) registerAccountAuthType(accountAuthType model.AccountAuthType, credential *model.Credential, l *logs.Log) error {
+func (a *Auth) registerAccountAuthType(accountAuthType model.AccountAuthType, credential *model.Credential, externalIDs map[string]string, l *logs.Log) error {
 	var err error
 	if credential != nil {
 		//TODO - in one transaction
@@ -982,6 +981,13 @@ func (a *Auth) registerAccountAuthType(accountAuthType model.AccountAuthType, cr
 	err = a.storage.InsertAccountAuthType(accountAuthType)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
+	}
+
+	if externalIDs != nil {
+		err = a.storage.InsertAccountExternalIDs(accountAuthType.Account.ID, externalIDs)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionInsert, "account external IDs", nil, err)
+		}
 	}
 
 	return nil
