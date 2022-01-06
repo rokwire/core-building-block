@@ -78,6 +78,8 @@ type LoginSession struct {
 	StateExpires *time.Time
 	MfaAttempts  int
 
+	DateRefreshed *time.Time
+
 	DateUpdated *time.Time
 	DateCreated time.Time
 }

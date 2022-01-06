@@ -313,9 +313,11 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 	}
 	loginSession.RefreshTokens = append(loginSession.RefreshTokens, refreshToken) //set the generated token
 
-	//store the updated session
 	now := time.Now()
 	loginSession.DateUpdated = &now
+	loginSession.DateRefreshed = &now
+
+	//store the updated session
 	err = a.storage.UpdateLoginSession(nil, *loginSession)
 	if err != nil {
 		l.Infof("error updating login session on refresh - %s", refreshToken)
