@@ -110,6 +110,7 @@ func (ls LoginSession) IsExpired() bool {
 
 	if tslActive {
 		//check if satisfy the policy
+		expired = ls.isTSLExpired(tslExpirePolicy)
 	}
 
 	if yearlyActive {
@@ -126,6 +127,14 @@ func (ls LoginSession) isInactivityExpired(policy InactivityExpirePolicy) bool {
 	}
 
 	expiresDate := lastRefreshedDate.Add(time.Duration(policy.InactivityPeriod) * time.Minute)
+	now := time.Now()
+
+	return expiresDate.Before(now)
+}
+
+func (ls LoginSession) isTSLExpired(policy TSLExpirePolicy) bool {
+	loginDate := ls.DateCreated
+	expiresDate := loginDate.Add(time.Duration(policy.TimeSinceLoginPeriod) * time.Minute)
 	now := time.Now()
 
 	return expiresDate.Before(now)
