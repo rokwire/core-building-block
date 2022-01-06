@@ -23,7 +23,7 @@ get:
       content:
         application/json:
             schema:
-              $ref: "../../schemas/apis/system/get-application/request/Request.yaml"
+              $ref: "../../schemas/apis/system/get-application/response/Response.yaml"
     400:
       description: Bad request
     401:

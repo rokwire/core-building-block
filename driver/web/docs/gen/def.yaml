@@ -2382,7 +2382,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_req_get_Application_Request"
+                  "$ref": "#/components/schemas/_res_get_Application_Response"
                 }
               }
             }
@@ -5040,7 +5040,9 @@
       "_res_get_Application_Response": {
         "required": [
           "id",
-          "name"
+          "name",
+          "multi_tenant",
+          "requires_own_users"
         ],
         "type": "object",
         "properties": {
@@ -5061,11 +5063,8 @@
             "description": "The maximum allowed duration (in hours) of a user's login session for this application",
             "type": "integer"
           },
-          "organization": {
-            "$ref": "#/components/schemas/ApplicationOrganization"
-          },
-          "applicationType": {
-            "$ref": "#/components/schemas/ApplicationType"
+          "application_types": {
+            "$ref": "#/components/schemas/ApplicationTypeFields"
           }
         }
       },

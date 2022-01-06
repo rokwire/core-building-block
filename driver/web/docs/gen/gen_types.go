@@ -612,9 +612,6 @@ type ReqCredentialUpdateRequest struct {
 	Params            *interface{} `json:"params,omitempty"`
 }
 
-// ReqGetApplicationRequest defines model for _req_get_Application_Request.
-type ReqGetApplicationRequest string
-
 // ReqGetOrganizationRequest defines model for _req_get_Organization_Request.
 type ReqGetOrganizationRequest struct {
 	Id string `json:"id"`
@@ -797,6 +794,18 @@ type ResAuthorizeServiceResponse struct {
 
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResAuthorizeServiceResponseTokenType string
+
+// ResGetApplicationResponse defines model for _res_get_Application_Response.
+type ResGetApplicationResponse struct {
+	ApplicationTypes *ApplicationTypeFields `json:"application_types,omitempty"`
+	Id               string                 `json:"id"`
+
+	// The maximum allowed duration (in hours) of a user's login session for this application
+	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
+	MultiTenant             bool   `json:"multi_tenant"`
+	Name                    string `json:"name"`
+	RequiresOwnUsers        bool   `json:"requires_own_users"`
+}
 
 // ResGetApplicationsResponse defines model for _res_get_Applications_Response.
 type ResGetApplicationsResponse struct {
