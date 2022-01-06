@@ -93,8 +93,6 @@ type Application struct {
 	//if true the service will always require the user to create profile for the application, otherwise he/she could use his/her already created profile from another platform application
 	RequiresOwnUsers bool
 
-	MaxLoginSessionDuration *int
-
 	Types []ApplicationType
 
 	Organizations []ApplicationOrganization

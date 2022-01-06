@@ -303,7 +303,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 	}
 	loginSession.AccessToken = accessToken //set the generated token
 	// - generate new refresh token
-	refreshToken, expires, err := a.buildRefreshToken()
+	refreshToken, err = a.buildRefreshToken()
 	if err != nil {
 		l.Infof("error generating refresh token on refresh - %s", refreshToken)
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -312,8 +312,6 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		loginSession.RefreshTokens = make([]string, 0)
 	}
 	loginSession.RefreshTokens = append(loginSession.RefreshTokens, refreshToken) //set the generated token
-	// - update the expired field
-	loginSession.Expires = *expires
 
 	//store the updated session
 	now := time.Now()

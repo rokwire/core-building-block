@@ -78,17 +78,16 @@ type LoginSession struct {
 	StateExpires *time.Time
 	MfaAttempts  int
 
-	Expires      time.Time
-	ForceExpires *time.Time
-
 	DateUpdated *time.Time
 	DateCreated time.Time
 }
 
 //IsExpired says if the sessions is expired
 func (ls LoginSession) IsExpired() bool {
-	now := time.Now()
-	return ls.Expires.Before(now) || (ls.ForceExpires != nil && ls.ForceExpires.Before(now))
+	//TODO
+	return false
+	//now := time.Now()
+	//return ls.Expires.Before(now) || (ls.ForceExpires != nil && ls.ForceExpires.Before(now))
 }
 
 //CurrentRefreshToken returns the current refresh token (last element of RefreshTokens)

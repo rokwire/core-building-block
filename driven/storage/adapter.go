@@ -410,7 +410,7 @@ func (sa *Adapter) InsertLoginSession(context TransactionContext, session model.
 func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier string) ([]model.LoginSession, error) {
 	filter := bson.D{primitive.E{Key: "identifier", Value: identifier}}
 	opts := options.Find()
-	opts.SetSort(bson.D{primitive.E{Key: "expires", Value: 1}})
+	opts.SetSort(bson.D{primitive.E{Key: "date_created", Value: 1}})
 
 	var loginSessions []loginSession
 	var err error

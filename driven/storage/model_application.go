@@ -13,8 +13,6 @@ type application struct {
 	RequiresOwnUsers bool `bson:"requires_own_users"`
 	Admin            bool `bson:"admin"`
 
-	MaxLoginSessionDuration *int `bson:"max_login_session_duration,omitempty"`
-
 	Types []applicationType `bson:"types"`
 
 	DateCreated time.Time  `bson:"date_created"`

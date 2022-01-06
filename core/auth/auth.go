@@ -43,7 +43,6 @@ const (
 
 	refreshTokenLength int = 256
 
-	sessionExpiry       int = 7 * 24 * 60 //1 week
 	sessionDeletePeriod int = 2
 
 	loginStateLength   int = 128
@@ -671,7 +670,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 	}
 
 	//refresh token
-	refreshToken, expires, err := a.buildRefreshToken()
+	refreshToken, err := a.buildRefreshToken()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
@@ -682,16 +681,11 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 		stateExpireTime := now.Add(time.Minute * time.Duration(loginStateDuration))
 		stateExpires = &stateExpireTime
 	}
-	var forceExpires *time.Time
-	if appType.Application.MaxLoginSessionDuration != nil {
-		forceLogoutTime := now.Add(time.Duration(*appType.Application.MaxLoginSessionDuration) * time.Hour)
-		forceExpires = &forceLogoutTime
-	}
 
 	loginSession := model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType,
 		AppType: appType, Anonymous: anonymous, Identifier: sub, AccountAuthType: accountAuthType,
 		Device: device, IPAddress: ipAddress, AccessToken: accessToken, RefreshTokens: []string{refreshToken}, Params: params,
-		State: state, StateExpires: stateExpires, Expires: *expires, ForceExpires: forceExpires, DateCreated: now}
+		State: state, StateExpires: stateExpires, DateCreated: now}
 
 	return &loginSession, nil
 }
@@ -1102,14 +1096,13 @@ func (a *Auth) buildCsrfToken(claims tokenauth.Claims) (string, error) {
 	return a.generateToken(&claims)
 }
 
-func (a *Auth) buildRefreshToken() (string, *time.Time, error) {
+func (a *Auth) buildRefreshToken() (string, error) {
 	newToken, err := utils.GenerateRandomString(refreshTokenLength)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionCompute, logutils.TypeToken, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionCompute, logutils.TypeToken, nil, err)
 	}
 
-	expireTime := time.Now().UTC().Add(time.Minute * time.Duration(sessionExpiry))
-	return newToken, &expireTime, nil
+	return newToken, nil
 }
 
 //getScopedAccessToken returns a scoped access token with the requested scopes
