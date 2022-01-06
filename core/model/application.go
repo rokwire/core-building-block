@@ -207,7 +207,7 @@ type LoginsSessionsSetting struct {
 
 	InactivityExpirePolicy InactivityExpirePolicy `bson:"inactivity_expire_policy"`
 	TSLExpirePolicy        TSLExpirePolicy        `bson:"time_since_login_expire_policy"`
-	FDExpirePolicy         FDExpirePolicy         `bson:"fixed_date_expire_policy"`
+	YearlyExpirePolicy     YearlyExpirePolicy     `bson:"yearly_expire_policy"`
 }
 
 //InactivityExpirePolicy represents expires policy based on inactivity
@@ -222,10 +222,11 @@ type TSLExpirePolicy struct {
 	TimeSinceLoginPeriod int  `bson:"time_since_login_period"` //in minutes
 }
 
-//FDExpirePolicy represents expires policy based on fixed date
-type FDExpirePolicy struct {
-	Active    bool      `bson:"active"`
-	FixedDate time.Time `bson:"fixed_date"`
+//YearlyExpirePolicy represents expires policy based on fixed date
+type YearlyExpirePolicy struct {
+	Active bool `bson:"active"`
+	Day    int  `bson:"day"`
+	Month  int  `bson:"month"`
 }
 
 //ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc
