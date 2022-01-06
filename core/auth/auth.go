@@ -45,7 +45,6 @@ const (
 
 	sessionExpiry       int = 7 * 24 * 60 //1 week
 	sessionDeletePeriod int = 2
-	sessionLimit        int = 3
 
 	loginStateLength   int = 128
 	loginStateDuration int = 5
@@ -593,6 +592,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 		}
 
 		//2. check session limit against number of active sessions
+		sessionLimit := appOrg.LoginsSessionsSetting.MaxConcurrentSessions
 		if sessionLimit > 0 {
 			loginSessions, err := a.storage.FindLoginSessions(context, loginSession.Identifier)
 			if err != nil {
