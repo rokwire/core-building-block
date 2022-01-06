@@ -86,10 +86,49 @@ type LoginSession struct {
 
 //IsExpired says if the sessions is expired
 func (ls LoginSession) IsExpired() bool {
-	//TODO
-	return false
-	//now := time.Now()
-	//return ls.Expires.Before(now) || (ls.ForceExpires != nil && ls.ForceExpires.Before(now))
+	loginsSessionsSetting := ls.AppOrg.LoginsSessionsSetting
+
+	inactivityExpirePolicy := loginsSessionsSetting.InactivityExpirePolicy
+	tslExpirePolicy := loginsSessionsSetting.TSLExpirePolicy
+	yearlyExpirePolicy := loginsSessionsSetting.YearlyExpirePolicy
+
+	inactivityActive := inactivityExpirePolicy.Active
+	tslActive := tslExpirePolicy.Active
+	yearlyActive := yearlyExpirePolicy.Active
+
+	//we must have at least one active expiration policy
+	if !inactivityActive && !tslActive && !yearlyActive {
+		return true //expired
+	}
+
+	expired := true //expired by default
+
+	if inactivityActive {
+		//check if satisfy the policy
+		expired = ls.isInactivityExpired(inactivityExpirePolicy)
+	}
+
+	if tslActive {
+		//check if satisfy the policy
+	}
+
+	if yearlyActive {
+		//check if satisfy the policy
+	}
+
+	return expired
+}
+
+func (ls LoginSession) isInactivityExpired(policy InactivityExpirePolicy) bool {
+	lastRefreshedDate := ls.DateRefreshed
+	if lastRefreshedDate == nil {
+		lastRefreshedDate = &ls.DateCreated //not refreshed yet
+	}
+
+	expiresDate := lastRefreshedDate.Add(time.Duration(policy.InactivityPeriod) * time.Minute)
+	now := time.Now()
+
+	return expiresDate.Before(now)
 }
 
 //CurrentRefreshToken returns the current refresh token (last element of RefreshTokens)
