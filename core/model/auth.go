@@ -151,6 +151,8 @@ func (ls LoginSession) isTSLExpired(policy TSLExpirePolicy) bool {
 }
 
 func (ls LoginSession) isYearlyExpired(policy YearlyExpirePolicy) bool {
+	createdDate := ls.DateCreated
+
 	now := time.Now().UTC()
 
 	day := policy.Day
@@ -159,7 +161,7 @@ func (ls LoginSession) isYearlyExpired(policy YearlyExpirePolicy) bool {
 
 	expiresDate := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
 
-	return expiresDate.Before(now)
+	return createdDate.Before(expiresDate) && expiresDate.Before(now)
 }
 
 //CurrentRefreshToken returns the current refresh token (last element of RefreshTokens)
