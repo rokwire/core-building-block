@@ -225,6 +225,8 @@ type YearlyExpirePolicy struct {
 	Active bool `bson:"active"`
 	Day    int  `bson:"day"`
 	Month  int  `bson:"month"`
+	Hour   int  `bson:"hour"`
+	Min    int  `bson:"min"`
 }
 
 //ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc

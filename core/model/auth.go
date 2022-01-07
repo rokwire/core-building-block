@@ -155,11 +155,13 @@ func (ls LoginSession) isYearlyExpired(policy YearlyExpirePolicy) bool {
 
 	now := time.Now().UTC()
 
+	min := policy.Min
+	hour := policy.Hour
 	day := policy.Day
 	month := policy.Month
 	year, _, _ := now.Date()
 
-	expiresDate := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+	expiresDate := time.Date(year, time.Month(month), day, hour, min, 0, 0, time.UTC)
 
 	return createdDate.Before(expiresDate) && expiresDate.Before(now)
 }
