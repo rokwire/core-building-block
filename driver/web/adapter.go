@@ -158,7 +158,7 @@ func (we Adapter) Start() {
 
 	systemSubrouter.HandleFunc("/permissions", we.wrapFunc(we.systemApisHandler.createPermission, we.auth.systemAuth)).Methods("POST")
 	systemSubrouter.HandleFunc("/permissions", we.wrapFunc(we.systemApisHandler.updatePermission, we.auth.systemAuth)).Methods("PUT")
-	//systemSubrouter.HandleFunc("/application-roles", we.wrapFunc(we.systemApisHandler.createApplicationRole, we.auth.systemAuth)).Methods("POST")
+	systemSubrouter.HandleFunc("/application-roles", we.wrapFunc(we.systemApisHandler.createApplicationRole, we.auth.systemAuth)).Methods("POST")
 	systemSubrouter.HandleFunc("/application-api-keys", we.wrapFunc(we.systemApisHandler.getApplicationAPIKeys, we.auth.systemAuth)).Methods("GET")
 
 	//systemSubrouter.HandleFunc("/account/permissions", we.wrapFunc(we.systemApisHandler.grantAccountPermissions, we.auth.systemAuth)).Methods("PUT")
