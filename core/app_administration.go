@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
@@ -233,6 +234,24 @@ func (app *application) updateBuildingBlockEnvironment(buildingBlock *model.Buil
 	}
 
 	return environment
+}
+
+func (app *application) admGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error) {
+	//1. find application organization
+	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+	if appOrg == nil {
+		return nil, errors.New("there is no app org for app ID and org ID")
+	}
+
+	//2. find permissions by the service ids
+	permissions, err := app.storage.FindPermissionsByServiceIDs(appOrg.ServicesIDs)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypePermission, nil, err)
+	}
+	return permissions, nil
 }
 
 func (app *application) admGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {

@@ -1698,6 +1698,44 @@
         }
       }
     },
+    "/admin/application/permissions": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get application permissions",
+        "description": "Get application permissions\n\n**Auth:** Requires user auth token\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PermissionFields"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/enc/test": {
       "get": {
         "tags": [
