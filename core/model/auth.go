@@ -106,16 +106,25 @@ func (ls LoginSession) IsExpired() bool {
 	if inactivityActive {
 		//check if satisfy the policy
 		expired = ls.isInactivityExpired(inactivityExpirePolicy)
+		if expired {
+			return true
+		}
 	}
 
 	if tslActive {
 		//check if satisfy the policy
 		expired = ls.isTSLExpired(tslExpirePolicy)
+		if expired {
+			return true
+		}
 	}
 
 	if yearlyActive {
 		//check if satisfy the policy
 		expired = ls.isYearlyExpired(yearlyExpirePolicy)
+		if expired {
+			return true
+		}
 	}
 
 	return expired
