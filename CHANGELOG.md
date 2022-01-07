@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 = Expose Admin API which gives an application account devices [#359](https://github.com/rokwire/core-building-block/issues/359)
+- Expose get permissions list admin API [#296](https://github.com/rokwire/core-building-block/issues/296)
 - Expose get accounts admin API [#283](https://github.com/rokwire/core-building-block/issues/283)
 - Expose get account admin API [#270](https://github.com/rokwire/core-building-block/issues/270)
 
