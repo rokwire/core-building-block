@@ -164,13 +164,13 @@ func (_m *Storage) FindAccountByID(context storage.TransactionContext, id string
 	return r0, r1
 }
 
-// FindAccounts provides a mock function with given fields: id, identifier, appID, orgID
-func (_m *Storage) FindAccounts(id string, identifier string, appID *string, orgID *string) ([]model.Account, error) {
-	ret := _m.Called(id, identifier, appID, orgID)
+// FindAccounts provides a mock function with given fields: appID, orgID, accountID, authTypeIdentifier
+func (_m *Storage) FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
+	ret := _m.Called(appID, orgID, accountID, authTypeIdentifier)
 
 	var r0 []model.Account
 	if rf, ok := ret.Get(0).(func(string, string, *string, *string) []model.Account); ok {
-		r0 = rf(id, identifier, appID, orgID)
+		r0 = rf(appID, orgID, accountID, authTypeIdentifier)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Account)
@@ -179,7 +179,7 @@ func (_m *Storage) FindAccounts(id string, identifier string, appID *string, org
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, string, *string, *string) error); ok {
-		r1 = rf(id, identifier, appID, orgID)
+		r1 = rf(appID, orgID, accountID, authTypeIdentifier)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -226,6 +226,29 @@ func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(ID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindApplicationOrganizations provides a mock function with given fields: appID, orgID
+func (_m *Storage) FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error) {
+	ret := _m.Called(appID, orgID)
+
+	var r0 *model.ApplicationOrganization
+	if rf, ok := ret.Get(0).(func(string, string) *model.ApplicationOrganization); ok {
+		r0 = rf(appID, orgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.ApplicationOrganization)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(appID, orgID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -341,6 +364,29 @@ func (_m *Storage) FindPermissionsByName(names []string) ([]model.Permission, er
 	var r1 error
 	if rf, ok := ret.Get(1).(func([]string) error); ok {
 		r1 = rf(names)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindPermissionsByServiceIDs provides a mock function with given fields: serviceIDs
+func (_m *Storage) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error) {
+	ret := _m.Called(serviceIDs)
+
+	var r0 []model.Permission
+	if rf, ok := ret.Get(0).(func([]string) []model.Permission); ok {
+		r0 = rf(serviceIDs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Permission)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func([]string) error); ok {
+		r1 = rf(serviceIDs)
 	} else {
 		r1 = ret.Error(1)
 	}
