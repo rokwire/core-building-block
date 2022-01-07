@@ -984,9 +984,14 @@ func (a *Auth) registerAccountAuthType(accountAuthType model.AccountAuthType, cr
 	}
 
 	if externalIDs != nil {
-		err = a.storage.InsertAccountExternalIDs(accountAuthType.Account.ID, externalIDs)
+		err = a.storage.UpdateAccountExternalIDs(accountAuthType.Account.ID, externalIDs)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionInsert, "account external IDs", nil, err)
+			return errors.WrapErrorAction(logutils.ActionUpdate, "account external IDs", nil, err)
+		}
+
+		err = a.storage.UpdateLoginSessionExternalIDs(accountAuthType.Account.ID, externalIDs)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, "login session external IDs", nil, err)
 		}
 	}
 
@@ -1059,7 +1064,7 @@ func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier str
 
 	//check if the auth type is supported for this application and organization
 	if !appOrg.IsAuthTypeSupported(*applicationType, *authType) {
-		return nil, nil, nil, errors.ErrorAction(logutils.ActionValidate, "not supported auth type for application and organization", nil)
+		return nil, nil, nil, errors.ErrorAction(logutils.ActionValidate, "not supported auth type for application and organization", &logutils.FieldArgs{"app_type_id": applicationType.ID, "auth_type_id": authType.ID})
 	}
 
 	return authType, applicationType, appOrg, nil
@@ -1459,14 +1464,6 @@ func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, er
 	}
 
 	return authRegs, nil
-}
-
-func (l *LocalServiceRegLoaderImpl) GetAccessToken() error {
-	return nil
-}
-
-func (l *LocalServiceRegLoaderImpl) GetDeletedAccounts() ([]string, error) {
-	return nil, nil
 }
 
 //NewLocalServiceRegLoader creates and configures a new LocalServiceRegLoaderImpl instance

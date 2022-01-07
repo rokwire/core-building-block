@@ -983,8 +983,8 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	return nil
 }
 
-//InsertAccountExternalIDs inserts external IDs into an account
-func (sa *Adapter) InsertAccountExternalIDs(accountID string, externalIDs map[string]string) error {
+//UpdateAccountExternalIDs updates account external IDs
+func (sa *Adapter) UpdateAccountExternalIDs(accountID string, externalIDs map[string]string) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 	now := time.Now().UTC()
 	update := bson.D{
@@ -996,10 +996,29 @@ func (sa *Adapter) InsertAccountExternalIDs(accountID string, externalIDs map[st
 
 	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, "account external IDs", &logutils.FieldArgs{"_id": accountID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, "account external IDs", &logutils.FieldArgs{"_id": accountID}, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionInsert, "account external IDs", &logutils.FieldArgs{"_id": accountID, "unexpected modified count": res.ModifiedCount})
+		return errors.ErrorAction(logutils.ActionUpdate, "account external IDs", &logutils.FieldArgs{"_id": accountID, "unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+//UpdateLoginSessionExternalIDs updates login session external IDs
+func (sa *Adapter) UpdateLoginSessionExternalIDs(accountID string, externalIDs map[string]string) error {
+	filter := bson.D{primitive.E{Key: "identifier", Value: accountID}}
+	now := time.Now().UTC()
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "external_ids", Value: externalIDs},
+			primitive.E{Key: "date_updated", Value: &now},
+		}},
+	}
+
+	_, err := sa.db.loginsSessions.UpdateMany(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, "login session external IDs", &logutils.FieldArgs{"identifier": accountID}, err)
 	}
 
 	return nil
