@@ -1403,24 +1403,6 @@ func (sa *Adapter) FindAppOrgRole(appOrgID string) ([]model.AppOrgRole, error) {
 	return result, nil
 }
 
-//FindAppOrg find  application_organization
-func (sa *Adapter) FindAppOrg(appID string, orgID string) (*model.ApplicationOrganization, error) {
-	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
-	var result []applicationOrganization
-	err := sa.db.applicationsOrganizations.Find(filter, &result, nil)
-
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
-	}
-	if len(result) == 0 {
-		//no record
-		return nil, nil
-	}
-
-	appOrgRes := result[0]
-	return &model.ApplicationOrganization{ID: appOrgRes.ID}, nil
-}
-
 //FindAppOrgGroups finds a set of application organization groups
 func (sa *Adapter) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
 	if len(ids) == 0 {
