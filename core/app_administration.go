@@ -165,7 +165,7 @@ func (app *application) admGetTestModel() string {
 
 func (app *application) admGetAppOrg(appID string, orgID string) ([]model.AppOrgGroup, error) {
 	//find application organization
-	getAppOrg, err := app.storage.FindAppOrg(appID, orgID)
+	getAppOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
