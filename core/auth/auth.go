@@ -7,6 +7,7 @@ import (
 	"core-building-block/utils"
 	"crypto/rsa"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -545,6 +546,32 @@ func (a *Auth) findAccountAuthTypeByID(account *model.Account, accountAuthTypeID
 	return accountAuthType, nil
 }
 
+func (a *Auth) clearExpiredSessions(identifier string, l *logs.Log) error {
+	l.Info("clearExpiredSessions")
+
+	//load the sessions for the identifier
+	loginsSessions, err := a.storage.FindLoginSessions(nil, identifier)
+	if err != nil {
+		return errors.Wrap("error finding logins sessions for clearing them", err)
+	}
+
+	//determine the expired sessions
+	expiredSessions := []model.LoginSession{}
+	for _, session := range loginsSessions {
+		if session.IsExpired() {
+			expiredSessions = append(expiredSessions, session)
+		}
+	}
+
+	//log sessions and expired sessions count
+	l.Info(fmt.Sprintf("there are %d sessions", len(loginsSessions)))
+	l.Info(fmt.Sprintf("there are %d expired sessions", len(expiredSessions)))
+
+	//TODO
+
+	return nil
+}
+
 func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, appOrg model.ApplicationOrganization,
 	accountAuthType *model.AccountAuthType, appType model.ApplicationType, ipAddress string, deviceType string,
 	deviceOS *string, deviceID string, params map[string]interface{}, state string, l *logs.Log) (*model.LoginSession, error) {
@@ -553,7 +580,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 	var loginSession *model.LoginSession
 
 	transaction := func(context storage.TransactionContext) error {
-		///assign device to session and account
+		///1. assign device to session and account
 		var device *model.Device
 		if !anonymous {
 			//1. check if the device exists
@@ -1389,11 +1416,11 @@ func (a *Auth) setupDeleteSessionsTimer() {
 		a.deleteSessionsTimer.Stop()
 	}
 
-	a.deleteExpiredSessions()
+	a.deleteSessions()
 }
 
-func (a *Auth) deleteExpiredSessions() {
-	a.logger.Info("deleteExpiredSessions")
+func (a *Auth) deleteSessions() {
+	a.logger.Info("deleteSessions")
 
 	// to delete:
 	// - not completed MFA
@@ -1402,6 +1429,9 @@ func (a *Auth) deleteExpiredSessions() {
 	//1. not completed MFA
 	a.deleteNotCompletedMFASessions()
 
+	//2. expired sessions
+	a.deleteExpiredSessions()
+
 	duration := time.Hour * time.Duration(sessionDeletePeriod)
 	a.deleteSessionsTimer = time.NewTimer(duration)
 	select {
@@ -1409,7 +1439,7 @@ func (a *Auth) deleteExpiredSessions() {
 		// timer expired
 		a.deleteSessionsTimer = nil
 
-		a.deleteExpiredSessions()
+		a.deleteSessions()
 	case <-a.timerDone:
 		// timer aborted
 		a.deleteSessionsTimer = nil
@@ -1419,10 +1449,79 @@ func (a *Auth) deleteExpiredSessions() {
 func (a *Auth) deleteNotCompletedMFASessions() {
 	a.logger.Info("deleteNotCompletedMFASessions")
 
-	now := time.Now().UTC()
-	err := a.storage.DeleteMFAExpiredSessions(&now)
+	err := a.storage.DeleteMFAExpiredSessions()
 	if err != nil {
 		a.logger.Error(err.Error())
+	}
+}
+
+func (a *Auth) deleteExpiredSessions() {
+	a.logger.Info("deleteExpiredSessions")
+
+	appsOrgs, err := a.storage.LoadApplicationsOrganizations()
+	if err != nil {
+		a.logger.Error(err.Error())
+	}
+
+	if len(appsOrgs) == 0 {
+		a.logger.Error("for some reasons apps orgs are missing")
+		return
+	}
+
+	for _, appOrg := range appsOrgs {
+		a.logger.Info("delete expired sessions for " + appOrg.ID + " app org")
+
+		loginsSessionsSetting := appOrg.LoginsSessionsSetting
+
+		inactivityExpirePolicy := loginsSessionsSetting.InactivityExpirePolicy
+		tslExpirePolicy := loginsSessionsSetting.TSLExpirePolicy
+		yearlyExpirePolicy := loginsSessionsSetting.YearlyExpirePolicy
+
+		inactivityActive := inactivityExpirePolicy.Active
+		tslActive := tslExpirePolicy.Active
+		yearlyActive := yearlyExpirePolicy.Active
+
+		if inactivityActive {
+			a.logger.Info("apply inactivity policy")
+			a.deleteSessionsByInactivity(appOrg)
+		}
+
+		if tslActive {
+			a.logger.Info("apply tsl policy")
+			a.deleteSessionsByTSL(appOrg)
+		}
+
+		if yearlyActive {
+			a.logger.Info("apply yearly policy")
+			a.deleteSessionsByYearly(appOrg)
+		}
+	}
+}
+
+func (a *Auth) deleteSessionsByInactivity(appOrg model.ApplicationOrganization) {
+	a.logger.Info("deleteSessionsByInactivity - app org " + appOrg.ID)
+
+	err := a.storage.DeleteExpiredSessionsByInactivity(appOrg.Application.ID, appOrg.Organization.ID)
+	if err != nil {
+		a.logger.Error("error deleting expired sessions by inactivity - " + err.Error())
+	}
+}
+
+func (a *Auth) deleteSessionsByTSL(appOrg model.ApplicationOrganization) {
+	a.logger.Info("deleteSessionsByTSL - app org " + appOrg.ID)
+
+	err := a.storage.DeleteExpiredSessionsByTSL(appOrg.Application.ID, appOrg.Organization.ID)
+	if err != nil {
+		a.logger.Error("error deleting expired sessions by tls - " + err.Error())
+	}
+}
+
+func (a *Auth) deleteSessionsByYearly(appOrg model.ApplicationOrganization) {
+	a.logger.Info("deleteSessionsByYearly - app org " + appOrg.ID)
+
+	err := a.storage.DeleteExpiredSessionsByYearly(appOrg.Application.ID, appOrg.Organization.ID)
+	if err != nil {
+		a.logger.Error("error deleting expired sessions by yearly - " + err.Error())
 	}
 }
 

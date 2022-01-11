@@ -108,8 +108,6 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		}
 
 		sub = accountAuthType.Account.ID
-
-		//TODO groups mapping
 	} else {
 		message, accountAuthType, mfaTypes, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
@@ -131,6 +129,12 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("generate", "login state", nil, err)
 		}
+	}
+
+	//clear the expired sessions for the identifier - user or anonymous
+	err = a.clearExpiredSessions(sub, l)
+	if err != nil {
+		return nil, nil, nil, errors.WrapErrorAction("error clearing expired session for identifier", "", nil, err)
 	}
 
 	//now we are ready to apply login for the user or anonymous

@@ -587,7 +587,9 @@ func (sa *Adapter) DeleteLoginSessions(context TransactionContext, identifier st
 }
 
 //DeleteMFAExpiredSessions deletes MFA expired sessions
-func (sa *Adapter) DeleteMFAExpiredSessions(now *time.Time) error {
+func (sa *Adapter) DeleteMFAExpiredSessions() error {
+	now := time.Now().UTC()
+
 	filter := bson.D{primitive.E{Key: "state_expires", Value: bson.M{"$lte": now}}}
 
 	_, err := sa.db.loginsSessions.DeleteMany(filter, nil)
@@ -595,6 +597,24 @@ func (sa *Adapter) DeleteMFAExpiredSessions(now *time.Time) error {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, &logutils.FieldArgs{"expires": now}, err)
 	}
 
+	return nil
+}
+
+//DeleteExpiredSessionsByInactivity deletes all expired sessions for app org based on the inactivity policy
+func (sa *Adapter) DeleteExpiredSessionsByInactivity(appID string, orgID string) error {
+	//TODO
+	return nil
+}
+
+//DeleteExpiredSessionsByTSL deletes all expired sessions for app org based on the TSL policy
+func (sa *Adapter) DeleteExpiredSessionsByTSL(appID string, orgID string) error {
+	//TODO
+	return nil
+}
+
+//DeleteExpiredSessionsByYearly deletes all expired sessions for app org based on the yearly policy
+func (sa *Adapter) DeleteExpiredSessionsByYearly(appID string, orgID string) error {
+	//TODO
 	return nil
 }
 
