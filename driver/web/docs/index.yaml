@@ -85,6 +85,8 @@ paths:
     $ref: "./resources/admin/account/mfa.yaml"
   /admin/application/accounts:
     $ref: "./resources/admin/application/accounts.yaml"
+  /admin/application/permissions:
+    $ref: "./resources/admin/application/permissions.yaml"
 
   #enc
   /enc/test:
@@ -95,6 +97,8 @@ paths:
     $ref: "./resources/bbs/test.yaml"
   /bbs/service-regs:
     $ref: "./resources/bbs/service-regs.yaml"
+  /bbs/access-token:
+    $ref: "./resources/bbs/access-token.yaml"
   /bbs/deleted-accounts:
     $ref: "./resources/bbs/deleted-accounts.yaml"
 
@@ -103,8 +107,8 @@ paths:
     $ref: "./resources/tps/service-regs.yaml"
   /tps/auth-keys:
     $ref: "./resources/tps/auth-keys.yaml"
-  /tps/account/token:
-    $ref: "./resources/tps/account-tokens.yaml"
+  /tps/access-token:
+    $ref: "./resources/tps/access-token.yaml"
 
   #system
   /system/global-config:

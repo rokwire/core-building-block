@@ -3,6 +3,7 @@ package web
 import (
 	"core-building-block/core"
 	"core-building-block/core/model"
+	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -44,6 +45,26 @@ func (h BBsApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, cl
 	}
 
 	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h BBsApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	message, accessToken, err := h.coreAPIs.Auth.GetServiceAccessToken(r, l)
+	if err != nil {
+		if message != nil {
+			return l.HttpResponseError(*message, err, http.StatusUnauthorized, false)
+		}
+		return l.HttpResponseError("Error getting access token", err, http.StatusInternalServerError, false)
+	}
+
+	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
+	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, TokenType: &tokenType}
+
+	respData, err := json.Marshal(rokwireToken)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service access token response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
 }
 
 func (h BBsApisHandler) getDeletedAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
