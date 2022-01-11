@@ -43,7 +43,7 @@ const (
 
 	refreshTokenLength int = 256
 
-	sessionDeletePeriod int = 2
+	sessionDeletePeriod int = 24
 
 	loginStateLength   int = 128
 	loginStateDuration int = 5
