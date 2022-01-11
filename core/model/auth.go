@@ -1,9 +1,11 @@
 package model
 
 import (
+	"core-building-block/utils"
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/binary"
+	"fmt"
 	"time"
 
 	"github.com/rokwire/logging-library-go/errors"
@@ -173,6 +175,24 @@ func (ls LoginSession) CurrentRefreshToken() string {
 		return ""
 	}
 	return ls.RefreshTokens[numTokens-1]
+}
+
+//LogInfo gives the information appropriate to be logged for the session
+func (ls LoginSession) LogInfo() string {
+	identifier := utils.GetLogValue(ls.Identifier)
+	accessToken := utils.GetLogValue(ls.AccessToken)
+
+	refreshTokens := make([]string, len(ls.RefreshTokens))
+	for i, rt := range ls.RefreshTokens {
+		refreshTokens[i] = utils.GetLogValue(rt)
+	}
+
+	state := utils.GetLogValue(ls.State)
+
+	return fmt.Sprintf("[id:%s, anonymous:%t, identifier:%s, at:%s, rts:%s, state:%s, "+
+		"state expires:%s,mfa attempts:%d, date refreshed:%s, date updated:%s, date created:%s]",
+		ls.ID, ls.Anonymous, identifier, accessToken, refreshTokens, state,
+		ls.StateExpires, ls.MfaAttempts, ls.DateRefreshed, ls.DateUpdated, ls.DateCreated)
 }
 
 //APIKey represents an API key entity
