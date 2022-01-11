@@ -997,6 +997,9 @@ type PostAdminAuthRefreshJSONBody ReqSharedRefresh
 // PostAdminAuthVerifyMfaJSONBody defines parameters for PostAdminAuthVerifyMfa.
 type PostAdminAuthVerifyMfaJSONBody ReqSharedMfa
 
+// PostBbsAccessTokenJSONBody defines parameters for PostBbsAccessToken.
+type PostBbsAccessTokenJSONBody ReqServiceAccountsTokenRequest
+
 // GetBbsServiceRegsParams defines parameters for GetBbsServiceRegs.
 type GetBbsServiceRegsParams struct {
 
@@ -1202,8 +1205,8 @@ type PostSystemServiceRegsJSONBody ServiceReg
 // PutSystemServiceRegsJSONBody defines parameters for PutSystemServiceRegs.
 type PutSystemServiceRegsJSONBody ServiceReg
 
-// PostTpsAccountTokenJSONBody defines parameters for PostTpsAccountToken.
-type PostTpsAccountTokenJSONBody ReqServiceAccountsTokenRequest
+// PostTpsAccessTokenJSONBody defines parameters for PostTpsAccessToken.
+type PostTpsAccessTokenJSONBody ReqServiceAccountsTokenRequest
 
 // GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
 type GetTpsServiceRegsParams struct {
@@ -1226,6 +1229,9 @@ type PostAdminAuthRefreshJSONRequestBody PostAdminAuthRefreshJSONBody
 
 // PostAdminAuthVerifyMfaJSONRequestBody defines body for PostAdminAuthVerifyMfa for application/json ContentType.
 type PostAdminAuthVerifyMfaJSONRequestBody PostAdminAuthVerifyMfaJSONBody
+
+// PostBbsAccessTokenJSONRequestBody defines body for PostBbsAccessToken for application/json ContentType.
+type PostBbsAccessTokenJSONRequestBody PostBbsAccessTokenJSONBody
 
 // DeleteServicesAccountMfaJSONRequestBody defines body for DeleteServicesAccountMfa for application/json ContentType.
 type DeleteServicesAccountMfaJSONRequestBody DeleteServicesAccountMfaJSONBody
@@ -1326,8 +1332,8 @@ type PostSystemServiceRegsJSONRequestBody PostSystemServiceRegsJSONBody
 // PutSystemServiceRegsJSONRequestBody defines body for PutSystemServiceRegs for application/json ContentType.
 type PutSystemServiceRegsJSONRequestBody PutSystemServiceRegsJSONBody
 
-// PostTpsAccountTokenJSONRequestBody defines body for PostTpsAccountToken for application/json ContentType.
-type PostTpsAccountTokenJSONRequestBody PostTpsAccountTokenJSONBody
+// PostTpsAccessTokenJSONRequestBody defines body for PostTpsAccessToken for application/json ContentType.
+type PostTpsAccessTokenJSONRequestBody PostTpsAccessTokenJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found

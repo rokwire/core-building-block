@@ -1528,6 +1528,53 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /bbs/access-token:
+    post:
+      tags:
+        - BBs
+      summary: Get service account access token
+      description: |
+        Returns a new service account access token
+      requestBody:
+        description: |
+          Service account credentials
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_req_service-accounts_TokenRequest'
+            examples:
+              static_token:
+                summary: Static token
+                value: |
+                  {
+                    "auth_type": "static_token",
+                    "creds": {
+                      "token": "account_token"
+                    }
+                  }
+              signature:
+                summary: Signature
+                value: |
+                  {
+                    "auth_type": "signature",
+                    "creds": {
+                      "id": "service_account_id"
+                    }
+                  }
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_res_shared_RokwireToken'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /tps/service-regs:
     get:
       tags:
@@ -1579,7 +1626,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /tps/account/token:
+  /tps/access-token:
     post:
       tags:
         - Third-Party Services

@@ -97,14 +97,16 @@ paths:
     $ref: "./resources/bbs/test.yaml"
   /bbs/service-regs:
     $ref: "./resources/bbs/service-regs.yaml"
+  /bbs/access-token:
+    $ref: "./resources/bbs/access-token.yaml"
 
   #third-party services
   /tps/service-regs:
     $ref: "./resources/tps/service-regs.yaml"
   /tps/auth-keys:
     $ref: "./resources/tps/auth-keys.yaml"
-  /tps/account/token:
-    $ref: "./resources/tps/account-tokens.yaml"
+  /tps/access-token:
+    $ref: "./resources/tps/access-token.yaml"
 
   #system
   /system/global-config:
