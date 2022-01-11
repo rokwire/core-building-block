@@ -179,15 +179,15 @@ func (ls LoginSession) CurrentRefreshToken() string {
 
 //LogInfo gives the information appropriate to be logged for the session
 func (ls LoginSession) LogInfo() string {
-	identifier := utils.GetLogValue(ls.Identifier)
-	accessToken := utils.GetLogValue(ls.AccessToken)
+	identifier := utils.GetLogValue(ls.Identifier, 3)
+	accessToken := utils.GetLogValue(ls.AccessToken, 10)
 
 	refreshTokens := make([]string, len(ls.RefreshTokens))
 	for i, rt := range ls.RefreshTokens {
-		refreshTokens[i] = utils.GetLogValue(rt)
+		refreshTokens[i] = utils.GetLogValue(rt, 10)
 	}
 
-	state := utils.GetLogValue(ls.State)
+	state := utils.GetLogValue(ls.State, 5)
 
 	return fmt.Sprintf("[id:%s, anonymous:%t, identifier:%s, at:%s, rts:%s, state:%s, "+
 		"state expires:%s,mfa attempts:%d, date refreshed:%s, date updated:%s, date created:%s]",

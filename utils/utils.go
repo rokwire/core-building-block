@@ -102,10 +102,10 @@ func GetIP(l *logs.Log, r *http.Request) string {
 }
 
 //GetLogValue prepares a sensitive data to be logged.
-func GetLogValue(value string) string {
-	if len(value) <= 3 {
+func GetLogValue(value string, n int) string {
+	if len(value) <= n {
 		return "***"
 	}
-	last3 := value[len(value)-3:]
-	return fmt.Sprintf("***%s", last3)
+	lastN := value[len(value)-n:]
+	return fmt.Sprintf("***%s", lastN)
 }
