@@ -20,7 +20,7 @@ type account struct {
 	MFATypes []mfaType `bson:"mfa_types,omitempty"`
 
 	Preferences map[string]interface{} `bson:"preferences,omitempty"`
-	Profile     *profile               `bson:"profile,omitempty"`
+	Profile     profile                `bson:"profile"`
 
 	Devices []userDevice `bson:"devices,omitempty"`
 

@@ -47,7 +47,7 @@ type Account struct {
 	MFATypes []MFAType
 
 	Preferences map[string]interface{}
-	Profile     *Profile //one account has one profile, one profile can be shared between many accounts
+	Profile     Profile //one account has one profile, one profile can be shared between many accounts
 
 	Devices []Device
 

@@ -8,7 +8,7 @@ import (
 //Account
 func accountToDef(item model.Account) *Def.ResSharedAccount {
 	//profile
-	profile := profileToDef(item.Profile)
+	profile := profileToDef(&item.Profile)
 	//preferences
 	preferences := &item.Preferences
 	//permissions

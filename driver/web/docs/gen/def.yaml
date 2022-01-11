@@ -1582,6 +1582,10 @@ paths:
       summary: Get deleted accounts
       description: |
         Returns a list of deleted account IDs
+
+        **Auth:** Requires auth token with permission to get deleted accounts
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Success
