@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"reflect"
@@ -98,4 +99,13 @@ func GetIP(l *logs.Log, r *http.Request) string {
 		IPAddress = r.RemoteAddr
 	}
 	return IPAddress
+}
+
+//GetLogValue prepares a sensitive data to be logged.
+func GetLogValue(value string) string {
+	if len(value) <= 3 {
+		return "***"
+	}
+	last3 := value[len(value)-3:]
+	return fmt.Sprintf("***%s", last3)
 }
