@@ -1393,19 +1393,14 @@ func (a *Auth) setupDeleteSessionsTimer() {
 }
 
 func (a *Auth) deleteExpiredSessions() {
-
-	//TODO
-	// to delete:
-	// - not compelted MFA
-	// - expired sessions
-
 	a.logger.Info("deleteExpiredSessions")
 
-	now := time.Now().UTC()
-	err := a.storage.DeleteMFAExpiredSessions(&now)
-	if err != nil {
-		a.logger.Error(err.Error())
-	}
+	// to delete:
+	// - not completed MFA
+	// - expired sessions
+
+	//1. not completed MFA
+	a.deleteNotCompletedMFASessions()
 
 	duration := time.Hour * time.Duration(sessionDeletePeriod)
 	a.deleteSessionsTimer = time.NewTimer(duration)
@@ -1418,6 +1413,16 @@ func (a *Auth) deleteExpiredSessions() {
 	case <-a.timerDone:
 		// timer aborted
 		a.deleteSessionsTimer = nil
+	}
+}
+
+func (a *Auth) deleteNotCompletedMFASessions() {
+	a.logger.Info("deleteNotCompletedMFASessions")
+
+	now := time.Now().UTC()
+	err := a.storage.DeleteMFAExpiredSessions(&now)
+	if err != nil {
+		a.logger.Error(err.Error())
 	}
 }
 
