@@ -568,6 +568,9 @@ func (a *Auth) clearExpiredSessions(identifier string, l *logs.Log) error {
 	l.Info(fmt.Sprintf("there are %d expired sessions", len(expiredSessions)))
 
 	//TODO
+	for _, session := range loginsSessions {
+		l.Info(session.LogInfo())
+	}
 
 	return nil
 }
@@ -630,7 +633,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 
 			if len(loginSessions) > sessionLimit {
 				// delete first session in list (sorted by expiration)
-				err = a.storage.DeleteLoginSession(context, loginSessions[0].ID)
+				err = a.deleteLoginSession(context, loginSessions[0], l)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
 				}
@@ -717,11 +720,16 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 	return &loginSession, nil
 }
 
-func (a *Auth) deleteLoginSession(context storage.TransactionContext, sessionID string, l *logs.Log) {
-	err := a.storage.DeleteLoginSession(context, sessionID)
+func (a *Auth) deleteLoginSession(context storage.TransactionContext, loginSession model.LoginSession, l *logs.Log) error {
+	//always log what session has been deleted
+	l.Info("deleting loging session - " + loginSession.LogInfo())
+
+	err := a.storage.DeleteLoginSession(context, loginSession.ID)
 	if err != nil {
 		l.WarnAction(logutils.ActionDelete, model.TypeLoginSession, err)
+		return err
 	}
+	return nil
 }
 
 func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier string, accountAuthTypeParams map[string]interface{},

@@ -212,7 +212,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		l.Infof("the session is expired, so delete it and return null - %s", refreshToken)
 
 		//remove the session
-		err = a.storage.DeleteLoginSession(nil, loginSession.ID)
+		err = a.deleteLoginSession(nil, *loginSession, l)
 		if err != nil {
 			return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err)
 		}
@@ -231,7 +231,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		l.Infof("previous refresh token being used, so delete login session and return null - %s", refreshToken)
 
 		//remove the session
-		err = a.storage.DeleteLoginSession(nil, loginSession.ID)
+		err = a.deleteLoginSession(nil, *loginSession, l)
 		if err != nil {
 			return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err)
 		}
@@ -400,7 +400,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 		}
 
 		if loginSession.MfaAttempts >= maxMfaAttempts {
-			a.deleteLoginSession(context, sessionID, l)
+			a.deleteLoginSession(context, *loginSession, l)
 			message = fmt.Sprintf("max mfa attempts reached: %d", maxMfaAttempts)
 			return errors.New(message)
 		}
@@ -435,7 +435,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 			return errors.ErrorData(logutils.StatusInvalid, "login state", errFields)
 		}
 		if loginSession.StateExpires != nil && time.Now().UTC().After(*loginSession.StateExpires) {
-			a.deleteLoginSession(context, sessionID, l)
+			a.deleteLoginSession(context, *loginSession, l)
 			message = "expired state"
 			return errors.ErrorData(logutils.StatusInvalid, "expired state", nil)
 		}
