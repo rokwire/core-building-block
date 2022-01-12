@@ -1538,7 +1538,23 @@ func (a *Auth) deleteExpiredSessions() {
 		expiredCount := len(forDelete)
 		a.logger.Infof("we have %d expired sessions, so we need to delete them", expiredCount)
 
-		//TODO
+		//log the data that will be deleted
+		a.logger.Info("expired sessions to be deleted:")
+		for _, session := range forDelete {
+			a.logger.Info("deleting loging session - " + session.LogInfo())
+		}
+
+		//prepare the IDs
+		ids := make([]string, len(forDelete))
+		for i, session := range forDelete {
+			ids[i] = session.ID
+		}
+
+		//delete the sessions from the storage
+		err = a.storage.DeleteLoginSessionsByIDs(nil, ids)
+		if err != nil {
+			a.logger.Errorf("error on deleting logins sessions - %s", err)
+		}
 	}
 }
 
