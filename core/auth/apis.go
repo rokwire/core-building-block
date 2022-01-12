@@ -134,7 +134,8 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	//clear the expired sessions for the identifier - user or anonymous
 	err = a.clearExpiredSessions(sub, l)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction("error clearing expired session for identifier", "", nil, err)
+		return nil, nil, nil, errors.WrapErrorAction("error clearing expired session for identifier", "",
+			&logutils.FieldArgs{"identifier": sub}, err)
 	}
 
 	//now we are ready to apply login for the user or anonymous
