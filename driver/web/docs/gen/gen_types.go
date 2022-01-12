@@ -165,19 +165,6 @@ const (
 	ResAuthorizeServiceResponseTokenTypeBearer ResAuthorizeServiceResponseTokenType = "Bearer"
 )
 
-// Defines values for ResGetOrganizationsResponseType.
-const (
-	ResGetOrganizationsResponseTypeHuge ResGetOrganizationsResponseType = "huge"
-
-	ResGetOrganizationsResponseTypeLarge ResGetOrganizationsResponseType = "large"
-
-	ResGetOrganizationsResponseTypeMedium ResGetOrganizationsResponseType = "medium"
-
-	ResGetOrganizationsResponseTypeMicro ResGetOrganizationsResponseType = "micro"
-
-	ResGetOrganizationsResponseTypeSmall ResGetOrganizationsResponseType = "small"
-)
-
 // Defines values for ResSharedRokwireTokenTokenType.
 const (
 	ResSharedRokwireTokenTokenTypeBearer ResSharedRokwireTokenTokenType = "Bearer"
@@ -615,14 +602,6 @@ type ReqCredentialUpdateRequest struct {
 	Params            *interface{} `json:"params,omitempty"`
 }
 
-// ReqGetApplicationRequest defines model for _req_get_Application_Request.
-type ReqGetApplicationRequest string
-
-// ReqGetOrganizationRequest defines model for _req_get_Organization_Request.
-type ReqGetOrganizationRequest struct {
-	Id string `json:"id"`
-}
-
 // ReqPermissionsRequest defines model for _req_permissions_Request.
 type ReqPermissionsRequest struct {
 
@@ -802,29 +781,6 @@ type ResAuthorizeServiceResponse struct {
 
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResAuthorizeServiceResponseTokenType string
-
-// ResGetApplicationsResponse defines model for _res_get_Applications_Response.
-type ResGetApplicationsResponse struct {
-	ApplicationTypes *ApplicationTypeFields `json:"application_types,omitempty"`
-	Id               string                 `json:"id"`
-
-	// The maximum allowed duration (in hours) of a user's login session for this application
-	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
-	MultiTenant             bool   `json:"multi_tenant"`
-	Name                    string `json:"name"`
-	RequiresOwnUsers        bool   `json:"requires_own_users"`
-}
-
-// ResGetOrganizationsResponse defines model for _res_get_Organizations_Response.
-type ResGetOrganizationsResponse struct {
-	Config *[]OrganizationConfigFields     `json:"config,omitempty"`
-	Id     string                          `json:"id"`
-	Name   string                          `json:"name"`
-	Type   ResGetOrganizationsResponseType `json:"type"`
-}
-
-// ResGetOrganizationsResponseType defines model for ResGetOrganizationsResponse.Type.
-type ResGetOrganizationsResponseType string
 
 // ResSharedAccount defines model for _res_shared_Account.
 type ResSharedAccount struct {

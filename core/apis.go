@@ -22,8 +22,8 @@ type APIs struct {
 
 	Auth auth.APIs //expose to the drivers auth
 
-	RokwireOrgID      string
-	RokwireAdminAppID string
+	SystemOrgID      string
+	SystemAdminAppID string
 
 	app *application
 }
@@ -48,48 +48,48 @@ func (c *APIs) GetVersion() string {
 
 func (c *APIs) storeSystemData() error {
 	transaction := func(context storage.TransactionContext) error {
-		//1. insert rokwire admin app if doesn't exist
-		rokwireAdminApp, err := c.app.storage.FindApplication(c.RokwireAdminAppID)
+		//1. insert system admin app if doesn't exist
+		systemAdminApp, err := c.app.storage.FindApplication(c.SystemAdminAppID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 		}
-		if rokwireAdminApp == nil {
+		if systemAdminApp == nil {
 			id, _ := uuid.NewUUID()
 			newAndroidAppType := model.ApplicationType{ID: id.String(), Identifier: "edu.illinois.rokwire.admin.android",
-				Name: "ROKWIRE Admin Android", Versions: []string{"1.0.0"}}
-			newRokwireAdminApp := model.Application{ID: c.RokwireAdminAppID, Name: "ROKWIRE Admin Application", MultiTenant: false, Admin: true,
+				Name: "System Admin Android", Versions: []string{"1.0.0"}}
+			newSystemAdminApp := model.Application{ID: c.SystemAdminAppID, Name: "System Admin Application", MultiTenant: false, Admin: true,
 				RequiresOwnUsers: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
-			_, err = c.app.storage.InsertApplication(newRokwireAdminApp)
+			_, err = c.app.storage.InsertApplication(newSystemAdminApp)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, nil, err)
 			}
 
-			rokwireAdminApp = &newRokwireAdminApp
+			systemAdminApp = &newSystemAdminApp
 		}
 
-		//2. insert rokwire org if doesn't exist
-		rokwireOrg, err := c.app.storage.FindOrganization(c.RokwireOrgID)
+		//2. insert system org if doesn't exist
+		systemOrg, err := c.app.storage.FindOrganization(c.SystemOrgID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 		}
-		if rokwireOrg == nil {
+		if systemOrg == nil {
 			id, _ := uuid.NewUUID()
-			rokwireOrgConfig := model.OrganizationConfig{ID: id.String(), Domains: []string{"rokwire.com"}, DateCreated: time.Now().UTC()}
-			newRokwireOrg := model.Organization{ID: c.RokwireOrgID, Name: "ROKWIRE", Type: "small", Config: rokwireOrgConfig, DateCreated: time.Now().UTC()}
-			_, err = c.app.storage.InsertOrganization(newRokwireOrg)
+			systemOrgConfig := model.OrganizationConfig{ID: id.String(), DateCreated: time.Now().UTC()}
+			newSystemOrg := model.Organization{ID: c.SystemOrgID, Name: "System", Type: "small", Config: systemOrgConfig, DateCreated: time.Now().UTC()}
+			_, err = c.app.storage.InsertOrganization(newSystemOrg)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganization, nil, err)
 			}
 
-			rokwireOrg = &newRokwireOrg
+			systemOrg = &newSystemOrg
 		}
 
-		//3. insert rokwire appOrg if doesn't exist
-		rokwireAdminAppOrg, err := c.app.storage.FindApplicationOrganizations(c.RokwireAdminAppID, c.RokwireOrgID)
+		//3. insert system appOrg if doesn't exist
+		systemAdminAppOrg, err := c.app.storage.FindApplicationOrganizations(c.SystemAdminAppID, c.SystemOrgID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 		}
-		if rokwireAdminAppOrg == nil {
+		if systemAdminAppOrg == nil {
 			id, _ := uuid.NewUUID()
 
 			emailAuthType, err := c.app.storage.FindAuthType("email")
@@ -102,14 +102,14 @@ func (c *APIs) storeSystemData() error {
 			}{
 				{emailAuthType.ID, nil},
 			}
-			supportedAuthTypes := make([]model.AuthTypesSupport, len(rokwireAdminApp.Types))
-			for i, appType := range rokwireAdminApp.Types {
+			supportedAuthTypes := make([]model.AuthTypesSupport, len(systemAdminApp.Types))
+			for i, appType := range systemAdminApp.Types {
 				supportedAuthTypes[i] = model.AuthTypesSupport{AppTypeID: appType.ID, SupportedAuthTypes: emailSupport}
 			}
 
-			newRokwireAdminAppOrg := model.ApplicationOrganization{ID: id.String(), Application: *rokwireAdminApp, Organization: *rokwireOrg,
+			newSystemAdminAppOrg := model.ApplicationOrganization{ID: id.String(), Application: *systemAdminApp, Organization: *systemOrg,
 				SupportedAuthTypes: supportedAuthTypes, DateCreated: time.Now().UTC()}
-			_, err = c.app.storage.InsertApplicationOrganization(newRokwireAdminAppOrg)
+			_, err = c.app.storage.InsertApplicationOrganization(newSystemAdminAppOrg)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplicationOrganization, nil, err)
 			}
@@ -122,7 +122,7 @@ func (c *APIs) storeSystemData() error {
 }
 
 //NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, rokwireAdminAppID string, rokwireOrgID string) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, systemAdminAppID string, systemOrgID string) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
 	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners}
@@ -136,7 +136,7 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 
 	//+ auth
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
-		BBs: bbsImpl, System: systemImpl, Auth: auth, RokwireAdminAppID: rokwireAdminAppID, RokwireOrgID: rokwireOrgID,
+		BBs: bbsImpl, System: systemImpl, Auth: auth, SystemAdminAppID: systemAdminAppID, SystemOrgID: systemOrgID,
 		app: &application}
 
 	return &coreAPIs

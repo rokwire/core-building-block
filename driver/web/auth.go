@@ -255,7 +255,7 @@ func (auth *SystemAuth) check(req *http.Request) (int, *tokenauth.Claims, error)
 		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
 	}
 
-	if claims.OrgID != auth.coreAPIs.RokwireOrgID {
+	if claims.OrgID != auth.coreAPIs.SystemOrgID {
 		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "org id", logutils.StringArgs(claims.OrgID))
 	}
 

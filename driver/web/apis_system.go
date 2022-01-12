@@ -418,7 +418,7 @@ func (h SystemApisHandler) getApplications(l *logs.Log, r *http.Request, claims 
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}
-	var response []Def.ApplicationFields
+	var response []Def.Application
 	for _, application := range applications {
 		r := applicationToDef(&application)
 		response = append(response, *r)

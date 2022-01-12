@@ -141,6 +141,11 @@ func (we Adapter) Start() {
 
 	///system ///
 	//TODO - disable until we implement the system accounts login so that to protect them
+	systemSubrouter := subRouter.PathPrefix("/system").Subrouter()
+	systemSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.systemApisHandler.getOrganization, nil)).Methods("GET")
+	systemSubrouter.HandleFunc("/organizations", we.wrapFunc(we.systemApisHandler.getOrganizations, nil)).Methods("GET")
+	systemSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.systemApisHandler.getApplication, nil)).Methods("GET")
+	systemSubrouter.HandleFunc("/applications", we.wrapFunc(we.systemApisHandler.getApplications, nil)).Methods("GET")
 	/*
 		systemSubrouter := subRouter.PathPrefix("/system").Subrouter()
 		systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.createGlobalConfig, we.auth.systemAuth)).Methods("POST")

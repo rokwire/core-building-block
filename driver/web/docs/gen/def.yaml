@@ -1733,7 +1733,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_req_get_Organization_Request'
+                $ref: '#/components/schemas/Organization'
         '400':
           description: Bad request
         '401':
@@ -1762,7 +1762,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_res_get_Organizations_Response'
+                  $ref: '#/components/schemas/Organization'
         '400':
           description: Bad request
         '401':
@@ -1966,7 +1966,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_req_get_Application_Request'
+                $ref: '#/components/schemas/Application'
         '400':
           description: Bad request
         '401':
@@ -1995,7 +1995,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_res_get_Applications_Response'
+                  $ref: '#/components/schemas/Application'
         '400':
           description: Bad request
         '401':
