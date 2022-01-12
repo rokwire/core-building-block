@@ -18,11 +18,22 @@ type collectionWrapper struct {
 }
 
 func (collWrapper *collectionWrapper) Find(filter interface{}, result interface{}, findOptions *options.FindOptions) error {
-	return collWrapper.FindWithContext(context.Background(), filter, result, findOptions)
+	return collWrapper.FindWithParams(context.Background(), filter, result, findOptions, nil)
 }
 
 func (collWrapper *collectionWrapper) FindWithContext(ctx context.Context, filter interface{}, result interface{}, findOptions *options.FindOptions) error {
-	ctx, cancel := context.WithTimeout(ctx, collWrapper.database.mongoTimeout)
+	return collWrapper.FindWithParams(ctx, filter, result, findOptions, nil)
+}
+
+func (collWrapper *collectionWrapper) FindWithParams(ctx context.Context, filter interface{}, result interface{},
+	findOptions *options.FindOptions, timeout *time.Duration) error {
+
+	//set timeout
+	if timeout == nil {
+		timeout = &collWrapper.database.mongoTimeout
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, *timeout)
 	defer cancel()
 
 	if filter == nil {

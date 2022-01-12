@@ -629,7 +629,8 @@ func (sa *Adapter) FindSessionsLazy(appID string, orgID string) ([]model.LoginSe
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
 
 	var loginSessions []loginSession
-	err := sa.db.loginsSessions.Find(filter, &loginSessions, nil)
+	timeout := time.Millisecond * time.Duration(5000) //5 seconds
+	err := sa.db.loginsSessions.FindWithParams(context.Background(), filter, &loginSessions, nil, &timeout)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession,
 			&logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
