@@ -565,6 +565,27 @@ func (sa *Adapter) DeleteLoginSession(context TransactionContext, id string) err
 	return nil
 }
 
+//DeleteLoginSessionsByIDs deletes login sessions by ids
+func (sa *Adapter) DeleteLoginSessionsByIDs(context TransactionContext, ids []string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+
+	var res *mongo.DeleteResult
+	var err error
+	if context != nil {
+		res, err = sa.db.loginsSessions.DeleteManyWithContext(context, filter, nil)
+	} else {
+		res, err = sa.db.loginsSessions.DeleteMany(filter, nil)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession,
+			&logutils.FieldArgs{"identifier": ids}, err)
+	}
+
+	sa.logger.Infof("%s were deleted", res.DeletedCount)
+	return nil
+}
+
 //DeleteLoginSessions deletes all login sessions with the identifier
 func (sa *Adapter) DeleteLoginSessions(context TransactionContext, identifier string) error {
 	filter := bson.M{"identifier": identifier}

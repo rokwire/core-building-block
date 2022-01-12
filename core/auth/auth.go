@@ -567,9 +567,16 @@ func (a *Auth) clearExpiredSessions(identifier string, l *logs.Log) error {
 	l.Info(fmt.Sprintf("there are %d sessions", len(loginsSessions)))
 	l.Info(fmt.Sprintf("there are %d expired sessions", len(expiredSessions)))
 
-	//TODO
-	for _, session := range loginsSessions {
-		l.Info(session.LogInfo())
+	//clear the expird sessions if there are such ones
+	if len(expiredSessions) > 0 {
+		l.Info("there is expired sessions for deleting")
+
+		err = a.deleteLoginSessions(nil, expiredSessions, l)
+		if err != nil {
+			return errors.Wrap("error on deleting logins sessions", err)
+		}
+	} else {
+		l.Info("there is no expired sessions for deleting")
 	}
 
 	return nil
@@ -725,6 +732,28 @@ func (a *Auth) deleteLoginSession(context storage.TransactionContext, loginSessi
 	l.Info("deleting loging session - " + loginSession.LogInfo())
 
 	err := a.storage.DeleteLoginSession(context, loginSession.ID)
+	if err != nil {
+		l.WarnAction(logutils.ActionDelete, model.TypeLoginSession, err)
+		return err
+	}
+	return nil
+}
+
+func (a *Auth) deleteLoginSessions(context storage.TransactionContext, loginSessions []model.LoginSession, l *logs.Log) error {
+	//always log what session has been deleted
+	l.Info("expired sessions to be deleted:")
+	for _, session := range loginSessions {
+		l.Info("deleting loging session - " + session.LogInfo())
+	}
+
+	//prepare the IDs
+	ids := make([]string, len(loginSessions))
+	for i, session := range loginSessions {
+		ids[i] = session.ID
+	}
+
+	//delete the sessions from the storage
+	err := a.storage.DeleteLoginSessionsByIDs(context, ids)
 	if err != nil {
 		l.WarnAction(logutils.ActionDelete, model.TypeLoginSession, err)
 		return err
