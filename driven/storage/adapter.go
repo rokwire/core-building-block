@@ -566,15 +566,16 @@ func (sa *Adapter) DeleteLoginSession(context TransactionContext, id string) err
 }
 
 //DeleteLoginSessionsByIDs deletes login sessions by ids
-func (sa *Adapter) DeleteLoginSessionsByIDs(context TransactionContext, ids []string) error {
+func (sa *Adapter) DeleteLoginSessionsByIDs(transaction TransactionContext, ids []string) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 
 	var res *mongo.DeleteResult
 	var err error
-	if context != nil {
-		res, err = sa.db.loginsSessions.DeleteManyWithContext(context, filter, nil)
+	timeout := time.Millisecond * time.Duration(5000) //5 seconds
+	if transaction != nil {
+		res, err = sa.db.loginsSessions.DeleteManyWithParams(transaction, filter, nil, &timeout)
 	} else {
-		res, err = sa.db.loginsSessions.DeleteMany(filter, nil)
+		res, err = sa.db.loginsSessions.DeleteManyWithParams(context.Background(), filter, nil, &timeout)
 	}
 
 	if err != nil {
