@@ -45,6 +45,7 @@ const (
 	refreshTokenLength int = 256
 
 	sessionDeletePeriod int = 24
+	maxSessionsDelete   int = 250
 
 	loginStateLength   int = 128
 	loginStateDuration int = 5
@@ -1537,6 +1538,15 @@ func (a *Auth) deleteExpiredSessions() {
 		//we have expired sessions, so we need to delete them
 		expiredCount := len(forDelete)
 		a.logger.Infof("we have %d expired sessions, so we need to delete them", expiredCount)
+
+		//we delete max 250 items
+		if expiredCount > maxSessionsDelete {
+			a.logger.Infof("%d expired sessions > %d, so remove only %d",
+				expiredCount, maxSessionsDelete, maxSessionsDelete)
+			forDelete = forDelete[0 : maxSessionsDelete-1]
+		} else {
+			a.logger.Infof("%d expired sessions <= %d, so do nothing", expiredCount, maxSessionsDelete)
+		}
 
 		//log the data that will be deleted
 		a.logger.Info("expired sessions to be deleted:")
