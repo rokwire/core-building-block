@@ -1506,7 +1506,7 @@ func (a *Auth) deleteExpiredSessions() {
 	}
 
 	for _, appOrg := range appsOrgs {
-		a.logger.Info("delete expired sessions for " + appOrg.ID + " app org")
+		a.logger.Infof("delete expired sessions for %s app org", appOrg.ID)
 
 		//find the app/org sessions
 		sessions, err := a.storage.FindSessionsLazy(appOrg.Application.ID, appOrg.Organization.ID)
@@ -1516,7 +1516,7 @@ func (a *Auth) deleteExpiredSessions() {
 
 		//continue if no sessions
 		if len(sessions) == 0 {
-			a.logger.Info("no sessions for this app/org")
+			a.logger.Infof("no sessions for %s app org", appOrg.ID)
 			continue
 		}
 
@@ -1530,12 +1530,15 @@ func (a *Auth) deleteExpiredSessions() {
 
 		//count if no expired sessions
 		if len(forDelete) == 0 {
-			a.logger.Info("no expired sessions for this app/org")
+			a.logger.Infof("no expired sessions for %s app org", appOrg.ID)
 			continue
 		}
 
+		//we have expired sessions, so we need to delete them
+		expiredCount := len(forDelete)
+		a.logger.Infof("we have %d expired sessions, so we need to delete them", expiredCount)
+
 		//TODO
-		//a.logger.InfoWithFields("no expired sessions for this app/org", logutils.Fields{"count": len(forDelete)})
 	}
 }
 
