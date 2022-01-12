@@ -352,20 +352,21 @@ func (sa *Adapter) getCachedApplicationOrganization(appID string, orgID string) 
 }
 
 func (sa *Adapter) getCachedApplicationOrganizationByKey(key string) (*model.ApplicationOrganization, error) {
-	sa.applicationsOrganizationsLock.RLock()
-	defer sa.applicationsOrganizationsLock.RUnlock()
+	/*	sa.applicationsOrganizationsLock.RLock()
+		defer sa.applicationsOrganizationsLock.RUnlock()
 
-	errArgs := &logutils.FieldArgs{"key": key}
+		errArgs := &logutils.FieldArgs{"key": key}
 
-	item, _ := sa.cachedApplicationsOrganizations.Load(key)
-	if item != nil {
-		appOrg, ok := item.(model.ApplicationOrganization)
-		if !ok {
-			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplicationOrganization, errArgs)
+		item, _ := sa.cachedApplicationsOrganizations.Load(key)
+		if item != nil {
+			appOrg, ok := item.(model.ApplicationOrganization)
+			if !ok {
+				return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplicationOrganization, errArgs)
+			}
+			return &appOrg, nil
 		}
-		return &appOrg, nil
-	}
-	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, errArgs)
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, errArgs)*/
+	return nil, nil
 }
 
 //LoadAuthTypes loads all auth types
@@ -1732,6 +1733,7 @@ func (sa *Adapter) LoadApplications() ([]model.Application, error) {
 
 //InsertApplication inserts an application
 func (sa *Adapter) InsertApplication(application model.Application) (*model.Application, error) {
+
 	app := applicationToStorage(&application)
 	_, err := sa.db.applications.InsertOne(app)
 	if err != nil {

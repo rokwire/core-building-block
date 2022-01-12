@@ -188,6 +188,7 @@ func applicationToStorage(item *model.Application) *application {
 	if item == nil {
 		return nil
 	}
+	appTypes := applicationTypesToStorage(item.Types)
 	return &application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, RequiresOwnUsers: item.RequiresOwnUsers, Admin: item.Admin,
-		MaxLoginSessionDuration: item.MaxLoginSessionDuration, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		MaxLoginSessionDuration: item.MaxLoginSessionDuration, Types: appTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

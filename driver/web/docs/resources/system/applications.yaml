@@ -29,8 +29,6 @@
   summary: Create application
   description: |
     Creates application
-
-    **Auth:** Requires auth token with `app_admin` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -38,7 +36,7 @@
     content:
       application/json:
         schema:
-         $ref: "../../schemas/apis/system/create-application/request/Request.yaml"
+          $ref: "../../schemas/apis/system/create-application/request/Request.yaml"
     required: true
   responses:
     200:

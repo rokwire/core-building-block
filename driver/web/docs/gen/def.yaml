@@ -2444,7 +2444,7 @@
           "System"
         ],
         "summary": "Create application",
-        "description": "Creates application\n\n**Auth:** Requires auth token with `app_admin` permission\n",
+        "description": "Creates application\n",
         "security": [
           {
             "bearerAuth": []

@@ -390,18 +390,23 @@ func (h SystemApisHandler) createApplication(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqCreateApplicationRequest
-	err = json.Unmarshal(data, &requestData)
+	var application Def.ReqCreateApplicationRequest
+	err = json.Unmarshal(data, &application)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
 	}
+	name := application.Name
+	multiTenant := application.MultiTenant
+	requiresOwnUsers := application.RequiresOwnUsers
+	maxLoginSessionDuration := application.MaxLoginSessionDuration
+	applicationTypes := application.ApplicationTypes
 
-	name := requestData.Name
-	multiTenant := requestData.MultiTenant
-	requiresOwnUsers := requestData.RequiresOwnUsers
-	maxLoginSessionDuration := requestData.MaxLoginSessionDuration
+	appTypes := make([]model.ApplicationType, len(*applicationTypes))
+	for i, at := range *applicationTypes {
+		appTypes[i] = model.ApplicationType{ID: at.Id, Identifier: at.Identifier, Name: *at.Name, Versions: *at.Versions}
+	}
 
-	_, err = h.coreAPIs.System.SysCreateApplication(name, multiTenant, requiresOwnUsers, maxLoginSessionDuration)
+	_, err = h.coreAPIs.System.SysCreateApplication(name, multiTenant, requiresOwnUsers, maxLoginSessionDuration, appTypes)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}

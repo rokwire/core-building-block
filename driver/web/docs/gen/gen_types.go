@@ -561,7 +561,12 @@ type ReqCreateOrganizationRequestType string
 
 // ReqCreateApplicationRequest defines model for _req_create_Application_Request.
 type ReqCreateApplicationRequest struct {
-	ApplicationTypes *map[string]interface{} `json:"application_types,omitempty"`
+	ApplicationTypes *[]struct {
+		Id         string    `json:"id"`
+		Identifier string    `json:"identifier"`
+		Name       *string   `json:"name,omitempty"`
+		Versions   *[]string `json:"versions,omitempty"`
+	} `json:"application_types,omitempty"`
 
 	// The maximum allowed duration (in hours) of a user's login session for this application
 	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
