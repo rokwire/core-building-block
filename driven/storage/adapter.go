@@ -582,7 +582,7 @@ func (sa *Adapter) DeleteLoginSessionsByIDs(context TransactionContext, ids []st
 			&logutils.FieldArgs{"identifier": ids}, err)
 	}
 
-	sa.logger.Infof("%s were deleted", res.DeletedCount)
+	sa.logger.Infof("%d were deleted", res.DeletedCount)
 	return nil
 }
 
