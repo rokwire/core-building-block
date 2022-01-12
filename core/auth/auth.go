@@ -8,7 +8,6 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 	"time"
@@ -1515,9 +1514,28 @@ func (a *Auth) deleteExpiredSessions() {
 			a.logger.Errorf("error on finding unused sessions - %s", err)
 		}
 
-		log.Println(len(sessions))
+		//continue if no sessions
+		if len(sessions) == 0 {
+			a.logger.Info("no sessions for this app/org")
+			continue
+		}
 
-		//check if some of these old sessions is expired
+		//determine which sessions are expired
+		forDelete := []model.LoginSession{}
+		for _, session := range sessions {
+			if session.IsExpired() {
+				forDelete = append(forDelete, session)
+			}
+		}
+
+		//count if no expired sessions
+		if len(forDelete) == 0 {
+			a.logger.Info("no expired sessions for this app/org")
+			continue
+		}
+
+		//TODO
+		//a.logger.InfoWithFields("no expired sessions for this app/org", logutils.Fields{"count": len(forDelete)})
 	}
 }
 
