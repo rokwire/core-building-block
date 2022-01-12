@@ -1509,13 +1509,13 @@ func (a *Auth) deleteExpiredSessions() {
 	for _, appOrg := range appsOrgs {
 		a.logger.Info("delete expired sessions for " + appOrg.ID + " app org")
 
-		//find the 100 oldest unused sessions for more than a month
-		oldSessions, err := a.storage.FindUnusedSessions(appOrg.Application.ID, appOrg.Organization.ID)
+		//find the app/org sessions
+		sessions, err := a.storage.FindSessionsLazy(appOrg.Application.ID, appOrg.Organization.ID)
 		if err != nil {
 			a.logger.Errorf("error on finding unused sessions - %s", err)
 		}
 
-		log.Println(len(oldSessions))
+		log.Println(len(sessions))
 
 		//check if some of these old sessions is expired
 	}

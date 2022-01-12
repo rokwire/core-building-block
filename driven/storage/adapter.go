@@ -621,19 +621,14 @@ func (sa *Adapter) DeleteMFAExpiredSessions() error {
 	return nil
 }
 
-//FindUnusedSessions finds the oldest 100 unused sessions
-// - we care for sessions which are not used more than 1 month
-// - N.B. we do not load the Accounts in the results as they are not needed  - performance issue
-func (sa *Adapter) FindUnusedSessions(appID string, orgID string) ([]model.LoginSession, error) {
-	//TODO
-	//TODO limit, sort by
-
+//FindSessionsLazy finds all sessions for app/org but lazy filled.
+// - lazy means that we make only one request to the logins sessions collection and fill the objects with what we have there.
+// - i.e. we do not apply any relations
+// - this partly filled is enough for some cases(expiration policy checks for example) but in the same time it give very good performace
+func (sa *Adapter) FindSessionsLazy(appID string, orgID string) ([]model.LoginSession, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
-	//opts := options.Find()
-	//opts.SetSort(bson.D{primitive.E{Key: "date_created", Value: 1}})
 
 	var loginSessions []loginSession
-	//err := sa.db.loginsSessions.Find(filter, &loginSessions, opts)
 	err := sa.db.loginsSessions.Find(filter, &loginSessions, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession,

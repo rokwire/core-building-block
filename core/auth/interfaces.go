@@ -326,7 +326,7 @@ type Storage interface {
 	DeleteLoginSessionsByIDs(context storage.TransactionContext, ids []string) error
 	//LoginsSessions - predefined queries for manage deletion logic
 	DeleteMFAExpiredSessions() error
-	FindUnusedSessions(appID string, orgID string) ([]model.LoginSession, error)
+	FindSessionsLazy(appID string, orgID string) ([]model.LoginSession, error)
 	///
 
 	//Accounts
