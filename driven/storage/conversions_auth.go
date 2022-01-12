@@ -12,7 +12,7 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 	anonymous := item.Anonymous
 	identifier := item.Identifier
 	var accountAuthType *model.AccountAuthType
-	if item.AccountAuthTypeID != nil {
+	if item.AccountAuthTypeID != nil && account != nil {
 		accountAuthType = account.GetAccountAuthTypeByID(*item.AccountAuthTypeID)
 	}
 	device := &model.Device{ID: item.ID}

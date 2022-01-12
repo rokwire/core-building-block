@@ -621,22 +621,43 @@ func (sa *Adapter) DeleteMFAExpiredSessions() error {
 	return nil
 }
 
-//DeleteExpiredSessionsByInactivity deletes all expired sessions for app org based on the inactivity policy
-func (sa *Adapter) DeleteExpiredSessionsByInactivity(appID string, orgID string) error {
+//FindUnusedSessions finds the oldest 100 unused sessions
+// - we care for sessions which are not used more than 1 month
+// - N.B. we do not load the Accounts in the results as they are not needed  - performance issue
+func (sa *Adapter) FindUnusedSessions(appID string, orgID string) ([]model.LoginSession, error) {
 	//TODO
-	return nil
-}
+	//TODO limit, sort by
 
-//DeleteExpiredSessionsByTSL deletes all expired sessions for app org based on the TSL policy
-func (sa *Adapter) DeleteExpiredSessionsByTSL(appID string, orgID string) error {
-	//TODO
-	return nil
-}
+	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
+	//opts := options.Find()
+	//opts.SetSort(bson.D{primitive.E{Key: "date_created", Value: 1}})
 
-//DeleteExpiredSessionsByYearly deletes all expired sessions for app org based on the yearly policy
-func (sa *Adapter) DeleteExpiredSessionsByYearly(appID string, orgID string) error {
-	//TODO
-	return nil
+	var loginSessions []loginSession
+	//err := sa.db.loginsSessions.Find(filter, &loginSessions, opts)
+	err := sa.db.loginsSessions.Find(filter, &loginSessions, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession,
+			&logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
+	}
+
+	sessions := make([]model.LoginSession, len(loginSessions))
+	for i, session := range loginSessions {
+		//auth type - from cache
+		authType, err := sa.getCachedAuthType(session.AuthTypeCode)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, &logutils.FieldArgs{"code": session.AuthTypeCode}, err)
+		}
+
+		//application organization - from cache
+		appOrg, err := sa.getCachedApplicationOrganization(session.AppID, session.OrgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": session.AppID, "org_id": session.OrgID}, err)
+		}
+
+		sessions[i] = loginSessionFromStorage(session, *authType, nil, *appOrg)
+	}
+
+	return sessions, nil
 }
 
 //FindAccount finds an account for app, org, auth type and account auth type identifier

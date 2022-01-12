@@ -8,6 +8,7 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 	"time"
@@ -1508,57 +1509,15 @@ func (a *Auth) deleteExpiredSessions() {
 	for _, appOrg := range appsOrgs {
 		a.logger.Info("delete expired sessions for " + appOrg.ID + " app org")
 
-		loginsSessionsSetting := appOrg.LoginsSessionsSetting
-
-		inactivityExpirePolicy := loginsSessionsSetting.InactivityExpirePolicy
-		tslExpirePolicy := loginsSessionsSetting.TSLExpirePolicy
-		yearlyExpirePolicy := loginsSessionsSetting.YearlyExpirePolicy
-
-		inactivityActive := inactivityExpirePolicy.Active
-		tslActive := tslExpirePolicy.Active
-		yearlyActive := yearlyExpirePolicy.Active
-
-		if inactivityActive {
-			a.logger.Info("apply inactivity policy")
-			a.deleteSessionsByInactivity(appOrg)
+		//find the 100 oldest unused sessions for more than a month
+		oldSessions, err := a.storage.FindUnusedSessions(appOrg.Application.ID, appOrg.Organization.ID)
+		if err != nil {
+			a.logger.Errorf("error on finding unused sessions - %s", err)
 		}
 
-		if tslActive {
-			a.logger.Info("apply tsl policy")
-			a.deleteSessionsByTSL(appOrg)
-		}
+		log.Println(len(oldSessions))
 
-		if yearlyActive {
-			a.logger.Info("apply yearly policy")
-			a.deleteSessionsByYearly(appOrg)
-		}
-	}
-}
-
-func (a *Auth) deleteSessionsByInactivity(appOrg model.ApplicationOrganization) {
-	a.logger.Info("deleteSessionsByInactivity - app org " + appOrg.ID)
-
-	err := a.storage.DeleteExpiredSessionsByInactivity(appOrg.Application.ID, appOrg.Organization.ID)
-	if err != nil {
-		a.logger.Error("error deleting expired sessions by inactivity - " + err.Error())
-	}
-}
-
-func (a *Auth) deleteSessionsByTSL(appOrg model.ApplicationOrganization) {
-	a.logger.Info("deleteSessionsByTSL - app org " + appOrg.ID)
-
-	err := a.storage.DeleteExpiredSessionsByTSL(appOrg.Application.ID, appOrg.Organization.ID)
-	if err != nil {
-		a.logger.Error("error deleting expired sessions by tls - " + err.Error())
-	}
-}
-
-func (a *Auth) deleteSessionsByYearly(appOrg model.ApplicationOrganization) {
-	a.logger.Info("deleteSessionsByYearly - app org " + appOrg.ID)
-
-	err := a.storage.DeleteExpiredSessionsByYearly(appOrg.Application.ID, appOrg.Organization.ID)
-	if err != nil {
-		a.logger.Error("error deleting expired sessions by yearly - " + err.Error())
+		//check if some of these old sessions is expired
 	}
 }
 
