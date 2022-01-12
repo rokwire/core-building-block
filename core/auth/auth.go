@@ -639,7 +639,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 			}
 
 			if len(loginSessions) > sessionLimit {
-				// delete first session in list (sorted by expiration)
+				// delete first session in list (sorted by date created)
 				err = a.deleteLoginSession(context, loginSessions[0], l)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
