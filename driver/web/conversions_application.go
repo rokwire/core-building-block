@@ -9,7 +9,7 @@ import (
 func applicationToDef(item model.Application) Def.ApplicationFields {
 
 	return Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
-		RequiresOwnUsers: &item.RequiresOwnUsers, MaxLoginSessionDuration: item.MaxLoginSessionDuration}
+		RequiresOwnUsers: &item.RequiresOwnUsers}
 }
 
 func applicationsToDef(item []model.Application) []Def.ApplicationFields {
