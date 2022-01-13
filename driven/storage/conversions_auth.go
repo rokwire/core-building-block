@@ -13,7 +13,7 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 	identifier := item.Identifier
 	externalIDs := item.ExternalIDs
 	var accountAuthType *model.AccountAuthType
-	if item.AccountAuthTypeID != nil {
+	if item.AccountAuthTypeID != nil && account != nil {
 		accountAuthType = account.GetAccountAuthTypeByID(*item.AccountAuthTypeID)
 	}
 	device := &model.Device{ID: item.ID}
@@ -32,8 +32,7 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 		mfaAttempts = *item.MfaAttempts
 	}
 
-	expires := item.Expires
-	forceExpires := item.ForceExpires
+	dateRefreshed := item.DateRefreshed
 
 	dateUpdated := item.DateUpdated
 	dateCreated := item.DateCreated
@@ -42,7 +41,7 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 		Anonymous: anonymous, Identifier: identifier, ExternalIDs: externalIDs, AccountAuthType: accountAuthType,
 		Device: device, IPAddress: idAddress, AccessToken: accessToken, RefreshTokens: refreshTokens, Params: params,
 		State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
-		Expires: expires, ForceExpires: forceExpires, DateUpdated: dateUpdated, DateCreated: dateCreated}
+		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
 
 func loginSessionToStorage(item model.LoginSession) *loginSession {
@@ -84,8 +83,7 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 		mfaAttempts = &item.MfaAttempts
 	}
 
-	expires := item.Expires
-	forceExpires := item.ForceExpires
+	dateRefreshed := item.DateRefreshed
 
 	dateUpdated := item.DateUpdated
 	dateCreated := item.DateCreated
@@ -95,5 +93,5 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 		Identifier: identifier, ExternalIDs: externalIDs, AccountAuthTypeID: accountAuthTypeID, AccountAuthTypeIdentifier: accountAuthTypeIdentifier,
 		DeviceID: deviceID, IPAddress: ipAddress, AccessToken: accessToken, RefreshTokens: refreshTokens,
 		Params: params, State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
-		Expires: expires, ForceExpires: forceExpires, DateUpdated: dateUpdated, DateCreated: dateCreated}
+		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
