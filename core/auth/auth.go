@@ -741,15 +741,12 @@ func (a *Auth) deleteLoginSession(context storage.TransactionContext, loginSessi
 }
 
 func (a *Auth) deleteLoginSessions(context storage.TransactionContext, loginSessions []model.LoginSession, l *logs.Log) error {
-	//always log what session has been deleted
-	l.Info("expired sessions to be deleted:")
-	for _, session := range loginSessions {
-		l.Info("deleting loging session - " + session.LogInfo())
-	}
-
-	//prepare the IDs
+	//always log what session has been deleted, also prepare the IDs
 	ids := make([]string, len(loginSessions))
+	l.Info("expired sessions to be deleted:")
 	for i, session := range loginSessions {
+		l.Info("deleting loging session - " + session.LogInfo())
+
 		ids[i] = session.ID
 	}
 
@@ -1548,15 +1545,12 @@ func (a *Auth) deleteExpiredSessions() {
 			a.logger.Infof("%d expired sessions <= %d, so do nothing", expiredCount, maxSessionsDelete)
 		}
 
-		//log the data that will be deleted
-		a.logger.Info("expired sessions to be deleted:")
-		for _, session := range forDelete {
-			a.logger.Info("deleting loging session - " + session.LogInfo())
-		}
-
-		//prepare the IDs
+		//log the data that will be deleted and prepare the IDs
 		ids := make([]string, len(forDelete))
+		a.logger.Info("expired sessions to be deleted:")
 		for i, session := range forDelete {
+			a.logger.Info("deleting loging session - " + session.LogInfo())
+
 			ids[i] = session.ID
 		}
 
