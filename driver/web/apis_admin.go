@@ -221,7 +221,7 @@ func (h AdminApisHandler) getApplicationPermissions(l *logs.Log, r *http.Request
 }
 
 func (h AdminApisHandler) adminGetApplicationOrgRoles(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	appOrgRoles, err := h.coreAPIs.Administration.AdmGetAppOrg(claims.AppID, claims.OrgID)
+	appOrgRoles, err := h.coreAPIs.Administration.AdmGetAppOrgRoles(claims.AppID, claims.OrgID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
 	}

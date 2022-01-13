@@ -1444,7 +1444,7 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 //FindAppOrgRole load  application_organization_roles
 func (sa *Adapter) FindAppOrgRole(appOrgID string) ([]model.AppOrgRole, error) {
 	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
-	var result []model.AppOrgRole
+	var result []appOrgRole
 	err := sa.db.applicationsOrganizationsRoles.Find(filter, &result, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
@@ -1455,7 +1455,12 @@ func (sa *Adapter) FindAppOrgRole(appOrgID string) ([]model.AppOrgRole, error) {
 		return make([]model.AppOrgRole, 0), nil
 	}
 
-	return result, nil
+	appRole := make([]model.AppOrgRole, len(result))
+	for i, ar := range result {
+		appRole[i] = model.AppOrgRole{ID: ar.ID, Name: ar.Name, Description: ar.Description, System: ar.System, Permissions: ar.Permissions}
+	}
+
+	return appRole, nil
 }
 
 //FindAppOrgGroups finds a set of application organization groups
