@@ -1,9 +1,11 @@
 package model
 
 import (
+	"core-building-block/utils"
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/binary"
+	"fmt"
 	"time"
 
 	"github.com/rokwire/logging-library-go/errors"
@@ -82,8 +84,7 @@ type LoginSession struct {
 	StateExpires *time.Time
 	MfaAttempts  int
 
-	Expires      time.Time
-	ForceExpires *time.Time
+	DateRefreshed *time.Time
 
 	DateUpdated *time.Time
 	DateCreated time.Time
@@ -91,8 +92,84 @@ type LoginSession struct {
 
 //IsExpired says if the sessions is expired
 func (ls LoginSession) IsExpired() bool {
+	loginsSessionsSetting := ls.AppOrg.LoginsSessionsSetting
+
+	inactivityExpirePolicy := loginsSessionsSetting.InactivityExpirePolicy
+	tslExpirePolicy := loginsSessionsSetting.TSLExpirePolicy
+	yearlyExpirePolicy := loginsSessionsSetting.YearlyExpirePolicy
+
+	inactivityActive := inactivityExpirePolicy.Active
+	tslActive := tslExpirePolicy.Active
+	yearlyActive := yearlyExpirePolicy.Active
+
+	//we must have at least one active expiration policy
+	if !inactivityActive && !tslActive && !yearlyActive {
+		return true //expired
+	}
+
+	expired := true //expired by default
+
+	if inactivityActive {
+		//check if satisfy the policy
+		expired = ls.isInactivityExpired(inactivityExpirePolicy)
+		if expired {
+			return true
+		}
+	}
+
+	if tslActive {
+		//check if satisfy the policy
+		expired = ls.isTSLExpired(tslExpirePolicy)
+		if expired {
+			return true
+		}
+	}
+
+	if yearlyActive {
+		//check if satisfy the policy
+		expired = ls.isYearlyExpired(yearlyExpirePolicy)
+		if expired {
+			return true
+		}
+	}
+
+	return expired
+}
+
+func (ls LoginSession) isInactivityExpired(policy InactivityExpirePolicy) bool {
+	lastRefreshedDate := ls.DateRefreshed
+	if lastRefreshedDate == nil {
+		lastRefreshedDate = &ls.DateCreated //not refreshed yet
+	}
+
+	expiresDate := lastRefreshedDate.Add(time.Duration(policy.InactivityPeriod) * time.Minute)
 	now := time.Now()
-	return ls.Expires.Before(now) || (ls.ForceExpires != nil && ls.ForceExpires.Before(now))
+
+	return expiresDate.Before(now)
+}
+
+func (ls LoginSession) isTSLExpired(policy TSLExpirePolicy) bool {
+	loginDate := ls.DateCreated
+	expiresDate := loginDate.Add(time.Duration(policy.TimeSinceLoginPeriod) * time.Minute)
+	now := time.Now()
+
+	return expiresDate.Before(now)
+}
+
+func (ls LoginSession) isYearlyExpired(policy YearlyExpirePolicy) bool {
+	createdDate := ls.DateCreated
+
+	now := time.Now().UTC()
+
+	min := policy.Min
+	hour := policy.Hour
+	day := policy.Day
+	month := policy.Month
+	year, _, _ := now.Date()
+
+	expiresDate := time.Date(year, time.Month(month), day, hour, min, 0, 0, time.UTC)
+
+	return createdDate.Before(expiresDate) && expiresDate.Before(now)
 }
 
 //CurrentRefreshToken returns the current refresh token (last element of RefreshTokens)
@@ -102,6 +179,24 @@ func (ls LoginSession) CurrentRefreshToken() string {
 		return ""
 	}
 	return ls.RefreshTokens[numTokens-1]
+}
+
+//LogInfo gives the information appropriate to be logged for the session
+func (ls LoginSession) LogInfo() string {
+	identifier := utils.GetLogValue(ls.Identifier, 3)
+	accessToken := utils.GetLogValue(ls.AccessToken, 10)
+
+	refreshTokens := make([]string, len(ls.RefreshTokens))
+	for i, rt := range ls.RefreshTokens {
+		refreshTokens[i] = utils.GetLogValue(rt, 10)
+	}
+
+	state := utils.GetLogValue(ls.State, 5)
+
+	return fmt.Sprintf("[id:%s, anonymous:%t, identifier:%s, at:%s, rts:%s, state:%s, "+
+		"state expires:%s,mfa attempts:%d, date refreshed:%s, date updated:%s, date created:%s]",
+		ls.ID, ls.Anonymous, identifier, accessToken, refreshTokens, state,
+		ls.StateExpires, ls.MfaAttempts, ls.DateRefreshed, ls.DateUpdated, ls.DateCreated)
 }
 
 //APIKey represents an API key entity
