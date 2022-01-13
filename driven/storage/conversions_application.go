@@ -13,8 +13,9 @@ func applicationFromStorage(item *application) model.Application {
 	}
 
 	types := applicationTypesFromStorage(item.Types)
-	return model.Application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, RequiresOwnUsers: item.RequiresOwnUsers, Admin: item.Admin,
-		MaxLoginSessionDuration: item.MaxLoginSessionDuration, Types: types, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return model.Application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant,
+		RequiresOwnUsers: item.RequiresOwnUsers, Admin: item.Admin,
+		Types: types, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func applicationsFromStorage(itemsList []application) []model.Application {
@@ -167,7 +168,8 @@ func organizationToStorage(item *model.Organization) *organization {
 func applicationOrganizationFromStorage(item applicationOrganization, application model.Application, organization model.Organization) model.ApplicationOrganization {
 	return model.ApplicationOrganization{ID: item.ID, Application: application, Organization: organization,
 		ServicesIDs: item.ServicesIDs, IdentityProvidersSettings: item.IdentityProvidersSettings,
-		SupportedAuthTypes: item.SupportedAuthTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		SupportedAuthTypes: item.SupportedAuthTypes, LoginsSessionsSetting: item.LoginsSessionsSetting,
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func applicationTypeToStorage(item model.ApplicationType) applicationType {
@@ -189,8 +191,9 @@ func applicationTypesToStorage(items []model.ApplicationType) []applicationType 
 func applicationToStorage(item *model.Application) *application {
 	applicationTypes := applicationTypesToStorage(item.Types)
 
-	return &application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, RequiresOwnUsers: item.RequiresOwnUsers, Admin: item.Admin,
-		MaxLoginSessionDuration: item.MaxLoginSessionDuration, Types: applicationTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return &application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant,
+		RequiresOwnUsers: item.RequiresOwnUsers, Admin: item.Admin,
+		Types: applicationTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 //ServiceID

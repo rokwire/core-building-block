@@ -13,8 +13,6 @@ type application struct {
 	RequiresOwnUsers bool `bson:"requires_own_users"`
 	Admin            bool `bson:"admin"`
 
-	MaxLoginSessionDuration *int `bson:"max_login_session_duration,omitempty"`
-
 	Types []applicationType `bson:"types"`
 
 	DateCreated time.Time  `bson:"date_created"`
@@ -50,6 +48,8 @@ type applicationOrganization struct {
 	IdentityProvidersSettings []model.IdentityProviderSetting `bson:"identity_providers_settings"`
 
 	SupportedAuthTypes []model.AuthTypesSupport `bson:"supported_auth_types"`
+
+	LoginsSessionsSetting model.LoginsSessionsSetting `bson:"logins_sessions_settings"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

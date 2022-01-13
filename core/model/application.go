@@ -95,8 +95,6 @@ type Application struct {
 	//if true the service will always require the user to create profile for the application, otherwise he/she could use his/her already created profile from another platform application
 	RequiresOwnUsers bool
 
-	MaxLoginSessionDuration *int
-
 	Types []ApplicationType
 
 	Organizations []ApplicationOrganization
@@ -145,6 +143,8 @@ type ApplicationOrganization struct {
 	IdentityProvidersSettings []IdentityProviderSetting
 
 	SupportedAuthTypes []AuthTypesSupport //supported auth types for this organization in this application
+
+	LoginsSessionsSetting LoginsSessionsSetting
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -199,6 +199,36 @@ type IdentityProviderSetting struct {
 
 	Roles  map[string]string `bson:"roles"`  //map[identity_provider_role]app_role_id
 	Groups map[string]string `bson:"groups"` //map[identity_provider_group]app_group_id
+}
+
+//LoginsSessionsSetting represents logins sessions setting for an organization in an application
+type LoginsSessionsSetting struct {
+	MaxConcurrentSessions int `bson:"max_concurrent_sessions"`
+
+	InactivityExpirePolicy InactivityExpirePolicy `bson:"inactivity_expire_policy"`
+	TSLExpirePolicy        TSLExpirePolicy        `bson:"time_since_login_expire_policy"`
+	YearlyExpirePolicy     YearlyExpirePolicy     `bson:"yearly_expire_policy"`
+}
+
+//InactivityExpirePolicy represents expires policy based on inactivity
+type InactivityExpirePolicy struct {
+	Active           bool `bson:"active"`
+	InactivityPeriod int  `bson:"inactivity_period"` //in minutes
+}
+
+//TSLExpirePolicy represents expires policy based on the time since login
+type TSLExpirePolicy struct {
+	Active               bool `bson:"active"`
+	TimeSinceLoginPeriod int  `bson:"time_since_login_period"` //in minutes
+}
+
+//YearlyExpirePolicy represents expires policy based on fixed date
+type YearlyExpirePolicy struct {
+	Active bool `bson:"active"`
+	Day    int  `bson:"day"`
+	Month  int  `bson:"month"`
+	Hour   int  `bson:"hour"`
+	Min    int  `bson:"min"`
 }
 
 //ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc
