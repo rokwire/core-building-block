@@ -12,7 +12,7 @@ func applicationToDef(item *model.Application) *Def.ApplicationFields {
 	}
 
 	return &Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
-		RequiresOwnUsers: &item.RequiresOwnUsers, MaxLoginSessionDuration: item.MaxLoginSessionDuration}
+		RequiresOwnUsers: &item.RequiresOwnUsers}
 }
 
 //ApplicationType
@@ -30,7 +30,7 @@ func authTypeToDef(item *model.AuthType) *Def.AuthTypeFields {
 func appOrgToDef(item *model.ApplicationOrganization) *Def.ApplicationOrganization {
 
 	return &Def.ApplicationOrganization{Organization: &Def.Organization{Config: &Def.OrganizationConfig{Fields: &Def.OrganizationConfigFields{Domains: &item.Organization.Config.Domains}}},
-		Application: &Def.Application{Fields: &Def.ApplicationFields{MaxLoginSessionDuration: item.Application.MaxLoginSessionDuration, MultiTenant: &item.Application.MultiTenant,
+		Application: &Def.Application{Fields: &Def.ApplicationFields{MultiTenant: &item.Application.MultiTenant,
 			Name: item.Application.Name, RequiresOwnUsers: &item.Application.RequiresOwnUsers}}}
 }
 
