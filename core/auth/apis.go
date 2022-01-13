@@ -112,8 +112,6 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		}
 
 		sub = accountAuthType.Account.ID
-
-		//TODO groups mapping
 	} else {
 		message, accountAuthType, mfaTypes, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
@@ -135,6 +133,13 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("generate", "login state", nil, err)
 		}
+	}
+
+	//clear the expired sessions for the identifier - user or anonymous
+	err = a.clearExpiredSessions(sub, l)
+	if err != nil {
+		return nil, nil, nil, errors.WrapErrorAction("error clearing expired session for identifier", "",
+			&logutils.FieldArgs{"identifier": sub}, err)
 	}
 
 	//now we are ready to apply login for the user or anonymous
@@ -212,7 +217,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		l.Infof("the session is expired, so delete it and return null - %s", refreshToken)
 
 		//remove the session
-		err = a.storage.DeleteLoginSession(nil, loginSession.ID)
+		err = a.deleteLoginSession(nil, *loginSession, l)
 		if err != nil {
 			return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err)
 		}
@@ -231,7 +236,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		l.Infof("previous refresh token being used, so delete login session and return null - %s", refreshToken)
 
 		//remove the session
-		err = a.storage.DeleteLoginSession(nil, loginSession.ID)
+		err = a.deleteLoginSession(nil, *loginSession, l)
 		if err != nil {
 			return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err)
 		}
@@ -307,7 +312,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 	}
 	loginSession.AccessToken = accessToken //set the generated token
 	// - generate new refresh token
-	refreshToken, expires, err := a.buildRefreshToken()
+	refreshToken, err = a.buildRefreshToken()
 	if err != nil {
 		l.Infof("error generating refresh token on refresh - %s", refreshToken)
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -316,12 +321,12 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		loginSession.RefreshTokens = make([]string, 0)
 	}
 	loginSession.RefreshTokens = append(loginSession.RefreshTokens, refreshToken) //set the generated token
-	// - update the expired field
-	loginSession.Expires = *expires
 
-	//store the updated session
 	now := time.Now()
 	loginSession.DateUpdated = &now
+	loginSession.DateRefreshed = &now
+
+	//store the updated session
 	err = a.storage.UpdateLoginSession(nil, *loginSession)
 	if err != nil {
 		l.Infof("error updating login session on refresh - %s", refreshToken)
@@ -400,7 +405,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 		}
 
 		if loginSession.MfaAttempts >= maxMfaAttempts {
-			a.deleteLoginSession(context, sessionID, l)
+			a.deleteLoginSession(context, *loginSession, l)
 			message = fmt.Sprintf("max mfa attempts reached: %d", maxMfaAttempts)
 			return errors.New(message)
 		}
@@ -435,7 +440,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 			return errors.ErrorData(logutils.StatusInvalid, "login state", errFields)
 		}
 		if loginSession.StateExpires != nil && time.Now().UTC().After(*loginSession.StateExpires) {
-			a.deleteLoginSession(context, sessionID, l)
+			a.deleteLoginSession(context, *loginSession, l)
 			message = "expired state"
 			return errors.ErrorData(logutils.StatusInvalid, "expired state", nil)
 		}

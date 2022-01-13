@@ -69,7 +69,7 @@ func (s *staticTokenServiceAuthImpl) addCredentials(account *model.ServiceAccoun
 		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
 	}
 
-	token, _, err := s.auth.buildRefreshToken()
+	token, err := s.auth.buildRefreshToken()
 	if err != nil {
 		l.Info("error generating service account token")
 		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
