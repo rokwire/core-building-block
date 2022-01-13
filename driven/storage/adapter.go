@@ -406,11 +406,11 @@ func (sa *Adapter) InsertLoginSession(context TransactionContext, session model.
 	return nil
 }
 
-//FindLoginSessions finds login sessions by identifier and sorts by expiration
+//FindLoginSessions finds login sessions by identifier and sorts by date created
 func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier string) ([]model.LoginSession, error) {
 	filter := bson.D{primitive.E{Key: "identifier", Value: identifier}}
 	opts := options.Find()
-	opts.SetSort(bson.D{primitive.E{Key: "expires", Value: 1}})
+	opts.SetSort(bson.D{primitive.E{Key: "date_created", Value: 1}})
 
 	var loginSessions []loginSession
 	var err error
@@ -565,6 +565,28 @@ func (sa *Adapter) DeleteLoginSession(context TransactionContext, id string) err
 	return nil
 }
 
+//DeleteLoginSessionsByIDs deletes login sessions by ids
+func (sa *Adapter) DeleteLoginSessionsByIDs(transaction TransactionContext, ids []string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+
+	var res *mongo.DeleteResult
+	var err error
+	timeout := time.Millisecond * time.Duration(5000) //5 seconds
+	if transaction != nil {
+		res, err = sa.db.loginsSessions.DeleteManyWithParams(transaction, filter, nil, &timeout)
+	} else {
+		res, err = sa.db.loginsSessions.DeleteManyWithParams(context.Background(), filter, nil, &timeout)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession,
+			&logutils.FieldArgs{"identifier": ids}, err)
+	}
+
+	sa.logger.Infof("%d were deleted", res.DeletedCount)
+	return nil
+}
+
 //DeleteLoginSessions deletes all login sessions with the identifier
 func (sa *Adapter) DeleteLoginSessions(context TransactionContext, identifier string) error {
 	filter := bson.M{"identifier": identifier}
@@ -586,13 +608,11 @@ func (sa *Adapter) DeleteLoginSessions(context TransactionContext, identifier st
 	return nil
 }
 
-//DeleteExpiredSessions deletes expired sessions
-func (sa *Adapter) DeleteExpiredSessions(now *time.Time) error {
-	filter := bson.D{primitive.E{Key: "$or", Value: []interface{}{
-		bson.M{"expires": bson.M{"$lte": now}},
-		bson.M{"force_expires": bson.M{"$lte": now}},
-		bson.M{"state_expires": bson.M{"$lte": now}},
-	}}}
+//DeleteMFAExpiredSessions deletes MFA expired sessions
+func (sa *Adapter) DeleteMFAExpiredSessions() error {
+	now := time.Now().UTC()
+
+	filter := bson.D{primitive.E{Key: "state_expires", Value: bson.M{"$lte": now}}}
 
 	_, err := sa.db.loginsSessions.DeleteMany(filter, nil)
 	if err != nil {
@@ -600,6 +620,41 @@ func (sa *Adapter) DeleteExpiredSessions(now *time.Time) error {
 	}
 
 	return nil
+}
+
+//FindSessionsLazy finds all sessions for app/org but lazy filled.
+// - lazy means that we make only one request to the logins sessions collection and fill the objects with what we have there.
+// - i.e. we do not apply any relations
+// - this partly filled is enough for some cases(expiration policy checks for example) but in the same time it give very good performace
+func (sa *Adapter) FindSessionsLazy(appID string, orgID string) ([]model.LoginSession, error) {
+	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
+
+	var loginSessions []loginSession
+	timeout := time.Millisecond * time.Duration(5000) //5 seconds
+	err := sa.db.loginsSessions.FindWithParams(context.Background(), filter, &loginSessions, nil, &timeout)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession,
+			&logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
+	}
+
+	sessions := make([]model.LoginSession, len(loginSessions))
+	for i, session := range loginSessions {
+		//auth type - from cache
+		authType, err := sa.getCachedAuthType(session.AuthTypeCode)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, &logutils.FieldArgs{"code": session.AuthTypeCode}, err)
+		}
+
+		//application organization - from cache
+		appOrg, err := sa.getCachedApplicationOrganization(session.AppID, session.OrgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": session.AppID, "org_id": session.OrgID}, err)
+		}
+
+		sessions[i] = loginSessionFromStorage(session, *authType, nil, *appOrg)
+	}
+
+	return sessions, nil
 }
 
 //FindAccount finds an account for app, org, auth type and account auth type identifier
