@@ -1,0 +1,9 @@
+required:
+  - app_type_identifier
+  - org_id
+type: object
+properties:
+  app_type_identifier:
+    type: string
+  org_id:
+    type: string

@@ -533,6 +533,12 @@ type ReqAdminAppTokenResponse struct {
 	Token string `json:"token"`
 }
 
+// ReqAdminCreateAccountRequest defines model for _req_admin_create-account_Request.
+type ReqAdminCreateAccountRequest struct {
+	AppTypeIdentifier string `json:"app_type_identifier"`
+	OrgId             string `json:"org_id"`
+}
+
 // ReqApplicationRolesRequest defines model for _req_application-roles_Request.
 type ReqApplicationRolesRequest struct {
 	AppId       string   `json:"app_id"`
@@ -652,6 +658,7 @@ type ReqSharedCredsTwilioPhone struct {
 
 // ReqSharedLogin defines model for _req_shared_Login.
 type ReqSharedLogin struct {
+	AdminToken        *string                `json:"admin_token"`
 	ApiKey            string                 `json:"api_key"`
 	AppTypeIdentifier string                 `json:"app_type_identifier"`
 	AuthType          ReqSharedLoginAuthType `json:"auth_type"`
@@ -785,6 +792,11 @@ type ReqUpdateOrganizationRequestType string
 // ResAccountExistsResponse defines model for _res_account-exists_Response.
 type ResAccountExistsResponse bool
 
+// ResAdminCreateAccountResponse defines model for _res_admin_create-account_Response.
+type ResAdminCreateAccountResponse struct {
+	AdminToken string `json:"admin_token"`
+}
+
 // ResAuthorizeServiceResponse defines model for _res_authorize-service_Response.
 type ResAuthorizeServiceResponse struct {
 	AccessToken    *string   `json:"access_token,omitempty"`
@@ -887,6 +899,9 @@ type ResSharedRokwireToken struct {
 
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResSharedRokwireTokenTokenType string
+
+// PostAdminAccountJSONBody defines parameters for PostAdminAccount.
+type PostAdminAccountJSONBody ReqAdminCreateAccountRequest
 
 // DeleteAdminAccountMfaParams defines parameters for DeleteAdminAccountMfa.
 type DeleteAdminAccountMfaParams struct {
@@ -1117,6 +1132,9 @@ type GetTpsServiceRegsParams struct {
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
+
+// PostAdminAccountJSONRequestBody defines body for PostAdminAccount for application/json ContentType.
+type PostAdminAccountJSONRequestBody PostAdminAccountJSONBody
 
 // PostAdminAuthLoginJSONRequestBody defines body for PostAdminAuthLogin for application/json ContentType.
 type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody

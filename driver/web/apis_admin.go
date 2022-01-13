@@ -268,6 +268,33 @@ func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *token
 	return l.HttpResponseSuccessJSON(data)
 }
 
+func (h AdminApisHandler) createAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ReqAdminCreateAccountRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create account request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	// token, err := h.coreAPIs.Administration.AdmCreateAccount(requestData.AppTypeIdentifier, requestData.OrgId)
+	// if err != nil {
+	// 	return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	// }
+
+	// respData := &Def.ResAdminCreateAccountResponse{AdminToken: token}
+
+	// data, err = json.Marshal(respData)
+	// if err != nil {
+	// 	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	// }
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
 func (h AdminApisHandler) getMFATypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	mfaDataList, err := h.coreAPIs.Auth.GetMFATypes(claims.Subject)
 	if err != nil {

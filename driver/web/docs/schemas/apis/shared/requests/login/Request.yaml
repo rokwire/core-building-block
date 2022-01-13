@@ -19,6 +19,9 @@ properties:
     type: string
   api_key:
     type: string
+  admin_token:
+    type: string
+    nullable: true
   creds:
     anyOf:
       - $ref: "../CredsEmail.yaml"

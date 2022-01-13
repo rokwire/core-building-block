@@ -1,0 +1,6 @@
+required:
+  - admin_token
+type: object
+properties:
+  admin_token:
+    type: string
