@@ -87,6 +87,8 @@ paths:
     $ref: "./resources/admin/application/accounts.yaml"
   /admin/application/permissions:
     $ref: "./resources/admin/application/permissions.yaml"
+  /admin/application/account/{account_id}/session/{session_id}:
+    $ref: "./resources/admin/application/logins-sessions.yaml"
 
   #enc
   /enc/test:
