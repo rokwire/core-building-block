@@ -7,6 +7,7 @@ import (
 	"core-building-block/utils"
 	"crypto/rsa"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -43,9 +44,8 @@ const (
 
 	refreshTokenLength int = 256
 
-	sessionExpiry       int = 7 * 24 * 60 //1 week
-	sessionDeletePeriod int = 2
-	sessionLimit        int = 3
+	sessionDeletePeriod int = 24
+	maxSessionsDelete   int = 250
 
 	loginStateLength   int = 128
 	loginStateDuration int = 5
@@ -547,6 +547,42 @@ func (a *Auth) findAccountAuthTypeByID(account *model.Account, accountAuthTypeID
 	return accountAuthType, nil
 }
 
+func (a *Auth) clearExpiredSessions(identifier string, l *logs.Log) error {
+	l.Info("clearExpiredSessions")
+
+	//load the sessions for the identifier
+	loginsSessions, err := a.storage.FindLoginSessions(nil, identifier)
+	if err != nil {
+		return errors.Wrap("error finding logins sessions for clearing them", err)
+	}
+
+	//determine the expired sessions
+	expiredSessions := []model.LoginSession{}
+	for _, session := range loginsSessions {
+		if session.IsExpired() {
+			expiredSessions = append(expiredSessions, session)
+		}
+	}
+
+	//log sessions and expired sessions count
+	l.Info(fmt.Sprintf("there are %d sessions", len(loginsSessions)))
+	l.Info(fmt.Sprintf("there are %d expired sessions", len(expiredSessions)))
+
+	//clear the expird sessions if there are such ones
+	if len(expiredSessions) > 0 {
+		l.Info("there is expired sessions for deleting")
+
+		err = a.deleteLoginSessions(nil, expiredSessions, l)
+		if err != nil {
+			return errors.Wrap("error on deleting logins sessions", err)
+		}
+	} else {
+		l.Info("there is no expired sessions for deleting")
+	}
+
+	return nil
+}
+
 func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, appOrg model.ApplicationOrganization,
 	accountAuthType *model.AccountAuthType, appType model.ApplicationType, ipAddress string, deviceType string,
 	deviceOS *string, deviceID string, params map[string]interface{}, state string, l *logs.Log) (*model.LoginSession, error) {
@@ -555,7 +591,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 	var loginSession *model.LoginSession
 
 	transaction := func(context storage.TransactionContext) error {
-		///assign device to session and account
+		///1. assign device to session and account
 		var device *model.Device
 		if !anonymous {
 			//1. check if the device exists
@@ -593,6 +629,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 		}
 
 		//2. check session limit against number of active sessions
+		sessionLimit := appOrg.LoginsSessionsSetting.MaxConcurrentSessions
 		if sessionLimit > 0 {
 			loginSessions, err := a.storage.FindLoginSessions(context, loginSession.Identifier)
 			if err != nil {
@@ -603,8 +640,8 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 			}
 
 			if len(loginSessions) > sessionLimit {
-				// delete first session in list (sorted by expiration)
-				err = a.storage.DeleteLoginSession(context, loginSessions[0].ID)
+				// delete first session in list (sorted by date created)
+				err = a.deleteLoginSession(context, loginSessions[0], l)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
 				}
@@ -671,7 +708,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 	}
 
 	//refresh token
-	refreshToken, expires, err := a.buildRefreshToken()
+	refreshToken, err := a.buildRefreshToken()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
@@ -682,25 +719,44 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 		stateExpireTime := now.Add(time.Minute * time.Duration(loginStateDuration))
 		stateExpires = &stateExpireTime
 	}
-	var forceExpires *time.Time
-	if appType.Application.MaxLoginSessionDuration != nil {
-		forceLogoutTime := now.Add(time.Duration(*appType.Application.MaxLoginSessionDuration) * time.Hour)
-		forceExpires = &forceLogoutTime
-	}
 
 	loginSession := model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType,
 		AppType: appType, Anonymous: anonymous, Identifier: sub, AccountAuthType: accountAuthType,
 		Device: device, IPAddress: ipAddress, AccessToken: accessToken, RefreshTokens: []string{refreshToken}, Params: params,
-		State: state, StateExpires: stateExpires, Expires: *expires, ForceExpires: forceExpires, DateCreated: now}
+		State: state, StateExpires: stateExpires, DateCreated: now}
 
 	return &loginSession, nil
 }
 
-func (a *Auth) deleteLoginSession(context storage.TransactionContext, sessionID string, l *logs.Log) {
-	err := a.storage.DeleteLoginSession(context, sessionID)
+func (a *Auth) deleteLoginSession(context storage.TransactionContext, loginSession model.LoginSession, l *logs.Log) error {
+	//always log what session has been deleted
+	l.Info("deleting loging session - " + loginSession.LogInfo())
+
+	err := a.storage.DeleteLoginSession(context, loginSession.ID)
 	if err != nil {
 		l.WarnAction(logutils.ActionDelete, model.TypeLoginSession, err)
+		return err
 	}
+	return nil
+}
+
+func (a *Auth) deleteLoginSessions(context storage.TransactionContext, loginSessions []model.LoginSession, l *logs.Log) error {
+	//always log what session has been deleted, also prepare the IDs
+	ids := make([]string, len(loginSessions))
+	l.Info("expired sessions to be deleted:")
+	for i, session := range loginSessions {
+		l.Info("deleting loging session - " + session.LogInfo())
+
+		ids[i] = session.ID
+	}
+
+	//delete the sessions from the storage
+	err := a.storage.DeleteLoginSessionsByIDs(context, ids)
+	if err != nil {
+		l.WarnAction(logutils.ActionDelete, model.TypeLoginSession, err)
+		return err
+	}
+	return nil
 }
 
 func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier string, accountAuthTypeParams map[string]interface{},
@@ -1102,14 +1158,13 @@ func (a *Auth) buildCsrfToken(claims tokenauth.Claims) (string, error) {
 	return a.generateToken(&claims)
 }
 
-func (a *Auth) buildRefreshToken() (string, *time.Time, error) {
+func (a *Auth) buildRefreshToken() (string, error) {
 	newToken, err := utils.GenerateRandomString(refreshTokenLength)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionCompute, logutils.TypeToken, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionCompute, logutils.TypeToken, nil, err)
 	}
 
-	expireTime := time.Now().UTC().Add(time.Minute * time.Duration(sessionExpiry))
-	return newToken, &expireTime, nil
+	return newToken, nil
 }
 
 //getScopedAccessToken returns a scoped access token with the requested scopes
@@ -1396,17 +1451,21 @@ func (a *Auth) setupDeleteSessionsTimer() {
 		a.deleteSessionsTimer.Stop()
 	}
 
-	a.deleteExpiredSessions()
+	a.deleteSessions()
 }
 
-func (a *Auth) deleteExpiredSessions() {
-	a.logger.Info("deleteExpiredSessions")
+func (a *Auth) deleteSessions() {
+	a.logger.Info("deleteSessions")
 
-	now := time.Now().UTC()
-	err := a.storage.DeleteExpiredSessions(&now)
-	if err != nil {
-		a.logger.Error(err.Error())
-	}
+	// to delete:
+	// - not completed MFA
+	// - expired sessions
+
+	//1. not completed MFA
+	a.deleteNotCompletedMFASessions()
+
+	//2. expired sessions
+	a.deleteExpiredSessions()
 
 	duration := time.Hour * time.Duration(sessionDeletePeriod)
 	a.deleteSessionsTimer = time.NewTimer(duration)
@@ -1415,10 +1474,91 @@ func (a *Auth) deleteExpiredSessions() {
 		// timer expired
 		a.deleteSessionsTimer = nil
 
-		a.deleteExpiredSessions()
+		a.deleteSessions()
 	case <-a.timerDone:
 		// timer aborted
 		a.deleteSessionsTimer = nil
+	}
+}
+
+func (a *Auth) deleteNotCompletedMFASessions() {
+	a.logger.Info("deleteNotCompletedMFASessions")
+
+	err := a.storage.DeleteMFAExpiredSessions()
+	if err != nil {
+		a.logger.Error(err.Error())
+	}
+}
+
+func (a *Auth) deleteExpiredSessions() {
+	a.logger.Info("deleteExpiredSessions")
+
+	appsOrgs, err := a.storage.LoadApplicationsOrganizations()
+	if err != nil {
+		a.logger.Error(err.Error())
+	}
+
+	if len(appsOrgs) == 0 {
+		a.logger.Error("for some reasons apps orgs are missing")
+		return
+	}
+
+	for _, appOrg := range appsOrgs {
+		a.logger.Infof("delete expired sessions for %s app org", appOrg.ID)
+
+		//find the app/org sessions
+		sessions, err := a.storage.FindSessionsLazy(appOrg.Application.ID, appOrg.Organization.ID)
+		if err != nil {
+			a.logger.Errorf("error on finding unused sessions - %s", err)
+		}
+
+		//continue if no sessions
+		if len(sessions) == 0 {
+			a.logger.Infof("no sessions for %s app org", appOrg.ID)
+			continue
+		}
+
+		//determine which sessions are expired
+		forDelete := []model.LoginSession{}
+		for _, session := range sessions {
+			if session.IsExpired() {
+				forDelete = append(forDelete, session)
+			}
+		}
+
+		//count if no expired sessions
+		if len(forDelete) == 0 {
+			a.logger.Infof("no expired sessions for %s app org", appOrg.ID)
+			continue
+		}
+
+		//we have expired sessions, so we need to delete them
+		expiredCount := len(forDelete)
+		a.logger.Infof("we have %d expired sessions, so we need to delete them", expiredCount)
+
+		//we delete max 250 items
+		if expiredCount > maxSessionsDelete {
+			a.logger.Infof("%d expired sessions > %d, so remove only %d",
+				expiredCount, maxSessionsDelete, maxSessionsDelete)
+			forDelete = forDelete[0 : maxSessionsDelete-1]
+		} else {
+			a.logger.Infof("%d expired sessions <= %d, so do nothing", expiredCount, maxSessionsDelete)
+		}
+
+		//log the data that will be deleted and prepare the IDs
+		ids := make([]string, len(forDelete))
+		a.logger.Info("expired sessions to be deleted:")
+		for i, session := range forDelete {
+			a.logger.Info("deleting loging session - " + session.LogInfo())
+
+			ids[i] = session.ID
+		}
+
+		//delete the sessions from the storage
+		err = a.storage.DeleteLoginSessionsByIDs(nil, ids)
+		if err != nil {
+			a.logger.Errorf("error on deleting logins sessions - %s", err)
+		}
 	}
 }
 
