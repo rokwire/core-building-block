@@ -210,12 +210,6 @@ _req_permissions_Request:
 ### application-roles API
 _req_application-roles_Request:
   $ref: "./apis/system/application-roles/request/Request.yaml"
-_res_get_AppOrgRoles_Response:
- $ref: "./apis/system/get-appOrgRoles/response/Response.yaml"
-
- ### application-organization-groups API
-_res_get_AppOrgGroups_Response:
- $ref: "./apis/system/get-appOrgGroups/response/Response.yaml"
 
 ### account permissions API
 _req_account-permissions_Request:

@@ -208,7 +208,7 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 
 func (h AdminApisHandler) adminGetApplicationGroups(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 
-	get, err := h.coreAPIs.Administration.AdmGetAppOrg(claims.AppID, claims.OrgID)
+	get, err := h.coreAPIs.Administration.AdmGetAppOrgGroup(claims.AppID, claims.OrgID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
 	}

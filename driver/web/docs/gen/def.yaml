@@ -1666,7 +1666,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/_res_get_AppOrgGroups_Response"
+                    "$ref": "#/components/schemas/AppOrgGroup"
                   }
                 }
               }
@@ -5165,44 +5165,6 @@
             "items": {
               "type": "string"
             }
-          }
-        }
-      },
-      "_res_get_AppOrgRoles_Response": {
-        "required": [
-          "id",
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "readOnly": true,
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "system": {
-            "type": "boolean"
-          }
-        }
-      },
-      "_res_get_AppOrgGroups_Response": {
-        "required": [
-          "id",
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "readOnly": true,
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "system": {
-            "type": "boolean"
           }
         }
       },
