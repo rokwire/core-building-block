@@ -268,13 +268,10 @@ type Application struct {
 
 // ApplicationFields defines model for ApplicationFields.
 type ApplicationFields struct {
-	Id string `json:"id"`
-
-	// The maximum allowed duration (in hours) of a user's login session for this application
-	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
-	MultiTenant             *bool  `json:"multi_tenant,omitempty"`
-	Name                    string `json:"name"`
-	RequiresOwnUsers        *bool  `json:"requires_own_users,omitempty"`
+	Id               string `json:"id"`
+	MultiTenant      *bool  `json:"multi_tenant,omitempty"`
+	Name             string `json:"name"`
+	RequiresOwnUsers *bool  `json:"requires_own_users,omitempty"`
 }
 
 // ApplicationOrganization defines model for ApplicationOrganization.
