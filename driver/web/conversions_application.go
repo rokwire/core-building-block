@@ -12,7 +12,7 @@ func applicationToDef(item *model.Application) *Def.Application {
 	}
 
 	fields := Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
-		RequiresOwnUsers: &item.RequiresOwnUsers, MaxLoginSessionDuration: item.MaxLoginSessionDuration}
+		RequiresOwnUsers: &item.RequiresOwnUsers}
 	types := applicationTypeListToDef(item.Types)
 
 	return &Def.Application{Fields: &fields, Types: &types}
