@@ -99,7 +99,7 @@ func logginSessionFromStorage(items *loginSession) model.LoginSession {
 		Anonymous: items.Anonymous, Identifier: items.Identifier,
 		IPAddress: items.IPAddress, AccessToken: items.AccessToken, RefreshTokens: items.RefreshTokens, Params: items.Params,
 		StateExpires: items.StateExpires,
-		Expires:      items.Expires, ForceExpires: items.ForceExpires, DateUpdated: items.DateUpdated, DateCreated: items.DateCreated}
+		DateUpdated:  items.DateUpdated, DateCreated: items.DateCreated}
 }
 
 func logginSessionsFromStorage(itemsList []loginSession) []model.LoginSession {
