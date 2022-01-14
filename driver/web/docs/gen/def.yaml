@@ -3070,9 +3070,6 @@ components:
           type: string
         api_key:
           type: string
-        admin_token:
-          type: string
-          nullable: true
         creds:
           anyOf:
             - $ref: '#/components/schemas/_req_shared_CredsEmail'
@@ -3610,21 +3607,47 @@ components:
           type: string
     _req_admin_create-account_Request:
       required:
+        - auth_type
         - app_type_identifier
         - org_id
+        - identifier
       type: object
       properties:
+        auth_type:
+          type: string
+          enum:
+            - email
+            - illinois_oidc
         app_type_identifier:
           type: string
         org_id:
           type: string
+        identifier:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            type: string
+        groups:
+          type: array
+          items:
+            type: string
+        profile:
+          $ref: '#/components/schemas/_req_shared_ProfileNullable'
     _res_admin_create-account_Response:
       required:
-        - admin_token
+        - account
       type: object
       properties:
-        admin_token:
-          type: string
+        account:
+          $ref: '#/components/schemas/_res_shared_Account'
+        params:
+          type: object
+          nullable: true
     _req_create-Organization_Request:
       required:
         - name

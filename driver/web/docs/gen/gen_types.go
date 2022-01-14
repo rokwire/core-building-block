@@ -77,6 +77,13 @@ const (
 	ReqAccountAuthTypeLinkRequestAuthTypeUsername ReqAccountAuthTypeLinkRequestAuthType = "username"
 )
 
+// Defines values for ReqAdminCreateAccountRequestAuthType.
+const (
+	ReqAdminCreateAccountRequestAuthTypeEmail ReqAdminCreateAccountRequestAuthType = "email"
+
+	ReqAdminCreateAccountRequestAuthTypeIllinoisOidc ReqAdminCreateAccountRequestAuthType = "illinois_oidc"
+)
+
 // Defines values for ReqCreateOrganizationRequestType.
 const (
 	ReqCreateOrganizationRequestTypeHuge ReqCreateOrganizationRequestType = "huge"
@@ -535,9 +542,18 @@ type ReqAdminAppTokenResponse struct {
 
 // ReqAdminCreateAccountRequest defines model for _req_admin_create-account_Request.
 type ReqAdminCreateAccountRequest struct {
-	AppTypeIdentifier string `json:"app_type_identifier"`
-	OrgId             string `json:"org_id"`
+	AppTypeIdentifier string                               `json:"app_type_identifier"`
+	AuthType          ReqAdminCreateAccountRequestAuthType `json:"auth_type"`
+	Groups            *[]string                            `json:"groups,omitempty"`
+	Identifier        string                               `json:"identifier"`
+	OrgId             string                               `json:"org_id"`
+	Permissions       *[]string                            `json:"permissions,omitempty"`
+	Profile           *ReqSharedProfileNullable            `json:"profile"`
+	Roles             *[]string                            `json:"roles,omitempty"`
 }
+
+// ReqAdminCreateAccountRequestAuthType defines model for ReqAdminCreateAccountRequest.AuthType.
+type ReqAdminCreateAccountRequestAuthType string
 
 // ReqApplicationRolesRequest defines model for _req_application-roles_Request.
 type ReqApplicationRolesRequest struct {
@@ -658,7 +674,6 @@ type ReqSharedCredsTwilioPhone struct {
 
 // ReqSharedLogin defines model for _req_shared_Login.
 type ReqSharedLogin struct {
-	AdminToken        *string                `json:"admin_token"`
 	ApiKey            string                 `json:"api_key"`
 	AppTypeIdentifier string                 `json:"app_type_identifier"`
 	AuthType          ReqSharedLoginAuthType `json:"auth_type"`
@@ -794,7 +809,8 @@ type ResAccountExistsResponse bool
 
 // ResAdminCreateAccountResponse defines model for _res_admin_create-account_Response.
 type ResAdminCreateAccountResponse struct {
-	AdminToken string `json:"admin_token"`
+	Account ResSharedAccount        `json:"account"`
+	Params  *map[string]interface{} `json:"params"`
 }
 
 // ResAuthorizeServiceResponse defines model for _res_authorize-service_Response.

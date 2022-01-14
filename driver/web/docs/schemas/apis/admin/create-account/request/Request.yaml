@@ -1,9 +1,32 @@
 required:
+  - auth_type
   - app_type_identifier
   - org_id
+  - identifier
 type: object
 properties:
+  auth_type:
+    type: string
+    enum:
+      - email
+      - illinois_oidc
   app_type_identifier:
     type: string
   org_id:
     type: string
+  identifier:
+    type: string
+  permissions:
+    type: array
+    items:
+      type: string
+  roles:
+    type: array
+    items:
+      type: string
+  groups:
+    type: array
+    items:
+      type: string
+  profile:
+    $ref:  "../../../shared/requests/ProfileNullable.yaml"  

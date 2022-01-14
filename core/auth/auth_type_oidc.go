@@ -226,6 +226,10 @@ func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.Applic
 	return authURL + "?" + query.Encode(), responseParams, nil
 }
 
+func (a *oidcAuthImpl) signUpAdmin(identifier string) error {
+	return errors.New(logutils.Unimplemented)
+}
+
 func (a *oidcAuthImpl) checkToken(idToken string, authType model.AuthType, appType model.ApplicationType, oidcConfig *oidcAuthConfig, l *logs.Log) (string, error) {
 	var err error
 	if oidcConfig == nil {

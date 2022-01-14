@@ -18,6 +18,8 @@ type authType interface {
 	//	credentialValue (map): Credential value
 	signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
 
+	signUpAdmin(identifier string) (map[string]interface{}, error)
+
 	//verifies credential (checks the verification code generated on email signup for email auth type)
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
@@ -61,6 +63,8 @@ type externalAuthType interface {
 	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 	//refresh refreshes tokens
 	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
+	//signUpAdmin signs up a new admin user
+	signUpAdmin(identifier string) error
 }
 
 //anonymousAuthType is the interface for authentication for auth types which are anonymous
@@ -174,6 +178,9 @@ type APIs interface {
 	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
 	LoginMFA(apiKey string, accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
+
+	//CreateAdminAccount creates an account for a new admin user
+	CreateAdminAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string, permissions []string, roles []string, groups []string, profile model.Profile) (*model.Account, map[string]interface{}, error)
 
 	//VerifyCredential verifies credential (checks the verification code in the credentials collection)
 	VerifyCredential(id string, verification string, l *logs.Log) error

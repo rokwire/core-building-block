@@ -35,6 +35,10 @@ func (a *samlAuthImpl) refresh(params map[string]interface{}, authType model.Aut
 	return nil, nil, nil
 }
 
+func (a *samlAuthImpl) signUpAdmin(identifier string) error {
+	return errors.New(logutils.Unimplemented)
+}
+
 //initSamlAuth initializes and registers a new SAML auth instance
 func initSamlAuth(auth *Auth) (*samlAuthImpl, error) {
 	saml := &samlAuthImpl{auth: auth, authType: AuthTypeSaml}

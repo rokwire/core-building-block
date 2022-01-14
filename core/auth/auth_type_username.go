@@ -22,6 +22,10 @@ func (a *usernameAuthImpl) signUp(authType model.AuthType, appType model.Applica
 	return "", nil, nil
 }
 
+func (a *usernameAuthImpl) signUpAdmin(identifier string) (map[string]interface{}, error) {
+	return nil, errors.New(logutils.Unimplemented)
+}
+
 func (a *usernameAuthImpl) getUserIdentifier(creds string) (string, error) {
 	return "", nil
 }

@@ -111,6 +111,10 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appType model.Applicatio
 	return "verification code sent successfully", emailCredValueMap, nil
 }
 
+func (a *emailAuthImpl) signUpAdmin(identifier string) (map[string]interface{}, error) {
+	return nil, errors.New(logutils.Unimplemented)
+}
+
 func (a *emailAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
 	if credential.Verified {
 		verified := true

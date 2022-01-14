@@ -476,6 +476,17 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 	return nil, loginSession, nil
 }
 
+//CreateAdminAccount creates an account for a new admin user
+func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string, permissions []string, roles []string, groups []string, profile model.Profile) (*model.Account, map[string]interface{}, error) {
+	//validate if the provided auth type is supported by the provided application and organization
+	// authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+	// if err != nil {
+	// 	return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	// }
+
+	return nil, nil, errors.New(logutils.Unimplemented)
+}
+
 //VerifyCredential verifies credential (checks the verification code in the credentials collection)
 func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) error {
 	credential, err := a.storage.FindCredential(nil, id)

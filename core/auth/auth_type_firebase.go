@@ -23,6 +23,10 @@ func (a *firebaseAuthImpl) signUp(authType model.AuthType, appType model.Applica
 	return "", nil, nil
 }
 
+func (a *firebaseAuthImpl) signUpAdmin(identifier string) (map[string]interface{}, error) {
+	return nil, errors.New(logutils.Unimplemented)
+}
+
 func (a *firebaseAuthImpl) getUserIdentifier(creds string) (string, error) {
 	return "", nil
 }

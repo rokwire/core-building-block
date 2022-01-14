@@ -280,17 +280,35 @@ func (h AdminApisHandler) createAccount(l *logs.Log, r *http.Request, claims *to
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create account request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	// token, err := h.coreAPIs.Administration.AdmCreateAccount(requestData.AppTypeIdentifier, requestData.OrgId)
-	// if err != nil {
-	// 	return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
-	// }
+	var permissions []string
+	if requestData.Permissions != nil {
+		permissions = *requestData.Permissions
+	}
+	var roles []string
+	if requestData.Roles != nil {
+		roles = *requestData.Roles
+	}
+	var groups []string
+	if requestData.Groups != nil {
+		groups = *requestData.Groups
+	}
+	profile := profileFromDefNullable(requestData.Profile)
+	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.OrgId, requestData.Identifier, permissions, roles, groups, profile)
+	if err != nil || account == nil {
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
 
-	// respData := &Def.ResAdminCreateAccountResponse{AdminToken: token}
+	accountData := accountToDef(*account)
+	var paramsData *map[string]interface{}
+	if len(params) > 0 {
+		paramsData = &params
+	}
+	respData := &Def.ResAdminCreateAccountResponse{Account: *accountData, Params: paramsData}
 
-	// data, err = json.Marshal(respData)
-	// if err != nil {
-	// 	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
-	// }
+	data, err = json.Marshal(respData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
 
 	return l.HttpResponseSuccessJSON(data)
 }

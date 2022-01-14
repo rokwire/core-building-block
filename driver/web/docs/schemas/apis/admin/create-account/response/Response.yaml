@@ -1,6 +1,9 @@
 required:
-  - admin_token
+  - account
 type: object
 properties:
-  admin_token:
-    type: string
+  account:
+    $ref: "../../../shared/responses/Account.yaml"
+  params:
+    type: object
+    nullable: true
