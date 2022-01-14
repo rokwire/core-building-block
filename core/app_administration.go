@@ -163,7 +163,7 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admGetAppOrgGroup(appID string, orgID string) ([]model.AppOrgGroup, error) {
+func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
 	//find application organization
 	getAppOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
 	if err != nil {

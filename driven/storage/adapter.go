@@ -1492,7 +1492,7 @@ func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 
 func (sa *Adapter) FindAppGroups(appOrgID string) ([]model.AppOrgGroup, error) {
 	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
-	var result []model.AppOrgGroup
+	var result []appOrgGroup
 	err := sa.db.applicationsOrganizationsGroups.Find(filter, &result, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
@@ -1503,7 +1503,9 @@ func (sa *Adapter) FindAppGroups(appOrgID string) ([]model.AppOrgGroup, error) {
 		return make([]model.AppOrgGroup, 0), nil
 	}
 
-	return result, nil
+	appOrgResult := appOrgGroupsFromStorage(result, model.ApplicationOrganization{})
+
+	return appOrgResult, nil
 }
 
 //LoadAPIKeys finds all api key documents in the DB
