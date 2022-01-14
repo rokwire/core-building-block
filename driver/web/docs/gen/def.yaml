@@ -1698,11 +1698,20 @@
         ],
         "parameters": [
           {
-            "name": "account_id and session_id",
-            "in": "query",
-            "description": "The accountID and the sessionID of the loggin session to delete",
+            "name": "session_id",
+            "in": "path",
+            "description": "The sessionID of the loggin session to delete",
             "required": true,
-            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The accountID of the loggin session to delete",
+            "required": true,
             "explode": false,
             "schema": {
               "type": "string"
