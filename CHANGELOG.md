@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Service accounts [#306](https://github.com/rokwire/core-building-block/issues/306)
+- Admin APIs authorization fix [#372](https://github.com/rokwire/core-building-block/issues/372)
 - Fixed date login session expiration [#367](https://github.com/rokwire/core-building-block/issues/367)
 - Expose get permissions list admin API [#296](https://github.com/rokwire/core-building-block/issues/296)
 - Expose get accounts admin API [#283](https://github.com/rokwire/core-building-block/issues/283)
