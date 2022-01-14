@@ -28,6 +28,7 @@ type Administration interface {
 
 	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
+	AdmDeleteLoginSessions(context storage.TransactionContext, identifier string, sessionID string) error
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -83,6 +84,7 @@ type Storage interface {
 	DeleteCredential(context storage.TransactionContext, ID string) error
 
 	DeleteLoginSessions(context storage.TransactionContext, identifier string) error
+	DeleteLoginSessionsByAccountAndSessionID(context storage.TransactionContext, identifier string, sessionID string) error
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error

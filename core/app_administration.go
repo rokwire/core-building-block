@@ -2,6 +2,7 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
@@ -192,4 +193,13 @@ func (app *application) admGetAccounts(appID string, orgID string, accountID *st
 
 func (app *application) admGetAccount(accountID string) (*model.Account, error) {
 	return app.getAccount(accountID)
+}
+
+func (app *application) admDeleteLoginSessions(context storage.TransactionContext, identifier string, sessionID string) error {
+
+	deleteLoginSession := app.storage.DeleteLoginSessionsByAccountAndSessionID(context, identifier, sessionID)
+	if deleteLoginSession != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, deleteLoginSession)
+	}
+	return deleteLoginSession
 }

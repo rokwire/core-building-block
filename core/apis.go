@@ -3,6 +3,7 @@ package core
 import (
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 
 	"github.com/rokwire/logging-library-go/logs"
 )
@@ -121,6 +122,10 @@ func (s *administrationImpl) AdmGetAccounts(appID string, orgID string, accountI
 
 func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
 	return s.app.admGetAccount(accountID)
+}
+
+func (s *administrationImpl) AdmDeleteLoginSessions(context storage.TransactionContext, identifier string, sessionID string) error {
+	return s.app.admDeleteLoginSessions(context, identifier, sessionID)
 }
 
 ///
