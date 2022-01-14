@@ -1455,10 +1455,7 @@ func (sa *Adapter) FindAppOrgRole(appOrgID string) ([]model.AppOrgRole, error) {
 		return make([]model.AppOrgRole, 0), nil
 	}
 
-	appRole := make([]model.AppOrgRole, len(result))
-	for i, ar := range result {
-		appRole[i] = model.AppOrgRole{ID: ar.ID, Name: ar.Name, Description: ar.Description, System: ar.System, Permissions: ar.Permissions}
-	}
+	appRole := appOrgRolesFromStorage(result, model.ApplicationOrganization{})
 
 	return appRole, nil
 }

@@ -1,9 +1,9 @@
  get:
   tags:
   - Admin
-  summary: Get applications_organizations_roles
+  summary: Get applications organizations roles
   description: |
-    Gets applications_organizations_roles
+    Gets applications organizations roles
   security:
     - bearerAuth: []
   responses:
@@ -14,7 +14,7 @@
             schema:
               type: array
               items:
-                $ref: "../../../schemas/application/AppOrgRole.yaml"
+                $ref: "../../../schemas/application/AppOrgRoleFields.yaml"
       400:
         description: Bad request
       401:

@@ -225,11 +225,8 @@ func (h AdminApisHandler) adminGetApplicationOrgRoles(l *logs.Log, r *http.Reque
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
 	}
-	var response []Def.AppOrgRoleFields
-	for _, appOrgRole := range appOrgRoles {
-		r := appOrgRoleToDef(appOrgRole)
-		response = append(response, r)
-	}
+
+	response := appOrgRolesToDef(appOrgRoles)
 
 	data, err := json.Marshal(response)
 	if err != nil {

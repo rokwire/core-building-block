@@ -1689,8 +1689,8 @@
         "tags": [
           "Admin"
         ],
-        "summary": "Get applications_organizations_roles",
-        "description": "Gets applications_organizations_roles\n",
+        "summary": "Get applications organizations roles",
+        "description": "Gets applications organizations roles\n",
         "security": [
           {
             "bearerAuth": []
@@ -1704,7 +1704,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AppOrgRole"
+                    "$ref": "#/components/schemas/AppOrgRoleFields"
                   }
                 }
               }
