@@ -610,22 +610,19 @@ func (sa *Adapter) DeleteLoginSessions(context TransactionContext, identifier st
 
 //DeleteLoginSessionsByAccountAndSessionID deletes all login sessions with the identifier and sessionID
 func (sa *Adapter) DeleteLoginSessionsByAccountAndSessionID(context TransactionContext, identifier string, sessionID string) error {
-	filter := bson.D{primitive.E{Key: "identifier", Value: identifier}, primitive.E{Key: "session_id", Value: sessionID}}
-
-	var res *mongo.DeleteResult
-	var err error
-	if context != nil {
-		res, err = sa.db.loginsSessions.DeleteOneWithContext(context, filter, nil)
-	} else {
-		res, err = sa.db.loginsSessions.DeleteOne(filter, nil)
-	}
-
+	filter := bson.M{"identifier": identifier, "session_id": sessionID}
+	result, err := sa.db.loginsSessions.DeleteOne(filter, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"identifier": identifier, "session_id": sessionID}, err)
 	}
-	if res.DeletedCount < 1 {
-		return errors.ErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("unexpected deleted count"))
+	if result == nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"identifier": identifier, "session_id": sessionID}, err)
 	}
+	deletedCount := result.DeletedCount
+	if deletedCount == 0 {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeLoginSession, &logutils.FieldArgs{"identifier": identifier, "session_id": sessionID}, err)
+	}
+
 	return nil
 }
 
@@ -1891,7 +1888,6 @@ func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganizat
 		result[i] = applicationOrganizationFromStorage(item, *application, *organization)
 	}
 	return result, nil
-
 }
 
 //FindApplicationOrganizations finds application organization
