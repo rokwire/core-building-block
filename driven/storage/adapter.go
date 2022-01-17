@@ -1388,11 +1388,14 @@ func (sa *Adapter) DeletePermission(id string) error {
 
 //FindAppOrgRoles finds a set of application organization roles
 func (sa *Adapter) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error) {
+	var rolesFilter bson.D
+
 	if len(ids) == 0 {
-		return []model.AppOrgRole{}, nil
+		rolesFilter = bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
+	} else {
+		rolesFilter = bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	}
 
-	rolesFilter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var rolesResult []appOrgRole
 	err := sa.db.applicationsOrganizationsRoles.Find(rolesFilter, &rolesResult, nil)
 	if err != nil {

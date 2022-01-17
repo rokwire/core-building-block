@@ -163,6 +163,22 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
+func (app *application) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
+	//find application organization
+	getAppOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	//find application organization roles
+	getAppOrgRoles, err := app.storage.FindAppOrgRoles(nil, getAppOrg.ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err)
+	}
+
+	return getAppOrgRoles, nil
+}
+
 func (app *application) admGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error) {
 	//1. find application organization
 	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
