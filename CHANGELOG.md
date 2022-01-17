@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Expose get application organization groups admin API [#302](https://github.com/rokwire/core-building-block/issues/302)
+- Expose get application organization roles admin API [#301](https://github.com/rokwire/core-building-block/issues/301)
 - Admin APIs authorization fix [#372](https://github.com/rokwire/core-building-block/issues/372)
 - Fixed date login session expiration [#367](https://github.com/rokwire/core-building-block/issues/367)
 - Expose get permissions list admin API [#296](https://github.com/rokwire/core-building-block/issues/296)
