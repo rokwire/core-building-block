@@ -58,7 +58,7 @@ func applicationPermissionsToDef(items []model.Permission) []Def.PermissionField
 
 //AppOrgRole
 func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRoleFields {
-	return Def.AppOrgRoleFields{Id: item.ID, Name: item.Name}
+	return Def.AppOrgRoleFields{Id: item.ID, Name: item.Name, System: &item.System}
 }
 
 func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRoleFields {
@@ -71,7 +71,7 @@ func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRoleFields {
 
 //AppOrgGroup
 func appOrgGroupToDef(item model.AppOrgGroup) Def.AppOrgGroupFields {
-	return Def.AppOrgGroupFields{Id: item.ID, Name: item.Name}
+	return Def.AppOrgGroupFields{Id: item.ID, Name: item.Name, System: &item.System}
 }
 
 func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroupFields {
