@@ -171,7 +171,7 @@ func (app *application) AdmGetAppOrgRoles(appID string, orgID string) ([]model.A
 	}
 
 	//find application organization roles
-	getAppOrgRoles, err := app.storage.FindAppOrgRole(getAppOrg.ID)
+	getAppOrgRoles, err := app.storage.FindAppOrgRoles(nil, getAppOrg.ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err)
 	}

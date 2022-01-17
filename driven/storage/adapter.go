@@ -1388,11 +1388,14 @@ func (sa *Adapter) DeletePermission(id string) error {
 
 //FindAppOrgRoles finds a set of application organization roles
 func (sa *Adapter) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error) {
+	var rolesFilter bson.D
+
 	if len(ids) == 0 {
-		return []model.AppOrgRole{}, nil
+		rolesFilter = bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
+	} else {
+		rolesFilter = bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	}
 
-	rolesFilter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var rolesResult []appOrgRole
 	err := sa.db.applicationsOrganizationsRoles.Find(rolesFilter, &rolesResult, nil)
 	if err != nil {
@@ -1439,25 +1442,6 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
 	return errors.New(logutils.Unimplemented)
-}
-
-//FindAppOrgRole load  application_organization_roles
-func (sa *Adapter) FindAppOrgRole(appOrgID string) ([]model.AppOrgRole, error) {
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
-	var result []appOrgRole
-	err := sa.db.applicationsOrganizationsRoles.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
-	}
-
-	if len(result) == 0 {
-		//no data
-		return make([]model.AppOrgRole, 0), nil
-	}
-
-	appRole := appOrgRolesFromStorage(result, model.ApplicationOrganization{})
-
-	return appRole, nil
 }
 
 //FindAppOrgGroups finds a set of application organization groups
