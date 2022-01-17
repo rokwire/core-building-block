@@ -478,11 +478,33 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 
 //CreateAdminAccount creates an account for a new admin user
 func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string, permissions []string, roles []string, groups []string, profile model.Profile) (*model.Account, map[string]interface{}, error) {
-	//validate if the provided auth type is supported by the provided application and organization
-	// authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
-	// if err != nil {
-	// 	return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
-	// }
+	// validate if the provided auth type is supported by the provided application and organization
+	authType, _, _, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	if authType.IsExternal {
+		authImpl, err := a.getExternalAuthTypeImpl(*authType)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+		}
+
+		err = authImpl.signUpAdmin(identifier)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction("signing up", "external admin user", nil, err)
+		}
+	} else {
+		authImpl, err := a.getAuthTypeImpl(*authType)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+		}
+
+		_, err = authImpl.signUpAdmin(identifier)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction("signing up", "external admin user", nil, err)
+		}
+	}
 
 	return nil, nil, errors.New(logutils.Unimplemented)
 }
