@@ -87,8 +87,12 @@ paths:
     $ref: "./resources/admin/application/accounts.yaml"
   /admin/application/account/{account_id}/device:
     $ref: "./resources/admin/application/account-device.yaml"
+  /admin/application/groups:
+    $ref: "./resources/admin/application/groups.yaml"
   /admin/application/permissions:
     $ref: "./resources/admin/application/permissions.yaml"
+  /admin/application/roles:
+    $ref: "./resources/admin/application/roles.yaml"
 
   #enc
   /enc/test:
