@@ -43,7 +43,7 @@ func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRoleFields {
 
 //AppOrgGroup
 func appOrgGroupToDef(item model.AppOrgGroup) Def.AppOrgGroupFields {
-	return Def.AppOrgGroupFields{Id: item.ID, Name: item.Name}
+	return Def.AppOrgGroupFields{Id: item.ID, Name: item.Name, System: &item.System}
 }
 
 func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroupFields {
