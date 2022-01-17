@@ -1836,7 +1836,19 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 	return result, nil
 }
 
-//FindApplicationsByOrgID finds a set of applications organizations
+//FindApplicationTypeByIdentifier finds an application type by identifier
+func (sa *Adapter) FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error) {
+	app, appType, err := sa.getCachedApplicationTypeByIdentifier(identifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, nil, err)
+	}
+
+	appType.Application = *app
+
+	return appType, nil
+}
+
+//FindApplicationsOrganizationsByOrgID finds a set of applications organizations
 func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error) {
 	applicationsOrgFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}}
 	var applicationsOrgResult []applicationOrganization
@@ -1867,18 +1879,6 @@ func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.A
 	return result, nil
 }
 
-//FindApplicationTypeByIdentifier finds an application type by identifier
-func (sa *Adapter) FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error) {
-	app, appType, err := sa.getCachedApplicationTypeByIdentifier(identifier)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, nil, err)
-	}
-
-	appType.Application = *app
-
-	return appType, nil
-}
-
 //LoadApplicationsOrganizations loads all applications organizations
 func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error) {
 	filter := bson.D{}
@@ -1907,7 +1907,6 @@ func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganizat
 		result[i] = applicationOrganizationFromStorage(item, *application, *organization)
 	}
 	return result, nil
-
 }
 
 //FindApplicationOrganizations finds application organization

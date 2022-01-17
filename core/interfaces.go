@@ -119,8 +119,8 @@ type Storage interface {
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
-	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
 
+	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
 }
 
