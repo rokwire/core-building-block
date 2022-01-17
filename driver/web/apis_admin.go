@@ -227,13 +227,13 @@ func (h AdminApisHandler) getApplicationPermissions(l *logs.Log, r *http.Request
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
 	}
+
 	response := applicationPermissionsToDef(permissions)
 
 	data, err := json.Marshal(response)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypePermission, nil, err, http.StatusInternalServerError, false)
 	}
-
 	return l.HttpResponseSuccessJSON(data)
 }
 
