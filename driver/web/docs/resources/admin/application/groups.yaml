@@ -1,9 +1,9 @@
  get:
   tags:
   - Admin
-  summary: Get applications_organizations_groups
+  summary: Get application groups
   description: |
-    Gets applications_organizations_groups
+    Gets application groups
   security:
     - bearerAuth: []
   responses:
@@ -14,7 +14,7 @@
             schema:
               type: array
               items:
-                $ref: "../../../schemas/application/AppOrgGroup.yaml"
+                $ref: "../../../schemas/application/AppOrgGroupFields.yaml"
       400:
         description: Bad request
       401:
