@@ -171,7 +171,7 @@ func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.
 	}
 
 	//find application organization groups
-	getAppOrgGroups, err := app.storage.FindAppGroups(getAppOrg.ID)
+	getAppOrgGroups, err := app.storage.FindAppOrgGroups(nil, getAppOrg.ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err)
 	}

@@ -1446,11 +1446,14 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 
 //FindAppOrgGroups finds a set of application organization groups
 func (sa *Adapter) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
+	var filter bson.D
+
 	if len(ids) == 0 {
-		return []model.AppOrgGroup{}, nil
+		filter = bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
+	} else {
+		filter = bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	}
 
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var groupsResult []appOrgGroup
 	err := sa.db.applicationsOrganizationsGroups.Find(filter, &groupsResult, nil)
 	if err != nil {
@@ -1491,24 +1494,6 @@ func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
 	return errors.New(logutils.Unimplemented)
-}
-
-func (sa *Adapter) FindAppGroups(appOrgID string) ([]model.AppOrgGroup, error) {
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
-	var result []appOrgGroup
-	err := sa.db.applicationsOrganizationsGroups.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-	}
-
-	if len(result) == 0 {
-		//no data
-		return make([]model.AppOrgGroup, 0), nil
-	}
-
-	appOrgResult := appOrgGroupsFromStorage(result, model.ApplicationOrganization{})
-
-	return appOrgResult, nil
 }
 
 //LoadAPIKeys finds all api key documents in the DB

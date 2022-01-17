@@ -104,10 +104,10 @@ type Storage interface {
 	UpdateAppOrgRole(item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
 
+	FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	InsertAppOrgGroup(item model.AppOrgGroup) error
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
-	FindAppGroups(appOrgID string) ([]model.AppOrgGroup, error)
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
