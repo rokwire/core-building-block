@@ -1,9 +1,9 @@
  get:
   tags:
   - Admin
-  summary: Get applications organizations roles
+  summary: Get application roles
   description: |
-    Gets applications organizations roles
+    Gets application roles
   security:
     - bearerAuth: []
   responses:
