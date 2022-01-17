@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Restrict sign up action for admin accounts [#365](https://github.com/rokwire/core-building-block/issues/365)
 - Expose get application organization groups admin API [#302](https://github.com/rokwire/core-building-block/issues/302)
 - Expose get application organization roles admin API [#301](https://github.com/rokwire/core-building-block/issues/301)
 - Admin APIs authorization fix [#372](https://github.com/rokwire/core-building-block/issues/372)
