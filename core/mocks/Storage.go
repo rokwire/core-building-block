@@ -201,6 +201,29 @@ func (_m *Storage) FindAccounts(appID string, orgID string, accountID *string, a
 	return r0, r1
 }
 
+// FindAppOrgGroups provides a mock function with given fields: ids, appOrgID
+func (_m *Storage) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
+	ret := _m.Called(ids, appOrgID)
+
+	var r0 []model.AppOrgGroup
+	if rf, ok := ret.Get(0).(func([]string, string) []model.AppOrgGroup); ok {
+		r0 = rf(ids, appOrgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.AppOrgGroup)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func([]string, string) error); ok {
+		r1 = rf(ids, appOrgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindAppOrgRoles provides a mock function with given fields: ids, appOrgID
 func (_m *Storage) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error) {
 	ret := _m.Called(ids, appOrgID)
