@@ -203,7 +203,6 @@ _res_get_Application_Response:
 _res_get_Applications_Response:
  $ref: "./apis/system/get-applications/response/Response.yaml"
 
- 
 ### permissions API
 _req_permissions_Request:
   $ref: "./apis/system/permissions/request/Request.yaml"

@@ -75,8 +75,8 @@ paths:
     $ref: "./resources/admin/auth/refresh.yaml"
   /admin/auth/login-url:
     $ref: "./resources/admin/auth/login-url.yaml"
-  /admin/applications:
-    $ref: "./resources/admin/auth/get-applications.yaml"
+  /admin/auth/organization/applications:
+    $ref: "./resources/admin/organization/applications.yaml"
   /admin/auth/verify-mfa:
     $ref: "./resources/admin/auth/verify-mfa.yaml"
   /admin/auth/app-token:
