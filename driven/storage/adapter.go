@@ -1446,11 +1446,14 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 
 //FindAppOrgGroups finds a set of application organization groups
 func (sa *Adapter) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
+	var filter bson.D
+
 	if len(ids) == 0 {
-		return []model.AppOrgGroup{}, nil
+		filter = bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
+	} else {
+		filter = bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	}
 
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var groupsResult []appOrgGroup
 	err := sa.db.applicationsOrganizationsGroups.Find(filter, &groupsResult, nil)
 	if err != nil {
