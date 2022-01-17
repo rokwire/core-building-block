@@ -87,8 +87,12 @@ paths:
     $ref: "./resources/admin/account/mfa.yaml"
   /admin/application/accounts:
     $ref: "./resources/admin/application/accounts.yaml"
+  /admin/application/groups:
+    $ref: "./resources/admin/application/groups.yaml"
   /admin/application/permissions:
     $ref: "./resources/admin/application/permissions.yaml"
+  /admin/application/roles:
+    $ref: "./resources/admin/application/roles.yaml"
 
   #enc
   /enc/test:
