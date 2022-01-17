@@ -1698,6 +1698,44 @@
         }
       }
     },
+    "/admin/application/groups": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get application groups",
+        "description": "Gets application groups\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppOrgGroupFields"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/admin/application/permissions": {
       "get": {
         "tags": [
@@ -1719,6 +1757,44 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/PermissionFields"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/admin/application/roles": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get application roles",
+        "description": "Gets application roles\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppOrgRoleFields"
                   }
                 }
               }

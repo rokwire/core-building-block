@@ -119,6 +119,8 @@ func (we Adapter) Start() {
 
 	adminSubrouter.HandleFunc("/application/{app_id}/building-blocks", we.wrapFunc(we.adminApisHandler.adminGetBuildingBlocks, we.auth.admin.user)).Methods("GET")
 
+	adminSubrouter.HandleFunc("/application/groups", we.wrapFunc(we.adminApisHandler.adminGetApplicationGroups, we.auth.admin.permissions)).Methods("GET")
+	adminSubrouter.HandleFunc("/application/roles", we.wrapFunc(we.adminApisHandler.adminGetApplicationOrgRoles, we.auth.admin.permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/permissions", we.wrapFunc(we.adminApisHandler.getApplicationPermissions, we.auth.admin.permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/accounts", we.wrapFunc(we.adminApisHandler.getApplicationAccounts, we.auth.admin.permissions)).Methods("GET")
 	///
