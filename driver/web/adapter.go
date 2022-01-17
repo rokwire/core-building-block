@@ -117,8 +117,9 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.addMFAType, we.auth.admin.authenticated)).Methods("POST")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.removeMFAType, we.auth.admin.authenticated)).Methods("DELETE")
 
-	adminSubrouter.HandleFunc("/appOrgRoles", we.wrapFunc(we.adminApisHandler.adminDeleteApplicationOrgRoles, we.auth.admin.user)).Methods("DELETE")
-
+	adminSubrouter.HandleFunc("/application/groups", we.wrapFunc(we.adminApisHandler.adminGetApplicationGroups, we.auth.admin.permissions)).Methods("GET")
+	adminSubrouter.HandleFunc("/application/roles", we.wrapFunc(we.adminApisHandler.adminGetApplicationOrgRoles, we.auth.admin.permissions)).Methods("GET")
+	adminSubrouter.HandleFunc("/application/roles", we.wrapFunc(we.adminApisHandler.adminDeleteApplicationOrgRoles, we.auth.admin.user)).Methods("DELETE")
 	adminSubrouter.HandleFunc("/application/permissions", we.wrapFunc(we.adminApisHandler.getApplicationPermissions, we.auth.admin.permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/accounts", we.wrapFunc(we.adminApisHandler.getApplicationAccounts, we.auth.admin.permissions)).Methods("GET")
 	///
