@@ -166,8 +166,8 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admCreateAppOrgRole(name string, description string, permissionID []string) (*model.AppOrgRole, error) {
-	permissions, err := app.storage.FindPermissionsByID(permissionID)
+func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string) (*model.AppOrgRole, error) {
+	permissions, err := app.storage.FindPermissionsByIDs(permissionIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +175,7 @@ func (app *application) admCreateAppOrgRole(name string, description string, per
 	id, _ := uuid.NewUUID()
 	now := time.Now()
 	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: permissions, DateCreated: now}
-	err = app.storage.InsertAdmAppOrgRole(role)
+	err = app.storage.InsertAppOrgRole(role)
 	if err != nil {
 		return nil, err
 	}

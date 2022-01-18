@@ -210,29 +210,6 @@ func (_m *Storage) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppO
 	return r0, r1
 }
 
-// FindAppOrgGroupsList provides a mock function with given fields:
-func (_m *Storage) FindAppOrgGroupsList() ([]model.AppOrgGroup, error) {
-	ret := _m.Called()
-
-	var r0 []model.AppOrgGroup
-	if rf, ok := ret.Get(0).(func() []model.AppOrgGroup); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.AppOrgGroup)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // FindAppOrgRoles provides a mock function with given fields: ids, appOrgID
 func (_m *Storage) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error) {
 	ret := _m.Called(ids, appOrgID)
@@ -249,29 +226,6 @@ func (_m *Storage) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOr
 	var r1 error
 	if rf, ok := ret.Get(1).(func([]string, string) error); ok {
 		r1 = rf(ids, appOrgID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// FindAppOrgRolesList provides a mock function with given fields:
-func (_m *Storage) FindAppOrgRolesList() ([]model.AppOrgRole, error) {
-	ret := _m.Called()
-
-	var r0 []model.AppOrgRole
-	if rf, ok := ret.Get(0).(func() []model.AppOrgRole); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.AppOrgRole)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -394,8 +348,8 @@ func (_m *Storage) FindOrganization(id string) (*model.Organization, error) {
 	return r0, r1
 }
 
-// FindPermissionsByID provides a mock function with given fields: ids
-func (_m *Storage) FindPermissionsByID(ids []string) ([]model.Permission, error) {
+// FindPermissionsByIDs provides a mock function with given fields: ids
+func (_m *Storage) FindPermissionsByIDs(ids []string) ([]model.Permission, error) {
 	ret := _m.Called(ids)
 
 	var r0 []model.Permission
@@ -507,20 +461,6 @@ func (_m *Storage) InsertAccountRoles(accountID string, appOrgID string, roles [
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string, []model.AccountRole) error); ok {
 		r0 = rf(accountID, appOrgID, roles)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// InsertAdmAppOrgRole provides a mock function with given fields: item
-func (_m *Storage) InsertAdmAppOrgRole(item model.AppOrgRole) error {
-	ret := _m.Called(item)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(model.AppOrgRole) error); ok {
-		r0 = rf(item)
 	} else {
 		r0 = ret.Error(0)
 	}

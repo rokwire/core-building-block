@@ -801,20 +801,6 @@ type ResAuthorizeServiceResponse struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResAuthorizeServiceResponseTokenType string
 
-// ResGetAppOrgGroupsResponse defines model for _res_get_AppOrgGroups_Response.
-type ResGetAppOrgGroupsResponse struct {
-	Id     string `json:"id"`
-	Name   string `json:"name"`
-	System *bool  `json:"system,omitempty"`
-}
-
-// ResGetAppOrgRolesResponse defines model for _res_get_AppOrgRoles_Response.
-type ResGetAppOrgRolesResponse struct {
-	Id     string `json:"id"`
-	Name   string `json:"name"`
-	System *bool  `json:"system,omitempty"`
-}
-
 // ResGetApplicationsResponse defines model for _res_get_Applications_Response.
 type ResGetApplicationsResponse struct {
 	ApplicationTypes *ApplicationTypeFields `json:"application_types,omitempty"`
@@ -914,9 +900,6 @@ type PostAdminAccountMfaParams struct {
 	Type string `json:"type"`
 }
 
-// PostAdminAppOrgRolesJSONBody defines parameters for PostAdminAppOrgRoles.
-type PostAdminAppOrgRolesJSONBody ReqCreateAppOrgRolesRequest
-
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {
 	// The account ID
@@ -925,6 +908,9 @@ type GetAdminApplicationAccountsParams struct {
 	// The authentication type identifier
 	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
 }
+
+// PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
+type PostAdminApplicationRolesJSONBody ReqCreateAppOrgRolesRequest
 
 // GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.
 type GetAdminAuthAppTokenParams struct {
@@ -1118,8 +1104,8 @@ type GetTpsServiceRegsParams struct {
 	Ids string `json:"ids"`
 }
 
-// PostAdminAppOrgRolesJSONRequestBody defines body for PostAdminAppOrgRoles for application/json ContentType.
-type PostAdminAppOrgRolesJSONRequestBody PostAdminAppOrgRolesJSONBody
+// PostAdminApplicationRolesJSONRequestBody defines body for PostAdminApplicationRoles for application/json ContentType.
+type PostAdminApplicationRolesJSONRequestBody PostAdminApplicationRolesJSONBody
 
 // PostAdminAuthLoginJSONRequestBody defines body for PostAdminAuthLogin for application/json ContentType.
 type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody

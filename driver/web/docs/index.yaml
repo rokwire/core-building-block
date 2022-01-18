@@ -75,10 +75,6 @@ paths:
     $ref: "./resources/admin/auth/refresh.yaml"
   /admin/auth/login-url:
     $ref: "./resources/admin/auth/login-url.yaml"
-  /admin/appOrgRoles:
-    $ref: "./resources/admin/auth/appOrgRole.yaml"
-  /admin/auth/appOrgGroups:
-    $ref: "./resources/admin/auth/appOrgGroups.yaml"
   /admin/auth/verify-mfa:
     $ref: "./resources/admin/auth/verify-mfa.yaml"
   /admin/auth/app-token:
@@ -95,6 +91,7 @@ paths:
     $ref: "./resources/admin/application/permissions.yaml"
   /admin/application/roles:
     $ref: "./resources/admin/application/roles.yaml"
+
 
   #enc
   /enc/test:

@@ -111,8 +111,8 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
-func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, permissionID []string) (*model.AppOrgRole, error) {
-	return s.app.admCreateAppOrgRole(name, description, permissionID)
+func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, permissionIDs []string) (*model.AppOrgRole, error) {
+	return s.app.admCreateAppOrgRole(name, description, permissionIDs)
 }
 
 func (s *administrationImpl) AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {

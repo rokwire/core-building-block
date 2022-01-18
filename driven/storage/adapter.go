@@ -1337,8 +1337,8 @@ func (sa *Adapter) FindPermissionsByName(names []string) ([]model.Permission, er
 	return permissionsResult, nil
 }
 
-//FindPermissionsByName finds a set of permissions
-func (sa *Adapter) FindPermissionsByID(ids []string) ([]model.Permission, error) {
+//FindPermissionsByIDs finds a set of permissions
+func (sa *Adapter) FindPermissionsByIDs(ids []string) ([]model.Permission, error) {
 	permissionsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var permissionsResult []model.Permission
 	err := sa.db.permissions.Find(permissionsFilter, &permissionsResult, nil)
@@ -1440,15 +1440,6 @@ func (sa *Adapter) InsertAppOrgRole(item model.AppOrgRole) error {
 	return nil
 }
 
-//InsertPermission inserts a new  permission
-func (sa *Adapter) InsertAdmAppOrgRole(item model.AppOrgRole) error {
-	_, err := sa.db.applicationsOrganizationsRoles.InsertOne(item)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
-	}
-	return nil
-}
-
 //UpdateAppOrgRole updates application organization role
 func (sa *Adapter) UpdateAppOrgRole(item model.AppOrgRole) error {
 	//TODO
@@ -1463,23 +1454,6 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
 	return errors.New(logutils.Unimplemented)
-}
-
-//FindAppOrgRolesList loads all application_organization_roles
-func (sa *Adapter) FindAppOrgRolesList() ([]model.AppOrgRole, error) {
-	filter := bson.D{}
-	var result []model.AppOrgRole
-	err := sa.db.applicationsOrganizationsRoles.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
-	}
-
-	if len(result) == 0 {
-		//no data
-		return make([]model.AppOrgRole, 0), nil
-	}
-
-	return result, nil
 }
 
 //FindAppOrgGroups finds a set of application organization groups
@@ -1532,22 +1506,6 @@ func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
 	return errors.New(logutils.Unimplemented)
-}
-
-func (sa *Adapter) FindAppOrgGroupsList() ([]model.AppOrgGroup, error) {
-	filter := bson.D{}
-	var result []model.AppOrgGroup
-	err := sa.db.applicationsOrganizationsGroups.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-	}
-
-	if len(result) == 0 {
-		//no data
-		return make([]model.AppOrgGroup, 0), nil
-	}
-
-	return result, nil
 }
 
 //LoadAPIKeys finds all api key documents in the DB
@@ -1930,7 +1888,6 @@ func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganizat
 		result[i] = applicationOrganizationFromStorage(item, *application, *organization)
 	}
 	return result, nil
-
 }
 
 //FindApplicationOrganizations finds application organization
