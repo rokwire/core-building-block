@@ -6,12 +6,9 @@ import (
 )
 
 //Application
-func applicationToDef(item *model.Application) *Def.ApplicationFields {
-	if item == nil {
-		return nil
-	}
+func applicationToDef(item model.Application) Def.ApplicationFields {
 
-	return &Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
+	return Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
 		RequiresOwnUsers: &item.RequiresOwnUsers}
 }
 
@@ -32,6 +29,14 @@ func appOrgToDef(item *model.ApplicationOrganization) *Def.ApplicationOrganizati
 	return &Def.ApplicationOrganization{Organization: &Def.Organization{Config: &Def.OrganizationConfig{Fields: &Def.OrganizationConfigFields{Domains: &item.Organization.Config.Domains}}},
 		Application: &Def.Application{Fields: &Def.ApplicationFields{MultiTenant: &item.Application.MultiTenant,
 			Name: item.Application.Name, RequiresOwnUsers: &item.Application.RequiresOwnUsers}}}
+}
+
+func applicationsToDef(item []model.Application) []Def.ApplicationFields {
+	result := make([]Def.ApplicationFields, len(item))
+	for i, item := range item {
+		result[i] = applicationToDef(item)
+	}
+	return result
 }
 
 //ApplicationPermission
