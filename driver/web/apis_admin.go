@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -435,12 +436,13 @@ func (h AdminApisHandler) getAppToken(l *logs.Log, r *http.Request, claims *toke
 }
 
 func (h AdminApisHandler) adminDeleteApplicationOrgRoles(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	id := r.URL.Query().Get("id")
-	if id == "" {
+	params := mux.Vars(r)
+	rolesID := params["roles_id"]
+	if len(rolesID) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	err := h.coreAPIs.Administration.AdmDeleteAppOrgRole(id)
+	err := h.coreAPIs.Administration.AdmDeleteAppOrgRole(rolesID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}

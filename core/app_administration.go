@@ -172,6 +172,25 @@ func (app *application) admDeleteAppOrgRole(ID string) error {
 	if appOrgRole == nil {
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, nil)
 	}
+	if appOrgRole.System != false {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, nil)
+	}
+
+	account, _ := app.storage.FindAccountByID(nil, ID)
+	if account != nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, nil)
+	}
+
+	permission, _ := app.storage.FindPermissionsByID(appOrgRole.AppOrg.ServicesIDs)
+	if permission != nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, nil)
+	}
+
+	groups, _ := app.storage.FindAppOrgGroupByID(ID)
+	if groups != nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, nil)
+	}
+
 	//2. delete the application_organization_role
 	err = app.storage.DeleteAppOrgRole(ID)
 	if err != nil {
