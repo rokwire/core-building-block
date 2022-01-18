@@ -24,6 +24,7 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
+	AdmGetApplications(orgID string) ([]model.Application, error)
 	AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error)
 	AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error)
 	AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error)
@@ -126,6 +127,7 @@ type Storage interface {
 	InsertAuthType(authType model.AuthType) (*model.AuthType, error)
 	LoadAuthTypes() ([]model.AuthType, error)
 	UpdateAuthTypes(ID string, code string, description string) error
+	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
 }
 
