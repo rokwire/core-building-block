@@ -91,6 +91,8 @@ paths:
     $ref: "./resources/admin/application/permissions.yaml"
   /admin/application/roles:
     $ref: "./resources/admin/application/roles.yaml"
+  /admin/organization/applications:
+    $ref: "./resources/admin/organization/applications.yaml"
 
 
   #enc
