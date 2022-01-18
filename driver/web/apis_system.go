@@ -375,7 +375,7 @@ func (h SystemApisHandler) getApplication(l *logs.Log, r *http.Request, claims *
 		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeApplication, &logutils.FieldArgs{"id": ID}, nil, http.StatusNotFound, false)
 	}
 
-	responseData := applicationToDef(app)
+	responseData := applicationToDef(*app)
 	data, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
@@ -422,8 +422,8 @@ func (h SystemApisHandler) getApplications(l *logs.Log, r *http.Request, claims 
 	}
 	var response []Def.ApplicationFields
 	for _, application := range applications {
-		r := applicationToDef(&application)
-		response = append(response, *r)
+		r := applicationToDef(application)
+		response = append(response, r)
 	}
 
 	data, err := json.Marshal(response)
