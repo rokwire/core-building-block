@@ -25,6 +25,7 @@ type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
 	AdmDeleteAppOrgGroup(ID string) error
+	AdmGetApplications(orgID string) ([]model.Application, error)
 	AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error)
 	AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error)
 	AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error)
@@ -127,6 +128,7 @@ type Storage interface {
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 
+	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
 }
 
