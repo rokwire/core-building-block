@@ -1899,6 +1899,37 @@ func (sa *Adapter) FindApplicationTypeByIdentifier(identifier string) (*model.Ap
 	return appType, nil
 }
 
+//FindApplicationsOrganizationsByOrgID finds a set of applications organizations
+func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error) {
+	applicationsOrgFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}}
+	var applicationsOrgResult []applicationOrganization
+	err := sa.db.applicationsOrganizations.Find(applicationsOrgFilter, &applicationsOrgResult, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(applicationsOrgResult) == 0 {
+		//no data
+		return make([]model.ApplicationOrganization, 0), nil
+	}
+
+	result := make([]model.ApplicationOrganization, len(applicationsOrgResult))
+	organization, err := sa.getCachedOrganization(orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
+	}
+	for i, item := range applicationsOrgResult {
+		//we have organizations and applications cached
+		application, err := sa.getCachedApplication(item.AppID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		}
+
+		result[i] = applicationOrganizationFromStorage(item, *application, *organization)
+	}
+	return result, nil
+}
+
 //LoadApplicationsOrganizations loads all applications organizations
 func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error) {
 	filter := bson.D{}
