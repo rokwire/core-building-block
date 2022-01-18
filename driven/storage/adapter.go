@@ -1338,8 +1338,8 @@ func (sa *Adapter) FindPermissionsByName(names []string) ([]model.Permission, er
 	return permissionsResult, nil
 }
 
-//FindPermissionsByName finds a set of permissions
-func (sa *Adapter) FindPermissionsByID(ids []string) ([]model.Permission, error) {
+//FindPermissionsByIDs finds a set of permissions
+func (sa *Adapter) FindPermissionsByIDs(ids []string) ([]model.Permission, error) {
 	permissionsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var permissionsResult []model.Permission
 	err := sa.db.permissions.Find(permissionsFilter, &permissionsResult, nil)
@@ -1545,31 +1545,6 @@ func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
 	return errors.New(logutils.Unimplemented)
-}
-
-func (sa *Adapter) FindAppOrgGroupsList() ([]model.AppOrgGroup, error) {
-	filter := bson.D{}
-	var result []model.AppOrgGroup
-	err := sa.db.applicationsOrganizationsGroups.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-	}
-
-	if len(result) == 0 {
-		//no data
-		return make([]model.AppOrgGroup, 0), nil
-	}
-
-	return result, nil
-}
-
-//InsertAdmAppOrgRole inserts a new  applicationa_organization_role
-func (sa *Adapter) InsertAdmAppOrgGroup(item model.AppOrgGroup) error {
-	_, err := sa.db.applicationsOrganizationsGroups.InsertOne(item)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgGroup, nil, err)
-	}
-	return nil
 }
 
 //LoadAPIKeys finds all api key documents in the DB

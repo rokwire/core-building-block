@@ -166,9 +166,9 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admCreateAppOrgGroup(name string, ID string, permissionID []string, rolesID []string) (*model.AppOrgGroup, error) {
+func (app *application) admCreateAppOrgGroup(name string, ID string, permissionIDs []string, rolesID []string) (*model.AppOrgGroup, error) {
 
-	permissions, err := app.storage.FindPermissionsByID(permissionID)
+	permissions, err := app.storage.FindPermissionsByIDs(permissionIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (app *application) admCreateAppOrgGroup(name string, ID string, permissionI
 	id, _ := uuid.NewUUID()
 	now := time.Now()
 	group := model.AppOrgGroup{ID: id.String(), Name: name, Roles: role, Permissions: permissions, DateCreated: now}
-	err = app.storage.InsertAdmAppOrgGroup(group)
+	err = app.storage.InsertAppOrgGroup(group)
 	if err != nil {
 		return nil, err
 	}
