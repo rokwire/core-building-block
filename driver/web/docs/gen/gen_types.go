@@ -556,16 +556,6 @@ type ReqCreateOrganizationRequest struct {
 // ReqCreateOrganizationRequestType defines model for ReqCreateOrganizationRequest.Type.
 type ReqCreateOrganizationRequestType string
 
-// ReqCreateAppOrgGroupsRequest defines model for _req_create_AppOrgGroups_Request.
-type ReqCreateAppOrgGroupsRequest struct {
-	Application *[]string `json:"application,omitempty"`
-	Id          string    `json:"id"`
-	Name        string    `json:"name"`
-	Permissions *[]string `json:"permissions,omitempty"`
-	Roles       *[]string `json:"roles,omitempty"`
-	System      *bool     `json:"system,omitempty"`
-}
-
 // ReqCreateApplicationRequest defines model for _req_create_Application_Request.
 type ReqCreateApplicationRequest struct {
 	ApplicationTypes *[]struct {
@@ -804,20 +794,6 @@ type ResAuthorizeServiceResponse struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ResAuthorizeServiceResponseTokenType string
 
-// ResGetAppOrgGroupsResponse defines model for _res_get_AppOrgGroups_Response.
-type ResGetAppOrgGroupsResponse struct {
-	Id     string `json:"id"`
-	Name   string `json:"name"`
-	System *bool  `json:"system,omitempty"`
-}
-
-// ResGetAppOrgRolesResponse defines model for _res_get_AppOrgRoles_Response.
-type ResGetAppOrgRolesResponse struct {
-	Id     string `json:"id"`
-	Name   string `json:"name"`
-	System *bool  `json:"system,omitempty"`
-}
-
 // ResGetApplicationsResponse defines model for _res_get_Applications_Response.
 type ResGetApplicationsResponse struct {
 	ApplicationTypes *ApplicationTypeFields `json:"application_types,omitempty"`
@@ -916,9 +892,6 @@ type PostAdminAccountMfaParams struct {
 	// MFA type
 	Type string `json:"type"`
 }
-
-// PostAdminAppOrgGroupsJSONBody defines parameters for PostAdminAppOrgGroups.
-type PostAdminAppOrgGroupsJSONBody ReqCreateAppOrgGroupsRequest
 
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {
@@ -1120,9 +1093,6 @@ type GetTpsServiceRegsParams struct {
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
-
-// PostAdminAppOrgGroupsJSONRequestBody defines body for PostAdminAppOrgGroups for application/json ContentType.
-type PostAdminAppOrgGroupsJSONRequestBody PostAdminAppOrgGroupsJSONBody
 
 // PostAdminAuthLoginJSONRequestBody defines body for PostAdminAuthLogin for application/json ContentType.
 type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody

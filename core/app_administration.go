@@ -172,6 +172,10 @@ func (app *application) admDeleteAppOrgGroup(ID string) error {
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgGroup, nil)
 	}
 
+	if appOrgGroup.System != false {
+		return errors.New("The group cannot be deleted")
+	}
+
 	//2. delete the application_organization_group record
 	err = app.storage.DeleteAppOrgGroup(ID)
 	if err != nil {
