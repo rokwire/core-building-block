@@ -93,6 +93,8 @@ paths:
     $ref: "./resources/admin/application/logins-sessions.yaml"
   /admin/application/roles:
     $ref: "./resources/admin/application/roles.yaml"
+  /admin/organization/applications:
+    $ref: "./resources/admin/organization/applications.yaml"
 
   #enc
   /enc/test:
