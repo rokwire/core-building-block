@@ -175,6 +175,20 @@ func (app *application) admDeleteAppOrgGroup(ID string) error {
 	if appOrgGroup.System != false {
 		return errors.New("The group cannot be deleted")
 	}
+	account, _ := app.storage.FindAccountByID(nil, ID)
+	if account != nil {
+		return errors.New("The group cannot be deleted because of an account is using the group")
+	}
+
+	permission, _ := app.storage.FindPermissionsByServiceIDs(appOrgGroup.AppOrg.ServicesIDs)
+	if permission != nil {
+		return errors.New("The group cannot be deleted because of already used permission")
+	}
+
+	roles, _ := app.storage.FindAppOrgRolesByID(appOrgGroup.AppOrg.ServicesIDs)
+	if roles != nil {
+		return errors.New("The group cannot be deleted because of already used roles")
+	}
 
 	//2. delete the application_organization_group record
 	err = app.storage.DeleteAppOrgGroup(ID)
