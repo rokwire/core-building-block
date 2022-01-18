@@ -302,6 +302,29 @@ func (_m *Storage) FindApplications() ([]model.Application, error) {
 	return r0, r1
 }
 
+// FindApplicationsOrganizationsByOrgID provides a mock function with given fields: orgID
+func (_m *Storage) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error) {
+	ret := _m.Called(orgID)
+
+	var r0 []model.ApplicationOrganization
+	if rf, ok := ret.Get(0).(func(string) []model.ApplicationOrganization); ok {
+		r0 = rf(orgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.ApplicationOrganization)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(orgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindCredential provides a mock function with given fields: context, ID
 func (_m *Storage) FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error) {
 	ret := _m.Called(context, ID)

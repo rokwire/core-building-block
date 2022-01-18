@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Expose Admin API which gives all building blocks for an application within an organization [#325](https://github.com/rokwire/core-building-block/issues/325) 
+- Expose Admin API which gives all applications for an organization [#324](https://github.com/rokwire/core-building-block/issues/324)
 - Expose get application organization groups admin API [#302](https://github.com/rokwire/core-building-block/issues/302)
 - Expose get application organization roles admin API [#301](https://github.com/rokwire/core-building-block/issues/301)
 - Admin APIs authorization fix [#372](https://github.com/rokwire/core-building-block/issues/372)
