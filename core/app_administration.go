@@ -170,7 +170,7 @@ func (app *application) admGetApplications(orgID string) ([]model.Application, e
 	}
 
 	if len(applicationsOrganizations) == 0 {
-		return nil, errors.Newf("no application organization found for orgID: %v", orgID)
+		return nil, nil
 	}
 
 	var apps []model.Application
