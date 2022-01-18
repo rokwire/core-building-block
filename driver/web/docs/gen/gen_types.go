@@ -785,6 +785,11 @@ type ReqUpdateOrganizationRequestType string
 // ResAccountExistsResponse defines model for _res_account-exists_Response.
 type ResAccountExistsResponse bool
 
+// ResAccountAuthTypeLinkResponse defines model for _res_account_auth-type_link_Response.
+type ResAccountAuthTypeLinkResponse struct {
+	AuthTypes []AccountAuthTypeFields `json:"auth_types"`
+}
+
 // ResAuthorizeServiceResponse defines model for _res_authorize-service_Response.
 type ResAuthorizeServiceResponse struct {
 	AccessToken    *string   `json:"access_token,omitempty"`

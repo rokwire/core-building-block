@@ -1,0 +1,8 @@
+required:
+  - auth_types
+type: object
+properties:
+  auth_types:
+    type: array
+    items:
+      $ref: "../../../../../../user/AccountAuthTypeFields.yaml"

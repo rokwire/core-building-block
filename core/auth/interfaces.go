@@ -270,7 +270,8 @@ type APIs interface {
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		Message (*string): message
-	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, error)
+	//		accountAuthTypes ([]model.AccountAuthType): list of account auth types after the operation
+	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, []model.AccountAuthType, error)
 
 	//GetAdminToken returns an admin token for the specified application
 	GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error)
