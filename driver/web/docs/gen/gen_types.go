@@ -795,6 +795,7 @@ type ResAccountExistsResponse bool
 // ResAccountAuthTypeLinkResponse defines model for _res_account_auth-type_link_Response.
 type ResAccountAuthTypeLinkResponse struct {
 	AuthTypes []AccountAuthTypeFields `json:"auth_types"`
+	Message   *string                 `json:"message"`
 }
 
 // ResAuthorizeServiceResponse defines model for _res_authorize-service_Response.

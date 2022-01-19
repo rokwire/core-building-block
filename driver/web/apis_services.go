@@ -242,17 +242,13 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 		return l.HttpResponseError("Error linking account auth type", err, http.StatusInternalServerError, true)
 	}
 
-	if message != nil {
-		return l.HttpResponseSuccessMessage(*message)
-	}
-
-	var authTypes []Def.AccountAuthTypeFields
+	authTypes := make([]Def.AccountAuthTypeFields, 0)
 	if account != nil {
 		account.SortAccountAuthTypes(claims.UID)
 		authTypes = accountAuthTypesToDef(account.AuthTypes)
 	}
 
-	responseData := &Def.ResAccountAuthTypeLinkResponse{AuthTypes: authTypes}
+	responseData := &Def.ResAccountAuthTypeLinkResponse{AuthTypes: authTypes, Message: message}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "link account auth type response", nil, err, http.StatusInternalServerError, false)

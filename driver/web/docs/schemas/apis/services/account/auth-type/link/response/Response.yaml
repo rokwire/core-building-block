@@ -2,6 +2,9 @@ required:
   - auth_types
 type: object
 properties:
+  message:
+    type: string
+    nullable: true
   auth_types:
     type: array
     items:
