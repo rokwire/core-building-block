@@ -1337,18 +1337,6 @@ func (sa *Adapter) FindPermissionsByName(names []string) ([]model.Permission, er
 	return permissionsResult, nil
 }
 
-//FindPermissionsByIDs finds a set of permissions
-func (sa *Adapter) FindPermissionsByIDs(ids []string) ([]model.Permission, error) {
-	permissionsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
-	var permissionsResult []model.Permission
-	err := sa.db.permissions.Find(permissionsFilter, &permissionsResult, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return permissionsResult, nil
-}
-
 //InsertPermission inserts a new  permission
 func (sa *Adapter) InsertPermission(permission model.Permission) error {
 	_, err := sa.db.permissions.InsertOne(permission)
@@ -1919,6 +1907,7 @@ func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganizat
 		result[i] = applicationOrganizationFromStorage(item, *application, *organization)
 	}
 	return result, nil
+
 }
 
 //FindApplicationOrganizations finds application organization

@@ -1764,12 +1764,7 @@
           "Admin"
         ],
         "summary": "Create application role",
-        "description": "Creates application role\n\n**Auth:** Requires auth token with `auth_admin` permission\n",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "description": "Creates application role\n\n**Auth:** Requires auth token with 'all_admin_core'\n- bearerAuth: []\n",
         "requestBody": {
           "description": "Application role",
           "content": {

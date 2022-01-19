@@ -28,8 +28,7 @@
   description: |
     Creates application role
 
-    **Auth:** Requires auth token with `auth_admin` permission
-  security:
+    **Auth:** Requires auth token with 'all_admin_core'
     - bearerAuth: []
   requestBody:
     description: Application role

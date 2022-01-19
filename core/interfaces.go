@@ -28,7 +28,7 @@ type Administration interface {
 	AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error)
 	AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error)
 	AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error)
-	AdmCreateAppOrgRole(name string, description string, permissionIDs []string) (*model.AppOrgRole, error)
+	AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string) (*model.AppOrgRole, error)
 	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
 }
@@ -95,7 +95,6 @@ type Storage interface {
 	DeleteGlobalConfig(context storage.TransactionContext) error
 
 	FindPermissionsByName(names []string) ([]model.Permission, error)
-	FindPermissionsByIDs(ids []string) ([]model.Permission, error)
 	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)
 	InsertPermission(item model.Permission) error
 	UpdatePermission(item model.Permission) error

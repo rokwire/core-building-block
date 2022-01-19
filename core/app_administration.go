@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -166,15 +165,20 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string) (*model.AppOrgRole, error) {
-	permissions, err := app.storage.FindPermissionsByIDs(permissionIDs)
+func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string) (*model.AppOrgRole, error) {
+	getAppOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	permissions, err := app.storage.FindPermissionsByServiceIDs(getAppOrg.ServicesIDs)
 	if err != nil {
 		return nil, err
 	}
 
 	id, _ := uuid.NewUUID()
 	now := time.Now()
-	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: permissions, DateCreated: now}
+	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: permissions, AppOrg: *getAppOrg, DateCreated: now}
 	err = app.storage.InsertAppOrgRole(role)
 	if err != nil {
 		return nil, err
