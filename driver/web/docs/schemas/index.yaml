@@ -213,12 +213,6 @@ _req_application-roles_Request:
 _res_get_AppOrgRoles_Response:
  $ref: "./apis/system/get-appOrgRoles/response/Response.yaml"
 
-
- ### application-organization-groups API
-_res_get_AppOrgGroups_Response:
- $ref: "./apis/system/get-appOrgGroups/response/Response.yaml"
-
-
 ### account permissions API
 _req_account-permissions_Request:
   $ref: "./apis/system/account/permissions/request/Request.yaml"

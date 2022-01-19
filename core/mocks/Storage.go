@@ -15,6 +15,29 @@ type Storage struct {
 	mock.Mock
 }
 
+// CountAccountsByGroupID provides a mock function with given fields: context, groupID
+func (_m *Storage) CountAccountsByGroupID(context storage.TransactionContext, groupID string) (*int, error) {
+	ret := _m.Called(context, groupID)
+
+	var r0 *int
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) *int); ok {
+		r0 = rf(context, groupID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*int)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
+		r1 = rf(context, groupID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CreateGlobalConfig provides a mock function with given fields: context, globalConfig
 func (_m *Storage) CreateGlobalConfig(context storage.TransactionContext, globalConfig *model.GlobalConfig) error {
 	ret := _m.Called(context, globalConfig)
@@ -295,29 +318,6 @@ func (_m *Storage) FindAppOrgRolesByID(ids []string) ([]model.AppOrgRole, error)
 	var r1 error
 	if rf, ok := ret.Get(1).(func([]string) error); ok {
 		r1 = rf(ids)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// FindAppOrgRolesList provides a mock function with given fields:
-func (_m *Storage) FindAppOrgRolesList() ([]model.AppOrgRole, error) {
-	ret := _m.Called()
-
-	var r0 []model.AppOrgRole
-	if rf, ok := ret.Get(0).(func() []model.AppOrgRole); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.AppOrgRole)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
 	} else {
 		r1 = ret.Error(1)
 	}

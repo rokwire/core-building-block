@@ -949,6 +949,30 @@ func (sa *Adapter) UpdateAccountGroups(accountID string, groups []model.AccountG
 	return nil
 }
 
+func (sa *Adapter) CountAccountsByGroupID(context TransactionContext, groupID string) (*int, error) {
+	filter := bson.D{primitive.E{Key: "id", Value: groupID}}
+	var accounts []account
+	var err error
+	if context != nil {
+		err = sa.db.accounts.FindWithContext(context, filter, &accounts, nil)
+	} else {
+		err = sa.db.accounts.Find(filter, &accounts, nil)
+	}
+
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if len(accounts) > 0 {
+		//not found
+		return nil, errors.New("There is an account using this groupID")
+	}
+	var numberOfAccounts int
+	if numberOfAccounts == len(accounts) {
+		numberOfAccounts = 0
+	}
+	return &numberOfAccounts, nil
+}
+
 //InsertAccountAuthType inserts am account auth type
 func (sa *Adapter) InsertAccountAuthType(item model.AccountAuthType) error {
 	storageItem := accountAuthTypeToStorage(item)
@@ -1475,23 +1499,6 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
 	return errors.New(logutils.Unimplemented)
-}
-
-//FindAppOrgRolesList loads all application_organization_roles
-func (sa *Adapter) FindAppOrgRolesList() ([]model.AppOrgRole, error) {
-	filter := bson.D{}
-	var result []model.AppOrgRole
-	err := sa.db.applicationsOrganizationsRoles.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
-	}
-
-	if len(result) == 0 {
-		//no data
-		return make([]model.AppOrgRole, 0), nil
-	}
-
-	return result, nil
 }
 
 //FindAppOrgGroups finds a set of application organization groups
