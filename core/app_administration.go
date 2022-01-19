@@ -165,16 +165,62 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admCreateAppOrgGroup(name string, ID string, permissionIDs []string, rolesID []string) (*model.AppOrgGroup, error) {
+func (app *application) admCreateAppOrgGroup(name string, ID string, permissionIDs []string, rolesIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgGroup, error) {
 
-	permissions, err := app.storage.FindPermissionsByIDs(permissionIDs)
+	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
 
-	role, err := app.storage.FindAppOrgRolesByID(rolesID)
+	permissions, err := app.storage.FindPermissionsByServiceIDs(appOrg.ServicesIDs)
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+	}
+	if len(permissionIDs) > len(permissions) {
+		return nil, errors.New("mismatch permissions count")
+	}
+	rolePermissions := make([]model.Permission, len(permissionIDs))
+	for i, permissionID := range permissionIDs {
+		var rolePermission *model.Permission
+
+		for _, permission := range permissions {
+			if permission.ID == permissionID {
+				rolePermission = &permission
+				break
+			}
+		}
+
+		if rolePermission == nil {
+			l.Infof("%s permission does not match", permissionID)
+			return nil, errors.Newf("%s permission does not match", permissionID)
+		}
+		rolePermissions[i] = *rolePermission
+	}
+
+	rolesCheck, err := app.storage.FindAppOrgRolesByID(rolesIDs)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+	}
+	if len(rolesIDs) > len(rolesCheck) {
+		return nil, errors.New("mismatch roles count")
+	}
+
+	role := make([]model.AppOrgRole, len(rolesIDs))
+	for i, roleID := range rolesIDs {
+		var roles *model.AppOrgRole
+
+		for _, appRoles := range rolesCheck {
+			if appRoles.ID == roleID {
+				roles = &appRoles
+				break
+			}
+		}
+
+		if roles == nil {
+			l.Infof("%s roles does not match", roleID)
+			return nil, errors.Newf("%s roles does not match", roleID)
+		}
+		role[i] = *roles
 	}
 
 	id, _ := uuid.NewUUID()

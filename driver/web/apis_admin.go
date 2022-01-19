@@ -434,8 +434,8 @@ func (h AdminApisHandler) getAppToken(l *logs.Log, r *http.Request, claims *toke
 	return l.HttpResponseSuccessJSON(responseJSON)
 }
 
-//adminCreateApplicationOrgGroups creates an application_organization_role
-func (h AdminApisHandler) adminCreateApplicationOrgGroups(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+//adminCreateApplicationGroups creates an application_organization_role
+func (h AdminApisHandler) adminCreateApplicationGroups(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -446,7 +446,7 @@ func (h AdminApisHandler) adminCreateApplicationOrgGroups(l *logs.Log, r *http.R
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgGroup, nil, err, http.StatusBadRequest, true)
 	}
 
-	_, err = h.coreAPIs.Administration.AdmCreateAppOrgGroup(requestData.Name, requestData.Id, *requestData.Permissions, *requestData.Roles)
+	_, err = h.coreAPIs.Administration.AdmCreateAppOrgGroup(requestData.Name, requestData.Id, *requestData.Permissions, *requestData.Roles, claims.AppID, claims.OrgID, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
 	}
