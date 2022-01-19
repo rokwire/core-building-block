@@ -177,6 +177,10 @@ _res_authorize-service_Response:
 _req_admin_app-token_Response:
   $ref: "./apis/admin/app-token/response/Response.yaml"
 
+### admin application_roles API
+_req_admin_application_roles_Request:
+ $ref: "./apis/admin/application/roles/request/Request.yaml"
+
 ### organization API
 _req_create-Organization_Request:
   $ref: "./apis/system/create-organization/request/Request.yaml"
