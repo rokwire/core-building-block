@@ -185,6 +185,8 @@ func (app *application) sysCreateAppOrgRole(name string, appOrgID string, descri
 		return nil, err
 	}
 
+	//TODO - load ApplicationOrganization
+
 	id, _ := uuid.NewUUID()
 	now := time.Now()
 	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, AppOrg: model.ApplicationOrganization{ID: appOrgID}, Permissions: permissions, DateCreated: now}
