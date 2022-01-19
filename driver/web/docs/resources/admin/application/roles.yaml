@@ -35,7 +35,7 @@
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/admin/application-roles/request/Request.yaml"
+          $ref: "../../../schemas/apis/admin/application/roles/request/Request.yaml"
     required: true
   responses:
     200:
