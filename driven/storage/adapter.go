@@ -1315,6 +1315,10 @@ func (sa *Adapter) FindPermissions(ids []string) ([]model.Permission, error) {
 
 //FindPermissionsByServiceIDs finds permissions
 func (sa *Adapter) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error) {
+	if len(serviceIDs) == 0 {
+		return nil, nil
+	}
+
 	filter := bson.D{primitive.E{Key: "service_id", Value: bson.M{"$in": serviceIDs}}}
 	var permissionsResult []model.Permission
 	err := sa.db.permissions.Find(filter, &permissionsResult, nil)
