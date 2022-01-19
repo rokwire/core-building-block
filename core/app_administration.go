@@ -197,23 +197,44 @@ func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.
 	return getAppOrgGroups, nil
 }
 
-func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string) (*model.AppOrgRole, error) {
-	getAppOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error) {
+	//1. get application organization entity
+	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
 
-	permissions, err := app.storage.FindPermissionsByServiceIDs(getAppOrg.ServicesIDs)
+	//2. check permissions
+	permissions, err := app.storage.FindPermissionsByServiceIDs(appOrg.ServicesIDs)
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+	}
+	if len(permissionIDs) > len(permissions) {
+		return nil, errors.New("mismatch permissions count")
+	}
+	for _, permissionID := range permissionIDs {
+		exist := false
+
+		for _, permission := range permissions {
+			if permission.ID == permissionID {
+				exist = true
+				break
+			}
+		}
+
+		if !exist {
+			l.Infof("%s permission does not match")
+			return nil, errors.Newf("%s permission does not match")
+		}
 	}
 
+	//3. create role
 	id, _ := uuid.NewUUID()
 	now := time.Now()
-	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: permissions, AppOrg: *getAppOrg, DateCreated: now}
+	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: permissions, AppOrg: *appOrg, DateCreated: now}
 	err = app.storage.InsertAppOrgRole(role)
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
 	}
 	return &role, nil
 }

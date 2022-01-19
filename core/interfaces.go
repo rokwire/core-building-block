@@ -29,7 +29,7 @@ type Administration interface {
 
 	AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error)
 
-	AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string) (*model.AppOrgRole, error)
+	AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error)
 	AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error)
 
 	AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error)
