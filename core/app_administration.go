@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -218,6 +217,50 @@ func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.
 	}
 
 	return getAppOrgGroups, nil
+}
+
+func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error) {
+	//1. get application organization entity
+	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	//2. check permissions
+	permissions, err := app.storage.FindPermissionsByServiceIDs(appOrg.ServicesIDs)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+	}
+	if len(permissionIDs) > len(permissions) {
+		return nil, errors.New("mismatch permissions count")
+	}
+	rolePermissions := make([]model.Permission, len(permissionIDs))
+	for i, permissionID := range permissionIDs {
+		var rolePermission *model.Permission
+
+		for _, permission := range permissions {
+			if permission.ID == permissionID {
+				rolePermission = &permission
+				break
+			}
+		}
+
+		if rolePermission == nil {
+			l.Infof("%s permission does not match", permissionID)
+			return nil, errors.Newf("%s permission does not match", permissionID)
+		}
+		rolePermissions[i] = *rolePermission
+	}
+
+	//3. create role
+	id, _ := uuid.NewUUID()
+	now := time.Now()
+	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: rolePermissions, AppOrg: *appOrg, DateCreated: now}
+	err = app.storage.InsertAppOrgRole(role)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
+	}
+	return &role, nil
 }
 
 func (app *application) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
