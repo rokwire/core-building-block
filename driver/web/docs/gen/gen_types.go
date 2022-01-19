@@ -533,6 +533,13 @@ type ReqAdminAppTokenResponse struct {
 	Token string `json:"token"`
 }
 
+// ReqAdminApplicationRolesRequest defines model for _req_admin_application_roles_Request.
+type ReqAdminApplicationRolesRequest struct {
+	Description string   `json:"description"`
+	Name        string   `json:"name"`
+	Permissions []string `json:"permissions"`
+}
+
 // ReqApplicationRolesRequest defines model for _req_application-roles_Request.
 type ReqApplicationRolesRequest struct {
 	AppId       string   `json:"app_id"`
@@ -917,6 +924,9 @@ type GetAdminApplicationAccountsParams struct {
 	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
 }
 
+// PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
+type PostAdminApplicationRolesJSONBody ReqAdminApplicationRolesRequest
+
 // GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.
 type GetAdminAuthAppTokenParams struct {
 
@@ -1122,6 +1132,9 @@ type GetTpsServiceRegsParams struct {
 	// A comma-separated list of service IDs to return registrations for
 	Ids string `json:"ids"`
 }
+
+// PostAdminApplicationRolesJSONRequestBody defines body for PostAdminApplicationRoles for application/json ContentType.
+type PostAdminApplicationRolesJSONRequestBody PostAdminApplicationRolesJSONBody
 
 // PostAdminAuthLoginJSONRequestBody defines body for PostAdminAuthLogin for application/json ContentType.
 type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody
