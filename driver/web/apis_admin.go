@@ -441,7 +441,7 @@ func (h AdminApisHandler) adminCreateApplicationRole(l *logs.Log, r *http.Reques
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqCreateAppOrgRolesRequest
+	var requestData Def.ReqAdminApplicationRolesRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)

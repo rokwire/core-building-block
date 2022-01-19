@@ -176,7 +176,7 @@ _req_admin_app-token_Response:
   $ref: "./apis/admin/app-token/response/Response.yaml"
 
 ### admin application_roles API
-_req_application_roles_Request:
+_req_admin_application_roles_Request:
  $ref: "./apis/admin/application/roles/request/Request.yaml"
 
 ### organization API

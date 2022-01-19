@@ -533,16 +533,16 @@ type ReqAdminAppTokenResponse struct {
 	Token string `json:"token"`
 }
 
-// ReqApplicationRolesRequest defines model for _req_application-roles_Request.
-type ReqApplicationRolesRequest struct {
-	AppId       string   `json:"app_id"`
+// ReqAdminApplicationRolesRequest defines model for _req_admin_application_roles_Request.
+type ReqAdminApplicationRolesRequest struct {
 	Description string   `json:"description"`
 	Name        string   `json:"name"`
 	Permissions []string `json:"permissions"`
 }
 
-// ReqApplicationRolesRequest defines model for _req_application_roles_Request.
+// ReqApplicationRolesRequest defines model for _req_application-roles_Request.
 type ReqApplicationRolesRequest struct {
+	AppId       string   `json:"app_id"`
 	Description string   `json:"description"`
 	Name        string   `json:"name"`
 	Permissions []string `json:"permissions"`
@@ -920,7 +920,7 @@ type GetAdminApplicationAccountsParams struct {
 }
 
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
-type PostAdminApplicationRolesJSONBody ReqApplicationRolesRequest
+type PostAdminApplicationRolesJSONBody ReqAdminApplicationRolesRequest
 
 // GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.
 type GetAdminAuthAppTokenParams struct {
