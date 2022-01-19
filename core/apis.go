@@ -123,6 +123,10 @@ func (s *administrationImpl) AdmGetAppOrgGroups(appID string, orgID string) ([]m
 	return s.app.admGetAppOrgGroups(appID, orgID)
 }
 
+func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error) {
+	return s.app.admCreateAppOrgRole(name, description, permissionIDs, appID, orgID, l)
+}
+
 func (s *administrationImpl) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
 	return s.app.AdmGetAppOrgRoles(appID, orgID)
 }

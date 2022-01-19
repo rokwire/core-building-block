@@ -1758,6 +1758,46 @@
             "description": "Internal error"
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Create application role",
+        "description": "Creates application role\n\n**Auth:** Requires auth token with 'all_admin_core'\n- bearerAuth: []\n",
+        "requestBody": {
+          "description": "Application role",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_req_admin_application_roles_Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
       }
     },
     "/admin/application/roles/{id}": {
@@ -4919,6 +4959,28 @@
         "properties": {
           "token": {
             "type": "string"
+          }
+        }
+      },
+      "_req_admin_application_roles_Request": {
+        "required": [
+          "name",
+          "description",
+          "permissions"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
