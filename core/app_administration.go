@@ -223,8 +223,8 @@ func (app *application) admCreateAppOrgRole(name string, description string, per
 		}
 
 		if !exist {
-			l.Infof("%s permission does not match")
-			return nil, errors.Newf("%s permission does not match")
+			l.Infof("%s permission does not match", permissionID)
+			return nil, errors.Newf("%s permission does not match", permissionID)
 		}
 	}
 
