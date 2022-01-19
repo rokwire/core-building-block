@@ -682,8 +682,8 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 
 	//account auth type
 	if !anonymous {
-		//only return auth type used for login
-		accountAuthType.Account.AuthTypes = []model.AccountAuthType{*accountAuthType}
+		//sort account auth types by the one used for login
+		accountAuthType.Account.SortAccountAuthTypes(accountAuthType.Identifier)
 	}
 
 	//access token

@@ -237,17 +237,21 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	message, accountAuthTypes, err := h.coreAPIs.Auth.LinkAccountAuthType(claims.Subject, string(requestData.AuthType), requestData.AppTypeIdentifier, requestCreds, requestParams, l)
+	message, account, err := h.coreAPIs.Auth.LinkAccountAuthType(claims.Subject, string(requestData.AuthType), requestData.AppTypeIdentifier, requestCreds, requestParams, l)
 	if err != nil {
-		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
+		return l.HttpResponseError("Error linking account auth type", err, http.StatusInternalServerError, true)
 	}
 
 	if message != nil {
 		return l.HttpResponseSuccessMessage(*message)
 	}
 
-	//TODO: order account auth types so that the one in use is first in slice
-	authTypes := accountAuthTypesToDef(accountAuthTypes)
+	var authTypes []Def.AccountAuthTypeFields
+	if account != nil {
+		account.SortAccountAuthTypes(claims.UID)
+		authTypes = accountAuthTypesToDef(account.AuthTypes)
+	}
+
 	responseData := &Def.ResAccountAuthTypeLinkResponse{AuthTypes: authTypes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
@@ -332,6 +336,7 @@ func (h ServicesApisHandler) getAccount(l *logs.Log, r *http.Request, claims *to
 
 	var accountData *Def.ResSharedAccount
 	if account != nil {
+		account.SortAccountAuthTypes(claims.UID)
 		accountData = accountToDef(*account)
 	}
 

@@ -960,14 +960,17 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log)
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		message (*string): response message
-//		accountAuthTypes ([]model.AccountAuthType): list of account auth types after the operation
-func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, []model.AccountAuthType, error) {
+//		account (*model.Account): account data after the operation
+func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error) {
 	message := ""
 	var newAccountAuthType *model.AccountAuthType
 
 	account, err := a.storage.FindAccountByID(nil, accountID)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if account == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"id": accountID})
 	}
 
 	//validate if the provided auth type is supported by the provided application and organization
@@ -990,12 +993,11 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 		}
 	}
 
-	accountAuthTypes := account.AuthTypes
 	if newAccountAuthType != nil {
-		accountAuthTypes = append(accountAuthTypes, *newAccountAuthType)
+		account.AuthTypes = append(account.AuthTypes, *newAccountAuthType)
 	}
 
-	return &message, accountAuthTypes, nil
+	return &message, account, nil
 }
 
 //GetServiceRegistrations retrieves all service registrations
