@@ -165,27 +165,6 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string) (*model.AppOrgRole, error) {
-	getAppOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
-	}
-
-	permissions, err := app.storage.FindPermissionsByServiceIDs(getAppOrg.ServicesIDs)
-	if err != nil {
-		return nil, err
-	}
-
-	id, _ := uuid.NewUUID()
-	now := time.Now()
-	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: permissions, AppOrg: *getAppOrg, DateCreated: now}
-	err = app.storage.InsertAppOrgRole(role)
-	if err != nil {
-		return nil, err
-	}
-	return &role, nil
-}
-
 func (app *application) admGetApplications(orgID string) ([]model.Application, error) {
 	applicationsOrganizations, err := app.storage.FindApplicationsOrganizationsByOrgID(orgID)
 	if err != nil {
@@ -216,6 +195,27 @@ func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.
 	}
 
 	return getAppOrgGroups, nil
+}
+
+func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string) (*model.AppOrgRole, error) {
+	getAppOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	permissions, err := app.storage.FindPermissionsByServiceIDs(getAppOrg.ServicesIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	id, _ := uuid.NewUUID()
+	now := time.Now()
+	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: permissions, AppOrg: *getAppOrg, DateCreated: now}
+	err = app.storage.InsertAppOrgRole(role)
+	if err != nil {
+		return nil, err
+	}
+	return &role, nil
 }
 
 func (app *application) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
