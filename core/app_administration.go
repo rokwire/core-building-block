@@ -212,26 +212,28 @@ func (app *application) admCreateAppOrgRole(name string, description string, per
 	if len(permissionIDs) > len(permissions) {
 		return nil, errors.New("mismatch permissions count")
 	}
-	for _, permissionID := range permissionIDs {
-		exist := false
+	rolePermissions := make([]model.Permission, len(permissionIDs))
+	for i, permissionID := range permissionIDs {
+		var rolePermission *model.Permission
 
 		for _, permission := range permissions {
 			if permission.ID == permissionID {
-				exist = true
+				rolePermission = &permission
 				break
 			}
 		}
 
-		if !exist {
+		if rolePermission == nil {
 			l.Infof("%s permission does not match", permissionID)
 			return nil, errors.Newf("%s permission does not match", permissionID)
 		}
+		rolePermissions[i] = *rolePermission
 	}
 
 	//3. create role
 	id, _ := uuid.NewUUID()
 	now := time.Now()
-	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: permissions, AppOrg: *appOrg, DateCreated: now}
+	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: rolePermissions, AppOrg: *appOrg, DateCreated: now}
 	err = app.storage.InsertAppOrgRole(role)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
