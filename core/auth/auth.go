@@ -205,7 +205,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		}
 
 		//check if need to update the account
-		err = a.updateAccountIfNeeded(*accountAuthType, *externalUser, authType, appOrg)
+		err = a.updateAccountIfNeeded(*accountAuthType, *externalUser, authType, appOrg, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("update account if needed", "", nil, err)
 		}
@@ -272,7 +272,9 @@ func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, external
 }
 
 func (a *Auth) updateAccountIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
-	authType model.AuthType, appOrg model.ApplicationOrganization) error {
+	authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) error {
+	l.Info("updateAccountIfNeeded")
+
 	//get the current external user
 	currentDataMap := accountAuthType.Params["user"]
 	currentDataJSON, err := utils.ConvertToJSON(currentDataMap)
