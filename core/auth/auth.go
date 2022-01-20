@@ -204,8 +204,8 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 			return nil, nil, nil, err
 		}
 
-		//check if need to update the account
-		err = a.updateAccountIfNeeded(*accountAuthType, *externalUser, authType, appOrg, l)
+		//check if need to update the account data
+		err = a.updateDataIfNeeded(*accountAuthType, *externalUser, authType, appOrg, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("update account if needed", "", nil, err)
 		}
@@ -271,9 +271,27 @@ func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, external
 	return nil
 }
 
-func (a *Auth) updateAccountIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
+func (a *Auth) updateDataIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
 	authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) error {
-	l.Info("updateAccountIfNeeded")
+	l.Info("updateDataIfNeeded")
+
+	//1. check if need to update the external user data
+	err := a.updateExternalUserIfNeeded(accountAuthType, externalUser, authType, appOrg, l)
+	if err != nil {
+		return errors.WrapErrorAction("error on updating external user if needed", "", nil, err)
+	}
+
+	//2. check if need to update the profile data
+	err = a.updateProfileIfNeeded(accountAuthType.Account.Profile, externalUser, l)
+	if err != nil {
+		return errors.WrapErrorAction("error on updating profile if needed", "", nil, err)
+	}
+	return nil
+}
+
+func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
+	authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) error {
+	l.Info("updateExternalUserIfNeeded")
 
 	//get the current external user
 	currentDataMap := accountAuthType.Params["user"]
@@ -348,6 +366,13 @@ func (a *Auth) updateAccountIfNeeded(accountAuthType model.AccountAuthType, exte
 		}
 		return nil
 	}
+	return nil
+}
+
+func (a *Auth) updateProfileIfNeeded(profile model.Profile, externalUser model.ExternalSystemUser, l *logs.Log) error {
+	l.Info("updateProfileIfNeeded")
+
+	//TODO
 	return nil
 }
 
