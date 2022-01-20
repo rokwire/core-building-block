@@ -178,18 +178,22 @@ func (app *application) admDeleteAppOrgRole(ID string) error {
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, nil)
 	}
 
-	account, _ := app.storage.FindAccountByID(nil, ID)
+	numberOfAccounts, err := app.storage.CountAccountsByRoleID(nil, ID)
+	if err != nil {
+		return errors.New("This roleID is already used by account and cannot be deleted")
+	} else {
+		numberOfAccounts = numberOfAccounts
+	}
+
+	numberOfGroups, err := app.storage.CountGroupsByRoleID(nil, ID)
+	if err != nil {
+		return errors.New("This roleID is already used by account and cannot be deleted")
+	} else {
+		numberOfGroups = numberOfGroups
+	}
+
+	account, _ := app.storage.FindAccountByID(nil, appOrgRole.ID)
 	if account != nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, nil)
-	}
-
-	permission, _ := app.storage.FindPermissionsByID(appOrgRole.AppOrg.ServicesIDs)
-	if permission != nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, nil)
-	}
-
-	groups, _ := app.storage.FindAppOrgGroupByID(ID)
-	if groups != nil {
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, nil)
 	}
 

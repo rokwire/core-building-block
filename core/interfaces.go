@@ -86,6 +86,7 @@ type Storage interface {
 	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
+	CountAccountsByRoleID(context storage.TransactionContext, roleID string) (*int, error)
 
 	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
 	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
@@ -123,6 +124,7 @@ type Storage interface {
 	DeleteAppOrgGroup(id string) error
 	FindAppOrgGroupsList() ([]model.AppOrgGroup, error)
 	FindAppOrgGroupByID(id string) (*model.AppOrgGroup, error)
+	CountGroupsByRoleID(context storage.TransactionContext, roleID string) (*int, error)
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error

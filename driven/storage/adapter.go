@@ -1038,6 +1038,30 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	return nil
 }
 
+func (sa *Adapter) CountAccountsByRoleID(context TransactionContext, roleID string) (*int, error) {
+	filter := bson.D{primitive.E{Key: "id", Value: roleID}}
+	var accounts []account
+	var err error
+	if context != nil {
+		err = sa.db.accounts.FindWithContext(context, filter, &accounts, nil)
+	} else {
+		err = sa.db.accounts.Find(filter, &accounts, nil)
+	}
+
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if len(accounts) > 0 {
+		//not found
+		return nil, errors.New("There is an account using this roleID")
+	}
+	var numberOfAccounts int
+	if numberOfAccounts == len(accounts) {
+		numberOfAccounts = 0
+	}
+	return &numberOfAccounts, nil
+}
+
 //FindCredential finds a credential by ID
 func (sa *Adapter) FindCredential(context TransactionContext, ID string) (*model.Credential, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
@@ -1622,6 +1646,30 @@ func (sa *Adapter) FindAppOrgGroupByID(id string) (*model.AppOrgGroup, error) {
 
 	appGroupRes := result[0]
 	return &appGroupRes, nil
+}
+
+func (sa *Adapter) CountGroupsByRoleID(context TransactionContext, roleID string) (*int, error) {
+	filter := bson.D{primitive.E{Key: "id", Value: roleID}}
+	var groups []appOrgGroup
+	var err error
+	if context != nil {
+		err = sa.db.applicationsOrganizationsGroups.FindWithContext(context, filter, &groups, nil)
+	} else {
+		err = sa.db.applicationsOrganizationsGroups.Find(filter, &groups, nil)
+	}
+
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+	}
+	if len(groups) > 0 {
+		//not found
+		return nil, errors.New("There is an account using this roleID")
+	}
+	var numberOfGroups int
+	if numberOfGroups == len(groups) {
+		numberOfGroups = 0
+	}
+	return &numberOfGroups, nil
 }
 
 //LoadAPIKeys finds all api key documents in the DB
