@@ -707,6 +707,10 @@ func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, a
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
+	if len(list) > 20 {
+		return nil, errors.New("There is more than 20 items for get application accounts")
+	}
+
 	accounts := accountsFromStorage(list, *appOrg)
 	return accounts, nil
 }
