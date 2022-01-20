@@ -214,24 +214,24 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	} else {
 		//user does not exist, we need to register it
 
+		//1. prepare the registration data
 		//TODO: use shared profile
 		useSharedProfile := false
-
 		identifier := externalUser.Identifier
 		accountAuthTypeParams := map[string]interface{}{}
 		accountAuthTypeParams["user"] = externalUser
-
 		accountAuthType, _, profile, preferences, err = a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, nil, nil, regProfile, regPreferences, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
 
-		//roles and groups mapping
+		//2. roles and groups mapping
 		roles, groups, err := a.getExternalUserAuthorization(*externalUser, appOrg, authType)
 		if err != nil {
 			l.WarnAction(logutils.ActionGet, "external authorization", err)
 		}
 
+		//3. register the account
 		accountAuthType, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, *profile, preferences, roles, groups, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
