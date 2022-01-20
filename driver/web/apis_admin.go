@@ -270,20 +270,7 @@ func (h AdminApisHandler) adminGetApplicationOrgRoles(l *logs.Log, r *http.Reque
 
 func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	//account ID
-	var accountID *string
-	accountIDParam := r.URL.Query().Get("account-id")
-	if len(accountIDParam) > 0 {
-		accountID = &accountIDParam
-	}
-
-	//auth type identifier
-	var authTypeIdentifier *string
-	authTypeIdentifierParam := r.URL.Query().Get("auth-type-identifier")
-	if len(authTypeIdentifierParam) > 0 {
-		authTypeIdentifier = &authTypeIdentifierParam
-	}
-
-	accounts, err := h.coreAPIs.Administration.AdmGetAccounts(claims.AppID, claims.OrgID, accountID, authTypeIdentifier)
+	accounts, err := h.coreAPIs.Administration.AdmGetAccounts(claims.AppID, claims.OrgID)
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

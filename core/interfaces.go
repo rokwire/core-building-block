@@ -34,7 +34,7 @@ type Administration interface {
 
 	AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error)
 
-	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
+	AdmGetAccounts(appID string, orgID string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
 }
 
@@ -79,7 +79,7 @@ type Storage interface {
 	PerformTransaction(func(context storage.TransactionContext) error) error
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
-	FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
+	FindAccounts(appID string, orgID string) ([]model.Account, error)
 	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error

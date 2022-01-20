@@ -684,7 +684,7 @@ func (sa *Adapter) FindAccount(appOrgID string, authTypeID string, accountAuthTy
 }
 
 //FindAccounts finds accounts
-func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
+func (sa *Adapter) FindAccounts(appID string, orgID string) ([]model.Account, error) {
 	//find app org id
 	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -693,14 +693,6 @@ func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, a
 
 	//find the accounts
 	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrg.ID}}
-
-	if accountID != nil {
-		filter = append(filter, primitive.E{Key: "_id", Value: *accountID})
-	}
-	if authTypeIdentifier != nil {
-		filter = append(filter, primitive.E{Key: "auth_types.identifier", Value: *authTypeIdentifier})
-	}
-
 	var list []account
 	err = sa.db.accounts.Find(filter, &list, nil)
 	if err != nil {
