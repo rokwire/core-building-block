@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Limit the returned items for get application accounts admin API [#375](https://github.com/rokwire/core-building-block/issues/375)
 - Expose create app org role admin API [#308](https://github.com/rokwire/core-building-block/issues/308)
 - Expose Admin API which gives all applications for an organization [#324](https://github.com/rokwire/core-building-block/issues/324)
 - Expose get application organization groups admin API [#302](https://github.com/rokwire/core-building-block/issues/302)
