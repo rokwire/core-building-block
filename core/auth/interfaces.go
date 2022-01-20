@@ -335,6 +335,9 @@ type Storage interface {
 	InsertAccount(account model.Account) (*model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 
+	//Profiles
+	UpdateProfile(accountID string, profile *model.Profile) error
+
 	//AccountAuthTypes
 	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccountAuthType(item model.AccountAuthType) error

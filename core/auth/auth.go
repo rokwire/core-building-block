@@ -282,7 +282,7 @@ func (a *Auth) updateDataIfNeeded(accountAuthType model.AccountAuthType, externa
 	}
 
 	//2. check if need to update the profile data
-	err = a.updateProfileIfNeeded(accountAuthType.Account.Profile, externalUser, l)
+	err = a.updateProfileIfNeeded(accountAuthType.Account, externalUser, l)
 	if err != nil {
 		return errors.WrapErrorAction("error on updating profile if needed", "", nil, err)
 	}
@@ -369,10 +369,35 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 	return nil
 }
 
-func (a *Auth) updateProfileIfNeeded(profile model.Profile, externalUser model.ExternalSystemUser, l *logs.Log) error {
+func (a *Auth) updateProfileIfNeeded(account model.Account, externalUser model.ExternalSystemUser, l *logs.Log) error {
 	l.Info("updateProfileIfNeeded")
 
-	//TODO
+	changed := false
+	profile := account.Profile
+
+	//first name
+	if len(profile.FirstName) == 0 && len(externalUser.FirstName) > 0 {
+		profile.FirstName = externalUser.FirstName
+		changed = true
+	}
+	//last name
+	if len(profile.LastName) == 0 && len(externalUser.LastName) > 0 {
+		profile.LastName = externalUser.LastName
+		changed = true
+	}
+	//email
+	if len(profile.Email) == 0 && len(externalUser.Email) > 0 {
+		profile.Email = externalUser.Email
+		changed = true
+	}
+
+	if changed {
+		l.Info("the profile will be updated")
+		err := a.storage.UpdateProfile(account.ID, &profile)
+		if err != nil {
+			return errors.WrapErrorData("error updating profile from external user data", model.TypeProfile, nil, err)
+		}
+	}
 	return nil
 }
 
