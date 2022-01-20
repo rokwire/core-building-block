@@ -225,13 +225,19 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 			return nil, nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
 
-		//2. roles and groups mapping
+		//2. apply profile data from the external user if not provided
+		err = a.applyProfileDataFromExternalUser(profile, *externalUser, l)
+		if err != nil {
+			return nil, nil, nil, errors.WrapErrorAction("error applying profile data from external user", model.TypeProfile, nil, err)
+		}
+
+		//3. roles and groups mapping
 		roles, groups, err := a.getExternalUserAuthorization(*externalUser, appOrg, authType)
 		if err != nil {
 			l.WarnAction(logutils.ActionGet, "external authorization", err)
 		}
 
-		//3. register the account
+		//4. register the account
 		accountAuthType, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, *profile, preferences, roles, groups, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
@@ -240,6 +246,29 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 
 	//TODO: make sure we do not return any refresh tokens in extParams
 	return accountAuthType, extParams, mfaTypes, nil
+}
+
+func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, externalUser model.ExternalSystemUser, l *logs.Log) error {
+	l.Info("applyProfileDataFromExternalUser")
+
+	if profile == nil {
+		l.Error("for some reasons the profile is nil")
+		return errors.New("for some reasons the profile is nil")
+	}
+
+	//first name
+	if len(profile.FirstName) == 0 && len(externalUser.FirstName) > 0 {
+		profile.FirstName = externalUser.FirstName
+	}
+	//last name
+	if len(profile.LastName) == 0 && len(externalUser.LastName) > 0 {
+		profile.LastName = externalUser.LastName
+	}
+	//email
+	if len(profile.Email) == 0 && len(externalUser.Email) > 0 {
+		profile.Email = externalUser.Email
+	}
+	return nil
 }
 
 func (a *Auth) updateAccountIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
