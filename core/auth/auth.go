@@ -226,9 +226,9 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		}
 
 		//2. apply profile data from the external user if not provided
-		err = a.applyProfileDataFromExternalUser(profile, *externalUser, l)
+		_, err = a.applyProfileDataFromExternalUser(profile, *externalUser, l)
 		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction("error applying profile data from external user", model.TypeProfile, nil, err)
+			return nil, nil, nil, errors.WrapErrorAction("error applying profile data from external user on registration", model.TypeProfile, nil, err)
 		}
 
 		//3. roles and groups mapping
@@ -248,27 +248,31 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	return accountAuthType, extParams, mfaTypes, nil
 }
 
-func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, externalUser model.ExternalSystemUser, l *logs.Log) error {
+func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, externalUser model.ExternalSystemUser, l *logs.Log) (*bool, error) {
 	l.Info("applyProfileDataFromExternalUser")
 
 	if profile == nil {
 		l.Error("for some reasons the profile is nil")
-		return errors.New("for some reasons the profile is nil")
+		return nil, errors.New("for some reasons the profile is nil")
 	}
 
+	changed := false
 	//first name
 	if len(profile.FirstName) == 0 && len(externalUser.FirstName) > 0 {
 		profile.FirstName = externalUser.FirstName
+		changed = true
 	}
 	//last name
 	if len(profile.LastName) == 0 && len(externalUser.LastName) > 0 {
 		profile.LastName = externalUser.LastName
+		changed = true
 	}
 	//email
 	if len(profile.Email) == 0 && len(externalUser.Email) > 0 {
 		profile.Email = externalUser.Email
+		changed = true
 	}
-	return nil
+	return &changed, nil
 }
 
 func (a *Auth) updateDataIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
@@ -372,26 +376,13 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 func (a *Auth) updateProfileIfNeeded(account model.Account, externalUser model.ExternalSystemUser, l *logs.Log) error {
 	l.Info("updateProfileIfNeeded")
 
-	changed := false
 	profile := account.Profile
-
-	//first name
-	if len(profile.FirstName) == 0 && len(externalUser.FirstName) > 0 {
-		profile.FirstName = externalUser.FirstName
-		changed = true
-	}
-	//last name
-	if len(profile.LastName) == 0 && len(externalUser.LastName) > 0 {
-		profile.LastName = externalUser.LastName
-		changed = true
-	}
-	//email
-	if len(profile.Email) == 0 && len(externalUser.Email) > 0 {
-		profile.Email = externalUser.Email
-		changed = true
+	changed, err := a.applyProfileDataFromExternalUser(&profile, externalUser, l)
+	if err != nil {
+		return errors.WrapErrorAction("error applying profile data from external user", model.TypeProfile, nil, err)
 	}
 
-	if changed {
+	if *changed {
 		l.Info("the profile will be updated")
 		err := a.storage.UpdateProfile(account.ID, &profile)
 		if err != nil {
