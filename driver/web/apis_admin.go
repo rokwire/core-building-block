@@ -440,7 +440,7 @@ func (h AdminApisHandler) adminCreateApplicationGroups(l *logs.Log, r *http.Requ
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
-	var requestData Def.ReqCreateAppOrgGroupsRequest
+	var requestData Def.ReqAdminApplicationGroupsRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgGroup, nil, err, http.StatusBadRequest, true)

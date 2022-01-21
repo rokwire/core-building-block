@@ -1471,13 +1471,16 @@ paths:
     post:
       tags:
         - Admin
-      summary: Create application organization groups
+      summary: Create application group
       description: |
-        Create application organization groups
+        Create application group
+
+         **Auth:** Requires auth token with 'all_admin_core'
+         - bearerAuth: []
       security:
         - bearerAuth: []
       requestBody:
-        description: application organization groups
+        description: Application role
         content:
           application/json:
             schema:
