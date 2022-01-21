@@ -33,7 +33,7 @@
   security:
     - bearerAuth: []
   requestBody:
-    description: Application role
+    description: Application group
     content:
       application/json:
         schema:
