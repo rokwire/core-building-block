@@ -1605,7 +1605,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/LoginSession"
+                    "$ref": "#/components/schemas/LoginSessionFields"
                   }
                 }
               }

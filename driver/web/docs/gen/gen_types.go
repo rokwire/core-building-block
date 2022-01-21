@@ -391,16 +391,6 @@ type JWKS struct {
 	Keys []JWK `json:"keys"`
 }
 
-// LoginSession defines model for LoginSession.
-type LoginSession struct {
-	AccountAuthType *AccountAuthType         `json:"account_auth_type,omitempty"`
-	AppOrg          *ApplicationOrganization `json:"app_org,omitempty"`
-	AppType         *ApplicationType         `json:"app_type,omitempty"`
-	AuthType        *AuthType                `json:"auth_type,omitempty"`
-	Device          *Device                  `json:"device,omitempty"`
-	Fields          *LoginSessionFields      `json:"fields,omitempty"`
-}
-
 // LoginSessionFields defines model for LoginSessionFields.
 type LoginSessionFields struct {
 	AccessToken  *string                    `json:"access_token,omitempty"`
