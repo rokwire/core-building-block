@@ -320,7 +320,6 @@ func (sa *Adapter) cacheApplicationsOrganizations() error {
 	}
 
 	sa.setCachedApplicationsOrganizations(applicationsOrganizations)
-
 	return nil
 }
 
