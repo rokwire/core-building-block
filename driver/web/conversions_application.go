@@ -101,27 +101,15 @@ func loginSessionFieldsToDef(item model.LoginSession) *Def.LoginSessionFields {
 }
 
 //LoginSession
-func loginSessionToDef(item model.LoginSession) *Def.LoginSession {
-	//accountAuthType
-	accuntAuthType := accountAuthTypeToDef(*item.AccountAuthType)
-	//appOrg
-	appOrg := appOrgToDef(&item.AppOrg)
-	//appType
-	appType := appTypeToDef(&item.AppType)
-	//authType
-	authType := authTypeToDef(&item.AccountAuthType.AuthType)
-	//device
-	device := deviceToDef(item.Device)
+func loginSessionToDef(item model.LoginSession) Def.LoginSessionFields {
 
-	return &Def.LoginSession{AccountAuthType: &Def.AccountAuthType{Fields: &accuntAuthType}, AppOrg: appOrg, AppType: &Def.ApplicationType{Fields: appType},
-		AuthType: &Def.AuthType{Fields: authType}, Device: &Def.Device{Fields: device}, Fields: &Def.LoginSessionFields{AccessToken: &item.AccessToken, Anonymous: &item.Anonymous,
-			Id: &item.ID, IdAddress: &item.IPAddress, Identifier: &item.Identifier, Params: &Def.LoginSessionFields_Params{AdditionalProperties: accuntAuthType.Params.AdditionalProperties}}}
+	return Def.LoginSessionFields{AccessToken: &item.AccessToken, Anonymous: &item.Anonymous, Id: &item.ID, Identifier: &item.Identifier}
 }
 
-func loginSessionsToDef(items []model.LoginSession) []Def.LoginSession {
-	result := make([]Def.LoginSession, len(items))
+func loginSessionsToDef(items []model.LoginSession) []Def.LoginSessionFields {
+	result := make([]Def.LoginSessionFields, len(items))
 	for i, item := range items {
-		result[i] = *loginSessionToDef(item)
+		result[i] = loginSessionToDef(item)
 	}
 	return result
 }
