@@ -139,6 +139,10 @@ func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, er
 	return s.app.admGetAccount(accountID)
 }
 
+func (s *administrationImpl) AdmGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
+	return s.app.admGrantAccountPermissions(accountID, permissionNames, assignerPermissions)
+}
+
 ///
 
 //encryptionImpl

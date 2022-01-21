@@ -33,6 +33,7 @@ type Administration interface {
 	AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error)
 
 	AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error)
+	AdmGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
 
 	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)

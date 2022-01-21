@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -286,4 +287,38 @@ func (app *application) admGetAccounts(appID string, orgID string, accountID *st
 
 func (app *application) admGetAccount(accountID string) (*model.Account, error) {
 	return app.getAccount(accountID)
+}
+
+func (app *application) admGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
+	if assignerPermissions == nil {
+		return errors.New("no permissions from admin assigner")
+	}
+
+	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	if err != nil {
+		return err
+	}
+
+	if len(permissions) == 0 {
+		return errors.Newf("no permissions found for names: %v", permissionNames)
+	}
+
+	var authorizedPermissions []model.Permission
+	for _, permission := range permissions {
+		authorizedAssigners := permission.Assigners
+		for _, authorizedAssigner := range authorizedAssigners {
+			if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
+				authorizedPermissions = append(authorizedPermissions, permission)
+			}
+		}
+	}
+	if authorizedPermissions == nil {
+		return errors.Newf("Assigner is not authorized to assign permissions for names: %v", permissionNames)
+	}
+
+	err = app.storage.InsertAccountPermissions(accountID, authorizedPermissions)
+	if err != nil {
+		return err
+	}
+	return nil
 }
