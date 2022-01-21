@@ -1429,7 +1429,7 @@ func (sa *Adapter) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOr
 	return result, nil
 }
 
-//FindAppOrgRoles finds a set of application organization roles
+//FindAppOrgRolesByID finds a set of application organization groups
 func (sa *Adapter) FindAppOrgRolesByID(ids []string) ([]model.AppOrgRole, error) {
 	rolesFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var rolessResult []model.AppOrgRole
