@@ -455,11 +455,11 @@ func (h AdminApisHandler) adminCreateApplicationGroups(l *logs.Log, r *http.Requ
 
 //adminCreateApplicationRole creates an application role
 func (h AdminApisHandler) adminCreateApplicationRole(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
+
 	var requestData Def.ReqAdminApplicationRolesRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
@@ -470,6 +470,7 @@ func (h AdminApisHandler) adminCreateApplicationRole(l *logs.Log, r *http.Reques
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}
+
 	return l.HttpResponseSuccess()
 }
 
