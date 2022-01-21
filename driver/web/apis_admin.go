@@ -446,12 +446,10 @@ func (h AdminApisHandler) adminCreateApplicationGroups(l *logs.Log, r *http.Requ
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgGroup, nil, err, http.StatusBadRequest, true)
 	}
 
-	/*
-		TODO
-			_, err = h.coreAPIs.Administration.AdmCreateAppOrgGroup(requestData.Name, requestData.Id, *requestData.Permissions, *requestData.Roles, claims.AppID, claims.OrgID, l)
-			if err != nil {
-				return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
-			} */
+	_, err = h.coreAPIs.Administration.AdmCreateAppOrgGroup(requestData.Name, *requestData.Permissions, *requestData.Roles, claims.AppID, claims.OrgID, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
+	}
 	return l.HttpResponseSuccess()
 }
 

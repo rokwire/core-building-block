@@ -165,8 +165,24 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admCreateAppOrgGroup(name string, ID string, permissionIDs []string, rolesIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgGroup, error) {
+func (app *application) admGetApplications(orgID string) ([]model.Application, error) {
+	applicationsOrganizations, err := app.storage.FindApplicationsOrganizationsByOrgID(orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
 
+	if len(applicationsOrganizations) == 0 {
+		return nil, nil
+	}
+
+	var apps []model.Application
+	for _, appOrg := range applicationsOrganizations {
+		apps = append(apps, appOrg.Application)
+	}
+	return apps, nil
+}
+
+func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgGroup, error) {
 	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
@@ -231,23 +247,6 @@ func (app *application) admCreateAppOrgGroup(name string, ID string, permissionI
 		return nil, err
 	}
 	return &group, nil
-}
-
-func (app *application) admGetApplications(orgID string) ([]model.Application, error) {
-	applicationsOrganizations, err := app.storage.FindApplicationsOrganizationsByOrgID(orgID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
-	}
-
-	if len(applicationsOrganizations) == 0 {
-		return nil, nil
-	}
-
-	var apps []model.Application
-	for _, appOrg := range applicationsOrganizations {
-		apps = append(apps, appOrg.Application)
-	}
-	return apps, nil
 }
 
 func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
