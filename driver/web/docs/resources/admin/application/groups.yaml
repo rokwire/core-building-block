@@ -34,7 +34,7 @@
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/admin/create-appOrgGroups/request/Request.yaml"
+          $ref: "../../../schemas/apis/admin/application/groups/request/Request.yaml"
     required: true
   responses:
     200:
