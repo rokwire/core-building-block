@@ -1,18 +1,9 @@
 required:
-  - id
   - name
 type: object
 properties:
-  id:
-    type: string
   name:
     type: string
-  system:
-    type: boolean
-  application:
-    type: array
-    items:
-      type: string
   permissions:
     type: array
     items:

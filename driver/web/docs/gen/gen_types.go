@@ -535,12 +535,9 @@ type ReqAdminAppTokenResponse struct {
 
 // ReqAdminApplicationGroupsRequest defines model for _req_admin_application_groups_Request.
 type ReqAdminApplicationGroupsRequest struct {
-	Application *[]string `json:"application,omitempty"`
-	Id          string    `json:"id"`
 	Name        string    `json:"name"`
 	Permissions *[]string `json:"permissions,omitempty"`
 	Roles       *[]string `json:"roles,omitempty"`
-	System      *bool     `json:"system,omitempty"`
 }
 
 // ReqAdminApplicationRolesRequest defines model for _req_admin_application_roles_Request.
