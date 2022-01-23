@@ -1983,11 +1983,15 @@ func (sa *Adapter) FindApplicationLoginSessions(appID string, orgID string) ([]m
 		primitive.E{Key: "org_id", Value: orgID}}
 	var result []loginSession
 	err := sa.db.loginsSessions.Find(filter, &result, nil)
+
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 	}
 
 	log := logginSessionsFromStorage(result)
+	if len(log) > 20 {
+		log = log[0:20]
+	}
 	return log, nil
 }
 
