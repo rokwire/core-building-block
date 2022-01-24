@@ -78,3 +78,18 @@ func (app *application) checkPermissions(appOrg model.ApplicationOrganization, p
 	}
 	return rolePermissions, nil
 }
+
+//checkRoles checkRoles if the provided roles ids are valid for the app/org.
+//	it returns the roles list for these ids if they are valid
+func (app *application) checkRoles(appOrg model.ApplicationOrganization, rolesIDs []string, l *logs.Log) ([]model.AppOrgRole, error) {
+	appOrgRoles, err := app.storage.FindAppOrgRoles(rolesIDs, appOrg.ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+	}
+
+	if len(rolesIDs) != len(appOrgRoles) {
+		return nil, errors.New("mismatch roles count")
+	}
+
+	return appOrgRoles, nil
+}

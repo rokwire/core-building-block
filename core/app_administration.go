@@ -190,40 +190,20 @@ func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string
 	}
 
 	//2. check permissions
-	rolePermissions, err := app.checkPermissions(*appOrg, permissionIDs, l)
+	groupPermissions, err := app.checkPermissions(*appOrg, permissionIDs, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
 	}
 
-	rolesCheck, err := app.storage.FindAppOrgRolesByID(rolesIDs)
+	//3. check roles
+	groupRoles, err := app.checkRoles(*appOrg, rolesIDs, l)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
-	}
-	if len(rolesIDs) > len(rolesCheck) {
-		return nil, errors.New("mismatch roles count")
-	}
-
-	role := make([]model.AppOrgRole, len(rolesIDs))
-	for i, roleID := range rolesIDs {
-		var roles *model.AppOrgRole
-
-		for _, appRoles := range rolesCheck {
-			if appRoles.ID == roleID {
-				roles = &appRoles
-				break
-			}
-		}
-
-		if roles == nil {
-			l.Infof("%s roles does not match", roleID)
-			return nil, errors.Newf("%s roles does not match", roleID)
-		}
-		role[i] = *roles
+		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
 	}
 
 	id, _ := uuid.NewUUID()
 	now := time.Now()
-	group := model.AppOrgGroup{ID: id.String(), Name: name, Roles: role, Permissions: rolePermissions, DateCreated: now}
+	group := model.AppOrgGroup{ID: id.String(), Name: name, Roles: groupRoles, Permissions: groupPermissions, DateCreated: now}
 	err = app.storage.InsertAppOrgGroup(group)
 	if err != nil {
 		return nil, err
