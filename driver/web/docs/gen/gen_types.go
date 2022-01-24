@@ -53,45 +53,6 @@ const (
 	OrganizationFieldsTypeSmall OrganizationFieldsType = "small"
 )
 
-// Defines values for ReqCreateOrganizationRequestType.
-const (
-	ReqCreateOrganizationRequestTypeHuge ReqCreateOrganizationRequestType = "huge"
-
-	ReqCreateOrganizationRequestTypeLarge ReqCreateOrganizationRequestType = "large"
-
-	ReqCreateOrganizationRequestTypeMedium ReqCreateOrganizationRequestType = "medium"
-
-	ReqCreateOrganizationRequestTypeMicro ReqCreateOrganizationRequestType = "micro"
-
-	ReqCreateOrganizationRequestTypeSmall ReqCreateOrganizationRequestType = "small"
-)
-
-// Defines values for ReqUpdateOrganizationRequestType.
-const (
-	ReqUpdateOrganizationRequestTypeHuge ReqUpdateOrganizationRequestType = "huge"
-
-	ReqUpdateOrganizationRequestTypeLarge ReqUpdateOrganizationRequestType = "large"
-
-	ReqUpdateOrganizationRequestTypeMedium ReqUpdateOrganizationRequestType = "medium"
-
-	ReqUpdateOrganizationRequestTypeMicro ReqUpdateOrganizationRequestType = "micro"
-
-	ReqUpdateOrganizationRequestTypeSmall ReqUpdateOrganizationRequestType = "small"
-)
-
-// Defines values for ResGetOrganizationsResponseType.
-const (
-	ResGetOrganizationsResponseTypeHuge ResGetOrganizationsResponseType = "huge"
-
-	ResGetOrganizationsResponseTypeLarge ResGetOrganizationsResponseType = "large"
-
-	ResGetOrganizationsResponseTypeMedium ResGetOrganizationsResponseType = "medium"
-
-	ResGetOrganizationsResponseTypeMicro ResGetOrganizationsResponseType = "micro"
-
-	ResGetOrganizationsResponseTypeSmall ResGetOrganizationsResponseType = "small"
-)
-
 // Defines values for ServicesReqAccountExistsAuthType.
 const (
 	ServicesReqAccountExistsAuthTypeAnonymous ServicesReqAccountExistsAuthType = "anonymous"
@@ -181,6 +142,45 @@ const (
 // Defines values for SharedResRokwireTokenTokenType.
 const (
 	SharedResRokwireTokenTokenTypeBearer SharedResRokwireTokenTokenType = "Bearer"
+)
+
+// Defines values for SystemReqCreateOrganizationType.
+const (
+	SystemReqCreateOrganizationTypeHuge SystemReqCreateOrganizationType = "huge"
+
+	SystemReqCreateOrganizationTypeLarge SystemReqCreateOrganizationType = "large"
+
+	SystemReqCreateOrganizationTypeMedium SystemReqCreateOrganizationType = "medium"
+
+	SystemReqCreateOrganizationTypeMicro SystemReqCreateOrganizationType = "micro"
+
+	SystemReqCreateOrganizationTypeSmall SystemReqCreateOrganizationType = "small"
+)
+
+// Defines values for SystemReqUpdateOrganizationType.
+const (
+	SystemReqUpdateOrganizationTypeHuge SystemReqUpdateOrganizationType = "huge"
+
+	SystemReqUpdateOrganizationTypeLarge SystemReqUpdateOrganizationType = "large"
+
+	SystemReqUpdateOrganizationTypeMedium SystemReqUpdateOrganizationType = "medium"
+
+	SystemReqUpdateOrganizationTypeMicro SystemReqUpdateOrganizationType = "micro"
+
+	SystemReqUpdateOrganizationTypeSmall SystemReqUpdateOrganizationType = "small"
+)
+
+// Defines values for SystemResGetOrganizationsType.
+const (
+	SystemResGetOrganizationsTypeHuge SystemResGetOrganizationsType = "huge"
+
+	SystemResGetOrganizationsTypeLarge SystemResGetOrganizationsType = "large"
+
+	SystemResGetOrganizationsTypeMedium SystemResGetOrganizationsType = "medium"
+
+	SystemResGetOrganizationsTypeMicro SystemResGetOrganizationsType = "micro"
+
+	SystemResGetOrganizationsTypeSmall SystemResGetOrganizationsType = "small"
 )
 
 // API key record
@@ -510,105 +510,6 @@ type AdminReqCreateApplicationRole struct {
 	Permissions []string `json:"permissions"`
 }
 
-// ReqAccountPermissionsRequest defines model for _req_account-permissions_Request.
-type ReqAccountPermissionsRequest struct {
-	AccountId   string   `json:"account_id"`
-	AppId       string   `json:"app_id"`
-	Permissions []string `json:"permissions"`
-}
-
-// ReqAccountRolesRequest defines model for _req_account-roles_Request.
-type ReqAccountRolesRequest struct {
-	AccountId string   `json:"account_id"`
-	AppId     string   `json:"app_id"`
-	RoleIds   []string `json:"role_ids"`
-}
-
-// ReqApplicationRolesRequest defines model for _req_application-roles_Request.
-type ReqApplicationRolesRequest struct {
-	AppId       string   `json:"app_id"`
-	Description string   `json:"description"`
-	Name        string   `json:"name"`
-	Permissions []string `json:"permissions"`
-}
-
-// ReqCreateOrganizationRequest defines model for _req_create-Organization_Request.
-type ReqCreateOrganizationRequest struct {
-	Config *OrganizationConfigFields        `json:"config,omitempty"`
-	Id     *string                          `json:"id,omitempty"`
-	Name   string                           `json:"name"`
-	Type   ReqCreateOrganizationRequestType `json:"type"`
-}
-
-// ReqCreateOrganizationRequestType defines model for ReqCreateOrganizationRequest.Type.
-type ReqCreateOrganizationRequestType string
-
-// ReqCreateApplicationRequest defines model for _req_create_Application_Request.
-type ReqCreateApplicationRequest struct {
-	ApplicationTypes *[]struct {
-		Identifier string    `json:"identifier"`
-		Name       *string   `json:"name,omitempty"`
-		Versions   *[]string `json:"versions,omitempty"`
-	} `json:"application_types,omitempty"`
-
-	// The maximum allowed duration (in hours) of a user's login session for this application
-	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
-	MultiTenant             bool   `json:"multi_tenant"`
-	Name                    string `json:"name"`
-	RequiresOwnUsers        bool   `json:"requires_own_users"`
-}
-
-// ReqGetApplicationRequest defines model for _req_get_Application_Request.
-type ReqGetApplicationRequest string
-
-// ReqGetOrganizationRequest defines model for _req_get_Organization_Request.
-type ReqGetOrganizationRequest struct {
-	Id string `json:"id"`
-}
-
-// ReqPermissionsRequest defines model for _req_permissions_Request.
-type ReqPermissionsRequest struct {
-
-	// permissions that could assign current permission to accounts
-	Assigners *[]string `json:"assigners,omitempty"`
-	Name      string    `json:"name"`
-	ServiceId *string   `json:"service_id,omitempty"`
-}
-
-// ReqUpdateOrganizationRequest defines model for _req_update_Organization_Request.
-type ReqUpdateOrganizationRequest struct {
-	Config *OrganizationConfigFields        `json:"config,omitempty"`
-	Id     string                           `json:"id"`
-	Name   string                           `json:"name"`
-	Type   ReqUpdateOrganizationRequestType `json:"type"`
-}
-
-// ReqUpdateOrganizationRequestType defines model for ReqUpdateOrganizationRequest.Type.
-type ReqUpdateOrganizationRequestType string
-
-// ResGetApplicationsResponse defines model for _res_get_Applications_Response.
-type ResGetApplicationsResponse struct {
-	ApplicationTypes *ApplicationTypeFields `json:"application_types,omitempty"`
-	Id               string                 `json:"id"`
-
-	// The maximum allowed duration (in hours) of a user's login session for this application
-	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
-	MultiTenant             bool   `json:"multi_tenant"`
-	Name                    string `json:"name"`
-	RequiresOwnUsers        bool   `json:"requires_own_users"`
-}
-
-// ResGetOrganizationsResponse defines model for _res_get_Organizations_Response.
-type ResGetOrganizationsResponse struct {
-	Config *[]OrganizationConfigFields     `json:"config,omitempty"`
-	Id     string                          `json:"id"`
-	Name   string                          `json:"name"`
-	Type   ResGetOrganizationsResponseType `json:"type"`
-}
-
-// ResGetOrganizationsResponseType defines model for ResGetOrganizationsResponse.Type.
-type ResGetOrganizationsResponseType string
-
 // ServicesReqAccountExists defines model for _services_req_account-exists.
 type ServicesReqAccountExists struct {
 	ApiKey            string                           `json:"api_key"`
@@ -902,6 +803,105 @@ type SharedResRokwireToken struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type SharedResRokwireTokenTokenType string
 
+// SystemReqAccountPermissions defines model for _system_req_account-permissions.
+type SystemReqAccountPermissions struct {
+	AccountId   string   `json:"account_id"`
+	AppId       string   `json:"app_id"`
+	Permissions []string `json:"permissions"`
+}
+
+// SystemReqAccountRoles defines model for _system_req_account-roles.
+type SystemReqAccountRoles struct {
+	AccountId string   `json:"account_id"`
+	AppId     string   `json:"app_id"`
+	RoleIds   []string `json:"role_ids"`
+}
+
+// SystemReqApplicationRoles defines model for _system_req_application-roles.
+type SystemReqApplicationRoles struct {
+	AppId       string   `json:"app_id"`
+	Description string   `json:"description"`
+	Name        string   `json:"name"`
+	Permissions []string `json:"permissions"`
+}
+
+// SystemReqCreateOrganization defines model for _system_req_create-Organization.
+type SystemReqCreateOrganization struct {
+	Config *OrganizationConfigFields       `json:"config,omitempty"`
+	Id     *string                         `json:"id,omitempty"`
+	Name   string                          `json:"name"`
+	Type   SystemReqCreateOrganizationType `json:"type"`
+}
+
+// SystemReqCreateOrganizationType defines model for SystemReqCreateOrganization.Type.
+type SystemReqCreateOrganizationType string
+
+// SystemReqCreateApplication defines model for _system_req_create_Application.
+type SystemReqCreateApplication struct {
+	ApplicationTypes *[]struct {
+		Identifier string    `json:"identifier"`
+		Name       *string   `json:"name,omitempty"`
+		Versions   *[]string `json:"versions,omitempty"`
+	} `json:"application_types,omitempty"`
+
+	// The maximum allowed duration (in hours) of a user's login session for this application
+	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
+	MultiTenant             bool   `json:"multi_tenant"`
+	Name                    string `json:"name"`
+	RequiresOwnUsers        bool   `json:"requires_own_users"`
+}
+
+// SystemReqGetApplication defines model for _system_req_get_Application.
+type SystemReqGetApplication string
+
+// SystemReqGetOrganization defines model for _system_req_get_Organization.
+type SystemReqGetOrganization struct {
+	Id string `json:"id"`
+}
+
+// SystemReqPermissions defines model for _system_req_permissions.
+type SystemReqPermissions struct {
+
+	// permissions that could assign current permission to accounts
+	Assigners *[]string `json:"assigners,omitempty"`
+	Name      string    `json:"name"`
+	ServiceId *string   `json:"service_id,omitempty"`
+}
+
+// SystemReqUpdateOrganization defines model for _system_req_update_Organization.
+type SystemReqUpdateOrganization struct {
+	Config *OrganizationConfigFields       `json:"config,omitempty"`
+	Id     string                          `json:"id"`
+	Name   string                          `json:"name"`
+	Type   SystemReqUpdateOrganizationType `json:"type"`
+}
+
+// SystemReqUpdateOrganizationType defines model for SystemReqUpdateOrganization.Type.
+type SystemReqUpdateOrganizationType string
+
+// SystemResGetApplications defines model for _system_res_get_Applications.
+type SystemResGetApplications struct {
+	ApplicationTypes *ApplicationTypeFields `json:"application_types,omitempty"`
+	Id               string                 `json:"id"`
+
+	// The maximum allowed duration (in hours) of a user's login session for this application
+	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
+	MultiTenant             bool   `json:"multi_tenant"`
+	Name                    string `json:"name"`
+	RequiresOwnUsers        bool   `json:"requires_own_users"`
+}
+
+// SystemResGetOrganizations defines model for _system_res_get_Organizations.
+type SystemResGetOrganizations struct {
+	Config *[]OrganizationConfigFields   `json:"config,omitempty"`
+	Id     string                        `json:"id"`
+	Name   string                        `json:"name"`
+	Type   SystemResGetOrganizationsType `json:"type"`
+}
+
+// SystemResGetOrganizationsType defines model for SystemResGetOrganizations.Type.
+type SystemResGetOrganizationsType string
+
 // DeleteAdminAccountMfaParams defines parameters for DeleteAdminAccountMfa.
 type DeleteAdminAccountMfaParams struct {
 
@@ -1055,10 +1055,10 @@ type PostSystemAccountMfaParams struct {
 }
 
 // PutSystemAccountPermissionsJSONBody defines parameters for PutSystemAccountPermissions.
-type PutSystemAccountPermissionsJSONBody ReqAccountPermissionsRequest
+type PutSystemAccountPermissionsJSONBody SystemReqAccountPermissions
 
 // PutSystemAccountRolesJSONBody defines parameters for PutSystemAccountRoles.
-type PutSystemAccountRolesJSONBody ReqAccountRolesRequest
+type PutSystemAccountRolesJSONBody SystemReqAccountRoles
 
 // DeleteSystemApiKeysParams defines parameters for DeleteSystemApiKeys.
 type DeleteSystemApiKeysParams struct {
@@ -1088,10 +1088,10 @@ type GetSystemApplicationApiKeysParams struct {
 }
 
 // PostSystemApplicationRolesJSONBody defines parameters for PostSystemApplicationRoles.
-type PostSystemApplicationRolesJSONBody ReqApplicationRolesRequest
+type PostSystemApplicationRolesJSONBody SystemReqApplicationRoles
 
 // PostSystemApplicationsJSONBody defines parameters for PostSystemApplications.
-type PostSystemApplicationsJSONBody ReqCreateApplicationRequest
+type PostSystemApplicationsJSONBody SystemReqCreateApplication
 
 // PostSystemGlobalConfigJSONBody defines parameters for PostSystemGlobalConfig.
 type PostSystemGlobalConfigJSONBody GlobalConfig
@@ -1100,16 +1100,16 @@ type PostSystemGlobalConfigJSONBody GlobalConfig
 type PutSystemGlobalConfigJSONBody GlobalConfig
 
 // PostSystemOrganizationsJSONBody defines parameters for PostSystemOrganizations.
-type PostSystemOrganizationsJSONBody ReqCreateOrganizationRequest
+type PostSystemOrganizationsJSONBody SystemReqCreateOrganization
 
 // PutSystemOrganizationsIdJSONBody defines parameters for PutSystemOrganizationsId.
-type PutSystemOrganizationsIdJSONBody ReqUpdateOrganizationRequest
+type PutSystemOrganizationsIdJSONBody SystemReqUpdateOrganization
 
 // PostSystemPermissionsJSONBody defines parameters for PostSystemPermissions.
-type PostSystemPermissionsJSONBody ReqPermissionsRequest
+type PostSystemPermissionsJSONBody SystemReqPermissions
 
 // PutSystemPermissionsJSONBody defines parameters for PutSystemPermissions.
-type PutSystemPermissionsJSONBody ReqPermissionsRequest
+type PutSystemPermissionsJSONBody SystemReqPermissions
 
 // DeleteSystemServiceRegsParams defines parameters for DeleteSystemServiceRegs.
 type DeleteSystemServiceRegsParams struct {

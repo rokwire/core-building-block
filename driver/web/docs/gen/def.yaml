@@ -1825,7 +1825,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_update_Organization_Request'
+              $ref: '#/components/schemas/_system_req_update_Organization'
         required: true
       responses:
         '200':
@@ -1867,7 +1867,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_req_get_Organization_Request'
+                $ref: '#/components/schemas/_system_req_get_Organization'
         '400':
           description: Bad request
         '401':
@@ -1896,7 +1896,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_res_get_Organizations_Response'
+                  $ref: '#/components/schemas/_system_res_get_Organizations'
         '400':
           description: Bad request
         '401':
@@ -1919,7 +1919,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_create-Organization_Request'
+              $ref: '#/components/schemas/_system_req_create-Organization'
         required: true
       responses:
         '200':
@@ -2100,7 +2100,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_req_get_Application_Request'
+                $ref: '#/components/schemas/_system_req_get_Application'
         '400':
           description: Bad request
         '401':
@@ -2129,7 +2129,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_res_get_Applications_Response'
+                  $ref: '#/components/schemas/_system_res_get_Applications'
         '400':
           description: Bad request
         '401':
@@ -2152,7 +2152,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_create_Application_Request'
+              $ref: '#/components/schemas/_system_req_create_Application'
         required: true
       responses:
         '200':
@@ -2185,7 +2185,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_permissions_Request'
+              $ref: '#/components/schemas/_system_req_permissions'
         required: true
       responses:
         '200':
@@ -2217,7 +2217,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_permissions_Request'
+              $ref: '#/components/schemas/_system_req_permissions'
         required: true
       responses:
         '200':
@@ -2250,7 +2250,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_application-roles_Request'
+              $ref: '#/components/schemas/_system_req_application-roles'
         required: true
       responses:
         '200':
@@ -2319,7 +2319,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_account-permissions_Request'
+              $ref: '#/components/schemas/_system_req_account-permissions'
         required: true
       responses:
         '200':
@@ -2352,7 +2352,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_account-roles_Request'
+              $ref: '#/components/schemas/_system_req_account-roles'
         required: true
       responses:
         '200':
@@ -3738,7 +3738,7 @@ components:
           type: array
           items:
             type: string
-    _req_create-Organization_Request:
+    _system_req_create-Organization:
       required:
         - name
         - type
@@ -3759,7 +3759,7 @@ components:
             - huge
         config:
           $ref: '#/components/schemas/OrganizationConfigFields'
-    _res_create_Organization_Response:
+    _system_res_create_Organization:
       required:
         - id
         - name
@@ -3781,7 +3781,7 @@ components:
             - huge
         config:
           $ref: '#/components/schemas/OrganizationConfigFields'
-    _req_update_Organization_Request:
+    _system_req_update_Organization:
       required:
         - id
         - name
@@ -3803,7 +3803,7 @@ components:
             - huge
         config:
           $ref: '#/components/schemas/OrganizationConfigFields'
-    _res_update_Organization_Response:
+    _system_res_update_Organization:
       required:
         - id
         - name
@@ -3825,14 +3825,14 @@ components:
             - huge
         config:
           $ref: '#/components/schemas/OrganizationConfigFields'
-    _req_get_Organization_Request:
+    _system_req_get_Organization:
       required:
         - id
       properties:
         id:
           readOnly: true
           type: string
-    _res_get_Organization_Response:
+    _system_res_get_Organization:
       required:
         - id
         - name
@@ -3854,7 +3854,7 @@ components:
             - huge
         config:
           $ref: '#/components/schemas/OrganizationConfigFields'
-    _res_get_Organizations_Response:
+    _system_res_get_Organizations:
       required:
         - id
         - name
@@ -3878,7 +3878,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OrganizationConfigFields'
-    _req_create_Application_Request:
+    _system_req_create_Application:
       required:
         - name
         - multi_tenant
@@ -3909,7 +3909,7 @@ components:
                 type: array
                 items:
                   type: string
-    _req_get_Application_Request:
+    _system_req_get_Application:
       required:
         - id
       type: string
@@ -3917,7 +3917,7 @@ components:
         id:
           readOnly: true
           type: string
-    _res_get_Application_Response:
+    _system_res_get_Application:
       required:
         - id
         - name
@@ -3939,7 +3939,7 @@ components:
           $ref: '#/components/schemas/ApplicationOrganization'
         applicationType:
           $ref: '#/components/schemas/ApplicationType'
-    _res_get_Applications_Response:
+    _system_res_get_Applications:
       required:
         - id
         - name
@@ -3961,7 +3961,7 @@ components:
           type: integer
         application_types:
           $ref: '#/components/schemas/ApplicationTypeFields'
-    _req_permissions_Request:
+    _system_req_permissions:
       required:
         - name
       type: object
@@ -3975,7 +3975,7 @@ components:
           description: permissions that could assign current permission to accounts
           items:
             type: string
-    _req_application-roles_Request:
+    _system_req_application-roles:
       required:
         - name
         - app_id
@@ -3993,7 +3993,7 @@ components:
           type: array
           items:
             type: string
-    _req_account-permissions_Request:
+    _system_req_account-permissions:
       required:
         - account_id
         - app_id
@@ -4008,7 +4008,7 @@ components:
           type: array
           items:
             type: string
-    _req_account-roles_Request:
+    _system_req_account-roles:
       required:
         - account_id
         - app_id
