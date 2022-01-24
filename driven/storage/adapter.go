@@ -1341,18 +1341,6 @@ func (sa *Adapter) FindPermissionsByName(names []string) ([]model.Permission, er
 	return permissionsResult, nil
 }
 
-//FindPermissionsByIDs finds a set of permissions
-func (sa *Adapter) FindPermissionsByIDs(ids []string) ([]model.Permission, error) {
-	permissionsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
-	var permissionsResult []model.Permission
-	err := sa.db.permissions.Find(permissionsFilter, &permissionsResult, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return permissionsResult, nil
-}
-
 //InsertPermission inserts a new  permission
 func (sa *Adapter) InsertPermission(permission model.Permission) error {
 	_, err := sa.db.permissions.InsertOne(permission)
@@ -1427,18 +1415,6 @@ func (sa *Adapter) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOr
 	result := appOrgRolesFromStorage(rolesResult, *appOrg)
 
 	return result, nil
-}
-
-//FindAppOrgRolesByID finds a set of application organization groups
-func (sa *Adapter) FindAppOrgRolesByID(ids []string) ([]model.AppOrgRole, error) {
-	rolesFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
-	var rolessResult []model.AppOrgRole
-	err := sa.db.applicationsOrganizationsRoles.Find(rolesFilter, &rolessResult, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return rolessResult, nil
 }
 
 //InsertAppOrgRole inserts a new application organization role

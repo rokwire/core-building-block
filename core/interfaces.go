@@ -101,14 +101,12 @@ type Storage interface {
 	DeleteGlobalConfig(context storage.TransactionContext) error
 
 	FindPermissionsByName(names []string) ([]model.Permission, error)
-	FindPermissionsByIDs(ids []string) ([]model.Permission, error)
 	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)
 	InsertPermission(item model.Permission) error
 	UpdatePermission(item model.Permission) error
 	DeletePermission(id string) error
 
 	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
-	FindAppOrgRolesByID(ids []string) ([]model.AppOrgRole, error)
 	InsertAppOrgRole(item model.AppOrgRole) error
 	UpdateAppOrgRole(item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
