@@ -53,30 +53,6 @@ const (
 	OrganizationFieldsTypeSmall OrganizationFieldsType = "small"
 )
 
-// Defines values for ReqAccountExistsRequestAuthType.
-const (
-	ReqAccountExistsRequestAuthTypeAnonymous ReqAccountExistsRequestAuthType = "anonymous"
-
-	ReqAccountExistsRequestAuthTypeEmail ReqAccountExistsRequestAuthType = "email"
-
-	ReqAccountExistsRequestAuthTypeIllinoisOidc ReqAccountExistsRequestAuthType = "illinois_oidc"
-
-	ReqAccountExistsRequestAuthTypeTwilioPhone ReqAccountExistsRequestAuthType = "twilio_phone"
-
-	ReqAccountExistsRequestAuthTypeUsername ReqAccountExistsRequestAuthType = "username"
-)
-
-// Defines values for ReqAccountAuthTypeLinkRequestAuthType.
-const (
-	ReqAccountAuthTypeLinkRequestAuthTypeEmail ReqAccountAuthTypeLinkRequestAuthType = "email"
-
-	ReqAccountAuthTypeLinkRequestAuthTypeIllinoisOidc ReqAccountAuthTypeLinkRequestAuthType = "illinois_oidc"
-
-	ReqAccountAuthTypeLinkRequestAuthTypeTwilioPhone ReqAccountAuthTypeLinkRequestAuthType = "twilio_phone"
-
-	ReqAccountAuthTypeLinkRequestAuthTypeUsername ReqAccountAuthTypeLinkRequestAuthType = "username"
-)
-
 // Defines values for ReqCreateOrganizationRequestType.
 const (
 	ReqCreateOrganizationRequestTypeHuge ReqCreateOrganizationRequestType = "huge"
@@ -88,16 +64,6 @@ const (
 	ReqCreateOrganizationRequestTypeMicro ReqCreateOrganizationRequestType = "micro"
 
 	ReqCreateOrganizationRequestTypeSmall ReqCreateOrganizationRequestType = "small"
-)
-
-// Defines values for ReqCredentialForgotInitiateRequestAuthType.
-const (
-	ReqCredentialForgotInitiateRequestAuthTypeEmail ReqCredentialForgotInitiateRequestAuthType = "email"
-)
-
-// Defines values for ReqCredentialSendVerifyRequestAuthType.
-const (
-	ReqCredentialSendVerifyRequestAuthTypeEmail ReqCredentialSendVerifyRequestAuthType = "email"
 )
 
 // Defines values for ReqUpdateOrganizationRequestType.
@@ -113,11 +79,6 @@ const (
 	ReqUpdateOrganizationRequestTypeSmall ReqUpdateOrganizationRequestType = "small"
 )
 
-// Defines values for ResAuthorizeServiceResponseTokenType.
-const (
-	ResAuthorizeServiceResponseTokenTypeBearer ResAuthorizeServiceResponseTokenType = "Bearer"
-)
-
 // Defines values for ResGetOrganizationsResponseType.
 const (
 	ResGetOrganizationsResponseTypeHuge ResGetOrganizationsResponseType = "huge"
@@ -129,6 +90,45 @@ const (
 	ResGetOrganizationsResponseTypeMicro ResGetOrganizationsResponseType = "micro"
 
 	ResGetOrganizationsResponseTypeSmall ResGetOrganizationsResponseType = "small"
+)
+
+// Defines values for ServicesReqAccountExistsAuthType.
+const (
+	ServicesReqAccountExistsAuthTypeAnonymous ServicesReqAccountExistsAuthType = "anonymous"
+
+	ServicesReqAccountExistsAuthTypeEmail ServicesReqAccountExistsAuthType = "email"
+
+	ServicesReqAccountExistsAuthTypeIllinoisOidc ServicesReqAccountExistsAuthType = "illinois_oidc"
+
+	ServicesReqAccountExistsAuthTypeTwilioPhone ServicesReqAccountExistsAuthType = "twilio_phone"
+
+	ServicesReqAccountExistsAuthTypeUsername ServicesReqAccountExistsAuthType = "username"
+)
+
+// Defines values for ServicesReqAccountAuthTypeLinkAuthType.
+const (
+	ServicesReqAccountAuthTypeLinkAuthTypeEmail ServicesReqAccountAuthTypeLinkAuthType = "email"
+
+	ServicesReqAccountAuthTypeLinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeLinkAuthType = "illinois_oidc"
+
+	ServicesReqAccountAuthTypeLinkAuthTypeTwilioPhone ServicesReqAccountAuthTypeLinkAuthType = "twilio_phone"
+
+	ServicesReqAccountAuthTypeLinkAuthTypeUsername ServicesReqAccountAuthTypeLinkAuthType = "username"
+)
+
+// Defines values for ServicesReqCredentialForgotInitiateAuthType.
+const (
+	ServicesReqCredentialForgotInitiateAuthTypeEmail ServicesReqCredentialForgotInitiateAuthType = "email"
+)
+
+// Defines values for ServicesReqCredentialSendVerifyAuthType.
+const (
+	ServicesReqCredentialSendVerifyAuthTypeEmail ServicesReqCredentialSendVerifyAuthType = "email"
+)
+
+// Defines values for ServicesResAuthorizeServiceTokenType.
+const (
+	ServicesResAuthorizeServiceTokenTypeBearer ServicesResAuthorizeServiceTokenType = "Bearer"
 )
 
 // Defines values for SharedReqLoginAuthType.
@@ -491,18 +491,6 @@ type ServiceScope struct {
 	Scope       string  `json:"scope"`
 }
 
-// ReqAccountExistsRequest defines model for _req_account-exists_Request.
-type ReqAccountExistsRequest struct {
-	ApiKey            string                          `json:"api_key"`
-	AppTypeIdentifier string                          `json:"app_type_identifier"`
-	AuthType          ReqAccountExistsRequestAuthType `json:"auth_type"`
-	OrgId             string                          `json:"org_id"`
-	UserIdentifier    string                          `json:"user_identifier"`
-}
-
-// ReqAccountExistsRequestAuthType defines model for ReqAccountExistsRequest.AuthType.
-type ReqAccountExistsRequestAuthType string
-
 // ReqAccountPermissionsRequest defines model for _req_account-permissions_Request.
 type ReqAccountPermissionsRequest struct {
 	AccountId   string   `json:"account_id"`
@@ -516,17 +504,6 @@ type ReqAccountRolesRequest struct {
 	AppId     string   `json:"app_id"`
 	RoleIds   []string `json:"role_ids"`
 }
-
-// ReqAccountAuthTypeLinkRequest defines model for _req_account_auth-type_link_Request.
-type ReqAccountAuthTypeLinkRequest struct {
-	AppTypeIdentifier string                                `json:"app_type_identifier"`
-	AuthType          ReqAccountAuthTypeLinkRequestAuthType `json:"auth_type"`
-	Creds             interface{}                           `json:"creds"`
-	Params            *interface{}                          `json:"params,omitempty"`
-}
-
-// ReqAccountAuthTypeLinkRequestAuthType defines model for ReqAccountAuthTypeLinkRequest.AuthType.
-type ReqAccountAuthTypeLinkRequestAuthType string
 
 // ReqAdminAppTokenResponse defines model for _req_admin_app-token_Response.
 type ReqAdminAppTokenResponse struct {
@@ -555,14 +532,6 @@ type ReqApplicationRolesRequest struct {
 	Permissions []string `json:"permissions"`
 }
 
-// ReqAuthorizeServiceRequest defines model for _req_authorize-service_Request.
-type ReqAuthorizeServiceRequest struct {
-
-	// Scopes to be granted to this service in this and future tokens. Replaces existing scopes if present.
-	ApprovedScopes *[]string `json:"approved_scopes,omitempty"`
-	ServiceId      string    `json:"service_id"`
-}
-
 // ReqCreateOrganizationRequest defines model for _req_create-Organization_Request.
 type ReqCreateOrganizationRequest struct {
 	Config *OrganizationConfigFields        `json:"config,omitempty"`
@@ -587,43 +556,6 @@ type ReqCreateApplicationRequest struct {
 	MultiTenant             bool   `json:"multi_tenant"`
 	Name                    string `json:"name"`
 	RequiresOwnUsers        bool   `json:"requires_own_users"`
-}
-
-// ReqCredentialForgotCompleteRequest defines model for _req_credential_forgot_complete_Request.
-type ReqCredentialForgotCompleteRequest struct {
-	CredentialId string       `json:"credential_id"`
-	Params       *interface{} `json:"params,omitempty"`
-	ResetCode    string       `json:"reset_code"`
-}
-
-// ReqCredentialForgotInitiateRequest defines model for _req_credential_forgot_initiate_Request.
-type ReqCredentialForgotInitiateRequest struct {
-	ApiKey            string                                     `json:"api_key"`
-	AppTypeIdentifier string                                     `json:"app_type_identifier"`
-	AuthType          ReqCredentialForgotInitiateRequestAuthType `json:"auth_type"`
-	Identifier        string                                     `json:"identifier"`
-	OrgId             string                                     `json:"org_id"`
-}
-
-// ReqCredentialForgotInitiateRequestAuthType defines model for ReqCredentialForgotInitiateRequest.AuthType.
-type ReqCredentialForgotInitiateRequestAuthType string
-
-// ReqCredentialSendVerifyRequest defines model for _req_credential_send-verify_Request.
-type ReqCredentialSendVerifyRequest struct {
-	ApiKey            string                                 `json:"api_key"`
-	AppTypeIdentifier string                                 `json:"app_type_identifier"`
-	AuthType          ReqCredentialSendVerifyRequestAuthType `json:"auth_type"`
-	Identifier        string                                 `json:"identifier"`
-	OrgId             string                                 `json:"org_id"`
-}
-
-// ReqCredentialSendVerifyRequestAuthType defines model for ReqCredentialSendVerifyRequest.AuthType.
-type ReqCredentialSendVerifyRequestAuthType string
-
-// ReqCredentialUpdateRequest defines model for _req_credential_update_Request.
-type ReqCredentialUpdateRequest struct {
-	AccountAuthTypeId string       `json:"account_auth_type_id"`
-	Params            *interface{} `json:"params,omitempty"`
 }
 
 // ReqGetApplicationRequest defines model for _req_get_Application_Request.
@@ -654,24 +586,6 @@ type ReqUpdateOrganizationRequest struct {
 // ReqUpdateOrganizationRequestType defines model for ReqUpdateOrganizationRequest.Type.
 type ReqUpdateOrganizationRequestType string
 
-// ResAccountExistsResponse defines model for _res_account-exists_Response.
-type ResAccountExistsResponse bool
-
-// ResAuthorizeServiceResponse defines model for _res_authorize-service_Response.
-type ResAuthorizeServiceResponse struct {
-	AccessToken    *string   `json:"access_token,omitempty"`
-	ApprovedScopes *[]string `json:"approved_scopes,omitempty"`
-
-	// Full service registration record
-	ServiceReg *ServiceReg `json:"service_reg,omitempty"`
-
-	// The type of the provided tokens to be specified when they are sent in the "Authorization" header
-	TokenType *ResAuthorizeServiceResponseTokenType `json:"token_type,omitempty"`
-}
-
-// The type of the provided tokens to be specified when they are sent in the "Authorization" header
-type ResAuthorizeServiceResponseTokenType string
-
 // ResGetApplicationsResponse defines model for _res_get_Applications_Response.
 type ResGetApplicationsResponse struct {
 	ApplicationTypes *ApplicationTypeFields `json:"application_types,omitempty"`
@@ -694,6 +608,92 @@ type ResGetOrganizationsResponse struct {
 
 // ResGetOrganizationsResponseType defines model for ResGetOrganizationsResponse.Type.
 type ResGetOrganizationsResponseType string
+
+// ServicesReqAccountExists defines model for _services_req_account-exists.
+type ServicesReqAccountExists struct {
+	ApiKey            string                           `json:"api_key"`
+	AppTypeIdentifier string                           `json:"app_type_identifier"`
+	AuthType          ServicesReqAccountExistsAuthType `json:"auth_type"`
+	OrgId             string                           `json:"org_id"`
+	UserIdentifier    string                           `json:"user_identifier"`
+}
+
+// ServicesReqAccountExistsAuthType defines model for ServicesReqAccountExists.AuthType.
+type ServicesReqAccountExistsAuthType string
+
+// ServicesReqAccountAuthTypeLink defines model for _services_req_account_auth-type-link.
+type ServicesReqAccountAuthTypeLink struct {
+	AppTypeIdentifier string                                 `json:"app_type_identifier"`
+	AuthType          ServicesReqAccountAuthTypeLinkAuthType `json:"auth_type"`
+	Creds             interface{}                            `json:"creds"`
+	Params            *interface{}                           `json:"params,omitempty"`
+}
+
+// ServicesReqAccountAuthTypeLinkAuthType defines model for ServicesReqAccountAuthTypeLink.AuthType.
+type ServicesReqAccountAuthTypeLinkAuthType string
+
+// ServicesReqAuthorizeService defines model for _services_req_authorize-service.
+type ServicesReqAuthorizeService struct {
+
+	// Scopes to be granted to this service in this and future tokens. Replaces existing scopes if present.
+	ApprovedScopes *[]string `json:"approved_scopes,omitempty"`
+	ServiceId      string    `json:"service_id"`
+}
+
+// ServicesReqCredentialForgotComplete defines model for _services_req_credential_forgot_complete.
+type ServicesReqCredentialForgotComplete struct {
+	CredentialId string       `json:"credential_id"`
+	Params       *interface{} `json:"params,omitempty"`
+	ResetCode    string       `json:"reset_code"`
+}
+
+// ServicesReqCredentialForgotInitiate defines model for _services_req_credential_forgot_initiate.
+type ServicesReqCredentialForgotInitiate struct {
+	ApiKey            string                                      `json:"api_key"`
+	AppTypeIdentifier string                                      `json:"app_type_identifier"`
+	AuthType          ServicesReqCredentialForgotInitiateAuthType `json:"auth_type"`
+	Identifier        string                                      `json:"identifier"`
+	OrgId             string                                      `json:"org_id"`
+}
+
+// ServicesReqCredentialForgotInitiateAuthType defines model for ServicesReqCredentialForgotInitiate.AuthType.
+type ServicesReqCredentialForgotInitiateAuthType string
+
+// ServicesReqCredentialSendVerify defines model for _services_req_credential_send-verify.
+type ServicesReqCredentialSendVerify struct {
+	ApiKey            string                                  `json:"api_key"`
+	AppTypeIdentifier string                                  `json:"app_type_identifier"`
+	AuthType          ServicesReqCredentialSendVerifyAuthType `json:"auth_type"`
+	Identifier        string                                  `json:"identifier"`
+	OrgId             string                                  `json:"org_id"`
+}
+
+// ServicesReqCredentialSendVerifyAuthType defines model for ServicesReqCredentialSendVerify.AuthType.
+type ServicesReqCredentialSendVerifyAuthType string
+
+// ServicesReqCredentialUpdate defines model for _services_req_credential_update.
+type ServicesReqCredentialUpdate struct {
+	AccountAuthTypeId string       `json:"account_auth_type_id"`
+	Params            *interface{} `json:"params,omitempty"`
+}
+
+// ServicesResAccountExists defines model for _services_res_account-exists.
+type ServicesResAccountExists bool
+
+// ServicesResAuthorizeService defines model for _services_res_authorize-service.
+type ServicesResAuthorizeService struct {
+	AccessToken    *string   `json:"access_token,omitempty"`
+	ApprovedScopes *[]string `json:"approved_scopes,omitempty"`
+
+	// Full service registration record
+	ServiceReg *ServiceReg `json:"service_reg,omitempty"`
+
+	// The type of the provided tokens to be specified when they are sent in the "Authorization" header
+	TokenType *ServicesResAuthorizeServiceTokenType `json:"token_type,omitempty"`
+}
+
+// The type of the provided tokens to be specified when they are sent in the "Authorization" header
+type ServicesResAuthorizeServiceTokenType string
 
 // Auth login creds for auth_type="anonymous"
 type SharedReqCredsAPIKey struct {
@@ -981,25 +981,25 @@ type PutServicesAccountPreferencesJSONBody map[string]interface{}
 type PutServicesAccountProfileJSONBody SharedReqProfile
 
 // PostServicesAuthAccountAuthTypeLinkJSONBody defines parameters for PostServicesAuthAccountAuthTypeLink.
-type PostServicesAuthAccountAuthTypeLinkJSONBody ReqAccountAuthTypeLinkRequest
+type PostServicesAuthAccountAuthTypeLinkJSONBody ServicesReqAccountAuthTypeLink
 
 // PostServicesAuthAccountExistsJSONBody defines parameters for PostServicesAuthAccountExists.
-type PostServicesAuthAccountExistsJSONBody ReqAccountExistsRequest
+type PostServicesAuthAccountExistsJSONBody ServicesReqAccountExists
 
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
-type PostServicesAuthAuthorizeServiceJSONBody ReqAuthorizeServiceRequest
+type PostServicesAuthAuthorizeServiceJSONBody ServicesReqAuthorizeService
 
 // PostServicesAuthCredentialForgotCompleteJSONBody defines parameters for PostServicesAuthCredentialForgotComplete.
-type PostServicesAuthCredentialForgotCompleteJSONBody ReqCredentialForgotCompleteRequest
+type PostServicesAuthCredentialForgotCompleteJSONBody ServicesReqCredentialForgotComplete
 
 // PostServicesAuthCredentialForgotInitiateJSONBody defines parameters for PostServicesAuthCredentialForgotInitiate.
-type PostServicesAuthCredentialForgotInitiateJSONBody ReqCredentialForgotInitiateRequest
+type PostServicesAuthCredentialForgotInitiateJSONBody ServicesReqCredentialForgotInitiate
 
 // PostServicesAuthCredentialSendVerifyJSONBody defines parameters for PostServicesAuthCredentialSendVerify.
-type PostServicesAuthCredentialSendVerifyJSONBody ReqCredentialSendVerifyRequest
+type PostServicesAuthCredentialSendVerifyJSONBody ServicesReqCredentialSendVerify
 
 // PostServicesAuthCredentialUpdateJSONBody defines parameters for PostServicesAuthCredentialUpdate.
-type PostServicesAuthCredentialUpdateJSONBody ReqCredentialUpdateRequest
+type PostServicesAuthCredentialUpdateJSONBody ServicesReqCredentialUpdate
 
 // GetServicesAuthCredentialVerifyParams defines parameters for GetServicesAuthCredentialVerify.
 type GetServicesAuthCredentialVerifyParams struct {

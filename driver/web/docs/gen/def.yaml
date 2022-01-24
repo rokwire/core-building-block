@@ -364,7 +364,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_credential_send-verify_Request'
+              $ref: '#/components/schemas/_services_req_credential_send-verify'
         required: true
       responses:
         '200':
@@ -393,7 +393,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_credential_forgot_initiate_Request'
+              $ref: '#/components/schemas/_services_req_credential_forgot_initiate'
         required: true
       responses:
         '200':
@@ -417,7 +417,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_credential_forgot_complete_Request'
+              $ref: '#/components/schemas/_services_req_credential_forgot_complete'
         required: true
       responses:
         '200':
@@ -447,7 +447,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_credential_update_Request'
+              $ref: '#/components/schemas/_services_req_credential_update'
         required: true
       responses:
         '200':
@@ -505,7 +505,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_account-exists_Request'
+              $ref: '#/components/schemas/_services_req_account-exists'
         required: true
       responses:
         '200':
@@ -513,7 +513,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_account-exists_Response'
+                $ref: '#/components/schemas/_services_res_account-exists'
         '400':
           description: Bad request
         '401':
@@ -535,7 +535,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_account_auth-type_link_Request'
+              $ref: '#/components/schemas/_services_req_account_auth-type-link'
             examples:
               email-sign_up:
                 summary: Email
@@ -609,14 +609,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_authorize-service_Request'
+              $ref: '#/components/schemas/_services_req_authorize-service'
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_authorize-service_Response'
+                $ref: '#/components/schemas/_services_res_authorize-service'
               examples:
                 authorized:
                   summary: Service authorized
@@ -3552,7 +3552,7 @@ components:
           type: string
           enum:
             - Bearer
-    _req_account-exists_Request:
+    _services_req_account-exists:
       required:
         - auth_type
         - app_type_identifier
@@ -3577,9 +3577,9 @@ components:
           type: string
         user_identifier:
           type: string
-    _res_account-exists_Response:
+    _services_res_account-exists:
       type: boolean
-    _req_account_auth-type_link_Request:
+    _services_req_account_auth-type-link:
       required:
         - auth_type
         - app_type_identifier
@@ -3606,7 +3606,7 @@ components:
             - $ref: '#/components/schemas/_shared_req_ParamsEmail'
             - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
-    _req_credential_update_Request:
+    _services_req_credential_update:
       required:
         - account_auth_type_id
       type: object
@@ -3617,7 +3617,7 @@ components:
           type: object
           anyOf:
             - $ref: '#/components/schemas/_shared_req_ParamsSetEmailCredential'
-    _req_credential_send-verify_Request:
+    _services_req_credential_send-verify:
       required:
         - auth_type
         - app_type_identifier
@@ -3638,7 +3638,7 @@ components:
           type: string
           enum:
             - email
-    _req_credential_forgot_initiate_Request:
+    _services_req_credential_forgot_initiate:
       required:
         - auth_type
         - app_type_identifier
@@ -3659,7 +3659,7 @@ components:
           type: string
         identifier:
           type: string
-    _req_credential_forgot_complete_Request:
+    _services_req_credential_forgot_complete:
       required:
         - credential_id
         - reset_code
@@ -3673,7 +3673,7 @@ components:
           type: object
           anyOf:
             - $ref: '#/components/schemas/_shared_req_ParamsSetEmailCredential'
-    _req_authorize-service_Request:
+    _services_req_authorize-service:
       required:
         - service_id
       type: object
@@ -3685,7 +3685,7 @@ components:
           type: array
           items:
             type: string
-    _res_authorize-service_Response:
+    _services_res_authorize-service:
       type: object
       properties:
         access_token:

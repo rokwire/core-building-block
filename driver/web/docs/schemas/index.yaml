@@ -85,7 +85,7 @@ DeviceFields:
 
 ##### APIs requests and responses - they are at bottom
 
-## shared requests and responses
+## SHARED requests and responses
 
 ### requests
 _shared_req_Login:
@@ -136,39 +136,43 @@ _shared_res_Mfa:
   $ref: "./apis/shared/responses/mfa/Response.yaml"
 _shared_res_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
-## end - shared requests and responses
+## end SHARED requests and responses
+
+## SERVICES section
 
 ### account exists API
-_req_account-exists_Request:
+_services_req_account-exists:
   $ref: "./apis/services/account/exists/request/Request.yaml"
-_res_account-exists_Response:
+_services_res_account-exists:
   $ref: "./apis/services/account/exists/response/Response.yaml"
 
 ### account auth-type link API
-_req_account_auth-type_link_Request:
+_services_req_account_auth-type-link:
   $ref: "./apis/services/account/auth-type/link/request/Request.yaml"
 
 ### credential_update API
-_req_credential_update_Request:
+_services_req_credential_update:
   $ref: "./apis/services/credential/update/request/Request.yaml"
 
 ### credential_send-verify API
-_req_credential_send-verify_Request:
+_services_req_credential_send-verify:
   $ref: "./apis/services/credential/send-verify/request/Request.yaml"
 
 ### credential_forgot_initiate API
-_req_credential_forgot_initiate_Request:
+_services_req_credential_forgot_initiate:
   $ref: "./apis/services/credential/forgot/initiate/request/Request.yaml"
 
 ### credential_forgot_complete API
-_req_credential_forgot_complete_Request:
+_services_req_credential_forgot_complete:
   $ref: "./apis/services/credential/forgot/complete/request/Request.yaml"
 
 ### authorize-service API
-_req_authorize-service_Request:
+_services_req_authorize-service:
   $ref: "./apis/services/authorize-service/request/Request.yaml"
-_res_authorize-service_Response:
+_services_res_authorize-service:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
+
+## end SERVICES section
 
 ### admin app-roken API
 _req_admin_app-token_Response:

@@ -128,7 +128,7 @@ func (h ServicesApisHandler) accountExists(l *logs.Log, r *http.Request, claims 
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqAccountExistsRequest
+	var requestData Def.ServicesReqAccountExists
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
@@ -219,7 +219,7 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqAccountAuthTypeLinkRequest
+	var requestData Def.ServicesReqAccountAuthTypeLink
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account auth type link request"), nil, err, http.StatusBadRequest, true)
@@ -255,7 +255,7 @@ func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request, 
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqAuthorizeServiceRequest
+	var requestData Def.ServicesReqAuthorizeService
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "auth authorize service request", nil, err, http.StatusBadRequest, true)
@@ -274,9 +274,9 @@ func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request, 
 
 	scopesResp := scopeListToDef(tokenScopes)
 	regResp := serviceRegToDef(reg)
-	tokenType := Def.ResAuthorizeServiceResponseTokenTypeBearer
+	tokenType := Def.ServicesResAuthorizeServiceTokenTypeBearer
 
-	responseData := &Def.ResAuthorizeServiceResponse{AccessToken: &token, TokenType: &tokenType, ApprovedScopes: &scopesResp, ServiceReg: regResp}
+	responseData := &Def.ServicesResAuthorizeService{AccessToken: &token, TokenType: &tokenType, ApprovedScopes: &scopesResp, ServiceReg: regResp}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "auth login url response", nil, err, http.StatusInternalServerError, false)
@@ -506,7 +506,7 @@ func (h ServicesApisHandler) updateCredential(l *logs.Log, r *http.Request, clai
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqCredentialUpdateRequest
+	var requestData Def.ServicesReqCredentialUpdate
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password client request"), nil, err, http.StatusBadRequest, true)
@@ -532,7 +532,7 @@ func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Reque
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqCredentialForgotCompleteRequest
+	var requestData Def.ServicesReqCredentialForgotComplete
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password link request"), nil, err, http.StatusBadRequest, true)
@@ -558,7 +558,7 @@ func (h ServicesApisHandler) forgotCredentialInitiate(l *logs.Log, r *http.Reque
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqCredentialForgotInitiateRequest
+	var requestData Def.ServicesReqCredentialForgotInitiate
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password request"), nil, err, http.StatusBadRequest, true)
@@ -579,7 +579,7 @@ func (h ServicesApisHandler) sendVerifyCredential(l *logs.Log, r *http.Request, 
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqCredentialSendVerifyRequest
+	var requestData Def.ServicesReqCredentialSendVerify
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth resend verify code request"), nil, err, http.StatusBadRequest, true)
