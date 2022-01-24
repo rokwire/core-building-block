@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Return ordered list of account auth types on link account auth type [#376](https://github.com/rokwire/core-building-block/issues/376)
+- Expose create app org group admin API [#309](https://github.com/rokwire/core-building-block/issues/309)
 - Apply external auth system user data to profile [#377](https://github.com/rokwire/core-building-block/issues/377)
 - Expose create app org role admin API [#308](https://github.com/rokwire/core-building-block/issues/308)
 - Expose Admin API which gives all applications for an organization [#324](https://github.com/rokwire/core-building-block/issues/324)
