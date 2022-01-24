@@ -446,7 +446,19 @@ func (h AdminApisHandler) adminCreateApplicationGroup(l *logs.Log, r *http.Reque
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgGroup, nil, err, http.StatusBadRequest, true)
 	}
 
-	_, err = h.coreAPIs.Administration.AdmCreateAppOrgGroup(requestData.Name, *requestData.Permissions, *requestData.Roles, claims.AppID, claims.OrgID, l)
+	//permissions ids
+	var permissionsIDs []string
+	if requestData.Permissions != nil {
+		permissionsIDs = *requestData.Permissions
+	}
+
+	//roles ids
+	var rolesIDs []string
+	if requestData.Roles != nil {
+		rolesIDs = *requestData.Roles
+	}
+
+	_, err = h.coreAPIs.Administration.AdmCreateAppOrgGroup(requestData.Name, permissionsIDs, rolesIDs, claims.AppID, claims.OrgID, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
 	}
