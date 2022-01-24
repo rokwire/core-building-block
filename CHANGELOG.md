@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Fix create role and create group Admin APIs [#386](https://github.com/rokwire/core-building-block/issues/386)
 - Expose create app org group admin API [#309](https://github.com/rokwire/core-building-block/issues/309)
 - Apply external auth system user data to profile [#377](https://github.com/rokwire/core-building-block/issues/377)
 - Expose create app org role admin API [#308](https://github.com/rokwire/core-building-block/issues/308)
