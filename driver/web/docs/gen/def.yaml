@@ -1284,7 +1284,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_req_admin_app-token_Response'
+                $ref: '#/components/schemas/_admin_req_app-token'
         '400':
           description: Bad request
         '401':
@@ -1484,7 +1484,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_admin_application_groups_Request'
+              $ref: '#/components/schemas/_admin_req_create-application_group'
         required: true
       responses:
         '200':
@@ -1564,7 +1564,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_admin_application_roles_Request'
+              $ref: '#/components/schemas/_admin_req_create-application_role'
         required: true
       responses:
         '200':
@@ -3701,14 +3701,14 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
-    _req_admin_app-token_Response:
+    _admin_req_app-token:
       required:
         - token
       type: object
       properties:
         token:
           type: string
-    _req_admin_application_roles_Request:
+    _admin_req_create-application_role:
       required:
         - name
         - description
@@ -3723,7 +3723,7 @@ components:
           type: array
           items:
             type: string
-    _req_admin_application_groups_Request:
+    _admin_req_create-application_group:
       required:
         - name
       type: object

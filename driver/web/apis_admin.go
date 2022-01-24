@@ -425,7 +425,7 @@ func (h AdminApisHandler) getAppToken(l *logs.Log, r *http.Request, claims *toke
 		return l.HttpResponseErrorAction(logutils.ActionGet, "app token", nil, err, http.StatusInternalServerError, true)
 	}
 
-	response := Def.ReqAdminAppTokenResponse{Token: token}
+	response := Def.AdminReqAppToken{Token: token}
 	responseJSON, err := json.Marshal(response)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "app token", nil, err, http.StatusInternalServerError, false)
@@ -440,7 +440,7 @@ func (h AdminApisHandler) adminCreateApplicationGroup(l *logs.Log, r *http.Reque
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
-	var requestData Def.ReqAdminApplicationGroupsRequest
+	var requestData Def.AdminReqCreateApplicationGroup
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgGroup, nil, err, http.StatusBadRequest, true)
@@ -472,7 +472,7 @@ func (h AdminApisHandler) adminCreateApplicationRole(l *logs.Log, r *http.Reques
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqAdminApplicationRolesRequest
+	var requestData Def.AdminReqCreateApplicationRole
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)

@@ -174,17 +174,21 @@ _services_res_authorize-service:
 
 ## end SERVICES section
 
+## ADMIN section
+
 ### admin app-roken API
-_req_admin_app-token_Response:
+_admin_req_app-token:
   $ref: "./apis/admin/app-token/response/Response.yaml"
 
 ### admin application_roles API
-_req_admin_application_roles_Request:
- $ref: "./apis/admin/application/roles/request/Request.yaml"
+_admin_req_create-application_role:
+  $ref: "./apis/admin/application/roles/request/Request.yaml"
 
 ### admin application_groups API
-_req_admin_application_groups_Request:
- $ref: "./apis/admin/application/groups/request/Request.yaml"
+_admin_req_create-application_group:
+  $ref: "./apis/admin/application/groups/request/Request.yaml"
+
+## end ADMIN section
 
 ### organization API
 _req_create-Organization_Request:

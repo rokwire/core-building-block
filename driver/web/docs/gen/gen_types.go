@@ -491,6 +491,25 @@ type ServiceScope struct {
 	Scope       string  `json:"scope"`
 }
 
+// AdminReqAppToken defines model for _admin_req_app-token.
+type AdminReqAppToken struct {
+	Token string `json:"token"`
+}
+
+// AdminReqCreateApplicationGroup defines model for _admin_req_create-application_group.
+type AdminReqCreateApplicationGroup struct {
+	Name        string    `json:"name"`
+	Permissions *[]string `json:"permissions,omitempty"`
+	Roles       *[]string `json:"roles,omitempty"`
+}
+
+// AdminReqCreateApplicationRole defines model for _admin_req_create-application_role.
+type AdminReqCreateApplicationRole struct {
+	Description string   `json:"description"`
+	Name        string   `json:"name"`
+	Permissions []string `json:"permissions"`
+}
+
 // ReqAccountPermissionsRequest defines model for _req_account-permissions_Request.
 type ReqAccountPermissionsRequest struct {
 	AccountId   string   `json:"account_id"`
@@ -503,25 +522,6 @@ type ReqAccountRolesRequest struct {
 	AccountId string   `json:"account_id"`
 	AppId     string   `json:"app_id"`
 	RoleIds   []string `json:"role_ids"`
-}
-
-// ReqAdminAppTokenResponse defines model for _req_admin_app-token_Response.
-type ReqAdminAppTokenResponse struct {
-	Token string `json:"token"`
-}
-
-// ReqAdminApplicationGroupsRequest defines model for _req_admin_application_groups_Request.
-type ReqAdminApplicationGroupsRequest struct {
-	Name        string    `json:"name"`
-	Permissions *[]string `json:"permissions,omitempty"`
-	Roles       *[]string `json:"roles,omitempty"`
-}
-
-// ReqAdminApplicationRolesRequest defines model for _req_admin_application_roles_Request.
-type ReqAdminApplicationRolesRequest struct {
-	Description string   `json:"description"`
-	Name        string   `json:"name"`
-	Permissions []string `json:"permissions"`
 }
 
 // ReqApplicationRolesRequest defines model for _req_application-roles_Request.
@@ -927,10 +927,10 @@ type GetAdminApplicationAccountsParams struct {
 }
 
 // PostAdminApplicationGroupsJSONBody defines parameters for PostAdminApplicationGroups.
-type PostAdminApplicationGroupsJSONBody ReqAdminApplicationGroupsRequest
+type PostAdminApplicationGroupsJSONBody AdminReqCreateApplicationGroup
 
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
-type PostAdminApplicationRolesJSONBody ReqAdminApplicationRolesRequest
+type PostAdminApplicationRolesJSONBody AdminReqCreateApplicationRole
 
 // GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.
 type GetAdminAuthAppTokenParams struct {
