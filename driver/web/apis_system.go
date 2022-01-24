@@ -561,7 +561,7 @@ func (h SystemApisHandler) addMFAType(l *logs.Log, r *http.Request, claims *toke
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var mfaData Def.ReqSharedMfa
+	var mfaData Def.SharedReqMfa
 	err = json.Unmarshal(data, &mfaData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("add mfa request"), nil, err, http.StatusBadRequest, true)
@@ -589,7 +589,7 @@ func (h SystemApisHandler) removeMFAType(l *logs.Log, r *http.Request, claims *t
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var mfaData Def.ReqSharedMfa
+	var mfaData Def.SharedReqMfa
 	err = json.Unmarshal(data, &mfaData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("remove mfa request"), nil, err, http.StatusBadRequest, true)

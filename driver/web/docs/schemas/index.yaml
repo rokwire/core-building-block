@@ -85,44 +85,43 @@ DeviceFields:
 
 ##### APIs requests and responses - they are at bottom
 
-### shared requests and responses
+## shared requests and responses
 
-#### requests
-_req_shared_Login:
+### requests
+_shared_req_Login:
   $ref: "./apis/shared/requests/login/Request.yaml"
-_req_shared_Login_Mfa:
+_shared_req_Login_Mfa:
   $ref: "../schemas/apis/shared/requests/login/MfaRequest.yaml"
-_req_shared_Login_Device:
+_shared_req_Login_Device:
   $ref: "./apis/shared/requests/login/Device.yaml"
-_req_shared_LoginUrl:
+_shared_req_LoginUrl:
   $ref: "./apis/shared/requests/login-url/Request.yaml"
-_req_shared_Refresh:
+_shared_req_Refresh:
   $ref: "./apis/shared/requests/refresh/Request.yaml"
-_req_shared_Mfa:
+_shared_req_Mfa:
   $ref: "./apis/shared/requests/mfa/Request.yaml"
-
-_req_shared_CredsEmail:
+_shared_req_CredsEmail:
   $ref: "./apis/shared/requests/CredsEmail.yaml"
-_req_shared_CredsTwilioPhone:
+_shared_req_CredsTwilioPhone:
   $ref: "./apis/shared/requests/CredsTwilioPhone.yaml"
-_req_shared_CredsOIDC:
+_shared_req_CredsOIDC:
   $ref: "./apis/shared/requests/CredsOIDC.yaml"
-_req_shared_CredsAPIKey:
+_shared_req_CredsAPIKey:
   $ref: "./apis/shared/requests/CredsAPIKey.yaml"
-_req_shared_ParamsEmail:
+_shared_req_ParamsEmail:
   $ref: "./apis/shared/requests/ParamsEmail.yaml"
-_req_shared_ParamsOIDC:
+_shared_req_ParamsOIDC:
   $ref: "./apis/shared/requests/ParamsOIDC.yaml"
-_req_shared_ParamsNone:
+_shared_req_ParamsNone:
   $ref: "./apis/shared/requests/ParamsNone.yaml"
-_req_shared_Profile:
+_shared_req_Profile:
   $ref: "./apis/shared/requests/Profile.yaml"
-_req_shared_ProfileNullable:
+_shared_req_ProfileNullable:
   $ref: "./apis/shared/requests/ProfileNullable.yaml"
-_req_shared_ParamsSetEmailCredential:
+_shared_req_ParamsSetEmailCredential:
   $ref: "./apis/shared/requests/ParamsSetEmailCredential.yaml"
 
-#### responses
+### responses
 _res_shared_Login:
   $ref: "./apis/shared/responses/login/Response.yaml"
 _res_shared_Login_Mfa:
@@ -137,7 +136,7 @@ _res_shared_Mfa:
   $ref: "./apis/shared/responses/mfa/Response.yaml"
 _res_shared_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
-### end - shared requests and responses
+## end - shared requests and responses
 
 ### account exists API
 _req_account-exists_Request:

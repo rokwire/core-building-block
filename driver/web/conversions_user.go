@@ -74,7 +74,7 @@ func accountGroupsToDef(items []model.AccountGroup) []Def.AppOrgGroupFields {
 }
 
 //Profile
-func profileFromDef(item *Def.ReqSharedProfile) model.Profile {
+func profileFromDef(item *Def.SharedReqProfile) model.Profile {
 	if item == nil {
 		return model.Profile{}
 	}
@@ -165,7 +165,7 @@ func profileToDef(item *model.Profile) *Def.ProfileFields {
 		State: &item.State, Country: &item.Country}
 }
 
-func profileFromDefNullable(item *Def.ReqSharedProfileNullable) model.Profile {
+func profileFromDefNullable(item *Def.SharedReqProfileNullable) model.Profile {
 	if item == nil {
 		return model.Profile{}
 	}
