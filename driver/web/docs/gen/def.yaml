@@ -191,8 +191,8 @@ paths:
             application/json:
               schema:
                 anyOf:
-                  - $ref: '#/components/schemas/_res_shared_Login_Mfa'
-                  - $ref: '#/components/schemas/_res_shared_Login'
+                  - $ref: '#/components/schemas/_shared_res_Login_Mfa'
+                  - $ref: '#/components/schemas/_shared_res_Login'
         '400':
           description: Bad request
         '401':
@@ -252,7 +252,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Login'
+                $ref: '#/components/schemas/_shared_res_Login'
         '400':
           description: Bad request
         '401':
@@ -280,7 +280,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Refresh'
+                $ref: '#/components/schemas/_shared_res_Refresh'
         '400':
           description: Bad request
         '401':
@@ -306,7 +306,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_LoginUrl'
+                $ref: '#/components/schemas/_shared_res_LoginUrl'
         '400':
           description: Bad request
         '401':
@@ -735,7 +735,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Account'
+                $ref: '#/components/schemas/_shared_res_Account'
         '400':
           description: Bad request
         '401':
@@ -761,7 +761,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_res_shared_Mfa'
+                  $ref: '#/components/schemas/_shared_res_Mfa'
         '400':
           description: Bad request
         '401':
@@ -800,7 +800,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Mfa'
+                $ref: '#/components/schemas/_shared_res_Mfa'
         '400':
           description: Bad request
         '401':
@@ -1129,8 +1129,8 @@ paths:
             application/json:
               schema:
                 anyOf:
-                  - $ref: '#/components/schemas/_res_shared_Login_Mfa'
-                  - $ref: '#/components/schemas/_res_shared_Login'
+                  - $ref: '#/components/schemas/_shared_res_Login_Mfa'
+                  - $ref: '#/components/schemas/_shared_res_Login'
         '400':
           description: Bad request
         '401':
@@ -1167,7 +1167,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Login'
+                $ref: '#/components/schemas/_shared_res_Login'
         '400':
           description: Bad request
         '401':
@@ -1195,7 +1195,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Refresh'
+                $ref: '#/components/schemas/_shared_res_Refresh'
         '400':
           description: Bad request
         '401':
@@ -1221,7 +1221,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_LoginUrl'
+                $ref: '#/components/schemas/_shared_res_LoginUrl'
         '400':
           description: Bad request
         '401':
@@ -1308,7 +1308,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Account'
+                $ref: '#/components/schemas/_shared_res_Account'
         '400':
           description: Bad request
         '401':
@@ -1334,7 +1334,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_res_shared_Mfa'
+                  $ref: '#/components/schemas/_shared_res_Mfa'
         '400':
           description: Bad request
         '401':
@@ -1366,7 +1366,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Mfa'
+                $ref: '#/components/schemas/_shared_res_Mfa'
         '400':
           description: Bad request
         '401':
@@ -1437,7 +1437,7 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/_res_shared_Account'
+                $ref: '#/components/schemas/_shared_res_Account'
         '400':
           description: Bad request
         '401':
@@ -2388,7 +2388,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_res_shared_Mfa'
+                  $ref: '#/components/schemas/_shared_res_Mfa'
         '400':
           description: Bad request
         '401':
@@ -2421,7 +2421,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Mfa'
+                $ref: '#/components/schemas/_shared_res_Mfa'
         '400':
           description: Bad request
         '401':
@@ -3417,13 +3417,13 @@ components:
           type: string
         confirm_password:
           type: string
-    _res_shared_Login:
+    _shared_res_Login:
       type: object
       properties:
         token:
-          $ref: '#/components/schemas/_res_shared_RokwireToken'
+          $ref: '#/components/schemas/_shared_res_RokwireToken'
         account:
-          $ref: '#/components/schemas/_res_shared_Account'
+          $ref: '#/components/schemas/_shared_res_Account'
         params:
           type: object
           nullable: true
@@ -3454,7 +3454,7 @@ components:
               nullable: true
         message:
           type: string
-    _res_shared_Login_Mfa:
+    _shared_res_Login_Mfa:
       required:
         - enrolled
         - account_id
@@ -3465,7 +3465,7 @@ components:
         enrolled:
           type: array
           items:
-            $ref: '#/components/schemas/_res_shared_Mfa'
+            $ref: '#/components/schemas/_shared_res_Mfa'
         account_id:
           type: string
         session_id:
@@ -3476,10 +3476,10 @@ components:
           type: object
           nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/0'
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/1'
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/2'
-    _res_shared_LoginUrl:
+            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/0'
+            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/1'
+            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/2'
+    _shared_res_LoginUrl:
       required:
         - login_url
       type: object
@@ -3489,19 +3489,19 @@ components:
         params:
           type: object
           description: Params to be submitted with 'login' request (if necessary)
-    _res_shared_Refresh:
+    _shared_res_Refresh:
       type: object
       properties:
         token:
-          $ref: '#/components/schemas/_res_shared_RokwireToken'
+          $ref: '#/components/schemas/_shared_res_RokwireToken'
         params:
           type: object
           nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/0'
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/1'
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/2'
-    _res_shared_Account:
+            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/0'
+            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/1'
+            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/2'
+    _shared_res_Account:
       required:
         - id
       type: object
@@ -3529,7 +3529,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
-    _res_shared_Mfa:
+    _shared_res_Mfa:
       type: object
       properties:
         type:
@@ -3538,7 +3538,7 @@ components:
           type: boolean
         params:
           type: object
-    _res_shared_RokwireToken:
+    _shared_res_RokwireToken:
       type: object
       properties:
         access_token:

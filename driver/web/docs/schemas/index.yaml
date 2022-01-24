@@ -122,19 +122,19 @@ _shared_req_ParamsSetEmailCredential:
   $ref: "./apis/shared/requests/ParamsSetEmailCredential.yaml"
 
 ### responses
-_res_shared_Login:
+_shared_res_Login:
   $ref: "./apis/shared/responses/login/Response.yaml"
-_res_shared_Login_Mfa:
+_shared_res_Login_Mfa:
   $ref: "./apis/shared/responses/login/MfaResponse.yaml"
-_res_shared_LoginUrl:
+_shared_res_LoginUrl:
   $ref: "./apis/shared/responses/login-url/Response.yaml"
-_res_shared_Refresh:
+_shared_res_Refresh:
   $ref: "./apis/shared/responses/refresh/Response.yaml"
-_res_shared_Account:
+_shared_res_Account:
   $ref: "./apis/shared/responses/Account.yaml"
-_res_shared_Mfa:
+_shared_res_Mfa:
   $ref: "./apis/shared/responses/mfa/Response.yaml"
-_res_shared_RokwireToken:
+_shared_res_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
 ## end - shared requests and responses
 

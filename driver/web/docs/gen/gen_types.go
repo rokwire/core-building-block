@@ -131,11 +131,6 @@ const (
 	ResGetOrganizationsResponseTypeSmall ResGetOrganizationsResponseType = "small"
 )
 
-// Defines values for ResSharedRokwireTokenTokenType.
-const (
-	ResSharedRokwireTokenTokenTypeBearer ResSharedRokwireTokenTokenType = "Bearer"
-)
-
 // Defines values for SharedReqLoginAuthType.
 const (
 	SharedReqLoginAuthTypeAnonymous SharedReqLoginAuthType = "anonymous"
@@ -181,6 +176,11 @@ const (
 	SharedReqMfaTypePhone SharedReqMfaType = "phone"
 
 	SharedReqMfaTypeTotp SharedReqMfaType = "totp"
+)
+
+// Defines values for SharedResRokwireTokenTokenType.
+const (
+	SharedResRokwireTokenTokenTypeBearer SharedResRokwireTokenTokenType = "Bearer"
 )
 
 // API key record
@@ -695,71 +695,6 @@ type ResGetOrganizationsResponse struct {
 // ResGetOrganizationsResponseType defines model for ResGetOrganizationsResponse.Type.
 type ResGetOrganizationsResponseType string
 
-// ResSharedAccount defines model for _res_shared_Account.
-type ResSharedAccount struct {
-	AuthTypes   *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
-	Groups      *[]AppOrgGroupFields     `json:"groups,omitempty"`
-	Id          string                   `json:"id"`
-	Permissions *[]PermissionFields      `json:"permissions,omitempty"`
-	Preferences *map[string]interface{}  `json:"preferences"`
-	Profile     *ProfileFields           `json:"profile,omitempty"`
-	Roles       *[]AppOrgRoleFields      `json:"roles,omitempty"`
-}
-
-// ResSharedLogin defines model for _res_shared_Login.
-type ResSharedLogin struct {
-	Account *ResSharedAccount      `json:"account,omitempty"`
-	Message *string                `json:"message,omitempty"`
-	Params  *interface{}           `json:"params"`
-	Token   *ResSharedRokwireToken `json:"token,omitempty"`
-}
-
-// ResSharedLoginUrl defines model for _res_shared_LoginUrl.
-type ResSharedLoginUrl struct {
-	LoginUrl string `json:"login_url"`
-
-	// Params to be submitted with 'login' request (if necessary)
-	Params *map[string]interface{} `json:"params,omitempty"`
-}
-
-// ResSharedLoginMfa defines model for _res_shared_Login_Mfa.
-type ResSharedLoginMfa struct {
-	AccountId string         `json:"account_id"`
-	Enrolled  []ResSharedMfa `json:"enrolled"`
-	Params    *interface{}   `json:"params"`
-	SessionId string         `json:"session_id"`
-	State     string         `json:"state"`
-}
-
-// ResSharedMfa defines model for _res_shared_Mfa.
-type ResSharedMfa struct {
-	Params   *map[string]interface{} `json:"params,omitempty"`
-	Type     *string                 `json:"type,omitempty"`
-	Verified *bool                   `json:"verified,omitempty"`
-}
-
-// ResSharedRefresh defines model for _res_shared_Refresh.
-type ResSharedRefresh struct {
-	Params *interface{}           `json:"params"`
-	Token  *ResSharedRokwireToken `json:"token,omitempty"`
-}
-
-// ResSharedRokwireToken defines model for _res_shared_RokwireToken.
-type ResSharedRokwireToken struct {
-
-	// The user's access token to be provided to authorize access to ROKWIRE APIs
-	AccessToken *string `json:"access_token,omitempty"`
-
-	// A refresh token that can be used to get a new access token once the one provided expires
-	RefreshToken *string `json:"refresh_token,omitempty"`
-
-	// The type of the provided tokens to be specified when they are sent in the "Authorization" header
-	TokenType *ResSharedRokwireTokenTokenType `json:"token_type,omitempty"`
-}
-
-// The type of the provided tokens to be specified when they are sent in the "Authorization" header
-type ResSharedRokwireTokenTokenType string
-
 // Auth login creds for auth_type="anonymous"
 type SharedReqCredsAPIKey struct {
 	AnonymousId *string `json:"anonymous_id,omitempty"`
@@ -901,6 +836,71 @@ type SharedReqRefresh struct {
 	ApiKey       string `json:"api_key"`
 	RefreshToken string `json:"refresh_token"`
 }
+
+// SharedResAccount defines model for _shared_res_Account.
+type SharedResAccount struct {
+	AuthTypes   *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
+	Groups      *[]AppOrgGroupFields     `json:"groups,omitempty"`
+	Id          string                   `json:"id"`
+	Permissions *[]PermissionFields      `json:"permissions,omitempty"`
+	Preferences *map[string]interface{}  `json:"preferences"`
+	Profile     *ProfileFields           `json:"profile,omitempty"`
+	Roles       *[]AppOrgRoleFields      `json:"roles,omitempty"`
+}
+
+// SharedResLogin defines model for _shared_res_Login.
+type SharedResLogin struct {
+	Account *SharedResAccount      `json:"account,omitempty"`
+	Message *string                `json:"message,omitempty"`
+	Params  *interface{}           `json:"params"`
+	Token   *SharedResRokwireToken `json:"token,omitempty"`
+}
+
+// SharedResLoginUrl defines model for _shared_res_LoginUrl.
+type SharedResLoginUrl struct {
+	LoginUrl string `json:"login_url"`
+
+	// Params to be submitted with 'login' request (if necessary)
+	Params *map[string]interface{} `json:"params,omitempty"`
+}
+
+// SharedResLoginMfa defines model for _shared_res_Login_Mfa.
+type SharedResLoginMfa struct {
+	AccountId string         `json:"account_id"`
+	Enrolled  []SharedResMfa `json:"enrolled"`
+	Params    *interface{}   `json:"params"`
+	SessionId string         `json:"session_id"`
+	State     string         `json:"state"`
+}
+
+// SharedResMfa defines model for _shared_res_Mfa.
+type SharedResMfa struct {
+	Params   *map[string]interface{} `json:"params,omitempty"`
+	Type     *string                 `json:"type,omitempty"`
+	Verified *bool                   `json:"verified,omitempty"`
+}
+
+// SharedResRefresh defines model for _shared_res_Refresh.
+type SharedResRefresh struct {
+	Params *interface{}           `json:"params"`
+	Token  *SharedResRokwireToken `json:"token,omitempty"`
+}
+
+// SharedResRokwireToken defines model for _shared_res_RokwireToken.
+type SharedResRokwireToken struct {
+
+	// The user's access token to be provided to authorize access to ROKWIRE APIs
+	AccessToken *string `json:"access_token,omitempty"`
+
+	// A refresh token that can be used to get a new access token once the one provided expires
+	RefreshToken *string `json:"refresh_token,omitempty"`
+
+	// The type of the provided tokens to be specified when they are sent in the "Authorization" header
+	TokenType *SharedResRokwireTokenTokenType `json:"token_type,omitempty"`
+}
+
+// The type of the provided tokens to be specified when they are sent in the "Authorization" header
+type SharedResRokwireTokenTokenType string
 
 // DeleteAdminAccountMfaParams defines parameters for DeleteAdminAccountMfa.
 type DeleteAdminAccountMfaParams struct {
