@@ -179,6 +179,10 @@ _req_admin_app-token_Response:
 _req_admin_application_roles_Request:
  $ref: "./apis/admin/application/roles/request/Request.yaml"
 
+### admin application_groups API
+_req_admin_application_groups_Request:
+ $ref: "./apis/admin/application/groups/request/Request.yaml"
+
 ### organization API
 _req_create-Organization_Request:
   $ref: "./apis/system/create-organization/request/Request.yaml"

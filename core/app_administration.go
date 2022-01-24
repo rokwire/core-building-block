@@ -182,6 +182,35 @@ func (app *application) admGetApplications(orgID string) ([]model.Application, e
 	return apps, nil
 }
 
+func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgGroup, error) {
+	//1. get application organization entity
+	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	//2. check permissions
+	groupPermissions, err := app.checkPermissions(*appOrg, permissionIDs, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
+	}
+
+	//3. check roles
+	groupRoles, err := app.checkRoles(*appOrg, rolesIDs, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
+	}
+
+	id, _ := uuid.NewUUID()
+	now := time.Now()
+	group := model.AppOrgGroup{ID: id.String(), Name: name, Roles: groupRoles, Permissions: groupPermissions, DateCreated: now}
+	err = app.storage.InsertAppOrgGroup(group)
+	if err != nil {
+		return nil, err
+	}
+	return &group, nil
+}
+
 func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
 	//find application organization
 	getAppOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
@@ -205,29 +234,9 @@ func (app *application) admCreateAppOrgRole(name string, description string, per
 	}
 
 	//2. check permissions
-	permissions, err := app.storage.FindPermissionsByServiceIDs(appOrg.ServicesIDs)
+	rolePermissions, err := app.checkPermissions(*appOrg, permissionIDs, l)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
-	}
-	if len(permissionIDs) > len(permissions) {
-		return nil, errors.New("mismatch permissions count")
-	}
-	rolePermissions := make([]model.Permission, len(permissionIDs))
-	for i, permissionID := range permissionIDs {
-		var rolePermission *model.Permission
-
-		for _, permission := range permissions {
-			if permission.ID == permissionID {
-				rolePermission = &permission
-				break
-			}
-		}
-
-		if rolePermission == nil {
-			l.Infof("%s permission does not match", permissionID)
-			return nil, errors.Newf("%s permission does not match", permissionID)
-		}
-		rolePermissions[i] = *rolePermission
+		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
 	}
 
 	//3. create role
