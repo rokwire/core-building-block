@@ -7,9 +7,17 @@ get:
   security:
     - bearerAuth: []
   parameters:
-    - name: id
+    - name: identifier
       in: path
       description: identifier
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+    - name: account_auth_type_identifier
+      in: path
+      description: account_auth_type_identifier
       required: true
       style: simple
       explode: false
