@@ -225,8 +225,6 @@ _system_req_permissions:
 ### application-roles API
 _system_req_application-roles:
   $ref: "./apis/system/application-roles/request/Request.yaml"
-_res_get_AppOrgRoles_Response:
- $ref: "./apis/system/get-appOrgRoles/response/Response.yaml"
 
 ### account permissions API
 _system_req_account-permissions:

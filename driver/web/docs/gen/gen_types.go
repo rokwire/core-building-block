@@ -532,7 +532,6 @@ type ServicesReqAccountAuthTypeLinkAuthType string
 
 // ServicesReqAuthorizeService defines model for _services_req_authorize-service.
 type ServicesReqAuthorizeService struct {
-
 	// Scopes to be granted to this service in this and future tokens. Replaces existing scopes if present.
 	ApprovedScopes *[]string `json:"approved_scopes,omitempty"`
 	ServiceId      string    `json:"service_id"`
@@ -680,7 +679,6 @@ type SharedReqMfaType string
 
 // Auth login params for auth_type="email"
 type SharedReqParamsEmail struct {
-
 	// This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
 	ConfirmPassword *string `json:"confirm_password,omitempty"`
 	SignUp          *bool   `json:"sign_up,omitempty"`
@@ -786,7 +784,6 @@ type SharedResRefresh struct {
 
 // SharedResRokwireToken defines model for _shared_res_RokwireToken.
 type SharedResRokwireToken struct {
-
 	// The user's access token to be provided to authorize access to ROKWIRE APIs
 	AccessToken *string `json:"access_token,omitempty"`
 
@@ -836,6 +833,7 @@ type SystemReqCreateOrganizationType string
 // SystemReqCreateApplication defines model for _system_req_create_Application.
 type SystemReqCreateApplication struct {
 	ApplicationTypes *[]struct {
+		Id         string    `json:"id"`
 		Identifier string    `json:"identifier"`
 		Name       *string   `json:"name,omitempty"`
 		Versions   *[]string `json:"versions,omitempty"`
@@ -858,7 +856,6 @@ type SystemReqGetOrganization struct {
 
 // SystemReqPermissions defines model for _system_req_permissions.
 type SystemReqPermissions struct {
-
 	// permissions that could assign current permission to accounts
 	Assigners *[]string `json:"assigners,omitempty"`
 	Name      string    `json:"name"`
