@@ -9,7 +9,7 @@ get:
   parameters:
     - name: id
       in: path
-      description: The login session ID
+      description: identifier
       required: true
       style: simple
       explode: false
