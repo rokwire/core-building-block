@@ -1585,7 +1585,7 @@
         }
       }
     },
-    "/admin/application/login-sessions": {
+    "/admin/application/login-sessions/{id}": {
       "get": {
         "tags": [
           "Admin"
@@ -1595,6 +1595,19 @@
         "security": [
           {
             "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The login session ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

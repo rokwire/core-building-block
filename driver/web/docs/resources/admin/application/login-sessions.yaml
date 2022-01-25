@@ -6,6 +6,15 @@ get:
     Get login-sessions
   security:
     - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      description: The login session ID
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
   responses:
     200:
       description: Success
