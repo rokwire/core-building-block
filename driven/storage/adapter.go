@@ -1978,20 +1978,21 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 }
 
 //FindLoginSessions finds applications
-func (sa *Adapter) FindApplicationLoginSessions(appID string, orgID string) ([]model.LoginSession, error) {
+func (sa *Adapter) FindApplicationLoginSessions(appID string, orgID string, sessionID string) ([]model.LoginSession, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
-		primitive.E{Key: "org_id", Value: orgID}}
+		primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: sessionID}}
 	var result []loginSession
-	err := sa.db.loginsSessions.Find(filter, &result, nil)
+	options := options.Find()
+	var limitLoginSession int64
+	limitLoginSession = 20
+	options.SetLimit(limitLoginSession)
+	err := sa.db.loginsSessions.Find(filter, &result, options)
 
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 	}
 
 	log := logginSessionsFromStorage(result)
-	if len(log) > 20 {
-		log = log[0:20]
-	}
 	return log, nil
 }
 
