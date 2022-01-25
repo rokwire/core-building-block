@@ -6,10 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Fix create role and create group Admin APIs [#386](https://github.com/rokwire/core-building-block/issues/386)
 
 ## [1.18.0] - 2022-01-25
 ### Added
-- Fix create role and create group Admin APIs [#386](https://github.com/rokwire/core-building-block/issues/386)
 - Expose create app org group admin API [#309](https://github.com/rokwire/core-building-block/issues/309)
 - Apply external auth system user data to profile [#377](https://github.com/rokwire/core-building-block/issues/377)
 - Expose create app org role admin API [#308](https://github.com/rokwire/core-building-block/issues/308)
@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix yaml files paths [#352](https://github.com/rokwire/core-building-block/issues/352)
+- Fix create role and create group Admin APIs [#386](https://github.com/rokwire/core-building-block/issues/386)
 
 
 ## [1.17.0] - 2021-12-06
