@@ -6,18 +6,23 @@ import (
 )
 
 //Application
-func applicationToDef(item *model.Application) *Def.ApplicationFields {
-	if item == nil {
-		return nil
-	}
+func applicationToDef(item model.Application) Def.ApplicationFields {
 
-	return &Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
-		RequiresOwnUsers: &item.RequiresOwnUsers, MaxLoginSessionDuration: item.MaxLoginSessionDuration}
+	return Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
+		RequiresOwnUsers: &item.RequiresOwnUsers}
+}
+
+func applicationsToDef(item []model.Application) []Def.ApplicationFields {
+	result := make([]Def.ApplicationFields, len(item))
+	for i, item := range item {
+		result[i] = applicationToDef(item)
+	}
+	return result
 }
 
 //ApplicationPermission
 func applicationPermissionToDef(item model.Permission) Def.PermissionFields {
-	return Def.PermissionFields{Id: item.ID, Name: item.Name}
+	return Def.PermissionFields{Id: item.ID, Name: item.Name, ServiceId: &item.ServiceID, Assigners: &item.Assigners}
 }
 
 func applicationPermissionsToDef(items []model.Permission) []Def.PermissionFields {
@@ -30,7 +35,7 @@ func applicationPermissionsToDef(items []model.Permission) []Def.PermissionField
 
 //AppOrgRole
 func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRoleFields {
-	return Def.AppOrgRoleFields{Id: item.ID, Name: item.Name}
+	return Def.AppOrgRoleFields{Id: item.ID, Name: item.Name, System: &item.System}
 }
 
 func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRoleFields {
@@ -43,7 +48,7 @@ func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRoleFields {
 
 //AppOrgGroup
 func appOrgGroupToDef(item model.AppOrgGroup) Def.AppOrgGroupFields {
-	return Def.AppOrgGroupFields{Id: item.ID, Name: item.Name}
+	return Def.AppOrgGroupFields{Id: item.ID, Name: item.Name, System: &item.System}
 }
 
 func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroupFields {

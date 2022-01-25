@@ -24,6 +24,19 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
+
+	AdmGetApplications(orgID string) ([]model.Application, error)
+
+	AdmCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgGroup, error)
+	AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error)
+
+	AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error)
+	AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error)
+
+	AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error)
+
+	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
+	AdmGetAccount(accountID string) (*model.Account, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -67,6 +80,7 @@ type Storage interface {
 	PerformTransaction(func(context storage.TransactionContext) error) error
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
+	FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error
@@ -87,6 +101,7 @@ type Storage interface {
 	DeleteGlobalConfig(context storage.TransactionContext) error
 
 	FindPermissionsByName(names []string) ([]model.Permission, error)
+	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)
 	InsertPermission(item model.Permission) error
 	UpdatePermission(item model.Permission) error
 	DeletePermission(id string) error
@@ -96,6 +111,7 @@ type Storage interface {
 	UpdateAppOrgRole(item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
 
+	FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	InsertAppOrgGroup(item model.AppOrgGroup) error
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
@@ -109,6 +125,9 @@ type Storage interface {
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
+
+	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
+	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
 }
 
 //StorageListener listenes for change data storage events

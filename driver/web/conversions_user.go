@@ -6,7 +6,7 @@ import (
 )
 
 //Account
-func accountToDef(item model.Account) *Def.ResSharedAccount {
+func accountToDef(item model.Account) *Def.SharedResAccount {
 	//profile
 	profile := profileToDef(&item.Profile)
 	//preferences
@@ -19,8 +19,16 @@ func accountToDef(item model.Account) *Def.ResSharedAccount {
 	groups := accountGroupsToDef(item.GetActiveGroups())
 	//account auth types
 	authTypes := accountAuthTypesToDef(item.AuthTypes)
-	return &Def.ResSharedAccount{Id: item.ID, Permissions: &permissions, Roles: &roles, Groups: &groups,
+	return &Def.SharedResAccount{Id: item.ID, Permissions: &permissions, Roles: &roles, Groups: &groups,
 		AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
+}
+
+func аccountsToDef(items []model.Account) []Def.SharedResAccount {
+	result := make([]Def.SharedResAccount, len(items))
+	for i, item := range items {
+		result[i] = *accountToDef(item)
+	}
+	return result
 }
 
 //AccountAuthType
@@ -66,7 +74,7 @@ func accountGroupsToDef(items []model.AccountGroup) []Def.AppOrgGroupFields {
 }
 
 //Profile
-func profileFromDef(item *Def.ReqSharedProfile) model.Profile {
+func profileFromDef(item *Def.SharedReqProfile) model.Profile {
 	if item == nil {
 		return model.Profile{}
 	}
@@ -116,20 +124,20 @@ func profileFromDef(item *Def.ReqSharedProfile) model.Profile {
 		State: state, Country: country}
 }
 
-func mfaDataListToDef(items []model.MFAType) []Def.ResSharedMfa {
-	out := make([]Def.ResSharedMfa, len(items))
+func mfaDataListToDef(items []model.MFAType) []Def.SharedResMfa {
+	out := make([]Def.SharedResMfa, len(items))
 	for i, item := range items {
 		defItem := mfaDataToDef(&item)
 		if defItem != nil {
 			out[i] = *defItem
 		} else {
-			out[i] = Def.ResSharedMfa{}
+			out[i] = Def.SharedResMfa{}
 		}
 	}
 	return out
 }
 
-func mfaDataToDef(item *model.MFAType) *Def.ResSharedMfa {
+func mfaDataToDef(item *model.MFAType) *Def.SharedResMfa {
 	if item == nil {
 		return nil
 	}
@@ -147,7 +155,7 @@ func mfaDataToDef(item *model.MFAType) *Def.ResSharedMfa {
 	//recovery
 	delete(params, "codes")
 
-	return &Def.ResSharedMfa{Type: &mfaType, Verified: &verified, Params: &params}
+	return &Def.SharedResMfa{Type: &mfaType, Verified: &verified, Params: &params}
 }
 
 func profileToDef(item *model.Profile) *Def.ProfileFields {
@@ -157,7 +165,7 @@ func profileToDef(item *model.Profile) *Def.ProfileFields {
 		State: &item.State, Country: &item.Country}
 }
 
-func profileFromDefNullable(item *Def.ReqSharedProfileNullable) model.Profile {
+func profileFromDefNullable(item *Def.SharedReqProfileNullable) model.Profile {
 	if item == nil {
 		return model.Profile{}
 	}

@@ -323,13 +323,20 @@ type Storage interface {
 	FindAndUpdateLoginSession(context storage.TransactionContext, id string) (*model.LoginSession, error)
 	UpdateLoginSession(context storage.TransactionContext, loginSession model.LoginSession) error
 	DeleteLoginSession(context storage.TransactionContext, id string) error
-	DeleteExpiredSessions(now *time.Time) error
+	DeleteLoginSessionsByIDs(context storage.TransactionContext, ids []string) error
+	//LoginsSessions - predefined queries for manage deletion logic
+	DeleteMFAExpiredSessions() error
+	FindSessionsLazy(appID string, orgID string) ([]model.LoginSession, error)
+	///
 
 	//Accounts
 	FindAccount(appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccount(account model.Account) (*model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
+
+	//Profiles
+	UpdateProfile(accountID string, profile *model.Profile) error
 
 	//AccountAuthTypes
 	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)

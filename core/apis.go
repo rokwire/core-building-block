@@ -111,6 +111,38 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
+func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Application, error) {
+	return s.app.admGetApplications(orgID)
+}
+
+func (s *administrationImpl) AdmCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgGroup, error) {
+	return s.app.admCreateAppOrgGroup(name, permissionIDs, rolesIDs, appID, orgID, l)
+}
+
+func (s *administrationImpl) AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
+	return s.app.admGetAppOrgGroups(appID, orgID)
+}
+
+func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error) {
+	return s.app.admCreateAppOrgRole(name, description, permissionIDs, appID, orgID, l)
+}
+
+func (s *administrationImpl) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
+	return s.app.AdmGetAppOrgRoles(appID, orgID)
+}
+
+func (s *administrationImpl) AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error) {
+	return s.app.admGetApplicationPermissions(appID, orgID, l)
+}
+
+func (s *administrationImpl) AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
+	return s.app.admGetAccounts(appID, orgID, accountID, authTypeIdentifier)
+}
+
+func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
+	return s.app.admGetAccount(accountID)
+}
+
 ///
 
 //encryptionImpl

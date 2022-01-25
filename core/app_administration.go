@@ -1,5 +1,15 @@
 package core
 
+import (
+	"core-building-block/core/model"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/logutils"
+)
+
 func (app *application) admGetTest() string {
 	return "Admin - test"
 }
@@ -153,4 +163,136 @@ func (app *application) admGetTestModel() string {
 	return res
 	*/
 	return ""
+}
+
+func (app *application) admGetApplications(orgID string) ([]model.Application, error) {
+	applicationsOrganizations, err := app.storage.FindApplicationsOrganizationsByOrgID(orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	if len(applicationsOrganizations) == 0 {
+		return nil, nil
+	}
+
+	var apps []model.Application
+	for _, appOrg := range applicationsOrganizations {
+		apps = append(apps, appOrg.Application)
+	}
+	return apps, nil
+}
+
+func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgGroup, error) {
+	//1. get application organization entity
+	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	//2. check permissions
+	groupPermissions, err := app.checkPermissions(*appOrg, permissionIDs, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
+	}
+
+	//3. check roles
+	groupRoles, err := app.checkRoles(*appOrg, rolesIDs, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
+	}
+
+	id, _ := uuid.NewUUID()
+	now := time.Now()
+	group := model.AppOrgGroup{ID: id.String(), Name: name, Roles: groupRoles, Permissions: groupPermissions, DateCreated: now}
+	err = app.storage.InsertAppOrgGroup(group)
+	if err != nil {
+		return nil, err
+	}
+	return &group, nil
+}
+
+func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
+	//find application organization
+	getAppOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+	//find application organization groups
+	getAppOrgGroups, err := app.storage.FindAppOrgGroups(nil, getAppOrg.ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err)
+	}
+
+	return getAppOrgGroups, nil
+}
+
+func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error) {
+	//1. get application organization entity
+	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	//2. check permissions
+	rolePermissions, err := app.checkPermissions(*appOrg, permissionIDs, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
+	}
+
+	//3. create role
+	id, _ := uuid.NewUUID()
+	now := time.Now()
+	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: rolePermissions, AppOrg: *appOrg, DateCreated: now}
+	err = app.storage.InsertAppOrgRole(role)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
+	}
+	return &role, nil
+}
+
+func (app *application) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
+	//find application organization
+	getAppOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	//find application organization roles
+	getAppOrgRoles, err := app.storage.FindAppOrgRoles(nil, getAppOrg.ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err)
+	}
+
+	return getAppOrgRoles, nil
+}
+
+func (app *application) admGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error) {
+	//1. find application organization
+	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+	if appOrg == nil {
+		return nil, errors.New("there is no app org for app ID and org ID")
+	}
+
+	//2. find permissions by the service ids
+	permissions, err := app.storage.FindPermissionsByServiceIDs(appOrg.ServicesIDs)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypePermission, nil, err)
+	}
+	return permissions, nil
+}
+
+func (app *application) admGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
+	//find the accounts
+	accounts, err := app.storage.FindAccounts(appID, orgID, accountID, authTypeIdentifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	return accounts, nil
+}
+
+func (app *application) admGetAccount(accountID string) (*model.Account, error) {
+	return app.getAccount(accountID)
 }
