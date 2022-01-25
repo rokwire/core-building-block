@@ -299,12 +299,17 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 
 func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
-	identifier := params["id"]
+	identifier := params["identifier"]
 	if len(identifier) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("identifier"), nil, http.StatusBadRequest, false)
 	}
 
-	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, identifier)
+	accountAuthTypeIdentifier := params["account_auth_type_identifier"]
+	if len(accountAuthTypeIdentifier) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("account auth type identifier"), nil, http.StatusBadRequest, false)
+	}
+
+	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, &identifier, accountAuthTypeIdentifier)
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding login sessions", model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
 	}
