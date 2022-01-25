@@ -1365,18 +1365,6 @@ func (sa *Adapter) FindPermissionsByName(names []string) ([]model.Permission, er
 	return permissionsResult, nil
 }
 
-//FindPermissionsByName finds a set of permissions
-func (sa *Adapter) FindPermissionsByID(ids []string) ([]model.Permission, error) {
-	permissionsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
-	var permissionsResult []model.Permission
-	err := sa.db.permissions.Find(permissionsFilter, &permissionsResult, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return permissionsResult, nil
-}
-
 //InsertPermission inserts a new  permission
 func (sa *Adapter) InsertPermission(permission model.Permission) error {
 	_, err := sa.db.permissions.InsertOne(permission)
@@ -1453,31 +1441,10 @@ func (sa *Adapter) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOr
 	return result, nil
 }
 
-//FindAppOrgRoles finds a set of application organization roles
-func (sa *Adapter) FindAppOrgRolesByID(ids []string) ([]model.AppOrgRole, error) {
-	rolesFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
-	var rolessResult []model.AppOrgRole
-	err := sa.db.applicationsOrganizationsRoles.Find(rolesFilter, &rolessResult, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return rolessResult, nil
-}
-
 //InsertAppOrgRole inserts a new application organization role
 func (sa *Adapter) InsertAppOrgRole(item model.AppOrgRole) error {
 	role := appOrgRoleToStorage(item)
 	_, err := sa.db.applicationsOrganizationsRoles.InsertOne(role)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
-	}
-	return nil
-}
-
-//InsertAdmAppOrgRole inserts a new  applicationa_organization_role
-func (sa *Adapter) InsertAdmAppOrgRole(item model.AppOrgRole) error {
-	_, err := sa.db.applicationsOrganizationsRoles.InsertOne(item)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
 	}
@@ -1559,31 +1526,6 @@ func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 		return errors.WrapErrorData(logutils.StatusMissing, model.TypeAppOrgGroup, &logutils.FieldArgs{"_id": id}, err)
 	}
 
-	return nil
-}
-
-func (sa *Adapter) FindAppOrgGroupsList() ([]model.AppOrgGroup, error) {
-	filter := bson.D{}
-	var result []model.AppOrgGroup
-	err := sa.db.applicationsOrganizationsGroups.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-	}
-
-	if len(result) == 0 {
-		//no data
-		return make([]model.AppOrgGroup, 0), nil
-	}
-
-	return result, nil
-}
-
-//InsertAdmAppOrgRole inserts a new  applicationa_organization_role
-func (sa *Adapter) InsertAdmAppOrgGroup(item model.AppOrgGroup) error {
-	_, err := sa.db.applicationsOrganizationsGroups.InsertOne(item)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgGroup, nil, err)
-	}
 	return nil
 }
 
