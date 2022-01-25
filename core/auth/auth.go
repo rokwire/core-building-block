@@ -1163,7 +1163,6 @@ func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier str
 	}
 
 	//get the app org
-
 	applicationID := applicationType.Application.ID
 	appOrg, err := a.storage.FindApplicationOrganizations(applicationID, orgID)
 	if err != nil {
