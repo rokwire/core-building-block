@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Fix create role and create group Admin APIs [#386](https://github.com/rokwire/core-building-block/issues/386)
 
 ## [1.18.0] - 2022-01-25
 ### Added
@@ -26,7 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix yaml files paths [#352](https://github.com/rokwire/core-building-block/issues/352)
-
 
 ## [1.17.0] - 2021-12-06
 ### Fixed
