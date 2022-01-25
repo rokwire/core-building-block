@@ -1977,7 +1977,7 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 	return &device, nil
 }
 
-//FindLoginSessions finds applications
+//FindApplicationLoginSessions finds applications login session
 func (sa *Adapter) FindApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier string) ([]model.LoginSession, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
 		primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "identifier", Value: identifier},
