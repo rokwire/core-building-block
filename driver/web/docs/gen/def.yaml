@@ -3,7 +3,7 @@
   "info": {
     "title": "Rokwire Core Building Block API",
     "description": "Core Building Block API Documentation",
-    "version": "1.17.0"
+    "version": "1.18.0"
   },
   "servers": [
     {
@@ -62,7 +62,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_shared_Login"
+                "$ref": "#/components/schemas/_shared_req_Login"
               },
               "examples": {
                 "email-sign_in": {
@@ -98,10 +98,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/_res_shared_Login_Mfa"
+                      "$ref": "#/components/schemas/_shared_res_Login_Mfa"
                     },
                     {
-                      "$ref": "#/components/schemas/_res_shared_Login"
+                      "$ref": "#/components/schemas/_shared_res_Login"
                     }
                   ]
                 }
@@ -169,7 +169,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_shared_Login_Mfa"
+                "$ref": "#/components/schemas/_shared_req_Login_Mfa"
               }
             }
           },
@@ -181,7 +181,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_res_shared_Login"
+                  "$ref": "#/components/schemas/_shared_res_Login"
                 }
               }
             }
@@ -210,7 +210,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_shared_Refresh"
+                "$ref": "#/components/schemas/_shared_req_Refresh"
               }
             }
           },
@@ -222,7 +222,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_res_shared_Refresh"
+                  "$ref": "#/components/schemas/_shared_res_Refresh"
                 }
               }
             }
@@ -250,7 +250,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_shared_LoginUrl"
+                "$ref": "#/components/schemas/_shared_req_LoginUrl"
               }
             }
           },
@@ -262,7 +262,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_res_shared_LoginUrl"
+                  "$ref": "#/components/schemas/_shared_res_LoginUrl"
                 }
               }
             }
@@ -346,7 +346,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_credential_send-verify_Request"
+                "$ref": "#/components/schemas/_services_req_credential_send-verify"
               }
             }
           },
@@ -387,7 +387,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_credential_forgot_initiate_Request"
+                "$ref": "#/components/schemas/_services_req_credential_forgot_initiate"
               }
             }
           },
@@ -426,7 +426,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_credential_forgot_complete_Request"
+                "$ref": "#/components/schemas/_services_req_credential_forgot_complete"
               }
             }
           },
@@ -471,7 +471,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_credential_update_Request"
+                "$ref": "#/components/schemas/_services_req_credential_update"
               }
             }
           },
@@ -512,7 +512,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_shared_Mfa"
+                "$ref": "#/components/schemas/_shared_req_Mfa"
               }
             }
           },
@@ -556,7 +556,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_account-exists_Request"
+                "$ref": "#/components/schemas/_services_req_account-exists"
               }
             }
           },
@@ -568,7 +568,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_res_account-exists_Response"
+                  "$ref": "#/components/schemas/_services_res_account-exists"
                 }
               }
             }
@@ -601,7 +601,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_account_auth-type_link_Request"
+                "$ref": "#/components/schemas/_services_req_account_auth-type-link"
               },
               "examples": {
                 "email-sign_up": {
@@ -661,7 +661,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_authorize-service_Request"
+                "$ref": "#/components/schemas/_services_req_authorize-service"
               }
             }
           }
@@ -672,7 +672,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_res_authorize-service_Response"
+                  "$ref": "#/components/schemas/_services_res_authorize-service"
                 },
                 "examples": {
                   "authorized": {
@@ -802,7 +802,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_res_shared_Account"
+                  "$ref": "#/components/schemas/_shared_res_Account"
                 }
               }
             }
@@ -839,7 +839,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/_res_shared_Mfa"
+                    "$ref": "#/components/schemas/_shared_res_Mfa"
                   }
                 }
               }
@@ -872,7 +872,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_shared_Mfa"
+                "$ref": "#/components/schemas/_shared_req_Mfa"
               },
               "examples": {
                 "email": {
@@ -890,7 +890,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_res_shared_Mfa"
+                  "$ref": "#/components/schemas/_shared_res_Mfa"
                 }
               }
             }
@@ -922,7 +922,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_shared_Mfa"
+                "$ref": "#/components/schemas/_shared_req_Mfa"
               },
               "examples": {
                 "email": {
@@ -1079,7 +1079,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_shared_Profile"
+                "$ref": "#/components/schemas/_shared_req_Profile"
               }
             }
           },
@@ -1142,7 +1142,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_shared_Login"
+                "$ref": "#/components/schemas/_shared_req_Login"
               },
               "examples": {
                 "email-sign_in": {
@@ -1178,10 +1178,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/_res_shared_Login_Mfa"
+                      "$ref": "#/components/schemas/_shared_res_Login_Mfa"
                     },
                     {
-                      "$ref": "#/components/schemas/_res_shared_Login"
+                      "$ref": "#/components/schemas/_shared_res_Login"
                     }
                   ]
                 }
@@ -1225,7 +1225,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_shared_Login_Mfa"
+                "$ref": "#/components/schemas/_shared_req_Login_Mfa"
               }
             }
           },
@@ -1237,7 +1237,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_res_shared_Login"
+                  "$ref": "#/components/schemas/_shared_res_Login"
                 }
               }
             }
@@ -1266,7 +1266,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_shared_Refresh"
+                "$ref": "#/components/schemas/_shared_req_Refresh"
               }
             }
           },
@@ -1278,7 +1278,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_res_shared_Refresh"
+                  "$ref": "#/components/schemas/_shared_res_Refresh"
                 }
               }
             }
@@ -1306,7 +1306,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_shared_LoginUrl"
+                "$ref": "#/components/schemas/_shared_req_LoginUrl"
               }
             }
           },
@@ -1318,7 +1318,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_res_shared_LoginUrl"
+                  "$ref": "#/components/schemas/_shared_res_LoginUrl"
                 }
               }
             }
@@ -1347,7 +1347,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_shared_Mfa"
+                "$ref": "#/components/schemas/_shared_req_Mfa"
               }
             }
           },
@@ -1410,7 +1410,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_req_admin_app-token_Response"
+                  "$ref": "#/components/schemas/_admin_req_app-token"
                 }
               }
             }
@@ -1445,7 +1445,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_res_shared_Account"
+                  "$ref": "#/components/schemas/_shared_res_Account"
                 }
               }
             }
@@ -1482,7 +1482,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/_res_shared_Mfa"
+                    "$ref": "#/components/schemas/_shared_res_Mfa"
                   }
                 }
               }
@@ -1529,7 +1529,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_res_shared_Mfa"
+                  "$ref": "#/components/schemas/_shared_res_Mfa"
                 }
               }
             }
@@ -1680,7 +1680,7 @@
               "schema": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/_res_shared_Account"
+                  "$ref": "#/components/schemas/_shared_res_Account"
                 }
               }
             }
@@ -1719,6 +1719,51 @@
                   "items": {
                     "$ref": "#/components/schemas/AppOrgGroupFields"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Create application group",
+        "description": "Create application group\n\n **Auth:** Requires auth token with 'all_admin_core'\n - bearerAuth: []\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Application group",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_admin_req_create-application_group"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Success"
                 }
               }
             }
@@ -1821,7 +1866,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_admin_application_roles_Request"
+                "$ref": "#/components/schemas/_admin_req_create-application_role"
               }
             }
           },
@@ -2210,7 +2255,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_update_Organization_Request"
+                "$ref": "#/components/schemas/_system_req_update_Organization"
               }
             }
           },
@@ -2270,7 +2315,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_req_get_Organization_Request"
+                  "$ref": "#/components/schemas/_system_req_get_Organization"
                 }
               }
             }
@@ -2311,7 +2356,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/_res_get_Organizations_Response"
+                    "$ref": "#/components/schemas/_system_res_get_Organizations"
                   }
                 }
               }
@@ -2345,7 +2390,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_create-Organization_Request"
+                "$ref": "#/components/schemas/_system_req_create-Organization"
               }
             }
           },
@@ -2599,7 +2644,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_req_get_Application_Request"
+                  "$ref": "#/components/schemas/_system_req_get_Application"
                 }
               }
             }
@@ -2640,7 +2685,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/_res_get_Applications_Response"
+                    "$ref": "#/components/schemas/_system_res_get_Applications"
                   }
                 }
               }
@@ -2674,7 +2719,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_create_Application_Request"
+                "$ref": "#/components/schemas/_system_req_create_Application"
               }
             }
           },
@@ -2722,7 +2767,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_permissions_Request"
+                "$ref": "#/components/schemas/_system_req_permissions"
               }
             }
           },
@@ -2768,7 +2813,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_permissions_Request"
+                "$ref": "#/components/schemas/_system_req_permissions"
               }
             }
           },
@@ -2816,7 +2861,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_application-roles_Request"
+                "$ref": "#/components/schemas/_system_req_application-roles"
               }
             }
           },
@@ -2916,7 +2961,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_account-permissions_Request"
+                "$ref": "#/components/schemas/_system_req_account-permissions"
               }
             }
           },
@@ -2964,7 +3009,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_account-roles_Request"
+                "$ref": "#/components/schemas/_system_req_account-roles"
               }
             }
           },
@@ -3015,7 +3060,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/_res_shared_Mfa"
+                    "$ref": "#/components/schemas/_shared_res_Mfa"
                   }
                 }
               }
@@ -3063,7 +3108,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_res_shared_Mfa"
+                  "$ref": "#/components/schemas/_shared_res_Mfa"
                 }
               }
             }
@@ -4134,7 +4179,7 @@
           }
         }
       },
-      "_req_shared_Login": {
+      "_shared_req_Login": {
         "required": [
           "auth_type",
           "app_type_identifier",
@@ -4165,16 +4210,16 @@
           "creds": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/_req_shared_CredsEmail"
+                "$ref": "#/components/schemas/_shared_req_CredsEmail"
               },
               {
-                "$ref": "#/components/schemas/_req_shared_CredsTwilioPhone"
+                "$ref": "#/components/schemas/_shared_req_CredsTwilioPhone"
               },
               {
-                "$ref": "#/components/schemas/_req_shared_CredsOIDC"
+                "$ref": "#/components/schemas/_shared_req_CredsOIDC"
               },
               {
-                "$ref": "#/components/schemas/_req_shared_CredsAPIKey"
+                "$ref": "#/components/schemas/_shared_req_CredsAPIKey"
               }
             ]
           },
@@ -4182,21 +4227,21 @@
             "type": "object",
             "anyOf": [
               {
-                "$ref": "#/components/schemas/_req_shared_ParamsEmail"
+                "$ref": "#/components/schemas/_shared_req_ParamsEmail"
               },
               {
-                "$ref": "#/components/schemas/_req_shared_ParamsOIDC"
+                "$ref": "#/components/schemas/_shared_req_ParamsOIDC"
               },
               {
-                "$ref": "#/components/schemas/_req_shared_ParamsNone"
+                "$ref": "#/components/schemas/_shared_req_ParamsNone"
               }
             ]
           },
           "device": {
-            "$ref": "#/components/schemas/_req_shared_Login_Device"
+            "$ref": "#/components/schemas/_shared_req_Login_Device"
           },
           "profile": {
-            "$ref": "#/components/schemas/_req_shared_ProfileNullable"
+            "$ref": "#/components/schemas/_shared_req_ProfileNullable"
           },
           "preferences": {
             "type": "object",
@@ -4204,7 +4249,7 @@
           }
         }
       },
-      "_req_shared_Login_Mfa": {
+      "_shared_req_Login_Mfa": {
         "required": [
           "api_key",
           "account_id",
@@ -4245,7 +4290,7 @@
           }
         }
       },
-      "_req_shared_Login_Device": {
+      "_shared_req_Login_Device": {
         "required": [
           "type"
         ],
@@ -4269,7 +4314,7 @@
           }
         }
       },
-      "_req_shared_LoginUrl": {
+      "_shared_req_LoginUrl": {
         "required": [
           "auth_type",
           "app_type_identifier",
@@ -4299,7 +4344,7 @@
           }
         }
       },
-      "_req_shared_Refresh": {
+      "_shared_req_Refresh": {
         "required": [
           "api_key",
           "refresh_token"
@@ -4314,7 +4359,7 @@
           }
         }
       },
-      "_req_shared_Mfa": {
+      "_shared_req_Mfa": {
         "required": [
           "identifier",
           "type"
@@ -4337,7 +4382,7 @@
           }
         }
       },
-      "_req_shared_CredsEmail": {
+      "_shared_req_CredsEmail": {
         "required": [
           "email",
           "password"
@@ -4353,7 +4398,7 @@
           }
         }
       },
-      "_req_shared_CredsTwilioPhone": {
+      "_shared_req_CredsTwilioPhone": {
         "type": "object",
         "description": "Auth login creds for auth_type=\"twilio_phone\"",
         "required": [
@@ -4368,11 +4413,11 @@
           }
         }
       },
-      "_req_shared_CredsOIDC": {
+      "_shared_req_CredsOIDC": {
         "type": "string",
         "description": "Auth login creds for auth_type=\"oidc\" (or variants)\n  - full redirect URI received from OIDC provider\n"
       },
-      "_req_shared_CredsAPIKey": {
+      "_shared_req_CredsAPIKey": {
         "type": "object",
         "description": "Auth login creds for auth_type=\"anonymous\"",
         "properties": {
@@ -4381,7 +4426,7 @@
           }
         }
       },
-      "_req_shared_ParamsEmail": {
+      "_shared_req_ParamsEmail": {
         "type": "object",
         "description": "Auth login params for auth_type=\"email\"",
         "properties": {
@@ -4395,7 +4440,7 @@
           }
         }
       },
-      "_req_shared_ParamsOIDC": {
+      "_shared_req_ParamsOIDC": {
         "type": "object",
         "description": "Auth login params for auth_type=\"oidc\" (or variants)",
         "properties": {
@@ -4407,12 +4452,12 @@
           }
         }
       },
-      "_req_shared_ParamsNone": {
+      "_shared_req_ParamsNone": {
         "type": "object",
         "description": "Auth login request params for unlisted auth_types (None)",
         "nullable": true
       },
-      "_req_shared_Profile": {
+      "_shared_req_Profile": {
         "type": "object",
         "properties": {
           "photo_url": {
@@ -4457,7 +4502,7 @@
           }
         }
       },
-      "_req_shared_ProfileNullable": {
+      "_shared_req_ProfileNullable": {
         "type": "object",
         "nullable": true,
         "properties": {
@@ -4503,7 +4548,7 @@
           }
         }
       },
-      "_req_shared_ParamsSetEmailCredential": {
+      "_shared_req_ParamsSetEmailCredential": {
         "required": [
           "new_password",
           "confirm_password"
@@ -4518,14 +4563,14 @@
           }
         }
       },
-      "_res_shared_Login": {
+      "_shared_res_Login": {
         "type": "object",
         "properties": {
           "token": {
-            "$ref": "#/components/schemas/_res_shared_RokwireToken"
+            "$ref": "#/components/schemas/_shared_res_RokwireToken"
           },
           "account": {
-            "$ref": "#/components/schemas/_res_shared_Account"
+            "$ref": "#/components/schemas/_shared_res_Account"
           },
           "params": {
             "type": "object",
@@ -4578,7 +4623,7 @@
           }
         }
       },
-      "_res_shared_Login_Mfa": {
+      "_shared_res_Login_Mfa": {
         "required": [
           "enrolled",
           "account_id",
@@ -4590,7 +4635,7 @@
           "enrolled": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/_res_shared_Mfa"
+              "$ref": "#/components/schemas/_shared_res_Mfa"
             }
           },
           "account_id": {
@@ -4607,19 +4652,19 @@
             "nullable": true,
             "anyOf": [
               {
-                "$ref": "#/components/schemas/_res_shared_Login/properties/params/anyOf/0"
+                "$ref": "#/components/schemas/_shared_res_Login/properties/params/anyOf/0"
               },
               {
-                "$ref": "#/components/schemas/_res_shared_Login/properties/params/anyOf/1"
+                "$ref": "#/components/schemas/_shared_res_Login/properties/params/anyOf/1"
               },
               {
-                "$ref": "#/components/schemas/_res_shared_Login/properties/params/anyOf/2"
+                "$ref": "#/components/schemas/_shared_res_Login/properties/params/anyOf/2"
               }
             ]
           }
         }
       },
-      "_res_shared_LoginUrl": {
+      "_shared_res_LoginUrl": {
         "required": [
           "login_url"
         ],
@@ -4634,30 +4679,30 @@
           }
         }
       },
-      "_res_shared_Refresh": {
+      "_shared_res_Refresh": {
         "type": "object",
         "properties": {
           "token": {
-            "$ref": "#/components/schemas/_res_shared_RokwireToken"
+            "$ref": "#/components/schemas/_shared_res_RokwireToken"
           },
           "params": {
             "type": "object",
             "nullable": true,
             "anyOf": [
               {
-                "$ref": "#/components/schemas/_res_shared_Login/properties/params/anyOf/0"
+                "$ref": "#/components/schemas/_shared_res_Login/properties/params/anyOf/0"
               },
               {
-                "$ref": "#/components/schemas/_res_shared_Login/properties/params/anyOf/1"
+                "$ref": "#/components/schemas/_shared_res_Login/properties/params/anyOf/1"
               },
               {
-                "$ref": "#/components/schemas/_res_shared_Login/properties/params/anyOf/2"
+                "$ref": "#/components/schemas/_shared_res_Login/properties/params/anyOf/2"
               }
             ]
           }
         }
       },
-      "_res_shared_Account": {
+      "_shared_res_Account": {
         "required": [
           "id"
         ],
@@ -4699,7 +4744,7 @@
           }
         }
       },
-      "_res_shared_Mfa": {
+      "_shared_res_Mfa": {
         "type": "object",
         "properties": {
           "type": {
@@ -4713,7 +4758,7 @@
           }
         }
       },
-      "_res_shared_RokwireToken": {
+      "_shared_res_RokwireToken": {
         "type": "object",
         "properties": {
           "access_token": {
@@ -4733,7 +4778,7 @@
           }
         }
       },
-      "_req_account-exists_Request": {
+      "_services_req_account-exists": {
         "required": [
           "auth_type",
           "app_type_identifier",
@@ -4767,10 +4812,10 @@
           }
         }
       },
-      "_res_account-exists_Response": {
+      "_services_res_account-exists": {
         "type": "boolean"
       },
-      "_req_account_auth-type_link_Request": {
+      "_services_req_account_auth-type-link": {
         "required": [
           "auth_type",
           "app_type_identifier",
@@ -4793,13 +4838,13 @@
           "creds": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/_req_shared_CredsEmail"
+                "$ref": "#/components/schemas/_shared_req_CredsEmail"
               },
               {
-                "$ref": "#/components/schemas/_req_shared_CredsTwilioPhone"
+                "$ref": "#/components/schemas/_shared_req_CredsTwilioPhone"
               },
               {
-                "$ref": "#/components/schemas/_req_shared_CredsOIDC"
+                "$ref": "#/components/schemas/_shared_req_CredsOIDC"
               }
             ]
           },
@@ -4807,19 +4852,19 @@
             "type": "object",
             "anyOf": [
               {
-                "$ref": "#/components/schemas/_req_shared_ParamsEmail"
+                "$ref": "#/components/schemas/_shared_req_ParamsEmail"
               },
               {
-                "$ref": "#/components/schemas/_req_shared_ParamsOIDC"
+                "$ref": "#/components/schemas/_shared_req_ParamsOIDC"
               },
               {
-                "$ref": "#/components/schemas/_req_shared_ParamsNone"
+                "$ref": "#/components/schemas/_shared_req_ParamsNone"
               }
             ]
           }
         }
       },
-      "_req_credential_update_Request": {
+      "_services_req_credential_update": {
         "required": [
           "account_auth_type_id"
         ],
@@ -4832,13 +4877,13 @@
             "type": "object",
             "anyOf": [
               {
-                "$ref": "#/components/schemas/_req_shared_ParamsSetEmailCredential"
+                "$ref": "#/components/schemas/_shared_req_ParamsSetEmailCredential"
               }
             ]
           }
         }
       },
-      "_req_credential_send-verify_Request": {
+      "_services_req_credential_send-verify": {
         "required": [
           "auth_type",
           "app_type_identifier",
@@ -4868,7 +4913,7 @@
           }
         }
       },
-      "_req_credential_forgot_initiate_Request": {
+      "_services_req_credential_forgot_initiate": {
         "required": [
           "auth_type",
           "app_type_identifier",
@@ -4898,7 +4943,7 @@
           }
         }
       },
-      "_req_credential_forgot_complete_Request": {
+      "_services_req_credential_forgot_complete": {
         "required": [
           "credential_id",
           "reset_code"
@@ -4915,13 +4960,13 @@
             "type": "object",
             "anyOf": [
               {
-                "$ref": "#/components/schemas/_req_shared_ParamsSetEmailCredential"
+                "$ref": "#/components/schemas/_shared_req_ParamsSetEmailCredential"
               }
             ]
           }
         }
       },
-      "_req_authorize-service_Request": {
+      "_services_req_authorize-service": {
         "required": [
           "service_id"
         ],
@@ -4939,7 +4984,7 @@
           }
         }
       },
-      "_res_authorize-service_Response": {
+      "_services_res_authorize-service": {
         "type": "object",
         "properties": {
           "access_token": {
@@ -4963,7 +5008,7 @@
           }
         }
       },
-      "_req_admin_app-token_Response": {
+      "_admin_req_app-token": {
         "required": [
           "token"
         ],
@@ -4974,7 +5019,7 @@
           }
         }
       },
-      "_req_admin_application_roles_Request": {
+      "_admin_req_create-application_role": {
         "required": [
           "name",
           "description",
@@ -4996,7 +5041,30 @@
           }
         }
       },
-      "_req_create-Organization_Request": {
+      "_admin_req_create-application_group": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "_system_req_create-Organization": {
         "required": [
           "name",
           "type"
@@ -5025,37 +5093,7 @@
           }
         }
       },
-      "_res_create_Organization_Response": {
-        "required": [
-          "id",
-          "name",
-          "type"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "readOnly": true,
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "micro",
-              "small",
-              "medium",
-              "large",
-              "huge"
-            ]
-          },
-          "config": {
-            "$ref": "#/components/schemas/OrganizationConfigFields"
-          }
-        }
-      },
-      "_req_update_Organization_Request": {
+      "_system_res_create_Organization": {
         "required": [
           "id",
           "name",
@@ -5085,7 +5123,7 @@
           }
         }
       },
-      "_res_update_Organization_Response": {
+      "_system_req_update_Organization": {
         "required": [
           "id",
           "name",
@@ -5115,7 +5153,37 @@
           }
         }
       },
-      "_req_get_Organization_Request": {
+      "_system_res_update_Organization": {
+        "required": [
+          "id",
+          "name",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "readOnly": true,
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "micro",
+              "small",
+              "medium",
+              "large",
+              "huge"
+            ]
+          },
+          "config": {
+            "$ref": "#/components/schemas/OrganizationConfigFields"
+          }
+        }
+      },
+      "_system_req_get_Organization": {
         "required": [
           "id"
         ],
@@ -5126,7 +5194,7 @@
           }
         }
       },
-      "_res_get_Organization_Response": {
+      "_system_res_get_Organization": {
         "required": [
           "id",
           "name",
@@ -5156,7 +5224,7 @@
           }
         }
       },
-      "_res_get_Organizations_Response": {
+      "_system_res_get_Organizations": {
         "required": [
           "id",
           "name",
@@ -5189,7 +5257,7 @@
           }
         }
       },
-      "_req_create_Application_Request": {
+      "_system_req_create_Application": {
         "required": [
           "name",
           "multi_tenant",
@@ -5235,7 +5303,7 @@
           }
         }
       },
-      "_req_get_Application_Request": {
+      "_system_req_get_Application": {
         "required": [
           "id"
         ],
@@ -5247,7 +5315,7 @@
           }
         }
       },
-      "_res_get_Application_Response": {
+      "_system_res_get_Application": {
         "required": [
           "id",
           "name"
@@ -5279,7 +5347,7 @@
           }
         }
       },
-      "_res_get_Applications_Response": {
+      "_system_res_get_Applications": {
         "required": [
           "id",
           "name",
@@ -5310,7 +5378,7 @@
           }
         }
       },
-      "_req_permissions_Request": {
+      "_system_req_permissions": {
         "required": [
           "name"
         ],
@@ -5331,7 +5399,7 @@
           }
         }
       },
-      "_req_application-roles_Request": {
+      "_system_req_application-roles": {
         "required": [
           "name",
           "app_id",
@@ -5357,7 +5425,7 @@
           }
         }
       },
-      "_req_account-permissions_Request": {
+      "_system_req_account-permissions": {
         "required": [
           "account_id",
           "app_id",
@@ -5379,7 +5447,7 @@
           }
         }
       },
-      "_req_account-roles_Request": {
+      "_system_req_account-roles": {
         "required": [
           "account_id",
           "app_id",
