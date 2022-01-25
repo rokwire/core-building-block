@@ -256,13 +256,13 @@ func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	return r0, r1
 }
 
-// FindApplicationLoginSessions provides a mock function with given fields: appID, orgID, sessionID
-func (_m *Storage) FindApplicationLoginSessions(appID string, orgID string, sessionID string) ([]model.LoginSession, error) {
-	ret := _m.Called(appID, orgID, sessionID)
+// FindApplicationLoginSessions provides a mock function with given fields: appID, orgID, identifier
+func (_m *Storage) FindApplicationLoginSessions(appID string, orgID string, identifier string) ([]model.LoginSession, error) {
+	ret := _m.Called(appID, orgID, identifier)
 
 	var r0 []model.LoginSession
 	if rf, ok := ret.Get(0).(func(string, string, string) []model.LoginSession); ok {
-		r0 = rf(appID, orgID, sessionID)
+		r0 = rf(appID, orgID, identifier)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.LoginSession)
@@ -271,7 +271,7 @@ func (_m *Storage) FindApplicationLoginSessions(appID string, orgID string, sess
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, string, string) error); ok {
-		r1 = rf(appID, orgID, sessionID)
+		r1 = rf(appID, orgID, identifier)
 	} else {
 		r1 = ret.Error(1)
 	}
