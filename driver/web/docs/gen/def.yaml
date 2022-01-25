@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.17.0
+  version: 1.18.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -39,7 +39,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_shared_Login'
+              $ref: '#/components/schemas/_shared_req_Login'
             examples:
               email-sign_in:
                 summary: Email - sign in
@@ -191,8 +191,8 @@ paths:
             application/json:
               schema:
                 anyOf:
-                  - $ref: '#/components/schemas/_res_shared_Login_Mfa'
-                  - $ref: '#/components/schemas/_res_shared_Login'
+                  - $ref: '#/components/schemas/_shared_res_Login_Mfa'
+                  - $ref: '#/components/schemas/_shared_res_Login'
         '400':
           description: Bad request
         '401':
@@ -244,7 +244,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_shared_Login_Mfa'
+              $ref: '#/components/schemas/_shared_req_Login_Mfa'
         required: true
       responses:
         '200':
@@ -252,7 +252,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Login'
+                $ref: '#/components/schemas/_shared_res_Login'
         '400':
           description: Bad request
         '401':
@@ -272,7 +272,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_shared_Refresh'
+              $ref: '#/components/schemas/_shared_req_Refresh'
         required: true
       responses:
         '200':
@@ -280,7 +280,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Refresh'
+                $ref: '#/components/schemas/_shared_res_Refresh'
         '400':
           description: Bad request
         '401':
@@ -298,7 +298,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_shared_LoginUrl'
+              $ref: '#/components/schemas/_shared_req_LoginUrl'
         required: true
       responses:
         '200':
@@ -306,7 +306,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_LoginUrl'
+                $ref: '#/components/schemas/_shared_res_LoginUrl'
         '400':
           description: Bad request
         '401':
@@ -364,7 +364,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_credential_send-verify_Request'
+              $ref: '#/components/schemas/_services_req_credential_send-verify'
         required: true
       responses:
         '200':
@@ -393,7 +393,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_credential_forgot_initiate_Request'
+              $ref: '#/components/schemas/_services_req_credential_forgot_initiate'
         required: true
       responses:
         '200':
@@ -417,7 +417,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_credential_forgot_complete_Request'
+              $ref: '#/components/schemas/_services_req_credential_forgot_complete'
         required: true
       responses:
         '200':
@@ -447,7 +447,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_credential_update_Request'
+              $ref: '#/components/schemas/_services_req_credential_update'
         required: true
       responses:
         '200':
@@ -475,7 +475,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_shared_Mfa'
+              $ref: '#/components/schemas/_shared_req_Mfa'
         required: true
       responses:
         '200':
@@ -505,7 +505,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_account-exists_Request'
+              $ref: '#/components/schemas/_services_req_account-exists'
         required: true
       responses:
         '200':
@@ -513,7 +513,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_account-exists_Response'
+                $ref: '#/components/schemas/_services_res_account-exists'
         '400':
           description: Bad request
         '401':
@@ -535,7 +535,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_account_auth-type_link_Request'
+              $ref: '#/components/schemas/_services_req_account_auth-type-link'
             examples:
               email-sign_up:
                 summary: Email
@@ -608,14 +608,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_authorize-service_Request'
+              $ref: '#/components/schemas/_services_req_authorize-service'
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_authorize-service_Response'
+                $ref: '#/components/schemas/_services_res_authorize-service'
               examples:
                 authorized:
                   summary: Service authorized
@@ -734,7 +734,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Account'
+                $ref: '#/components/schemas/_shared_res_Account'
         '400':
           description: Bad request
         '401':
@@ -760,7 +760,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_res_shared_Mfa'
+                  $ref: '#/components/schemas/_shared_res_Mfa'
         '400':
           description: Bad request
         '401':
@@ -783,7 +783,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_shared_Mfa'
+              $ref: '#/components/schemas/_shared_req_Mfa'
             examples:
               email:
                 summary: Enroll in email MFA
@@ -799,7 +799,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Mfa'
+                $ref: '#/components/schemas/_shared_res_Mfa'
         '400':
           description: Bad request
         '401':
@@ -822,7 +822,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_shared_Mfa'
+              $ref: '#/components/schemas/_shared_req_Mfa'
             examples:
               email:
                 summary: Unenroll in email MFA
@@ -934,7 +934,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_shared_Profile'
+              $ref: '#/components/schemas/_shared_req_Profile'
         required: true
       responses:
         '200':
@@ -976,7 +976,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_shared_Login'
+              $ref: '#/components/schemas/_shared_req_Login'
             examples:
               email-sign_in:
                 summary: Email - sign in
@@ -1128,8 +1128,8 @@ paths:
             application/json:
               schema:
                 anyOf:
-                  - $ref: '#/components/schemas/_res_shared_Login_Mfa'
-                  - $ref: '#/components/schemas/_res_shared_Login'
+                  - $ref: '#/components/schemas/_shared_res_Login_Mfa'
+                  - $ref: '#/components/schemas/_shared_res_Login'
         '400':
           description: Bad request
         '401':
@@ -1158,7 +1158,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_shared_Login_Mfa'
+              $ref: '#/components/schemas/_shared_req_Login_Mfa'
         required: true
       responses:
         '200':
@@ -1166,7 +1166,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Login'
+                $ref: '#/components/schemas/_shared_res_Login'
         '400':
           description: Bad request
         '401':
@@ -1186,7 +1186,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_shared_Refresh'
+              $ref: '#/components/schemas/_shared_req_Refresh'
         required: true
       responses:
         '200':
@@ -1194,7 +1194,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Refresh'
+                $ref: '#/components/schemas/_shared_res_Refresh'
         '400':
           description: Bad request
         '401':
@@ -1212,7 +1212,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_shared_LoginUrl'
+              $ref: '#/components/schemas/_shared_req_LoginUrl'
         required: true
       responses:
         '200':
@@ -1220,7 +1220,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_LoginUrl'
+                $ref: '#/components/schemas/_shared_res_LoginUrl'
         '400':
           description: Bad request
         '401':
@@ -1240,7 +1240,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_shared_Mfa'
+              $ref: '#/components/schemas/_shared_req_Mfa'
         required: true
       responses:
         '200':
@@ -1283,7 +1283,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_req_admin_app-token_Response'
+                $ref: '#/components/schemas/_admin_req_app-token'
         '400':
           description: Bad request
         '401':
@@ -1307,7 +1307,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Account'
+                $ref: '#/components/schemas/_shared_res_Account'
         '400':
           description: Bad request
         '401':
@@ -1333,7 +1333,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_res_shared_Mfa'
+                  $ref: '#/components/schemas/_shared_res_Mfa'
         '400':
           description: Bad request
         '401':
@@ -1365,7 +1365,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Mfa'
+                $ref: '#/components/schemas/_shared_res_Mfa'
         '400':
           description: Bad request
         '401':
@@ -1436,7 +1436,7 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/_res_shared_Account'
+                $ref: '#/components/schemas/_shared_res_Account'
         '400':
           description: Bad request
         '401':
@@ -1483,7 +1483,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_admin_application_groups_Request'
+              $ref: '#/components/schemas/_admin_req_create-application_group'
         required: true
       responses:
         '200':
@@ -1563,7 +1563,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_admin_application_roles_Request'
+              $ref: '#/components/schemas/_admin_req_create-application_role'
         required: true
       responses:
         '200':
@@ -1824,7 +1824,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_update_Organization_Request'
+              $ref: '#/components/schemas/_system_req_update_Organization'
         required: true
       responses:
         '200':
@@ -1866,7 +1866,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_req_get_Organization_Request'
+                $ref: '#/components/schemas/_system_req_get_Organization'
         '400':
           description: Bad request
         '401':
@@ -1895,7 +1895,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_res_get_Organizations_Response'
+                  $ref: '#/components/schemas/_system_res_get_Organizations'
         '400':
           description: Bad request
         '401':
@@ -1918,7 +1918,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_create-Organization_Request'
+              $ref: '#/components/schemas/_system_req_create-Organization'
         required: true
       responses:
         '200':
@@ -2099,7 +2099,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_req_get_Application_Request'
+                $ref: '#/components/schemas/_system_req_get_Application'
         '400':
           description: Bad request
         '401':
@@ -2128,7 +2128,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_res_get_Applications_Response'
+                  $ref: '#/components/schemas/_system_res_get_Applications'
         '400':
           description: Bad request
         '401':
@@ -2151,7 +2151,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_create_Application_Request'
+              $ref: '#/components/schemas/_system_req_create_Application'
         required: true
       responses:
         '200':
@@ -2184,7 +2184,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_permissions_Request'
+              $ref: '#/components/schemas/_system_req_permissions'
         required: true
       responses:
         '200':
@@ -2216,7 +2216,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_permissions_Request'
+              $ref: '#/components/schemas/_system_req_permissions'
         required: true
       responses:
         '200':
@@ -2249,7 +2249,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_application-roles_Request'
+              $ref: '#/components/schemas/_system_req_application-roles'
         required: true
       responses:
         '200':
@@ -2318,7 +2318,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_account-permissions_Request'
+              $ref: '#/components/schemas/_system_req_account-permissions'
         required: true
       responses:
         '200':
@@ -2351,7 +2351,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_account-roles_Request'
+              $ref: '#/components/schemas/_system_req_account-roles'
         required: true
       responses:
         '200':
@@ -2387,7 +2387,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_res_shared_Mfa'
+                  $ref: '#/components/schemas/_shared_res_Mfa'
         '400':
           description: Bad request
         '401':
@@ -2420,7 +2420,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_shared_Mfa'
+                $ref: '#/components/schemas/_shared_res_Mfa'
         '400':
           description: Bad request
         '401':
@@ -3150,7 +3150,7 @@ components:
             - other
         os:
           type: string
-    _req_shared_Login:
+    _shared_req_Login:
       required:
         - auth_type
         - app_type_identifier
@@ -3174,24 +3174,24 @@ components:
           type: string
         creds:
           anyOf:
-            - $ref: '#/components/schemas/_req_shared_CredsEmail'
-            - $ref: '#/components/schemas/_req_shared_CredsTwilioPhone'
-            - $ref: '#/components/schemas/_req_shared_CredsOIDC'
-            - $ref: '#/components/schemas/_req_shared_CredsAPIKey'
+            - $ref: '#/components/schemas/_shared_req_CredsEmail'
+            - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_shared_req_CredsOIDC'
+            - $ref: '#/components/schemas/_shared_req_CredsAPIKey'
         params:
           type: object
           anyOf:
-            - $ref: '#/components/schemas/_req_shared_ParamsEmail'
-            - $ref: '#/components/schemas/_req_shared_ParamsOIDC'
-            - $ref: '#/components/schemas/_req_shared_ParamsNone'
+            - $ref: '#/components/schemas/_shared_req_ParamsEmail'
+            - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
+            - $ref: '#/components/schemas/_shared_req_ParamsNone'
         device:
-          $ref: '#/components/schemas/_req_shared_Login_Device'
+          $ref: '#/components/schemas/_shared_req_Login_Device'
         profile:
-          $ref: '#/components/schemas/_req_shared_ProfileNullable'
+          $ref: '#/components/schemas/_shared_req_ProfileNullable'
         preferences:
           type: object
           nullable: true
-    _req_shared_Login_Mfa:
+    _shared_req_Login_Mfa:
       required:
         - api_key
         - account_id
@@ -3221,7 +3221,7 @@ components:
             - recovery
         code:
           type: string
-    _req_shared_Login_Device:
+    _shared_req_Login_Device:
       required:
         - type
       type: object
@@ -3238,7 +3238,7 @@ components:
             - other
         os:
           type: string
-    _req_shared_LoginUrl:
+    _shared_req_LoginUrl:
       required:
         - auth_type
         - app_type_identifier
@@ -3259,7 +3259,7 @@ components:
           type: string
         redirect_uri:
           type: string
-    _req_shared_Refresh:
+    _shared_req_Refresh:
       required:
         - api_key
         - refresh_token
@@ -3269,7 +3269,7 @@ components:
           type: string
         refresh_token:
           type: string
-    _req_shared_Mfa:
+    _shared_req_Mfa:
       required:
         - identifier
         - type
@@ -3285,7 +3285,7 @@ components:
             - totp
         code:
           type: string
-    _req_shared_CredsEmail:
+    _shared_req_CredsEmail:
       required:
         - email
         - password
@@ -3296,7 +3296,7 @@ components:
           type: string
         password:
           type: string
-    _req_shared_CredsTwilioPhone:
+    _shared_req_CredsTwilioPhone:
       type: object
       description: Auth login creds for auth_type="twilio_phone"
       required:
@@ -3306,18 +3306,18 @@ components:
           type: string
         code:
           type: string
-    _req_shared_CredsOIDC:
+    _shared_req_CredsOIDC:
       type: string
       description: |
         Auth login creds for auth_type="oidc" (or variants)
           - full redirect URI received from OIDC provider
-    _req_shared_CredsAPIKey:
+    _shared_req_CredsAPIKey:
       type: object
       description: Auth login creds for auth_type="anonymous"
       properties:
         anonymous_id:
           type: string
-    _req_shared_ParamsEmail:
+    _shared_req_ParamsEmail:
       type: object
       description: Auth login params for auth_type="email"
       properties:
@@ -3327,7 +3327,7 @@ components:
         sign_up:
           type: boolean
           default: false
-    _req_shared_ParamsOIDC:
+    _shared_req_ParamsOIDC:
       type: object
       description: Auth login params for auth_type="oidc" (or variants)
       properties:
@@ -3335,11 +3335,11 @@ components:
           type: string
         pkce_verifier:
           type: string
-    _req_shared_ParamsNone:
+    _shared_req_ParamsNone:
       type: object
       description: Auth login request params for unlisted auth_types (None)
       nullable: true
-    _req_shared_Profile:
+    _shared_req_Profile:
       type: object
       properties:
         photo_url:
@@ -3372,7 +3372,7 @@ components:
         country:
           type: string
           nullable: true
-    _req_shared_ProfileNullable:
+    _shared_req_ProfileNullable:
       type: object
       nullable: true
       properties:
@@ -3406,7 +3406,7 @@ components:
         country:
           type: string
           nullable: true
-    _req_shared_ParamsSetEmailCredential:
+    _shared_req_ParamsSetEmailCredential:
       required:
         - new_password
         - confirm_password
@@ -3416,13 +3416,13 @@ components:
           type: string
         confirm_password:
           type: string
-    _res_shared_Login:
+    _shared_res_Login:
       type: object
       properties:
         token:
-          $ref: '#/components/schemas/_res_shared_RokwireToken'
+          $ref: '#/components/schemas/_shared_res_RokwireToken'
         account:
-          $ref: '#/components/schemas/_res_shared_Account'
+          $ref: '#/components/schemas/_shared_res_Account'
         params:
           type: object
           nullable: true
@@ -3453,7 +3453,7 @@ components:
               nullable: true
         message:
           type: string
-    _res_shared_Login_Mfa:
+    _shared_res_Login_Mfa:
       required:
         - enrolled
         - account_id
@@ -3464,7 +3464,7 @@ components:
         enrolled:
           type: array
           items:
-            $ref: '#/components/schemas/_res_shared_Mfa'
+            $ref: '#/components/schemas/_shared_res_Mfa'
         account_id:
           type: string
         session_id:
@@ -3475,10 +3475,10 @@ components:
           type: object
           nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/0'
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/1'
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/2'
-    _res_shared_LoginUrl:
+            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/0'
+            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/1'
+            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/2'
+    _shared_res_LoginUrl:
       required:
         - login_url
       type: object
@@ -3488,19 +3488,19 @@ components:
         params:
           type: object
           description: Params to be submitted with 'login' request (if necessary)
-    _res_shared_Refresh:
+    _shared_res_Refresh:
       type: object
       properties:
         token:
-          $ref: '#/components/schemas/_res_shared_RokwireToken'
+          $ref: '#/components/schemas/_shared_res_RokwireToken'
         params:
           type: object
           nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/0'
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/1'
-            - $ref: '#/components/schemas/_res_shared_Login/properties/params/anyOf/2'
-    _res_shared_Account:
+            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/0'
+            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/1'
+            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/2'
+    _shared_res_Account:
       required:
         - id
       type: object
@@ -3528,7 +3528,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
-    _res_shared_Mfa:
+    _shared_res_Mfa:
       type: object
       properties:
         type:
@@ -3537,7 +3537,7 @@ components:
           type: boolean
         params:
           type: object
-    _res_shared_RokwireToken:
+    _shared_res_RokwireToken:
       type: object
       properties:
         access_token:
@@ -3551,7 +3551,7 @@ components:
           type: string
           enum:
             - Bearer
-    _req_account-exists_Request:
+    _services_req_account-exists:
       required:
         - auth_type
         - app_type_identifier
@@ -3576,9 +3576,9 @@ components:
           type: string
         user_identifier:
           type: string
-    _res_account-exists_Response:
+    _services_res_account-exists:
       type: boolean
-    _req_account_auth-type_link_Request:
+    _services_req_account_auth-type-link:
       required:
         - auth_type
         - app_type_identifier
@@ -3596,15 +3596,15 @@ components:
           type: string
         creds:
           anyOf:
-            - $ref: '#/components/schemas/_req_shared_CredsEmail'
-            - $ref: '#/components/schemas/_req_shared_CredsTwilioPhone'
-            - $ref: '#/components/schemas/_req_shared_CredsOIDC'
+            - $ref: '#/components/schemas/_shared_req_CredsEmail'
+            - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_shared_req_CredsOIDC'
         params:
           type: object
           anyOf:
-            - $ref: '#/components/schemas/_req_shared_ParamsEmail'
-            - $ref: '#/components/schemas/_req_shared_ParamsOIDC'
-            - $ref: '#/components/schemas/_req_shared_ParamsNone'
+            - $ref: '#/components/schemas/_shared_req_ParamsEmail'
+            - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
+            - $ref: '#/components/schemas/_shared_req_ParamsNone'
     _res_account_auth-type_link_Response:
       required:
         - auth_types
@@ -3617,7 +3617,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
-    _req_credential_update_Request:
+    _services_req_credential_update:
       required:
         - account_auth_type_id
       type: object
@@ -3627,8 +3627,8 @@ components:
         params:
           type: object
           anyOf:
-            - $ref: '#/components/schemas/_req_shared_ParamsSetEmailCredential'
-    _req_credential_send-verify_Request:
+            - $ref: '#/components/schemas/_shared_req_ParamsSetEmailCredential'
+    _services_req_credential_send-verify:
       required:
         - auth_type
         - app_type_identifier
@@ -3649,7 +3649,7 @@ components:
           type: string
           enum:
             - email
-    _req_credential_forgot_initiate_Request:
+    _services_req_credential_forgot_initiate:
       required:
         - auth_type
         - app_type_identifier
@@ -3670,7 +3670,7 @@ components:
           type: string
         identifier:
           type: string
-    _req_credential_forgot_complete_Request:
+    _services_req_credential_forgot_complete:
       required:
         - credential_id
         - reset_code
@@ -3683,8 +3683,8 @@ components:
         params:
           type: object
           anyOf:
-            - $ref: '#/components/schemas/_req_shared_ParamsSetEmailCredential'
-    _req_authorize-service_Request:
+            - $ref: '#/components/schemas/_shared_req_ParamsSetEmailCredential'
+    _services_req_authorize-service:
       required:
         - service_id
       type: object
@@ -3696,7 +3696,7 @@ components:
           type: array
           items:
             type: string
-    _res_authorize-service_Response:
+    _services_res_authorize-service:
       type: object
       properties:
         access_token:
@@ -3712,14 +3712,14 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
-    _req_admin_app-token_Response:
+    _admin_req_app-token:
       required:
         - token
       type: object
       properties:
         token:
           type: string
-    _req_admin_application_roles_Request:
+    _admin_req_create-application_role:
       required:
         - name
         - description
@@ -3734,7 +3734,7 @@ components:
           type: array
           items:
             type: string
-    _req_admin_application_groups_Request:
+    _admin_req_create-application_group:
       required:
         - name
       type: object
@@ -3749,7 +3749,7 @@ components:
           type: array
           items:
             type: string
-    _req_create-Organization_Request:
+    _system_req_create-Organization:
       required:
         - name
         - type
@@ -3770,7 +3770,7 @@ components:
             - huge
         config:
           $ref: '#/components/schemas/OrganizationConfigFields'
-    _res_create_Organization_Response:
+    _system_res_create_Organization:
       required:
         - id
         - name
@@ -3792,7 +3792,7 @@ components:
             - huge
         config:
           $ref: '#/components/schemas/OrganizationConfigFields'
-    _req_update_Organization_Request:
+    _system_req_update_Organization:
       required:
         - id
         - name
@@ -3814,7 +3814,7 @@ components:
             - huge
         config:
           $ref: '#/components/schemas/OrganizationConfigFields'
-    _res_update_Organization_Response:
+    _system_res_update_Organization:
       required:
         - id
         - name
@@ -3836,14 +3836,14 @@ components:
             - huge
         config:
           $ref: '#/components/schemas/OrganizationConfigFields'
-    _req_get_Organization_Request:
+    _system_req_get_Organization:
       required:
         - id
       properties:
         id:
           readOnly: true
           type: string
-    _res_get_Organization_Response:
+    _system_res_get_Organization:
       required:
         - id
         - name
@@ -3865,7 +3865,7 @@ components:
             - huge
         config:
           $ref: '#/components/schemas/OrganizationConfigFields'
-    _res_get_Organizations_Response:
+    _system_res_get_Organizations:
       required:
         - id
         - name
@@ -3889,7 +3889,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OrganizationConfigFields'
-    _req_create_Application_Request:
+    _system_req_create_Application:
       required:
         - name
         - multi_tenant
@@ -3920,7 +3920,7 @@ components:
                 type: array
                 items:
                   type: string
-    _req_get_Application_Request:
+    _system_req_get_Application:
       required:
         - id
       type: string
@@ -3928,7 +3928,7 @@ components:
         id:
           readOnly: true
           type: string
-    _res_get_Application_Response:
+    _system_res_get_Application:
       required:
         - id
         - name
@@ -3950,7 +3950,7 @@ components:
           $ref: '#/components/schemas/ApplicationOrganization'
         applicationType:
           $ref: '#/components/schemas/ApplicationType'
-    _res_get_Applications_Response:
+    _system_res_get_Applications:
       required:
         - id
         - name
@@ -3972,7 +3972,7 @@ components:
           type: integer
         application_types:
           $ref: '#/components/schemas/ApplicationTypeFields'
-    _req_permissions_Request:
+    _system_req_permissions:
       required:
         - name
       type: object
@@ -3986,7 +3986,7 @@ components:
           description: permissions that could assign current permission to accounts
           items:
             type: string
-    _req_application-roles_Request:
+    _system_req_application-roles:
       required:
         - name
         - app_id
@@ -4004,7 +4004,7 @@ components:
           type: array
           items:
             type: string
-    _req_account-permissions_Request:
+    _system_req_account-permissions:
       required:
         - account_id
         - app_id
@@ -4019,7 +4019,7 @@ components:
           type: array
           items:
             type: string
-    _req_account-roles_Request:
+    _system_req_account-roles:
       required:
         - account_id
         - app_id
