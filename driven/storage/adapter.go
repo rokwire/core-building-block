@@ -1978,9 +1978,9 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 }
 
 //FindLoginSessions finds applications
-func (sa *Adapter) FindApplicationLoginSessions(appID string, orgID string, sessionID string) ([]model.LoginSession, error) {
+func (sa *Adapter) FindApplicationLoginSessions(appID string, orgID string, identifier string) ([]model.LoginSession, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
-		primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: sessionID}}
+		primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "_id", Value: identifier}}
 	var result []loginSession
 	options := options.Find()
 	var limitLoginSession int64

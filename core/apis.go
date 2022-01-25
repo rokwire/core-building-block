@@ -143,8 +143,8 @@ func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, er
 	return s.app.admGetAccount(accountID)
 }
 
-func (s *administrationImpl) AdmGetApplicationLoginSessions(appID string, orgID string, sessionID string) ([]model.LoginSession, error) {
-	return s.app.admGetApplicationLoginSessions(appID, orgID, sessionID)
+func (s *administrationImpl) AdmGetApplicationLoginSessions(appID string, orgID string, identifier string) ([]model.LoginSession, error) {
+	return s.app.admGetApplicationLoginSessions(appID, orgID, identifier)
 }
 
 ///

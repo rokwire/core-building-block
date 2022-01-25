@@ -293,9 +293,9 @@ func (app *application) admGetAccounts(appID string, orgID string, accountID *st
 	return accounts, nil
 }
 
-func (app *application) admGetApplicationLoginSessions(appID string, orgID string, sessionID string) ([]model.LoginSession, error) {
+func (app *application) admGetApplicationLoginSessions(appID string, orgID string, identifier string) ([]model.LoginSession, error) {
 	//find the login sessions
-	loginSessions, err := app.storage.FindApplicationLoginSessions(appID, orgID, sessionID)
+	loginSessions, err := app.storage.FindApplicationLoginSessions(appID, orgID, identifier)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 	}

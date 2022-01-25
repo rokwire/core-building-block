@@ -299,12 +299,12 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 
 func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
-	sessionID := params["id"]
-	if len(sessionID) <= 0 {
+	identifier := params["id"]
+	if len(identifier) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, sessionID)
+	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, identifier)
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding login sessions", model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
 	}
