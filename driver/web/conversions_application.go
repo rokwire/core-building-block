@@ -12,25 +12,6 @@ func applicationToDef(item model.Application) Def.ApplicationFields {
 		RequiresOwnUsers: &item.RequiresOwnUsers}
 }
 
-//ApplicationType
-func appTypeToDef(item *model.ApplicationType) *Def.ApplicationTypeFields {
-	return &Def.ApplicationTypeFields{Identifier: item.Identifier, Name: &item.Name, Versions: &item.Versions}
-}
-
-//AuthType
-func authTypeToDef(item *model.AuthType) *Def.AuthTypeFields {
-	return &Def.AuthTypeFields{Code: &item.Code, Description: &item.Description, IgnoreMfa: &item.IgnoreMFA, IsExternal: &item.IsExternal,
-		Params: &Def.AuthTypeFields_Params{AdditionalProperties: map[string]interface{}{}}}
-}
-
-//ApplicationOrganization
-func appOrgToDef(item *model.ApplicationOrganization) *Def.ApplicationOrganization {
-
-	return &Def.ApplicationOrganization{Organization: &Def.Organization{Config: &Def.OrganizationConfig{Fields: &Def.OrganizationConfigFields{Domains: &item.Organization.Config.Domains}}},
-		Application: &Def.Application{Fields: &Def.ApplicationFields{MultiTenant: &item.Application.MultiTenant,
-			Name: item.Application.Name, RequiresOwnUsers: &item.Application.RequiresOwnUsers}}}
-}
-
 func applicationsToDef(item []model.Application) []Def.ApplicationFields {
 	result := make([]Def.ApplicationFields, len(item))
 	for i, item := range item {
@@ -93,11 +74,6 @@ func organizationsToDef(items []model.Organization) []Def.OrganizationFields {
 		result[i] = *organizationToDef(&item)
 	}
 	return result
-}
-
-func loginSessionFieldsToDef(item model.LoginSession) *Def.LoginSessionFields {
-	return &Def.LoginSessionFields{AccessToken: &item.AccessToken, Anonymous: &item.Anonymous, Id: &item.ID, IdAddress: &item.IPAddress,
-		Identifier: &item.Identifier}
 }
 
 //LoginSession
