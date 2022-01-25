@@ -78,7 +78,6 @@ func organizationsToDef(items []model.Organization) []Def.OrganizationFields {
 
 //LoginSession
 func loginSessionToDef(item model.LoginSession) Def.LoginSessionFields {
-
 	return Def.LoginSessionFields{AccessToken: &item.AccessToken, Anonymous: &item.Anonymous, Id: &item.ID, Identifier: &item.Identifier}
 }
 
