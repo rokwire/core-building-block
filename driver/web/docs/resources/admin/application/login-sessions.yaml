@@ -8,7 +8,7 @@ get:
     - bearerAuth: []
   parameters:
     - name: identifier
-      in: path
+      in: query
       description: identifier
       required: true
       style: simple
@@ -16,7 +16,7 @@ get:
       schema:
         type: string
     - name: account_auth_type_identifier
-      in: path
+      in: query
       description: account_auth_type_identifier
       required: true
       style: simple

@@ -1585,7 +1585,7 @@
         }
       }
     },
-    "/admin/application/{identifier}/login-sessions/{account_auth_type_identifier}": {
+    "/admin/application/login-sessions": {
       "get": {
         "tags": [
           "Admin"
@@ -1600,7 +1600,7 @@
         "parameters": [
           {
             "name": "identifier",
-            "in": "path",
+            "in": "query",
             "description": "identifier",
             "required": true,
             "style": "simple",
@@ -1611,7 +1611,7 @@
           },
           {
             "name": "account_auth_type_identifier",
-            "in": "path",
+            "in": "query",
             "description": "account_auth_type_identifier",
             "required": true,
             "style": "simple",

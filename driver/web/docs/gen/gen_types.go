@@ -938,6 +938,15 @@ type GetAdminApplicationAccountsParams struct {
 // PostAdminApplicationGroupsJSONBody defines parameters for PostAdminApplicationGroups.
 type PostAdminApplicationGroupsJSONBody AdminReqCreateApplicationGroup
 
+// GetAdminApplicationLoginSessionsParams defines parameters for GetAdminApplicationLoginSessions.
+type GetAdminApplicationLoginSessionsParams struct {
+	// identifier
+	Identifier string `json:"identifier"`
+
+	// account_auth_type_identifier
+	AccountAuthTypeIdentifier string `json:"account_auth_type_identifier"`
+}
+
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
 type PostAdminApplicationRolesJSONBody AdminReqCreateApplicationRole
 
