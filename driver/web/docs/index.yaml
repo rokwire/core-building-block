@@ -103,6 +103,8 @@ paths:
     $ref: "./resources/bbs/test.yaml"
   /bbs/service-regs:
     $ref: "./resources/bbs/service-regs.yaml"
+  /bbs/accounts:
+    $ref: "./resources/bbs/accounts.yaml"
 
   #third-party services
   /tps/service-regs:
