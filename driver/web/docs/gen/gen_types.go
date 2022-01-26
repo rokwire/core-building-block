@@ -77,6 +77,17 @@ const (
 	ServicesReqAccountAuthTypeLinkAuthTypeUsername ServicesReqAccountAuthTypeLinkAuthType = "username"
 )
 
+// Defines values for ServicesReqAccountAuthTypeUnlinkAuthType.
+const (
+	ServicesReqAccountAuthTypeUnlinkAuthTypeEmail ServicesReqAccountAuthTypeUnlinkAuthType = "email"
+
+	ServicesReqAccountAuthTypeUnlinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeUnlinkAuthType = "illinois_oidc"
+
+	ServicesReqAccountAuthTypeUnlinkAuthTypeTwilioPhone ServicesReqAccountAuthTypeUnlinkAuthType = "twilio_phone"
+
+	ServicesReqAccountAuthTypeUnlinkAuthTypeUsername ServicesReqAccountAuthTypeUnlinkAuthType = "username"
+)
+
 // Defines values for ServicesReqCredentialForgotInitiateAuthType.
 const (
 	ServicesReqCredentialForgotInitiateAuthTypeEmail ServicesReqCredentialForgotInitiateAuthType = "email"
@@ -533,6 +544,16 @@ type ServicesReqAccountAuthTypeLink struct {
 // ServicesReqAccountAuthTypeLinkAuthType defines model for ServicesReqAccountAuthTypeLink.AuthType.
 type ServicesReqAccountAuthTypeLinkAuthType string
 
+// ServicesReqAccountAuthTypeUnlink defines model for _services_req_account_auth-type-unlink.
+type ServicesReqAccountAuthTypeUnlink struct {
+	AppTypeIdentifier string                                   `json:"app_type_identifier"`
+	AuthType          ServicesReqAccountAuthTypeUnlinkAuthType `json:"auth_type"`
+	Identifier        string                                   `json:"identifier"`
+}
+
+// ServicesReqAccountAuthTypeUnlinkAuthType defines model for ServicesReqAccountAuthTypeUnlink.AuthType.
+type ServicesReqAccountAuthTypeUnlinkAuthType string
+
 // ServicesReqAuthorizeService defines model for _services_req_authorize-service.
 type ServicesReqAuthorizeService struct {
 
@@ -983,6 +1004,9 @@ type PutServicesAccountProfileJSONBody SharedReqProfile
 // PostServicesAuthAccountAuthTypeLinkJSONBody defines parameters for PostServicesAuthAccountAuthTypeLink.
 type PostServicesAuthAccountAuthTypeLinkJSONBody ServicesReqAccountAuthTypeLink
 
+// PostServicesAuthAccountAuthTypeUnlinkJSONBody defines parameters for PostServicesAuthAccountAuthTypeUnlink.
+type PostServicesAuthAccountAuthTypeUnlinkJSONBody ServicesReqAccountAuthTypeUnlink
+
 // PostServicesAuthAccountExistsJSONBody defines parameters for PostServicesAuthAccountExists.
 type PostServicesAuthAccountExistsJSONBody ServicesReqAccountExists
 
@@ -1173,6 +1197,9 @@ type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
 
 // PostServicesAuthAccountAuthTypeLinkJSONRequestBody defines body for PostServicesAuthAccountAuthTypeLink for application/json ContentType.
 type PostServicesAuthAccountAuthTypeLinkJSONRequestBody PostServicesAuthAccountAuthTypeLinkJSONBody
+
+// PostServicesAuthAccountAuthTypeUnlinkJSONRequestBody defines body for PostServicesAuthAccountAuthTypeUnlink for application/json ContentType.
+type PostServicesAuthAccountAuthTypeUnlinkJSONRequestBody PostServicesAuthAccountAuthTypeUnlinkJSONBody
 
 // PostServicesAuthAccountExistsJSONRequestBody defines body for PostServicesAuthAccountExists for application/json ContentType.
 type PostServicesAuthAccountExistsJSONRequestBody PostServicesAuthAccountExistsJSONBody

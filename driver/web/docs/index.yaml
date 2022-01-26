@@ -51,6 +51,8 @@ paths:
     $ref: "./resources/services/auth/account/exists.yaml"
   /services/auth/account/auth-type/link:
     $ref: "./resources/services/auth/account/auth-type/link.yaml"
+  /services/auth/account/auth-type/unlink:
+    $ref: "./resources/services/auth/account/auth-type/unlink.yaml"
   /services/auth/authorize-service:
     $ref: "./resources/services/auth/authorize-service.yaml"
   /services/auth/service-regs:
