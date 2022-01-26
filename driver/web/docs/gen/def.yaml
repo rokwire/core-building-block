@@ -1843,7 +1843,9 @@
             "description": "Internal error"
           }
         }
-      },
+      }
+    },
+    "/admin/application/roles/{id}": {
       "delete": {
         "tags": [
           "Admin"
@@ -1859,7 +1861,7 @@
           {
             "name": "id",
             "in": "query",
-            "description": "role ID",
+            "description": "application organization roles ID",
             "required": true,
             "style": "form",
             "explode": false,
