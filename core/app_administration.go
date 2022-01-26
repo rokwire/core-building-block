@@ -293,7 +293,7 @@ func (app *application) admGetAccounts(appID string, orgID string, accountID *st
 	return accounts, nil
 }
 
-func (app *application) admGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier string) ([]model.LoginSession, error) {
+func (app *application) admGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error) {
 	//find the login sessions
 	loginSessions, err := app.storage.FindApplicationLoginSessions(appID, orgID, identifier, accountAuthTypeIdentifier)
 	if err != nil {
