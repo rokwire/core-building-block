@@ -56,7 +56,7 @@ func (auth *Auth) Start() error {
 }
 
 //NewAuth creates new auth handler
-func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.AuthService, logger *logs.Logger) (*Auth, error) {
+func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.AuthService, bbApiKey string, logger *logs.Logger) (*Auth, error) {
 	servicesAuth, err := newServicesAuth(coreAPIs, authService, serviceID, logger)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, "services auth", nil, err)
