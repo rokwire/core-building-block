@@ -149,7 +149,7 @@ _services_res_account-exists:
 ### account auth-type link API
 _services_req_account_auth-type-link:
   $ref: "./apis/services/account/auth-type/link/request/Request.yaml"
-_res_account_auth-type_link_Response:
+_services_res_account_auth-type-link:
   $ref: "./apis/services/account/auth-type/link/response/Response.yaml"
 
 ### credential_update API

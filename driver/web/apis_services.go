@@ -248,7 +248,7 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 		authTypes = accountAuthTypesToDef(account.AuthTypes)
 	}
 
-	responseData := &Def.ResAccountAuthTypeLinkResponse{AuthTypes: authTypes, Message: message}
+	responseData := &Def.ServicesResAccountAuthTypeLink{AuthTypes: authTypes, Message: message}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "link account auth type response", nil, err, http.StatusInternalServerError, false)

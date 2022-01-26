@@ -586,7 +586,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_res_account_auth-type_link_Response'
+                $ref: '#/components/schemas/_services_res_account_auth-type-link'
         '400':
           description: Bad request
         '401':
@@ -3605,7 +3605,7 @@ components:
             - $ref: '#/components/schemas/_shared_req_ParamsEmail'
             - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
-    _res_account_auth-type_link_Response:
+    _services_res_account_auth-type-link:
       required:
         - auth_types
       type: object

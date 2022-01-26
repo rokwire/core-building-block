@@ -510,12 +510,6 @@ type AdminReqCreateApplicationRole struct {
 	Permissions []string `json:"permissions"`
 }
 
-// ResAccountAuthTypeLinkResponse defines model for _res_account_auth-type_link_Response.
-type ResAccountAuthTypeLinkResponse struct {
-	AuthTypes []AccountAuthTypeFields `json:"auth_types"`
-	Message   *string                 `json:"message"`
-}
-
 // ServicesReqAccountExists defines model for _services_req_account-exists.
 type ServicesReqAccountExists struct {
 	ApiKey            string                           `json:"api_key"`
@@ -586,6 +580,12 @@ type ServicesReqCredentialUpdate struct {
 
 // ServicesResAccountExists defines model for _services_res_account-exists.
 type ServicesResAccountExists bool
+
+// ServicesResAccountAuthTypeLink defines model for _services_res_account_auth-type-link.
+type ServicesResAccountAuthTypeLink struct {
+	AuthTypes []AccountAuthTypeFields `json:"auth_types"`
+	Message   *string                 `json:"message"`
+}
 
 // ServicesResAuthorizeService defines model for _services_res_authorize-service.
 type ServicesResAuthorizeService struct {
