@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -298,18 +297,19 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 }
 
 func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	params := mux.Vars(r)
-	identifier := params["identifier"]
-	if len(identifier) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("identifier"), nil, http.StatusBadRequest, false)
+	identifierFromQuery := r.URL.Query().Get("identifier")
+	var identifier *string
+	if len(identifierFromQuery) > 0 {
+		identifier = &identifierFromQuery
 	}
 
-	accountAuthTypeIdentifier := params["account_auth_type_identifier"]
-	if len(accountAuthTypeIdentifier) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("account auth type identifier"), nil, http.StatusBadRequest, false)
+	accountAuthTypeIdentifierFromQuery := r.URL.Query().Get("account-auth-type-identifier")
+	var accountAuthTypeIdentifier *string
+	if len(accountAuthTypeIdentifierFromQuery) > 0 {
+		accountAuthTypeIdentifier = &accountAuthTypeIdentifierFromQuery
 	}
 
-	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, &identifier, &accountAuthTypeIdentifier)
+	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, identifier, accountAuthTypeIdentifier)
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding login sessions", model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
 	}

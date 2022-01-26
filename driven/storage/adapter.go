@@ -1980,8 +1980,16 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 //FindApplicationLoginSessions finds applications login session
 func (sa *Adapter) FindApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
-		primitive.E{Key: "org_id", Value: orgID}, primitive.E{Key: "identifier", Value: identifier},
-		primitive.E{Key: "account_auth_type_identifier", Value: accountAuthTypeIdentifier}}
+		primitive.E{Key: "org_id", Value: orgID}}
+
+	if identifier != nil {
+		filter = append(filter, primitive.E{Key: "identifier", Value: *identifier})
+	}
+
+	if accountAuthTypeIdentifier != nil {
+		filter = append(filter, primitive.E{Key: "account_auth_type_identifier", Value: *accountAuthTypeIdentifier})
+	}
+
 	var result []loginSession
 	options := options.Find()
 	var limitLoginSession int64
