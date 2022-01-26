@@ -919,6 +919,12 @@ type GetAdminApplicationAccountsParams struct {
 // PostAdminApplicationGroupsJSONBody defines parameters for PostAdminApplicationGroups.
 type PostAdminApplicationGroupsJSONBody AdminReqCreateApplicationGroup
 
+// DeleteAdminApplicationRolesParams defines parameters for DeleteAdminApplicationRoles.
+type DeleteAdminApplicationRolesParams struct {
+	// role ID
+	Id string `json:"id"`
+}
+
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
 type PostAdminApplicationRolesJSONBody AdminReqCreateApplicationRole
 
