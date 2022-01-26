@@ -941,10 +941,10 @@ type PostAdminApplicationGroupsJSONBody AdminReqCreateApplicationGroup
 // GetAdminApplicationLoginSessionsParams defines parameters for GetAdminApplicationLoginSessions.
 type GetAdminApplicationLoginSessionsParams struct {
 	// identifier
-	Identifier string `json:"identifier"`
+	Identifier *string `json:"identifier,omitempty"`
 
-	// account_auth_type_identifier
-	AccountAuthTypeIdentifier string `json:"account_auth_type_identifier"`
+	// account auth type identifier
+	AccountAuthTypeIdentifier *string `json:"account-auth-type-identifier,omitempty"`
 }
 
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
