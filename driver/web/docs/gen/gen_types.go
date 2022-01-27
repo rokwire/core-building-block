@@ -581,6 +581,12 @@ type ServicesReqCredentialUpdate struct {
 // ServicesResAccountExists defines model for _services_res_account-exists.
 type ServicesResAccountExists bool
 
+// ServicesResAccountAuthTypeLink defines model for _services_res_account_auth-type-link.
+type ServicesResAccountAuthTypeLink struct {
+	AuthTypes []AccountAuthTypeFields `json:"auth_types"`
+	Message   *string                 `json:"message"`
+}
+
 // ServicesResAuthorizeService defines model for _services_res_authorize-service.
 type ServicesResAuthorizeService struct {
 	AccessToken    *string   `json:"access_token,omitempty"`
