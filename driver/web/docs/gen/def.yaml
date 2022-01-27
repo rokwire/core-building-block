@@ -3601,6 +3601,46 @@ components:
           type: string
           enum:
             - Bearer
+    _shared_res_LoginSession:
+      type: object
+      properties:
+        id:
+          type: string
+        auth_type_code:
+          type: string
+        app_type_id:
+          type: string
+        app_type_identifier:
+          type: string
+        anonymous:
+          type: boolean
+        identifier:
+          type: string
+        account_auth_type_id:
+          type: string
+        account_auth_type_identifier:
+          type: string
+        device_id:
+          type: string
+        id_address:
+          type: string
+        refresh_tokens_count:
+          type: string
+        state:
+          type: string
+        state_expires:
+          type: string
+          nullable: true
+        mfa_attempts:
+          type: integer
+        date_refreshed:
+          type: string
+          nullable: true
+        date_updated:
+          type: string
+          nullable: true
+        date_created:
+          type: string
     _services_req_account-exists:
       required:
         - auth_type
