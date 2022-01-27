@@ -1313,23 +1313,6 @@ func (sa *Adapter) FindPermissions(ids []string) ([]model.Permission, error) {
 	return permissionsResult, nil
 }
 
-//FindPermissionsByServiceID finds permissions
-func (sa *Adapter) FindPermissionsByServiceID(serviceID []string) ([]model.Permission, error) {
-	filter := bson.D{primitive.E{Key: "services_ids", Value: serviceID}}
-	var result []model.Permission
-	err := sa.db.permissions.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
-	}
-
-	if len(result) == 0 {
-		//no data
-		return make([]model.Permission, 0), nil
-	}
-
-	return result, nil
-}
-
 //FindPermissionsByServiceIDs finds permissions
 func (sa *Adapter) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error) {
 	if len(serviceIDs) == 0 {

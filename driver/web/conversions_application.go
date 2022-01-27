@@ -59,19 +59,6 @@ func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroupFields {
 	return result
 }
 
-//ServiceID
-func serviceIDsToDef(item Def.ApplicationOrganization) Def.ApplicationOrganization {
-	return Def.ApplicationOrganization{ServicesIds: item.ServicesIds}
-}
-
-func servicesIDsToDef(items []Def.ApplicationOrganization) []Def.ApplicationOrganization {
-	result := make([]Def.ApplicationOrganization, len(items))
-	for i, item := range items {
-		result[i] = serviceIDsToDef(item)
-	}
-	return result
-}
-
 //Organization
 func organizationToDef(item *model.Organization) *Def.OrganizationFields {
 	if item == nil {
