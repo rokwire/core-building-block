@@ -416,7 +416,7 @@ func (h AdminApisHandler) adminVerifyMFA(l *logs.Log, r *http.Request, claims *t
 }
 
 func (h AdminApisHandler) adminGetBuildingBlocks(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	appID := r.URL.Query().Get("app_id")
+	appID := r.URL.Query().Get("id")
 	if appID == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
 	}
