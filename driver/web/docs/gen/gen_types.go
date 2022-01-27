@@ -921,7 +921,7 @@ type PostAdminApplicationGroupsJSONBody AdminReqCreateApplicationGroup
 
 // DeleteAdminApplicationRolesParams defines parameters for DeleteAdminApplicationRoles.
 type DeleteAdminApplicationRolesParams struct {
-	// role ID
+	// application organization roles ID
 	Id string `json:"id"`
 }
 
