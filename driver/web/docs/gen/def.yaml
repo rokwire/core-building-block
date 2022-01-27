@@ -584,10 +584,9 @@ paths:
         '200':
           description: Success
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                example: Success
+                $ref: '#/components/schemas/_services_res_account_auth-type-link'
         '400':
           description: Bad request
         '401':
@@ -3662,6 +3661,18 @@ components:
             - $ref: '#/components/schemas/_shared_req_ParamsEmail'
             - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
+    _services_res_account_auth-type-link:
+      required:
+        - auth_types
+      type: object
+      properties:
+        message:
+          type: string
+          nullable: true
+        auth_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountAuthTypeFields'
     _services_req_account_auth-type-unlink:
       required:
         - auth_type

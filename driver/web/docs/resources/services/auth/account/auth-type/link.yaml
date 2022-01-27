@@ -61,10 +61,9 @@ post:
     200:
       description: Success
       content:
-        text/plain:
+        application/json:
           schema:
-            type: string
-            example: Success
+            $ref: "../../../../../schemas/apis/services/account/auth-type/link/response/Response.yaml"
     400:
       description: Bad request
     401:
