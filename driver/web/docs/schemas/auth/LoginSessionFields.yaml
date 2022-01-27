@@ -12,7 +12,8 @@ properties:
     type: string
   refresh_tokens:
     type: array
-    items: string
+    items: 
+      type: string
   params:
     type: object
     additionalProperties: true
