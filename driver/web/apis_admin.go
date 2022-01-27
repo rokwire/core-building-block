@@ -305,6 +305,7 @@ func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *token
 
 	var accountData *Def.SharedResAccount
 	if account != nil {
+		account.SortAccountAuthTypes(claims.UID)
 		accountData = accountToDef(*account)
 	}
 
