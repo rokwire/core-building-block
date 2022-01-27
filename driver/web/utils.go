@@ -16,11 +16,11 @@ func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.
 	accessToken := loginSession.AccessToken
 	refreshToken := loginSession.CurrentRefreshToken()
 
-	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
-	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
+	tokenType := Def.SharedResRokwireTokenTokenTypeBearer
+	rokwireToken := Def.SharedResRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
 	//account
-	var accountData *Def.ResSharedAccount
+	var accountData *Def.SharedResAccount
 	if !loginSession.Anonymous {
 		account := loginSession.AccountAuthType.Account
 		accountData = accountToDef(account)
@@ -32,7 +32,7 @@ func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.
 		paramsRes = loginSession.Params
 	}
 
-	responseData := &Def.ResSharedLogin{Token: &rokwireToken, Account: accountData, Params: &paramsRes}
+	responseData := &Def.SharedResLogin{Token: &rokwireToken, Account: accountData, Params: &paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
