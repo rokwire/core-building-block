@@ -10,13 +10,22 @@ properties:
     type: string
   access_token:
     type: string
-  refresh_token:
-    type: string
+  refresh_tokens:
+    type: array
+    items: string
   params:
     type: object
     additionalProperties: true
-  expires:
+  state:
     type: string
+  state_expires:
+    type: string
+    nullable: true
+  mfa_attempts:
+    type: integer
+  date_refreshed:
+    type: string
+    nullable: true
   date_updated:
     type: string
     nullable: true
