@@ -776,8 +776,8 @@ type SharedResLoginSession struct {
 	DateUpdated               *string `json:"date_updated"`
 	DeviceId                  *string `json:"device_id,omitempty"`
 	Id                        *string `json:"id,omitempty"`
-	IdAddress                 *string `json:"id_address,omitempty"`
 	Identifier                *string `json:"identifier,omitempty"`
+	IpAddress                 *string `json:"ip_address,omitempty"`
 	MfaAttempts               *int    `json:"mfa_attempts,omitempty"`
 	RefreshTokensCount        *string `json:"refresh_tokens_count,omitempty"`
 	State                     *string `json:"state,omitempty"`

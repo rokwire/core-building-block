@@ -3623,7 +3623,7 @@ components:
           type: string
         device_id:
           type: string
-        id_address:
+        ip_address:
           type: string
         refresh_tokens_count:
           type: string
