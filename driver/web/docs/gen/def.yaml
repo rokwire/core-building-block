@@ -3626,7 +3626,7 @@ components:
         ip_address:
           type: string
         refresh_tokens_count:
-          type: string
+          type: integer
         state:
           type: string
         state_expires:

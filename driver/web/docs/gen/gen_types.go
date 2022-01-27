@@ -779,7 +779,7 @@ type SharedResLoginSession struct {
 	Identifier                *string `json:"identifier,omitempty"`
 	IpAddress                 *string `json:"ip_address,omitempty"`
 	MfaAttempts               *int    `json:"mfa_attempts,omitempty"`
-	RefreshTokensCount        *string `json:"refresh_tokens_count,omitempty"`
+	RefreshTokensCount        *int    `json:"refresh_tokens_count,omitempty"`
 	State                     *string `json:"state,omitempty"`
 	StateExpires              *string `json:"state_expires"`
 }
