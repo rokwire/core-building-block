@@ -1038,6 +1038,26 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	return nil
 }
 
+//DeleteAccountAuthType deletes an account auth type
+func (sa *Adapter) DeleteAccountAuthType(item model.AccountAuthType) error {
+	filter := bson.M{"_id": item.Account.ID}
+	update := bson.D{
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "auth_types", Value: bson.M{"auth_type_code": item.AuthType.Code, "identifier": item.Identifier}},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountAuthType, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
 //FindCredential finds a credential by ID
 func (sa *Adapter) FindCredential(context TransactionContext, ID string) (*model.Credential, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}

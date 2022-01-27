@@ -273,6 +273,18 @@ type APIs interface {
 	//		account (*model.Account): account data after the operation
 	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error)
 
+	//UnlinkAccountAuthType unlinks credentials from an existing account.
+	//The authentication method must be one of the supported for the application.
+	//	Input:
+	//		accountID (string): ID of the account to unlink creds from
+	//		authenticationType (string): Name of the authentication method of account auth type to unlink
+	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
+	//		identifier (string): Identifier of account auth type to unlink
+	//		l (*logs.Log): Log object pointer for request
+	//	Returns:
+	//		account (*model.Account): account data after the operation
+	UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error)
+
 	//GetAdminToken returns an admin token for the specified application
 	GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error)
 
@@ -343,6 +355,7 @@ type Storage interface {
 	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccountAuthType(item model.AccountAuthType) error
 	UpdateAccountAuthType(item model.AccountAuthType) error
+	DeleteAccountAuthType(item model.AccountAuthType) error
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)

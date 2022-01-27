@@ -973,6 +973,13 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"id": accountID})
 	}
 
+	for _, aat := range account.AuthTypes {
+		if aat.AuthType.Code == authenticationType {
+			message = "This account already has linked credentials for this authentication type"
+			return &message, account, nil
+		}
+	}
+
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, account.AppOrg.Organization.ID)
 	if err != nil {
@@ -998,6 +1005,52 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 	}
 
 	return &message, account, nil
+}
+
+//UnlinkAccountAuthType unlinks credentials from an existing account.
+//The authentication method must be one of the supported for the application.
+//	Input:
+//		accountID (string): ID of the account to unlink creds from
+//		authenticationType (string): Name of the authentication method of account auth type to unlink
+//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
+//		identifier (string): Identifier of account auth type to unlink
+//		l (*logs.Log): Log object pointer for request
+//	Returns:
+//		account (*model.Account): account data after the operation
+func (a *Auth) UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error) {
+	account, err := a.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if account == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"id": accountID})
+	}
+
+	//validate if the provided auth type is supported by the provided application and organization
+	authType, _, _, err := a.validateAuthType(authenticationType, appTypeIdentifier, account.AppOrg.Organization.ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	accountAuthType, _, err := a.prepareAccountAuthType(*authType, identifier, nil, nil, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
+	}
+
+	err = a.storage.DeleteAccountAuthType(*accountAuthType)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountAuthType, nil, err)
+	}
+	//TODO: delete credential
+
+	for i, aat := range account.AuthTypes {
+		if aat.AuthType.Code == authenticationType && aat.Identifier == identifier {
+			account.AuthTypes = append(account.AuthTypes[:i], account.AuthTypes[i+1:]...)
+			break
+		}
+	}
+
+	return account, nil
 }
 
 //GetServiceRegistrations retrieves all service registrations
