@@ -1334,7 +1334,7 @@
         }
       }
     },
-    "/admin/application/{app_id}/building-blocks": {
+    "/admin/application/building-blocks": {
       "get": {
         "tags": [
           "Admin"
@@ -1348,12 +1348,10 @@
         ],
         "parameters": [
           {
-            "name": "app_id",
-            "in": "path",
+            "name": "id",
+            "in": "query",
             "description": "app_id",
             "required": true,
-            "style": "simple",
-            "explode": false,
             "schema": {
               "type": "string"
             }
@@ -3499,12 +3497,6 @@
           },
           "organization": {
             "$ref": "#/components/schemas/Organization"
-          },
-          "services_ids": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           },
           "TODO": {
             "type": "string"

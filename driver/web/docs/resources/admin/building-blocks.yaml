@@ -7,12 +7,10 @@ get:
   security:
     - bearerAuth: []
   parameters:
-  - name: app_id
-    in: path
+  - name: id
+    in: query
     description: app_id
     required: true
-    style: simple
-    explode: false
     schema:
       type: string
   responses:

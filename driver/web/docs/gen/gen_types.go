@@ -280,7 +280,6 @@ type ApplicationOrganization struct {
 	Application  *Application  `json:"application,omitempty"`
 	Id           *string       `json:"id,omitempty"`
 	Organization *Organization `json:"organization,omitempty"`
-	ServicesIds  *[]string     `json:"services_ids,omitempty"`
 }
 
 // ApplicationType defines model for ApplicationType.
@@ -921,6 +920,12 @@ type GetAdminApplicationAccountsParams struct {
 
 	// The authentication type identifier
 	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
+}
+
+// GetAdminApplicationBuildingBlocksParams defines parameters for GetAdminApplicationBuildingBlocks.
+type GetAdminApplicationBuildingBlocksParams struct {
+	// app_id
+	Id string `json:"id"`
 }
 
 // PostAdminApplicationGroupsJSONBody defines parameters for PostAdminApplicationGroups.

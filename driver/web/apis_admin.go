@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -417,13 +416,12 @@ func (h AdminApisHandler) adminVerifyMFA(l *logs.Log, r *http.Request, claims *t
 }
 
 func (h AdminApisHandler) adminGetBuildingBlocks(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	params := mux.Vars(r)
-	appID := params["app_id"]
-	if len(appID) <= 0 {
+	appID := r.URL.Query().Get("app_id")
+	if appID == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
 	}
 
-	buildingBlocks, err := h.coreAPIs.Administration.AdmGetBuildingBlocks(claims.AppID, claims.OrgID)
+	buildingBlocks, err := h.coreAPIs.Administration.AdmGetBuildingBlocks(appID, claims.OrgID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, "Error on getting the building blocks", nil, err, http.StatusInternalServerError, true)
 	}
