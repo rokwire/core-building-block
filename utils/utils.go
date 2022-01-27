@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"reflect"
+	"time"
 
 	"github.com/rokwire/logging-library-go/logs"
 
@@ -108,4 +109,12 @@ func GetLogValue(value string, n int) string {
 	}
 	lastN := value[len(value)-n:]
 	return fmt.Sprintf("***%s", lastN)
+}
+
+//GetTime gives the value which this pointer points. Gives empty string if the pointer is nil
+func GetTime(time *time.Time) string {
+	if time == nil {
+		return ""
+	}
+	return fmt.Sprintf("%s", time)
 }

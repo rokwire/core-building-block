@@ -3,12 +3,42 @@ package web
 import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 
 	"github.com/rokwire/core-auth-library-go/authorization"
 	"github.com/rokwire/core-auth-library-go/authservice"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
+
+//LoginSession
+func loginSessionToDef(item model.LoginSession) Def.SharedResLoginSession {
+	accountAuthTypeId := item.AccountAuthType.ID
+	accountAuthTypeIdentifier := item.AccountAuthType.Identifier
+	appTypeId := item.AppType.ID
+	appTypeIdentifier := item.AppType.Identifier
+	authTypeCode := item.AuthType.Code
+	deviceID := item.Device.ID
+	refreshTokensCount := len(item.RefreshTokens)
+	stateExpires := utils.GetTime(item.StateExpires)
+	dateRefreshed := utils.GetTime(item.DateRefreshed)
+	dateUpdated := utils.GetTime(item.DateUpdated)
+	dateCreated := utils.GetTime(&item.DateCreated)
+	return Def.SharedResLoginSession{Id: &item.ID, Anonymous: &item.Anonymous, AccountAuthTypeId: &accountAuthTypeId,
+		AccountAuthTypeIdentifier: &accountAuthTypeIdentifier, AppTypeId: &appTypeId, AppTypeIdentifier: &appTypeIdentifier,
+		AuthTypeCode: &authTypeCode, Identifier: &item.Identifier, IpAddress: &item.IPAddress, DeviceId: &deviceID,
+		RefreshTokensCount: &refreshTokensCount, State: &item.State, MfaAttempts: &item.MfaAttempts, StateExpires: &stateExpires,
+		DateRefreshed: &dateRefreshed, DateUpdated: &dateUpdated, DateCreated: &dateCreated,
+	}
+}
+
+func loginSessionsToDef(items []model.LoginSession) []Def.SharedResLoginSession {
+	result := make([]Def.SharedResLoginSession, len(items))
+	for i, item := range items {
+		result[i] = loginSessionToDef(item)
+	}
+	return result
+}
 
 func pubKeyFromDef(item *Def.PubKey) *authservice.PubKey {
 	if item == nil {

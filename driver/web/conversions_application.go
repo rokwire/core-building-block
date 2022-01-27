@@ -75,16 +75,3 @@ func organizationsToDef(items []model.Organization) []Def.OrganizationFields {
 	}
 	return result
 }
-
-//LoginSession
-func loginSessionToDef(item model.LoginSession) Def.LoginSessionFields {
-	return Def.LoginSessionFields{AccessToken: &item.AccessToken, Anonymous: &item.Anonymous, Id: &item.ID, Identifier: &item.Identifier}
-}
-
-func loginSessionsToDef(items []model.LoginSession) []Def.LoginSessionFields {
-	result := make([]Def.LoginSessionFields, len(items))
-	for i, item := range items {
-		result[i] = loginSessionToDef(item)
-	}
-	return result
-}
