@@ -227,19 +227,6 @@ _system_req_permissions:
 ### application-roles API
 _system_req_application-roles:
   $ref: "./apis/system/application-roles/request/Request.yaml"
-_res_get_AppOrgRoles_Response:
- $ref: "./apis/system/get-appOrgRoles/response/Response.yaml"
-_req_create_AppOrgRoles_Request:
- $ref: "./apis/system/create-appOrgRoles/request/Request.yaml"
-_res_create_AppOrgRoles_Response:
- $ref: "./apis/system/create-appOrgRoles/response/Response.yaml"
-
- ### application-organization-groups API
-_res_get_AppOrgGroups_Response:
- $ref: "./apis/system/get-appOrgGroups/response/Response.yaml"
-_req_create_AppOrgGroups_Request:
- $ref: "./apis/system/create-appOrgGroups/request/Request.yaml"
-
 
 ### account permissions API
 _system_req_account-permissions:
