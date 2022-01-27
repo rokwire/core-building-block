@@ -19,3 +19,4 @@ properties:
     type: integer
   application_types:
     $ref: "../../../../application/ApplicationTypeFields.yaml"
+ 

@@ -1,10 +1,7 @@
 required:
-  - id
   - identifier
 type: object
 properties:
-  id:
-    type: string
   identifier:
     type: string
   name:

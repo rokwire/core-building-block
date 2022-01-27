@@ -17,3 +17,4 @@ properties:
     type: array
     items:
       $ref: "./ApplicationType.yaml"
+    
