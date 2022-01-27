@@ -1915,11 +1915,11 @@ func (sa *Adapter) FindApplicationOrganizations(appID string, orgID string) (*mo
 }
 
 //ReadAllBuildingBlocks reads all the building blocks
-func (sa *Adapter) ReadAllBuildingBlocks(appID string, orgID string) ([]*model.BuildingBlock, error) {
+func (sa *Adapter) ReadAllBuildingBlocks(appID string, orgID string) ([]model.ServiceReg, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
 		primitive.E{Key: "org_id", Value: orgID}}
-	var result []*model.BuildingBlock
-	err := sa.db.buildingblocks.Find(filter, &result, nil)
+	var result []model.ServiceReg
+	err := sa.db.serviceRegs.Find(filter, &result, nil)
 	if err != nil {
 		return nil, err
 	}
