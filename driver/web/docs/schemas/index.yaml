@@ -190,7 +190,6 @@ _admin_req_create-application_role:
 _admin_req_create-application_group:
   $ref: "./apis/admin/application/groups/request/Request.yaml"
 
-
 ## end ADMIN section
 
 ## SYSTEM section
