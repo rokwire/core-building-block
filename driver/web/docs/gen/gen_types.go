@@ -392,28 +392,6 @@ type JWKS struct {
 	Keys []JWK `json:"keys"`
 }
 
-// LoginSessionFields defines model for LoginSessionFields.
-type LoginSessionFields struct {
-	AccessToken   *string                    `json:"access_token,omitempty"`
-	Anonymous     *bool                      `json:"anonymous,omitempty"`
-	DateCreated   *string                    `json:"date_created,omitempty"`
-	DateRefreshed *string                    `json:"date_refreshed"`
-	DateUpdated   *string                    `json:"date_updated"`
-	Id            *string                    `json:"id,omitempty"`
-	IdAddress     *string                    `json:"id_address,omitempty"`
-	Identifier    *string                    `json:"identifier,omitempty"`
-	MfaAttempts   *int                       `json:"mfa_attempts,omitempty"`
-	Params        *LoginSessionFields_Params `json:"params,omitempty"`
-	RefreshTokens *[]string                  `json:"refresh_tokens,omitempty"`
-	State         *string                    `json:"state,omitempty"`
-	StateExpires  *string                    `json:"state_expires"`
-}
-
-// LoginSessionFields_Params defines model for LoginSessionFields.Params.
-type LoginSessionFields_Params struct {
-	AdditionalProperties map[string]interface{} `json:"-"`
-}
-
 // OpenID Connect Discovery Metadata
 type OIDCDiscovery struct {
 	Issuer  string `json:"issuer"`
@@ -783,6 +761,27 @@ type SharedResLogin struct {
 	Message *string                `json:"message,omitempty"`
 	Params  *interface{}           `json:"params"`
 	Token   *SharedResRokwireToken `json:"token,omitempty"`
+}
+
+// SharedResLoginSession defines model for _shared_res_LoginSession.
+type SharedResLoginSession struct {
+	AccountAuthTypeId         *string `json:"account_auth_type_id,omitempty"`
+	AccountAuthTypeIdentifier *string `json:"account_auth_type_identifier,omitempty"`
+	Anonymous                 *bool   `json:"anonymous,omitempty"`
+	AppTypeId                 *string `json:"app_type_id,omitempty"`
+	AppTypeIdentifier         *string `json:"app_type_identifier,omitempty"`
+	AuthTypeCode              *string `json:"auth_type_code,omitempty"`
+	DateCreated               *string `json:"date_created,omitempty"`
+	DateRefreshed             *string `json:"date_refreshed"`
+	DateUpdated               *string `json:"date_updated"`
+	DeviceId                  *string `json:"device_id,omitempty"`
+	Id                        *string `json:"id,omitempty"`
+	IdAddress                 *string `json:"id_address,omitempty"`
+	Identifier                *string `json:"identifier,omitempty"`
+	MfaAttempts               *int    `json:"mfa_attempts,omitempty"`
+	RefreshTokensCount        *string `json:"refresh_tokens_count,omitempty"`
+	State                     *string `json:"state,omitempty"`
+	StateExpires              *string `json:"state_expires"`
 }
 
 // SharedResLoginUrl defines model for _shared_res_LoginUrl.
@@ -1381,59 +1380,6 @@ func (a *AuthTypeFields_Params) UnmarshalJSON(b []byte) error {
 
 // Override default JSON handling for AuthTypeFields_Params to handle AdditionalProperties
 func (a AuthTypeFields_Params) MarshalJSON() ([]byte, error) {
-	var err error
-	object := make(map[string]json.RawMessage)
-
-	for fieldName, field := range a.AdditionalProperties {
-		object[fieldName], err = json.Marshal(field)
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error marshaling '%s'", fieldName))
-		}
-	}
-	return json.Marshal(object)
-}
-
-// Getter for additional properties for LoginSessionFields_Params. Returns the specified
-// element and whether it was found
-func (a LoginSessionFields_Params) Get(fieldName string) (value interface{}, found bool) {
-	if a.AdditionalProperties != nil {
-		value, found = a.AdditionalProperties[fieldName]
-	}
-	return
-}
-
-// Setter for additional properties for LoginSessionFields_Params
-func (a *LoginSessionFields_Params) Set(fieldName string, value interface{}) {
-	if a.AdditionalProperties == nil {
-		a.AdditionalProperties = make(map[string]interface{})
-	}
-	a.AdditionalProperties[fieldName] = value
-}
-
-// Override default JSON handling for LoginSessionFields_Params to handle AdditionalProperties
-func (a *LoginSessionFields_Params) UnmarshalJSON(b []byte) error {
-	object := make(map[string]json.RawMessage)
-	err := json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if len(object) != 0 {
-		a.AdditionalProperties = make(map[string]interface{})
-		for fieldName, fieldBuf := range object {
-			var fieldVal interface{}
-			err := json.Unmarshal(fieldBuf, &fieldVal)
-			if err != nil {
-				return errors.Wrap(err, fmt.Sprintf("error unmarshaling field %s", fieldName))
-			}
-			a.AdditionalProperties[fieldName] = fieldVal
-		}
-	}
-	return nil
-}
-
-// Override default JSON handling for LoginSessionFields_Params to handle AdditionalProperties
-func (a LoginSessionFields_Params) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 

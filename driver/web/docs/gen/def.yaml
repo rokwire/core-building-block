@@ -1400,47 +1400,6 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/login-sessions:
-    get:
-      tags:
-        - Admin
-      summary: Get login-sessions
-      description: |
-        Get login-sessions
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: identifier
-          in: query
-          description: identifier
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: string
-        - name: account-auth-type-identifier
-          in: query
-          description: account auth type identifier
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/LoginSessionFields'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
   /admin/application/accounts:
     get:
       tags:
@@ -1478,6 +1437,47 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/_shared_res_Account'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/application/login-sessions:
+    get:
+      tags:
+        - Admin
+      summary: Get application sessions
+      description: |
+        Get application sessions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: identifier
+          in: query
+          description: identifier
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: account-auth-type-identifier
+          in: query
+          description: account auth type identifier
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/_shared_res_LoginSession'
         '400':
           description: Bad request
         '401':

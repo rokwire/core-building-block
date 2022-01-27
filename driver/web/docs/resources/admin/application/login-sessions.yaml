@@ -1,9 +1,9 @@
 get:
   tags:
   - Admin
-  summary: Get login-sessions
+  summary: Get application sessions
   description: |
-    Get login-sessions
+    Get application sessions
   security:
     - bearerAuth: []
   parameters:
@@ -31,7 +31,7 @@ get:
           schema:
             type: array
             items:
-              $ref: "../../../schemas/auth/LoginSessionFields.yaml"
+              $ref: "../../../schemas/apis/shared/responses/LoginSession.yaml"
     400:
       description: Bad request
     401:
