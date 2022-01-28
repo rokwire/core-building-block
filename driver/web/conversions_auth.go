@@ -25,10 +25,10 @@ func loginSessionToDef(item model.LoginSession) Def.SharedResLoginSession {
 	authTypeCode := item.AuthType.Code
 	deviceID := item.Device.ID
 	refreshTokensCount := len(item.RefreshTokens)
-	stateExpires := utils.GetTime(item.StateExpires)
-	dateRefreshed := utils.GetTime(item.DateRefreshed)
-	dateUpdated := utils.GetTime(item.DateUpdated)
-	dateCreated := utils.GetTime(&item.DateCreated)
+	stateExpires := utils.FormatTime(item.StateExpires)
+	dateRefreshed := utils.FormatTime(item.DateRefreshed)
+	dateUpdated := utils.FormatTime(item.DateUpdated)
+	dateCreated := utils.FormatTime(&item.DateCreated)
 	return Def.SharedResLoginSession{Id: &item.ID, Anonymous: &item.Anonymous, AccountAuthTypeId: accountAuthTypeID,
 		AccountAuthTypeIdentifier: accountAuthTypeIdentifier, AppTypeId: &appTypeID, AppTypeIdentifier: &appTypeIdentifier,
 		AuthTypeCode: &authTypeCode, Identifier: &item.Identifier, IpAddress: &item.IPAddress, DeviceId: &deviceID,

@@ -111,10 +111,10 @@ func GetLogValue(value string, n int) string {
 	return fmt.Sprintf("***%s", lastN)
 }
 
-//GetTime gives the value which this pointer points. Gives empty string if the pointer is nil
-func GetTime(time *time.Time) string {
-	if time == nil {
+//FormatTime formats the time value which this pointer points. Gives empty string if the pointer is nil
+func FormatTime(v *time.Time) string {
+	if v == nil {
 		return ""
 	}
-	return fmt.Sprintf("%s", time)
+	return v.Format("2006-01-02T15:04:05.000Z")
 }
