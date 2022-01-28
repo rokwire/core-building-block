@@ -450,6 +450,34 @@ func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier stri
 	return sessions, nil
 }
 
+//FindLoginSessionsByParams finds login sessions by params
+func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error) {
+	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
+		primitive.E{Key: "org_id", Value: orgID}}
+
+	if identifier != nil {
+		filter = append(filter, primitive.E{Key: "identifier", Value: *identifier})
+	}
+
+	if accountAuthTypeIdentifier != nil {
+		filter = append(filter, primitive.E{Key: "account_auth_type_identifier", Value: *accountAuthTypeIdentifier})
+	}
+
+	var result []loginSession
+	options := options.Find()
+	var limitLoginSession int64
+	limitLoginSession = 20
+	options.SetLimit(limitLoginSession)
+	err := sa.db.loginsSessions.Find(filter, &result, options)
+
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+	}
+
+	log := logginSessionsFromStorage(result)
+	return log, nil
+}
+
 //FindLoginSession finds a login session
 func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, error) {
 	//find loggin session
@@ -1975,34 +2003,6 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 	}
 
 	return &device, nil
-}
-
-//FindApplicationLoginSessions finds applications login session
-func (sa *Adapter) FindApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error) {
-	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
-		primitive.E{Key: "org_id", Value: orgID}}
-
-	if identifier != nil {
-		filter = append(filter, primitive.E{Key: "identifier", Value: *identifier})
-	}
-
-	if accountAuthTypeIdentifier != nil {
-		filter = append(filter, primitive.E{Key: "account_auth_type_identifier", Value: *accountAuthTypeIdentifier})
-	}
-
-	var result []loginSession
-	options := options.Find()
-	var limitLoginSession int64
-	limitLoginSession = 20
-	options.SetLimit(limitLoginSession)
-	err := sa.db.loginsSessions.Find(filter, &result, options)
-
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
-	}
-
-	log := logginSessionsFromStorage(result)
-	return log, nil
 }
 
 // ============================== ServiceRegs ==============================
