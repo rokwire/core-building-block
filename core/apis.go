@@ -143,6 +143,10 @@ func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, er
 	return s.app.admGetAccount(accountID)
 }
 
+func (s *administrationImpl) AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error) {
+	return s.app.admGetApplicationLoginSessions(appID, orgID, identifier, accountAuthTypeIdentifier)
+}
+
 ///
 
 //encryptionImpl

@@ -136,6 +136,8 @@ _shared_res_Mfa:
   $ref: "./apis/shared/responses/mfa/Response.yaml"
 _shared_res_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
+_shared_res_LoginSession:
+  $ref: "./apis/shared/responses/LoginSession.yaml"
 ## end SHARED requests and responses
 
 ## SERVICES section
