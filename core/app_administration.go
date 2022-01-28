@@ -305,3 +305,20 @@ func (app *application) admGetApplicationLoginSessions(appID string, orgID strin
 func (app *application) admGetAccount(accountID string) (*model.Account, error) {
 	return app.getAccount(accountID)
 }
+
+func (app *application) admGrantAccountRoles(accountID string, appOrgID string, roleIDs []string) error {
+	roles, err := app.storage.FindAppOrgRoles(roleIDs, appOrgID)
+	if err != nil {
+		return err
+	}
+
+	if len(roles) == 0 {
+		return errors.Newf("no roles found for IDs: %v", roleIDs)
+	}
+
+	err = app.storage.InsertAccountRoles(accountID, appOrgID, model.AccountRolesFromAppOrgRoles(roles, true, true))
+	if err != nil {
+		return err
+	}
+	return nil
+}
