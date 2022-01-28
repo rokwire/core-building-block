@@ -307,7 +307,7 @@ func (app *application) admGetAccount(accountID string) (*model.Account, error) 
 	return app.getAccount(accountID)
 }
 
-func (app *application) admDeleteLoginSessions(context storage.TransactionContext, identifier string, sessionID string) error {
+func (app *application) admDeleteLoginSession(context storage.TransactionContext, identifier string, sessionID string) error {
 
 	deleteLoginSession := app.storage.DeleteLoginSessionsByAccountAndSessionID(context, identifier, sessionID)
 	if deleteLoginSession != nil {

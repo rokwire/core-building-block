@@ -476,7 +476,7 @@ func (h AdminApisHandler) deleteLoginSession(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("session_id"), nil, http.StatusBadRequest, false)
 	}
 
-	err := h.coreAPIs.Administration.AdmDeleteLoginSessions(nil, identifier, sessionID)
+	err := h.coreAPIs.Administration.AdmDeleteLoginSession(nil, identifier, sessionID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
 	}

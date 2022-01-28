@@ -144,8 +144,8 @@ func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, er
 	return s.app.admGetAccount(accountID)
 }
 
-func (s *administrationImpl) AdmDeleteLoginSessions(context storage.TransactionContext, identifier string, sessionID string) error {
-	return s.app.admDeleteLoginSessions(context, identifier, sessionID)
+func (s *administrationImpl) AdmDeleteLoginSession(context storage.TransactionContext, identifier string, sessionID string) error {
+	return s.app.admDeleteLoginSession(context, identifier, sessionID)
 }
 
 func (s *administrationImpl) AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error) {
