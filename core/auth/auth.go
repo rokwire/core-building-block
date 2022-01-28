@@ -204,8 +204,8 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 			return nil, nil, nil, err
 		}
 
-		//check if need to update the account
-		err = a.updateAccountIfNeeded(*accountAuthType, *externalUser, authType, appOrg)
+		//check if need to update the account data
+		err = a.updateDataIfNeeded(*accountAuthType, *externalUser, authType, appOrg, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("update account if needed", "", nil, err)
 		}
@@ -214,24 +214,30 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	} else {
 		//user does not exist, we need to register it
 
+		//1. prepare the registration data
 		//TODO: use shared profile
 		useSharedProfile := false
-
 		identifier := externalUser.Identifier
 		accountAuthTypeParams := map[string]interface{}{}
 		accountAuthTypeParams["user"] = externalUser
-
 		accountAuthType, _, profile, preferences, err = a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, nil, nil, regProfile, regPreferences, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
 
-		//roles and groups mapping
+		//2. apply profile data from the external user if not provided
+		_, err = a.applyProfileDataFromExternalUser(profile, *externalUser, l)
+		if err != nil {
+			return nil, nil, nil, errors.WrapErrorAction("error applying profile data from external user on registration", model.TypeProfile, nil, err)
+		}
+
+		//3. roles and groups mapping
 		roles, groups, err := a.getExternalUserAuthorization(*externalUser, appOrg, authType)
 		if err != nil {
 			l.WarnAction(logutils.ActionGet, "external authorization", err)
 		}
 
+		//4. register the account
 		accountAuthType, err = a.registerUser(appOrg, *accountAuthType, nil, useSharedProfile, *profile, preferences, roles, groups, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
@@ -242,8 +248,55 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	return accountAuthType, extParams, mfaTypes, nil
 }
 
-func (a *Auth) updateAccountIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
-	authType model.AuthType, appOrg model.ApplicationOrganization) error {
+func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, externalUser model.ExternalSystemUser, l *logs.Log) (*bool, error) {
+	l.Info("applyProfileDataFromExternalUser")
+
+	if profile == nil {
+		l.Error("for some reasons the profile is nil")
+		return nil, errors.New("for some reasons the profile is nil")
+	}
+
+	changed := false
+	//first name
+	if len(profile.FirstName) == 0 && len(externalUser.FirstName) > 0 {
+		profile.FirstName = externalUser.FirstName
+		changed = true
+	}
+	//last name
+	if len(profile.LastName) == 0 && len(externalUser.LastName) > 0 {
+		profile.LastName = externalUser.LastName
+		changed = true
+	}
+	//email
+	if len(profile.Email) == 0 && len(externalUser.Email) > 0 {
+		profile.Email = externalUser.Email
+		changed = true
+	}
+	return &changed, nil
+}
+
+func (a *Auth) updateDataIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
+	authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) error {
+	l.Info("updateDataIfNeeded")
+
+	//1. check if need to update the external user data
+	err := a.updateExternalUserIfNeeded(accountAuthType, externalUser, authType, appOrg, l)
+	if err != nil {
+		return errors.WrapErrorAction("error on updating external user if needed", "", nil, err)
+	}
+
+	//2. check if need to update the profile data
+	err = a.updateProfileIfNeeded(accountAuthType.Account, externalUser, l)
+	if err != nil {
+		return errors.WrapErrorAction("error on updating profile if needed", "", nil, err)
+	}
+	return nil
+}
+
+func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
+	authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) error {
+	l.Info("updateExternalUserIfNeeded")
+
 	//get the current external user
 	currentDataMap := accountAuthType.Params["user"]
 	currentDataJSON, err := utils.ConvertToJSON(currentDataMap)
@@ -316,6 +369,25 @@ func (a *Auth) updateAccountIfNeeded(accountAuthType model.AccountAuthType, exte
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
 		}
 		return nil
+	}
+	return nil
+}
+
+func (a *Auth) updateProfileIfNeeded(account model.Account, externalUser model.ExternalSystemUser, l *logs.Log) error {
+	l.Info("updateProfileIfNeeded")
+
+	profile := account.Profile
+	changed, err := a.applyProfileDataFromExternalUser(&profile, externalUser, l)
+	if err != nil {
+		return errors.WrapErrorAction("error applying profile data from external user", model.TypeProfile, nil, err)
+	}
+
+	if *changed {
+		l.Info("the profile will be updated")
+		err := a.storage.UpdateProfile(account.ID, &profile)
+		if err != nil {
+			return errors.WrapErrorData("error updating profile from external user data", model.TypeProfile, nil, err)
+		}
 	}
 	return nil
 }
@@ -682,8 +754,8 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 
 	//account auth type
 	if !anonymous {
-		//only return auth type used for login
-		accountAuthType.Account.AuthTypes = []model.AccountAuthType{*accountAuthType}
+		//sort account auth types by the one used for login
+		accountAuthType.Account.SortAccountAuthTypes(accountAuthType.Identifier)
 	}
 
 	//access token

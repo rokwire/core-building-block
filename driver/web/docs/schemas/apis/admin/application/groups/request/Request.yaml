@@ -1,0 +1,14 @@
+required:
+  - name
+type: object
+properties:
+  name:
+    type: string
+  permissions:
+    type: array
+    items:
+      type: string
+  roles:
+    type: array
+    items:
+      type: string

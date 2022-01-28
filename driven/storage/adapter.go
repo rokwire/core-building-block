@@ -450,6 +450,45 @@ func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier stri
 	return sessions, nil
 }
 
+//FindLoginSessionsByParams finds login sessions by params
+func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error) {
+	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
+		primitive.E{Key: "org_id", Value: orgID}}
+
+	if identifier != nil {
+		filter = append(filter, primitive.E{Key: "identifier", Value: *identifier})
+	}
+
+	if accountAuthTypeIdentifier != nil {
+		filter = append(filter, primitive.E{Key: "account_auth_type_identifier", Value: *accountAuthTypeIdentifier})
+	}
+
+	var result []loginSession
+	options := options.Find()
+	limitLoginSession := int64(20)
+	options.SetLimit(limitLoginSession)
+	err := sa.db.loginsSessions.Find(filter, &result, options)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+	}
+
+	if len(result) == 0 {
+		//no data
+		return make([]model.LoginSession, 0), nil
+	}
+
+	loginSessions := make([]model.LoginSession, len(result))
+	for i, ls := range result {
+		//we could allow calling buildLoginSession function as we have limitted the items to max 20
+		loginSession, err := sa.buildLoginSession(&ls)
+		if err != nil {
+			return nil, errors.WrapErrorAction("build", model.TypeLoginSession, nil, err)
+		}
+		loginSessions[i] = *loginSession
+	}
+	return loginSessions, nil
+}
+
 //FindLoginSession finds a login session
 func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, error) {
 	//find loggin session
@@ -1588,8 +1627,8 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 }
 
 //UpdateProfile updates an account profile
-func (sa *Adapter) UpdateProfile(id string, profile *model.Profile) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+func (sa *Adapter) UpdateProfile(accountID string, profile *model.Profile) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 
 	now := time.Now().UTC()
 	if profile == nil {
