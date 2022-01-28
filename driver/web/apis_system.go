@@ -647,9 +647,8 @@ func (h SystemApisHandler) getAuthTypes(l *logs.Log, r *http.Request, claims *to
 
 //updateAuthTypes updates auth type
 func (h SystemApisHandler) updateAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	params := mux.Vars(r)
-	ID := params["id"]
-	if len(ID) <= 0 {
+	ID := r.URL.Query().Get("id")
+	if ID == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
