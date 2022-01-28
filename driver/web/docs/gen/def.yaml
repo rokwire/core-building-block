@@ -1695,6 +1695,68 @@
         }
       }
     },
+    "/admin/application/login-sessions": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get application sessions",
+        "description": "Get application sessions\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "query",
+            "description": "identifier",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account-auth-type-identifier",
+            "in": "query",
+            "description": "account auth type identifier",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/_shared_res_LoginSession"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/admin/application/groups": {
       "get": {
         "tags": [
@@ -3716,15 +3778,29 @@
           "access_token": {
             "type": "string"
           },
-          "refresh_token": {
-            "type": "string"
+          "refresh_tokens": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "params": {
             "type": "object",
             "additionalProperties": true
           },
-          "expires": {
+          "state": {
             "type": "string"
+          },
+          "state_expires": {
+            "type": "string",
+            "nullable": true
+          },
+          "mfa_attempts": {
+            "type": "integer"
+          },
+          "date_refreshed": {
+            "type": "string",
+            "nullable": true
           },
           "date_updated": {
             "type": "string",
@@ -4787,6 +4863,65 @@
             "type": "string"
           },
           "host": {
+            "type": "string"
+          }
+        }
+      },
+      "_shared_res_LoginSession": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "auth_type_code": {
+            "type": "string"
+          },
+          "app_type_id": {
+            "type": "string"
+          },
+          "app_type_identifier": {
+            "type": "string"
+          },
+          "anonymous": {
+            "type": "boolean"
+          },
+          "identifier": {
+            "type": "string"
+          },
+          "account_auth_type_id": {
+            "type": "string"
+          },
+          "account_auth_type_identifier": {
+            "type": "string"
+          },
+          "device_id": {
+            "type": "string"
+          },
+          "ip_address": {
+            "type": "string"
+          },
+          "refresh_tokens_count": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "state_expires": {
+            "type": "string",
+            "nullable": true
+          },
+          "mfa_attempts": {
+            "type": "integer"
+          },
+          "date_refreshed": {
+            "type": "string",
+            "nullable": true
+          },
+          "date_updated": {
+            "type": "string",
+            "nullable": true
+          },
+          "date_created": {
             "type": "string"
           }
         }

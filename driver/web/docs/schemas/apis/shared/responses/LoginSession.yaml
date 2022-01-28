@@ -2,21 +2,26 @@ type: object
 properties:
   id:
     type: string
+  auth_type_code:
+    type: string
+  app_type_id:
+    type: string
+  app_type_identifier:
+    type: string
   anonymous:
     type: boolean
   identifier:
     type: string
-  id_address:
+  account_auth_type_id:
     type: string
-  access_token:
+  account_auth_type_identifier:
     type: string
-  refresh_tokens:
-    type: array
-    items: 
-      type: string
-  params:
-    type: object
-    additionalProperties: true
+  device_id:
+    type: string
+  ip_address:
+    type: string
+  refresh_tokens_count:
+    type: integer
   state:
     type: string
   state_expires:

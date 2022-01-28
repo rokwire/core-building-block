@@ -138,6 +138,8 @@ _shared_res_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
 _res_shared_BuildingBlocks:
   $ref: "./apis/shared/responses/BuildingBlocks.yaml"
+_shared_res_LoginSession:
+  $ref: "./apis/shared/responses/LoginSession.yaml"
 ## end SHARED requests and responses
 
 ## SERVICES section
