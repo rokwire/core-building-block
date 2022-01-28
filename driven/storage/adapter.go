@@ -465,8 +465,7 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, identif
 
 	var result []loginSession
 	options := options.Find()
-	var limitLoginSession int64
-	limitLoginSession = 20
+	limitLoginSession := int64(20)
 	options.SetLimit(limitLoginSession)
 	err := sa.db.loginsSessions.Find(filter, &result, options)
 	if err != nil {
