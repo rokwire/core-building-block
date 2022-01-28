@@ -1645,7 +1645,7 @@
         }
       }
     },
-    "/admin/application/account/{account_id}/device": {
+    "/admin/application/account/device": {
       "get": {
         "tags": [
           "Admin"
@@ -1659,10 +1659,10 @@
         ],
         "parameters": [
           {
-            "name": "account_id",
-            "in": "path",
+            "name": "id",
+            "in": "query",
             "description": "The account ID",
-            "required": false,
+            "required": true,
             "schema": {
               "type": "string"
             }

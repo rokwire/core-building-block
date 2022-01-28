@@ -934,6 +934,12 @@ type PostAdminAccountMfaParams struct {
 	Type string `json:"type"`
 }
 
+// GetAdminApplicationAccountDeviceParams defines parameters for GetAdminApplicationAccountDevice.
+type GetAdminApplicationAccountDeviceParams struct {
+	// The account ID
+	Id string `json:"id"`
+}
+
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {
 	// The account ID

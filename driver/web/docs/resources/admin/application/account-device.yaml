@@ -9,10 +9,10 @@ get:
   security:
     - bearerAuth: []
   parameters:
-    - name: account_id
-      in: path
+    - name: id
+      in: query
       description: The account ID
-      required: false
+      required: true
       schema:
         type: string
   responses:
