@@ -24,7 +24,7 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	AdmDeleteAppOrgGroup(ID string) error
+	AdmDeleteAppOrgGroup(ID string, appID string, orgID string) error
 
 	AdmGetApplications(orgID string) ([]model.Application, error)
 
@@ -120,7 +120,7 @@ type Storage interface {
 	InsertAppOrgGroup(item model.AppOrgGroup) error
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
-	FindAppOrgGroupByID(id string) (*model.AppOrgGroup, error)
+	FindAppOrgGroupByID(id string, appID string, orgID string) (*model.AppOrgGroup, error)
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error

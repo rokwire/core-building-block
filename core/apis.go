@@ -111,8 +111,8 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
-func (s *administrationImpl) AdmDeleteAppOrgGroup(ID string) error {
-	return s.app.admDeleteAppOrgGroup(ID)
+func (s *administrationImpl) AdmDeleteAppOrgGroup(ID string, appID string, orgID string) error {
+	return s.app.admDeleteAppOrgGroup(ID, appID, orgID)
 }
 
 func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Application, error) {

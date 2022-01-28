@@ -1569,8 +1569,10 @@ func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 }
 
 //FindAppOrgGroupByID finds an application organization group
-func (sa *Adapter) FindAppOrgGroupByID(id string) (*model.AppOrgGroup, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+func (sa *Adapter) FindAppOrgGroupByID(id string, appID string, orgID string) (*model.AppOrgGroup, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: id},
+		primitive.E{Key: "app_id", Value: appID},
+		primitive.E{Key: "org_id", Value: orgID}}
 	var result []model.AppOrgGroup
 	err := sa.db.applicationsOrganizationsGroups.Find(filter, &result, nil)
 	if err != nil {

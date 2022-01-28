@@ -469,7 +469,7 @@ func (h AdminApisHandler) adminDeleteApplicationGroup(l *logs.Log, r *http.Reque
 	if len(groupsID) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
-	err := h.coreAPIs.Administration.AdmDeleteAppOrgGroup(groupsID)
+	err := h.coreAPIs.Administration.AdmDeleteAppOrgGroup(groupsID, claims.AppID, claims.OrgID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
 	}

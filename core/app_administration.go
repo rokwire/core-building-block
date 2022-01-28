@@ -165,8 +165,8 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admDeleteAppOrgGroup(ID string) error {
-	appOrgGroup, err := app.storage.FindAppOrgGroupByID(ID)
+func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID string) error {
+	appOrgGroup, err := app.storage.FindAppOrgGroupByID(ID, appID, orgID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
 	}
