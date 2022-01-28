@@ -3,6 +3,7 @@ package core
 import (
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 
 	"github.com/rokwire/logging-library-go/logs"
 )
@@ -143,8 +144,8 @@ func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, er
 	return s.app.admGetAccount(accountID)
 }
 
-func (s *administrationImpl) AdmGetApplicationAccountDevices(ID string) ([]model.Device, error) {
-	return s.app.admGetApplicationAccountDevices(nil, ID)
+func (s *administrationImpl) AdmGetApplicationAccountDevices(context storage.TransactionContext, ID string) ([]model.Device, error) {
+	return s.app.admGetApplicationAccountDevices(context, ID)
 }
 
 func (s *administrationImpl) AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error) {

@@ -470,7 +470,7 @@ func (h AdminApisHandler) getApplicationAccountDevices(l *logs.Log, r *http.Requ
 	if len(accountID) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
-	device, err := h.coreAPIs.Administration.AdmGetApplicationAccountDevices(accountID)
+	device, err := h.coreAPIs.Administration.AdmGetApplicationAccountDevices(nil, accountID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeDevice, nil, err, http.StatusInternalServerError, true)
 	}

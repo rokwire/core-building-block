@@ -37,7 +37,7 @@ type Administration interface {
 
 	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
-	AdmGetApplicationAccountDevices(ID string) ([]model.Device, error)
+	AdmGetApplicationAccountDevices(context storage.TransactionContext, ID string) ([]model.Device, error)
 
 	AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error)
 }
