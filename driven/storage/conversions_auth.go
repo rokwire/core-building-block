@@ -93,23 +93,3 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 		Params: params, State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
 		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
-
-func logginSessionFromStorage(items *loginSession) model.LoginSession {
-	return model.LoginSession{ID: items.ID,
-		Anonymous: items.Anonymous, Identifier: items.Identifier,
-		IPAddress: items.IPAddress, AccessToken: items.AccessToken, RefreshTokens: items.RefreshTokens, Params: items.Params,
-		StateExpires: items.StateExpires,
-		DateUpdated:  items.DateUpdated, DateCreated: items.DateCreated}
-}
-
-func logginSessionsFromStorage(itemsList []loginSession) []model.LoginSession {
-	if len(itemsList) == 0 {
-		return make([]model.LoginSession, 0)
-	}
-
-	var items []model.LoginSession
-	for _, ls := range itemsList {
-		items = append(items, logginSessionFromStorage(&ls))
-	}
-	return items
-}

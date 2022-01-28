@@ -469,13 +469,24 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, identif
 	limitLoginSession = 20
 	options.SetLimit(limitLoginSession)
 	err := sa.db.loginsSessions.Find(filter, &result, options)
-
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 	}
 
-	log := logginSessionsFromStorage(result)
-	return log, nil
+	if len(result) == 0 {
+		//no data
+		return make([]model.LoginSession, 0), nil
+	}
+
+	loginSessions := make([]model.LoginSession, len(result))
+	for i, ls := range result {
+		loginSession, err := sa.buildLoginSession(&ls)
+		if err != nil {
+			return nil, errors.WrapErrorAction("build", model.TypeLoginSession, nil, err)
+		}
+		loginSessions[i] = *loginSession
+	}
+	return loginSessions, nil
 }
 
 //FindLoginSession finds a login session
