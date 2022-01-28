@@ -741,13 +741,13 @@ func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, a
 	}
 
 	var list []account
-	err = sa.db.accounts.Find(filter, &list, nil)
+	options := options.Find()
+	var limitAccounts int64
+	limitAccounts = 20
+	options.SetLimit(limitAccounts)
+	err = sa.db.accounts.Find(filter, &list, options)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-
-	if len(list) > 20 {
-		return nil, errors.New("There is more than 20 items for get application accounts")
 	}
 
 	accounts := accountsFromStorage(list, *appOrg)
