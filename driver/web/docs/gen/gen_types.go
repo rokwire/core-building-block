@@ -763,6 +763,27 @@ type SharedResLogin struct {
 	Token   *SharedResRokwireToken `json:"token,omitempty"`
 }
 
+// SharedResLoginSession defines model for _shared_res_LoginSession.
+type SharedResLoginSession struct {
+	AccountAuthTypeId         *string `json:"account_auth_type_id,omitempty"`
+	AccountAuthTypeIdentifier *string `json:"account_auth_type_identifier,omitempty"`
+	Anonymous                 *bool   `json:"anonymous,omitempty"`
+	AppTypeId                 *string `json:"app_type_id,omitempty"`
+	AppTypeIdentifier         *string `json:"app_type_identifier,omitempty"`
+	AuthTypeCode              *string `json:"auth_type_code,omitempty"`
+	DateCreated               *string `json:"date_created,omitempty"`
+	DateRefreshed             *string `json:"date_refreshed"`
+	DateUpdated               *string `json:"date_updated"`
+	DeviceId                  *string `json:"device_id,omitempty"`
+	Id                        *string `json:"id,omitempty"`
+	Identifier                *string `json:"identifier,omitempty"`
+	IpAddress                 *string `json:"ip_address,omitempty"`
+	MfaAttempts               *int    `json:"mfa_attempts,omitempty"`
+	RefreshTokensCount        *int    `json:"refresh_tokens_count,omitempty"`
+	State                     *string `json:"state,omitempty"`
+	StateExpires              *string `json:"state_expires"`
+}
+
 // SharedResLoginUrl defines model for _shared_res_LoginUrl.
 type SharedResLoginUrl struct {
 	LoginUrl string `json:"login_url"`
@@ -934,6 +955,16 @@ type GetAdminApplicationAccountsParams struct {
 
 // PostAdminApplicationGroupsJSONBody defines parameters for PostAdminApplicationGroups.
 type PostAdminApplicationGroupsJSONBody AdminReqCreateApplicationGroup
+
+// GetAdminApplicationLoginSessionsParams defines parameters for GetAdminApplicationLoginSessions.
+type GetAdminApplicationLoginSessionsParams struct {
+
+	// identifier
+	Identifier *string `json:"identifier,omitempty"`
+
+	// account auth type identifier
+	AccountAuthTypeIdentifier *string `json:"account-auth-type-identifier,omitempty"`
+}
 
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
 type PostAdminApplicationRolesJSONBody AdminReqCreateApplicationRole
