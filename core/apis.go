@@ -116,6 +116,10 @@ func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Applicati
 	return s.app.admGetApplications(orgID)
 }
 
+func (s *administrationImpl) AdmCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgGroup, error) {
+	return s.app.admCreateAppOrgGroup(name, permissionIDs, rolesIDs, appID, orgID, l)
+}
+
 func (s *administrationImpl) AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
 	return s.app.admGetAppOrgGroups(appID, orgID)
 }
@@ -142,6 +146,10 @@ func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, er
 
 func (s *administrationImpl) AdmDeleteLoginSessions(context storage.TransactionContext, identifier string, sessionID string) error {
 	return s.app.admDeleteLoginSessions(context, identifier, sessionID)
+}
+
+func (s *administrationImpl) AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error) {
+	return s.app.admGetApplicationLoginSessions(appID, orgID, identifier, accountAuthTypeIdentifier)
 }
 
 ///
