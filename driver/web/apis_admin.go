@@ -296,6 +296,33 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 	return l.HttpResponseSuccessJSON(data)
 }
 
+func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	identifierFromQuery := r.URL.Query().Get("identifier")
+	var identifier *string
+	if len(identifierFromQuery) > 0 {
+		identifier = &identifierFromQuery
+	}
+
+	accountAuthTypeIdentifierFromQuery := r.URL.Query().Get("account-auth-type-identifier")
+	var accountAuthTypeIdentifier *string
+	if len(accountAuthTypeIdentifierFromQuery) > 0 {
+		accountAuthTypeIdentifier = &accountAuthTypeIdentifierFromQuery
+	}
+
+	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, identifier, accountAuthTypeIdentifier)
+	if err != nil {
+		return l.HttpResponseErrorAction("error finding login sessions", model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
+	}
+
+	loginSessions := loginSessionsToDef(getLoginSessions)
+
+	data, err := json.Marshal(loginSessions)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeLoginSession, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
 func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	account, err := h.coreAPIs.Administration.AdmGetAccount(claims.Subject)
 	if err != nil {

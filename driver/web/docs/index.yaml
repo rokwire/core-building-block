@@ -85,6 +85,8 @@ paths:
     $ref: "./resources/admin/account/mfa.yaml"
   /admin/application/accounts:
     $ref: "./resources/admin/application/accounts.yaml"
+  /admin/application/login-sessions:
+    $ref: "./resources/admin/application/login-sessions.yaml"
   /admin/application/groups:
     $ref: "./resources/admin/application/groups.yaml"
   /admin/application/permissions:
