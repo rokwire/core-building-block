@@ -21,7 +21,8 @@ import (
 
 //Adapter implements the Storage interface
 type Adapter struct {
-	db *database
+	db   *database
+	coll *mongo.Collection
 
 	logger *logs.Logger
 
@@ -988,28 +989,20 @@ func (sa *Adapter) UpdateAccountGroups(accountID string, groups []model.AccountG
 	return nil
 }
 
-func (sa *Adapter) CountAccountsByGroupID(context TransactionContext, groupID string) (*int, error) {
-	filter := bson.D{primitive.E{Key: "id", Value: groupID}}
-	var accounts []account
+func (sa *Adapter) CountAccountsByGroupID(appID string, orgID string, groupID string) (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), sa.db.mongoTimeout)
+	defer cancel()
+	filter := bson.D{primitive.E{Key: "id", Value: groupID},
+		primitive.E{Key: "app_id", Value: appID},
+		primitive.E{Key: "org_id", Value: orgID}}
+
 	var err error
-	if context != nil {
-		err = sa.db.accounts.FindWithContext(context, filter, &accounts, nil)
-	} else {
-		err = sa.db.accounts.Find(filter, &accounts, nil)
-	}
+	count, err := sa.coll.CountDocuments(ctx, filter)
 
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return 0, err
 	}
-	if len(accounts) > 0 {
-		//not found
-		return nil, errors.New("There is an account using this groupID")
-	}
-	var numberOfAccounts int
-	if numberOfAccounts == len(accounts) {
-		numberOfAccounts = 0
-	}
-	return &numberOfAccounts, nil
+	return count, nil
 }
 
 //InsertAccountAuthType inserts am account auth type
