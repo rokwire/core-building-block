@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Expose grant permissions to account Admin API [#382](https://github.com/rokwire/core-building-block/issues/382)
+- Expose Admin API with the currently logged in accounts [#355](https://github.com/rokwire/core-building-block/issues/355)
+
+### Fixed
+- Fix create role and create group Admin APIs [#386](https://github.com/rokwire/core-building-block/issues/386)
+
+### Changed
+- Return ordered list of account auth types on link account auth type [#376](https://github.com/rokwire/core-building-block/issues/376)
+
+## [1.18.0] - 2022-01-25
+### Added
+- Expose create app org group admin API [#309](https://github.com/rokwire/core-building-block/issues/309)
 - Apply external auth system user data to profile [#377](https://github.com/rokwire/core-building-block/issues/377)
 - Expose create app org role admin API [#308](https://github.com/rokwire/core-building-block/issues/308)
 - Expose Admin API which gives all applications for an organization [#324](https://github.com/rokwire/core-building-block/issues/324)
@@ -19,9 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expose get accounts admin API [#283](https://github.com/rokwire/core-building-block/issues/283)
 - Expose get account admin API [#270](https://github.com/rokwire/core-building-block/issues/270)
 
+### Changed
+- Clean up schemas index.yaml file [#387](https://github.com/rokwire/core-building-block/issues/387)
+
 ### Fixed
 - Fix yaml files paths [#352](https://github.com/rokwire/core-building-block/issues/352)
-
 
 ## [1.17.0] - 2021-12-06
 ### Fixed
@@ -207,7 +220,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.17.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.18.0...HEAD
+[1.18.0]: https://github.com/rokwire/core-building-block/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/rokwire/core-building-block/compare/v1.16.0...v1.17.0
 [1.16.0]: https://github.com/rokwire/core-building-block/compare/v1.15.0...v1.16.0
 [1.15.0]: https://github.com/rokwire/core-building-block/compare/v1.14.0...v1.15.0
