@@ -13,14 +13,14 @@ import (
 
 //LoginSession
 func loginSessionToDef(item model.LoginSession) Def.SharedResLoginSession {
-	var accountAuthTypeId *string
+	var accountAuthTypeID *string
 	var accountAuthTypeIdentifier *string
 	if item.AccountAuthType != nil {
-		accountAuthTypeId = &item.AccountAuthType.ID
+		accountAuthTypeID = &item.AccountAuthType.ID
 		accountAuthTypeIdentifier = &item.AccountAuthType.Identifier
 	}
 
-	appTypeId := item.AppType.ID
+	appTypeID := item.AppType.ID
 	appTypeIdentifier := item.AppType.Identifier
 	authTypeCode := item.AuthType.Code
 	deviceID := item.Device.ID
@@ -29,8 +29,8 @@ func loginSessionToDef(item model.LoginSession) Def.SharedResLoginSession {
 	dateRefreshed := utils.GetTime(item.DateRefreshed)
 	dateUpdated := utils.GetTime(item.DateUpdated)
 	dateCreated := utils.GetTime(&item.DateCreated)
-	return Def.SharedResLoginSession{Id: &item.ID, Anonymous: &item.Anonymous, AccountAuthTypeId: accountAuthTypeId,
-		AccountAuthTypeIdentifier: accountAuthTypeIdentifier, AppTypeId: &appTypeId, AppTypeIdentifier: &appTypeIdentifier,
+	return Def.SharedResLoginSession{Id: &item.ID, Anonymous: &item.Anonymous, AccountAuthTypeId: accountAuthTypeID,
+		AccountAuthTypeIdentifier: accountAuthTypeIdentifier, AppTypeId: &appTypeID, AppTypeIdentifier: &appTypeIdentifier,
 		AuthTypeCode: &authTypeCode, Identifier: &item.Identifier, IpAddress: &item.IPAddress, DeviceId: &deviceID,
 		RefreshTokensCount: &refreshTokensCount, State: &item.State, MfaAttempts: &item.MfaAttempts, StateExpires: &stateExpires,
 		DateRefreshed: &dateRefreshed, DateUpdated: &dateUpdated, DateCreated: &dateCreated,
