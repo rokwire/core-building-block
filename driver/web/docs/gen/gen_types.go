@@ -1133,8 +1133,14 @@ type PostSystemApplicationsJSONBody SystemReqCreateApplication
 // PostSystemAuthTypesJSONBody defines parameters for PostSystemAuthTypes.
 type PostSystemAuthTypesJSONBody ReqCreateAuthTypeRequest
 
-// PutSystemAuthTypesIdJSONBody defines parameters for PutSystemAuthTypesId.
-type PutSystemAuthTypesIdJSONBody ReqUpdateAuthTypeRequest
+// PutSystemAuthTypesJSONBody defines parameters for PutSystemAuthTypes.
+type PutSystemAuthTypesJSONBody ReqUpdateAuthTypeRequest
+
+// PutSystemAuthTypesParams defines parameters for PutSystemAuthTypes.
+type PutSystemAuthTypesParams struct {
+	// ID of the auth type that needs to be updated
+	Id string `json:"id"`
+}
 
 // PostSystemGlobalConfigJSONBody defines parameters for PostSystemGlobalConfig.
 type PostSystemGlobalConfigJSONBody GlobalConfig
@@ -1268,8 +1274,8 @@ type PostSystemApplicationsJSONRequestBody PostSystemApplicationsJSONBody
 // PostSystemAuthTypesJSONRequestBody defines body for PostSystemAuthTypes for application/json ContentType.
 type PostSystemAuthTypesJSONRequestBody PostSystemAuthTypesJSONBody
 
-// PutSystemAuthTypesIdJSONRequestBody defines body for PutSystemAuthTypesId for application/json ContentType.
-type PutSystemAuthTypesIdJSONRequestBody PutSystemAuthTypesIdJSONBody
+// PutSystemAuthTypesJSONRequestBody defines body for PutSystemAuthTypes for application/json ContentType.
+type PutSystemAuthTypesJSONRequestBody PutSystemAuthTypesJSONBody
 
 // PostSystemGlobalConfigJSONRequestBody defines body for PostSystemGlobalConfig for application/json ContentType.
 type PostSystemGlobalConfigJSONRequestBody PostSystemGlobalConfigJSONBody

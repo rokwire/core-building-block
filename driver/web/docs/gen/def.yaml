@@ -3468,9 +3468,7 @@
             "description": "Internal error"
           }
         }
-      }
-    },
-    "/system/auth-types/{id}": {
+      },
       "put": {
         "tags": [
           "System"
@@ -3485,11 +3483,9 @@
         "parameters": [
           {
             "name": "id",
-            "in": "path",
+            "in": "query",
             "description": "ID of the auth type that needs to be updated",
             "required": true,
-            "style": "simple",
-            "explode": false,
             "schema": {
               "type": "string"
             }
