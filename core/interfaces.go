@@ -24,7 +24,7 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	AdmGetBuildingBlocks(appID string, orgID string) ([]model.ServiceReg, error)
+	AdmGetBuildingBlocks(appID string, orgID string) ([]*model.BuildingBlock, error)
 
 	AdmGetApplications(orgID string) ([]model.Application, error)
 
@@ -129,7 +129,7 @@ type Storage interface {
 
 	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
-	ReadAllBuildingBlocks(appID string, orgID string) ([]model.ServiceReg, error)
+	ReadAllBuildingBlocks(appID string, orgID string) ([]*model.BuildingBlock, error)
 }
 
 //StorageListener listenes for change data storage events

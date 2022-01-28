@@ -169,13 +169,13 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admGetBuildingBlocks(appID string, orgID string) ([]model.ServiceReg, error) {
+func (app *application) admGetBuildingBlocks(appID string, orgID string) ([]*model.BuildingBlock, error) {
 	buildingBlocks, err := app.storage.ReadAllBuildingBlocks(appID, orgID)
 	if err != nil {
 		return nil, err
 	}
 
-	/*wg := sync.WaitGroup{}
+	wg := sync.WaitGroup{}
 	for _, bb := range buildingBlocks {
 		//check if can get the version
 		if bb.VersionURL != nil {
@@ -186,7 +186,7 @@ func (app *application) admGetBuildingBlocks(appID string, orgID string) ([]mode
 			}(bb)
 		}
 	}
-	wg.Wait()*/
+	wg.Wait()
 
 	return buildingBlocks, nil
 }
