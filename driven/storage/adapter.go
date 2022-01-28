@@ -1078,7 +1078,7 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 }
 
 //DeleteAccountAuthType deletes an account auth type
-func (sa *Adapter) DeleteAccountAuthType(item model.AccountAuthType) error {
+func (sa *Adapter) DeleteAccountAuthType(context TransactionContext, item model.AccountAuthType) error {
 	filter := bson.M{"_id": item.Account.ID}
 	update := bson.D{
 		primitive.E{Key: "$pull", Value: bson.D{
@@ -1086,7 +1086,14 @@ func (sa *Adapter) DeleteAccountAuthType(item model.AccountAuthType) error {
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	var res *mongo.UpdateResult
+	var err error
+	if context != nil {
+		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	} else {
+		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
+	}
+
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountAuthType, nil, err)
 	}

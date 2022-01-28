@@ -355,7 +355,7 @@ type Storage interface {
 	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccountAuthType(item model.AccountAuthType) error
 	UpdateAccountAuthType(item model.AccountAuthType) error
-	DeleteAccountAuthType(item model.AccountAuthType) error
+	DeleteAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)
