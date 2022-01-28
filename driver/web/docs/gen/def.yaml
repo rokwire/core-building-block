@@ -1788,13 +1788,15 @@
             "description": "Internal error"
           }
         }
-      },
+      }
+    },
+    "/admin/application/groups/{id}": {
       "delete": {
         "tags": [
           "Admin"
         ],
         "summary": "Delete application group",
-        "description": "Deletes an existing application group\n\n**Auth:** Requires auth token with `service_admin` permission\n",
+        "description": "Deletes an existing application group\n\n**Auth:** Requires auth token with 'all_admin_core' permission\n",
         "security": [
           {
             "bearerAuth": []
@@ -1803,7 +1805,7 @@
         "parameters": [
           {
             "name": "id",
-            "in": "query",
+            "in": "path",
             "description": "The group ID",
             "required": true,
             "schema": {

@@ -943,12 +943,6 @@ type GetAdminApplicationAccountsParams struct {
 	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
 }
 
-// DeleteAdminApplicationGroupsParams defines parameters for DeleteAdminApplicationGroups.
-type DeleteAdminApplicationGroupsParams struct {
-	// The group ID
-	Id string `json:"id"`
-}
-
 // PostAdminApplicationGroupsJSONBody defines parameters for PostAdminApplicationGroups.
 type PostAdminApplicationGroupsJSONBody AdminReqCreateApplicationGroup
 
