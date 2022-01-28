@@ -1026,29 +1026,36 @@ func (a *Auth) UnlinkAccountAuthType(accountID string, authenticationType string
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"id": accountID})
 	}
 
-	//validate if the provided auth type is supported by the provided application and organization
-	authType, _, _, err := a.validateAuthType(authenticationType, appTypeIdentifier, account.AppOrg.Organization.ID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
-	}
-
-	accountAuthType, _, err := a.prepareAccountAuthType(*authType, identifier, nil, nil, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
-	}
-
-	err = a.storage.DeleteAccountAuthType(*accountAuthType)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountAuthType, nil, err)
-	}
-	//TODO: delete credential
-
 	for i, aat := range account.AuthTypes {
 		if aat.AuthType.Code == authenticationType && aat.Identifier == identifier {
+			aat.Account = *account
+			err = a.storage.DeleteAccountAuthType(aat)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountAuthType, nil, err)
+			}
+
+			if aat.Credential != nil {
+				err = a.storage.DeleteCredential(nil, aat.Credential.ID)
+				if err != nil {
+					return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
+				}
+			}
+
 			account.AuthTypes = append(account.AuthTypes[:i], account.AuthTypes[i+1:]...)
 			break
 		}
 	}
+
+	//validate if the provided auth type is supported by the provided application and organization
+	// authType, _, _, err := a.validateAuthType(authenticationType, appTypeIdentifier, account.AppOrg.Organization.ID)
+	// if err != nil {
+	// 	return nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	// }
+
+	// accountAuthType, _, err := a.prepareAccountAuthType(*authType, identifier, nil, nil, nil)
+	// if err != nil {
+	// 	return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
+	// }
 
 	return account, nil
 }
