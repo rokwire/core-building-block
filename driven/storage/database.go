@@ -386,8 +386,14 @@ func (m *database) applyApplicationsOrganizationsChecks(applicationsOrganization
 func (m *database) applyApplicationsOrganizationsGroupsChecks(applicationsOrganizationGroups *collectionWrapper) error {
 	m.logger.Info("apply applications organziations groups checks.....")
 
+	//add compound unique index - name + app_org_id
+	err := applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
 	//add application organization index
-	err := applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
+	err = applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -417,8 +423,14 @@ func (m *database) applyApplicationsOrganizationsGroupsChecks(applicationsOrgani
 func (m *database) applyApplicationsOrganziationsRolesChecks(applicationsOrganziationsRoles *collectionWrapper) error {
 	m.logger.Info("apply applications organizations roles checks.....")
 
+	//add compound unique index - name + app_org_id
+	err := applicationsOrganziationsRoles.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
 	//add application organization index
-	err := applicationsOrganziationsRoles.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
+	err = applicationsOrganziationsRoles.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}

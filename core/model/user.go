@@ -2,6 +2,7 @@ package model
 
 import (
 	"core-building-block/utils"
+	"sort"
 	"time"
 
 	"github.com/rokwire/logging-library-go/logutils"
@@ -79,6 +80,13 @@ func (a Account) GetAccountAuthType(authTypeID string, identifier string) *Accou
 	//assign account
 	result.Account = a
 	return &result
+}
+
+//SortAccountAuthTypes sorts account auth types by matching the given uid
+func (a Account) SortAccountAuthTypes(uid string) {
+	sort.Slice(a.AuthTypes, func(i, _ int) bool {
+		return a.AuthTypes[i].Identifier == uid
+	})
 }
 
 //GetPermissions returns all permissions granted to this account

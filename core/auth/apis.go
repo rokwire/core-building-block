@@ -274,13 +274,13 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 			return nil, errors.WrapErrorAction("error refreshing external auth type on refresh", "", nil, err)
 		}
 
-		//check if need to update the account
+		//check if need to update the account data
 		authType, err := a.storage.FindAuthType(loginSession.AuthType.ID)
 		if err != nil {
 			l.Infof("error getting auth type - %s", refreshToken)
 			return nil, errors.WrapErrorAction("error getting auth type", "", nil, err)
 		}
-		err = a.updateAccountIfNeeded(*loginSession.AccountAuthType, *externalUser, *authType, loginSession.AppOrg)
+		err = a.updateDataIfNeeded(*loginSession.AccountAuthType, *externalUser, *authType, loginSession.AppOrg, l)
 		if err != nil {
 			return nil, errors.WrapErrorAction("update account if needed on refresh", "", nil, err)
 		}
@@ -960,35 +960,44 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log)
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		message (*string): response message
-func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, error) {
+//		account (*model.Account): account data after the operation
+func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error) {
 	message := ""
+	var newAccountAuthType *model.AccountAuthType
 
 	account, err := a.storage.FindAccountByID(nil, accountID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if account == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"id": accountID})
 	}
 
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, account.AppOrg.Organization.ID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
 	if authType.IsAnonymous {
-		return nil, errors.New("cannot link anonymous auth type to an account")
+		return nil, nil, errors.New("cannot link anonymous auth type to an account")
 	} else if authType.IsExternal {
-		_, err = a.linkAccountAuthTypeExternal(*account, *authType, *appType, *appOrg, creds, params, l)
+		newAccountAuthType, err = a.linkAccountAuthTypeExternal(*account, *authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
+			return nil, nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
 		}
 	} else {
-		message, _, err = a.linkAccountAuthType(*account, *authType, *appType, *appOrg, creds, params, l)
+		message, newAccountAuthType, err = a.linkAccountAuthType(*account, *authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
+			return nil, nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
 		}
 	}
 
-	return &message, nil
+	if newAccountAuthType != nil {
+		account.AuthTypes = append(account.AuthTypes, *newAccountAuthType)
+	}
+
+	return &message, account, nil
 }
 
 //GetServiceRegistrations retrieves all service registrations
