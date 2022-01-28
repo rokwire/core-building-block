@@ -479,6 +479,7 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, identif
 
 	loginSessions := make([]model.LoginSession, len(result))
 	for i, ls := range result {
+		//we could allow calling buildLoginSession function as we have limitted the items to max 20
 		loginSession, err := sa.buildLoginSession(&ls)
 		if err != nil {
 			return nil, errors.WrapErrorAction("build", model.TypeLoginSession, nil, err)
