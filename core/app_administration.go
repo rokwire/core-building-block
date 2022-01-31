@@ -165,32 +165,6 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID string) error {
-	appOrgGroup, err := app.storage.FindAppOrgGroupByID(ID, appID, orgID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-	}
-	if appOrgGroup == nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgGroup, nil)
-	}
-
-	if appOrgGroup.System != false {
-		return errors.New("The group cannot be deleted")
-	}
-
-	numberOfAccounts, err := app.storage.CountAccountsByGroupID(appID, orgID, ID)
-	if numberOfAccounts != 0 {
-		return errors.New("This groupID is already used by account and cannot be deleted")
-	}
-
-	//2. delete the application_organization_group record
-	err = app.storage.DeleteAppOrgGroup(ID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgGroup, nil, err)
-	}
-	return nil
-}
-
 func (app *application) admGetApplications(orgID string) ([]model.Application, error) {
 	applicationsOrganizations, err := app.storage.FindApplicationsOrganizationsByOrgID(orgID)
 	if err != nil {
@@ -250,6 +224,32 @@ func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.
 	}
 
 	return getAppOrgGroups, nil
+}
+
+func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID string) error {
+	appOrgGroup, err := app.storage.FindAppOrgGroupByID(ID, appID, orgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+	}
+	if appOrgGroup == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgGroup, nil)
+	}
+
+	if appOrgGroup.System != false {
+		return errors.New("The group cannot be deleted")
+	}
+
+	numberOfAccounts, err := app.storage.CountAccountsByGroupID(appID, orgID, ID)
+	if numberOfAccounts != 0 {
+		return errors.New("This groupID is already used by account and cannot be deleted")
+	}
+
+	//2. delete the application_organization_group record
+	err = app.storage.DeleteAppOrgGroup(ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgGroup, nil, err)
+	}
+	return nil
 }
 
 func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error) {

@@ -111,10 +111,6 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
-func (s *administrationImpl) AdmDeleteAppOrgGroup(ID string, appID string, orgID string) error {
-	return s.app.admDeleteAppOrgGroup(ID, appID, orgID)
-}
-
 func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Application, error) {
 	return s.app.admGetApplications(orgID)
 }
@@ -125,6 +121,10 @@ func (s *administrationImpl) AdmCreateAppOrgGroup(name string, permissionIDs []s
 
 func (s *administrationImpl) AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
 	return s.app.admGetAppOrgGroups(appID, orgID)
+}
+
+func (s *administrationImpl) AdmDeleteAppOrgGroup(ID string, appID string, orgID string) error {
+	return s.app.admDeleteAppOrgGroup(ID, appID, orgID)
 }
 
 func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error) {
