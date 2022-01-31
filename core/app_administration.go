@@ -198,12 +198,6 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 		return errors.Newf("the %s is already used by groups and cannot be deleted", role.Name)
 	}
 
-	account, _ := app.storage.FindAccountByID(nil, role.ID)
-	if account != nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, nil)
-	}
-
-	//2. delete the application_organization_role
 	err = app.storage.DeleteAppOrgRole(ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgRole, nil, err)
