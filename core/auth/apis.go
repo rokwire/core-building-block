@@ -973,13 +973,6 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"id": accountID})
 	}
 
-	for _, aat := range account.AuthTypes {
-		if aat.AuthType.Code == authenticationType {
-			message = "This account already has linked credentials for this authentication type"
-			return &message, account, nil
-		}
-	}
-
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, account.AppOrg.Organization.ID)
 	if err != nil {
