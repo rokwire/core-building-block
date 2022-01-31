@@ -1963,8 +1963,6 @@
             "in": "path",
             "description": "application organization roles ID",
             "required": true,
-            "style": "form",
-            "explode": false,
             "schema": {
               "type": "string"
             }
