@@ -38,22 +38,22 @@ func (_m *Storage) CountAccountsByGroupID(groupID string) (*int64, error) {
 	return r0, r1
 }
 
-// CountAccountsByRoleID provides a mock function with given fields: context, roleID
-func (_m *Storage) CountAccountsByRoleID(context storage.TransactionContext, roleID string) (*int, error) {
-	ret := _m.Called(context, roleID)
+// CountAccountsByRoleID provides a mock function with given fields: roleID
+func (_m *Storage) CountAccountsByRoleID(roleID string) (*int64, error) {
+	ret := _m.Called(roleID)
 
-	var r0 *int
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) *int); ok {
-		r0 = rf(context, roleID)
+	var r0 *int64
+	if rf, ok := ret.Get(0).(func(string) *int64); ok {
+		r0 = rf(roleID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*int)
+			r0 = ret.Get(0).(*int64)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
-		r1 = rf(context, roleID)
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(roleID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -61,22 +61,22 @@ func (_m *Storage) CountAccountsByRoleID(context storage.TransactionContext, rol
 	return r0, r1
 }
 
-// CountGroupsByRoleID provides a mock function with given fields: context, roleID
-func (_m *Storage) CountGroupsByRoleID(context storage.TransactionContext, roleID string) (*int, error) {
-	ret := _m.Called(context, roleID)
+// CountGroupsByRoleID provides a mock function with given fields: roleID
+func (_m *Storage) CountGroupsByRoleID(roleID string) (*int64, error) {
+	ret := _m.Called(roleID)
 
-	var r0 *int
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) *int); ok {
-		r0 = rf(context, roleID)
+	var r0 *int64
+	if rf, ok := ret.Get(0).(func(string) *int64); ok {
+		r0 = rf(roleID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*int)
+			r0 = ret.Get(0).(*int64)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
-		r1 = rf(context, roleID)
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(roleID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -302,13 +302,13 @@ func (_m *Storage) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppO
 	return r0, r1
 }
 
-// FindAppOrgRole provides a mock function with given fields: id
-func (_m *Storage) FindAppOrgRole(id string) (*model.AppOrgRole, error) {
-	ret := _m.Called(id)
+// FindAppOrgRole provides a mock function with given fields: id, appOrgID
+func (_m *Storage) FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error) {
+	ret := _m.Called(id, appOrgID)
 
 	var r0 *model.AppOrgRole
-	if rf, ok := ret.Get(0).(func(string) *model.AppOrgRole); ok {
-		r0 = rf(id)
+	if rf, ok := ret.Get(0).(func(string, string) *model.AppOrgRole); ok {
+		r0 = rf(id, appOrgID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.AppOrgRole)
@@ -316,8 +316,8 @@ func (_m *Storage) FindAppOrgRole(id string) (*model.AppOrgRole, error) {
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(id)
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(id, appOrgID)
 	} else {
 		r1 = ret.Error(1)
 	}
