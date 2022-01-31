@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix create role and create group Admin APIs [#386](https://github.com/rokwire/core-building-block/issues/386)
+- Fix creating application group admin API [#397](https://github.com/rokwire/core-building-block/issues/397)
 
 ### Changed
 - Return ordered list of account auth types on link account auth type [#376](https://github.com/rokwire/core-building-block/issues/376)
