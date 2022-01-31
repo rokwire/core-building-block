@@ -127,6 +127,10 @@ func (s *administrationImpl) AdmDeleteAppOrgGroup(ID string, appID string, orgID
 	return s.app.admDeleteAppOrgGroup(ID, appID, orgID)
 }
 
+func (s *administrationImpl) AdmGrantGroupAccounts(groupID string, accountIDs []string, appID string, orgID string) error {
+	return s.app.admGrantGroupAccounts(groupID, accountIDs, appID, orgID)
+}
+
 func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error) {
 	return s.app.admCreateAppOrgRole(name, description, permissionIDs, appID, orgID, l)
 }

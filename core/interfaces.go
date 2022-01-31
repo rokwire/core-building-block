@@ -30,6 +30,7 @@ type Administration interface {
 	AdmCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgGroup, error)
 	AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error)
 	AdmDeleteAppOrgGroup(ID string, appID string, orgID string) error
+	AdmGrantGroupAccounts(groupID string, accountIDs []string, appID string, orgID string) error
 
 	AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error)
 	AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error)
@@ -84,6 +85,7 @@ type Storage interface {
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
+	FindAccountByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error)
 	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateProfile(accountID string, profile *model.Profile) error
@@ -121,6 +123,7 @@ type Storage interface {
 	InsertAppOrgGroup(item model.AppOrgGroup) error
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
+	InsertGroupAccounts(groupID string, account []model.Account) error
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error

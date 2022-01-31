@@ -264,6 +264,24 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 	return nil
 }
 
+func (app *application) admGrantGroupAccounts(groupID string, accountIDs []string, appID string, orgID string) error {
+
+	account, err := app.storage.FindAccountByAccountID(appID, orgID, accountIDs)
+	if err != nil {
+		return err
+	}
+
+	if len(accountIDs) == 0 {
+		return errors.Newf("no accounts found for ID: %v", accountIDs)
+	}
+
+	err = app.storage.InsertGroupAccounts(groupID, account)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error) {
 	//1. get application organization entity
 	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
