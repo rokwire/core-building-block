@@ -955,12 +955,6 @@ type GetAdminApplicationLoginSessionsParams struct {
 	AccountAuthTypeIdentifier *string `json:"account-auth-type-identifier,omitempty"`
 }
 
-// DeleteAdminApplicationRolesParams defines parameters for DeleteAdminApplicationRoles.
-type DeleteAdminApplicationRolesParams struct {
-	// application organization roles ID
-	Id string `json:"id"`
-}
-
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
 type PostAdminApplicationRolesJSONBody AdminReqCreateApplicationRole
 

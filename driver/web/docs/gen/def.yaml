@@ -1943,7 +1943,9 @@
             "description": "Internal error"
           }
         }
-      },
+      }
+    },
+    "/admin/application/roles/{id}": {
       "delete": {
         "tags": [
           "Admin"
@@ -1958,7 +1960,7 @@
         "parameters": [
           {
             "name": "id",
-            "in": "query",
+            "in": "path",
             "description": "application organization roles ID",
             "required": true,
             "style": "form",
