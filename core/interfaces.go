@@ -90,7 +90,7 @@ type Storage interface {
 	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
-	CountAccountsByRoleID(context storage.TransactionContext, roleID string) (*int, error)
+	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 
 	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)

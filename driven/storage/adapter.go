@@ -1077,28 +1077,14 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	return nil
 }
 
-func (sa *Adapter) CountAccountsByRoleID(context TransactionContext, roleID string) (*int, error) {
-	filter := bson.D{primitive.E{Key: "id", Value: roleID}}
-	var accounts []account
-	var err error
-	if context != nil {
-		err = sa.db.accounts.FindWithContext(context, filter, &accounts, nil)
-	} else {
-		err = sa.db.accounts.Find(filter, &accounts, nil)
-	}
+func (sa *Adapter) CountAccountsByRoleID(roleID string) (*int64, error) {
+	filter := bson.D{primitive.E{Key: "roles._id", Value: roleID}}
 
+	count, err := sa.db.accounts.CountDocuments(filter)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, errors.WrapErrorAction("error counting accounts for group id", "", &logutils.FieldArgs{"roles._id": roleID}, err)
 	}
-	if len(accounts) > 0 {
-		//not found
-		return nil, errors.New("There is an account using this roleID")
-	}
-	var numberOfAccounts int
-	if numberOfAccounts == len(accounts) {
-		numberOfAccounts = 0
-	}
-	return &numberOfAccounts, nil
+	return &count, nil
 }
 
 //CountAccountsByGroupID counts how many accounts there are with the passed group id
