@@ -750,6 +750,31 @@ func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, a
 	return accounts, nil
 }
 
+//FindAccounts finds accounts
+func (sa *Adapter) FindAccountByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error) {
+	//find app org id
+	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error getting cached application organization", "", nil, err)
+	}
+
+	//find the accounts
+	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrg.ID}}
+
+	if accountIDs != nil {
+		filter = append(filter, primitive.E{Key: "_id", Value: accountIDs})
+	}
+
+	var list []account
+	err = sa.db.accounts.Find(filter, &list, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	accounts := accountsFromStorage(list, *appOrg)
+	return accounts, nil
+}
+
 //FindAccountByID finds an account by id
 func (sa *Adapter) FindAccountByID(context TransactionContext, id string) (*model.Account, error) {
 	return sa.findAccount(context, "_id", id)
@@ -1550,6 +1575,26 @@ func (sa *Adapter) InsertAppOrgGroup(item model.AppOrgGroup) error {
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgGroup, nil, err)
 	}
+	return nil
+}
+
+//InsertGroupAccounts inserts account in group
+func (sa *Adapter) InsertGroupAccounts(groupID string, account []model.Account) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: groupID}}
+	update := bson.D{
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "accounts", Value: bson.M{"$each": account}},
+		}},
+	}
+
+	res, err := sa.db.applicationsOrganizationsGroups.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAppOrgGroup, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
 	return nil
 }
 
