@@ -266,6 +266,44 @@ func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.
 	return getAppOrgGroups, nil
 }
 
+func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID string) error {
+	//1. get application organization entity
+	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	//2. find the group
+	group, err := app.storage.FindAppOrgGroup(ID, appOrg.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+	}
+	if group == nil {
+		return errors.Newf("there is no a group for id %s", ID)
+	}
+
+	//3. do not allow to delete system groups
+	if group.System {
+		return errors.Newf("%s group is a system grup and cannot be deleted", group.Name)
+	}
+
+	//4. check if the group has accounts relations
+	numberOfAccounts, err := app.storage.CountAccountsByGroupID(ID)
+	if err != nil {
+		return errors.WrapErrorAction("error checking the accounts count by group id", "", nil, err)
+	}
+	if *numberOfAccounts > 0 {
+		return errors.Newf("the %s is already used by account and cannot be deleted", group.Name)
+	}
+
+	//5. delete the group
+	err = app.storage.DeleteAppOrgGroup(ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgGroup, nil, err)
+	}
+	return nil
+}
+
 func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error) {
 	//1. get application organization entity
 	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)

@@ -1101,6 +1101,17 @@ func (sa *Adapter) CountAccountsByRoleID(context TransactionContext, roleID stri
 	return &numberOfAccounts, nil
 }
 
+//CountAccountsByGroupID counts how many accounts there are with the passed group id
+func (sa *Adapter) CountAccountsByGroupID(groupID string) (*int64, error) {
+	filter := bson.D{primitive.E{Key: "groups._id", Value: groupID}}
+
+	count, err := sa.db.accounts.CountDocuments(filter)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error counting accounts for group id", "", &logutils.FieldArgs{"groups._id": groupID}, err)
+	}
+	return &count, nil
+}
+
 //FindCredential finds a credential by ID
 func (sa *Adapter) FindCredential(context TransactionContext, ID string) (*model.Credential, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
@@ -1534,6 +1545,7 @@ func (sa *Adapter) FindAppOrgRole(id string) (*model.AppOrgRole, error) {
 }
 
 //FindAppOrgGroups finds a set of application organization groups
+//	ids param is optional
 func (sa *Adapter) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
 	var filter bson.D
 
@@ -1559,6 +1571,29 @@ func (sa *Adapter) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppO
 	return result, nil
 }
 
+//FindAppOrgGroup finds a application organization group
+func (sa *Adapter) FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: id}, primitive.E{Key: "app_org_id", Value: appOrgID}}
+	var groupsResult []appOrgGroup
+	err := sa.db.applicationsOrganizationsGroups.Find(filter, &groupsResult, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(groupsResult) == 0 {
+		//no data
+		return nil, nil
+	}
+
+	group := groupsResult[0]
+
+	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+	}
+	result := appOrgGroupFromStorage(&group, *appOrg)
+	return &result, nil
+}
+
 //InsertAppOrgGroup inserts a new application organization group
 func (sa *Adapter) InsertAppOrgGroup(item model.AppOrgGroup) error {
 	group := appOrgGroupToStorage(item)
@@ -1578,6 +1613,8 @@ func (sa *Adapter) UpdateAppOrgGroup(item model.AppOrgGroup) error {
 }
 
 //DeleteAppOrgGroup deletes application organization group
+//	- make sure to call this function once you have verified that there is no any relations
+//	in other collections for the group which is supposed to be deleted.
 func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 	filter := bson.M{"_id": id}
 	result, err := sa.db.applicationsOrganizationsGroups.DeleteOne(filter, nil)
