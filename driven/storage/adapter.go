@@ -1500,6 +1500,7 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 }
 
 //FindAppOrgGroups finds a set of application organization groups
+//	ids param is optional
 func (sa *Adapter) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
 	var filter bson.D
 
@@ -1523,6 +1524,29 @@ func (sa *Adapter) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppO
 	result := appOrgGroupsFromStorage(groupsResult, *appOrg)
 
 	return result, nil
+}
+
+//FindAppOrgGroup finds a application organization group
+func (sa *Adapter) FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: appOrgID}, primitive.E{Key: "app_org_id", Value: appOrgID}}
+	var groupsResult []appOrgGroup
+	err := sa.db.applicationsOrganizationsGroups.Find(filter, &groupsResult, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(groupsResult) == 0 {
+		//no data
+		return nil, nil
+	}
+
+	group := groupsResult[0]
+
+	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+	}
+	result := appOrgGroupFromStorage(&group, *appOrg)
+	return &result, nil
 }
 
 //InsertAppOrgGroup inserts a new application organization group
@@ -1559,25 +1583,6 @@ func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 	}
 
 	return nil
-}
-
-//FindAppOrgGroupByID finds an application organization group
-func (sa *Adapter) FindAppOrgGroupByID(id string, appID string, orgID string) (*model.AppOrgGroup, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: id},
-		primitive.E{Key: "app_id", Value: appID},
-		primitive.E{Key: "org_id", Value: orgID}}
-	var result []model.AppOrgGroup
-	err := sa.db.applicationsOrganizationsGroups.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-	}
-	if len(result) == 0 {
-		//no record
-		return nil, nil
-	}
-
-	appGroupRes := result[0]
-	return &appGroupRes, nil
 }
 
 //LoadAPIKeys finds all api key documents in the DB

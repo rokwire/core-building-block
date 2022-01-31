@@ -117,10 +117,10 @@ type Storage interface {
 	DeleteAppOrgRole(id string) error
 
 	FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
+	FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error)
 	InsertAppOrgGroup(item model.AppOrgGroup) error
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
-	FindAppOrgGroupByID(id string, appID string, orgID string) (*model.AppOrgGroup, error)
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error

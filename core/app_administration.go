@@ -227,7 +227,9 @@ func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.
 }
 
 func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID string) error {
-	appOrgGroup, err := app.storage.FindAppOrgGroupByID(ID, appID, orgID)
+	//TODO
+	return nil
+	/*appOrgGroup, err := app.storage.FindAppOrgGroupByID(ID, appID, orgID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
 	}
@@ -249,7 +251,7 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgGroup, nil, err)
 	}
-	return nil
+	return nil */
 }
 
 func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error) {
