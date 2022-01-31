@@ -989,22 +989,6 @@ func (sa *Adapter) UpdateAccountGroups(accountID string, groups []model.AccountG
 	return nil
 }
 
-func (sa *Adapter) CountAccountsByGroupID(appID string, orgID string, groupID string) (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), sa.db.mongoTimeout)
-	defer cancel()
-	filter := bson.D{primitive.E{Key: "id", Value: groupID},
-		primitive.E{Key: "app_id", Value: appID},
-		primitive.E{Key: "org_id", Value: orgID}}
-
-	var err error
-	count, err := sa.coll.CountDocuments(ctx, filter)
-
-	if err != nil {
-		return 0, err
-	}
-	return count, nil
-}
-
 //InsertAccountAuthType inserts am account auth type
 func (sa *Adapter) InsertAccountAuthType(item model.AccountAuthType) error {
 	storageItem := accountAuthTypeToStorage(item)
@@ -1092,6 +1076,17 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	}
 
 	return nil
+}
+
+//CountAccountsByGroupID counts how many accounts there are with the passed group id
+func (sa *Adapter) CountAccountsByGroupID(groupID string) (*int64, error) {
+	filter := bson.D{primitive.E{Key: "groups._id", Value: groupID}}
+
+	count, err := sa.db.accounts.CountDocuments(filter)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error counting accounts for group id", "", &logutils.FieldArgs{"groups._id": groupID}, err)
+	}
+	return &count, nil
 }
 
 //FindCredential finds a credential by ID

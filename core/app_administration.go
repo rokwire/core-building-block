@@ -247,11 +247,14 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 		return errors.Newf("%s group is a system grup and cannot be deleted", group.Name)
 	}
 
-	//TODO - 4. check relations
-	/*numberOfAccounts, err := app.storage.CountAccountsByGroupID(appID, orgID, ID)
-	if numberOfAccounts != 0 {
-		return errors.New("This groupID is already used by account and cannot be deleted")
-	} */
+	//4. check if the group has accounts relations
+	numberOfAccounts, err := app.storage.CountAccountsByGroupID(ID)
+	if err != nil {
+		return errors.WrapErrorAction("error checking the accounts count by group id", "", nil, err)
+	}
+	if *numberOfAccounts > 0 {
+		return errors.Newf("the %s is already used by account and cannot be deleted", group.Name)
+	}
 
 	//5. delete the group
 	err = app.storage.DeleteAppOrgGroup(ID)

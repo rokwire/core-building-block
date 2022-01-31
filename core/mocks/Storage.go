@@ -15,20 +15,22 @@ type Storage struct {
 	mock.Mock
 }
 
-// CountAccountsByGroupID provides a mock function with given fields: appID, orgID, groupID
-func (_m *Storage) CountAccountsByGroupID(appID string, orgID string, groupID string) (int64, error) {
-	ret := _m.Called(appID, orgID, groupID)
+// CountAccountsByGroupID provides a mock function with given fields: groupID
+func (_m *Storage) CountAccountsByGroupID(groupID string) (*int64, error) {
+	ret := _m.Called(groupID)
 
-	var r0 int64
-	if rf, ok := ret.Get(0).(func(string, string, string) int64); ok {
-		r0 = rf(appID, orgID, groupID)
+	var r0 *int64
+	if rf, ok := ret.Get(0).(func(string) *int64); ok {
+		r0 = rf(groupID)
 	} else {
-		r0 = ret.Get(0).(int64)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*int64)
+		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string, string) error); ok {
-		r1 = rf(appID, orgID, groupID)
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(groupID)
 	} else {
 		r1 = ret.Error(1)
 	}
