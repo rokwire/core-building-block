@@ -1528,7 +1528,7 @@ func (sa *Adapter) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppO
 
 //FindAppOrgGroup finds a application organization group
 func (sa *Adapter) FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: appOrgID}, primitive.E{Key: "app_org_id", Value: appOrgID}}
+	filter := bson.D{primitive.E{Key: "_id", Value: id}, primitive.E{Key: "app_org_id", Value: appOrgID}}
 	var groupsResult []appOrgGroup
 	err := sa.db.applicationsOrganizationsGroups.Find(filter, &groupsResult, nil)
 	if err != nil {
