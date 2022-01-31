@@ -171,15 +171,15 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 		return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
 
-	appOrgRole, err := app.storage.FindAppOrgRole(ID, appOrg.ID)
+	role, err := app.storage.FindAppOrgRole(ID, appOrg.ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
 	}
-	if appOrgRole == nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, nil)
+	if role == nil {
+		return errors.Newf("there is no a role for id %s", ID)
 	}
-	if appOrgRole.System != false {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, nil)
+	if role.System {
+		return errors.Newf("%s role is a system role and cannot be deleted", role.Name)
 	}
 
 	numberOfAccounts, err := app.storage.CountAccountsByRoleID(nil, ID)
@@ -196,7 +196,7 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 		numberOfGroups = numberOfGroups
 	}
 
-	account, _ := app.storage.FindAccountByID(nil, appOrgRole.ID)
+	account, _ := app.storage.FindAccountByID(nil, role.ID)
 	if account != nil {
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, nil)
 	}
