@@ -21,8 +21,7 @@ import (
 
 //Adapter implements the Storage interface
 type Adapter struct {
-	db   *database
-	coll *mongo.Collection
+	db *database
 
 	logger *logs.Logger
 
