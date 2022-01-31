@@ -1078,11 +1078,11 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 }
 
 func (sa *Adapter) CountAccountsByRoleID(roleID string) (*int64, error) {
-	filter := bson.D{primitive.E{Key: "roles._id", Value: roleID}}
+	filter := bson.D{primitive.E{Key: "_id", Value: roleID}}
 
 	count, err := sa.db.accounts.CountDocuments(filter)
 	if err != nil {
-		return nil, errors.WrapErrorAction("error counting accounts for group id", "", &logutils.FieldArgs{"roles._id": roleID}, err)
+		return nil, errors.WrapErrorAction("error counting accounts for group id", "", &logutils.FieldArgs{"_id": roleID}, err)
 	}
 	return &count, nil
 }
@@ -1624,11 +1624,11 @@ func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 }
 
 func (sa *Adapter) CountGroupsByRoleID(roleID string) (*int64, error) {
-	filter := bson.D{primitive.E{Key: "roles._id", Value: roleID}}
+	filter := bson.D{primitive.E{Key: "_id", Value: roleID}}
 
 	count, err := sa.db.applicationsOrganizationsGroups.CountDocuments(filter)
 	if err != nil {
-		return nil, errors.WrapErrorAction("error counting group for role id", "", &logutils.FieldArgs{"roles._id": roleID}, err)
+		return nil, errors.WrapErrorAction("error counting group for role id", "", &logutils.FieldArgs{"_id": roleID}, err)
 	}
 	return &count, nil
 }
