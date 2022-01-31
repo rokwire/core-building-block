@@ -227,31 +227,38 @@ func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.
 }
 
 func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID string) error {
-	//TODO
-	return nil
-	/*appOrgGroup, err := app.storage.FindAppOrgGroupByID(ID, appID, orgID)
+	//1. get application organization entity
+	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	//2. find the group
+	group, err := app.storage.FindAppOrgGroup(ID, appOrg.ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
 	}
-	if appOrgGroup == nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgGroup, nil)
+	if group == nil {
+		return errors.Newf("there is no a group for id %s", ID)
 	}
 
-	if appOrgGroup.System != false {
-		return errors.New("The group cannot be deleted")
+	//3. do not allow to delete system groups
+	if group.System {
+		return errors.Newf("%s group is a system grup and cannot be deleted", group.Name)
 	}
 
-	numberOfAccounts, err := app.storage.CountAccountsByGroupID(appID, orgID, ID)
+	//TODO - 4. check relations
+	/*numberOfAccounts, err := app.storage.CountAccountsByGroupID(appID, orgID, ID)
 	if numberOfAccounts != 0 {
 		return errors.New("This groupID is already used by account and cannot be deleted")
-	}
+	} */
 
-	//2. delete the application_organization_group record
+	//5. delete the group
 	err = app.storage.DeleteAppOrgGroup(ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgGroup, nil, err)
 	}
-	return nil */
+	return nil
 }
 
 func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error) {
