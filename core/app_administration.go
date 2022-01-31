@@ -203,7 +203,7 @@ func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string
 
 	id, _ := uuid.NewUUID()
 	now := time.Now()
-	group := model.AppOrgGroup{ID: id.String(), Name: name, Roles: groupRoles, Permissions: groupPermissions, DateCreated: now}
+	group := model.AppOrgGroup{ID: id.String(), Name: name, Roles: groupRoles, Permissions: groupPermissions, AppOrg: *appOrg, DateCreated: now}
 	err = app.storage.InsertAppOrgGroup(group)
 	if err != nil {
 		return nil, err
