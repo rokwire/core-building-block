@@ -124,7 +124,7 @@ type Storage interface {
 	InsertAppOrgGroup(item model.AppOrgGroup) error
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
-	CountGroupsByRoleID(context storage.TransactionContext, roleID string) (*int, error)
+	CountGroupsByRoleID(roleID string) (*int64, error)
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error

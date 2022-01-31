@@ -190,11 +190,12 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 		return errors.Newf("the %s is already used by account and cannot be deleted", role.Name)
 	}
 
-	numberOfGroups, err := app.storage.CountGroupsByRoleID(nil, ID)
+	numberOfGroups, err := app.storage.CountGroupsByRoleID(ID)
 	if err != nil {
-		return errors.New("This roleID is already used by account and cannot be deleted")
-	} else {
-		numberOfGroups = numberOfGroups
+		return errors.WrapErrorAction("error checking the groups count by role id", "", nil, err)
+	}
+	if *numberOfGroups > 0 {
+		return errors.Newf("the %s is already used by groups and cannot be deleted", role.Name)
 	}
 
 	account, _ := app.storage.FindAccountByID(nil, role.ID)

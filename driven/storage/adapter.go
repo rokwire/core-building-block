@@ -1624,28 +1624,14 @@ func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 	return nil
 }
 
-func (sa *Adapter) CountGroupsByRoleID(context TransactionContext, roleID string) (*int, error) {
-	filter := bson.D{primitive.E{Key: "id", Value: roleID}}
-	var groups []appOrgGroup
-	var err error
-	if context != nil {
-		err = sa.db.applicationsOrganizationsGroups.FindWithContext(context, filter, &groups, nil)
-	} else {
-		err = sa.db.applicationsOrganizationsGroups.Find(filter, &groups, nil)
-	}
+func (sa *Adapter) CountGroupsByRoleID(roleID string) (*int64, error) {
+	filter := bson.D{primitive.E{Key: "roles._id", Value: roleID}}
 
+	count, err := sa.db.applicationsOrganizationsGroups.CountDocuments(filter)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+		return nil, errors.WrapErrorAction("error counting group for role id", "", &logutils.FieldArgs{"roles._id": roleID}, err)
 	}
-	if len(groups) > 0 {
-		//not found
-		return nil, errors.New("There is an account using this roleID")
-	}
-	var numberOfGroups int
-	if numberOfGroups == len(groups) {
-		numberOfGroups = 0
-	}
-	return &numberOfGroups, nil
+	return &count, nil
 }
 
 //LoadAPIKeys finds all api key documents in the DB
