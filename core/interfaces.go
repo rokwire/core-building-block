@@ -24,7 +24,7 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	AdmDeleteAppOrgRole(ID string) error
+	AdmDeleteAppOrgRole(ID string, appID string, orgID string) error
 
 	AdmGetApplications(orgID string) ([]model.Application, error)
 

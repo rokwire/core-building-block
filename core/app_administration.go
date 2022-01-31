@@ -165,7 +165,7 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admDeleteAppOrgRole(ID string) error {
+func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID string) error {
 
 	appOrgRole, err := app.storage.FindAppOrgRole(ID)
 	if err != nil {
