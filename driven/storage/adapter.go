@@ -1527,21 +1527,27 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 	return nil
 }
 
-//FindAppOrgRoleinds an application organization group
-func (sa *Adapter) FindAppOrgRole(id string) (*model.AppOrgRole, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: id}}
-	var result []appOrgRole
-	err := sa.db.applicationsOrganizationsRoles.Find(filter, &result, nil)
+//FindAppOrgRole an application organization role
+func (sa *Adapter) FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: id}, primitive.E{Key: "app_org_id", Value: appOrgID}}
+	var rolesResult []appOrgRole
+	err := sa.db.applicationsOrganizationsRoles.Find(filter, &rolesResult, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+		return nil, err
 	}
-	if len(result) == 0 {
-		//no record
+	if len(rolesResult) == 0 {
+		//no data
 		return nil, nil
 	}
-	response := appOrgRolesFromStorage(result, model.ApplicationOrganization{})
-	//appRoles := result[0]
-	return &response[0], nil
+
+	roles := rolesResult[0]
+
+	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+	}
+	result := appOrgRoleFromStorage(&roles, *appOrg)
+	return &result, nil
 }
 
 //FindAppOrgGroups finds a set of application organization groups

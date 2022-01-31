@@ -166,8 +166,12 @@ func (app *application) admGetTestModel() string {
 }
 
 func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID string) error {
+	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
 
-	appOrgRole, err := app.storage.FindAppOrgRole(ID)
+	appOrgRole, err := app.storage.FindAppOrgRole(ID, appOrg.ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
 	}

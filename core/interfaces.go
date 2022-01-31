@@ -114,7 +114,7 @@ type Storage interface {
 	DeletePermission(id string) error
 
 	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
-	FindAppOrgRole(id string) (*model.AppOrgRole, error)
+	FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error)
 	InsertAppOrgRole(item model.AppOrgRole) error
 	UpdateAppOrgRole(item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
