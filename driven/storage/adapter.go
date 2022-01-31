@@ -1509,7 +1509,6 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 	if deletedCount == 0 {
 		return errors.WrapErrorData(logutils.StatusMissing, model.TypeAppOrgRole, &logutils.FieldArgs{"_id": id}, err)
 	}
-
 	return nil
 }
 
