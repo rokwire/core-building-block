@@ -1562,6 +1562,8 @@ func (sa *Adapter) UpdateAppOrgGroup(item model.AppOrgGroup) error {
 }
 
 //DeleteAppOrgGroup deletes application organization group
+//	- make sure to call this function once you have verified that there is no any relations
+//	in other collections for the group which is supposed to be deleted.
 func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 	filter := bson.M{"_id": id}
 	result, err := sa.db.applicationsOrganizationsGroups.DeleteOne(filter, nil)
