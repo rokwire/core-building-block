@@ -464,8 +464,9 @@ func (h AdminApisHandler) getAppToken(l *logs.Log, r *http.Request, claims *toke
 }
 
 func (h AdminApisHandler) adminDeleteApplicationOrgRoles(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	rolesID := r.URL.Query().Get("id")
-	if rolesID == "" {
+	params := mux.Vars(r)
+	rolesID := params["id"]
+	if len(rolesID) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
