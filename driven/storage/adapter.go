@@ -725,9 +725,9 @@ func (sa *Adapter) FindAccount(appOrgID string, authTypeID string, accountAuthTy
 //FindAccounts finds accounts
 func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
 	//find app org id
-	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
-	if err != nil {
-		return nil, errors.WrapErrorAction("error getting cached application organization", "", nil, err)
+	appOrg, _ := sa.getCachedApplicationOrganization(appID, orgID)
+	if appOrg == nil {
+		return nil, errors.WrapErrorAction("error getting cached application organization", "", nil, nil)
 	}
 
 	//find the accounts
@@ -742,10 +742,9 @@ func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, a
 
 	var list []account
 	options := options.Find()
-	var limitAccounts int64
-	limitAccounts = 20
+	limitAccounts := int64(20)
 	options.SetLimit(limitAccounts)
-	err = sa.db.accounts.Find(filter, &list, options)
+	err := sa.db.accounts.Find(filter, &list, options)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
