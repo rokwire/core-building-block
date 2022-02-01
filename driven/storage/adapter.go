@@ -1104,6 +1104,17 @@ func (sa *Adapter) DeleteAccountAuthType(context TransactionContext, item model.
 	return nil
 }
 
+//CountAccountsByRoleID counts how many accounts there are with the passed role id
+func (sa *Adapter) CountAccountsByRoleID(roleID string) (*int64, error) {
+	filter := bson.D{primitive.E{Key: "roles._id", Value: roleID}}
+
+	count, err := sa.db.accounts.CountDocuments(filter)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error counting accounts for role id", "", &logutils.FieldArgs{"roles._id": roleID}, err)
+	}
+	return &count, nil
+}
+
 //CountAccountsByGroupID counts how many accounts there are with the passed group id
 func (sa *Adapter) CountAccountsByGroupID(groupID string) (*int64, error) {
 	filter := bson.D{primitive.E{Key: "groups._id", Value: groupID}}
@@ -1494,6 +1505,29 @@ func (sa *Adapter) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOr
 	return result, nil
 }
 
+//FindAppOrgRole finds an application organization role
+func (sa *Adapter) FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: id}, primitive.E{Key: "app_org_id", Value: appOrgID}}
+	var rolesResult []appOrgRole
+	err := sa.db.applicationsOrganizationsRoles.Find(filter, &rolesResult, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(rolesResult) == 0 {
+		//no data
+		return nil, nil
+	}
+
+	roles := rolesResult[0]
+
+	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+	}
+	result := appOrgRoleFromStorage(&roles, *appOrg)
+	return &result, nil
+}
+
 //InsertAppOrgRole inserts a new application organization role
 func (sa *Adapter) InsertAppOrgRole(item model.AppOrgRole) error {
 	role := appOrgRoleToStorage(item)
@@ -1513,11 +1547,22 @@ func (sa *Adapter) UpdateAppOrgRole(item model.AppOrgRole) error {
 }
 
 //DeleteAppOrgRole deletes application organization role
+//	- make sure to call this function once you have verified that there is no any relations
+//	in other collections for the role which is supposed to be deleted.
 func (sa *Adapter) DeleteAppOrgRole(id string) error {
-	//TODO
-	//This will be slow operation as we keep a copy of the entity in the users collection without index.
-	//Maybe we need to up the transaction timeout for this operation because of this.
-	return errors.New(logutils.Unimplemented)
+	filter := bson.M{"_id": id}
+	result, err := sa.db.applicationsOrganizationsRoles.DeleteOne(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgRole, &logutils.FieldArgs{"_id": id}, err)
+	}
+	if result == nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"_id": id}, err)
+	}
+	deletedCount := result.DeletedCount
+	if deletedCount == 0 {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeAppOrgRole, &logutils.FieldArgs{"_id": id}, err)
+	}
+	return nil
 }
 
 //FindAppOrgGroups finds a set of application organization groups
@@ -1606,6 +1651,17 @@ func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 	}
 
 	return nil
+}
+
+//CountGroupsByRoleID counts how many groups there are with the passed role id
+func (sa *Adapter) CountGroupsByRoleID(roleID string) (*int64, error) {
+	filter := bson.D{primitive.E{Key: "roles._id", Value: roleID}}
+
+	count, err := sa.db.applicationsOrganizationsGroups.CountDocuments(filter)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error counting groups for role id", "", &logutils.FieldArgs{"roles._id": roleID}, err)
+	}
+	return &count, nil
 }
 
 //LoadAPIKeys finds all api key documents in the DB
