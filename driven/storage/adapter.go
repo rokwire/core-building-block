@@ -1478,6 +1478,29 @@ func (sa *Adapter) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOr
 	return result, nil
 }
 
+//FindAppOrgRole an application organization role
+func (sa *Adapter) FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: id}, primitive.E{Key: "app_org_id", Value: appOrgID}}
+	var rolesResult []appOrgRole
+	err := sa.db.applicationsOrganizationsRoles.Find(filter, &rolesResult, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(rolesResult) == 0 {
+		//no data
+		return nil, nil
+	}
+
+	roles := rolesResult[0]
+
+	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+	}
+	result := appOrgRoleFromStorage(&roles, *appOrg)
+	return &result, nil
+}
+
 //InsertAppOrgRole inserts a new application organization role
 func (sa *Adapter) InsertAppOrgRole(item model.AppOrgRole) error {
 	role := appOrgRoleToStorage(item)
@@ -1511,29 +1534,6 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 		return errors.WrapErrorData(logutils.StatusMissing, model.TypeAppOrgRole, &logutils.FieldArgs{"_id": id}, err)
 	}
 	return nil
-}
-
-//FindAppOrgRole an application organization role
-func (sa *Adapter) FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: id}, primitive.E{Key: "app_org_id", Value: appOrgID}}
-	var rolesResult []appOrgRole
-	err := sa.db.applicationsOrganizationsRoles.Find(filter, &rolesResult, nil)
-	if err != nil {
-		return nil, err
-	}
-	if len(rolesResult) == 0 {
-		//no data
-		return nil, nil
-	}
-
-	roles := rolesResult[0]
-
-	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
-	if err != nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
-	}
-	result := appOrgRoleFromStorage(&roles, *appOrg)
-	return &result, nil
 }
 
 //FindAppOrgGroups finds a set of application organization groups
