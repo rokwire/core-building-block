@@ -141,7 +141,7 @@ func (we Adapter) Start() {
 
 	///system ///
 	//TODO - disable until we implement the system accounts login so that to protect them
-	// /*
+	/*
 	systemSubrouter := subRouter.PathPrefix("/system").Subrouter()
 	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.createGlobalConfig, we.auth.systemAuth)).Methods("POST")
 	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.getGlobalConfig, we.auth.systemAuth)).Methods("GET")
@@ -182,7 +182,7 @@ func (we Adapter) Start() {
 	systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.createAPIKey, we.auth.systemAuth)).Methods("POST")
 	systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.updateAPIKey, we.auth.systemAuth)).Methods("PUT")
 	systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.deleteAPIKey, we.auth.systemAuth)).Methods("DELETE")
-	// */
+	*/
 	///
 
 	err := http.ListenAndServe(":"+we.port, router)
