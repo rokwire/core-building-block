@@ -7,7 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Limit the returned items for get application accounts admin API [#375](https://github.com/rokwire/core-building-block/issues/375)
 - Expose delete app org role admin API [#313](https://github.com/rokwire/core-building-block/issues/313)
 - Expose delete app org group admin API [#312](https://github.com/rokwire/core-building-block/issues/312)
 - Expose Admin API with the currently logged in accounts [#355](https://github.com/rokwire/core-building-block/issues/355)
@@ -17,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix create role and create group Admin APIs [#386](https://github.com/rokwire/core-building-block/issues/386)
 
 ### Changed
+- Limit the returned items for get application accounts admin API [#375](https://github.com/rokwire/core-building-block/issues/375)
 - Return ordered list of account auth types on link account auth type [#376](https://github.com/rokwire/core-building-block/issues/376)
 
 ## [1.18.0] - 2022-01-25
