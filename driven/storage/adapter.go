@@ -750,7 +750,7 @@ func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, a
 	return accounts, nil
 }
 
-//FindAccounts finds accounts
+//FindAccountsByAccountID finds accounts
 func (sa *Adapter) FindAccountsByAccountID(accountIDs []string) ([]model.Account, error) {
 
 	accountFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}}}
