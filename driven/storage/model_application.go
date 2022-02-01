@@ -29,24 +29,24 @@ type applicationType struct {
 }
 
 type version struct {
-	ID             string               `json:"id" bson:"_id"`
-	VersionNumbers model.VersionNumbers `json:"version_numbers" bson:"version_numbers"`
-	AppTypeID      string               `json:"app_type_id" bson:"app_type"`
+	ID             string               `bson:"_id"`
+	VersionNumbers model.VersionNumbers `bson:"version_numbers"`
+	AppTypeID      string               `bson:"app_type_id"`
 
-	DateCreated time.Time  `json:"date_created" bson:"date_created"`
-	DateUpdated *time.Time `json:"date_updated" bson:"date_updated"`
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 type applicationConfig struct {
-	ID        string  `json:"id" bson:"_id"`
-	AppTypeID string  `json:"app_type_id" bson:"app_type_id"`
-	Version   version `json:"version" bson:"version"`
+	ID        string  `bson:"_id"`
+	AppTypeID string  `bson:"app_type_id"`
+	Version   version `bson:"version"`
 	AppOrgID  *string `bson:"app_org_id"`
 
-	Data map[string]interface{} `json:"data" bson:"data"`
+	Data map[string]interface{} `bson:"data"`
 
-	DateCreated time.Time  `json:"date_created" bson:"date_created"`
-	DateUpdated *time.Time `json:"date_updated" bson:"date_updated"`
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 type organization struct {

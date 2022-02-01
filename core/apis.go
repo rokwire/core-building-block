@@ -117,7 +117,16 @@ func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, orgID *string, 
 		}
 	}
 
-	return s.app.serGetAppConfig(applicationType.ID, orgID, versionNumbers)
+	var appOrgID *string
+	if orgID != nil {
+		appOrg, err := s.app.storage.FindApplicationOrganization(appID, *orgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": *orgID}, err)
+		}
+		appOrgID = &appOrg.ID
+	}
+
+	return s.app.serGetAppConfig(applicationType.ID, appOrgID, versionNumbers)
 }
 
 ///
@@ -229,7 +238,26 @@ func (s *systemImpl) SysCreateAppOrgRole(name string, appOrgID string, descripti
 }
 
 func (s *systemImpl) SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
-	return s.app.sysGetAppConfigs(appTypeID, orgID, versionNumbers)
+	//get the app type
+	applicationType, err := s.app.storage.FindApplicationType(appTypeID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeID), err)
+	}
+	if applicationType == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeID))
+	}
+
+	appID := applicationType.Application.ID
+	var appOrgID *string
+	if orgID != nil {
+		appOrg, err := s.app.storage.FindApplicationOrganization(appID, *orgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": *orgID}, err)
+		}
+		appOrgID = &appOrg.ID
+	}
+
+	return s.app.sysGetAppConfigs(appTypeID, appOrgID, versionNumbers)
 }
 
 func (s *systemImpl) SysGetAppConfig(id string) (*model.ApplicationConfig, error) {

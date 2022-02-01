@@ -224,13 +224,13 @@ func (_m *Storage) FindAppConfigByID(ID string) (*model.ApplicationConfig, error
 	return r0, r1
 }
 
-// FindAppConfigByVersion provides a mock function with given fields: appTypeIdentifier, orgID, versionNumbers
-func (_m *Storage) FindAppConfigByVersion(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	ret := _m.Called(appTypeIdentifier, orgID, versionNumbers)
+// FindAppConfigByVersion provides a mock function with given fields: appTypeIdentifier, appOrgID, versionNumbers
+func (_m *Storage) FindAppConfigByVersion(appTypeIdentifier string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
+	ret := _m.Called(appTypeIdentifier, appOrgID, versionNumbers)
 
 	var r0 *model.ApplicationConfig
 	if rf, ok := ret.Get(0).(func(string, *string, model.VersionNumbers) *model.ApplicationConfig); ok {
-		r0 = rf(appTypeIdentifier, orgID, versionNumbers)
+		r0 = rf(appTypeIdentifier, appOrgID, versionNumbers)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.ApplicationConfig)
@@ -239,7 +239,7 @@ func (_m *Storage) FindAppConfigByVersion(appTypeIdentifier string, orgID *strin
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, *string, model.VersionNumbers) error); ok {
-		r1 = rf(appTypeIdentifier, orgID, versionNumbers)
+		r1 = rf(appTypeIdentifier, appOrgID, versionNumbers)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -247,13 +247,13 @@ func (_m *Storage) FindAppConfigByVersion(appTypeIdentifier string, orgID *strin
 	return r0, r1
 }
 
-// FindAppConfigs provides a mock function with given fields: appTypeIdentifier, orgID, versionNumbers
-func (_m *Storage) FindAppConfigs(appTypeIdentifier string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
-	ret := _m.Called(appTypeIdentifier, orgID, versionNumbers)
+// FindAppConfigs provides a mock function with given fields: appTypeIdentifier, appOrgID, versionNumbers
+func (_m *Storage) FindAppConfigs(appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+	ret := _m.Called(appTypeIdentifier, appOrgID, versionNumbers)
 
 	var r0 []model.ApplicationConfig
 	if rf, ok := ret.Get(0).(func(string, *string, *model.VersionNumbers) []model.ApplicationConfig); ok {
-		r0 = rf(appTypeIdentifier, orgID, versionNumbers)
+		r0 = rf(appTypeIdentifier, appOrgID, versionNumbers)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.ApplicationConfig)
@@ -262,7 +262,7 @@ func (_m *Storage) FindAppConfigs(appTypeIdentifier string, orgID *string, versi
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, *string, *model.VersionNumbers) error); ok {
-		r1 = rf(appTypeIdentifier, orgID, versionNumbers)
+		r1 = rf(appTypeIdentifier, appOrgID, versionNumbers)
 	} else {
 		r1 = ret.Error(1)
 	}

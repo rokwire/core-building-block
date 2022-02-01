@@ -127,8 +127,8 @@ func (app *application) serGetCommonTest(l *logs.Log) string {
 	return "Services - Common - test"
 }
 
-func (app *application) serGetAppConfig(appTypeID string, orgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	appConfigs, err := app.storage.FindAppConfigByVersion(appTypeID, orgID, versionNumbers)
+func (app *application) serGetAppConfig(appTypeID string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
+	appConfigs, err := app.storage.FindAppConfigByVersion(appTypeID, appOrgID, versionNumbers)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
 	}

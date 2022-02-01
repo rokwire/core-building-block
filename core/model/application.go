@@ -229,7 +229,7 @@ type AuthTypesSupport struct {
 	} `bson:"supported_auth_types"`
 }
 
-//ApplicationConfig represents mobile app configs
+//ApplicationConfig represents app configs
 type ApplicationConfig struct {
 	ID              string
 	ApplicationType ApplicationType
@@ -241,18 +241,17 @@ type ApplicationConfig struct {
 	DateUpdated *time.Time
 }
 
-// Version represents mobile app config version information
+// Version represents app config version information
 type Version struct {
-	ID             string         `json:"id" bson:"_id"`
-	VersionNumbers VersionNumbers `json:"version_numbers" bson:"version_numbers"`
+	ID             string
+	VersionNumbers VersionNumbers
 
-	ApplicationType ApplicationType `json:"app_type" bson:"app_type"`
-
-	DateCreated time.Time  `json:"date_created" bson:"date_created"`
-	DateUpdated *time.Time `json:"date_updated" bson:"date_updated"`
+	ApplicationType ApplicationType
+	DateCreated     time.Time
+	DateUpdated     *time.Time
 }
 
-//VersionNumbers represents mobile app config version numbers
+//VersionNumbers represents app config version numbers
 type VersionNumbers struct {
 	Major int `json:"major" bson:"major"`
 	Minor int `json:"minor" bson:"minor"`

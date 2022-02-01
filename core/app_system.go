@@ -196,8 +196,8 @@ func (app *application) sysCreateAppOrgRole(name string, appOrgID string, descri
 	return &role, nil
 }
 
-func (app *application) sysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
-	appConfigs, err := app.storage.FindAppConfigs(appTypeID, orgID, versionNumbers)
+func (app *application) sysGetAppConfigs(appTypeID string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+	appConfigs, err := app.storage.FindAppConfigs(appTypeID, appOrgID, versionNumbers)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
 	}
