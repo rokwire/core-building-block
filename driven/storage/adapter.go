@@ -1520,6 +1520,8 @@ func (sa *Adapter) UpdateAppOrgRole(item model.AppOrgRole) error {
 }
 
 //DeleteAppOrgRole deletes application organization role
+//	- make sure to call this function once you have verified that there is no any relations
+//	in other collections for the role which is supposed to be deleted.
 func (sa *Adapter) DeleteAppOrgRole(id string) error {
 	filter := bson.M{"_id": id}
 	result, err := sa.db.applicationsOrganizationsRoles.DeleteOne(filter, nil)
