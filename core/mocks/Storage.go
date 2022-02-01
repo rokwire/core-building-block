@@ -15,6 +15,75 @@ type Storage struct {
 	mock.Mock
 }
 
+// CountAccountsByGroupID provides a mock function with given fields: groupID
+func (_m *Storage) CountAccountsByGroupID(groupID string) (*int64, error) {
+	ret := _m.Called(groupID)
+
+	var r0 *int64
+	if rf, ok := ret.Get(0).(func(string) *int64); ok {
+		r0 = rf(groupID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*int64)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(groupID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CountAccountsByRoleID provides a mock function with given fields: roleID
+func (_m *Storage) CountAccountsByRoleID(roleID string) (*int64, error) {
+	ret := _m.Called(roleID)
+
+	var r0 *int64
+	if rf, ok := ret.Get(0).(func(string) *int64); ok {
+		r0 = rf(roleID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*int64)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(roleID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CountGroupsByRoleID provides a mock function with given fields: roleID
+func (_m *Storage) CountGroupsByRoleID(roleID string) (*int64, error) {
+	ret := _m.Called(roleID)
+
+	var r0 *int64
+	if rf, ok := ret.Get(0).(func(string) *int64); ok {
+		r0 = rf(roleID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*int64)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(roleID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CreateGlobalConfig provides a mock function with given fields: context, globalConfig
 func (_m *Storage) CreateGlobalConfig(context storage.TransactionContext, globalConfig *model.GlobalConfig) error {
 	ret := _m.Called(context, globalConfig)
@@ -201,6 +270,29 @@ func (_m *Storage) FindAccounts(appID string, orgID string, accountID *string, a
 	return r0, r1
 }
 
+// FindAppOrgGroup provides a mock function with given fields: id, appOrgID
+func (_m *Storage) FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error) {
+	ret := _m.Called(id, appOrgID)
+
+	var r0 *model.AppOrgGroup
+	if rf, ok := ret.Get(0).(func(string, string) *model.AppOrgGroup); ok {
+		r0 = rf(id, appOrgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.AppOrgGroup)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(id, appOrgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindAppOrgGroups provides a mock function with given fields: ids, appOrgID
 func (_m *Storage) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
 	ret := _m.Called(ids, appOrgID)
@@ -217,6 +309,29 @@ func (_m *Storage) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppO
 	var r1 error
 	if rf, ok := ret.Get(1).(func([]string, string) error); ok {
 		r1 = rf(ids, appOrgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindAppOrgRole provides a mock function with given fields: id, appOrgID
+func (_m *Storage) FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error) {
+	ret := _m.Called(id, appOrgID)
+
+	var r0 *model.AppOrgRole
+	if rf, ok := ret.Get(0).(func(string, string) *model.AppOrgRole); ok {
+		r0 = rf(id, appOrgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.AppOrgRole)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(id, appOrgID)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -1,0 +1,27 @@
+delete:
+  tags:
+  - Admin
+  summary: Delete application group
+  description: |
+    Deletes an existing application group
+
+    **Auth:** Requires auth token with 'all_admin_core' permission
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      description: The group ID 
+      required: true
+      schema:
+        type: string
+  responses:
+    200:
+      description: Success
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
+ 
