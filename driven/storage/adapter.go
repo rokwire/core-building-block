@@ -1077,6 +1077,7 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	return nil
 }
 
+//CountAccountsByRoleID counts how many accounts there are with the passed role id
 func (sa *Adapter) CountAccountsByRoleID(roleID string) (*int64, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: roleID}}
 
