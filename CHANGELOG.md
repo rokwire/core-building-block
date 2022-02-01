@@ -8,9 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Expose System APIs for auth types [#362](https://github.com/rokwire/core-building-block/issues/362)
+- Expose delete app org role admin API [#313](https://github.com/rokwire/core-building-block/issues/313)
+- Expose delete app org group admin API [#312](https://github.com/rokwire/core-building-block/issues/312)
 - Expose Admin API with the currently logged in accounts [#355](https://github.com/rokwire/core-building-block/issues/355)
 
 ### Fixed
+- Fix creating application group admin API [#397](https://github.com/rokwire/core-building-block/issues/397)
 - Fix create role and create group Admin APIs [#386](https://github.com/rokwire/core-building-block/issues/386)
 
 ### Changed
