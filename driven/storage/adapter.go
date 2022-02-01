@@ -1624,6 +1624,7 @@ func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 	return nil
 }
 
+//CountGroupsByRoleID counts how many groups there are with the passed role id
 func (sa *Adapter) CountGroupsByRoleID(roleID string) (*int64, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: roleID}}
 
