@@ -165,46 +165,6 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
-func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID string) error {
-	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
-	}
-
-	role, err := app.storage.FindAppOrgRole(ID, appOrg.ID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
-	}
-	if role == nil {
-		return errors.Newf("there is no a role for id %s", ID)
-	}
-	if role.System {
-		return errors.Newf("%s role is a system role and cannot be deleted", role.Name)
-	}
-
-	numberOfAccounts, err := app.storage.CountAccountsByRoleID(ID)
-	if err != nil {
-		return errors.WrapErrorAction("error checking the accounts count by role id", "", nil, err)
-	}
-	if *numberOfAccounts > 0 {
-		return errors.Newf("the %s is already used by account and cannot be deleted", role.Name)
-	}
-
-	numberOfGroups, err := app.storage.CountGroupsByRoleID(ID)
-	if err != nil {
-		return errors.WrapErrorAction("error checking the groups count by role id", "", nil, err)
-	}
-	if *numberOfGroups > 0 {
-		return errors.Newf("the %s is already used by groups and cannot be deleted", role.Name)
-	}
-
-	err = app.storage.DeleteAppOrgRole(ID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgRole, nil, err)
-	}
-	return nil
-}
-
 func (app *application) admGetApplications(orgID string) ([]model.Application, error) {
 	applicationsOrganizations, err := app.storage.FindApplicationsOrganizationsByOrgID(orgID)
 	if err != nil {
@@ -342,6 +302,46 @@ func (app *application) AdmGetAppOrgRoles(appID string, orgID string) ([]model.A
 	}
 
 	return getAppOrgRoles, nil
+}
+
+func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID string) error {
+	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	role, err := app.storage.FindAppOrgRole(ID, appOrg.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+	}
+	if role == nil {
+		return errors.Newf("there is no a role for id %s", ID)
+	}
+	if role.System {
+		return errors.Newf("%s role is a system role and cannot be deleted", role.Name)
+	}
+
+	numberOfAccounts, err := app.storage.CountAccountsByRoleID(ID)
+	if err != nil {
+		return errors.WrapErrorAction("error checking the accounts count by role id", "", nil, err)
+	}
+	if *numberOfAccounts > 0 {
+		return errors.Newf("the %s is already used by account and cannot be deleted", role.Name)
+	}
+
+	numberOfGroups, err := app.storage.CountGroupsByRoleID(ID)
+	if err != nil {
+		return errors.WrapErrorAction("error checking the groups count by role id", "", nil, err)
+	}
+	if *numberOfGroups > 0 {
+		return errors.Newf("the %s is already used by groups and cannot be deleted", role.Name)
+	}
+
+	err = app.storage.DeleteAppOrgRole(ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgRole, nil, err)
+	}
+	return nil
 }
 
 func (app *application) admGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error) {

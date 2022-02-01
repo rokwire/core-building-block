@@ -24,7 +24,6 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
-	AdmDeleteAppOrgRole(ID string, appID string, orgID string) error
 
 	AdmGetApplications(orgID string) ([]model.Application, error)
 
@@ -34,6 +33,7 @@ type Administration interface {
 
 	AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error)
 	AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error)
+	AdmDeleteAppOrgRole(ID string, appID string, orgID string) error
 
 	AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error)
 
