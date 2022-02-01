@@ -1626,11 +1626,11 @@ func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 
 //CountGroupsByRoleID counts how many groups there are with the passed role id
 func (sa *Adapter) CountGroupsByRoleID(roleID string) (*int64, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: roleID}}
+	filter := bson.D{primitive.E{Key: "roles._id", Value: roleID}}
 
 	count, err := sa.db.applicationsOrganizationsGroups.CountDocuments(filter)
 	if err != nil {
-		return nil, errors.WrapErrorAction("error counting group for role id", "", &logutils.FieldArgs{"_id": roleID}, err)
+		return nil, errors.WrapErrorAction("error counting groups for role id", "", &logutils.FieldArgs{"roles._id": roleID}, err)
 	}
 	return &count, nil
 }
