@@ -517,10 +517,10 @@ func (h AdminApisHandler) grantGroupAccounts(l *logs.Log, r *http.Request, claim
 	var requestData Def.AdminReqAddApplicationAccountGroup
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAccount, nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.Administration.AdmGrantGroupAccounts(requestData.GroupId, requestData.AccountIds, claims.AppID, claims.OrgID)
+	err = h.coreAPIs.Administration.AdmGrantGroupAccounts(requestData.GroupId, requestData.AccountIds)
 	if err != nil {
 		return l.HttpResponseErrorAction(actionGrant, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
