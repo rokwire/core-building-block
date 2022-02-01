@@ -264,15 +264,15 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 	return nil
 }
 
-func (app *application) admGrantGroupAccounts(groupID string, accountIDs []string, appID string, orgID string) error {
+func (app *application) admGrantGroupAccounts(groupID string, accountIDs []string) error {
 
-	account, err := app.storage.FindAccountByAccountID(appID, orgID, accountIDs)
+	account, err := app.storage.FindAccountsByAccountID(accountIDs)
 	if err != nil {
 		return err
 	}
 
-	if len(accountIDs) == 0 {
-		return errors.Newf("no accounts found for ID: %v", accountIDs)
+	if account == nil {
+		return errors.Newf("no accounts found for ID: %v", account)
 	}
 
 	err = app.storage.InsertGroupAccounts(groupID, account)
