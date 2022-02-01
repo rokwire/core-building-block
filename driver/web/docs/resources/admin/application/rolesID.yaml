@@ -5,13 +5,13 @@
   description: |
     Delete application role
 
-    **Auth:** Requires user auth token
+    **Auth:** Requires auth token with 'all_admin_core' permission
   security:
     - bearerAuth: []
   parameters:
     - name: id
       in: path
-      description: application organization roles ID
+      description: The role ID
       required: true
       schema:
         type: string
