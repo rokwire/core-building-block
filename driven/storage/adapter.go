@@ -751,28 +751,16 @@ func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, a
 }
 
 //FindAccounts finds accounts
-func (sa *Adapter) FindAccountByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error) {
-	//find app org id
-	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
+func (sa *Adapter) FindAccountsByAccountID(accountIDs []string) ([]model.Account, error) {
+
+	accountFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}}}
+	var accountResult []model.Account
+	err := sa.db.accounts.Find(accountFilter, &accountResult, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction("error getting cached application organization", "", nil, err)
+		return nil, err
 	}
 
-	//find the accounts
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrg.ID}}
-
-	if accountIDs != nil {
-		filter = append(filter, primitive.E{Key: "_id", Value: accountIDs})
-	}
-
-	var list []account
-	err = sa.db.accounts.Find(filter, &list, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-
-	accounts := accountsFromStorage(list, *appOrg)
-	return accounts, nil
+	return accountResult, nil
 }
 
 //FindAccountByID finds an account by id
