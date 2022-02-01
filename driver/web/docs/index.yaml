@@ -97,6 +97,8 @@ paths:
     $ref: "./resources/admin/application/permissions.yaml"
   /admin/application/roles:
     $ref: "./resources/admin/application/roles.yaml"
+  /admin/application/roles/{id}:
+    $ref: "./resources/admin/application/rolesID.yaml"
   /admin/organization/applications:
     $ref: "./resources/admin/organization/applications.yaml"
 

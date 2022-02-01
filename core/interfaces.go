@@ -34,6 +34,7 @@ type Administration interface {
 
 	AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error)
 	AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error)
+	AdmDeleteAppOrgRole(ID string, appID string, orgID string) error
 
 	AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error)
 
@@ -91,6 +92,7 @@ type Storage interface {
 	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
+	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 
 	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
@@ -114,6 +116,7 @@ type Storage interface {
 	DeletePermission(id string) error
 
 	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
+	FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error)
 	InsertAppOrgRole(item model.AppOrgRole) error
 	UpdateAppOrgRole(item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
@@ -124,6 +127,7 @@ type Storage interface {
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
 	InsertGroupAccounts(groupID string, account []model.Account) error
+	CountGroupsByRoleID(roleID string) (*int64, error)
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
