@@ -869,7 +869,10 @@ func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, a
 	}
 
 	var list []account
-	err = sa.db.accounts.Find(filter, &list, nil)
+	options := options.Find()
+	limitAccounts := int64(20)
+	options.SetLimit(limitAccounts)
+	err = sa.db.accounts.Find(filter, &list, options)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
