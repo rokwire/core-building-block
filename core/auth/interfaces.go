@@ -317,6 +317,9 @@ type APIs interface {
 
 	//DeleteAPIKey deletes an API key
 	DeleteAPIKey(ID string) error
+
+	//ValidateAPIKey validates the given API key for the given app ID
+	ValidateAPIKey(appID string, apiKey string) error
 }
 
 //Storage interface to communicate with the storage
@@ -399,11 +402,11 @@ type Storage interface {
 	DeleteAPIKey(ID string) error
 
 	//ApplicationTypes
-	FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error)
+	FindApplicationType(id string) (*model.ApplicationType, error)
 
 	//ApplicationsOrganizations
 	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
-	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
+	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 
 	//Device
 	FindDevice(context storage.TransactionContext, deviceID string, accountID string) (*model.Device, error)

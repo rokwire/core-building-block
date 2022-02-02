@@ -277,6 +277,17 @@ type Application struct {
 	Types         *[]ApplicationType         `json:"types,omitempty"`
 }
 
+// ApplicationConfig defines model for ApplicationConfig.
+type ApplicationConfig struct {
+	AppTypeId string                 `json:"app_type_id"`
+	Data      map[string]interface{} `json:"data"`
+	Id        string                 `json:"id"`
+	OrgId     *string                `json:"org_id,omitempty"`
+
+	// conforms major.minor.patch format
+	Version string `json:"version"`
+}
+
 // ApplicationFields defines model for ApplicationFields.
 type ApplicationFields struct {
 	Id               string `json:"id"`
@@ -553,6 +564,23 @@ type ServicesReqAccountAuthTypeUnlink struct {
 
 // ServicesReqAccountAuthTypeUnlinkAuthType defines model for ServicesReqAccountAuthTypeUnlink.AuthType.
 type ServicesReqAccountAuthTypeUnlinkAuthType string
+
+// ServicesReqApplicationConfigs defines model for _services_req_application_configs.
+type ServicesReqApplicationConfigs struct {
+	ApiKey            string `json:"api_key"`
+	AppTypeIdentifier string `json:"app_type_identifier"`
+
+	// conforms major.minor.patch format
+	Version string `json:"version"`
+}
+
+// ServicesReqApplicationOrgConfigs defines model for _services_req_application_org-configs.
+type ServicesReqApplicationOrgConfigs struct {
+	AppTypeIdentifier string `json:"app_type_identifier"`
+
+	// conforms major.minor.patch format
+	Version string `json:"version"`
+}
 
 // ServicesReqAuthorizeService defines model for _services_req_authorize-service.
 type ServicesReqAuthorizeService struct {
@@ -899,6 +927,16 @@ type SystemReqCreateApplication struct {
 	RequiresOwnUsers        bool   `json:"requires_own_users"`
 }
 
+// SystemReqCreateApplicationConfigRequest defines model for _system_req_create_ApplicationConfig_Request.
+type SystemReqCreateApplicationConfigRequest struct {
+	AppTypeId string                 `json:"app_type_id"`
+	Data      map[string]interface{} `json:"data"`
+	OrgId     *string                `json:"org_id,omitempty"`
+
+	// conforms major.minor.patch format
+	Version string `json:"version"`
+}
+
 // SystemReqGetApplication defines model for _system_req_get_Application.
 type SystemReqGetApplication string
 
@@ -1038,6 +1076,12 @@ type PutServicesAccountPreferencesJSONBody map[string]interface{}
 // PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
 type PutServicesAccountProfileJSONBody SharedReqProfile
 
+// PostServicesApplicationConfigsJSONBody defines parameters for PostServicesApplicationConfigs.
+type PostServicesApplicationConfigsJSONBody ServicesReqApplicationConfigs
+
+// PostServicesApplicationOrganizationConfigsJSONBody defines parameters for PostServicesApplicationOrganizationConfigs.
+type PostServicesApplicationOrganizationConfigsJSONBody ServicesReqApplicationOrgConfigs
+
 // DeleteServicesAuthAccountAuthTypeLinkJSONBody defines parameters for DeleteServicesAuthAccountAuthTypeLink.
 type DeleteServicesAuthAccountAuthTypeLinkJSONBody ServicesReqAccountAuthTypeUnlink
 
@@ -1151,6 +1195,19 @@ type GetSystemApplicationApiKeysParams struct {
 // PostSystemApplicationRolesJSONBody defines parameters for PostSystemApplicationRoles.
 type PostSystemApplicationRolesJSONBody SystemReqApplicationRoles
 
+// GetSystemApplicationConfigsParams defines parameters for GetSystemApplicationConfigs.
+type GetSystemApplicationConfigsParams struct {
+	AppTypeId string  `json:"app_type_id"`
+	OrgId     *string `json:"org_id,omitempty"`
+	Version   *string `json:"version,omitempty"`
+}
+
+// PostSystemApplicationConfigsJSONBody defines parameters for PostSystemApplicationConfigs.
+type PostSystemApplicationConfigsJSONBody SystemReqCreateApplicationConfigRequest
+
+// PutSystemApplicationConfigsIdJSONBody defines parameters for PutSystemApplicationConfigsId.
+type PutSystemApplicationConfigsIdJSONBody SystemReqCreateApplicationConfigRequest
+
 // PostSystemApplicationsJSONBody defines parameters for PostSystemApplications.
 type PostSystemApplicationsJSONBody SystemReqCreateApplication
 
@@ -1232,6 +1289,12 @@ type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJ
 // PutServicesAccountProfileJSONRequestBody defines body for PutServicesAccountProfile for application/json ContentType.
 type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
 
+// PostServicesApplicationConfigsJSONRequestBody defines body for PostServicesApplicationConfigs for application/json ContentType.
+type PostServicesApplicationConfigsJSONRequestBody PostServicesApplicationConfigsJSONBody
+
+// PostServicesApplicationOrganizationConfigsJSONRequestBody defines body for PostServicesApplicationOrganizationConfigs for application/json ContentType.
+type PostServicesApplicationOrganizationConfigsJSONRequestBody PostServicesApplicationOrganizationConfigsJSONBody
+
 // DeleteServicesAuthAccountAuthTypeLinkJSONRequestBody defines body for DeleteServicesAuthAccountAuthTypeLink for application/json ContentType.
 type DeleteServicesAuthAccountAuthTypeLinkJSONRequestBody DeleteServicesAuthAccountAuthTypeLinkJSONBody
 
@@ -1285,6 +1348,12 @@ type PutSystemApiKeysJSONRequestBody PutSystemApiKeysJSONBody
 
 // PostSystemApplicationRolesJSONRequestBody defines body for PostSystemApplicationRoles for application/json ContentType.
 type PostSystemApplicationRolesJSONRequestBody PostSystemApplicationRolesJSONBody
+
+// PostSystemApplicationConfigsJSONRequestBody defines body for PostSystemApplicationConfigs for application/json ContentType.
+type PostSystemApplicationConfigsJSONRequestBody PostSystemApplicationConfigsJSONBody
+
+// PutSystemApplicationConfigsIdJSONRequestBody defines body for PutSystemApplicationConfigsId for application/json ContentType.
+type PutSystemApplicationConfigsIdJSONRequestBody PutSystemApplicationConfigsIdJSONBody
 
 // PostSystemApplicationsJSONRequestBody defines body for PostSystemApplications for application/json ContentType.
 type PostSystemApplicationsJSONRequestBody PostSystemApplicationsJSONBody

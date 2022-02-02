@@ -1,6 +1,7 @@
 package core
 
 import (
+	"core-building-block/core/auth"
 	"core-building-block/core/model"
 
 	"github.com/rokwire/logging-library-go/errors"
@@ -17,6 +18,8 @@ type application struct {
 	storage Storage
 
 	listeners []ApplicationListener
+
+	auth auth.APIs
 }
 
 //start starts the core part of the application

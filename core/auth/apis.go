@@ -939,7 +939,7 @@ func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, appro
 //GetAdminToken returns an admin token for the specified application
 func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error) {
 	//verify that the provided appID is valid for the organization
-	_, err := a.storage.FindApplicationOrganizations(appID, claims.OrgID)
+	_, err := a.storage.FindApplicationOrganization(appID, claims.OrgID)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": claims.OrgID, "app_id": appID}, err)
 	}
@@ -1134,4 +1134,9 @@ func (a *Auth) UpdateAPIKey(apiKey model.APIKey) error {
 //DeleteAPIKey deletes an API key
 func (a *Auth) DeleteAPIKey(ID string) error {
 	return a.storage.DeleteAPIKey(ID)
+}
+
+//ValidateAPIKey validates the given API key for the given app ID
+func (a *Auth) ValidateAPIKey(appID string, apiKey string) error {
+	return a.validateAPIKey(apiKey, appID)
 }
