@@ -152,6 +152,7 @@ type Storage interface {
 	InsertAppConfig(item model.ApplicationConfig) (*model.ApplicationConfig, error)
 	UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error
 	DeleteAppConfig(ID string) error
+
 	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 }

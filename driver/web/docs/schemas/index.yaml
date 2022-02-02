@@ -179,9 +179,9 @@ _services_res_authorize-service:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
 
 ### app-configs API
-_req_application_configs_Request:
+_services_req_application_configs:
   $ref: "./apis/services/application/configs/request/Request.yaml"
-_req_application_org-configs_Request:
+_services_req_application_org-configs:
   $ref: "./apis/services/application/org-configs/request/Request.yaml"
 ## end SERVICES section
 

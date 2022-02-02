@@ -978,7 +978,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_application_configs_Request'
+              $ref: '#/components/schemas/_services_req_application_configs'
             example:
               version: 1.0.1
               app_type_identifier: edu.illinois.rokwire.android
@@ -1013,7 +1013,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_application_org-configs_Request'
+              $ref: '#/components/schemas/_services_req_application_org-configs'
             example:
               version: 1.0.1
               app_type_identifier: edu.illinois.rokwire.android
@@ -2528,7 +2528,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_create_ApplicationConfig_Request'
+              $ref: '#/components/schemas/_system_req_create_ApplicationConfig_Request'
             example:
               version: 1.0.1
               app_type_id: 7e037f2d-b423-4b4d-a1bc-18507f81c6d1
@@ -2603,7 +2603,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_req_create_ApplicationConfig_Request'
+              $ref: '#/components/schemas/_system_req_create_ApplicationConfig_Request'
             example:
               version: 1.0.1
               app_type_id: 7e037f2d-b423-4b4d-a1bc-18507f81c6d1
@@ -4131,7 +4131,7 @@ components:
             type: string
         service_reg:
           $ref: '#/components/schemas/ServiceReg'
-    _req_application_configs_Request:
+    _services_req_application_configs:
       required:
         - app_type_identifier
         - version
@@ -4145,7 +4145,7 @@ components:
           description: conforms major.minor.patch format
         api_key:
           type: string
-    _req_application_org-configs_Request:
+    _services_req_application_org-configs:
       required:
         - app_type_identifier
         - version
@@ -4478,7 +4478,7 @@ components:
           type: array
           items:
             type: string
-    _req_create_ApplicationConfig_Request:
+    _system_req_create_ApplicationConfig_Request:
       required:
         - app_type_id
         - version
