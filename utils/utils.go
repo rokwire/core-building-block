@@ -5,9 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"reflect"
+	"time"
 
 	"github.com/rokwire/logging-library-go/logs"
 
@@ -98,4 +100,21 @@ func GetIP(l *logs.Log, r *http.Request) string {
 		IPAddress = r.RemoteAddr
 	}
 	return IPAddress
+}
+
+//GetLogValue prepares a sensitive data to be logged.
+func GetLogValue(value string, n int) string {
+	if len(value) <= n {
+		return "***"
+	}
+	lastN := value[len(value)-n:]
+	return fmt.Sprintf("***%s", lastN)
+}
+
+//FormatTime formats the time value which this pointer points. Gives empty string if the pointer is nil
+func FormatTime(v *time.Time) string {
+	if v == nil {
+		return ""
+	}
+	return v.Format("2006-01-02T15:04:05.000Z")
 }

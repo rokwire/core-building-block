@@ -2,8 +2,11 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
@@ -162,6 +165,210 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
+func (app *application) admGetApplications(orgID string) ([]model.Application, error) {
+	applicationsOrganizations, err := app.storage.FindApplicationsOrganizationsByOrgID(orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	if len(applicationsOrganizations) == 0 {
+		return nil, nil
+	}
+
+	var apps []model.Application
+	for _, appOrg := range applicationsOrganizations {
+		apps = append(apps, appOrg.Application)
+	}
+	return apps, nil
+}
+
+func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgGroup, error) {
+	//1. get application organization entity
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	//2. check permissions
+	groupPermissions, err := app.checkPermissions(*appOrg, permissionIDs, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
+	}
+
+	//3. check roles
+	groupRoles, err := app.checkRoles(*appOrg, rolesIDs, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
+	}
+
+	id, _ := uuid.NewUUID()
+	now := time.Now()
+	group := model.AppOrgGroup{ID: id.String(), Name: name, Roles: groupRoles, Permissions: groupPermissions, AppOrg: *appOrg, DateCreated: now}
+	err = app.storage.InsertAppOrgGroup(group)
+	if err != nil {
+		return nil, err
+	}
+	return &group, nil
+}
+
+func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
+	//find application organization
+	getAppOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+	//find application organization groups
+	getAppOrgGroups, err := app.storage.FindAppOrgGroups(nil, getAppOrg.ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err)
+	}
+
+	return getAppOrgGroups, nil
+}
+
+func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID string) error {
+	//1. get application organization entity
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	//2. find the group
+	group, err := app.storage.FindAppOrgGroup(ID, appOrg.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+	}
+	if group == nil {
+		return errors.Newf("there is no a group for id %s", ID)
+	}
+
+	//3. do not allow to delete system groups
+	if group.System {
+		return errors.Newf("%s group is a system grup and cannot be deleted", group.Name)
+	}
+
+	//4. check if the group has accounts relations
+	numberOfAccounts, err := app.storage.CountAccountsByGroupID(ID)
+	if err != nil {
+		return errors.WrapErrorAction("error checking the accounts count by group id", "", nil, err)
+	}
+	if *numberOfAccounts > 0 {
+		return errors.Newf("the %s is already used by account and cannot be deleted", group.Name)
+	}
+
+	//5. delete the group
+	err = app.storage.DeleteAppOrgGroup(ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgGroup, nil, err)
+	}
+	return nil
+}
+
+func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error) {
+	//1. get application organization entity
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	//2. check permissions
+	rolePermissions, err := app.checkPermissions(*appOrg, permissionIDs, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
+	}
+
+	//3. create role
+	id, _ := uuid.NewUUID()
+	now := time.Now()
+	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: rolePermissions, AppOrg: *appOrg, DateCreated: now}
+	err = app.storage.InsertAppOrgRole(role)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
+	}
+	return &role, nil
+}
+
+func (app *application) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
+	//find application organization
+	getAppOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	//find application organization roles
+	getAppOrgRoles, err := app.storage.FindAppOrgRoles(nil, getAppOrg.ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err)
+	}
+
+	return getAppOrgRoles, nil
+}
+
+func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID string) error {
+	//1. get application organization entity
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	//2. find the role
+	role, err := app.storage.FindAppOrgRole(ID, appOrg.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+	}
+	if role == nil {
+		return errors.Newf("there is no a role for id %s", ID)
+	}
+
+	//3. do not allow to delete system roles
+	if role.System {
+		return errors.Newf("%s role is a system role and cannot be deleted", role.Name)
+	}
+
+	//4. check if the role has accounts relations
+	numberOfAccounts, err := app.storage.CountAccountsByRoleID(ID)
+	if err != nil {
+		return errors.WrapErrorAction("error checking the accounts count by role id", "", nil, err)
+	}
+	if *numberOfAccounts > 0 {
+		return errors.Newf("the %s is already used by account and cannot be deleted", role.Name)
+	}
+
+	//5. check if the group has groups relations
+	numberOfGroups, err := app.storage.CountGroupsByRoleID(ID)
+	if err != nil {
+		return errors.WrapErrorAction("error checking the groups count by role id", "", nil, err)
+	}
+	if *numberOfGroups > 0 {
+		return errors.Newf("the %s is already used by groups and cannot be deleted", role.Name)
+	}
+
+	//6. delete the group
+	err = app.storage.DeleteAppOrgRole(ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgRole, nil, err)
+	}
+	return nil
+}
+
+func (app *application) admGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error) {
+	//1. find application organization
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+	if appOrg == nil {
+		return nil, errors.New("there is no app org for app ID and org ID")
+	}
+
+	//2. find permissions by the service ids
+	permissions, err := app.storage.FindPermissionsByServiceIDs(appOrg.ServicesIDs)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypePermission, nil, err)
+	}
+	return permissions, nil
+}
+
 func (app *application) admGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
 	//find the accounts
 	accounts, err := app.storage.FindAccounts(appID, orgID, accountID, authTypeIdentifier)
@@ -169,6 +376,15 @@ func (app *application) admGetAccounts(appID string, orgID string, accountID *st
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	return accounts, nil
+}
+
+func (app *application) admGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error) {
+	//find the login sessions
+	loginSessions, err := app.storage.FindLoginSessionsByParams(appID, orgID, identifier, accountAuthTypeIdentifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+	}
+	return loginSessions, nil
 }
 
 func (app *application) admGetAccount(accountID string) (*model.Account, error) {

@@ -27,8 +27,22 @@ type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
 
+	AdmGetApplications(orgID string) ([]model.Application, error)
+
+	AdmCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgGroup, error)
+	AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error)
+	AdmDeleteAppOrgGroup(ID string, appID string, orgID string) error
+
+	AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error)
+	AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error)
+	AdmDeleteAppOrgRole(ID string, appID string, orgID string) error
+
+	AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error)
+
 	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
+
+	AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -84,14 +98,15 @@ type Storage interface {
 	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
+	CountAccountsByRoleID(roleID string) (*int64, error)
+	CountAccountsByGroupID(groupID string) (*int64, error)
 
 	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
 	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
 	DeleteCredential(context storage.TransactionContext, ID string) error
 
+	FindLoginSessionsByParams(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error)
 	DeleteLoginSessions(context storage.TransactionContext, identifier string) error
-
-	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error
@@ -101,18 +116,23 @@ type Storage interface {
 	DeleteGlobalConfig(context storage.TransactionContext) error
 
 	FindPermissionsByName(names []string) ([]model.Permission, error)
+	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)
 	InsertPermission(item model.Permission) error
 	UpdatePermission(item model.Permission) error
 	DeletePermission(id string) error
 
 	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
+	FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error)
 	InsertAppOrgRole(item model.AppOrgRole) error
 	UpdateAppOrgRole(item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
 
+	FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
+	FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error)
 	InsertAppOrgGroup(item model.AppOrgGroup) error
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
+	CountGroupsByRoleID(roleID string) (*int64, error)
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
@@ -132,6 +152,8 @@ type Storage interface {
 	InsertAppConfig(item model.ApplicationConfig) (*model.ApplicationConfig, error)
 	UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error
 	DeleteAppConfig(ID string) error
+	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
+	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 }
 
 //StorageListener listenes for change data storage events
