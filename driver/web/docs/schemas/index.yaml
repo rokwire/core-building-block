@@ -182,7 +182,7 @@ _services_res_authorize-service:
 _services_req_application_configs:
   $ref: "./apis/services/application/configs/request/Request.yaml"
 _services_req_application_org-configs:
-  $ref: "./apis/services/application/org-configs/request/Request.yaml"
+  $ref: "./apis/services/application/organization/configs/request/Request.yaml"
 ## end SERVICES section
 
 ## ADMIN section

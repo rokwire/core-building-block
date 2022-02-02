@@ -558,7 +558,7 @@ func (h SystemApisHandler) createApplicationConfig(l *logs.Log, r *http.Request,
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqCreateApplicationConfigRequest
+	var requestData Def.SystemReqCreateApplicationConfigRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("appconfig create request"), nil, err, http.StatusBadRequest, true)
@@ -596,7 +596,7 @@ func (h SystemApisHandler) updateApplicationConfig(l *logs.Log, r *http.Request,
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqCreateApplicationConfigRequest
+	var requestData Def.SystemReqCreateApplicationConfigRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("appconfig update request"), nil, err, http.StatusBadRequest, true)

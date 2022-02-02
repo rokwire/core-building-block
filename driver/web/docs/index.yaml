@@ -67,8 +67,8 @@ paths:
     $ref: "./resources/services/test.yaml"
   /services/application/configs:
     $ref: "./resources/services/application/configs.yaml"
-  /services/application/org-configs:
-    $ref: "./resources/services/application/org-configs.yaml"
+  /services/application/organization/configs:
+    $ref: "./resources/services/application/organization/configs.yaml"
 
   #admin
   /admin/auth/login:

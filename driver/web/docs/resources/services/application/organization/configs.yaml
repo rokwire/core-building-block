@@ -12,7 +12,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/services/application/org-configs/request/Request.yaml"
+          $ref: "../../../../schemas/apis/services/application/organization/configs/request/Request.yaml"
         example:
           version: "1.0.1"
           app_type_identifier: "edu.illinois.rokwire.android"
@@ -22,7 +22,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/application/ApplicationConfig.yaml"
+            $ref: "../../../../schemas/application/ApplicationConfig.yaml"
     400:
       description: Bad request.
     401:

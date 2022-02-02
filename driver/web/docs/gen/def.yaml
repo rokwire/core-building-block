@@ -998,7 +998,7 @@ paths:
           description: AppConfig not found
         '500':
           description: Internal error
-  /services/application/org-configs:
+  /services/application/organization/configs:
     post:
       tags:
         - Services
