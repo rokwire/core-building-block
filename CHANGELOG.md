@@ -10,10 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expose delete app org role admin API [#313](https://github.com/rokwire/core-building-block/issues/313)
 - Expose delete app org group admin API [#312](https://github.com/rokwire/core-building-block/issues/312)
 - Expose Admin API with the currently logged in accounts [#355](https://github.com/rokwire/core-building-block/issues/355)
+- Add app config endpoints [#261](https://github.com/rokwire/core-building-block/issues/261)
 
 ### Fixed
 - Fix creating application group admin API [#397](https://github.com/rokwire/core-building-block/issues/397)
 - Fix create role and create group Admin APIs [#386](https://github.com/rokwire/core-building-block/issues/386)
+- Fix broken app config API and CHANGELOG.md [#401](https://github.com/rokwire/core-building-block/issues/401)
 
 ### Changed
 - Limit the returned items for get application accounts admin API [#375](https://github.com/rokwire/core-building-block/issues/375)
@@ -87,7 +89,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expose get account services API [#217](https://github.com/rokwire/core-building-block/issues/217)
 - Define unified responses for the APIs [#286](https://github.com/rokwire/core-building-block/issues/286)
 - Add refresh token abuse detection to login sessions [#257](https://github.com/rokwire/core-building-block/issues/257)
-- Add app config endpoints [#261](https://github.com/rokwire/core-building-block/issues/261)
 
 ### Changed
 - Limit number of active login sessions per account [#256](https://github.com/rokwire/core-building-block/issues/256)
