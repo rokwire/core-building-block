@@ -270,7 +270,6 @@ func (_m *Storage) FindAccounts(appID string, orgID string, accountID *string, a
 	return r0, r1
 }
 
-<<<<<<< HEAD
 // FindAppConfigByID provides a mock function with given fields: ID
 func (_m *Storage) FindAppConfigByID(ID string) (*model.ApplicationConfig, error) {
 	ret := _m.Called(ID)
@@ -281,29 +280,12 @@ func (_m *Storage) FindAppConfigByID(ID string) (*model.ApplicationConfig, error
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.ApplicationConfig)
-=======
-// FindAppOrgGroup provides a mock function with given fields: id, appOrgID
-func (_m *Storage) FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error) {
-	ret := _m.Called(id, appOrgID)
-
-	var r0 *model.AppOrgGroup
-	if rf, ok := ret.Get(0).(func(string, string) *model.AppOrgGroup); ok {
-		r0 = rf(id, appOrgID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.AppOrgGroup)
->>>>>>> develop
 		}
 	}
 
 	var r1 error
-<<<<<<< HEAD
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(ID)
-=======
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(id, appOrgID)
->>>>>>> develop
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -311,7 +293,6 @@ func (_m *Storage) FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGro
 	return r0, r1
 }
 
-<<<<<<< HEAD
 // FindAppConfigByVersion provides a mock function with given fields: appTypeIdentifier, appOrgID, versionNumbers
 func (_m *Storage) FindAppConfigByVersion(appTypeIdentifier string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
 	ret := _m.Called(appTypeIdentifier, appOrgID, versionNumbers)
@@ -322,29 +303,12 @@ func (_m *Storage) FindAppConfigByVersion(appTypeIdentifier string, appOrgID *st
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.ApplicationConfig)
-=======
-// FindAppOrgGroups provides a mock function with given fields: ids, appOrgID
-func (_m *Storage) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
-	ret := _m.Called(ids, appOrgID)
-
-	var r0 []model.AppOrgGroup
-	if rf, ok := ret.Get(0).(func([]string, string) []model.AppOrgGroup); ok {
-		r0 = rf(ids, appOrgID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.AppOrgGroup)
->>>>>>> develop
 		}
 	}
 
 	var r1 error
-<<<<<<< HEAD
 	if rf, ok := ret.Get(1).(func(string, *string, model.VersionNumbers) error); ok {
 		r1 = rf(appTypeIdentifier, appOrgID, versionNumbers)
-=======
-	if rf, ok := ret.Get(1).(func([]string, string) error); ok {
-		r1 = rf(ids, appOrgID)
->>>>>>> develop
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -352,7 +316,6 @@ func (_m *Storage) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppO
 	return r0, r1
 }
 
-<<<<<<< HEAD
 // FindAppConfigs provides a mock function with given fields: appTypeIdentifier, appOrgID, versionNumbers
 func (_m *Storage) FindAppConfigs(appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
 	ret := _m.Called(appTypeIdentifier, appOrgID, versionNumbers)
@@ -363,7 +326,65 @@ func (_m *Storage) FindAppConfigs(appTypeIdentifier string, appOrgID *string, ve
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.ApplicationConfig)
-=======
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, *string, *model.VersionNumbers) error); ok {
+		r1 = rf(appTypeIdentifier, appOrgID, versionNumbers)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindAppOrgGroup provides a mock function with given fields: id, appOrgID
+func (_m *Storage) FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error) {
+	ret := _m.Called(id, appOrgID)
+
+	var r0 *model.AppOrgGroup
+	if rf, ok := ret.Get(0).(func(string, string) *model.AppOrgGroup); ok {
+		r0 = rf(id, appOrgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.AppOrgGroup)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(id, appOrgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindAppOrgGroups provides a mock function with given fields: ids, appOrgID
+func (_m *Storage) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
+	ret := _m.Called(ids, appOrgID)
+
+	var r0 []model.AppOrgGroup
+	if rf, ok := ret.Get(0).(func([]string, string) []model.AppOrgGroup); ok {
+		r0 = rf(ids, appOrgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.AppOrgGroup)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func([]string, string) error); ok {
+		r1 = rf(ids, appOrgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindAppOrgRole provides a mock function with given fields: id, appOrgID
 func (_m *Storage) FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error) {
 	ret := _m.Called(id, appOrgID)
@@ -374,18 +395,12 @@ func (_m *Storage) FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.AppOrgRole)
->>>>>>> develop
 		}
 	}
 
 	var r1 error
-<<<<<<< HEAD
-	if rf, ok := ret.Get(1).(func(string, *string, *model.VersionNumbers) error); ok {
-		r1 = rf(appTypeIdentifier, appOrgID, versionNumbers)
-=======
 	if rf, ok := ret.Get(1).(func(string, string) error); ok {
 		r1 = rf(id, appOrgID)
->>>>>>> develop
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -439,13 +454,8 @@ func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	return r0, r1
 }
 
-<<<<<<< HEAD
 // FindApplicationOrganization provides a mock function with given fields: appID, orgID
 func (_m *Storage) FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
-=======
-// FindApplicationOrganization provides a mock function with given fields: appID, orgID
-func (_m *Storage) FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
->>>>>>> develop
 	ret := _m.Called(appID, orgID)
 
 	var r0 *model.ApplicationOrganization
@@ -467,7 +477,6 @@ func (_m *Storage) FindApplicationOrganization(appID string, orgID string) (*mod
 	return r0, r1
 }
 
-<<<<<<< HEAD
 // FindApplicationType provides a mock function with given fields: id
 func (_m *Storage) FindApplicationType(id string) (*model.ApplicationType, error) {
 	ret := _m.Called(id)
@@ -491,8 +500,6 @@ func (_m *Storage) FindApplicationType(id string) (*model.ApplicationType, error
 	return r0, r1
 }
 
-=======
->>>>>>> develop
 // FindApplications provides a mock function with given fields:
 func (_m *Storage) FindApplications() ([]model.Application, error) {
 	ret := _m.Called()
