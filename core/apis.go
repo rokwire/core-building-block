@@ -4,9 +4,7 @@ import (
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
 
-	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
 )
 
 //APIs exposes to the drivers adapters access to the core functionality
@@ -246,26 +244,7 @@ func (s *systemImpl) SysCreateAppOrgRole(name string, appOrgID string, descripti
 }
 
 func (s *systemImpl) SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
-	//get the app type
-	applicationType, err := s.app.storage.FindApplicationType(appTypeID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeID), err)
-	}
-	if applicationType == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeID))
-	}
-
-	appID := applicationType.Application.ID
-	var appOrgID *string
-	if orgID != nil {
-		appOrg, err := s.app.storage.FindApplicationOrganization(appID, *orgID)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": *orgID}, err)
-		}
-		appOrgID = &appOrg.ID
-	}
-
-	return s.app.sysGetAppConfigs(appTypeID, appOrgID, versionNumbers)
+	return s.app.sysGetAppConfigs(appTypeID, orgID, versionNumbers)
 }
 
 func (s *systemImpl) SysGetAppConfig(id string) (*model.ApplicationConfig, error) {
@@ -273,63 +252,11 @@ func (s *systemImpl) SysGetAppConfig(id string) (*model.ApplicationConfig, error
 }
 
 func (s *systemImpl) SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	//get the app type
-	applicationType, err := s.app.storage.FindApplicationType(appTypeID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeID), err)
-	}
-	if applicationType == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeID))
-	}
-	if len(applicationType.Versions) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationTypeVersionList, logutils.StringArgs(appTypeID))
-	}
-
-	var appOrg *model.ApplicationOrganization
-	if orgID != nil {
-		appOrg, err = s.app.storage.FindApplicationOrganization(applicationType.Application.ID, *orgID)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": applicationType.Application.ID, "org_id": *orgID}, err)
-		}
-	}
-
-	for _, supportedVersion := range applicationType.Versions {
-		if versionNumbers == supportedVersion.VersionNumbers {
-			return s.app.sysCreateAppConfig(*applicationType, supportedVersion, appOrg, data)
-		}
-	}
-
-	return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigsVersion, logutils.StringArgs(versionNumbers.String()+" for app_type_id: "+appTypeID))
+	return s.app.sysCreateAppConfig(appTypeID, orgID, data, versionNumbers)
 }
 
 func (s *systemImpl) SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
-	applicationType, err := s.app.storage.FindApplicationType(appTypeID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeID), err)
-
-	}
-	if applicationType == nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeID))
-	}
-	if len(applicationType.Versions) == 0 {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationTypeVersionList, logutils.StringArgs(appTypeID))
-	}
-
-	var appOrg *model.ApplicationOrganization
-	if orgID != nil {
-		appOrg, err = s.app.storage.FindApplicationOrganization(applicationType.Application.ID, *orgID)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": applicationType.Application.ID, "org_id": *orgID}, err)
-		}
-	}
-
-	for _, supportedVersion := range applicationType.Versions {
-		if versionNumbers == supportedVersion.VersionNumbers {
-			return s.app.sysUpdateAppConfig(id, *applicationType, supportedVersion, appOrg, data)
-		}
-	}
-
-	return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigsVersion, logutils.StringArgs(versionNumbers.String()+" for app_type_id: "+appTypeID))
+	return s.app.sysUpdateAppConfig(id, appTypeID, orgID, data, versionNumbers)
 }
 
 func (s *systemImpl) SysDeleteAppConfig(id string) error {
