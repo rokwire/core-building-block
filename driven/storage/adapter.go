@@ -727,7 +727,7 @@ func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, a
 	//find app org id
 	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
 	if err != nil {
-		return nil, errors.WrapErrorAction("error getting cached application organization", "", nil, nil)
+		return nil, errors.WrapErrorAction("error getting cached application organization", "", nil, err)
 	}
 
 	//find the accounts
