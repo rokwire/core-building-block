@@ -127,8 +127,35 @@ func (app *application) serGetCommonTest(l *logs.Log) string {
 	return "Services - Common - test"
 }
 
-func (app *application) serGetAppConfig(appTypeID string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	appConfigs, err := app.storage.FindAppConfigByVersion(appTypeID, appOrgID, versionNumbers)
+func (app *application) serGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
+	//get the app type
+	applicationType, err := app.storage.FindApplicationType(appTypeIdentifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
+	}
+	if applicationType == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier))
+	}
+
+	appID := applicationType.Application.ID
+
+	if orgID == nil || apiKey != nil {
+		err = app.auth.ValidateAPIKey(appID, *apiKey)
+		if err != nil {
+			return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+		}
+	}
+
+	var appOrgID *string
+	if orgID != nil {
+		appOrg, err := app.storage.FindApplicationOrganization(appID, *orgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": *orgID}, err)
+		}
+		appOrgID = &appOrg.ID
+	}
+
+	appConfigs, err := app.storage.FindAppConfigByVersion(applicationType.ID, appOrgID, versionNumbers)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
 	}

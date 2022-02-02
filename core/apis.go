@@ -42,10 +42,10 @@ func (c *APIs) GetVersion() string {
 func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
-	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners}
+	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners, auth: auth}
 
 	//add coreAPIs instance
-	servicesImpl := &servicesImpl{app: &application, auth: auth}
+	servicesImpl := &servicesImpl{app: &application}
 	administrationImpl := &administrationImpl{app: &application}
 	encryptionImpl := &encryptionImpl{app: &application}
 	bbsImpl := &bbsImpl{app: &application}
@@ -62,8 +62,7 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 
 //servicesImpl
 type servicesImpl struct {
-	auth auth.APIs
-	app  *application
+	app *application
 }
 
 func (s *servicesImpl) SerDeleteAccount(id string) error {
@@ -99,34 +98,7 @@ func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[st
 }
 
 func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
-	//get the app type
-	applicationType, err := s.app.storage.FindApplicationType(appTypeIdentifier)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
-	}
-	if applicationType == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier))
-	}
-
-	appID := applicationType.Application.ID
-
-	if orgID == nil || apiKey != nil {
-		err = s.auth.ValidateAPIKey(appID, *apiKey)
-		if err != nil {
-			return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
-		}
-	}
-
-	var appOrgID *string
-	if orgID != nil {
-		appOrg, err := s.app.storage.FindApplicationOrganization(appID, *orgID)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": *orgID}, err)
-		}
-		appOrgID = &appOrg.ID
-	}
-
-	return s.app.serGetAppConfig(applicationType.ID, appOrgID, versionNumbers)
+	return s.app.serGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey)
 }
 
 ///
