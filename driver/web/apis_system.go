@@ -403,7 +403,7 @@ func (h SystemApisHandler) createApplication(l *logs.Log, r *http.Request, claim
 
 	appTypes := make([]model.ApplicationType, len(*applicationTypes))
 	for i, at := range *applicationTypes {
-		appTypes[i] = model.ApplicationType{ID: at.Id, Identifier: at.Identifier, Name: *at.Name, Versions: *at.Versions}
+		appTypes[i] = model.ApplicationType{ID: at.Id, Identifier: at.Identifier, Name: *at.Name}
 	}
 
 	_, err = h.coreAPIs.System.SysCreateApplication(name, multiTenant, requiresOwnUsers, maxLoginSessionDuration, appTypes)
