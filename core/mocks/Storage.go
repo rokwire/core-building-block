@@ -569,13 +569,13 @@ func (_m *Storage) FindCredential(context storage.TransactionContext, ID string)
 	return r0, r1
 }
 
-// FindLoginSessionsByParams provides a mock function with given fields: appID, orgID, identifier, accountAuthTypeIdentifier
-func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error) {
-	ret := _m.Called(appID, orgID, identifier, accountAuthTypeIdentifier)
+// FindLoginSessionsByParams provides a mock function with given fields: appID, orgID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress
+func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string, appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
+	ret := _m.Called(appID, orgID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
 
 	var r0 []model.LoginSession
-	if rf, ok := ret.Get(0).(func(string, string, *string, *string) []model.LoginSession); ok {
-		r0 = rf(appID, orgID, identifier, accountAuthTypeIdentifier)
+	if rf, ok := ret.Get(0).(func(string, string, *string, *string, *string, *string, *bool, *string, *string) []model.LoginSession); ok {
+		r0 = rf(appID, orgID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.LoginSession)
@@ -583,8 +583,8 @@ func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, identif
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string, *string, *string) error); ok {
-		r1 = rf(appID, orgID, identifier, accountAuthTypeIdentifier)
+	if rf, ok := ret.Get(1).(func(string, string, *string, *string, *string, *string, *bool, *string, *string) error); ok {
+		r1 = rf(appID, orgID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
 	} else {
 		r1 = ret.Error(1)
 	}
