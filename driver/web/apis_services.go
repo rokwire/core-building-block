@@ -270,7 +270,7 @@ func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request,
 	}
 
 	if string(requestData.AuthType) == claims.AuthType && requestData.Identifier == claims.UID {
-		return l.HttpResponseError("May not unlink account auth type currently in use", nil, http.StatusForbidden, true)
+		return l.HttpResponseError("May not unlink account auth type currently in use", nil, http.StatusBadRequest, false)
 	}
 
 	account, err := h.coreAPIs.Auth.UnlinkAccountAuthType(claims.Subject, string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.Identifier, l)
