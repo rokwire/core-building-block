@@ -1789,6 +1789,17 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "app-type-identifier",
+            "in": "query",
+            "description": "app type identifier",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

@@ -994,6 +994,9 @@ type GetAdminApplicationLoginSessionsParams struct {
 
 	// app type id
 	AppTypeId *string `json:"app-type-id,omitempty"`
+
+	// app type identifier
+	AppTypeIdentifier *string `json:"app-type-identifier,omitempty"`
 }
 
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.

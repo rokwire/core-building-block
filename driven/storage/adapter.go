@@ -580,7 +580,7 @@ func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier stri
 
 //FindLoginSessionsByParams finds login sessions by params
 func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
-	appTypeID *string) ([]model.LoginSession, error) {
+	appTypeID *string, appTypeIdentifier *string) ([]model.LoginSession, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
 		primitive.E{Key: "org_id", Value: orgID}}
 
@@ -594,6 +594,10 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, identif
 
 	if appTypeID != nil {
 		filter = append(filter, primitive.E{Key: "app_type_id", Value: appTypeID})
+	}
+
+	if appTypeIdentifier != nil {
+		filter = append(filter, primitive.E{Key: "app_type_identifier", Value: appTypeIdentifier})
 	}
 
 	var result []loginSession
