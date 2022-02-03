@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
@@ -322,8 +323,15 @@ func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Reque
 		appTypeIdentifier = &appTypeIdentifierFromQuery
 	}
 
+	anonymousFromQuery := r.URL.Query().Get("anonymous")
+	var anonymous *bool
+	result, _ := strconv.ParseBool(anonymousFromQuery)
+	if len(anonymousFromQuery) > 0 {
+		anonymous = &result
+	}
+
 	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, identifier, accountAuthTypeIdentifier, appTypeID,
-		appTypeIdentifier)
+		appTypeIdentifier, anonymous)
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding login sessions", model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
 	}
