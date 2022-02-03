@@ -18,6 +18,8 @@ type Services interface {
 
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
+
+	SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
 }
 
 //Administration exposes administration APIs for the driver adapters
@@ -73,6 +75,12 @@ type System interface {
 	SysUpdatePermission(name string, serviceID *string, assigners *[]string) (*model.Permission, error)
 
 	SysCreateAppOrgRole(name string, appID string, description string, permissionNames []string) (*model.AppOrgRole, error)
+
+	SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
+	SysGetAppConfig(id string) (*model.ApplicationConfig, error)
+	SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
+	SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
+	SysDeleteAppConfig(id string) error
 
 	SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
 	SysGrantAccountRoles(accountID string, appID string, roleIDs []string) error
@@ -137,9 +145,19 @@ type Storage interface {
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 
+	FindApplicationType(id string) (*model.ApplicationType, error)
+
+	FindAppConfigs(appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
+	FindAppConfigByVersion(appTypeIdentifier string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
+	FindAppConfigByID(ID string) (*model.ApplicationConfig, error)
+	InsertAppConfig(item model.ApplicationConfig) (*model.ApplicationConfig, error)
+	UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error
+	DeleteAppConfig(ID string) error
+
 	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
 	ReadAllBuildingBlocks(appID string, orgID string) ([]*model.BuildingBlock, error)
+	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 }
 
 //StorageListener listenes for change data storage events
