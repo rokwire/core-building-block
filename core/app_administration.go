@@ -185,7 +185,7 @@ func (app *application) admGetApplications(orgID string) ([]model.Application, e
 
 func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgGroup, error) {
 	//1. get application organization entity
-	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
@@ -214,7 +214,7 @@ func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string
 
 func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
 	//find application organization
-	getAppOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	getAppOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
@@ -229,7 +229,7 @@ func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.
 
 func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID string) error {
 	//1. get application organization entity
-	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
@@ -267,7 +267,7 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 
 func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error) {
 	//1. get application organization entity
-	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
@@ -291,7 +291,7 @@ func (app *application) admCreateAppOrgRole(name string, description string, per
 
 func (app *application) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
 	//find application organization
-	getAppOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	getAppOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
@@ -307,7 +307,7 @@ func (app *application) AdmGetAppOrgRoles(appID string, orgID string) ([]model.A
 
 func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID string) error {
 	//1. get application organization entity
-	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
@@ -354,7 +354,7 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 
 func (app *application) admGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error) {
 	//1. find application organization
-	appOrg, err := app.storage.FindApplicationOrganizations(appID, orgID)
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
