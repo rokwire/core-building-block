@@ -159,6 +159,9 @@ func mfaDataToDef(item *model.MFAType) *Def.SharedResMfa {
 }
 
 func profileToDef(item *model.Profile) *Def.ProfileFields {
+	if item == nil {
+		return nil
+	}
 	birthYear := int(item.BirthYear)
 	return &Def.ProfileFields{Id: &item.ID, PhotoUrl: &item.PhotoURL, FirstName: &item.FirstName, LastName: &item.LastName,
 		Email: &item.Email, Phone: &item.Phone, BirthYear: &birthYear, Address: &item.Address, ZipCode: &item.ZipCode,

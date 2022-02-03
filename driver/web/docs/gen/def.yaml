@@ -1129,6 +1129,105 @@
         }
       }
     },
+    "/services/application/configs": {
+      "post": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Gets default app config",
+        "description": "Returns the default app config for the highest version that is equal to or less than the provided version\n\n**Auth:** Requires a valid API Key for access.\n",
+        "requestBody": {
+          "description": "App config query\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_services_req_application_configs"
+              },
+              "example": {
+                "version": "1.0.1",
+                "app_type_identifier": "edu.illinois.rokwire.android",
+                "api_key": ""
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "successfully read app configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationConfig"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "AppConfig not found"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/services/application/organization/configs": {
+      "post": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Gets organization-specific app configs",
+        "description": "Returns the app config for the highest version that is equal to or less than the provided version for the currently authenticated organization\n\n**Auth:** Requires auth token\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_services_req_application_org-configs"
+              },
+              "example": {
+                "version": "1.0.1",
+                "app_type_identifier": "edu.illinois.rokwire.android"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "successfully read app configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationConfig"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "AppConfig not found"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/admin/auth/login": {
       "post": {
         "tags": [
@@ -3031,6 +3130,281 @@
         }
       }
     },
+    "/system/application/configs": {
+      "get": {
+        "deprecated": true,
+        "tags": [
+          "System"
+        ],
+        "summary": "Reads app configs",
+        "description": "If version is provided, the app config for the highest version that is equal to or less than this value will be returned as the only item in the list.\nOtherwise it will return a list of all app config versions for the given app_type_id. If org_id is provided, the configs for that organization will\nbe returned, otherwise the default configs will be returned.\n\n**Auth:** Requires user auth token with 'all_appconfigs' or 'get_appconfig' permission\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "app_type_id",
+            "in": "query",
+            "required": true,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "query",
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successfully read app configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApplicationConfig"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      },
+      "post": {
+        "deprecated": true,
+        "tags": [
+          "System"
+        ],
+        "summary": "Creates app configs",
+        "description": "**Auth:** Requires user auth token with 'all_appconfigs' or 'update_appconfig' permission.\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "New app configs",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_system_req_create_ApplicationConfig_Request"
+              },
+              "example": {
+                "version": "1.0.1",
+                "app_type_id": "7e037f2d-b423-4b4d-a1bc-18507f81c6d1",
+                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                "data": {}
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/system/application/configs/{id}": {
+      "get": {
+        "deprecated": true,
+        "tags": [
+          "System"
+        ],
+        "summary": "Reads app configs by given id",
+        "description": "**Auth:** Requires user auth token  with 'all_appconfigs' or 'get_appconfig' permission\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "app config id to read",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationConfig"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      },
+      "put": {
+        "deprecated": true,
+        "tags": [
+          "System"
+        ],
+        "summary": "Updates app configs",
+        "description": "**Auth:** Requires user auth token with 'all_appconfigs' or 'update_appconfig' permission\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "updated app config",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_system_req_create_ApplicationConfig_Request"
+              },
+              "example": {
+                "version": "1.0.1",
+                "app_type_id": "7e037f2d-b423-4b4d-a1bc-18507f81c6d1",
+                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                "data": {
+                  "url": "rokmetro.dev"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      },
+      "delete": {
+        "deprecated": true,
+        "tags": [
+          "System"
+        ],
+        "summary": "Deletes app configs",
+        "description": "**Auth:** Requires user auth token with 'all_appconfigs' or 'update_appconfig' permission\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/system/account/permissions": {
       "put": {
         "deprecated": true,
@@ -3922,6 +4296,33 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "ApplicationConfig": {
+        "required": [
+          "id",
+          "app_type_id",
+          "version",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "app_type_id": {
+            "type": "string"
+          },
+          "org_id": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string",
+            "description": "conforms major.minor.patch format"
+          },
+          "data": {
+            "type": "object"
           }
         }
       },
@@ -5348,6 +5749,42 @@
           }
         }
       },
+      "_services_req_application_configs": {
+        "required": [
+          "app_type_identifier",
+          "version",
+          "api_key"
+        ],
+        "type": "object",
+        "properties": {
+          "app_type_identifier": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string",
+            "description": "conforms major.minor.patch format"
+          },
+          "api_key": {
+            "type": "string"
+          }
+        }
+      },
+      "_services_req_application_org-configs": {
+        "required": [
+          "app_type_identifier",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "app_type_identifier": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string",
+            "description": "conforms major.minor.patch format"
+          }
+        }
+      },
       "_admin_req_app-token": {
         "required": [
           "token"
@@ -5847,6 +6284,29 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "_system_req_create_ApplicationConfig_Request": {
+        "required": [
+          "app_type_id",
+          "version",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "app_type_id": {
+            "type": "string"
+          },
+          "org_id": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string",
+            "description": "conforms major.minor.patch format"
+          },
+          "data": {
+            "type": "object"
           }
         }
       }
