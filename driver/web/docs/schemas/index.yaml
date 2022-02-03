@@ -33,6 +33,8 @@ OrganizationConfig:
   $ref: "./application/OrganizationConfig.yaml"
 OrganizationConfigFields:
   $ref: "./application/OrganizationConfigFields.yaml"
+ApplicationConfig:
+  $ref: "./application/ApplicationConfig.yaml"
 
 # auth
 LoginSession:
@@ -176,6 +178,11 @@ _services_req_authorize-service:
 _services_res_authorize-service:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
 
+### app-configs API
+_services_req_application_configs:
+  $ref: "./apis/services/application/configs/request/Request.yaml"
+_services_req_application_org-configs:
+  $ref: "./apis/services/application/organization/configs/request/Request.yaml"
 ## end SERVICES section
 
 ## ADMIN section
@@ -261,5 +268,9 @@ _res_update_GlobalConfig_Response:
   $ref: "./apis/system/update-global-config/response/Response.yaml"
 _system_req_account-roles:
   $ref: "./apis/system/account/roles/request/Request.yaml"
+
+### application config API
+_system_req_create_ApplicationConfig_Request:
+  $ref: "./apis/system/application-config/request/Request.yaml"
 
 ## end SYSTEM section

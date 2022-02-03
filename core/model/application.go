@@ -2,6 +2,8 @@ package model
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/rokwire/logging-library-go/logutils"
@@ -22,8 +24,16 @@ const (
 	TypeApplicationOrganization logutils.MessageDataType = "application organization"
 	//TypeApplicationType ...
 	TypeApplicationType logutils.MessageDataType = "application type"
+	//TypeApplicationTypeVersionList ...
+	TypeApplicationTypeVersionList logutils.MessageDataType = "application type supported version list"
 	//TypeApplicationUserRelations ...
 	TypeApplicationUserRelations logutils.MessageDataType = "app user relations"
+	//TypeApplicationConfig ...
+	TypeApplicationConfig logutils.MessageDataType = "app config"
+	//TypeApplicationConfigsVersion ...
+	TypeApplicationConfigsVersion logutils.MessageDataType = "app config version number"
+	//TypeVersionNumbers ...
+	TypeVersionNumbers logutils.MessageDataType = "version numbers"
 )
 
 //Permission represents permission entity
@@ -101,10 +111,10 @@ type Application struct {
 	DateUpdated *time.Time
 }
 
-//FindApplicationType finds app type for identifier
-func (a Application) FindApplicationType(identifier string) *ApplicationType {
+//FindApplicationType finds app type
+func (a Application) FindApplicationType(id string) *ApplicationType {
 	for _, appType := range a.Types {
-		if appType.Identifier == identifier {
+		if appType.Identifier == id || appType.ID == id {
 			return &appType
 		}
 	}
@@ -232,9 +242,9 @@ type YearlyExpirePolicy struct {
 //ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc
 type ApplicationType struct {
 	ID         string
-	Identifier string   //edu.illinois.rokwire etc
-	Name       string   //safer community android, safer community ios, safer community web, uuic android etc
-	Versions   []string //1.1.0, 1.2.0 etc
+	Identifier string    //edu.illinois.rokwire etc
+	Name       string    //safer community android, safer community ios, safer community web, uuic android etc
+	Versions   []Version //1.1.0, 1.2.0 etc
 
 	Application Application
 }
@@ -247,4 +257,82 @@ type AuthTypesSupport struct {
 		AuthTypeID string                 `bson:"auth_type_id"`
 		Params     map[string]interface{} `bson:"params"`
 	} `bson:"supported_auth_types"`
+}
+
+//ApplicationConfig represents app configs
+type ApplicationConfig struct {
+	ID              string
+	ApplicationType ApplicationType
+	Version         Version
+	AppOrg          *ApplicationOrganization
+	Data            map[string]interface{}
+
+	DateCreated time.Time
+	DateUpdated *time.Time
+}
+
+// Version represents app config version information
+type Version struct {
+	ID             string
+	VersionNumbers VersionNumbers
+
+	ApplicationType ApplicationType
+	DateCreated     time.Time
+	DateUpdated     *time.Time
+}
+
+//VersionNumbers represents app config version numbers
+type VersionNumbers struct {
+	Major int `json:"major" bson:"major"`
+	Minor int `json:"minor" bson:"minor"`
+	Patch int `json:"patch" bson:"patch"`
+}
+
+func (v *VersionNumbers) String() string {
+	if v == nil {
+		return ""
+	}
+	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
+}
+
+// LessThanOrEqualTo evaluates if v1 is less than or equal to v
+func (v VersionNumbers) LessThanOrEqualTo(v1 *VersionNumbers) bool {
+	if v1 == nil {
+		return false
+	}
+
+	if v.Major < v1.Major {
+		return true
+	}
+	if v.Major == v1.Major && v.Minor < v1.Minor {
+		return true
+	}
+	if v.Major == v1.Major && v.Minor == v1.Minor && v.Patch <= v1.Patch {
+		return true
+	}
+
+	return false
+}
+
+//VersionNumbersFromString parses a string into a VersionNumbers struct. Returns nil if invalid format.
+func VersionNumbersFromString(version string) *VersionNumbers {
+	parts := strings.Split(version, ".")
+	if len(parts) != 3 {
+		return nil
+	}
+
+	major, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return nil
+	}
+	minor, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return nil
+	}
+	patch, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return nil
+	}
+
+	return &VersionNumbers{Major: major, Minor: minor, Patch: patch}
 }
