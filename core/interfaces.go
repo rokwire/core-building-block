@@ -155,7 +155,6 @@ type Storage interface {
 	DeleteAppConfig(ID string) error
 
 	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
-	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
 	ReadAllBuildingBlocks(appID string, orgID string) ([]*model.BuildingBlock, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 }
