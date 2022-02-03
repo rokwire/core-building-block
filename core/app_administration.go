@@ -379,9 +379,9 @@ func (app *application) admGetAccounts(appID string, orgID string, accountID *st
 }
 
 func (app *application) admGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
-	appTypeID *string, appTypeIdentifier *string, anonymous *bool) ([]model.LoginSession, error) {
+	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string) ([]model.LoginSession, error) {
 	//find the login sessions
-	loginSessions, err := app.storage.FindLoginSessionsByParams(appID, orgID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous)
+	loginSessions, err := app.storage.FindLoginSessionsByParams(appID, orgID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 	}

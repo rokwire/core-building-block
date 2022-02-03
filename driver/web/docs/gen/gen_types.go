@@ -1000,6 +1000,9 @@ type GetAdminApplicationLoginSessionsParams struct {
 
 	// anonymous
 	Anonymous *bool `json:"anonymous,omitempty"`
+
+	// device id
+	DeviceId *string `json:"device-id,omitempty"`
 }
 
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.

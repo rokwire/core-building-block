@@ -1811,6 +1811,17 @@
             "schema": {
               "type": "boolean"
             }
+          },
+          {
+            "name": "device-id",
+            "in": "query",
+            "description": "device id",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

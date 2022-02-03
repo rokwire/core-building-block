@@ -156,8 +156,8 @@ func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, er
 }
 
 func (s *administrationImpl) AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
-	appTypeID *string, appTypeIdentifier *string, anonymous *bool) ([]model.LoginSession, error) {
-	return s.app.admGetApplicationLoginSessions(appID, orgID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous)
+	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string) ([]model.LoginSession, error) {
+	return s.app.admGetApplicationLoginSessions(appID, orgID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID)
 }
 
 ///

@@ -330,8 +330,14 @@ func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Reque
 		anonymous = &result
 	}
 
+	deviceIdFromQuery := r.URL.Query().Get("device-id")
+	var deviceID *string
+	if len(deviceIdFromQuery) > 0 {
+		deviceID = &deviceIdFromQuery
+	}
+
 	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, identifier, accountAuthTypeIdentifier, appTypeID,
-		appTypeIdentifier, anonymous)
+		appTypeIdentifier, anonymous, deviceID)
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding login sessions", model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
 	}
