@@ -310,7 +310,13 @@ func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Reque
 		accountAuthTypeIdentifier = &accountAuthTypeIdentifierFromQuery
 	}
 
-	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, identifier, accountAuthTypeIdentifier)
+	appTypeIDFromQuery := r.URL.Query().Get("app-type-id")
+	var appTypeID *string
+	if len(appTypeIDFromQuery) > 0 {
+		appTypeID = &appTypeIDFromQuery
+	}
+
+	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, identifier, accountAuthTypeIdentifier, appTypeID)
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding login sessions", model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
 	}
