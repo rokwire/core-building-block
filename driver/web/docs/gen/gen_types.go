@@ -1003,6 +1003,9 @@ type GetAdminApplicationLoginSessionsParams struct {
 
 	// device id
 	DeviceId *string `json:"device-id,omitempty"`
+
+	// ip address
+	IpAddress *string `json:"ip-address,omitempty"`
 }
 
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.

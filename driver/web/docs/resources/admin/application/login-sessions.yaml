@@ -55,6 +55,14 @@ get:
       explode: false
       schema:
         type: string
+    - name: ip-address
+      in: query
+      description: ip address
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
   responses:
     200:
       description: Success
