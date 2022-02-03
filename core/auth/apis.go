@@ -1020,6 +1020,7 @@ func (a *Auth) UnlinkAccountAuthType(accountID string, authenticationType string
 	}
 
 	for i, aat := range account.AuthTypes {
+		// unlink auth type with matching code and identifier
 		if aat.AuthType.Code == authenticationType && aat.Identifier == identifier {
 			aat.Account = *account
 			transaction := func(context storage.TransactionContext) error {
@@ -1035,6 +1036,12 @@ func (a *Auth) UnlinkAccountAuthType(accountID string, authenticationType string
 					if err != nil {
 						return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
 					}
+				}
+
+				//3. delete login sessions using unlinked account auth type
+				err = a.storage.DeleteLoginSessionsByAccountAuthTypeID(context, aat.ID)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
 				}
 
 				return nil

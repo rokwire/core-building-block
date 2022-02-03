@@ -754,9 +754,18 @@ func (sa *Adapter) DeleteLoginSessionsByIDs(transaction TransactionContext, ids 
 	return nil
 }
 
-//DeleteLoginSessions deletes all login sessions with the identifier
-func (sa *Adapter) DeleteLoginSessions(context TransactionContext, identifier string) error {
-	filter := bson.M{"identifier": identifier}
+//DeleteLoginSessionsByAccountAuthTypeID deletes login sessions by account auth type ID
+func (sa *Adapter) DeleteLoginSessionsByAccountAuthTypeID(context TransactionContext, id string) error {
+	return sa.deleteLoginSessions(context, "account_auth_type_id", id, false)
+}
+
+//DeleteLoginSessionsByIdentifier deletes all login sessions with the identifier
+func (sa *Adapter) DeleteLoginSessionsByIdentifier(context TransactionContext, identifier string) error {
+	return sa.deleteLoginSessions(context, "identifier", identifier, true)
+}
+
+func (sa *Adapter) deleteLoginSessions(context TransactionContext, key string, value string, checkDeletedCount bool) error {
+	filter := bson.M{key: value}
 
 	var res *mongo.DeleteResult
 	var err error
@@ -767,9 +776,9 @@ func (sa *Adapter) DeleteLoginSessions(context TransactionContext, identifier st
 	}
 
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, &logutils.FieldArgs{"identifier": identifier}, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, &logutils.FieldArgs{key: value}, err)
 	}
-	if res.DeletedCount < 1 {
+	if checkDeletedCount && res.DeletedCount < 1 {
 		return errors.ErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("unexpected deleted count"))
 	}
 	return nil

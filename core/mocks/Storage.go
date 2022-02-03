@@ -196,8 +196,8 @@ func (_m *Storage) DeleteGlobalConfig(context storage.TransactionContext) error 
 	return r0
 }
 
-// DeleteLoginSessions provides a mock function with given fields: context, identifier
-func (_m *Storage) DeleteLoginSessions(context storage.TransactionContext, identifier string) error {
+// DeleteLoginSessionsByIdentifier provides a mock function with given fields: context, identifier
+func (_m *Storage) DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error {
 	ret := _m.Called(context, identifier)
 
 	var r0 error

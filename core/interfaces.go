@@ -106,7 +106,7 @@ type Storage interface {
 	DeleteCredential(context storage.TransactionContext, ID string) error
 
 	FindLoginSessionsByParams(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error)
-	DeleteLoginSessions(context storage.TransactionContext, identifier string) error
+	DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error
