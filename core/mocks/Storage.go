@@ -477,6 +477,29 @@ func (_m *Storage) FindApplicationOrganization(appID string, orgID string) (*mod
 	return r0, r1
 }
 
+// FindApplicationOrganizations provides a mock function with given fields: appID, orgID
+func (_m *Storage) FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error) {
+	ret := _m.Called(appID, orgID)
+
+	var r0 *model.ApplicationOrganization
+	if rf, ok := ret.Get(0).(func(string, string) *model.ApplicationOrganization); ok {
+		r0 = rf(appID, orgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.ApplicationOrganization)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(appID, orgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindApplicationType provides a mock function with given fields: id
 func (_m *Storage) FindApplicationType(id string) (*model.ApplicationType, error) {
 	ret := _m.Called(id)

@@ -17,7 +17,8 @@ type application struct {
 
 	storage Storage
 
-	listeners []ApplicationListener
+	listeners       []ApplicationListener
+	requestExecutor HTTPRequestExecutor
 
 	auth auth.APIs
 }
