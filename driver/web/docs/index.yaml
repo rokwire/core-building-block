@@ -153,6 +153,9 @@ paths:
     $ref: "./resources/system/api-keys.yaml"
   /system/auth-types:
     $ref: "./resources/system/auth-type.yaml"
+  /system/auth-types/{id}:
+    $ref: "./resources/system/auth-typeID.yaml"
+
 
   #default
   /version:

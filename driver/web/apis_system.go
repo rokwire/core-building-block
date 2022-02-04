@@ -659,7 +659,7 @@ func (h SystemApisHandler) grantAccountRoles(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SystemReqAccountRoles
+	var requestData Def.SystemSystemReqAccountRoles
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)
@@ -747,7 +747,7 @@ func (h SystemApisHandler) createAuthTypes(l *logs.Log, r *http.Request, claims 
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqCreateAuthTypeRequest
+	var requestData Def.SystemReqCreateAuthTypeRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
@@ -792,7 +792,7 @@ func (h SystemApisHandler) updateAuthTypes(l *logs.Log, r *http.Request, claims 
 	if err != nil {
 		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
-	var requestData Def.ReqUpdateAuthTypeRequest
+	var requestData Def.SystemReqUpdateAuthTypeRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)

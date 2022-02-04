@@ -3528,7 +3528,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_system_req_account-roles"
+                "$ref": "#/components/schemas/_system_system_req_account-roles"
               }
             }
           },
@@ -3891,7 +3891,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_create_Auth_Type_Request"
+                "$ref": "#/components/schemas/_system_req_create_Auth_Type_Request"
               }
             }
           },
@@ -3939,29 +3939,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "readOnly": true,
-                        "type": "string"
-                      },
-                      "code": {
-                        "type": "string"
-                      },
-                      "description": {
-                        "type": "string"
-                      },
-                      "is_external": {
-                        "type": "boolean"
-                      },
-                      "ignore_mfa": {
-                        "type": "boolean"
-                      },
-                      "params": {
-                        "type": "object",
-                        "additionalProperties": true
-                      }
-                    }
+                    "$ref": "#/components/schemas/AuthTypeFields"
                   }
                 }
               }
@@ -3977,7 +3955,9 @@
             "description": "Internal error"
           }
         }
-      },
+      }
+    },
+    "/system/auth-types/{id}": {
       "put": {
         "tags": [
           "System"
@@ -3992,7 +3972,7 @@
         "parameters": [
           {
             "name": "id",
-            "in": "query",
+            "in": "path",
             "description": "ID of the auth type that needs to be updated",
             "required": true,
             "schema": {
@@ -4005,7 +3985,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_req_update_Auth_Type_Request"
+                "$ref": "#/components/schemas/_system_req_update_Auth_Type_Request"
               }
             }
           },
@@ -4018,7 +3998,9 @@
               "text/plain": {
                 "schema": {
                   "type": "string",
-                  "example": "Success"
+                  "items": {
+                    "$ref": "#/components/schemas/AuthTypeFields"
+                  }
                 }
               }
             }
@@ -6306,10 +6288,7 @@
           }
         }
       },
-      "_req_account-roles_Request": {
-        "$ref": "#/components/schemas/_system_req_account-roles"
-      },
-      "_req_create_Auth_Type_Request": {
+      "_system_req_create_Auth_Type_Request": {
         "type": "object",
         "properties": {
           "code": {
@@ -6323,7 +6302,7 @@
           }
         }
       },
-      "_req_update_Auth_Type_Request": {
+      "_system_req_update_Auth_Type_Request": {
         "type": "object",
         "properties": {
           "id": {
@@ -6347,7 +6326,7 @@
           }
         }
       },
-      "_system_req_account-roles": {
+      "_system_system_req_account-roles": {
         "required": [
           "account_id",
           "app_id",

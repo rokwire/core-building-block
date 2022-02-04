@@ -529,28 +529,6 @@ type AdminReqCreateApplicationRole struct {
 	Permissions []string `json:"permissions"`
 }
 
-// ReqCreateAuthTypeRequest defines model for _req_create_Auth_Type_Request.
-type ReqCreateAuthTypeRequest struct {
-	Code        *string `json:"code,omitempty"`
-	Description *string `json:"description,omitempty"`
-	IsExternal  *bool   `json:"is_external,omitempty"`
-}
-
-// ReqUpdateAuthTypeRequest defines model for _req_update_Auth_Type_Request.
-type ReqUpdateAuthTypeRequest struct {
-	Code        *string                          `json:"code,omitempty"`
-	Description *string                          `json:"description,omitempty"`
-	Id          *string                          `json:"id,omitempty"`
-	IgnoreMfa   *bool                            `json:"ignore_mfa,omitempty"`
-	IsExternal  *bool                            `json:"is_external,omitempty"`
-	Params      *ReqUpdateAuthTypeRequest_Params `json:"params,omitempty"`
-}
-
-// ReqUpdateAuthTypeRequest_Params defines model for ReqUpdateAuthTypeRequest.Params.
-type ReqUpdateAuthTypeRequest_Params struct {
-	AdditionalProperties map[string]interface{} `json:"-"`
-}
-
 // ServicesReqAccountExists defines model for _services_req_account-exists.
 type ServicesReqAccountExists struct {
 	ApiKey            string                           `json:"api_key"`
@@ -902,13 +880,6 @@ type SystemReqAccountPermissions struct {
 	Permissions []string `json:"permissions"`
 }
 
-// SystemReqAccountRoles defines model for _system_req_account-roles.
-type SystemReqAccountRoles struct {
-	AccountId string   `json:"account_id"`
-	AppId     string   `json:"app_id"`
-	RoleIds   []string `json:"role_ids"`
-}
-
 // SystemReqApplicationRoles defines model for _system_req_application-roles.
 type SystemReqApplicationRoles struct {
 	AppId       string   `json:"app_id"`
@@ -953,6 +924,13 @@ type SystemReqCreateApplicationConfigRequest struct {
 	Version string `json:"version"`
 }
 
+// SystemReqCreateAuthTypeRequest defines model for _system_req_create_Auth_Type_Request.
+type SystemReqCreateAuthTypeRequest struct {
+	Code        *string `json:"code,omitempty"`
+	Description *string `json:"description,omitempty"`
+	IsExternal  *bool   `json:"is_external,omitempty"`
+}
+
 // SystemReqGetApplication defines model for _system_req_get_Application.
 type SystemReqGetApplication string
 
@@ -967,6 +945,21 @@ type SystemReqPermissions struct {
 	Assigners *[]string `json:"assigners,omitempty"`
 	Name      string    `json:"name"`
 	ServiceId *string   `json:"service_id,omitempty"`
+}
+
+// SystemReqUpdateAuthTypeRequest defines model for _system_req_update_Auth_Type_Request.
+type SystemReqUpdateAuthTypeRequest struct {
+	Code        *string                                `json:"code,omitempty"`
+	Description *string                                `json:"description,omitempty"`
+	Id          *string                                `json:"id,omitempty"`
+	IgnoreMfa   *bool                                  `json:"ignore_mfa,omitempty"`
+	IsExternal  *bool                                  `json:"is_external,omitempty"`
+	Params      *SystemReqUpdateAuthTypeRequest_Params `json:"params,omitempty"`
+}
+
+// SystemReqUpdateAuthTypeRequest_Params defines model for SystemReqUpdateAuthTypeRequest.Params.
+type SystemReqUpdateAuthTypeRequest_Params struct {
+	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
 // SystemReqUpdateOrganization defines model for _system_req_update_Organization.
@@ -1002,6 +995,13 @@ type SystemResGetOrganizations struct {
 
 // SystemResGetOrganizationsType defines model for SystemResGetOrganizations.Type.
 type SystemResGetOrganizationsType string
+
+// SystemSystemReqAccountRoles defines model for _system_system_req_account-roles.
+type SystemSystemReqAccountRoles struct {
+	AccountId string   `json:"account_id"`
+	AppId     string   `json:"app_id"`
+	RoleIds   []string `json:"role_ids"`
+}
 
 // DeleteAdminAccountMfaParams defines parameters for DeleteAdminAccountMfa.
 type DeleteAdminAccountMfaParams struct {
@@ -1166,7 +1166,7 @@ type PostSystemAccountMfaParams struct {
 type PutSystemAccountPermissionsJSONBody SystemReqAccountPermissions
 
 // PutSystemAccountRolesJSONBody defines parameters for PutSystemAccountRoles.
-type PutSystemAccountRolesJSONBody SystemReqAccountRoles
+type PutSystemAccountRolesJSONBody SystemSystemReqAccountRoles
 
 // DeleteSystemApiKeysParams defines parameters for DeleteSystemApiKeys.
 type DeleteSystemApiKeysParams struct {
@@ -1212,16 +1212,10 @@ type PutSystemApplicationConfigsIdJSONBody SystemReqCreateApplicationConfigReque
 type PostSystemApplicationsJSONBody SystemReqCreateApplication
 
 // PostSystemAuthTypesJSONBody defines parameters for PostSystemAuthTypes.
-type PostSystemAuthTypesJSONBody ReqCreateAuthTypeRequest
+type PostSystemAuthTypesJSONBody SystemReqCreateAuthTypeRequest
 
-// PutSystemAuthTypesJSONBody defines parameters for PutSystemAuthTypes.
-type PutSystemAuthTypesJSONBody ReqUpdateAuthTypeRequest
-
-// PutSystemAuthTypesParams defines parameters for PutSystemAuthTypes.
-type PutSystemAuthTypesParams struct {
-	// ID of the auth type that needs to be updated
-	Id string `json:"id"`
-}
+// PutSystemAuthTypesIdJSONBody defines parameters for PutSystemAuthTypesId.
+type PutSystemAuthTypesIdJSONBody SystemReqUpdateAuthTypeRequest
 
 // PostSystemGlobalConfigJSONBody defines parameters for PostSystemGlobalConfig.
 type PostSystemGlobalConfigJSONBody GlobalConfig
@@ -1370,8 +1364,8 @@ type PostSystemApplicationsJSONRequestBody PostSystemApplicationsJSONBody
 // PostSystemAuthTypesJSONRequestBody defines body for PostSystemAuthTypes for application/json ContentType.
 type PostSystemAuthTypesJSONRequestBody PostSystemAuthTypesJSONBody
 
-// PutSystemAuthTypesJSONRequestBody defines body for PutSystemAuthTypes for application/json ContentType.
-type PutSystemAuthTypesJSONRequestBody PutSystemAuthTypesJSONBody
+// PutSystemAuthTypesIdJSONRequestBody defines body for PutSystemAuthTypesId for application/json ContentType.
+type PutSystemAuthTypesIdJSONRequestBody PutSystemAuthTypesIdJSONBody
 
 // PostSystemGlobalConfigJSONRequestBody defines body for PostSystemGlobalConfig for application/json ContentType.
 type PostSystemGlobalConfigJSONRequestBody PostSystemGlobalConfigJSONBody
@@ -1503,25 +1497,25 @@ func (a AuthTypeFields_Params) MarshalJSON() ([]byte, error) {
 	return json.Marshal(object)
 }
 
-// Getter for additional properties for ReqUpdateAuthTypeRequest_Params. Returns the specified
+// Getter for additional properties for SystemReqUpdateAuthTypeRequest_Params. Returns the specified
 // element and whether it was found
-func (a ReqUpdateAuthTypeRequest_Params) Get(fieldName string) (value interface{}, found bool) {
+func (a SystemReqUpdateAuthTypeRequest_Params) Get(fieldName string) (value interface{}, found bool) {
 	if a.AdditionalProperties != nil {
 		value, found = a.AdditionalProperties[fieldName]
 	}
 	return
 }
 
-// Setter for additional properties for ReqUpdateAuthTypeRequest_Params
-func (a *ReqUpdateAuthTypeRequest_Params) Set(fieldName string, value interface{}) {
+// Setter for additional properties for SystemReqUpdateAuthTypeRequest_Params
+func (a *SystemReqUpdateAuthTypeRequest_Params) Set(fieldName string, value interface{}) {
 	if a.AdditionalProperties == nil {
 		a.AdditionalProperties = make(map[string]interface{})
 	}
 	a.AdditionalProperties[fieldName] = value
 }
 
-// Override default JSON handling for ReqUpdateAuthTypeRequest_Params to handle AdditionalProperties
-func (a *ReqUpdateAuthTypeRequest_Params) UnmarshalJSON(b []byte) error {
+// Override default JSON handling for SystemReqUpdateAuthTypeRequest_Params to handle AdditionalProperties
+func (a *SystemReqUpdateAuthTypeRequest_Params) UnmarshalJSON(b []byte) error {
 	object := make(map[string]json.RawMessage)
 	err := json.Unmarshal(b, &object)
 	if err != nil {
@@ -1542,8 +1536,8 @@ func (a *ReqUpdateAuthTypeRequest_Params) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// Override default JSON handling for ReqUpdateAuthTypeRequest_Params to handle AdditionalProperties
-func (a ReqUpdateAuthTypeRequest_Params) MarshalJSON() ([]byte, error) {
+// Override default JSON handling for SystemReqUpdateAuthTypeRequest_Params to handle AdditionalProperties
+func (a SystemReqUpdateAuthTypeRequest_Params) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 

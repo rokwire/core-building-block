@@ -157,8 +157,8 @@ func (we Adapter) Start() {
 	///system ///
 	//TODO - disable until we implement the system accounts login so that to protect them
 
-	systemSubrouter := subRouter.PathPrefix("/system").Subrouter()
-	/*	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.createGlobalConfig, we.auth.systemAuth)).Methods("POST")
+	/*systemSubrouter := subRouter.PathPrefix("/system").Subrouter()
+	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.createGlobalConfig, we.auth.systemAuth)).Methods("POST")
 		systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.getGlobalConfig, we.auth.systemAuth)).Methods("GET")
 		systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.updateGlobalConfig, we.auth.systemAuth)).Methods("PUT")
 
@@ -196,10 +196,10 @@ func (we Adapter) Start() {
 		systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.getAPIKey, we.auth.systemAuth)).Methods("GET")
 		systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.createAPIKey, we.auth.systemAuth)).Methods("POST")
 		systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.updateAPIKey, we.auth.systemAuth)).Methods("PUT")
-		systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.deleteAPIKey, we.auth.systemAuth)).Methods("DELETE")*/
+		systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.deleteAPIKey, we.auth.systemAuth)).Methods("DELETE")
 	systemSubrouter.HandleFunc("/auth-types", we.wrapFunc(we.systemApisHandler.createAuthTypes, we.auth.systemAuth)).Methods("POST")
 	systemSubrouter.HandleFunc("/auth-types", we.wrapFunc(we.systemApisHandler.getAuthTypes, we.auth.systemAuth)).Methods("GET")
-	systemSubrouter.HandleFunc("/auth-types", we.wrapFunc(we.systemApisHandler.updateAuthTypes, we.auth.systemAuth)).Methods("PUT")
+	systemSubrouter.HandleFunc("/auth-types/{id}", we.wrapFunc(we.systemApisHandler.updateAuthTypes, we.auth.systemAuth)).Methods("PUT")*/
 	///
 
 	err := http.ListenAndServe(":"+we.port, router)
