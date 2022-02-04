@@ -152,7 +152,9 @@ _services_res_account-exists:
 
 ### account auth-type link API
 _services_req_account_auth-type-link:
-  $ref: "./apis/services/account/auth-type/link/request/Request.yaml"
+  $ref: "./apis/services/account/auth-type/link/request/Link.yaml"
+_services_req_account_auth-type-unlink:
+  $ref: "./apis/services/account/auth-type/link/request/Unlink.yaml"
 _services_res_account_auth-type-link:
   $ref: "./apis/services/account/auth-type/link/response/Response.yaml"
 
