@@ -138,8 +138,9 @@ _shared_res_Mfa:
   $ref: "./apis/shared/responses/mfa/Response.yaml"
 _shared_res_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
-_res_shared_Device:
-  $ref: "./apis/shared/responses/Device.yaml"
+_shared_res_DeviceFields:
+  $ref: "./apis/shared/responses/DeviceFields.yaml"
+  
 ### end - shared requests and responses
 _shared_res_LoginSession:
   $ref: "./apis/shared/responses/LoginSession.yaml"

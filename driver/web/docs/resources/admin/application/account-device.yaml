@@ -1,18 +1,18 @@
 get:
   tags:
   - Admin
-  summary: Finds application accounts
+  summary: Finds application account devices
   description: |
-    Finds accounts for the specified application
-
-    **Auth:** Requires user auth token
+    Finds devices for the specified application
   security:
     - bearerAuth: []
   parameters:
     - name: id
-      in: query
+      in: path
       description: The account ID
       required: true
+      style: simple
+      explode: false
       schema:
         type: string
   responses:
@@ -23,7 +23,7 @@ get:
         schema:
           type: array
           items:
-            $ref: "../../../schemas/user/DeviceFields.yaml"
+            $ref: "../../../schemas/apis/shared/responses/DeviceFields.yaml"
     400:
       description: Bad request
     401:

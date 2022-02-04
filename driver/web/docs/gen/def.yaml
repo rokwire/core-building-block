@@ -1801,13 +1801,13 @@
         }
       }
     },
-    "/admin/application/account/device": {
+    "/admin/application/account/{id}/devices": {
       "get": {
         "tags": [
           "Admin"
         ],
-        "summary": "Finds application accounts",
-        "description": "Finds accounts for the specified application\n\n**Auth:** Requires user auth token\n",
+        "summary": "Finds application account devices",
+        "description": "Finds devices for the specified application\n",
         "security": [
           {
             "bearerAuth": []
@@ -1816,9 +1816,11 @@
         "parameters": [
           {
             "name": "id",
-            "in": "query",
+            "in": "path",
             "description": "The account ID",
             "required": true,
+            "style": "simple",
+            "explode": false,
             "schema": {
               "type": "string"
             }
@@ -1832,7 +1834,7 @@
               "schema": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/DeviceFields"
+                  "$ref": "#/components/schemas/_shared_res_DeviceFields"
                 }
               }
             }
@@ -5386,7 +5388,7 @@
           }
         }
       },
-      "_res_shared_Device": {
+      "_shared_res_DeviceFields": {
         "required": [
           "id"
         ],
