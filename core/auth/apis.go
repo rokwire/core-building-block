@@ -1000,6 +1000,66 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 	return &message, account, nil
 }
 
+//UnlinkAccountAuthType unlinks credentials from an existing account.
+//The authentication method must be one of the supported for the application.
+//	Input:
+//		accountID (string): ID of the account to unlink creds from
+//		authenticationType (string): Name of the authentication method of account auth type to unlink
+//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
+//		identifier (string): Identifier of account auth type to unlink
+//		l (*logs.Log): Log object pointer for request
+//	Returns:
+//		account (*model.Account): account data after the operation
+func (a *Auth) UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error) {
+	account, err := a.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if account == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"id": accountID})
+	}
+
+	for i, aat := range account.AuthTypes {
+		// unlink auth type with matching code and identifier
+		if aat.AuthType.Code == authenticationType && aat.Identifier == identifier {
+			aat.Account = *account
+			transaction := func(context storage.TransactionContext) error {
+				//1. delete account auth type in account
+				err := a.storage.DeleteAccountAuthType(context, aat)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountAuthType, nil, err)
+				}
+
+				//2. delete credential if it exists
+				if aat.Credential != nil {
+					err = a.storage.DeleteCredential(context, aat.Credential.ID)
+					if err != nil {
+						return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
+					}
+				}
+
+				//3. delete login sessions using unlinked account auth type
+				err = a.storage.DeleteLoginSessionsByAccountAuthTypeID(context, aat.ID)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
+				}
+
+				return nil
+			}
+
+			err = a.storage.PerformTransaction(transaction)
+			if err != nil {
+				return nil, errors.WrapErrorAction("unlinking", model.TypeAccountAuthType, nil, err)
+			}
+
+			account.AuthTypes = append(account.AuthTypes[:i], account.AuthTypes[i+1:]...)
+			break
+		}
+	}
+
+	return account, nil
+}
+
 //GetServiceRegistrations retrieves all service registrations
 func (a *Auth) GetServiceRegistrations(serviceIDs []string) ([]model.ServiceReg, error) {
 	return a.storage.FindServiceRegs(serviceIDs)

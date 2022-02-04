@@ -642,6 +642,63 @@
             "description": "Internal error"
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Unlink credentials",
+        "description": "Unlink credentials from an existing account\n\n**Auth:** Requires \"authenticated\" auth token\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_services_req_account_auth-type-unlink"
+              },
+              "examples": {
+                "email": {
+                  "summary": "Email",
+                  "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"identifier\": \"test@example.com\"\n}\n"
+                },
+                "phone": {
+                  "summary": "Phone",
+                  "value": "{\n  \"auth_type\": \"twilio_phone\",\n  \"app_type_identifier\": \"edu.illinois.rokwire\",\n  \"identifier\": \"+12223334444\"\n}\n"
+                },
+                "illinois_oidc": {
+                  "summary": "Illinois OIDC",
+                  "value": "{\n  \"auth_type\": \"illinois_oidc\",\n  \"app_type_identifier\": \"edu.illinois.rokwire\",\n  \"identifier\": \"123456789\"\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_services_res_account_auth-type-link"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
       }
     },
     "/services/auth/authorize-service": {
@@ -5481,6 +5538,31 @@
                 "$ref": "#/components/schemas/_shared_req_ParamsNone"
               }
             ]
+          }
+        }
+      },
+      "_services_req_account_auth-type-unlink": {
+        "required": [
+          "auth_type",
+          "app_type_identifier",
+          "identifier"
+        ],
+        "type": "object",
+        "properties": {
+          "auth_type": {
+            "type": "string",
+            "enum": [
+              "email",
+              "twilio_phone",
+              "illinois_oidc",
+              "username"
+            ]
+          },
+          "app_type_identifier": {
+            "type": "string"
+          },
+          "identifier": {
+            "type": "string"
           }
         }
       },

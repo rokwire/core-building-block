@@ -196,20 +196,6 @@ func (_m *Storage) DeleteGlobalConfig(context storage.TransactionContext) error 
 	return r0
 }
 
-// DeleteLoginSessions provides a mock function with given fields: context, identifier
-func (_m *Storage) DeleteLoginSessions(context storage.TransactionContext, identifier string) error {
-	ret := _m.Called(context, identifier)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
-		r0 = rf(context, identifier)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // DeleteLoginSessionsByAccountAndSessionID provides a mock function with given fields: context, identifier, sessionID
 func (_m *Storage) DeleteLoginSessionsByAccountAndSessionID(context storage.TransactionContext, identifier string, sessionID string) error {
 	ret := _m.Called(context, identifier, sessionID)
@@ -217,6 +203,20 @@ func (_m *Storage) DeleteLoginSessionsByAccountAndSessionID(context storage.Tran
 	var r0 error
 	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string) error); ok {
 		r0 = rf(context, identifier, sessionID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteLoginSessionsByIdentifier provides a mock function with given fields: context, identifier
+func (_m *Storage) DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error {
+	ret := _m.Called(context, identifier)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
+		r0 = rf(context, identifier)
 	} else {
 		r0 = ret.Error(0)
 	}
