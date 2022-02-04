@@ -257,6 +257,42 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 	return l.HttpResponseSuccessJSON(respData)
 }
 
+func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ServicesReqAccountAuthTypeUnlink
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account auth type unlink request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	if string(requestData.AuthType) == claims.AuthType && requestData.Identifier == claims.UID {
+		return l.HttpResponseError("May not unlink account auth type currently in use", nil, http.StatusBadRequest, false)
+	}
+
+	account, err := h.coreAPIs.Auth.UnlinkAccountAuthType(claims.Subject, string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.Identifier, l)
+	if err != nil {
+		return l.HttpResponseError("Error unlinking account auth type", err, http.StatusInternalServerError, true)
+	}
+
+	authTypes := make([]Def.AccountAuthTypeFields, 0)
+	if account != nil {
+		account.SortAccountAuthTypes(claims.UID)
+		authTypes = accountAuthTypesToDef(account.AuthTypes)
+	}
+
+	responseData := &Def.ServicesResAccountAuthTypeLink{AuthTypes: authTypes}
+	respData, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "unlink account auth type response", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
+}
+
 func (h ServicesApisHandler) authAuthorizeService(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
