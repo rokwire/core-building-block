@@ -273,6 +273,18 @@ type APIs interface {
 	//		account (*model.Account): account data after the operation
 	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error)
 
+	//UnlinkAccountAuthType unlinks credentials from an existing account.
+	//The authentication method must be one of the supported for the application.
+	//	Input:
+	//		accountID (string): ID of the account to unlink creds from
+	//		authenticationType (string): Name of the authentication method of account auth type to unlink
+	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
+	//		identifier (string): Identifier of account auth type to unlink
+	//		l (*logs.Log): Log object pointer for request
+	//	Returns:
+	//		account (*model.Account): account data after the operation
+	UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error)
+
 	//GetAdminToken returns an admin token for the specified application
 	GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error)
 
@@ -328,6 +340,7 @@ type Storage interface {
 	UpdateLoginSession(context storage.TransactionContext, loginSession model.LoginSession) error
 	DeleteLoginSession(context storage.TransactionContext, id string) error
 	DeleteLoginSessionsByIDs(context storage.TransactionContext, ids []string) error
+	DeleteLoginSessionsByAccountAuthTypeID(context storage.TransactionContext, id string) error
 	//LoginsSessions - predefined queries for manage deletion logic
 	DeleteMFAExpiredSessions() error
 	FindSessionsLazy(appID string, orgID string) ([]model.LoginSession, error)
@@ -346,6 +359,7 @@ type Storage interface {
 	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccountAuthType(item model.AccountAuthType) error
 	UpdateAccountAuthType(item model.AccountAuthType) error
+	DeleteAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)
@@ -355,6 +369,7 @@ type Storage interface {
 	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
 	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
 	UpdateCredentialValue(ID string, value map[string]interface{}) error
+	DeleteCredential(context storage.TransactionContext, ID string) error
 
 	//MFA
 	FindMFAType(context storage.TransactionContext, accountID string, identifier string, mfaType string) (*model.MFAType, error)
