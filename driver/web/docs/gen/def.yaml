@@ -1807,7 +1807,7 @@
           "Admin"
         ],
         "summary": "Grant account permissions",
-        "description": "Grant account permissions\n\n**Auth:** Requires auth token with `auth_admin` permission\n",
+        "description": "Grant account permissions\n",
         "security": [
           {
             "bearerAuth": []
@@ -5808,6 +5808,9 @@
             }
           }
         }
+      },
+      "_admin_req_grant-permissions_Request": {
+        "$ref": "#/components/schemas/_req_grant-permissions_Request"
       },
       "_system_req_create-Organization": {
         "required": [

@@ -106,7 +106,6 @@ paths:
   /admin/organization/applications:
     $ref: "./resources/admin/organization/applications.yaml"
  
-
   #enc
   /enc/test:
     $ref: "./resources/enc/test.yaml"
