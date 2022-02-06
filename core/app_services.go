@@ -100,7 +100,7 @@ func (app *application) serDeleteAccount(id string) error {
 		}
 
 		//4. delete login sessions
-		err = app.storage.DeleteLoginSessions(context, id)
+		err = app.storage.DeleteLoginSessionsByIdentifier(context, id)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
 		}
