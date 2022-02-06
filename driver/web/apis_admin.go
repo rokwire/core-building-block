@@ -325,8 +325,8 @@ func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Reque
 
 	anonymousFromQuery := r.URL.Query().Get("anonymous")
 	var anonymous *bool
-	result, _ := strconv.ParseBool(anonymousFromQuery)
 	if len(anonymousFromQuery) > 0 {
+		result, _ := strconv.ParseBool(anonymousFromQuery)
 		anonymous = &result
 	}
 

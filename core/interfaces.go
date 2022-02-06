@@ -108,7 +108,6 @@ type Storage interface {
 
 	FindLoginSessionsByParams(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
-	DeleteLoginSessions(context storage.TransactionContext, identifier string) error
 	DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
