@@ -1003,6 +1003,9 @@ type PostAdminAccountMfaParams struct {
 // PutAdminAccountRolesJSONBody defines parameters for PutAdminAccountRoles.
 type PutAdminAccountRolesJSONBody AdminReqAccountRoles
 
+// PostAdminApplicationAccountRolesGrantJSONBody defines parameters for PostAdminApplicationAccountRolesGrant.
+type PostAdminApplicationAccountRolesGrantJSONBody AdminReqCreateApplicationRole
+
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {
 	// The account ID
@@ -1023,9 +1026,6 @@ type GetAdminApplicationLoginSessionsParams struct {
 	// account auth type identifier
 	AccountAuthTypeIdentifier *string `json:"account-auth-type-identifier,omitempty"`
 }
-
-// PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
-type PostAdminApplicationRolesJSONBody AdminReqCreateApplicationRole
 
 // GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.
 type GetAdminAuthAppTokenParams struct {
@@ -1244,11 +1244,11 @@ type GetTpsServiceRegsParams struct {
 // PutAdminAccountRolesJSONRequestBody defines body for PutAdminAccountRoles for application/json ContentType.
 type PutAdminAccountRolesJSONRequestBody PutAdminAccountRolesJSONBody
 
+// PostAdminApplicationAccountRolesGrantJSONRequestBody defines body for PostAdminApplicationAccountRolesGrant for application/json ContentType.
+type PostAdminApplicationAccountRolesGrantJSONRequestBody PostAdminApplicationAccountRolesGrantJSONBody
+
 // PostAdminApplicationGroupsJSONRequestBody defines body for PostAdminApplicationGroups for application/json ContentType.
 type PostAdminApplicationGroupsJSONRequestBody PostAdminApplicationGroupsJSONBody
-
-// PostAdminApplicationRolesJSONRequestBody defines body for PostAdminApplicationRoles for application/json ContentType.
-type PostAdminApplicationRolesJSONRequestBody PostAdminApplicationRolesJSONBody
 
 // PostAdminAuthLoginJSONRequestBody defines body for PostAdminAuthLogin for application/json ContentType.
 type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody

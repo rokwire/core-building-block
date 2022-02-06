@@ -2070,7 +2070,7 @@
         }
       }
     },
-    "/admin/application/roles": {
+    "/admin/application/account/roles/grant": {
       "get": {
         "tags": [
           "Admin"
