@@ -230,6 +230,12 @@ _system_res_get_Application:
   $ref: "./apis/system/get-application/response/Response.yaml"
 _system_res_get_Applications:
   $ref: "./apis/system/get-applications/response/Response.yaml"
+
+ ### application-type API 
+_system_req_create_Application-Type:
+ $ref: "./apis/system/create-application-type-version/request/Request.yaml"
+_system_res_create_Application-Type:
+ $ref: "./apis/system/create-application-type-version/response/Response.yaml"
  
 ### permissions API
 _system_req_permissions:

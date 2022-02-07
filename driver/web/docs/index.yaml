@@ -145,6 +145,8 @@ paths:
     $ref: "./resources/system/application-configs.yaml"
   /system/application/configs/{id}:
     $ref: "./resources/system/application-configsId.yaml"
+  /system/application-type/{id}/versions:
+    $ref: "./resources/system/application-type.yaml"
   /system/account/permissions:
     $ref: "./resources/system/account/permissions.yaml"
   /system/account/roles:
