@@ -385,7 +385,7 @@ func (app *application) admGetAccount(accountID string) (*model.Account, error) 
 func (app *application) admGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
 	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
 	//find the login sessions
-	loginSessions, err := app.storage.FindLoginSessionsByParams(appID, orgID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
+	loginSessions, err := app.storage.FindLoginSessionsByParams(appID, orgID, nil, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 	}
@@ -399,12 +399,20 @@ func (app *application) admDeleteApplicationLoginSession(appID string, orgID str
 		return errors.New("cannot logout yourself")
 	}
 
-	//TODO
-	/*
-		deleteLoginSession := app.storage.DeleteLoginSessionsByAccountAndSessionID(context, identifier, sessionID)
-		if deleteLoginSession != nil {
-			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, deleteLoginSession)
-		}
-		return deleteLoginSession */
+	//2. validate if the session is for the current app/org and account
+	sessions, err := app.storage.FindLoginSessionsByParams(appID, orgID, &sessionID, &identifier, nil, nil, nil, nil, nil, nil)
+	if err != nil {
+		return errors.Wrap("error checking if it is valid to remove account session", err)
+	}
+	if len(sessions) == 0 {
+		return errors.New("not valid params")
+	}
+
+	//3. delete the session
+	err = app.storage.DeleteLoginSessionByID(nil, sessionID)
+	if err != nil {
+		return errors.Wrap("error dleting session by id", err)
+	}
+
 	return nil
 }

@@ -579,10 +579,14 @@ func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier stri
 }
 
 //FindLoginSessionsByParams finds login sessions by params
-func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
+func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
 	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
 		primitive.E{Key: "org_id", Value: orgID}}
+
+	if sessionID != nil {
+		filter = append(filter, primitive.E{Key: "_id", Value: *sessionID})
+	}
 
 	if identifier != nil {
 		filter = append(filter, primitive.E{Key: "identifier", Value: *identifier})
@@ -775,14 +779,19 @@ func (sa *Adapter) DeleteLoginSessionsByIDs(transaction TransactionContext, ids 
 	return nil
 }
 
-//DeleteLoginSessionsByAccountAuthTypeID deletes login sessions by account auth type ID
-func (sa *Adapter) DeleteLoginSessionsByAccountAuthTypeID(context TransactionContext, id string) error {
-	return sa.deleteLoginSessions(context, "account_auth_type_id", id, false)
-}
-
 //DeleteLoginSessionsByIdentifier deletes all login sessions with the identifier
 func (sa *Adapter) DeleteLoginSessionsByIdentifier(context TransactionContext, identifier string) error {
 	return sa.deleteLoginSessions(context, "identifier", identifier, true)
+}
+
+//DeleteLoginSessionByID deletes a login session by id
+func (sa *Adapter) DeleteLoginSessionByID(context TransactionContext, id string) error {
+	return sa.deleteLoginSessions(context, "_id", id, true)
+}
+
+//DeleteLoginSessionsByAccountAuthTypeID deletes login sessions by account auth type ID
+func (sa *Adapter) DeleteLoginSessionsByAccountAuthTypeID(context TransactionContext, id string) error {
+	return sa.deleteLoginSessions(context, "account_auth_type_id", id, false)
 }
 
 func (sa *Adapter) deleteLoginSessions(context TransactionContext, key string, value string, checkDeletedCount bool) error {
