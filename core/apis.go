@@ -160,8 +160,9 @@ func (s *administrationImpl) AdmDeleteLoginSession(context storage.TransactionCo
 	return s.app.admDeleteLoginSession(context, identifier, sessionID)
 }
 
-func (s *administrationImpl) AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error) {
-	return s.app.admGetApplicationLoginSessions(appID, orgID, identifier, accountAuthTypeIdentifier)
+func (s *administrationImpl) AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
+	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
+	return s.app.admGetApplicationLoginSessions(appID, orgID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
 }
 
 ///

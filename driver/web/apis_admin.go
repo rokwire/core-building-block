@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
@@ -310,7 +311,39 @@ func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Reque
 		accountAuthTypeIdentifier = &accountAuthTypeIdentifierFromQuery
 	}
 
-	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, identifier, accountAuthTypeIdentifier)
+	appTypeIDFromQuery := r.URL.Query().Get("app-type-id")
+	var appTypeID *string
+	if len(appTypeIDFromQuery) > 0 {
+		appTypeID = &appTypeIDFromQuery
+	}
+
+	appTypeIdentifierFromQuery := r.URL.Query().Get("app-type-identifier")
+	var appTypeIdentifier *string
+	if len(appTypeIdentifierFromQuery) > 0 {
+		appTypeIdentifier = &appTypeIdentifierFromQuery
+	}
+
+	anonymousFromQuery := r.URL.Query().Get("anonymous")
+	var anonymous *bool
+	if len(anonymousFromQuery) > 0 {
+		result, _ := strconv.ParseBool(anonymousFromQuery)
+		anonymous = &result
+	}
+
+	deviceIdFromQuery := r.URL.Query().Get("device-id")
+	var deviceID *string
+	if len(deviceIdFromQuery) > 0 {
+		deviceID = &deviceIdFromQuery
+	}
+
+	ipAddressFromQuery := r.URL.Query().Get("ip-address")
+	var ipAddress *string
+	if len(ipAddressFromQuery) > 0 {
+		ipAddress = &ipAddressFromQuery
+	}
+
+	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, identifier, accountAuthTypeIdentifier, appTypeID,
+		appTypeIdentifier, anonymous, deviceID, ipAddress)
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding login sessions", model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
 	}
