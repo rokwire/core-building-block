@@ -698,7 +698,7 @@ func (sa *Adapter) buildLoginSession(ls *loginSession) (*model.LoginSession, err
 	}
 
 	//auth type - from cache
-	authType, err := sa.getCachedAuthType(*&ls.AuthTypeCode)
+	authType, err := sa.getCachedAuthType(ls.AuthTypeCode)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, &logutils.FieldArgs{"code": ls.AuthTypeCode}, err)
 	}
