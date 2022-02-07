@@ -1566,7 +1566,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  '/admin/application/account/{account_id}/session/{session_id}':
+  '/admin/application/account/{account_id}/login-sessions/{session_id}':
     delete:
       tags:
         - Admin
