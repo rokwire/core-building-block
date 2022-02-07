@@ -330,10 +330,10 @@ func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Reque
 		anonymous = &result
 	}
 
-	deviceIdFromQuery := r.URL.Query().Get("device-id")
+	deviceIDFromQuery := r.URL.Query().Get("device-id")
 	var deviceID *string
-	if len(deviceIdFromQuery) > 0 {
-		deviceID = &deviceIdFromQuery
+	if len(deviceIDFromQuery) > 0 {
+		deviceID = &deviceIDFromQuery
 	}
 
 	ipAddressFromQuery := r.URL.Query().Get("ip-address")

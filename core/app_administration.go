@@ -395,7 +395,7 @@ func (app *application) admGetApplicationLoginSessions(appID string, orgID strin
 func (app *application) admDeleteApplicationLoginSession(appID string, orgID string, currentAccountID string, identifier string, sessionID string, l *logs.Log) error {
 	//1. do not allow to logout the current account
 	if currentAccountID == identifier {
-		l.Infof("%s is trying to logout yourself")
+		l.Infof("%s is trying to logout yourself", currentAccountID)
 		return errors.New("cannot logout yourself")
 	}
 
