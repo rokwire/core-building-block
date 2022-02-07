@@ -89,6 +89,8 @@ paths:
     $ref: "./resources/admin/account/mfa.yaml"
   /admin/application/accounts:
     $ref: "./resources/admin/application/accounts.yaml"
+  /admin/application/account/{account_id}/session/{session_id}:
+    $ref: "./resources/admin/application/logins-sessions.yaml"
   /admin/application/login-sessions:
     $ref: "./resources/admin/application/login-sessions.yaml"
   /admin/application/groups:
@@ -97,8 +99,6 @@ paths:
     $ref: "./resources/admin/application/groupsID.yaml"
   /admin/application/permissions:
     $ref: "./resources/admin/application/permissions.yaml"
-  /admin/application/account/{account_id}/session/{session_id}:
-    $ref: "./resources/admin/application/logins-sessions.yaml"
   /admin/application/roles:
     $ref: "./resources/admin/application/roles.yaml"
   /admin/application/roles/{id}:
