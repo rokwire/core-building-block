@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Expose Admin API which logouts an account session for specific application [#371](https://github.com/rokwire/core-building-block/issues/371)
 - Unlink account auth types [#393](https://github.com/rokwire/core-building-block/issues/393)
 - Expose delete app org role admin API [#313](https://github.com/rokwire/core-building-block/issues/313)
 - Expose delete app org group admin API [#312](https://github.com/rokwire/core-building-block/issues/312)

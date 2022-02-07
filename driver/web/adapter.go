@@ -135,6 +135,8 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/permissions", we.wrapFunc(we.adminApisHandler.getApplicationPermissions, we.auth.admin.permissions)).Methods("GET")
 
 	adminSubrouter.HandleFunc("/application/accounts", we.wrapFunc(we.adminApisHandler.getApplicationAccounts, we.auth.admin.permissions)).Methods("GET")
+
+	adminSubrouter.HandleFunc("/application/account/{account_id}/login-sessions/{session_id}", we.wrapFunc(we.adminApisHandler.deleteApplicationLoginSession, we.auth.admin.permissions)).Methods("DELETE")
 	///
 
 	///enc ///

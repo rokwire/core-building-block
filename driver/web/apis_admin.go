@@ -330,10 +330,10 @@ func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Reque
 		anonymous = &result
 	}
 
-	deviceIdFromQuery := r.URL.Query().Get("device-id")
+	deviceIDFromQuery := r.URL.Query().Get("device-id")
 	var deviceID *string
-	if len(deviceIdFromQuery) > 0 {
-		deviceID = &deviceIdFromQuery
+	if len(deviceIDFromQuery) > 0 {
+		deviceID = &deviceIDFromQuery
 	}
 
 	ipAddressFromQuery := r.URL.Query().Get("ip-address")
@@ -571,6 +571,26 @@ func (h AdminApisHandler) adminDeleteApplicationRole(l *logs.Log, r *http.Reques
 	err := h.coreAPIs.Administration.AdmDeleteAppOrgRole(rolesID, claims.AppID, claims.OrgID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
+	}
+	return l.HttpResponseSuccess()
+}
+
+func (h AdminApisHandler) deleteApplicationLoginSession(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	identifier := params["account_id"]
+	if len(identifier) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("account_id"), nil, http.StatusBadRequest, false)
+	}
+
+	params2 := mux.Vars(r)
+	sessionID := params2["session_id"]
+	if len(sessionID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("session_id"), nil, http.StatusBadRequest, false)
+	}
+
+	err := h.coreAPIs.Administration.AdmDeleteApplicationLoginSession(claims.AppID, claims.OrgID, claims.Subject, identifier, sessionID, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
 	}
 	return l.HttpResponseSuccess()
 }
