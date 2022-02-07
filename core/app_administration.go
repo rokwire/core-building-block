@@ -2,7 +2,6 @@ package core
 
 import (
 	"core-building-block/core/model"
-	"core-building-block/driven/storage"
 	"time"
 
 	"github.com/google/uuid"
@@ -383,15 +382,6 @@ func (app *application) admGetAccount(accountID string) (*model.Account, error) 
 	return app.getAccount(accountID)
 }
 
-func (app *application) admDeleteLoginSession(context storage.TransactionContext, identifier string, sessionID string) error {
-
-	deleteLoginSession := app.storage.DeleteLoginSessionsByAccountAndSessionID(context, identifier, sessionID)
-	if deleteLoginSession != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, deleteLoginSession)
-	}
-	return deleteLoginSession
-}
-
 func (app *application) admGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
 	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
 	//find the login sessions
@@ -400,4 +390,21 @@ func (app *application) admGetApplicationLoginSessions(appID string, orgID strin
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 	}
 	return loginSessions, nil
+}
+
+func (app *application) admDeleteApplicationLoginSession(appID string, orgID string, currentAccountID string, identifier string, sessionID string, l *logs.Log) error {
+	//1. do not allow to logout the current account
+	if currentAccountID == identifier {
+		l.Infof("%s is trying to logout yourself")
+		return errors.New("cannot logout yourself")
+	}
+
+	//TODO
+	/*
+		deleteLoginSession := app.storage.DeleteLoginSessionsByAccountAndSessionID(context, identifier, sessionID)
+		if deleteLoginSession != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, deleteLoginSession)
+		}
+		return deleteLoginSession */
+	return nil
 }
