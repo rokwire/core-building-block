@@ -1975,6 +1975,25 @@ func (sa *Adapter) UpdateProfile(accountID string, profile *model.Profile) error
 	return nil
 }
 
+//FindProfiles finds profiles by authtype id and account auth type identifier
+func (sa *Adapter) FindProfiles(authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error) {
+	filter := bson.D{
+		primitive.E{Key: "auth_types.auth_type_id", Value: authTypeID},
+		primitive.E{Key: "auth_types.identifier", Value: accountAuthTypeIdentifier}}
+	var accounts []account
+	err := sa.db.accounts.Find(filter, &accounts, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if len(accounts) == 0 {
+		//not found
+		return nil, nil
+	}
+
+	result := profilesFromStorage(accounts, *sa)
+	return result, nil
+}
+
 //CreateGlobalConfig creates global config
 func (sa *Adapter) CreateGlobalConfig(context TransactionContext, globalConfig *model.GlobalConfig) error {
 	if globalConfig == nil {
