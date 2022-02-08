@@ -483,9 +483,11 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 			}
 
 			//credential
-			now := time.Now()
-			credential = &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
-				AuthType: authType, DateCreated: now, DateUpdated: &now}
+			if credentialValue != nil {
+				now := time.Now()
+				credential = &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
+					AuthType: authType, DateCreated: now, DateUpdated: &now}
+			}
 		}
 
 		profile, preferences, err = a.prepareRegistrationData(authType, userIdentifier, nil, regProfile, regPreferences, l)
@@ -1152,9 +1154,12 @@ func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthTyp
 	}
 
 	//credential
-	now := time.Now()
-	credential := &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
-		AuthType: authType, DateCreated: now, DateUpdated: &now}
+	var credential *model.Credential
+	if credentialValue != nil {
+		now := time.Now()
+		credential = &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
+			AuthType: authType, DateCreated: now, DateUpdated: &now}
+	}
 
 	accountAuthType, credential, err := a.prepareAccountAuthType(authType, userIdentifier, nil, credential)
 	if err != nil {
