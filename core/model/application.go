@@ -100,7 +100,8 @@ type Application struct {
 	MultiTenant bool //safer community is multi-tenant
 	Admin       bool //is this an admin app?
 
-	//if true the service will always require the user to create profile for the application, otherwise he/she could use his/her already created profile from another platform application
+	//if true - the user uses a separate profile for every organization within the application
+	//if false - the user uses shared profile between all organizations within the application
 	RequiresOwnUsers bool
 
 	Types []ApplicationType
