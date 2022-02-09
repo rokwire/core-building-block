@@ -28,7 +28,8 @@ post:
       content:
         text/plain:
           schema:
-            $ref: "../../schemas/apis/system/create-application-type-version/response/Response.yaml"
+            type: string
+            example: Success
     400:
       description: Bad request
     401:

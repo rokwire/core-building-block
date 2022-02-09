@@ -3617,7 +3617,8 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/_system_res_create_Application-Type"
+                  "type": "string",
+                  "example": "Success"
                 }
               }
             }
@@ -6254,30 +6255,6 @@
         ],
         "type": "object",
         "properties": {
-          "major": {
-            "type": "integer"
-          },
-          "minor": {
-            "type": "integer"
-          },
-          "patch": {
-            "type": "integer"
-          }
-        }
-      },
-      "_system_res_create_Application-Type": {
-        "required": [
-          "id"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "readOnly": true,
-            "type": "string"
-          },
-          "version_numbers": {
-            "type": "object"
-          },
           "major": {
             "type": "integer"
           },

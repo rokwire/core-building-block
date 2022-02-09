@@ -234,9 +234,7 @@ _system_res_get_Applications:
  ### application-type API 
 _system_req_create_Application-Type:
  $ref: "./apis/system/create-application-type-version/request/Request.yaml"
-_system_res_create_Application-Type:
- $ref: "./apis/system/create-application-type-version/response/Response.yaml"
- 
+
 ### permissions API
 _system_req_permissions:
   $ref: "./apis/system/permissions/request/Request.yaml"

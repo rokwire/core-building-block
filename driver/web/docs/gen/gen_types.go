@@ -965,15 +965,6 @@ type SystemReqUpdateOrganization struct {
 // SystemReqUpdateOrganizationType defines model for SystemReqUpdateOrganization.Type.
 type SystemReqUpdateOrganizationType string
 
-// SystemResCreateApplicationType defines model for _system_res_create_Application-Type.
-type SystemResCreateApplicationType struct {
-	Id             string                  `json:"id"`
-	Major          *int                    `json:"major,omitempty"`
-	Minor          *int                    `json:"minor,omitempty"`
-	Patch          *int                    `json:"patch,omitempty"`
-	VersionNumbers *map[string]interface{} `json:"version_numbers,omitempty"`
-}
-
 // SystemResGetApplications defines model for _system_res_get_Applications.
 type SystemResGetApplications struct {
 	ApplicationTypes *ApplicationTypeFields `json:"application_types,omitempty"`
