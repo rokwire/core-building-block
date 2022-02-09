@@ -585,9 +585,8 @@ func (a *Auth) applySharedProfile(app model.Application, authTypeID string, user
 func (a *Auth) hasSharedProfile(app model.Application, authTypeID string, userIdentifier string, l *logs.Log) (bool, *model.Profile, *model.Credential, error) {
 	l.Info("hasSharedProfile")
 
-	//find if already there is profile
-	//TODO application
-	profiles, err := a.storage.FindProfiles(authTypeID, userIdentifier)
+	//find if already there is a profile for the application
+	profiles, err := a.storage.FindProfiles(app.ID, authTypeID, userIdentifier)
 	if err != nil {
 		return false, nil, nil, errors.Wrap("error finding profiles", err)
 	}

@@ -354,7 +354,7 @@ type Storage interface {
 
 	//Profiles
 	UpdateProfile(accountID string, profile *model.Profile) error
-	FindProfiles(authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)
+	FindProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)
 
 	//AccountAuthTypes
 	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)

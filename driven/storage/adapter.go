@@ -1975,13 +1975,19 @@ func (sa *Adapter) UpdateProfile(accountID string, profile *model.Profile) error
 	return nil
 }
 
-//FindProfiles finds profiles by authtype id and account auth type identifier
-func (sa *Adapter) FindProfiles(authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error) {
-	filter := bson.D{
-		primitive.E{Key: "auth_types.auth_type_id", Value: authTypeID},
-		primitive.E{Key: "auth_types.identifier", Value: accountAuthTypeIdentifier}}
+//FindProfiles finds profiles by app id, authtype id and account auth type identifier
+func (sa *Adapter) FindProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error) {
+	pipeline := []bson.M{
+		{"$lookup": bson.M{
+			"from":         "applications_organizations",
+			"localField":   "app_org_id",
+			"foreignField": "_id",
+			"as":           "app_org",
+		}},
+		{"$match": bson.M{"app_org.app_id": appID}},
+	}
 	var accounts []account
-	err := sa.db.accounts.Find(filter, &accounts, nil)
+	err := sa.db.accounts.Aggregate(pipeline, &accounts, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
