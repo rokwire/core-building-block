@@ -215,7 +215,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		//user does not exist, we need to register it
 
 		//1. check if needs to use shared profile
-		useSharedProfile, sharedProfile, _, err := a.applySharedProfile(appOrg, authType.ID, externalUser.Identifier, l)
+		useSharedProfile, sharedProfile, _, err := a.applySharedProfile(appOrg.Application, authType.ID, externalUser.Identifier, l)
 		if err != nil {
 			return nil, nil, nil, errors.Wrap("error applying shared profile", err)
 		}
@@ -458,7 +458,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		}
 
 		//check if needs to use shared profile
-		useSharedProfile, sharedProfile, sharedCredential, err := a.applySharedProfile(appOrg, authType.ID, userIdentifier, l)
+		useSharedProfile, sharedProfile, sharedCredential, err := a.applySharedProfile(appOrg.Application, authType.ID, userIdentifier, l)
 		if err != nil {
 			return "", nil, nil, errors.Wrap("error applying shared profile", err)
 		}
@@ -551,7 +551,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	return message, accountAuthType, mfaTypes, nil
 }
 
-func (a *Auth) applySharedProfile(appOrg model.ApplicationOrganization, authTypeID string, userIdentifier string, l *logs.Log) (bool, *model.Profile, *model.Credential, error) {
+func (a *Auth) applySharedProfile(app model.Application, authTypeID string, userIdentifier string, l *logs.Log) (bool, *model.Profile, *model.Credential, error) {
 	//do not share profiles by default
 	useSharedProfile := false
 
@@ -561,11 +561,11 @@ func (a *Auth) applySharedProfile(appOrg model.ApplicationOrganization, authType
 	var err error
 
 	//the application uses shared profiles
-	if !appOrg.Application.RequiresOwnUsers {
-		l.Infof("%s does not require own profiles", appOrg.Application.Name)
+	if !app.RequiresOwnUsers {
+		l.Infof("%s does not require own profiles", app.Name)
 
 		hasSharedProfile := false
-		hasSharedProfile, sharedProfile, sharedCredential, err = a.hasSharedProfile(authTypeID, userIdentifier, l)
+		hasSharedProfile, sharedProfile, sharedCredential, err = a.hasSharedProfile(app, authTypeID, userIdentifier, l)
 		if err != nil {
 			return false, nil, nil, errors.Wrap("error checking shared profile", err)
 		}
@@ -576,16 +576,17 @@ func (a *Auth) applySharedProfile(appOrg model.ApplicationOrganization, authType
 			l.Infof("%s does not have a profile", userIdentifier)
 		}
 	} else {
-		l.Infof("%s requires own profiles", appOrg.Application.Name)
+		l.Infof("%s requires own profiles", app.Name)
 	}
 
 	return useSharedProfile, sharedProfile, sharedCredential, nil
 }
 
-func (a *Auth) hasSharedProfile(authTypeID string, userIdentifier string, l *logs.Log) (bool, *model.Profile, *model.Credential, error) {
+func (a *Auth) hasSharedProfile(app model.Application, authTypeID string, userIdentifier string, l *logs.Log) (bool, *model.Profile, *model.Credential, error) {
 	l.Info("hasSharedProfile")
 
 	//find if already there is profile
+	//TODO application
 	profiles, err := a.storage.FindProfiles(authTypeID, userIdentifier)
 	if err != nil {
 		return false, nil, nil, errors.Wrap("error finding profiles", err)
@@ -1099,7 +1100,7 @@ func (a *Auth) registerUser(authType model.AuthType, userIdentifier string, appO
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
 	}
 
-	//insert credential
+	//insert or update credential
 	if credential != nil {
 		//TODO - in one transaction
 		if useSharedProfile {
