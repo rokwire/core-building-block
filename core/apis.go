@@ -79,10 +79,6 @@ func (s *servicesImpl) SerGetPreferences(accountID string) (map[string]interface
 	return s.app.serGetPreferences(accountID)
 }
 
-func (s *servicesImpl) SerUpdateProfile(accountID string, profile *model.Profile) error {
-	return s.app.serUpdateProfile(accountID, profile)
-}
-
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
 	return s.app.serGetAuthTest(l)
 }
@@ -93,6 +89,10 @@ func (s *servicesImpl) SerGetCommonTest(l *logs.Log) string {
 
 func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error {
 	return s.app.serUpdateAccountPreferences(id, preferences)
+}
+
+func (s *servicesImpl) SerUpdateProfile(profile model.Profile) error {
+	return s.app.serUpdateProfile(profile)
 }
 
 func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {

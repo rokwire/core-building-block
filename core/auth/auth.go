@@ -433,7 +433,7 @@ func (a *Auth) updateProfileIfNeeded(account model.Account, externalUser model.E
 
 	if *changed {
 		l.Info("the profile will be updated")
-		err := a.storage.UpdateProfile(account.ID, &profile)
+		err := a.storage.UpdateProfile(profile)
 		if err != nil {
 			return errors.WrapErrorData("error updating profile from external user data", model.TypeProfile, nil, err)
 		}
@@ -1203,6 +1203,14 @@ func (a *Auth) registerUser(authType model.AuthType, userIdentifier string, appO
 			if err != nil {
 				return nil, errors.Wrapf("error inserting a credential", err)
 			}
+		}
+	}
+
+	//update profile if shared
+	if useSharedProfile {
+		err = a.storage.UpdateProfile(profile)
+		if err != nil {
+			return nil, errors.Wrapf("error updating profile on register", err)
 		}
 	}
 

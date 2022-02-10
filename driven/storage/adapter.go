@@ -1940,14 +1940,11 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 
 }
 
-//UpdateProfile updates an account profile
-func (sa *Adapter) UpdateProfile(accountID string, profile *model.Profile) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+//UpdateProfile updates a profile
+func (sa *Adapter) UpdateProfile(profile model.Profile) error {
+	filter := bson.D{primitive.E{Key: "profile.id", Value: profile.ID}}
 
 	now := time.Now().UTC()
-	if profile == nil {
-		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeProfile))
-	}
 	profileUpdate := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "profile.photo_url", Value: profile.PhotoURL},
@@ -1964,13 +1961,11 @@ func (sa *Adapter) UpdateProfile(accountID string, profile *model.Profile) error
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, profileUpdate, nil)
+	res, err := sa.db.accounts.UpdateMany(filter, profileUpdate, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
 	}
-	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeProfile, logutils.StringArgs("unexpected modified count"))
-	}
+	sa.logger.Infof("modified %d profile copies", res.ModifiedCount)
 
 	return nil
 }

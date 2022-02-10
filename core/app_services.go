@@ -40,8 +40,8 @@ func (app *application) serGetPreferences(accountID string) (map[string]interfac
 	return preferences, nil
 }
 
-func (app *application) serUpdateProfile(accountID string, profile *model.Profile) error {
-	return app.storage.UpdateProfile(accountID, profile)
+func (app *application) serUpdateProfile(profile model.Profile) error {
+	return app.storage.UpdateProfile(profile)
 }
 
 func (app *application) serUpdateAccountPreferences(id string, preferences map[string]interface{}) error {

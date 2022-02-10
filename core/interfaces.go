@@ -13,8 +13,9 @@ type Services interface {
 	SerGetAccount(accountID string) (*model.Account, error)
 	SerGetProfile(accountID string) (*model.Profile, error)
 	SerGetPreferences(accountID string) (map[string]interface{}, error)
-	SerUpdateProfile(accountID string, profile *model.Profile) error
 	SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error
+
+	SerUpdateProfile(profile model.Profile) error
 
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
@@ -97,11 +98,12 @@ type Storage interface {
 	FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
-	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
+
+	UpdateProfile(profile model.Profile) error
 
 	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
 	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error

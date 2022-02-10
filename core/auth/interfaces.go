@@ -353,7 +353,7 @@ type Storage interface {
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 
 	//Profiles
-	UpdateProfile(accountID string, profile *model.Profile) error
+	UpdateProfile(profile model.Profile) error
 	FindProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)
 
 	//AccountAuthTypes
