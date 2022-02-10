@@ -238,7 +238,7 @@ func (a *Auth) applySignUpExternal(authType model.AuthType, appOrg model.Applica
 	regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (*model.AccountAuthType, error) {
 	var accountAuthType *model.AccountAuthType
 
-	var profile *model.Profile
+	var profile model.Profile
 	var preferences map[string]interface{}
 
 	//1. check if needs to use shared profile
@@ -249,9 +249,15 @@ func (a *Auth) applySignUpExternal(authType model.AuthType, appOrg model.Applica
 
 	if useSharedProfile {
 		l.Infof("%s uses a shared profile", externalUser.Identifier)
-		regProfile = *sharedProfile
+
+		//merge client profile and shared profile
+		profile = a.mergeClientAndSharedProfile(regProfile, *sharedProfile)
+		preferences = regPreferences
 	} else {
 		l.Infof("%s does not use a shared profile", externalUser.Identifier)
+
+		profile = regProfile
+		preferences = regPreferences
 	}
 
 	//2. prepare the registration data
@@ -260,13 +266,13 @@ func (a *Auth) applySignUpExternal(authType model.AuthType, appOrg model.Applica
 	accountAuthTypeParams["user"] = externalUser
 
 	//prepare profile and preferences
-	profile, preferences, err = a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, regProfile, regPreferences, l)
+	preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, profile, preferences, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 	}
 
 	//3. apply profile data from the external user if not provided
-	_, err = a.applyProfileDataFromExternalUser(profile, externalUser, l)
+	_, err = a.applyProfileDataFromExternalUser(preparedProfile, externalUser, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error applying profile data from external user on registration", model.TypeProfile, nil, err)
 	}
@@ -278,7 +284,7 @@ func (a *Auth) applySignUpExternal(authType model.AuthType, appOrg model.Applica
 	}
 
 	//5. register the account
-	accountAuthType, err = a.registerUser(authType, identifier, appOrg, nil, useSharedProfile, *profile, preferences, roles, groups, l)
+	accountAuthType, err = a.registerUser(authType, identifier, appOrg, nil, useSharedProfile, *preparedProfile, preparedPreferences, roles, groups, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
@@ -542,7 +548,7 @@ func (a *Auth) applySignUp(authImpl authType, accountExists bool, authType model
 
 	var message string
 	var credential *model.Credential
-	var profile *model.Profile
+	var profile model.Profile
 	var preferences map[string]interface{}
 
 	//check if needs to use shared profile
@@ -560,14 +566,18 @@ func (a *Auth) applySignUp(authImpl authType, accountExists bool, authType model
 			return "", nil, errors.New("unverified credentials").SetStatus(utils.ErrorStatusSharedCredentialUnverified)
 		}
 
-		//
+		//merge client profile and shared profile
+		profile = a.mergeClientAndSharedProfile(regProfile, *sharedProfile)
+		preferences = regPreferences
 
-		regProfile = *sharedProfile
 		credential = sharedCredential
 
 		message = "sucessfully registered"
 	} else {
 		l.Infof("%s does not use a shared profile", userIdentifier)
+
+		profile = regProfile
+		preferences = regPreferences
 
 		credentialID, _ := uuid.NewUUID()
 		credID := credentialID.String()
@@ -587,17 +597,37 @@ func (a *Auth) applySignUp(authImpl authType, accountExists bool, authType model
 		}
 	}
 
-	profile, preferences, err = a.prepareRegistrationData(authType, userIdentifier, nil, regProfile, regPreferences, l)
+	preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, userIdentifier, nil, profile, preferences, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 	}
 
-	accountAuthType, err := a.registerUser(authType, userIdentifier, appOrg, credential, useSharedProfile, *profile, preferences, nil, nil, l)
+	accountAuthType, err := a.registerUser(authType, userIdentifier, appOrg, credential, useSharedProfile, *preparedProfile, preparedPreferences, nil, nil, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
 
 	return message, accountAuthType, nil
+}
+
+func (a *Auth) mergeClientAndSharedProfile(clientData model.Profile, sharedProfile model.Profile) model.Profile {
+	clientData.ID = sharedProfile.ID
+
+	clientData.PhotoURL = utils.SetStringIfEmpty(clientData.PhotoURL, sharedProfile.PhotoURL)
+	clientData.FirstName = utils.SetStringIfEmpty(clientData.FirstName, sharedProfile.FirstName)
+	clientData.LastName = utils.SetStringIfEmpty(clientData.LastName, sharedProfile.LastName)
+	clientData.Email = utils.SetStringIfEmpty(clientData.Email, sharedProfile.Email)
+	clientData.Phone = utils.SetStringIfEmpty(clientData.Phone, sharedProfile.Phone)
+	clientData.Address = utils.SetStringIfEmpty(clientData.Address, sharedProfile.Address)
+	clientData.ZipCode = utils.SetStringIfEmpty(clientData.ZipCode, sharedProfile.ZipCode)
+	clientData.State = utils.SetStringIfEmpty(clientData.State, sharedProfile.State)
+	clientData.Country = utils.SetStringIfEmpty(clientData.Country, sharedProfile.Country)
+
+	if clientData.BirthYear == 0 {
+		clientData.BirthYear = sharedProfile.BirthYear
+	}
+
+	return clientData
 }
 
 func (a *Auth) applySharedProfile(app model.Application, authTypeID string, userIdentifier string, l *logs.Log) (bool, *model.Profile, *model.Credential, error) {
