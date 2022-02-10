@@ -319,6 +319,20 @@ func (app *application) sysDeleteAppConfig(id string) error {
 	return nil
 }
 
+func (app *application) sysCreateAppTypeVersion(appTypeID string, major int, minor int, patch int) error {
+
+	appType := model.ApplicationType{ID: appTypeID}
+
+	versionID, _ := uuid.NewUUID()
+	version := &model.Version{ID: versionID.String(), ApplicationType: appType, VersionNumbers: model.VersionNumbers{Major: major, Minor: minor, Patch: patch}}
+
+	err := app.storage.InsertApplicationTypeVersion(nil, version, appTypeID)
+	if err != nil {
+		return nil
+	}
+	return nil
+}
+
 func (app *application) sysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
 	if assignerPermissions == nil {
 		return errors.New("no permissions from admin assigner")

@@ -6250,9 +6250,6 @@
         }
       },
       "_system_req_create_Application-Type": {
-        "required": [
-          "version_numbers"
-        ],
         "type": "object",
         "properties": {
           "major": {

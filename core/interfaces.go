@@ -85,6 +85,8 @@ type System interface {
 
 	SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
 	SysGrantAccountRoles(accountID string, appID string, roleIDs []string) error
+
+	SysCreateAppTypeVersion(appTypeID string, major int, minor int, patch int) error
 }
 
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
@@ -147,8 +149,8 @@ type Storage interface {
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
-
 	FindApplicationType(id string) (*model.ApplicationType, error)
+	InsertApplicationTypeVersion(context storage.TransactionContext, version *model.Version, appTypeID string) error
 
 	FindAppConfigs(appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	FindAppConfigByVersion(appTypeIdentifier string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)

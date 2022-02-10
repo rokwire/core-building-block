@@ -276,4 +276,8 @@ func (s *systemImpl) SysGrantAccountRoles(accountID string, appID string, roleID
 	return s.app.sysGrantAccountRoles(accountID, appID, roleIDs)
 }
 
+func (s *systemImpl) SysCreateAppTypeVersion(appTypeID string, major int, minor int, patch int) error {
+	return s.app.sysCreateAppTypeVersion(appTypeID, major, minor, patch)
+}
+
 ///

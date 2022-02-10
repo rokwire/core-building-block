@@ -1658,6 +1658,22 @@ func (sa *Adapter) UpdatePermission(item model.Permission) error {
 	return nil
 }
 
+/*//FindApplicationByAppTypeID finds the application for the application type
+func (sa *Adapter) FindApplicationByAppTypeID(appTypeID string) ([]model.Application, error) {
+	if len(appTypeID) == 0 {
+		return nil, nil
+	}
+
+	filter := bson.D{primitive.E{Key: "types.id", Value: appTypeID}}
+	var applicationsResult []model.Application
+	err := sa.db.applications.Find(filter, &applicationsResult, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return applicationsResult, nil
+}*/
+
 //DeletePermission deletes permission
 func (sa *Adapter) DeletePermission(id string) error {
 	//TODO
@@ -2323,6 +2339,53 @@ func (sa *Adapter) FindApplicationType(id string) (*model.ApplicationType, error
 	appType.Application = *app
 
 	return appType, nil
+}
+
+//InsertAuthType inserts an organization
+func (sa *Adapter) InsertApplicationTypeVersion(context TransactionContext, version *model.Version, appTypeID string) error {
+	if version == nil {
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("version"))
+	}
+	if len(appTypeID) == 0 {
+		return nil
+	}
+
+	filter := bson.D{primitive.E{Key: "types.id", Value: appTypeID}}
+	var applicationsResult []application
+	err := sa.db.applications.Find(filter, &applicationsResult, nil)
+	if err != nil {
+		return err
+	}
+
+	if len(applicationsResult) == 0 {
+		return errors.Newf("no application for ID: %v", appTypeID)
+	}
+
+	application := applicationsResult[0]
+
+	storageVersion := versionToStorage(*version)
+	appType := application.Types
+
+	for i, currentAppType := range appType {
+		if currentAppType.ID == appTypeID {
+			currentAppType.Versions = append(currentAppType.Versions, storageVersion)
+			appType[i] = currentAppType
+		}
+	}
+
+	applicationFilter := bson.M{"_id": application.ID}
+	opts := options.Replace().SetUpsert(true)
+	if context != nil {
+		err = sa.db.applications.ReplaceOneWithContext(context, applicationFilter, application, opts)
+	} else {
+		err = sa.db.applications.ReplaceOne(applicationFilter, application, opts)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSave, "applications", &logutils.FieldArgs{"applications_id": application.ID}, nil)
+	}
+
+	return nil
 }
 
 //FindApplicationsOrganizationsByOrgID finds a set of applications organizations
