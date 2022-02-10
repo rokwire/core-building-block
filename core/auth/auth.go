@@ -172,9 +172,6 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
 	creds string, params string, regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (*model.AccountAuthType, map[string]interface{}, []model.MFAType, error) {
 	var accountAuthType *model.AccountAuthType
-	var profile *model.Profile
-	var preferences map[string]interface{}
-	var extParams map[string]interface{}
 	var mfaTypes []model.MFAType
 
 	//external auth type
@@ -184,8 +181,8 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	}
 
 	//1. get the user from the external system
-	var externalUser *model.ExternalSystemUser
-	externalUser, extParams, err = authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
+	//var externalUser *model.ExternalSystemUser
+	externalUser, extParams, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction("logging in", "external user", nil, err)
 	}
@@ -197,68 +194,96 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	}
 	if account != nil {
 		//account exists
-
-		//find account auth type
-		accountAuthType, err = a.findAccountAuthType(account, &authType, externalUser.Identifier)
+		accountAuthType, mfaTypes, err = a.applySignInExternal(*account, authType, appOrg, *externalUser, l)
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, nil, nil, errors.Wrap("error on apply sign in external", err)
 		}
-
-		//check if need to update the account data
-		err = a.updateDataIfNeeded(*accountAuthType, *externalUser, authType, appOrg, l)
-		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction("update account if needed", "", nil, err)
-		}
-
-		mfaTypes = account.GetVerifiedMFATypes()
 	} else {
 		//user does not exist, we need to register it
-
-		//1. check if needs to use shared profile
-		useSharedProfile, sharedProfile, _, err := a.applySharedProfile(appOrg.Application, authType.ID, externalUser.Identifier, l)
+		accountAuthType, err = a.applySignUpExternal(authType, appOrg, *externalUser, regProfile, regPreferences, l)
 		if err != nil {
-			return nil, nil, nil, errors.Wrap("error applying shared profile", err)
-		}
-
-		if useSharedProfile {
-			l.Infof("%s uses a shared profile", externalUser.Identifier)
-			regProfile = *sharedProfile
-		} else {
-			l.Infof("%s does not use a shared profile", externalUser.Identifier)
-		}
-
-		//2. prepare the registration data
-		identifier := externalUser.Identifier
-		accountAuthTypeParams := map[string]interface{}{}
-		accountAuthTypeParams["user"] = externalUser
-
-		//prepare profile and preferences
-		profile, preferences, err = a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, regProfile, regPreferences, l)
-		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
-		}
-
-		//3. apply profile data from the external user if not provided
-		_, err = a.applyProfileDataFromExternalUser(profile, *externalUser, l)
-		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction("error applying profile data from external user on registration", model.TypeProfile, nil, err)
-		}
-
-		//4. roles and groups mapping
-		roles, groups, err := a.getExternalUserAuthorization(*externalUser, appOrg, authType)
-		if err != nil {
-			l.WarnAction(logutils.ActionGet, "external authorization", err)
-		}
-
-		//5. register the account
-		accountAuthType, err = a.registerUser(authType, identifier, appOrg, nil, useSharedProfile, *profile, preferences, roles, groups, l)
-		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+			return nil, nil, nil, errors.Wrap("error on apply sign up external", err)
 		}
 	}
 
 	//TODO: make sure we do not return any refresh tokens in extParams
 	return accountAuthType, extParams, mfaTypes, nil
+}
+
+func (a *Auth) applySignInExternal(account model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
+	externalUser model.ExternalSystemUser, l *logs.Log) (*model.AccountAuthType, []model.MFAType, error) {
+	var accountAuthType *model.AccountAuthType
+	var mfaTypes []model.MFAType
+
+	var err error
+
+	//find account auth type
+	accountAuthType, err = a.findAccountAuthType(&account, &authType, externalUser.Identifier)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	//check if need to update the account data
+	err = a.updateDataIfNeeded(*accountAuthType, externalUser, authType, appOrg, l)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction("update account if needed", "", nil, err)
+	}
+
+	mfaTypes = account.GetVerifiedMFATypes()
+
+	return accountAuthType, mfaTypes, nil
+}
+
+func (a *Auth) applySignUpExternal(authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser,
+	regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (*model.AccountAuthType, error) {
+	var accountAuthType *model.AccountAuthType
+
+	var profile *model.Profile
+	var preferences map[string]interface{}
+
+	//1. check if needs to use shared profile
+	useSharedProfile, sharedProfile, _, err := a.applySharedProfile(appOrg.Application, authType.ID, externalUser.Identifier, l)
+	if err != nil {
+		return nil, errors.Wrap("error applying shared profile", err)
+	}
+
+	if useSharedProfile {
+		l.Infof("%s uses a shared profile", externalUser.Identifier)
+		regProfile = *sharedProfile
+	} else {
+		l.Infof("%s does not use a shared profile", externalUser.Identifier)
+	}
+
+	//2. prepare the registration data
+	identifier := externalUser.Identifier
+	accountAuthTypeParams := map[string]interface{}{}
+	accountAuthTypeParams["user"] = externalUser
+
+	//prepare profile and preferences
+	profile, preferences, err = a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, regProfile, regPreferences, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
+	}
+
+	//3. apply profile data from the external user if not provided
+	_, err = a.applyProfileDataFromExternalUser(profile, externalUser, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error applying profile data from external user on registration", model.TypeProfile, nil, err)
+	}
+
+	//4. roles and groups mapping
+	roles, groups, err := a.getExternalUserAuthorization(externalUser, appOrg, authType)
+	if err != nil {
+		l.WarnAction(logutils.ActionGet, "external authorization", err)
+	}
+
+	//5. register the account
+	accountAuthType, err = a.registerUser(authType, identifier, appOrg, nil, useSharedProfile, *profile, preferences, roles, groups, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+	}
+
+	return accountAuthType, nil
 }
 
 func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, externalUser model.ExternalSystemUser, l *logs.Log) (*bool, error) {
@@ -465,6 +490,9 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 
 		if useSharedProfile {
 			l.Infof("%s uses a shared profile", userIdentifier)
+
+			//TODO check if verified
+
 			regProfile = *sharedProfile
 			credential = sharedCredential
 
