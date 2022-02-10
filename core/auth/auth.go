@@ -554,7 +554,11 @@ func (a *Auth) applySignUp(authImpl authType, accountExists bool, authType model
 	if useSharedProfile {
 		l.Infof("%s uses a shared profile", userIdentifier)
 
-		//TODO check if verified
+		//allow sign up only if the shared credential is verified
+		if !sharedCredential.Verified {
+			l.Infof("trying to sign up in %s with unverified shared credentials", appOrg.Organization.Name)
+			return "", nil, errors.New("unverified credentials").SetStatus(utils.ErrorStatusSharedCredentialUnverified)
+		}
 
 		regProfile = *sharedProfile
 		credential = sharedCredential
