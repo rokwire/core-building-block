@@ -447,12 +447,6 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, appType model.App
 
 func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
 	creds string, params string, regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (string, *model.AccountAuthType, []model.MFAType, error) {
-	var message string
-	var account *model.Account
-	var credential *model.Credential
-	var profile *model.Profile
-	var preferences map[string]interface{}
-	var mfaTypes []model.MFAType
 
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(authType)
@@ -465,7 +459,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
 	}
-	account, err = a.storage.FindAccount(appOrg.ID, authType.ID, userIdentifier)
+	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, userIdentifier)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
@@ -478,73 +472,33 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		return "", nil, nil, errors.WrapErrorAction("error checking is sign up", "", nil, err)
 	}
 	if isSignUp {
-		if accountExists {
-			return "", nil, nil, errors.New("account already exists").SetStatus(utils.ErrorStatusAlreadyExists)
-		}
-
-		//check if needs to use shared profile
-		useSharedProfile, sharedProfile, sharedCredential, err := a.applySharedProfile(appOrg.Application, authType.ID, userIdentifier, l)
+		message, accountAuthType, err := a.applySignUp(authImpl, accountExists, authType, appType, appOrg, userIdentifier,
+			creds, params, regProfile, regPreferences, l)
 		if err != nil {
-			return "", nil, nil, errors.Wrap("error applying shared profile", err)
+			return "", nil, nil, err
 		}
-
-		if useSharedProfile {
-			l.Infof("%s uses a shared profile", userIdentifier)
-
-			//TODO check if verified
-
-			regProfile = *sharedProfile
-			credential = sharedCredential
-
-			message = "sucessfully registered" //no need from credential verification as it has already been verified/shared one is used/
-		} else {
-			l.Infof("%s does not use a shared profile", userIdentifier)
-
-			credentialID, _ := uuid.NewUUID()
-			credID := credentialID.String()
-
-			///apply sign up
-			var credentialValue map[string]interface{}
-			message, credentialValue, err = authImpl.signUp(authType, appType, appOrg, creds, params, credentialID.String(), l)
-			if err != nil {
-				return "", nil, nil, errors.Wrap("error signing up", err)
-			}
-
-			//credential
-			if credentialValue != nil {
-				now := time.Now()
-				credential = &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
-					AuthType: authType, DateCreated: now, DateUpdated: &now}
-			}
-		}
-
-		profile, preferences, err = a.prepareRegistrationData(authType, userIdentifier, nil, regProfile, regPreferences, l)
-		if err != nil {
-			return "", nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
-		}
-
-		accountAuthType, err := a.registerUser(authType, userIdentifier, appOrg, credential, useSharedProfile, *profile, preferences, nil, nil, l)
-		if err != nil {
-			return "", nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
-		}
-
 		return message, accountAuthType, nil, nil
 	}
-
 	///apply sign in
+	return a.applySignIn(authImpl, authType, accountExists, *account, userIdentifier, creds, l)
+}
+
+func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, accountExists bool, account model.Account,
+	userIdentifier string, creds string, l *logs.Log) (string, *model.AccountAuthType, []model.MFAType, error) {
 	if !accountExists {
 		return "", nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil).SetStatus(utils.ErrorStatusNotFound)
 	}
-	mfaTypes = account.GetVerifiedMFATypes()
+
+	mfaTypes := account.GetVerifiedMFATypes()
 
 	//find account auth type
-	accountAuthType, err := a.findAccountAuthType(account, &authType, userIdentifier)
+	accountAuthType, err := a.findAccountAuthType(&account, &authType, userIdentifier)
 	if accountAuthType == nil {
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
 
 	//check the credentials
-	message, err = authImpl.checkCredentials(*accountAuthType, creds, l)
+	message, err := authImpl.checkCredentials(*accountAuthType, creds, l)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
 	}
@@ -577,6 +531,67 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 
 	return message, accountAuthType, mfaTypes, nil
+}
+
+func (a *Auth) applySignUp(authImpl authType, accountExists bool, authType model.AuthType, appType model.ApplicationType,
+	appOrg model.ApplicationOrganization, userIdentifier string, creds string, params string,
+	regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (string, *model.AccountAuthType, error) {
+	if accountExists {
+		return "", nil, errors.New("account already exists").SetStatus(utils.ErrorStatusAlreadyExists)
+	}
+
+	var message string
+	var credential *model.Credential
+	var profile *model.Profile
+	var preferences map[string]interface{}
+
+	//check if needs to use shared profile
+	useSharedProfile, sharedProfile, sharedCredential, err := a.applySharedProfile(appOrg.Application, authType.ID, userIdentifier, l)
+	if err != nil {
+		return "", nil, errors.Wrap("error applying shared profile", err)
+	}
+
+	if useSharedProfile {
+		l.Infof("%s uses a shared profile", userIdentifier)
+
+		//TODO check if verified
+
+		regProfile = *sharedProfile
+		credential = sharedCredential
+
+		message = "sucessfully registered" //no need from credential verification as it has already been verified/shared one is used/
+	} else {
+		l.Infof("%s does not use a shared profile", userIdentifier)
+
+		credentialID, _ := uuid.NewUUID()
+		credID := credentialID.String()
+
+		///apply sign up
+		var credentialValue map[string]interface{}
+		message, credentialValue, err = authImpl.signUp(authType, appType, appOrg, creds, params, credentialID.String(), l)
+		if err != nil {
+			return "", nil, errors.Wrap("error signing up", err)
+		}
+
+		//credential
+		if credentialValue != nil {
+			now := time.Now()
+			credential = &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
+				AuthType: authType, DateCreated: now, DateUpdated: &now}
+		}
+	}
+
+	profile, preferences, err = a.prepareRegistrationData(authType, userIdentifier, nil, regProfile, regPreferences, l)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
+	}
+
+	accountAuthType, err := a.registerUser(authType, userIdentifier, appOrg, credential, useSharedProfile, *profile, preferences, nil, nil, l)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+	}
+
+	return message, accountAuthType, nil
 }
 
 func (a *Auth) applySharedProfile(app model.Application, authTypeID string, userIdentifier string, l *logs.Log) (bool, *model.Profile, *model.Credential, error) {
