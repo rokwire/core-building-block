@@ -1188,9 +1188,9 @@ func (a *Auth) registerUser(authType model.AuthType, userIdentifier string, appO
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
 	}
 
+	//TODO - in one transaction
 	//insert or update credential
 	if credential != nil {
-		//TODO - in one transaction
 		if useSharedProfile {
 			//update credential
 			err = a.storage.UpdateCredential(nil, credential)
@@ -1213,6 +1213,7 @@ func (a *Auth) registerUser(authType model.AuthType, userIdentifier string, appO
 			return nil, errors.Wrapf("error updating profile on register", err)
 		}
 	}
+	//TODO - in one transaction
 
 	accountAuthType.Account = *insertedAccount
 
