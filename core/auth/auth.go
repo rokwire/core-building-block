@@ -560,10 +560,12 @@ func (a *Auth) applySignUp(authImpl authType, accountExists bool, authType model
 			return "", nil, errors.New("unverified credentials").SetStatus(utils.ErrorStatusSharedCredentialUnverified)
 		}
 
+		//
+
 		regProfile = *sharedProfile
 		credential = sharedCredential
 
-		message = "sucessfully registered" //no need from credential verification as it has already been verified/shared one is used/
+		message = "sucessfully registered"
 	} else {
 		l.Infof("%s does not use a shared profile", userIdentifier)
 
