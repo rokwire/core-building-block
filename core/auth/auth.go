@@ -562,7 +562,7 @@ func (a *Auth) applySharedProfile(app model.Application, authTypeID string, user
 
 	//the application uses shared profiles
 	if app.SharedIdentities {
-		l.Infof("%s does not require own profiles", app.Name)
+		l.Infof("%s uses shared identities", app.Name)
 
 		hasSharedProfile := false
 		hasSharedProfile, sharedProfile, sharedCredential, err = a.hasSharedProfile(app, authTypeID, userIdentifier, l)
@@ -576,7 +576,7 @@ func (a *Auth) applySharedProfile(app model.Application, authTypeID string, user
 			l.Infof("%s does not have a profile", userIdentifier)
 		}
 	} else {
-		l.Infof("%s requires own profiles", app.Name)
+		l.Infof("%s does not use shared identities", app.Name)
 	}
 
 	return useSharedProfile, sharedProfile, sharedCredential, nil
