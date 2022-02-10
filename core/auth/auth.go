@@ -266,13 +266,18 @@ func (a *Auth) applySignUpExternal(authType model.AuthType, appOrg model.Applica
 	accountAuthTypeParams["user"] = externalUser
 
 	//prepare profile and preferences
-	preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, identifier, profile, preferences, l)
-	if err != nil {
-		return nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
+	if !useSharedProfile {
+		//no need to merge from profile BB for new apps/UIUC app has useSharedprofile=false/
+		preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, identifier, profile, preferences, l)
+		if err != nil {
+			return nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
+		}
+		profile = *preparedProfile
+		preferences = preparedPreferences
 	}
 
 	//3. apply profile data from the external user if not provided
-	_, err = a.applyProfileDataFromExternalUser(preparedProfile, externalUser, l)
+	_, err = a.applyProfileDataFromExternalUser(&profile, externalUser, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error applying profile data from external user on registration", model.TypeProfile, nil, err)
 	}
@@ -284,7 +289,7 @@ func (a *Auth) applySignUpExternal(authType model.AuthType, appOrg model.Applica
 	}
 
 	//5. register the account
-	accountAuthType, err = a.registerUser(authType, identifier, appOrg, nil, useSharedProfile, *preparedProfile, preparedPreferences, roles, groups, l)
+	accountAuthType, err = a.registerUser(authType, identifier, appOrg, nil, useSharedProfile, profile, preferences, roles, groups, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
@@ -597,12 +602,17 @@ func (a *Auth) applySignUp(authImpl authType, accountExists bool, authType model
 		}
 	}
 
-	preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, userIdentifier, profile, preferences, l)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
+	if !useSharedProfile {
+		//no need to merge from profile BB for new apps/UIUC app has useSharedprofile=false/
+		preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, userIdentifier, profile, preferences, l)
+		if err != nil {
+			return "", nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
+		}
+		profile = *preparedProfile
+		preferences = preparedPreferences
 	}
 
-	accountAuthType, err := a.registerUser(authType, userIdentifier, appOrg, credential, useSharedProfile, *preparedProfile, preparedPreferences, nil, nil, l)
+	accountAuthType, err := a.registerUser(authType, userIdentifier, appOrg, credential, useSharedProfile, profile, preferences, nil, nil, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
