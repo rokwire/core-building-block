@@ -40,8 +40,22 @@ func (app *application) serGetPreferences(accountID string) (map[string]interfac
 	return preferences, nil
 }
 
-func (app *application) serUpdateProfile(profile model.Profile) error {
-	return app.storage.UpdateProfile(profile)
+func (app *application) serUpdateProfile(accountID string, profile model.Profile) error {
+	//1. find the account
+	account, err := app.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return errors.Wrapf("error finding an account on profile update", err)
+	}
+
+	//2. get the profile ID from the account
+	profile.ID = account.Profile.ID
+
+	//3. update profile
+	err = app.storage.UpdateProfile(profile)
+	if err != nil {
+		return errors.Wrapf("error updating a profile", err)
+	}
+	return nil
 }
 
 func (app *application) serUpdateAccountPreferences(id string, preferences map[string]interface{}) error {

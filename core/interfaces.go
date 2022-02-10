@@ -15,7 +15,7 @@ type Services interface {
 	SerGetPreferences(accountID string) (map[string]interface{}, error)
 	SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error
 
-	SerUpdateProfile(profile model.Profile) error
+	SerUpdateProfile(accountID string, profile model.Profile) error
 
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string

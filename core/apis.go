@@ -91,8 +91,8 @@ func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[st
 	return s.app.serUpdateAccountPreferences(id, preferences)
 }
 
-func (s *servicesImpl) SerUpdateProfile(profile model.Profile) error {
-	return s.app.serUpdateProfile(profile)
+func (s *servicesImpl) SerUpdateProfile(accountID string, profile model.Profile) error {
+	return s.app.serUpdateProfile(accountID, profile)
 }
 
 func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
