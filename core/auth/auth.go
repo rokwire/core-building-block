@@ -266,7 +266,7 @@ func (a *Auth) applySignUpExternal(authType model.AuthType, appOrg model.Applica
 	accountAuthTypeParams["user"] = externalUser
 
 	//prepare profile and preferences
-	preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, identifier, accountAuthTypeParams, profile, preferences, l)
+	preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, identifier, profile, preferences, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 	}
@@ -597,7 +597,7 @@ func (a *Auth) applySignUp(authImpl authType, accountExists bool, authType model
 		}
 	}
 
-	preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, userIdentifier, nil, profile, preferences, l)
+	preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, userIdentifier, profile, preferences, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 	}
@@ -1017,7 +1017,7 @@ func (a *Auth) deleteLoginSessions(context storage.TransactionContext, loginSess
 	return nil
 }
 
-func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier string, accountAuthTypeParams map[string]interface{},
+func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier string,
 	profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*model.Profile, map[string]interface{}, error) {
 
 	///profile and preferences
