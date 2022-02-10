@@ -561,7 +561,7 @@ func (a *Auth) applySharedProfile(app model.Application, authTypeID string, user
 	var err error
 
 	//the application uses shared profiles
-	if !app.RequiresOwnUsers {
+	if app.SharedIdentities {
 		l.Infof("%s does not require own profiles", app.Name)
 
 		hasSharedProfile := false

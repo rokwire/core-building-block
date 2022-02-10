@@ -293,7 +293,7 @@ type ApplicationFields struct {
 	Id               string `json:"id"`
 	MultiTenant      *bool  `json:"multi_tenant,omitempty"`
 	Name             string `json:"name"`
-	RequiresOwnUsers *bool  `json:"requires_own_users,omitempty"`
+	SharedIdentities *bool  `json:"shared_identities,omitempty"`
 }
 
 // ApplicationOrganization defines model for ApplicationOrganization.
@@ -924,7 +924,7 @@ type SystemReqCreateApplication struct {
 	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
 	MultiTenant             bool   `json:"multi_tenant"`
 	Name                    string `json:"name"`
-	RequiresOwnUsers        bool   `json:"requires_own_users"`
+	SharedIdentities        bool   `json:"shared_identities"`
 }
 
 // SystemReqCreateApplicationConfigRequest defines model for _system_req_create_ApplicationConfig_Request.
@@ -974,7 +974,7 @@ type SystemResGetApplications struct {
 	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
 	MultiTenant             bool   `json:"multi_tenant"`
 	Name                    string `json:"name"`
-	RequiresOwnUsers        bool   `json:"requires_own_users"`
+	SharedIdentities        bool   `json:"shared_identities"`
 }
 
 // SystemResGetOrganizations defines model for _system_res_get_Organizations.

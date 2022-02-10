@@ -100,9 +100,10 @@ type Application struct {
 	MultiTenant bool //safer community is multi-tenant
 	Admin       bool //is this an admin app?
 
-	//if true - the user uses a separate profile for every organization within the application
-	//if false - the user uses shared profile between all organizations within the application
-	RequiresOwnUsers bool
+	//if to share identities between the organizations within the appication or to use e separate identities for every organization
+	//if true - the user uses shared profile between all organizations within the application
+	//if false - the user uses a separate profile for every organization within the application
+	SharedIdentities bool
 
 	Types []ApplicationType
 

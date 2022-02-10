@@ -3138,7 +3138,7 @@ components:
           type: string
         multi_tenant:
           type: boolean
-        requires_own_users:
+        shared_identities:
           type: boolean
     ApplicationType:
       type: object
@@ -4487,14 +4487,14 @@ components:
       required:
         - name
         - multi_tenant
-        - requires_own_users
+        - shared_identities
       type: object
       properties:
         name:
           type: string
         multi_tenant:
           type: boolean
-        requires_own_users:
+        shared_identities:
           type: boolean
         max_login_session_duration:
           description: The maximum allowed duration (in hours) of a user's login session for this application
@@ -4535,7 +4535,7 @@ components:
           type: string
         multi_tenant:
           type: boolean
-        requires_own_users:
+        shared_identities:
           type: boolean
         max_login_session_duration:
           description: The maximum allowed duration (in hours) of a user's login session for this application
@@ -4549,7 +4549,7 @@ components:
         - id
         - name
         - multi_tenant
-        - requires_own_users
+        - shared_identities
       type: object
       properties:
         id:
@@ -4559,7 +4559,7 @@ components:
           type: string
         multi_tenant:
           type: boolean
-        requires_own_users:
+        shared_identities:
           type: boolean
         max_login_session_duration:
           description: The maximum allowed duration (in hours) of a user's login session for this application
