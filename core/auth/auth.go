@@ -585,7 +585,7 @@ func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType m
 		l.Infof("%s uses a shared profile", userIdentifier)
 
 		//allow sign up only if the shared credential is verified
-		if !sharedCredential.Verified {
+		if sharedCredential != nil && !sharedCredential.Verified {
 			l.Infof("trying to sign up in %s with unverified shared credentials", appOrg.Organization.Name)
 			return "", nil, errors.New("unverified credentials").SetStatus(utils.ErrorStatusSharedCredentialUnverified)
 		}
@@ -721,6 +721,10 @@ func (a *Auth) hasSharedProfile(app model.Application, authTypeID string, userId
 				}
 			}
 		}
+	}
+
+	if profile == nil {
+		return false, nil, nil, nil
 	}
 
 	//find the credential
@@ -1274,7 +1278,15 @@ func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthTyp
 			if message != "" {
 				return "", nil, errors.New("verification not complete").SetStatus(utils.ErrorStatusUnverified)
 			}
-			return "", aat, nil
+			if aat != nil {
+				for i, accAuthType := range account.AuthTypes {
+					if accAuthType.ID == aat.ID {
+						account.AuthTypes[i] = *aat
+						break
+					}
+				}
+			}
+			return "", nil, nil
 		} else {
 			err = a.handleAccountAuthTypeConflict(*newCredsAccount, authType.ID, userIdentifier, false)
 			if err != nil {

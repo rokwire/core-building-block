@@ -58,30 +58,24 @@ type Account struct {
 
 //GetAccountAuthTypeByID finds account auth type by id
 func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
-	var result AccountAuthType
 	for _, aat := range a.AuthTypes {
 		if aat.ID == ID {
-			result = aat
-			break
+			aat.Account = a
+			return &aat
 		}
 	}
-	//assign account
-	result.Account = a
-	return &result
+	return nil
 }
 
 //GetAccountAuthType finds account auth type
 func (a Account) GetAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
-	var result AccountAuthType
 	for _, aat := range a.AuthTypes {
 		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {
-			result = aat
-			break
+			aat.Account = a
+			return &aat
 		}
 	}
-	//assign account
-	result.Account = a
-	return &result
+	return nil
 }
 
 //SortAccountAuthTypes sorts account auth types by matching the given uid
