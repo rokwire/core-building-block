@@ -147,6 +147,8 @@ paths:
     $ref: "./resources/system/application-configsId.yaml"
   /system/application-type/{id}/versions:
     $ref: "./resources/system/application-type.yaml"
+  /system/application-type/{id}/versions/{_id}:
+    $ref: "./resources/system/delete-application-type-version.yaml"
   /system/account/permissions:
     $ref: "./resources/system/account/permissions.yaml"
   /system/account/roles:

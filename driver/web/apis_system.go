@@ -681,6 +681,27 @@ func (h SystemApisHandler) getApplicationTypeVersion(l *logs.Log, r *http.Reques
 
 }
 
+func (h SystemApisHandler) deleteApplicationTypeVersion(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	appTypeID := params["id"]
+	if len(appTypeID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	params = mux.Vars(r)
+	versionID := params["_id"]
+	if len(versionID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("_id"), nil, http.StatusBadRequest, false)
+	}
+
+	err := h.coreAPIs.System.SysDeleteApplicationTypeVersion(appTypeID, versionID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationTypeVersionList, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 //grantAccountPermissions grants an account the given permissions
 func (h SystemApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)

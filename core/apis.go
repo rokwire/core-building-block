@@ -284,4 +284,8 @@ func (s *systemImpl) SysGetApplicationTypeVersion(appTypeID string) ([]model.Ver
 	return s.app.sysGetApplicationTypeVersion(appTypeID)
 }
 
+func (s *systemImpl) SysDeleteApplicationTypeVersion(appTypeID string, versionID string) error {
+	return s.app.sysDeleteApplicationTypeVersion(appTypeID, versionID)
+}
+
 ///

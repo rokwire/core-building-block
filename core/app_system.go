@@ -342,6 +342,15 @@ func (app *application) sysGetApplicationTypeVersion(appTypeID string) ([]model.
 	return appTypeVersion, nil
 }
 
+func (app *application) sysDeleteApplicationTypeVersion(appTypeID string, versionID string) error {
+	err := app.storage.DeleteApplicationTypeVersion(nil, appTypeID, versionID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeApplicationTypeVersionList, nil, err)
+	}
+
+	return nil
+}
+
 func (app *application) sysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
 	if assignerPermissions == nil {
 		return errors.New("no permissions from admin assigner")

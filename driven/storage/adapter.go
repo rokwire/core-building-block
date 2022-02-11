@@ -2341,7 +2341,7 @@ func (sa *Adapter) FindApplicationType(id string) (*model.ApplicationType, error
 	return appType, nil
 }
 
-//InsertAuthType inserts an organization
+//InsertApplicationTypeVersion inserts version
 func (sa *Adapter) InsertApplicationTypeVersion(context TransactionContext, version *model.Version, appTypeID string) error {
 	if version == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("version"))
@@ -2415,9 +2415,56 @@ func (sa *Adapter) FindApplicationVersionByAppTypeID(context TransactionContext,
 			av := versionsFromStorage(currentAppType.Versions, model.ApplicationType{})
 			return av, nil
 		}
+
 	}
 
 	return nil, nil
+}
+
+//InsertApplicationTypeVersion inserts version
+func (sa *Adapter) DeleteApplicationTypeVersion(context TransactionContext, appTypeID string, versionID string) error {
+
+	if len(appTypeID) == 0 {
+		return nil
+	}
+
+	if len(versionID) == 0 {
+		return nil
+	}
+
+	filter := bson.D{primitive.E{Key: "types.id", Value: appTypeID}}
+	var applicationsResult []application
+	err := sa.db.applications.Find(filter, &applicationsResult, nil)
+	if err != nil {
+		return err
+	}
+
+	if len(applicationsResult) == 0 {
+		return errors.Newf("no application for ID: %v", appTypeID)
+	}
+
+	application := applicationsResult[0]
+
+	appType := application.Types
+
+	for i, currentAppType := range appType {
+		if currentAppType.ID == appTypeID {
+			appType[i] = currentAppType
+		}
+	}
+
+	applicationFilter := bson.M{"_id": application.ID}
+	var res *mongo.DeleteResult
+	if context != nil {
+		res, err = sa.db.applications.DeleteOneWithContext(context, applicationFilter, nil)
+	} else {
+		res, err = sa.db.applications.DeleteOne(applicationFilter, nil)
+	}
+
+	if res.DeletedCount != 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeApplicationTypeVersionList, logutils.StringArgs("unexpected deleted count"))
+	}
+	return nil
 }
 
 //FindApplicationsOrganizationsByOrgID finds a set of applications organizations
