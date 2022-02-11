@@ -1568,6 +1568,39 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  '/admin/application/account/{id}/devices':
+    get:
+      tags:
+        - Admin
+      summary: Finds application account devices
+      description: |
+        Finds devices for the specified application
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The account ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content: null
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeviceFields'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   '/admin/application/account/{account_id}/login-sessions/{session_id}':
     delete:
       tags:
@@ -3653,6 +3686,8 @@ components:
       type: object
       properties:
         id:
+          type: string
+        device_id:
           type: string
         type:
           type: string

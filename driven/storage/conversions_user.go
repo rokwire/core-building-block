@@ -60,7 +60,7 @@ func accountDevicesFromStorage(item account) []model.Device {
 }
 
 func accountDeviceFromStorage(item userDevice) model.Device {
-	return model.Device{ID: item.ID, Type: item.Type, OS: item.OS,
+	return model.Device{ID: item.ID, DeviceID: item.DeviceID, Type: item.Type, OS: item.OS,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 

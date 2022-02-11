@@ -164,6 +164,10 @@ func (s *administrationImpl) AdmDeleteApplicationLoginSession(appID string, orgI
 	return s.app.admDeleteApplicationLoginSession(appID, orgID, currentAccountID, identifier, sessionID, l)
 }
 
+func (s *administrationImpl) AdmGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error) {
+	return s.app.admGetApplicationAccountDevices(appID, orgID, accountID, l)
+}
+
 ///
 
 //encryptionImpl
