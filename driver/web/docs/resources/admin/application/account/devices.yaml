@@ -23,7 +23,7 @@ get:
         schema:
           type: array
           items:
-            $ref: "../../../schemas/apis/shared/responses/DeviceFields.yaml"
+            $ref: "../../../../schemas/user/DeviceFields.yaml"
     400:
       description: Bad request
     401:

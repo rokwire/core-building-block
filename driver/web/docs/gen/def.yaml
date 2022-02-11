@@ -1594,7 +1594,7 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/_shared_res_DeviceFields'
+                $ref: '#/components/schemas/DeviceFields'
         '400':
           description: Bad request
         '401':
@@ -4097,22 +4097,6 @@ components:
           type: string
           enum:
             - Bearer
-    _shared_res_DeviceFields:
-      required:
-        - id
-      type: object
-      properties:
-        id:
-          type: string
-        type:
-          type: string
-          enum:
-            - mobile
-            - web
-            - desktop
-            - other
-        os:
-          type: string
     _shared_res_LoginSession:
       type: object
       properties:
