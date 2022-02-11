@@ -91,6 +91,8 @@ paths:
     $ref: "./resources/admin/application/accounts.yaml"
   /admin/application/account/{id}/devices:
     $ref: "./resources/admin/application/account-device.yaml"
+  /admin/application/account/{account_id}/login-sessions/{session_id}:
+    $ref: "./resources/admin/application/account/login-sessions.yaml"
   /admin/application/login-sessions:
     $ref: "./resources/admin/application/login-sessions.yaml"
   /admin/application/groups:

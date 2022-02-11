@@ -379,17 +379,43 @@ func (app *application) admGetAccounts(appID string, orgID string, accountID *st
 	return accounts, nil
 }
 
-func (app *application) admGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error) {
+func (app *application) admGetAccount(accountID string) (*model.Account, error) {
+	return app.getAccount(accountID)
+}
+
+func (app *application) admGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
+	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
 	//find the login sessions
-	loginSessions, err := app.storage.FindLoginSessionsByParams(appID, orgID, identifier, accountAuthTypeIdentifier)
+	loginSessions, err := app.storage.FindLoginSessionsByParams(appID, orgID, nil, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 	}
 	return loginSessions, nil
 }
 
-func (app *application) admGetAccount(accountID string) (*model.Account, error) {
-	return app.getAccount(accountID)
+func (app *application) admDeleteApplicationLoginSession(appID string, orgID string, currentAccountID string, identifier string, sessionID string, l *logs.Log) error {
+	//1. do not allow to logout the current account
+	if currentAccountID == identifier {
+		l.Infof("%s is trying to logout yourself", currentAccountID)
+		return errors.New("cannot logout yourself")
+	}
+
+	//2. validate if the session is for the current app/org and account
+	sessions, err := app.storage.FindLoginSessionsByParams(appID, orgID, &sessionID, &identifier, nil, nil, nil, nil, nil, nil)
+	if err != nil {
+		return errors.Wrap("error checking if it is valid to remove account session", err)
+	}
+	if len(sessions) == 0 {
+		return errors.New("not valid params")
+	}
+
+	//3. delete the session
+	err = app.storage.DeleteLoginSessionByID(nil, sessionID)
+	if err != nil {
+		return errors.Wrap("error dleting session by id", err)
+	}
+
+	return nil
 }
 
 func (app *application) admGetApplicationAccountDevices(context storage.TransactionContext, ID string) ([]model.Device, error) {
