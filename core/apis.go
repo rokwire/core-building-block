@@ -79,10 +79,6 @@ func (s *servicesImpl) SerGetPreferences(accountID string) (map[string]interface
 	return s.app.serGetPreferences(accountID)
 }
 
-func (s *servicesImpl) SerUpdateProfile(accountID string, profile *model.Profile) error {
-	return s.app.serUpdateProfile(accountID, profile)
-}
-
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
 	return s.app.serGetAuthTest(l)
 }
@@ -93,6 +89,10 @@ func (s *servicesImpl) SerGetCommonTest(l *logs.Log) string {
 
 func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error {
 	return s.app.serUpdateAccountPreferences(id, preferences)
+}
+
+func (s *servicesImpl) SerUpdateProfile(accountID string, profile model.Profile) error {
+	return s.app.serUpdateProfile(accountID, profile)
 }
 
 func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
@@ -164,6 +164,10 @@ func (s *administrationImpl) AdmDeleteApplicationLoginSession(appID string, orgI
 	return s.app.admDeleteApplicationLoginSession(appID, orgID, currentAccountID, identifier, sessionID, l)
 }
 
+func (s *administrationImpl) AdmGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error) {
+	return s.app.admGetApplicationAccountDevices(appID, orgID, accountID, l)
+}
+
 ///
 
 //encryptionImpl
@@ -224,8 +228,8 @@ func (s *systemImpl) SysGetOrganization(ID string) (*model.Organization, error) 
 	return s.app.sysGetOrganization(ID)
 }
 
-func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, requiresOwnUsers bool, maxLoginSessionDuration *int, identifier string, nameInType string, versions []string) (*model.Application, error) {
-	return s.app.sysCreateApplication(name, multiTenant, requiresOwnUsers, maxLoginSessionDuration, identifier, nameInType, versions)
+func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, sharedIdentities bool, maxLoginSessionDuration *int, identifier string, nameInType string, versions []string) (*model.Application, error) {
+	return s.app.sysCreateApplication(name, multiTenant, sharedIdentities, maxLoginSessionDuration, identifier, nameInType, versions)
 }
 
 func (s *systemImpl) SysGetApplication(ID string) (*model.Application, error) {

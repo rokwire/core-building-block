@@ -1014,13 +1014,13 @@ func (_m *Storage) UpdatePermission(item model.Permission) error {
 	return r0
 }
 
-// UpdateProfile provides a mock function with given fields: accountID, profile
-func (_m *Storage) UpdateProfile(accountID string, profile *model.Profile) error {
-	ret := _m.Called(accountID, profile)
+// UpdateProfile provides a mock function with given fields: profile
+func (_m *Storage) UpdateProfile(profile model.Profile) error {
+	ret := _m.Called(profile)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, *model.Profile) error); ok {
-		r0 = rf(accountID, profile)
+	if rf, ok := ret.Get(0).(func(model.Profile) error); ok {
+		r0 = rf(profile)
 	} else {
 		r0 = ret.Error(0)
 	}

@@ -213,6 +213,7 @@ paths:
                       - already-exists
                       - not-found
                       - internal-server-error
+                      - shared-credential-unverified
                     description: |
                       - `invalid`: Invalid credentials
                       - `unverified`: Unverified credentials
@@ -220,6 +221,7 @@ paths:
                       - `already-found`: Account already exists when `sign-up=true`
                       - `not-found`: Account could not be found when `sign-up=false`
                       - `internal-server-error`: An undefined error occurred
+                      - `shared-credential-unverified`: The shared credential has not been verified yet
                   message:
                     type: string
   /services/auth/mfa:
@@ -1560,6 +1562,39 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/_shared_res_Account'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  '/admin/application/account/{id}/devices':
+    get:
+      tags:
+        - Admin
+      summary: Finds application account devices
+      description: |
+        Finds devices for the specified application
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The account ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content: null
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeviceFields'
         '400':
           description: Bad request
         '401':
@@ -3138,7 +3173,7 @@ components:
           type: string
         multi_tenant:
           type: boolean
-        requires_own_users:
+        shared_identities:
           type: boolean
     ApplicationType:
       type: object
@@ -3651,6 +3686,8 @@ components:
       type: object
       properties:
         id:
+          type: string
+        device_id:
           type: string
         type:
           type: string
@@ -4487,14 +4524,14 @@ components:
       required:
         - name
         - multi_tenant
-        - requires_own_users
+        - shared_identities
       type: object
       properties:
         name:
           type: string
         multi_tenant:
           type: boolean
-        requires_own_users:
+        shared_identities:
           type: boolean
         max_login_session_duration:
           description: The maximum allowed duration (in hours) of a user's login session for this application
@@ -4535,7 +4572,7 @@ components:
           type: string
         multi_tenant:
           type: boolean
-        requires_own_users:
+        shared_identities:
           type: boolean
         max_login_session_duration:
           description: The maximum allowed duration (in hours) of a user's login session for this application
@@ -4549,7 +4586,7 @@ components:
         - id
         - name
         - multi_tenant
-        - requires_own_users
+        - shared_identities
       type: object
       properties:
         id:
@@ -4559,7 +4596,7 @@ components:
           type: string
         multi_tenant:
           type: boolean
-        requires_own_users:
+        shared_identities:
           type: boolean
         max_login_session_duration:
           description: The maximum allowed duration (in hours) of a user's login session for this application

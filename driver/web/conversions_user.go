@@ -231,7 +231,7 @@ func deviceToDef(item *model.Device) *Def.DeviceFields {
 		return nil
 	}
 
-	return &Def.DeviceFields{Id: item.ID, Type: Def.DeviceFieldsType(item.Type), Os: &item.OS}
+	return &Def.DeviceFields{Id: item.ID, DeviceId: &item.DeviceID, Type: Def.DeviceFieldsType(item.Type), Os: &item.OS}
 }
 
 func deviceListToDef(items []model.Device) []Def.DeviceFields {
