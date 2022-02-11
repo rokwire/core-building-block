@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
@@ -310,7 +311,39 @@ func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Reque
 		accountAuthTypeIdentifier = &accountAuthTypeIdentifierFromQuery
 	}
 
-	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, identifier, accountAuthTypeIdentifier)
+	appTypeIDFromQuery := r.URL.Query().Get("app-type-id")
+	var appTypeID *string
+	if len(appTypeIDFromQuery) > 0 {
+		appTypeID = &appTypeIDFromQuery
+	}
+
+	appTypeIdentifierFromQuery := r.URL.Query().Get("app-type-identifier")
+	var appTypeIdentifier *string
+	if len(appTypeIdentifierFromQuery) > 0 {
+		appTypeIdentifier = &appTypeIdentifierFromQuery
+	}
+
+	anonymousFromQuery := r.URL.Query().Get("anonymous")
+	var anonymous *bool
+	if len(anonymousFromQuery) > 0 {
+		result, _ := strconv.ParseBool(anonymousFromQuery)
+		anonymous = &result
+	}
+
+	deviceIDFromQuery := r.URL.Query().Get("device-id")
+	var deviceID *string
+	if len(deviceIDFromQuery) > 0 {
+		deviceID = &deviceIDFromQuery
+	}
+
+	ipAddressFromQuery := r.URL.Query().Get("ip-address")
+	var ipAddress *string
+	if len(ipAddressFromQuery) > 0 {
+		ipAddress = &ipAddressFromQuery
+	}
+
+	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, identifier, accountAuthTypeIdentifier, appTypeID,
+		appTypeIdentifier, anonymous, deviceID, ipAddress)
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding login sessions", model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
 	}
@@ -540,6 +573,49 @@ func (h AdminApisHandler) adminDeleteApplicationRole(l *logs.Log, r *http.Reques
 		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}
 	return l.HttpResponseSuccess()
+}
+
+func (h AdminApisHandler) deleteApplicationLoginSession(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	identifier := params["account_id"]
+	if len(identifier) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("account_id"), nil, http.StatusBadRequest, false)
+	}
+
+	params2 := mux.Vars(r)
+	sessionID := params2["session_id"]
+	if len(sessionID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("session_id"), nil, http.StatusBadRequest, false)
+	}
+
+	err := h.coreAPIs.Administration.AdmDeleteApplicationLoginSession(claims.AppID, claims.OrgID, claims.Subject, identifier, sessionID, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
+	}
+	return l.HttpResponseSuccess()
+}
+
+func (h AdminApisHandler) getApplicationAccountDevices(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	accountID := params["id"]
+	if len(accountID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	if len(accountID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+	devices, err := h.coreAPIs.Administration.AdmGetApplicationAccountDevices(claims.AppID, claims.OrgID, accountID, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeDevice, nil, err, http.StatusInternalServerError, true)
+	}
+
+	devicesRes := deviceListToDef(devices)
+	data, err := json.Marshal(devicesRes)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance

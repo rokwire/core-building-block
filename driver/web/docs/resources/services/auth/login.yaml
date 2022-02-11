@@ -184,6 +184,7 @@ post:
                   - already-exists
                   - not-found
                   - internal-server-error
+                  - shared-credential-unverified
                 description: |
                   - `invalid`: Invalid credentials
                   - `unverified`: Unverified credentials
@@ -191,5 +192,6 @@ post:
                   - `already-found`: Account already exists when `sign-up=true`
                   - `not-found`: Account could not be found when `sign-up=false`
                   - `internal-server-error`: An undefined error occurred
+                  - `shared-credential-unverified`: The shared credential has not been verified yet
               message:
                 type: string

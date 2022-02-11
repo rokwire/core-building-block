@@ -293,7 +293,7 @@ type ApplicationFields struct {
 	Id               string `json:"id"`
 	MultiTenant      *bool  `json:"multi_tenant,omitempty"`
 	Name             string `json:"name"`
-	RequiresOwnUsers *bool  `json:"requires_own_users,omitempty"`
+	SharedIdentities *bool  `json:"shared_identities,omitempty"`
 }
 
 // ApplicationOrganization defines model for ApplicationOrganization.
@@ -365,9 +365,10 @@ type Device struct {
 
 // DeviceFields defines model for DeviceFields.
 type DeviceFields struct {
-	Id   string           `json:"id"`
-	Os   *string          `json:"os,omitempty"`
-	Type DeviceFieldsType `json:"type"`
+	DeviceId *string          `json:"device_id,omitempty"`
+	Id       string           `json:"id"`
+	Os       *string          `json:"os,omitempty"`
+	Type     DeviceFieldsType `json:"type"`
 }
 
 // DeviceFieldsType defines model for DeviceFields.Type.
@@ -911,7 +912,7 @@ type SystemReqCreateApplication struct {
 	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
 	MultiTenant             bool   `json:"multi_tenant"`
 	Name                    string `json:"name"`
-	RequiresOwnUsers        bool   `json:"requires_own_users"`
+	SharedIdentities        bool   `json:"shared_identities"`
 }
 
 // SystemReqCreateApplicationConfigRequest defines model for _system_req_create_ApplicationConfig_Request.
@@ -982,7 +983,7 @@ type SystemResGetApplications struct {
 	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
 	MultiTenant             bool   `json:"multi_tenant"`
 	Name                    string `json:"name"`
-	RequiresOwnUsers        bool   `json:"requires_own_users"`
+	SharedIdentities        bool   `json:"shared_identities"`
 }
 
 // SystemResGetOrganizations defines model for _system_res_get_Organizations.
@@ -1034,6 +1035,21 @@ type GetAdminApplicationLoginSessionsParams struct {
 
 	// account auth type identifier
 	AccountAuthTypeIdentifier *string `json:"account-auth-type-identifier,omitempty"`
+
+	// app type id
+	AppTypeId *string `json:"app-type-id,omitempty"`
+
+	// app type identifier
+	AppTypeIdentifier *string `json:"app-type-identifier,omitempty"`
+
+	// anonymous
+	Anonymous *bool `json:"anonymous,omitempty"`
+
+	// device id
+	DeviceId *string `json:"device-id,omitempty"`
+
+	// ip address
+	IpAddress *string `json:"ip-address,omitempty"`
 }
 
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
