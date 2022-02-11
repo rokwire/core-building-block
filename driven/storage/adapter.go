@@ -2388,6 +2388,38 @@ func (sa *Adapter) InsertApplicationTypeVersion(context TransactionContext, vers
 	return nil
 }
 
+//FindApplicationVersionByAppTypeID finds version
+func (sa *Adapter) FindApplicationVersionByAppTypeID(context TransactionContext, appTypeID string) ([]model.Version, error) {
+
+	if len(appTypeID) == 0 {
+		return nil, nil
+	}
+
+	filter := bson.D{primitive.E{Key: "types.id", Value: appTypeID}}
+	var applicationsResult []application
+	err := sa.db.applications.Find(filter, &applicationsResult, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(applicationsResult) == 0 {
+		return nil, errors.Newf("no application for ID: %v", appTypeID)
+	}
+
+	application := applicationsResult[0]
+
+	appType := application.Types
+	for i, currentAppType := range appType {
+		if currentAppType.ID == appTypeID {
+			appType[i] = currentAppType
+			av := versionsFromStorage(currentAppType.Versions, model.ApplicationType{})
+			return av, nil
+		}
+	}
+
+	return nil, nil
+}
+
 //FindApplicationsOrganizationsByOrgID finds a set of applications organizations
 func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error) {
 	applicationsOrgFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}}

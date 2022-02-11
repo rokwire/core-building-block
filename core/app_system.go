@@ -333,6 +333,15 @@ func (app *application) sysCreateAppTypeVersion(appTypeID string, major int, min
 	return nil
 }
 
+func (app *application) sysGetApplicationTypeVersion(appTypeID string) ([]model.Version, error) {
+	appTypeVersion, err := app.storage.FindApplicationVersionByAppTypeID(nil, appTypeID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationTypeVersionList, nil, err)
+	}
+
+	return appTypeVersion, nil
+}
+
 func (app *application) sysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
 	if assignerPermissions == nil {
 		return errors.New("no permissions from admin assigner")

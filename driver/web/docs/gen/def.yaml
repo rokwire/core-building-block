@@ -3633,6 +3633,82 @@
             "description": "Internal error"
           }
         }
+      },
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Get application type version",
+        "description": "Gets application type versions\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the application type",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "version_number": {
+                        "type": "object",
+                        "properties": {
+                          "version_number": {
+                            "type": "object",
+                            "properties": {
+                              "major": {
+                                "type": "integer"
+                              },
+                              "minor": {
+                                "type": "integer"
+                              },
+                              "match": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
       }
     },
     "/system/account/permissions": {

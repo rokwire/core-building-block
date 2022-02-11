@@ -280,4 +280,8 @@ func (s *systemImpl) SysCreateAppTypeVersion(appTypeID string, major int, minor 
 	return s.app.sysCreateAppTypeVersion(appTypeID, major, minor, patch)
 }
 
+func (s *systemImpl) SysGetApplicationTypeVersion(appTypeID string) ([]model.Version, error) {
+	return s.app.sysGetApplicationTypeVersion(appTypeID)
+}
+
 ///

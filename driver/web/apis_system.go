@@ -657,6 +657,30 @@ func (h SystemApisHandler) createApplicationTypeVersion(l *logs.Log, r *http.Req
 	return l.HttpResponseSuccess()
 }
 
+func (h SystemApisHandler) getApplicationTypeVersion(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	appTypeID := params["id"]
+	if len(appTypeID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("appTypeid"), nil, http.StatusBadRequest, false)
+	}
+
+	appVersion, err := h.coreAPIs.System.SysGetApplicationTypeVersion(appTypeID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationTypeVersionList, nil, err, http.StatusInternalServerError, true)
+	}
+	if appVersion == nil {
+		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeApplicationTypeVersionList, &logutils.FieldArgs{"id": appTypeID}, nil, http.StatusNotFound, false)
+	}
+
+	data, err := json.Marshal(appVersion)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplicationConfigsVersion, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+
+}
+
 //grantAccountPermissions grants an account the given permissions
 func (h SystemApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)

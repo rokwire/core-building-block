@@ -1,0 +1,10 @@
+
+type: object
+properties:
+  major:
+    type: integer
+  minor:
+    type: integer
+  match:
+    type: integer
+    
