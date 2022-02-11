@@ -213,6 +213,7 @@ paths:
                       - already-exists
                       - not-found
                       - internal-server-error
+                      - shared-credential-unverified
                     description: |
                       - `invalid`: Invalid credentials
                       - `unverified`: Unverified credentials
@@ -220,6 +221,7 @@ paths:
                       - `already-found`: Account already exists when `sign-up=true`
                       - `not-found`: Account could not be found when `sign-up=false`
                       - `internal-server-error`: An undefined error occurred
+                      - `shared-credential-unverified`: The shared credential has not been verified yet
                   message:
                     type: string
   /services/auth/mfa:
@@ -3138,7 +3140,7 @@ components:
           type: string
         multi_tenant:
           type: boolean
-        requires_own_users:
+        shared_identities:
           type: boolean
     ApplicationType:
       type: object
@@ -4487,14 +4489,14 @@ components:
       required:
         - name
         - multi_tenant
-        - requires_own_users
+        - shared_identities
       type: object
       properties:
         name:
           type: string
         multi_tenant:
           type: boolean
-        requires_own_users:
+        shared_identities:
           type: boolean
         max_login_session_duration:
           description: The maximum allowed duration (in hours) of a user's login session for this application
@@ -4535,7 +4537,7 @@ components:
           type: string
         multi_tenant:
           type: boolean
-        requires_own_users:
+        shared_identities:
           type: boolean
         max_login_session_duration:
           description: The maximum allowed duration (in hours) of a user's login session for this application
@@ -4549,7 +4551,7 @@ components:
         - id
         - name
         - multi_tenant
-        - requires_own_users
+        - shared_identities
       type: object
       properties:
         id:
@@ -4559,7 +4561,7 @@ components:
           type: string
         multi_tenant:
           type: boolean
-        requires_own_users:
+        shared_identities:
           type: boolean
         max_login_session_duration:
           description: The maximum allowed duration (in hours) of a user's login session for this application

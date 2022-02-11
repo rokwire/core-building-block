@@ -10,7 +10,7 @@ type application struct {
 	Name string `bson:"name"`
 
 	MultiTenant      bool `bson:"multi_tenant"`
-	RequiresOwnUsers bool `bson:"requires_own_users"`
+	SharedIdentities bool `bson:"shared_identities"`
 	Admin            bool `bson:"admin"`
 
 	Types []applicationType `bson:"types"`
