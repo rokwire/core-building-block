@@ -285,6 +285,9 @@ type APIs interface {
 	//		account (*model.Account): account data after the operation
 	UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error)
 
+	//DeleteAccount deletes an account for the given id
+	DeleteAccount(id string) error
+
 	//GetAdminToken returns an admin token for the specified application
 	GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error)
 
@@ -341,6 +344,8 @@ type Storage interface {
 	DeleteLoginSession(context storage.TransactionContext, id string) error
 	DeleteLoginSessionsByIDs(context storage.TransactionContext, ids []string) error
 	DeleteLoginSessionsByAccountAuthTypeID(context storage.TransactionContext, id string) error
+	DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error
+
 	//LoginsSessions - predefined queries for manage deletion logic
 	DeleteMFAExpiredSessions() error
 	FindSessionsLazy(appID string, orgID string) ([]model.LoginSession, error)
@@ -351,6 +356,7 @@ type Storage interface {
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccount(account model.Account) (*model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
+	DeleteAccount(context storage.TransactionContext, id string) error
 
 	//Profiles
 	UpdateProfile(profile model.Profile) error
@@ -413,6 +419,7 @@ type Storage interface {
 	//Device
 	FindDevice(context storage.TransactionContext, deviceID string, accountID string) (*model.Device, error)
 	InsertDevice(context storage.TransactionContext, device model.Device) (*model.Device, error)
+	DeleteDevice(context storage.TransactionContext, id string) error
 
 	//ApplicationRoles
 	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)

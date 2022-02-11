@@ -218,7 +218,7 @@ paths:
                       - `invalid`: Invalid credentials
                       - `unverified`: Unverified credentials
                       - `verification-expired`: Credentials verification expired. The verification is restarted
-                      - `already-found`: Account already exists when `sign-up=true`
+                      - `already-exists`: Account already exists when `sign-up=true`
                       - `not-found`: Account could not be found when `sign-up=false`
                       - `internal-server-error`: An undefined error occurred
                       - `shared-credential-unverified`: The shared credential has not been verified yet
@@ -649,6 +649,25 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - invalid
+                      - verification-expired
+                      - already-exists
+                      - internal-server-error
+                    description: |
+                      - `invalid`: Invalid credentials
+                      - `verification-expired`: Credentials verification expired. The verification is restarted
+                      - `already-exists`: Auth type identifier already exists
+                      - `internal-server-error`: An undefined error occurred
+                  message:
+                    type: string
   /services/auth/authorize-service:
     post:
       tags:
@@ -3671,6 +3690,8 @@ components:
           additionalProperties: true
           nullable: true
         active:
+          type: boolean
+        unverified:
           type: boolean
     Device:
       type: object

@@ -98,7 +98,7 @@ type Storage interface {
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
-	DeleteAccount(context storage.TransactionContext, id string) error
+
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
@@ -107,13 +107,8 @@ type Storage interface {
 
 	UpdateProfile(profile model.Profile) error
 
-	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
-	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
-	DeleteCredential(context storage.TransactionContext, ID string) error
-
 	FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
-	DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error
 	DeleteLoginSessionByID(context storage.TransactionContext, id string) error
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error

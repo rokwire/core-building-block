@@ -62,6 +62,7 @@ func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
 	for _, aat := range a.AuthTypes {
 		if aat.ID == ID {
 			result = aat
+			break
 		}
 	}
 	//assign account
@@ -75,6 +76,7 @@ func (a Account) GetAccountAuthType(authTypeID string, identifier string) *Accou
 	for _, aat := range a.AuthTypes {
 		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {
 			result = aat
+			break
 		}
 	}
 	//assign account
@@ -258,8 +260,9 @@ type AccountAuthType struct {
 
 	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
 
-	Active   bool
-	Verified bool
+	Active     bool
+	Unverified bool
+	Linked     bool
 
 	DateCreated time.Time
 	DateUpdated *time.Time

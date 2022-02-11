@@ -181,7 +181,14 @@ func (a *Auth) AccountExists(authenticationType string, userIdentifier string, a
 		return false, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	return account != nil, nil
+	if account != nil {
+		aat := account.GetAccountAuthType(authType.ID, userIdentifier)
+		if aat == nil || !aat.Linked || !aat.Unverified {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 //Refresh refreshes an access token using a refresh token
@@ -1012,6 +1019,29 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 //		account (*model.Account): account data after the operation
 func (a *Auth) UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error) {
 	return a.unlinkAccountAuthType(accountID, authenticationType, appTypeIdentifier, identifier, l)
+}
+
+//DeleteAccount deletes an account for the given id
+func (a *Auth) DeleteAccount(id string) error {
+	transaction := func(context storage.TransactionContext) error {
+		//1. first find the account record
+		account, err := a.storage.FindAccountByID(context, id)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		if account == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+		}
+
+		err = a.deleteAccount(context, *account)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+		}
+
+		return nil
+	}
+
+	return a.storage.PerformTransaction(transaction)
 }
 
 //GetServiceRegistrations retrieves all service registrations

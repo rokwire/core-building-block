@@ -483,7 +483,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		return "", nil, nil, errors.WrapErrorAction("error checking is sign up", "", nil, err)
 	}
 	if isSignUp {
-		message, accountAuthType, err := a.applySignUp(authImpl, accountExists, authType, appType, appOrg, userIdentifier,
+		message, accountAuthType, err := a.applySignUp(authImpl, account, authType, appType, appOrg, userIdentifier,
 			creds, params, regProfile, regPreferences, l)
 		if err != nil {
 			return "", nil, nil, err
@@ -491,21 +491,31 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		return message, accountAuthType, nil, nil
 	}
 	///apply sign in
-	return a.applySignIn(authImpl, authType, accountExists, *account, userIdentifier, creds, l)
+	return a.applySignIn(authImpl, authType, account, userIdentifier, creds, false, l)
 }
 
-func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, accountExists bool, account model.Account,
-	userIdentifier string, creds string, l *logs.Log) (string, *model.AccountAuthType, []model.MFAType, error) {
-	if !accountExists {
+func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, account *model.Account,
+	userIdentifier string, creds string, link bool, l *logs.Log) (string, *model.AccountAuthType, []model.MFAType, error) {
+	if account == nil {
 		return "", nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil).SetStatus(utils.ErrorStatusNotFound)
 	}
 
 	mfaTypes := account.GetVerifiedMFATypes()
 
 	//find account auth type
-	accountAuthType, err := a.findAccountAuthType(&account, &authType, userIdentifier)
+	accountAuthType, err := a.findAccountAuthType(account, &authType, userIdentifier)
 	if accountAuthType == nil {
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+	}
+
+	if link {
+		if !accountAuthType.Linked {
+			return "", nil, nil, errors.New("cannot verify non-linked auth type")
+		}
+	} else {
+		if accountAuthType.Unverified && accountAuthType.Linked {
+			return "", nil, nil, errors.New("cannot verify linked auth type")
+		}
 	}
 
 	//check the credentials
@@ -541,14 +551,23 @@ func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, accountEx
 		}
 	}
 
+	//if sign in was completed successfully, set auth type to verified
+	if message == "" && accountAuthType.Unverified {
+		accountAuthType.Unverified = false
+		a.storage.UpdateAccountAuthType(*accountAuthType)
+	}
+
 	return message, accountAuthType, mfaTypes, nil
 }
 
-func (a *Auth) applySignUp(authImpl authType, accountExists bool, authType model.AuthType, appType model.ApplicationType,
+func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType model.AuthType, appType model.ApplicationType,
 	appOrg model.ApplicationOrganization, userIdentifier string, creds string, params string,
 	regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (string, *model.AccountAuthType, error) {
-	if accountExists {
-		return "", nil, errors.New("account already exists").SetStatus(utils.ErrorStatusAlreadyExists)
+	if account != nil {
+		err := a.handleAccountAuthTypeConflict(*account, authType.ID, userIdentifier, true)
+		if err != nil {
+			return "", nil, err
+		}
 	}
 
 	var message string
@@ -1073,14 +1092,14 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 }
 
 func (a *Auth) prepareAccountAuthType(authType model.AuthType, identifier string, accountAuthTypeParams map[string]interface{},
-	credential *model.Credential) (*model.AccountAuthType, *model.Credential, error) {
+	credential *model.Credential, unverified bool, linked bool) (*model.AccountAuthType, *model.Credential, error) {
 	now := time.Now()
 
 	//account auth type
 	accountAuthTypeID, _ := uuid.NewUUID()
 	active := true
 	accountAuthType := &model.AccountAuthType{ID: accountAuthTypeID.String(), AuthType: authType,
-		Identifier: identifier, Params: accountAuthTypeParams, Credential: credential, Active: active, DateCreated: now}
+		Identifier: identifier, Params: accountAuthTypeParams, Credential: credential, Unverified: unverified, Linked: linked, Active: active, DateCreated: now}
 
 	//credential
 	if credential != nil {
@@ -1159,8 +1178,16 @@ func (a *Auth) registerUser(authType model.AuthType, userIdentifier string, appO
 
 	//TODO - analyse what should go in one transaction
 
+	//External and anonymous auth is automatically verified, otherwise verified if credential has been verified previously
+	unverified := true
+	if authType.IsExternal || authType.IsAnonymous {
+		unverified = false
+	} else if credential != nil {
+		unverified = !credential.Verified
+	}
+
 	//create account auth type
-	accountAuthType, credential, err := a.prepareAccountAuthType(authType, userIdentifier, nil, credential)
+	accountAuthType, credential, err := a.prepareAccountAuthType(authType, userIdentifier, nil, credential, unverified, false)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
 	}
@@ -1237,9 +1264,23 @@ func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthTyp
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
-	//cannot link creds if an account already exists for new creds
 	if newCredsAccount != nil {
-		return "", nil, errors.New("account already exists").SetStatus(utils.ErrorStatusAlreadyExists)
+		//if account is current account, attempt sign-in. Otherwise, handle conflict
+		if newCredsAccount.ID == account.ID {
+			message, aat, _, err := a.applySignIn(authImpl, authType, &account, userIdentifier, creds, true, l)
+			if err != nil {
+				return "", nil, err
+			}
+			if message != "" {
+				return "", nil, errors.New("verification not complete").SetStatus(utils.ErrorStatusUnverified)
+			}
+			return "", aat, nil
+		} else {
+			err = a.handleAccountAuthTypeConflict(*newCredsAccount, authType.ID, userIdentifier, false)
+			if err != nil {
+				return "", nil, err
+			}
+		}
 	}
 
 	credentialID, _ := uuid.NewUUID()
@@ -1259,7 +1300,7 @@ func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthTyp
 			AuthType: authType, DateCreated: now, DateUpdated: &now}
 	}
 
-	accountAuthType, credential, err := a.prepareAccountAuthType(authType, userIdentifier, nil, credential)
+	accountAuthType, credential, err := a.prepareAccountAuthType(authType, userIdentifier, nil, credential, true, true)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
 	}
@@ -1298,7 +1339,7 @@ func (a *Auth) linkAccountAuthTypeExternal(account model.Account, authType model
 	accountAuthTypeParams := map[string]interface{}{}
 	accountAuthTypeParams["user"] = externalUser
 
-	accountAuthType, credential, err := a.prepareAccountAuthType(authType, externalUser.Identifier, accountAuthTypeParams, nil)
+	accountAuthType, credential, err := a.prepareAccountAuthType(authType, externalUser.Identifier, accountAuthTypeParams, nil, false, true)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
 	}
@@ -1342,31 +1383,7 @@ func (a *Auth) unlinkAccountAuthType(accountID string, authenticationType string
 		// unlink auth type with matching code and identifier
 		if aat.AuthType.Code == authenticationType && aat.Identifier == identifier {
 			aat.Account = *account
-			transaction := func(context storage.TransactionContext) error {
-				//1. delete account auth type in account
-				err := a.storage.DeleteAccountAuthType(context, aat)
-				if err != nil {
-					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountAuthType, nil, err)
-				}
-
-				//2. delete credential if it exists
-				if aat.Credential != nil {
-					err = a.storage.DeleteCredential(context, aat.Credential.ID)
-					if err != nil {
-						return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
-					}
-				}
-
-				//3. delete login sessions using unlinked account auth type
-				err = a.storage.DeleteLoginSessionsByAccountAuthTypeID(context, aat.ID)
-				if err != nil {
-					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
-				}
-
-				return nil
-			}
-
-			err = a.storage.PerformTransaction(transaction)
+			err := a.removeAccountAuthType(aat)
 			if err != nil {
 				return nil, errors.WrapErrorAction("unlinking", model.TypeAccountAuthType, nil, err)
 			}
@@ -1377,6 +1394,127 @@ func (a *Auth) unlinkAccountAuthType(accountID string, authenticationType string
 	}
 
 	return account, nil
+}
+
+func (a *Auth) handleAccountAuthTypeConflict(account model.Account, authTypeID string, userIdentifier string, newAccount bool) error {
+	aat := account.GetAccountAuthType(authTypeID, userIdentifier)
+	if aat == nil || !aat.Unverified {
+		//cannot link creds if a verified account already exists for new creds
+		return errors.New("account already exists").SetStatus(utils.ErrorStatusAlreadyExists)
+	} else {
+		//if this is the only auth type (this will only be possible for accounts created through sign up that were never verified/used)
+		if len(account.AuthTypes) == 1 {
+			//if signing up, do not replace previous unverified account created through sign up
+			if newAccount {
+				return errors.New("account already exists").SetStatus(utils.ErrorStatusAlreadyExists)
+			}
+			//if linked to a different unverified account, remove whole account
+			err := a.deleteAccount(nil, account)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+			}
+		} else {
+			//Otherwise unlink auth type from account
+			err := a.removeAccountAuthType(*aat)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountAuthType, nil, err)
+			}
+		}
+	}
+	return nil
+}
+
+func (a *Auth) removeAccountAuthType(aat model.AccountAuthType) error {
+	transaction := func(context storage.TransactionContext) error {
+		//1. delete account auth type in account
+		err := a.storage.DeleteAccountAuthType(context, aat)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountAuthType, nil, err)
+		}
+
+		//2. delete credential if it exists
+		if aat.Credential != nil {
+			err = a.removeAccountAuthTypeCredential(context, aat)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
+			}
+		}
+
+		//3. delete login sessions using unlinked account auth type (if unverified no sessions should exist)
+		if !aat.Unverified {
+			err = a.storage.DeleteLoginSessionsByAccountAuthTypeID(context, aat.ID)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
+			}
+		}
+
+		return nil
+	}
+
+	return a.storage.PerformTransaction(transaction)
+}
+
+func (a *Auth) removeAccountAuthTypeCredential(context storage.TransactionContext, aat model.AccountAuthType) error {
+	credential, err := a.storage.FindCredential(context, aat.Credential.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+	}
+
+	if len(credential.AccountsAuthTypes) > 1 {
+		now := time.Now().UTC()
+		for i, credAat := range credential.AccountsAuthTypes {
+			if credAat.ID == aat.ID {
+				credential.AccountsAuthTypes = append(credential.AccountsAuthTypes[:i], credential.AccountsAuthTypes[i+1:]...)
+				credential.DateUpdated = &now
+				err = a.storage.UpdateCredential(context, credential)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+				}
+				break
+			}
+		}
+	} else {
+		err = a.storage.DeleteCredential(context, credential.ID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
+		}
+	}
+
+	return nil
+}
+
+func (a *Auth) deleteAccount(context storage.TransactionContext, account model.Account) error {
+	//1. delete the account record
+	err := a.storage.DeleteAccount(context, account.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+	}
+
+	//2. remove account auth types from or delete credentials
+	for _, aat := range account.AuthTypes {
+		if aat.Credential != nil {
+			err = a.removeAccountAuthTypeCredential(context, aat)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
+			}
+		}
+	}
+
+	//3. delete login sessions
+	err = a.storage.DeleteLoginSessionsByIdentifier(context, account.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
+	}
+
+	//4. delete devices records
+	for _, device := range account.Devices {
+		err = a.storage.DeleteDevice(context, device.ID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeDevice, nil, err)
+		}
+	}
+
+	return nil
 }
 
 func (a *Auth) registerAuthType(name string, auth authType) error {
