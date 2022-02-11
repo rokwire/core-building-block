@@ -258,7 +258,8 @@ type AccountAuthType struct {
 
 	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
 
-	Active bool
+	Active   bool
+	Verified bool
 
 	DateCreated time.Time
 	DateUpdated *time.Time
