@@ -196,6 +196,20 @@ func (_m *Storage) DeleteGlobalConfig(context storage.TransactionContext) error 
 	return r0
 }
 
+// DeleteLoginSessionByID provides a mock function with given fields: context, id
+func (_m *Storage) DeleteLoginSessionByID(context storage.TransactionContext, id string) error {
+	ret := _m.Called(context, id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
+		r0 = rf(context, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DeleteLoginSessionsByIdentifier provides a mock function with given fields: context, identifier
 func (_m *Storage) DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error {
 	ret := _m.Called(context, identifier)
@@ -569,13 +583,13 @@ func (_m *Storage) FindCredential(context storage.TransactionContext, ID string)
 	return r0, r1
 }
 
-// FindLoginSessionsByParams provides a mock function with given fields: appID, orgID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress
-func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string, appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
-	ret := _m.Called(appID, orgID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
+// FindLoginSessionsByParams provides a mock function with given fields: appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress
+func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string, appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
+	ret := _m.Called(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
 
 	var r0 []model.LoginSession
-	if rf, ok := ret.Get(0).(func(string, string, *string, *string, *string, *string, *bool, *string, *string) []model.LoginSession); ok {
-		r0 = rf(appID, orgID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
+	if rf, ok := ret.Get(0).(func(string, string, *string, *string, *string, *string, *string, *bool, *string, *string) []model.LoginSession); ok {
+		r0 = rf(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.LoginSession)
@@ -583,8 +597,8 @@ func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, identif
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string, *string, *string, *string, *string, *bool, *string, *string) error); ok {
-		r1 = rf(appID, orgID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
+	if rf, ok := ret.Get(1).(func(string, string, *string, *string, *string, *string, *string, *bool, *string, *string) error); ok {
+		r1 = rf(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1000,13 +1014,13 @@ func (_m *Storage) UpdatePermission(item model.Permission) error {
 	return r0
 }
 
-// UpdateProfile provides a mock function with given fields: accountID, profile
-func (_m *Storage) UpdateProfile(accountID string, profile *model.Profile) error {
-	ret := _m.Called(accountID, profile)
+// UpdateProfile provides a mock function with given fields: profile
+func (_m *Storage) UpdateProfile(profile model.Profile) error {
+	ret := _m.Called(profile)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, *model.Profile) error); ok {
-		r0 = rf(accountID, profile)
+	if rf, ok := ret.Get(0).(func(model.Profile) error); ok {
+		r0 = rf(profile)
 	} else {
 		r0 = ret.Error(0)
 	}

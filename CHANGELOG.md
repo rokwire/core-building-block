@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Expose Admin API which gives an application account devices [#359](https://github.com/rokwire/core-building-block/issues/359)
+- Expose Admin API which logouts an account session for specific application [#371](https://github.com/rokwire/core-building-block/issues/371)
 - Unlink account auth types [#393](https://github.com/rokwire/core-building-block/issues/393)
 - Expose delete app org role admin API [#313](https://github.com/rokwire/core-building-block/issues/313)
 - Expose delete app org group admin API [#312](https://github.com/rokwire/core-building-block/issues/312)
@@ -17,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix creating application group admin API [#397](https://github.com/rokwire/core-building-block/issues/397)
 - Fix create role and create group Admin APIs [#386](https://github.com/rokwire/core-building-block/issues/386)
 - Fix broken app config API and CHANGELOG.md [#401](https://github.com/rokwire/core-building-block/issues/401)
+- Fix shared profile feature [#405](https://github.com/rokwire/core-building-block/issues/405)
 
 ### Changed
 - Update the filter capability for the get login sessions Admin API [#394](https://github.com/rokwire/core-building-block/issues/394)
