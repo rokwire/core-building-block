@@ -579,9 +579,14 @@ func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier stri
 }
 
 //FindLoginSessionsByParams finds login sessions by params
-func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error) {
+func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
+	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
 		primitive.E{Key: "org_id", Value: orgID}}
+
+	if sessionID != nil {
+		filter = append(filter, primitive.E{Key: "_id", Value: *sessionID})
+	}
 
 	if identifier != nil {
 		filter = append(filter, primitive.E{Key: "identifier", Value: *identifier})
@@ -589,6 +594,26 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, identif
 
 	if accountAuthTypeIdentifier != nil {
 		filter = append(filter, primitive.E{Key: "account_auth_type_identifier", Value: *accountAuthTypeIdentifier})
+	}
+
+	if appTypeID != nil {
+		filter = append(filter, primitive.E{Key: "app_type_id", Value: appTypeID})
+	}
+
+	if appTypeIdentifier != nil {
+		filter = append(filter, primitive.E{Key: "app_type_identifier", Value: appTypeIdentifier})
+	}
+
+	if anonymous != nil {
+		filter = append(filter, primitive.E{Key: "anonymous", Value: anonymous})
+	}
+
+	if deviceID != nil {
+		filter = append(filter, primitive.E{Key: "device_id", Value: deviceID})
+	}
+
+	if ipAddress != nil {
+		filter = append(filter, primitive.E{Key: "ip_address", Value: ipAddress})
 	}
 
 	var result []loginSession
@@ -754,9 +779,23 @@ func (sa *Adapter) DeleteLoginSessionsByIDs(transaction TransactionContext, ids 
 	return nil
 }
 
-//DeleteLoginSessions deletes all login sessions with the identifier
-func (sa *Adapter) DeleteLoginSessions(context TransactionContext, identifier string) error {
-	filter := bson.M{"identifier": identifier}
+//DeleteLoginSessionsByIdentifier deletes all login sessions with the identifier
+func (sa *Adapter) DeleteLoginSessionsByIdentifier(context TransactionContext, identifier string) error {
+	return sa.deleteLoginSessions(context, "identifier", identifier, true)
+}
+
+//DeleteLoginSessionByID deletes a login session by id
+func (sa *Adapter) DeleteLoginSessionByID(context TransactionContext, id string) error {
+	return sa.deleteLoginSessions(context, "_id", id, true)
+}
+
+//DeleteLoginSessionsByAccountAuthTypeID deletes login sessions by account auth type ID
+func (sa *Adapter) DeleteLoginSessionsByAccountAuthTypeID(context TransactionContext, id string) error {
+	return sa.deleteLoginSessions(context, "account_auth_type_id", id, false)
+}
+
+func (sa *Adapter) deleteLoginSessions(context TransactionContext, key string, value string, checkDeletedCount bool) error {
+	filter := bson.M{key: value}
 
 	var res *mongo.DeleteResult
 	var err error
@@ -767,11 +806,29 @@ func (sa *Adapter) DeleteLoginSessions(context TransactionContext, identifier st
 	}
 
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, &logutils.FieldArgs{"identifier": identifier}, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, &logutils.FieldArgs{key: value}, err)
 	}
-	if res.DeletedCount < 1 {
+	if checkDeletedCount && res.DeletedCount < 1 {
 		return errors.ErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("unexpected deleted count"))
 	}
+	return nil
+}
+
+//DeleteLoginSessionsByAccountAndSessionID deletes all login sessions with the identifier and sessionID
+func (sa *Adapter) DeleteLoginSessionsByAccountAndSessionID(context TransactionContext, identifier string, sessionID string) error {
+	filter := bson.M{"identifier": identifier, "_id": sessionID}
+	result, err := sa.db.loginsSessions.DeleteOne(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"identifier": identifier, "_id": sessionID}, err)
+	}
+	if result == nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"identifier": identifier, "_id": sessionID}, err)
+	}
+	deletedCount := result.DeletedCount
+	if deletedCount == 0 {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeLoginSession, &logutils.FieldArgs{"identifier": identifier, "_id": sessionID}, err)
+	}
+
 	return nil
 }
 
@@ -1216,6 +1273,33 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	})
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+//DeleteAccountAuthType deletes an account auth type
+func (sa *Adapter) DeleteAccountAuthType(context TransactionContext, item model.AccountAuthType) error {
+	filter := bson.M{"_id": item.Account.ID}
+	update := bson.D{
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "auth_types", Value: bson.M{"auth_type_code": item.AuthType.Code, "identifier": item.Identifier}},
+		}},
+	}
+
+	var res *mongo.UpdateResult
+	var err error
+	if context != nil {
+		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	} else {
+		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountAuthType, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return nil
@@ -1889,14 +1973,11 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 
 }
 
-//UpdateProfile updates an account profile
-func (sa *Adapter) UpdateProfile(accountID string, profile *model.Profile) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+//UpdateProfile updates a profile
+func (sa *Adapter) UpdateProfile(profile model.Profile) error {
+	filter := bson.D{primitive.E{Key: "profile.id", Value: profile.ID}}
 
 	now := time.Now().UTC()
-	if profile == nil {
-		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeProfile))
-	}
 	profileUpdate := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "profile.photo_url", Value: profile.PhotoURL},
@@ -1913,15 +1994,38 @@ func (sa *Adapter) UpdateProfile(accountID string, profile *model.Profile) error
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, profileUpdate, nil)
+	res, err := sa.db.accounts.UpdateMany(filter, profileUpdate, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
 	}
-	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeProfile, logutils.StringArgs("unexpected modified count"))
-	}
+	sa.logger.Infof("modified %d profile copies", res.ModifiedCount)
 
 	return nil
+}
+
+//FindProfiles finds profiles by app id, authtype id and account auth type identifier
+func (sa *Adapter) FindProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error) {
+	pipeline := []bson.M{
+		{"$lookup": bson.M{
+			"from":         "applications_organizations",
+			"localField":   "app_org_id",
+			"foreignField": "_id",
+			"as":           "app_org",
+		}},
+		{"$match": bson.M{"app_org.app_id": appID}},
+	}
+	var accounts []account
+	err := sa.db.accounts.Aggregate(pipeline, &accounts, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if len(accounts) == 0 {
+		//not found
+		return nil, nil
+	}
+
+	result := profilesFromStorage(accounts, *sa)
+	return result, nil
 }
 
 //CreateGlobalConfig creates global config
