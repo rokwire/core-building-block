@@ -343,12 +343,18 @@ func (app *application) sysGetApplicationTypeVersion(appTypeID string) ([]model.
 }
 
 func (app *application) sysDeleteApplicationTypeVersion(appTypeID string, versionID string) error {
-	err := app.storage.DeleteApplicationTypeVersion(nil, appTypeID, versionID)
+
+	appTypeVersion, err := app.storage.FindApplicationVersionByAppTypeID(nil, appTypeID)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeApplicationTypeVersionList, nil, err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationTypeVersionList, nil, err)
 	}
 
-	return nil
+	version := app.storage.DeleteVersion(nil, appTypeVersion, versionID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationTypeVersionList, nil, err)
+	}
+
+	return version
 }
 
 func (app *application) sysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
