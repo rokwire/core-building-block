@@ -23,6 +23,46 @@ get:
       explode: false
       schema:
         type: string
+    - name: app-type-id
+      in: query
+      description: app type id
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: app-type-identifier
+      in: query
+      description: app type identifier
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: anonymous
+      in: query
+      description: anonymous
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: boolean
+    - name: device-id
+      in: query
+      description: device id
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: ip-address
+      in: query
+      description: ip address
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
   responses:
     200:
       description: Success
