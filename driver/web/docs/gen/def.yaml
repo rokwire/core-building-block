@@ -129,9 +129,10 @@
                         "verification-expired",
                         "already-exists",
                         "not-found",
-                        "internal-server-error"
+                        "internal-server-error",
+                        "shared-credential-unverified"
                       ],
-                      "description": "- `invalid`: Invalid credentials\n- `unverified`: Unverified credentials\n- `verification-expired`: Credentials verification expired. The verification is restarted\n- `already-found`: Account already exists when `sign-up=true`\n- `not-found`: Account could not be found when `sign-up=false`\n- `internal-server-error`: An undefined error occurred\n"
+                      "description": "- `invalid`: Invalid credentials\n- `unverified`: Unverified credentials\n- `verification-expired`: Credentials verification expired. The verification is restarted\n- `already-found`: Account already exists when `sign-up=true`\n- `not-found`: Account could not be found when `sign-up=false`\n- `internal-server-error`: An undefined error occurred\n- `shared-credential-unverified`: The shared credential has not been verified yet\n"
                     },
                     "message": {
                       "type": "string"
@@ -615,6 +616,63 @@
                 "illinois_oidc": {
                   "summary": "Illinois OIDC",
                   "value": "{\n  \"auth_type\": \"illinois_oidc\",\n  \"app_type_identifier\": \"edu.illinois.rokwire\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": \"https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43\",\n  \"params\": {\n    \"redirect_uri\": \"https://redirect.example.com\",\n    \"pkce_verifier\": \"w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia\"\n  }\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_services_res_account_auth-type-link"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Unlink credentials",
+        "description": "Unlink credentials from an existing account\n\n**Auth:** Requires \"authenticated\" auth token\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_services_req_account_auth-type-unlink"
+              },
+              "examples": {
+                "email": {
+                  "summary": "Email",
+                  "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"identifier\": \"test@example.com\"\n}\n"
+                },
+                "phone": {
+                  "summary": "Phone",
+                  "value": "{\n  \"auth_type\": \"twilio_phone\",\n  \"app_type_identifier\": \"edu.illinois.rokwire\",\n  \"identifier\": \"+12223334444\"\n}\n"
+                },
+                "illinois_oidc": {
+                  "summary": "Illinois OIDC",
+                  "value": "{\n  \"auth_type\": \"illinois_oidc\",\n  \"app_type_identifier\": \"edu.illinois.rokwire\",\n  \"identifier\": \"123456789\"\n}\n"
                 }
               }
             }
@@ -1744,6 +1802,114 @@
         }
       }
     },
+    "/admin/application/account/{id}/devices": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Finds application account devices",
+        "description": "Finds devices for the specified application\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The account ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": null,
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DeviceFields"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/admin/application/account/{account_id}/login-sessions/{session_id}": {
+      "delete": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "logouts an account session",
+        "description": "Logouts an account session for specific application\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "description": "The sessionID of the loggin session to delete",
+            "required": true,
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_id",
+            "in": "path",
+            "description": "The accountID of the loggin session to delete",
+            "required": true,
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/admin/application/login-sessions": {
       "get": {
         "tags": [
@@ -1772,6 +1938,61 @@
             "name": "account-auth-type-identifier",
             "in": "query",
             "description": "account auth type identifier",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "app-type-id",
+            "in": "query",
+            "description": "app type id",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "app-type-identifier",
+            "in": "query",
+            "description": "app type identifier",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "anonymous",
+            "in": "query",
+            "description": "anonymous",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "device-id",
+            "in": "query",
+            "description": "device id",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ip-address",
+            "in": "query",
+            "description": "ip address",
             "required": false,
             "style": "form",
             "explode": false,
@@ -3886,7 +4107,7 @@
           "multi_tenant": {
             "type": "boolean"
           },
-          "requires_own_users": {
+          "shared_identities": {
             "type": "boolean"
           }
         }
@@ -4643,6 +4864,9 @@
         "type": "object",
         "properties": {
           "id": {
+            "type": "string"
+          },
+          "device_id": {
             "type": "string"
           },
           "type": {
@@ -5403,6 +5627,31 @@
           }
         }
       },
+      "_services_req_account_auth-type-unlink": {
+        "required": [
+          "auth_type",
+          "app_type_identifier",
+          "identifier"
+        ],
+        "type": "object",
+        "properties": {
+          "auth_type": {
+            "type": "string",
+            "enum": [
+              "email",
+              "twilio_phone",
+              "illinois_oidc",
+              "username"
+            ]
+          },
+          "app_type_identifier": {
+            "type": "string"
+          },
+          "identifier": {
+            "type": "string"
+          }
+        }
+      },
       "_services_res_account_auth-type-link": {
         "required": [
           "auth_types"
@@ -5858,7 +6107,7 @@
           "id",
           "name",
           "multi_tenant",
-          "requires_own_users"
+          "shared_identities"
         ],
         "type": "object",
         "properties": {
@@ -5872,7 +6121,7 @@
           "multi_tenant": {
             "type": "boolean"
           },
-          "requires_own_users": {
+          "shared_identities": {
             "type": "boolean"
           },
           "max_login_session_duration": {
@@ -5897,7 +6146,7 @@
         "required": [
           "name",
           "multi_tenant",
-          "requires_own_users"
+          "shared_identities"
         ],
         "type": "object",
         "properties": {
@@ -5907,7 +6156,7 @@
           "multi_tenant": {
             "type": "boolean"
           },
-          "requires_own_users": {
+          "shared_identities": {
             "type": "boolean"
           },
           "max_login_session_duration": {
@@ -5975,7 +6224,7 @@
           "multi_tenant": {
             "type": "boolean"
           },
-          "requires_own_users": {
+          "shared_identities": {
             "type": "boolean"
           },
           "max_login_session_duration": {
@@ -5992,7 +6241,7 @@
           "id",
           "name",
           "multi_tenant",
-          "requires_own_users"
+          "shared_identities"
         ],
         "type": "object",
         "properties": {
@@ -6006,7 +6255,7 @@
           "multi_tenant": {
             "type": "boolean"
           },
-          "requires_own_users": {
+          "shared_identities": {
             "type": "boolean"
           },
           "max_login_session_duration": {

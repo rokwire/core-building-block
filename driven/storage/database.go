@@ -245,13 +245,13 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 func (m *database) applyDevicesChecks(devices *collectionWrapper) error {
 	m.logger.Info("apply devices checks.....")
 
-	/*//add compound unique index - device_id + account_id
+	//add compound unique index - device_id + account_id
 	err := devices.AddIndex(bson.D{primitive.E{Key: "device_id", Value: 1}, primitive.E{Key: "account_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
 
-	m.logger.Info("devices check passed")*/
+	m.logger.Info("devices check passed")
 	return nil
 }
 
@@ -380,7 +380,7 @@ func (m *database) applyApplicationsChecks(applications *collectionWrapper) erro
 func (m *database) applyApplicationsOrganizationsChecks(applicationsOrganizations *collectionWrapper) error {
 	m.logger.Info("apply applications organizations checks.....")
 
-	/*//add compound unique index - application + auth type + auth type identifier
+	//add compound unique index - application + auth type + auth type identifier
 	err := applicationsOrganizations.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1},
 		primitive.E{Key: "org_id", Value: 1}},
 		true)
@@ -388,7 +388,7 @@ func (m *database) applyApplicationsOrganizationsChecks(applicationsOrganization
 		return err
 	}
 
-	m.logger.Info("applications organizations checks passed")*/
+	m.logger.Info("applications organizations checks passed")
 	return nil
 }
 

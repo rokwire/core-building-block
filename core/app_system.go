@@ -122,7 +122,7 @@ func (app *application) sysCreateApplication(name string, multiTenant bool, requ
 	now := time.Now()
 
 	applicationID, _ := uuid.NewUUID()
-	application := model.Application{ID: applicationID.String(), Name: name, MultiTenant: multiTenant, RequiresOwnUsers: requiresOwnUsers, Types: appTypes,
+	application := model.Application{ID: applicationID.String(), Name: name, MultiTenant: multiTenant, Types: appTypes,
 		DateCreated: now}
 	insertedApplication, err := app.storage.InsertApplication(application)
 	if err != nil {

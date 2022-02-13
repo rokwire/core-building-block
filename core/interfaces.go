@@ -13,8 +13,9 @@ type Services interface {
 	SerGetAccount(accountID string) (*model.Account, error)
 	SerGetProfile(accountID string) (*model.Profile, error)
 	SerGetPreferences(accountID string) (map[string]interface{}, error)
-	SerUpdateProfile(accountID string, profile *model.Profile) error
 	SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error
+
+	SerUpdateProfile(accountID string, profile model.Profile) error
 
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
@@ -42,7 +43,11 @@ type Administration interface {
 	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
 
-	AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error)
+	AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
+		appTypeID *string, appTypeIdentifier *string, anonymoys *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
+	AdmDeleteApplicationLoginSession(appID string, orgID string, currentAccountID string, identifier string, sessionID string, l *logs.Log) error
+
+	AdmGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -66,7 +71,7 @@ type System interface {
 	SysGetOrganization(ID string) (*model.Organization, error)
 	SysUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 
-	SysCreateApplication(name string, multiTenant bool, requiresOwnUsers bool, maxLoginSessionDuration *int, appTypes []model.ApplicationType) (*model.Application, error)
+	SysCreateApplication(name string, multiTenant bool, sharedIdentities bool, maxLoginSessionDuration *int, appTypes []model.ApplicationType) (*model.Application, error)
 	SysGetApplication(ID string) (*model.Application, error)
 	SysGetApplications() ([]model.Application, error)
 
@@ -95,18 +100,21 @@ type Storage interface {
 	FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
-	UpdateProfile(accountID string, profile *model.Profile) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 
+	UpdateProfile(profile model.Profile) error
+
 	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
 	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
 	DeleteCredential(context storage.TransactionContext, ID string) error
 
-	FindLoginSessionsByParams(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error)
-	DeleteLoginSessions(context storage.TransactionContext, identifier string) error
+	FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
+		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
+	DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error
+	DeleteLoginSessionByID(context storage.TransactionContext, id string) error
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error
