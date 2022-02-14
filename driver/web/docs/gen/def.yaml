@@ -1653,7 +1653,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_admin_req_grant-permissions_Request'
+              $ref: '#/components/schemas/_admin_req_grant-permissions'
         required: true
       responses:
         '200':
@@ -4410,7 +4410,7 @@ components:
           type: array
           items:
             type: string
-    _admin_req_grant-permissions_Request:
+    _admin_req_grant-permissions:
       required:
         - account_id
         - permissions

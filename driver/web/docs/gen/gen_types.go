@@ -533,8 +533,8 @@ type AdminReqCreateApplicationRole struct {
 	Permissions []string `json:"permissions"`
 }
 
-// AdminReqGrantPermissionsRequest defines model for _admin_req_grant-permissions_Request.
-type AdminReqGrantPermissionsRequest struct {
+// AdminReqGrantPermissions defines model for _admin_req_grant-permissions.
+type AdminReqGrantPermissions struct {
 	AccountId   string   `json:"account_id"`
 	Permissions []string `json:"permissions"`
 }
@@ -1010,7 +1010,7 @@ type PostAdminAccountMfaParams struct {
 }
 
 // PutAdminApplicationAccountPermissionsGrantJSONBody defines parameters for PutAdminApplicationAccountPermissionsGrant.
-type PutAdminApplicationAccountPermissionsGrantJSONBody AdminReqGrantPermissionsRequest
+type PutAdminApplicationAccountPermissionsGrantJSONBody AdminReqGrantPermissions
 
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {
