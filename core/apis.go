@@ -155,14 +155,10 @@ func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, er
 	return s.app.admGetAccount(accountID)
 }
 
-<<<<<<< HEAD
 func (s *administrationImpl) AdmGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
 	return s.app.admGrantAccountPermissions(accountID, permissionNames, assignerPermissions)
 }
 
-func (s *administrationImpl) AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string) ([]model.LoginSession, error) {
-	return s.app.admGetApplicationLoginSessions(appID, orgID, identifier, accountAuthTypeIdentifier)
-=======
 func (s *administrationImpl) AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
 	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
 	return s.app.admGetApplicationLoginSessions(appID, orgID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
@@ -174,7 +170,6 @@ func (s *administrationImpl) AdmDeleteApplicationLoginSession(appID string, orgI
 
 func (s *administrationImpl) AdmGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error) {
 	return s.app.admGetApplicationAccountDevices(appID, orgID, accountID, l)
->>>>>>> develop
 }
 
 ///
