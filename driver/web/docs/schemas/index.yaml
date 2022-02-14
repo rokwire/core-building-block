@@ -239,8 +239,6 @@ _system_res_get_Applications:
 ### permissions API
 _system_req_permissions:
   $ref: "./apis/system/permissions/request/Request.yaml"
-_req_grant-permissions_Request:
-  $ref: "./apis/admin/grant-permissions/request/Request.yaml"
   
 ### application-roles API
 _system_req_application-roles:
