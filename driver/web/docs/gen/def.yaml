@@ -129,9 +129,10 @@
                         "verification-expired",
                         "already-exists",
                         "not-found",
-                        "internal-server-error"
+                        "internal-server-error",
+                        "shared-credential-unverified"
                       ],
-                      "description": "- `invalid`: Invalid credentials\n- `unverified`: Unverified credentials\n- `verification-expired`: Credentials verification expired. The verification is restarted\n- `already-found`: Account already exists when `sign-up=true`\n- `not-found`: Account could not be found when `sign-up=false`\n- `internal-server-error`: An undefined error occurred\n"
+                      "description": "- `invalid`: Invalid credentials\n- `unverified`: Unverified credentials\n- `verification-expired`: Credentials verification expired. The verification is restarted\n- `already-found`: Account already exists when `sign-up=true`\n- `not-found`: Account could not be found when `sign-up=false`\n- `internal-server-error`: An undefined error occurred\n- `shared-credential-unverified`: The shared credential has not been verified yet\n"
                     },
                     "message": {
                       "type": "string"
@@ -1785,6 +1786,56 @@
                 "type": "array",
                 "items": {
                   "$ref": "#/components/schemas/_shared_res_Account"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/admin/application/account/{id}/devices": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Finds application account devices",
+        "description": "Finds devices for the specified application\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The account ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": null,
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DeviceFields"
                 }
               }
             }
@@ -4272,7 +4323,7 @@
           "multi_tenant": {
             "type": "boolean"
           },
-          "requires_own_users": {
+          "shared_identities": {
             "type": "boolean"
           }
         }
@@ -5028,6 +5079,9 @@
         "type": "object",
         "properties": {
           "id": {
+            "type": "string"
+          },
+          "device_id": {
             "type": "string"
           },
           "type": {
@@ -6264,7 +6318,7 @@
         "required": [
           "name",
           "multi_tenant",
-          "requires_own_users"
+          "shared_identities"
         ],
         "type": "object",
         "properties": {
@@ -6274,7 +6328,7 @@
           "multi_tenant": {
             "type": "boolean"
           },
-          "requires_own_users": {
+          "shared_identities": {
             "type": "boolean"
           },
           "max_login_session_duration": {
@@ -6335,7 +6389,7 @@
           "multi_tenant": {
             "type": "boolean"
           },
-          "requires_own_users": {
+          "shared_identities": {
             "type": "boolean"
           },
           "max_login_session_duration": {
@@ -6355,7 +6409,7 @@
           "id",
           "name",
           "multi_tenant",
-          "requires_own_users"
+          "shared_identities"
         ],
         "type": "object",
         "properties": {
@@ -6369,7 +6423,7 @@
           "multi_tenant": {
             "type": "boolean"
           },
-          "requires_own_users": {
+          "shared_identities": {
             "type": "boolean"
           },
           "max_login_session_duration": {

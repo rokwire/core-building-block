@@ -416,3 +416,26 @@ func (app *application) admDeleteApplicationLoginSession(appID string, orgID str
 
 	return nil
 }
+
+func (app *application) admGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error) {
+	//1. find the account
+	account, err := app.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return nil, errors.Wrapf("error finding account on getting devices", err)
+	}
+	if account == nil {
+		return nil, errors.Newf("no account for id %s", accountID)
+	}
+
+	//2. verify that the account is for the current app/org
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.Wrapf("error finding app org on getting devices", err)
+	}
+	if appOrg.ID != account.AppOrg.ID {
+		l.Warnf("someone from app(%s) org(%s) is trying to access an account %s", appID, orgID, accountID)
+		return nil, errors.Newf("not allowed to access data")
+	}
+
+	return account.Devices, nil
+}
