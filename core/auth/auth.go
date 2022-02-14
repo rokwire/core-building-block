@@ -1287,11 +1287,11 @@ func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthTyp
 				}
 			}
 			return "", nil, nil
-		} else {
-			err = a.handleAccountAuthTypeConflict(*newCredsAccount, authType.ID, userIdentifier, false)
-			if err != nil {
-				return "", nil, err
-			}
+		}
+
+		err = a.handleAccountAuthTypeConflict(*newCredsAccount, authType.ID, userIdentifier, false)
+		if err != nil {
+			return "", nil, err
 		}
 	}
 
@@ -1413,26 +1413,27 @@ func (a *Auth) handleAccountAuthTypeConflict(account model.Account, authTypeID s
 	if aat == nil || !aat.Unverified {
 		//cannot link creds if a verified account already exists for new creds
 		return errors.New("account already exists").SetStatus(utils.ErrorStatusAlreadyExists)
+	}
+
+	//if this is the only auth type (this will only be possible for accounts created through sign up that were never verified/used)
+	if len(account.AuthTypes) == 1 {
+		//if signing up, do not replace previous unverified account created through sign up
+		if newAccount {
+			return errors.New("account already exists").SetStatus(utils.ErrorStatusAlreadyExists)
+		}
+		//if linked to a different unverified account, remove whole account
+		err := a.deleteAccount(nil, account)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+		}
 	} else {
-		//if this is the only auth type (this will only be possible for accounts created through sign up that were never verified/used)
-		if len(account.AuthTypes) == 1 {
-			//if signing up, do not replace previous unverified account created through sign up
-			if newAccount {
-				return errors.New("account already exists").SetStatus(utils.ErrorStatusAlreadyExists)
-			}
-			//if linked to a different unverified account, remove whole account
-			err := a.deleteAccount(nil, account)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
-			}
-		} else {
-			//Otherwise unlink auth type from account
-			err := a.removeAccountAuthType(*aat)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountAuthType, nil, err)
-			}
+		//Otherwise unlink auth type from account
+		err := a.removeAccountAuthType(*aat)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountAuthType, nil, err)
 		}
 	}
+
 	return nil
 }
 
