@@ -633,7 +633,7 @@ func (h AdminApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, 
 	}
 
 	assignerPermissions := strings.Split(claims.Permissions, ",")
-	err = h.coreAPIs.Administration.AdmGrantAccountPermissions(requestData.AccountId, requestData.Permissions, assignerPermissions, l)
+	err = h.coreAPIs.Administration.AdmGrantAccountPermissions(claims.AppID, claims.OrgID, requestData.AccountId, requestData.Permissions, assignerPermissions, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(actionGrant, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}

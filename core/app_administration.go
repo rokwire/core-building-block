@@ -441,24 +441,44 @@ func (app *application) admGetApplicationAccountDevices(appID string, orgID stri
 	return account.Devices, nil
 }
 
-func (app *application) admGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
-	//TODO
-	if assignerPermissions == nil {
+func (app *application) admGrantAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
+	//check if there is data
+	if len(assignerPermissions) == 0 {
 		return errors.New("no permissions from admin assigner")
 	}
+	if len(permissionNames) == 0 {
+		return errors.New("no permissions for granting")
+	}
 
+	//verify that the account is for the current app/org
+	account, err := app.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return errors.Wrap("error finding account on permissions granting", err)
+	}
+	if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
+		l.Warnf("someone is trying to grant permissions to %s for different app/org", accountID)
+		return errors.Newf("not allowed")
+	}
+
+	//find permissions
 	permissions, err := app.storage.FindPermissionsByName(permissionNames)
 	if err != nil {
 		return err
 	}
-
 	if len(permissions) == 0 {
 		return errors.Newf("no permissions found for names: %v", permissionNames)
 	}
 
+	//check if authorized
 	var authorizedPermissions []model.Permission
 	for _, permission := range permissions {
 		authorizedAssigners := permission.Assigners
+
+		//grant all or nothing
+		if len(permission.Assigners) == 0 {
+			return errors.Newf("not defined assigners for %s permission", permission.Name)
+		}
+
 		for _, authorizedAssigner := range authorizedAssigners {
 			if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
 				authorizedPermissions = append(authorizedPermissions, permission)
@@ -469,6 +489,7 @@ func (app *application) admGrantAccountPermissions(accountID string, permissionN
 		return errors.Newf("Assigner is not authorized to assign permissions for names: %v", permissionNames)
 	}
 
+	//update account if authorized
 	err = app.storage.InsertAccountPermissions(accountID, authorizedPermissions)
 	if err != nil {
 		return err
