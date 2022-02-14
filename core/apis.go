@@ -155,8 +155,8 @@ func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, er
 	return s.app.admGetAccount(accountID)
 }
 
-func (s *administrationImpl) AdmGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
-	return s.app.admGrantAccountPermissions(accountID, permissionNames, assignerPermissions)
+func (s *administrationImpl) AdmGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
+	return s.app.admGrantAccountPermissions(accountID, permissionNames, assignerPermissions, l)
 }
 
 func (s *administrationImpl) AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,

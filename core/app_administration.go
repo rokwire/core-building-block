@@ -441,7 +441,8 @@ func (app *application) admGetApplicationAccountDevices(appID string, orgID stri
 	return account.Devices, nil
 }
 
-func (app *application) admGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
+func (app *application) admGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
+	//TODO
 	if assignerPermissions == nil {
 		return errors.New("no permissions from admin assigner")
 	}

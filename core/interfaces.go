@@ -39,10 +39,11 @@ type Administration interface {
 	AdmDeleteAppOrgRole(ID string, appID string, orgID string) error
 
 	AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error)
-	AdmGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
 
 	AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
+
+	AdmGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error
 
 	AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymoys *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
