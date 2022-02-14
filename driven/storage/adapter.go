@@ -2421,35 +2421,54 @@ func (sa *Adapter) FindApplicationVersionByAppTypeID(context TransactionContext,
 	return nil, nil
 }
 
-func (sa *Adapter) DeleteVersion(context TransactionContext, apptypeVersion []model.Version, versionID string) error {
+func (sa *Adapter) DeleteVersion(context TransactionContext, versionObj *model.Version, appTypeID string, versionID string) error {
 
+	if len(appTypeID) == 0 {
+		return nil
+	}
 	if len(versionID) == 0 {
 		return nil
 	}
 
-	version := apptypeVersion
+	filter := bson.D{primitive.E{Key: "types.id", Value: appTypeID}}
+	var applicationsResult []application
+	err := sa.db.applications.Find(filter, &applicationsResult, nil)
+	if err != nil {
+		return err
+	}
 
-	for i, versionForRemove := range version {
-		if versionForRemove.ID == versionID {
-			version[i] = versionForRemove
+	if len(applicationsResult) == 0 {
+		return errors.Newf("no application for ID: %v", appTypeID)
+	}
 
+	application := applicationsResult[0]
+
+	appType := application.Types
+
+	for _, currentAppType := range appType {
+		if currentAppType.ID == appTypeID {
+			versions := currentAppType.Versions
+			versionNew := []version{}
+			for _, version := range versions {
+				if version.ID == versionID {
+					versionNew = append(versionNew, version)
+
+				}
+			}
+			currentAppType.Versions = versionNew
 		}
 	}
 
-	//filter := bson.M{"_id": versionID}
-	var res *mongo.DeleteResult
-	var err error
+	applicationFilter := bson.M{"_id": application.ID}
+	opts := options.Replace().SetUpsert(true)
 	if context != nil {
-		res, err = sa.db.applications.DeleteOneWithContext(context, version, nil)
+		err = sa.db.applications.ReplaceOneWithContext(context, applicationFilter, application, opts)
 	} else {
-		res, err = sa.db.applications.DeleteOne(version, nil)
+		err = sa.db.applications.ReplaceOne(applicationFilter, application, opts)
 	}
 
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeApplicationTypeVersionList, nil, err)
-	}
-	if res.DeletedCount != 1 {
-		return errors.ErrorAction(logutils.ActionDelete, model.TypeApplicationTypeVersionList, logutils.StringArgs("unexpected deleted count"))
+		return errors.WrapErrorAction(logutils.ActionSave, "applications", &logutils.FieldArgs{"applications_id": application.ID}, nil)
 	}
 
 	return nil

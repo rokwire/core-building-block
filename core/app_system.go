@@ -344,17 +344,12 @@ func (app *application) sysGetApplicationTypeVersion(appTypeID string) ([]model.
 
 func (app *application) sysDeleteApplicationTypeVersion(appTypeID string, versionID string) error {
 
-	appTypeVersion, err := app.storage.FindApplicationVersionByAppTypeID(nil, appTypeID)
+	err := app.storage.DeleteVersion(nil, nil, appTypeID, versionID)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationTypeVersionList, nil, err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationTypeVersionList, nil, nil)
 	}
 
-	version := app.storage.DeleteVersion(nil, appTypeVersion, versionID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationTypeVersionList, nil, err)
-	}
-
-	return version
+	return nil
 }
 
 func (app *application) sysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
