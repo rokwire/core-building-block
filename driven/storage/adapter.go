@@ -1658,22 +1658,6 @@ func (sa *Adapter) UpdatePermission(item model.Permission) error {
 	return nil
 }
 
-/*//FindApplicationByAppTypeID finds the application for the application type
-func (sa *Adapter) FindApplicationByAppTypeID(appTypeID string) ([]model.Application, error) {
-	if len(appTypeID) == 0 {
-		return nil, nil
-	}
-
-	filter := bson.D{primitive.E{Key: "types.id", Value: appTypeID}}
-	var applicationsResult []model.Application
-	err := sa.db.applications.Find(filter, &applicationsResult, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return applicationsResult, nil
-}*/
-
 //DeletePermission deletes permission
 func (sa *Adapter) DeletePermission(id string) error {
 	//TODO
