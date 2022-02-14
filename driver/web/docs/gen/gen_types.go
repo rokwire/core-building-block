@@ -1001,11 +1001,11 @@ type PostAdminAccountMfaParams struct {
 	Type string `json:"type"`
 }
 
-// PutAdminAccountRolesJSONBody defines parameters for PutAdminAccountRoles.
-type PutAdminAccountRolesJSONBody AdminReqAccountRoles
+// PostAdminAccountRolesJSONBody defines parameters for PostAdminAccountRoles.
+type PostAdminAccountRolesJSONBody AdminReqCreateApplicationRole
 
-// PostAdminApplicationAccountRolesGrantJSONBody defines parameters for PostAdminApplicationAccountRolesGrant.
-type PostAdminApplicationAccountRolesGrantJSONBody AdminReqCreateApplicationRole
+// PutAdminApplicationAccountRolesGrantJSONBody defines parameters for PutAdminApplicationAccountRolesGrant.
+type PutAdminApplicationAccountRolesGrantJSONBody AdminReqAccountRoles
 
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {
@@ -1257,11 +1257,11 @@ type GetTpsServiceRegsParams struct {
 	Ids string `json:"ids"`
 }
 
-// PutAdminAccountRolesJSONRequestBody defines body for PutAdminAccountRoles for application/json ContentType.
-type PutAdminAccountRolesJSONRequestBody PutAdminAccountRolesJSONBody
+// PostAdminAccountRolesJSONRequestBody defines body for PostAdminAccountRoles for application/json ContentType.
+type PostAdminAccountRolesJSONRequestBody PostAdminAccountRolesJSONBody
 
-// PostAdminApplicationAccountRolesGrantJSONRequestBody defines body for PostAdminApplicationAccountRolesGrant for application/json ContentType.
-type PostAdminApplicationAccountRolesGrantJSONRequestBody PostAdminApplicationAccountRolesGrantJSONBody
+// PutAdminApplicationAccountRolesGrantJSONRequestBody defines body for PutAdminApplicationAccountRolesGrant for application/json ContentType.
+type PutAdminApplicationAccountRolesGrantJSONRequestBody PutAdminApplicationAccountRolesGrantJSONBody
 
 // PostAdminApplicationGroupsJSONRequestBody defines body for PostAdminApplicationGroups for application/json ContentType.
 type PostAdminApplicationGroupsJSONRequestBody PostAdminApplicationGroupsJSONBody

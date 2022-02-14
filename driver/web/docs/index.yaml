@@ -85,7 +85,7 @@ paths:
     $ref: "./resources/admin/auth/app-token.yaml"
   /admin/account:
     $ref: "./resources/admin/account.yaml"
-  /admin/account/roles:
+  /admin/application/account/roles/grant:
     $ref: "./resources/admin/account/roles.yaml"
   /admin/account/mfa:
     $ref: "./resources/admin/account/mfa.yaml"
@@ -103,7 +103,7 @@ paths:
     $ref: "./resources/admin/application/groupsID.yaml"
   /admin/application/permissions:
     $ref: "./resources/admin/application/permissions.yaml"
-  /admin/application/account/roles/grant:
+  /admin/account/roles:
     $ref: "./resources/admin/application/roles.yaml"
   /admin/application/roles/{id}:
     $ref: "./resources/admin/application/rolesID.yaml"

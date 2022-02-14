@@ -440,7 +440,16 @@ func (app *application) admGetApplicationAccountDevices(appID string, orgID stri
 	return account.Devices, nil
 }
 
-func (app *application) admGrantAccountRoles(accountID string, appOrgID string, roleIDs []string) error {
+func (app *application) admGrantAccountRoles(accountID string, appOrgID string, roleIDs []string, l *logs.Log) error {
+
+	account, err := app.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return errors.Wrap("error finding an acount with that ID", err)
+	}
+	if account.AppOrg.ID != appOrgID {
+		l.Warnf("someone is trying to grand roles to %s for different app/org", accountID)
+	}
+
 	roles, err := app.storage.FindAppOrgRoles(roleIDs, appOrgID)
 	if err != nil {
 		return err

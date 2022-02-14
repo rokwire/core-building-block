@@ -155,8 +155,8 @@ func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, er
 	return s.app.admGetAccount(accountID)
 }
 
-func (s *administrationImpl) AdmGrantAccountRoles(accountID string, appID string, roleIDs []string) error {
-	return s.app.admGrantAccountRoles(accountID, appID, roleIDs)
+func (s *administrationImpl) AdmGrantAccountRoles(accountID string, appID string, roleIDs []string, l *logs.Log) error {
+	return s.app.admGrantAccountRoles(accountID, appID, roleIDs, l)
 }
 
 func (s *administrationImpl) AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,

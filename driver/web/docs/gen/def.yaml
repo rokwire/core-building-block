@@ -1618,7 +1618,7 @@
         }
       }
     },
-    "/admin/account/roles": {
+    "/admin/application/account/roles/grant": {
       "put": {
         "tags": [
           "Admin"
@@ -2234,7 +2234,7 @@
         }
       }
     },
-    "/admin/application/account/roles/grant": {
+    "/admin/account/roles": {
       "get": {
         "tags": [
           "Admin"
