@@ -205,7 +205,6 @@ _admin_req_create-application_group:
 _admin_req_grant-permissions_Request:
   $ref: "./apis/admin/grant-permissions/request/Request.yaml"
   
-
 ## end ADMIN section
 
 ## SYSTEM section
