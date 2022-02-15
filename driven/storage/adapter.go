@@ -2477,8 +2477,7 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 
 //InsertAuthType inserts an auth type
 func (sa *Adapter) InsertAuthType(authType model.AuthType) (*model.AuthType, error) {
-	at := authTypeToStorage(&authType)
-	_, err := sa.db.authTypes.InsertOne(at)
+	_, err := sa.db.authTypes.InsertOne(authType)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, nil, err)
 	}

@@ -97,12 +97,3 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 		Params: params, State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
 		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
-
-func authTypeToStorage(item *model.AuthType) *authType {
-	if item == nil {
-		return nil
-	}
-
-	return &authType{ID: item.ID, Code: item.Code, Description: item.Description, IsExternal: item.IsExternal,
-		IsAnonymous: item.IsAnonymous, UseCredentials: item.UseCredentials, IgnoreMFA: item.IgnoreMFA, Params: item.Params}
-}

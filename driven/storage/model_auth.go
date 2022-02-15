@@ -38,14 +38,3 @@ type loginSession struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 	DateCreated time.Time  `bson:"date_created"`
 }
-
-type authType struct {
-	ID             string                 `bson:"_id"`
-	Code           string                 `bson:"code"`
-	Description    string                 `bson:"description"`
-	IsExternal     bool                   `bson:"is_external"`
-	IsAnonymous    bool                   `bson:"is_anonymous"`
-	UseCredentials bool                   `bson:"use_credentials"`
-	IgnoreMFA      bool                   `bson:"ignore_mfa"`
-	Params         map[string]interface{} `bson:"params"`
-}
