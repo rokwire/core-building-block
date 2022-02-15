@@ -93,6 +93,8 @@ paths:
     $ref: "./resources/admin/application/account/devices.yaml"
   /admin/application/account/{account_id}/login-sessions/{session_id}:
     $ref: "./resources/admin/application/account/login-sessions.yaml"
+  /admin/application/account/permissions/grant:
+    $ref: "./resources/admin/application/account/permissions/grant.yaml"
   /admin/application/login-sessions:
     $ref: "./resources/admin/application/login-sessions.yaml"
   /admin/application/groups:
@@ -109,7 +111,7 @@ paths:
     $ref: "./resources/admin/application/rolesID.yaml"
   /admin/organization/applications:
     $ref: "./resources/admin/organization/applications.yaml"
-
+ 
   #enc
   /enc/test:
     $ref: "./resources/enc/test.yaml"

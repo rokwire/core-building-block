@@ -204,6 +204,10 @@ _admin_req_create-application_group:
 ### admin application_groups API
 _admin_req_add-application_account_group:
   $ref: "./apis/admin/application/add-account-group/request/Request.yaml"
+### permissions API
+_admin_req_grant-permissions:
+  $ref: "./apis/admin/application/account/permissions/grant/request/Request.yaml"
+  
 ## end ADMIN section
 
 ## SYSTEM section
