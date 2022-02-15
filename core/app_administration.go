@@ -267,6 +267,14 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 
 func (app *application) admGrantGroupAccounts(groupID string, accountIDs []string) error {
 
+	if len(groupID) == 0 {
+		return nil
+	}
+
+	if len(accountIDs) == 0 {
+		return nil
+	}
+
 	account, err := app.storage.FindAccountsByAccountID(accountIDs)
 	if err != nil {
 		return err

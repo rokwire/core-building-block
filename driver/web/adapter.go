@@ -127,7 +127,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/groups", we.wrapFunc(we.adminApisHandler.adminGetApplicationGroups, we.auth.admin.permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/groups", we.wrapFunc(we.adminApisHandler.adminCreateApplicationGroup, we.auth.admin.permissions)).Methods("POST")
 	adminSubrouter.HandleFunc("/application/groups/{id}", we.wrapFunc(we.adminApisHandler.adminDeleteApplicationGroup, we.auth.admin.permissions)).Methods("DELETE")
-	adminSubrouter.HandleFunc("/application/group/accounts/add", we.wrapFunc(we.adminApisHandler.grantGroupAccounts, we.auth.admin.permissions)).Methods("PUT")
+	adminSubrouter.HandleFunc("/application/group/accounts/add", we.wrapFunc(we.adminApisHandler.grantGroupAccounts, we.auth.admin.user)).Methods("PUT")
 
 	adminSubrouter.HandleFunc("/application/roles", we.wrapFunc(we.adminApisHandler.adminGetApplicationOrgRoles, we.auth.admin.permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/roles", we.wrapFunc(we.adminApisHandler.adminCreateApplicationRole, we.auth.admin.permissions)).Methods("POST")
