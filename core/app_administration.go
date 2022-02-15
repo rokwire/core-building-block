@@ -460,6 +460,15 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 		return errors.Newf("not allowed")
 	}
 
+	//verify that the account do not have any of the permissions which are supposed to be granted
+	for _, current := range permissionNames {
+		hasP := account.GetPermissionNamed(current)
+		if hasP != nil {
+			l.Infof("trying to double grant %s for %s", current, accountID)
+			return errors.Newf("account %s already has %s granted", accountID, current)
+		}
+	}
+
 	//find permissions
 	permissions, err := app.storage.FindPermissionsByName(permissionNames)
 	if err != nil {
