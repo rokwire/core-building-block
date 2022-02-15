@@ -2449,17 +2449,18 @@ func (sa *Adapter) DeleteVersion(context TransactionContext, versionObj *model.V
 
 	appType := application.Types
 
-	for _, currentAppType := range appType {
+	for i, currentAppType := range appType {
 		if currentAppType.ID == appTypeID {
 			versions := currentAppType.Versions
 			versionNew := []version{}
 			for _, version := range versions {
-				if version.ID == versionID {
+				if version.ID != versionID {
 					versionNew = append(versionNew, version)
 
 				}
 			}
 			currentAppType.Versions = versionNew
+			appType[i] = currentAppType
 		}
 	}
 
