@@ -514,7 +514,7 @@ type ServiceScope struct {
 // AdminReqAccountRoles defines model for _admin_req_account-roles.
 type AdminReqAccountRoles struct {
 	AccountId string   `json:"account_id"`
-	AppId     string   `json:"app_id"`
+	AppOrgId  string   `json:"app_org_id"`
 	RoleIds   []string `json:"role_ids"`
 }
 

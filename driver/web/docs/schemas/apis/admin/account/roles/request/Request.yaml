@@ -1,12 +1,12 @@
 required:
   - account_id
-  - app_id
+  - app_org_id
   - role_ids
 type: object
 properties:
   account_id:
     type: string
-  app_id:
+  app_org_id:
     type: string
   role_ids:
     type: array
