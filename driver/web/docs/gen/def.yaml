@@ -1910,6 +1910,53 @@
         }
       }
     },
+    "/admin/application/account/permissions/grant": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Grant account permissions",
+        "description": "Grant account permissions\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Permissions",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_admin_req_grant-permissions"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/admin/application/login-sessions": {
       "get": {
         "tags": [
@@ -6106,6 +6153,24 @@
             }
           },
           "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "_admin_req_grant-permissions": {
+        "required": [
+          "account_id",
+          "permissions"
+        ],
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "permissions": {
             "type": "array",
             "items": {
               "type": "string"
