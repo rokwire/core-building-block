@@ -3719,25 +3719,17 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "id": {
-                        "type": "string"
-                      },
                       "version_number": {
                         "type": "object",
                         "properties": {
-                          "version_number": {
-                            "type": "object",
-                            "properties": {
-                              "major": {
-                                "type": "integer"
-                              },
-                              "minor": {
-                                "type": "integer"
-                              },
-                              "match": {
-                                "type": "integer"
-                              }
-                            }
+                          "major": {
+                            "type": "integer"
+                          },
+                          "minor": {
+                            "type": "integer"
+                          },
+                          "match": {
+                            "type": "integer"
                           }
                         }
                       }
@@ -3762,7 +3754,7 @@
         }
       }
     },
-    "/system/application-type/{id}/versions/{_id}": {
+    "/system/application-type/{appliction-type-id}/versions/{version-id}": {
       "delete": {
         "tags": [
           "System"
@@ -3776,7 +3768,7 @@
         ],
         "parameters": [
           {
-            "name": "id",
+            "name": "appliction-type-id",
             "in": "path",
             "description": "The app type ID of the registration to delete",
             "required": true,
@@ -3785,7 +3777,7 @@
             }
           },
           {
-            "name": "_id",
+            "name": "version-id",
             "in": "path",
             "description": "The version ID of the registration to delete",
             "required": true,

@@ -7,13 +7,13 @@ delete:
   security:
     - bearerAuth: []
   parameters:
-    - name: id
+    - name: appliction-type-id
       in: path
       description: The app type ID of the registration to delete
       required: true
       schema:
         type: string
-    - name: _id
+    - name: version-id
       in: path
       description: The version ID of the registration to delete
       required: true

@@ -203,7 +203,7 @@ func (we Adapter) Start() {
 	*/
 	systemSubrouter.HandleFunc("/application-type/{id}/versions", we.wrapFunc(we.systemApisHandler.createApplicationTypeVersion, we.auth.systemAuth)).Methods("POST")
 	systemSubrouter.HandleFunc("/application-type/{id}/versions", we.wrapFunc(we.systemApisHandler.getApplicationTypeVersion, we.auth.systemAuth)).Methods("GET")
-	systemSubrouter.HandleFunc("/application-type/{id}/versions/{_id}", we.wrapFunc(we.systemApisHandler.deleteApplicationTypeVersion, we.auth.systemAuth)).Methods("DELETE")
+	systemSubrouter.HandleFunc("/application-type/{appliction-type-id}/versions/{version-id}", we.wrapFunc(we.systemApisHandler.deleteApplicationTypeVersion, we.auth.systemAuth)).Methods("DELETE")
 	///
 
 	err := http.ListenAndServe(":"+we.port, router)

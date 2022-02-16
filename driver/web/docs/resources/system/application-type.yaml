@@ -61,7 +61,7 @@ get:
             schema:
               type: array
               items:
-                $ref: "../../schemas/application/Version.yaml"
+                $ref: "../../schemas/application/VersionFields.yaml"
     400:
       description: Bad request
     401:

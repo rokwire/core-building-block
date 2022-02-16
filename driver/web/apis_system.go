@@ -694,7 +694,7 @@ func (h SystemApisHandler) deleteApplicationTypeVersion(l *logs.Log, r *http.Req
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("_id"), nil, http.StatusBadRequest, false)
 	}
 
-	err := h.coreAPIs.System.SysDeleteApplicationTypeVersion(appTypeID, versionID)
+	err := h.coreAPIs.System.SysDeleteApplicationTypeVersion(appTypeID, versionID, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationTypeVersionList, nil, err, http.StatusInternalServerError, true)
 	}

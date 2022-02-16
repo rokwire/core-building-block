@@ -91,7 +91,7 @@ type System interface {
 
 	SysCreateAppTypeVersion(appTypeID string, major int, minor int, patch int) error
 	SysGetApplicationTypeVersion(appTypeID string) ([]model.Version, error)
-	SysDeleteApplicationTypeVersion(appTypeID string, versionID string) error
+	SysDeleteApplicationTypeVersion(appTypeID string, versionID string, l *logs.Log) error
 }
 
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc

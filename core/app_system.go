@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
@@ -342,9 +343,19 @@ func (app *application) sysGetApplicationTypeVersion(appTypeID string) ([]model.
 	return appTypeVersion, nil
 }
 
-func (app *application) sysDeleteApplicationTypeVersion(appTypeID string, versionID string) error {
+func (app *application) sysDeleteApplicationTypeVersion(appTypeID string, versionID string, l *logs.Log) error {
 
-	err := app.storage.DeleteVersion(nil, nil, appTypeID, versionID)
+	appConfig, err := app.storage.FindAppConfigByID(appTypeID)
+	if err != nil {
+		return errors.Wrap("error finding application config", err)
+	}
+
+	if (appConfig.ApplicationType.ID != appTypeID) || (appConfig.Version.ID != versionID) {
+		l.Warnf("someone is trying to grant roles to %s for different app/org", appTypeID)
+		return errors.Newf("not allowed")
+	}
+
+	err = app.storage.DeleteVersion(nil, nil, appTypeID, versionID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationTypeVersionList, nil, nil)
 	}
