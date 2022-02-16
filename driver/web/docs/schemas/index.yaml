@@ -204,6 +204,8 @@ _admin_req_create-application_group:
 ### permissions API
 _admin_req_grant-permissions:
   $ref: "./apis/admin/application/account/permissions/grant/request/Request.yaml"
+_admin_req_revoke-permissions:
+  $ref: "./apis/admin/application/account/permissions/revoke/request/Request.yaml"
   
 ## end ADMIN section
 
