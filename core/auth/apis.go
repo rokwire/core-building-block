@@ -668,7 +668,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	}
 	//do not allow to reset credential for unverified credentials
 	if !credential.Verified {
-		return errors.New("The credential is not verified")
+		return errors.New("The credential is not verified").SetStatus(utils.ErrorStatusUnverified)
 	}
 
 	authTypeCreds, err := authImpl.forgotCredential(credential, identifier, l)

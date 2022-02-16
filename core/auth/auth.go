@@ -521,12 +521,6 @@ func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, account *
 		}
 	}
 
-	//check the credentials
-	message, err := authImpl.checkCredentials(*accountAuthType, creds, l)
-	if err != nil {
-		return "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
-	}
-
 	//check is verified
 	if authType.UseCredentials {
 		verified, expired, err := authImpl.isCredentialVerified(accountAuthType.Credential, l)
@@ -552,6 +546,12 @@ func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, account *
 			//notify the client
 			return "", nil, nil, errors.ErrorData("", "credential verification expired", nil).SetStatus(utils.ErrorStatusVerificationExpired)
 		}
+	}
+
+	//check the credentials
+	message, err := authImpl.checkCredentials(*accountAuthType, creds, l)
+	if err != nil {
+		return "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
 	}
 
 	//if sign in was completed successfully, set auth type to verified
