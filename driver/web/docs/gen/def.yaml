@@ -595,6 +595,29 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - invalid
+                      - unverified
+                      - verification-expired
+                      - already-exists
+                      - not-found
+                      - internal-server-error
+                    description: |
+                      - `invalid`: Invalid credentials
+                      - `unverified`: Unverified credentials
+                      - `verification-expired`: Credentials verification expired. The verification is restarted
+                      - `already-exists`: Auth type identifier already exists
+                      - `not-found`: Account could not be found when `sign-up=false`
+                      - `internal-server-error`: An undefined error occurred
+                  message:
+                    type: string
     delete:
       tags:
         - Services
@@ -649,25 +672,6 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    enum:
-                      - invalid
-                      - verification-expired
-                      - already-exists
-                      - internal-server-error
-                    description: |
-                      - `invalid`: Invalid credentials
-                      - `verification-expired`: Credentials verification expired. The verification is restarted
-                      - `already-exists`: Auth type identifier already exists
-                      - `internal-server-error`: An undefined error occurred
-                  message:
-                    type: string
   /services/auth/authorize-service:
     post:
       tags:
@@ -4167,6 +4171,7 @@ components:
         - org_id
         - api_key
         - user_identifier
+        - operation
       type: object
       properties:
         auth_type:
@@ -4185,6 +4190,11 @@ components:
           type: string
         user_identifier:
           type: string
+        operation:
+          type: string
+          enum:
+            - link
+            - login
     _services_res_account-exists:
       type: boolean
     _services_req_account_auth-type-link:

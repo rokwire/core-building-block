@@ -66,6 +66,13 @@ const (
 	ServicesReqAccountExistsAuthTypeUsername ServicesReqAccountExistsAuthType = "username"
 )
 
+// Defines values for ServicesReqAccountExistsOperation.
+const (
+	ServicesReqAccountExistsOperationLink ServicesReqAccountExistsOperation = "link"
+
+	ServicesReqAccountExistsOperationLogin ServicesReqAccountExistsOperation = "login"
+)
+
 // Defines values for ServicesReqAccountAuthTypeLinkAuthType.
 const (
 	ServicesReqAccountAuthTypeLinkAuthTypeEmail ServicesReqAccountAuthTypeLinkAuthType = "email"
@@ -536,15 +543,19 @@ type AdminReqCreateApplicationRole struct {
 
 // ServicesReqAccountExists defines model for _services_req_account-exists.
 type ServicesReqAccountExists struct {
-	ApiKey            string                           `json:"api_key"`
-	AppTypeIdentifier string                           `json:"app_type_identifier"`
-	AuthType          ServicesReqAccountExistsAuthType `json:"auth_type"`
-	OrgId             string                           `json:"org_id"`
-	UserIdentifier    string                           `json:"user_identifier"`
+	ApiKey            string                            `json:"api_key"`
+	AppTypeIdentifier string                            `json:"app_type_identifier"`
+	AuthType          ServicesReqAccountExistsAuthType  `json:"auth_type"`
+	Operation         ServicesReqAccountExistsOperation `json:"operation"`
+	OrgId             string                            `json:"org_id"`
+	UserIdentifier    string                            `json:"user_identifier"`
 }
 
 // ServicesReqAccountExistsAuthType defines model for ServicesReqAccountExists.AuthType.
 type ServicesReqAccountExistsAuthType string
+
+// ServicesReqAccountExistsOperation defines model for ServicesReqAccountExists.Operation.
+type ServicesReqAccountExistsOperation string
 
 // ServicesReqAccountAuthTypeLink defines model for _services_req_account_auth-type-link.
 type ServicesReqAccountAuthTypeLink struct {

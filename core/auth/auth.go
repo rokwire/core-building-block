@@ -42,6 +42,9 @@ const (
 	typeAuth              logutils.MessageDataType = "auth"
 	typeAuthRefreshParams logutils.MessageDataType = "auth refresh params"
 
+	operationLink  string = "link"
+	operationLogin string = "login"
+
 	refreshTokenLength int = 256
 
 	sessionDeletePeriod int = 24

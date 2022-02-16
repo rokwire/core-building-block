@@ -70,6 +70,29 @@ post:
       description: Unauthorized
     500:
       description: Internal error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                enum:
+                  - invalid
+                  - unverified
+                  - verification-expired
+                  - already-exists
+                  - not-found
+                  - internal-server-error
+                description: |
+                  - `invalid`: Invalid credentials
+                  - `unverified`: Unverified credentials
+                  - `verification-expired`: Credentials verification expired. The verification is restarted
+                  - `already-exists`: Auth type identifier already exists
+                  - `not-found`: Account could not be found when `sign-up=false`
+                  - `internal-server-error`: An undefined error occurred
+              message:
+                type: string
 delete:
   tags:
   - Services
@@ -124,22 +147,3 @@ delete:
       description: Unauthorized
     500:
       description: Internal error
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              status:
-                type: string
-                enum:
-                  - invalid
-                  - verification-expired
-                  - already-exists
-                  - internal-server-error
-                description: |
-                  - `invalid`: Invalid credentials
-                  - `verification-expired`: Credentials verification expired. The verification is restarted
-                  - `already-exists`: Auth type identifier already exists
-                  - `internal-server-error`: An undefined error occurred
-              message:
-                type: string

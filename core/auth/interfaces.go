@@ -126,10 +126,11 @@ type APIs interface {
 	//		apiKey (string): API key to validate the specified app
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
+	//		operation (string): auth method which determines whether account exists in certain cases
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		accountExisted (bool): valid when error is nil
-	AccountExists(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string, l *logs.Log) (bool, error)
+	AccountExists(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string, operation string, l *logs.Log) (bool, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
