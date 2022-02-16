@@ -1683,7 +1683,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_admin_req_account-roles'
+              $ref: '#/components/schemas/_admin_req_grant-roles-to-account'
         required: true
       responses:
         '200':
@@ -4440,16 +4440,13 @@ components:
           type: array
           items:
             type: string
-    _admin_req_account-roles:
+    _admin_req_grant-roles-to-account:
       required:
         - account_id
-        - app_org_id
         - role_ids
       type: object
       properties:
         account_id:
-          type: string
-        app_org_id:
           type: string
         role_ids:
           type: array

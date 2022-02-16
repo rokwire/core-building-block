@@ -514,13 +514,6 @@ type ServiceScope struct {
 	Scope       string  `json:"scope"`
 }
 
-// AdminReqAccountRoles defines model for _admin_req_account-roles.
-type AdminReqAccountRoles struct {
-	AccountId string   `json:"account_id"`
-	AppOrgId  string   `json:"app_org_id"`
-	RoleIds   []string `json:"role_ids"`
-}
-
 // AdminReqAppToken defines model for _admin_req_app-token.
 type AdminReqAppToken struct {
 	Token string `json:"token"`
@@ -544,6 +537,12 @@ type AdminReqCreateApplicationRole struct {
 type AdminReqGrantPermissions struct {
 	AccountId   string   `json:"account_id"`
 	Permissions []string `json:"permissions"`
+}
+
+// AdminReqGrantRolesToAccount defines model for _admin_req_grant-roles-to-account.
+type AdminReqGrantRolesToAccount struct {
+	AccountId string   `json:"account_id"`
+	RoleIds   []string `json:"role_ids"`
 }
 
 // ServicesReqAccountExists defines model for _services_req_account-exists.
@@ -1020,7 +1019,7 @@ type PostAdminAccountMfaParams struct {
 type PutAdminApplicationAccountPermissionsGrantJSONBody AdminReqGrantPermissions
 
 // PutAdminApplicationAccountRolesGrantJSONBody defines parameters for PutAdminApplicationAccountRolesGrant.
-type PutAdminApplicationAccountRolesGrantJSONBody AdminReqAccountRoles
+type PutAdminApplicationAccountRolesGrantJSONBody AdminReqGrantRolesToAccount
 
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {

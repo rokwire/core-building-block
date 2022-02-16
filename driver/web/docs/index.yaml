@@ -96,7 +96,7 @@ paths:
   /admin/application/account/permissions/grant:
     $ref: "./resources/admin/application/account/permissions/grant.yaml"
   /admin/application/account/roles/grant:
-    $ref: "./resources/admin/account/roles.yaml"
+    $ref: "./resources/admin/application/account/roles/grant.yaml"
   /admin/application/login-sessions:
     $ref: "./resources/admin/application/login-sessions.yaml"
   /admin/application/groups:
