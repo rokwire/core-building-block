@@ -441,32 +441,6 @@ func (app *application) admGetApplicationAccountDevices(appID string, orgID stri
 	return account.Devices, nil
 }
 
-func (app *application) admGrantAccountRoles(accountID string, appOrgID string, roleIDs []string, l *logs.Log) error {
-
-	account, err := app.storage.FindAccountByID(nil, accountID)
-	if err != nil {
-		return errors.Wrap("error finding an acount with that ID", err)
-	}
-	if account.AppOrg.ID != appOrgID {
-		l.Warnf("someone is trying to grand roles to %s for different app/org", accountID)
-	}
-
-	roles, err := app.storage.FindAppOrgRoles(roleIDs, appOrgID)
-	if err != nil {
-		return err
-	}
-
-	if len(roles) == 0 {
-		return errors.Newf("no roles found for IDs: %v", roleIDs)
-	}
-
-	err = app.storage.InsertAccountRoles(accountID, appOrgID, model.AccountRolesFromAppOrgRoles(roles, true, true))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (app *application) admGrantAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
 	//check if there is data
 	if len(assignerPermissions) == 0 {
@@ -529,5 +503,67 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (app *application) admGrantAccountRoles(appID string, orgID string, accountID string, roleIDs []string, assignerPermissions []string, l *logs.Log) error {
+	//check if there is data
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from admin assigner")
+	}
+	if len(roleIDs) == 0 {
+		return errors.New("no roles for granting")
+	}
+
+	//verify that the account is for the current app/org
+	account, err := app.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return errors.Wrap("error finding account on permissions granting", err)
+	}
+	if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
+		l.Warnf("someone is trying to grant roles to %s for different app/org", accountID)
+		return errors.Newf("not allowed")
+	}
+
+	//find roles
+	roles, err := app.storage.FindAppOrgRoles(roleIDs, account.AppOrg.ID)
+	if err != nil {
+		return errors.Wrap("error finding app org roles", err)
+	}
+	if len(roles) != len(roleIDs) {
+		return errors.New("not valid roles")
+	}
+
+	//verify that the account do not have any of the roles which are supposed to be granted
+	//TODO
+
+	//check if authorized
+	//TODO
+
+	//update account if authorized
+	//TODO
+
+	/*
+		account, err := app.storage.FindAccountByID(nil, accountID)
+		if err != nil {
+			return errors.Wrap("error finding an acount with that ID", err)
+		}
+		if account.AppOrg.ID != appOrgID {
+			l.Warnf("someone is trying to grand roles to %s for different app/org", accountID)
+		}
+
+		roles, err := app.storage.FindAppOrgRoles(roleIDs, appOrgID)
+		if err != nil {
+			return err
+		}
+
+		if len(roles) == 0 {
+			return errors.Newf("no roles found for IDs: %v", roleIDs)
+		}
+
+		err = app.storage.InsertAccountRoles(accountID, appOrgID, model.AccountRolesFromAppOrgRoles(roles, true, true))
+		if err != nil {
+			return err
+		} */
 	return nil
 }
