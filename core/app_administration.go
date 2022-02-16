@@ -535,7 +535,13 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 	}
 
 	//verify that the account do not have any of the roles which are supposed to be granted
-	//TODO
+	for _, current := range roles {
+		hasR := account.GetRole(current.ID)
+		if hasR != nil {
+			l.Infof("trying to double grant %s for %s", current.Name, accountID)
+			return errors.Newf("account %s already has %s granted", accountID, current.Name)
+		}
+	}
 
 	//check if authorized
 	//TODO
