@@ -683,15 +683,15 @@ func (h SystemApisHandler) getApplicationTypeVersion(l *logs.Log, r *http.Reques
 
 func (h SystemApisHandler) deleteApplicationTypeVersion(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
-	appTypeID := params["id"]
+	appTypeID := params["appliction-type-id"]
 	if len(appTypeID) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("appliction-type-id"), nil, http.StatusBadRequest, false)
 	}
 
 	params = mux.Vars(r)
-	versionID := params["_id"]
+	versionID := params["version-id"]
 	if len(versionID) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("_id"), nil, http.StatusBadRequest, false)
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("version-id"), nil, http.StatusBadRequest, false)
 	}
 
 	err := h.coreAPIs.System.SysDeleteApplicationTypeVersion(appTypeID, versionID, l)

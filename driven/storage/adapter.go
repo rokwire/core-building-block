@@ -1314,6 +1314,17 @@ func (sa *Adapter) CountAccountsByGroupID(groupID string) (*int64, error) {
 	return &count, nil
 }
 
+//CountAppConfigsByVersionID counts how many applicationConfigs  there are with the passed version id
+func (sa *Adapter) CountAppConfigsByVersionID(versionID string) (*int64, error) {
+	filter := bson.D{primitive.E{Key: "version._id", Value: versionID}}
+
+	count, err := sa.db.applicationConfigs.CountDocuments(filter)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error counting app confgs for version id", "", &logutils.FieldArgs{"version._id": versionID}, err)
+	}
+	return &count, nil
+}
+
 //FindCredential finds a credential by ID
 func (sa *Adapter) FindCredential(context TransactionContext, ID string) (*model.Credential, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}

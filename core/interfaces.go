@@ -110,6 +110,7 @@ type Storage interface {
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
+	CountAppConfigsByVersionID(versionID string) (*int64, error)
 
 	UpdateProfile(profile model.Profile) error
 

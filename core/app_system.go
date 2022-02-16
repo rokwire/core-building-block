@@ -345,14 +345,14 @@ func (app *application) sysGetApplicationTypeVersion(appTypeID string) ([]model.
 
 func (app *application) sysDeleteApplicationTypeVersion(appTypeID string, versionID string, l *logs.Log) error {
 
-	appConfig, err := app.storage.FindAppConfigByID(appTypeID)
+	// check if the Applcation type version has applications config relations
+	numberOfVersions, err := app.storage.CountAppConfigsByVersionID(versionID)
 	if err != nil {
-		return errors.Wrap("error finding application config", err)
+		return errors.WrapErrorAction("error checking the configs count by version id", "", nil, err)
 	}
 
-	if (appConfig.ApplicationType.ID != appTypeID) || (appConfig.Version.ID != versionID) {
-		l.Warnf("someone is trying to grant roles to %s for different app/org", appTypeID)
-		return errors.Newf("not allowed")
+	if *numberOfVersions > 0 {
+		return errors.Newf("the %s is already used by application configs and cannot be deleted", versionID)
 	}
 
 	err = app.storage.DeleteVersion(nil, nil, appTypeID, versionID)
