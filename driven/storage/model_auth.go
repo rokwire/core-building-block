@@ -1,8 +1,6 @@
 package storage
 
-import (
-	"time"
-)
+import "time"
 
 type loginSession struct {
 	ID string `bson:"_id"`
