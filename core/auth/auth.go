@@ -523,28 +523,9 @@ func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, account *
 
 	//check is verified
 	if authType.UseCredentials {
-		verified, expired, err := authImpl.isCredentialVerified(accountAuthType.Credential, l)
+		err = a.checkVerified(authImpl, accountAuthType, l)
 		if err != nil {
-			return "", nil, nil, errors.Wrap("error checking is credential verified", err)
-		}
-		if !*verified {
-			//it is unverified
-
-			//check if verification is expired
-			if !*expired {
-				//not expired, just notify the client that it is "unverified"
-				return "", nil, nil, errors.ErrorData("", "unverified credential", nil).SetStatus(utils.ErrorStatusUnverified)
-			}
-			//expired, first restart the verification and then notify the client that it is unverified and verification is restarted
-
-			//restart credential verification
-			err = authImpl.restartCredentialVerification(accountAuthType.Credential, l)
-			if err != nil {
-				return "", nil, nil, errors.Wrap("error restarting creation verification", err)
-			}
-
-			//notify the client
-			return "", nil, nil, errors.ErrorData("", "credential verification expired", nil).SetStatus(utils.ErrorStatusVerificationExpired)
+			return "", nil, nil, err
 		}
 	}
 
@@ -561,6 +542,32 @@ func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, account *
 	}
 
 	return message, accountAuthType, mfaTypes, nil
+}
+
+func (a *Auth) checkVerified(authImpl authType, accountAuthType *model.AccountAuthType, l *logs.Log) error {
+	verified, expired, err := authImpl.isCredentialVerified(accountAuthType.Credential, l)
+	if err != nil {
+		return errors.Wrap("error checking is credential verified", err)
+	}
+	if !*verified {
+		//it is unverified
+		if !*expired {
+			//not expired, just notify the client that it is "unverified"
+			return errors.ErrorData("", "unverified credential", nil).SetStatus(utils.ErrorStatusUnverified)
+		}
+		//expired, first restart the verification and then notify the client that it is unverified and verification is restarted
+
+		//restart credential verification
+		err = authImpl.restartCredentialVerification(accountAuthType.Credential, l)
+		if err != nil {
+			return errors.Wrap("error restarting creation verification", err)
+		}
+
+		//notify the client
+		return errors.ErrorData("", "credential verification expired", nil).SetStatus(utils.ErrorStatusVerificationExpired)
+	}
+
+	return nil
 }
 
 func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType model.AuthType, appType model.ApplicationType,

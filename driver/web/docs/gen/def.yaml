@@ -410,6 +410,23 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - unverified
+                      - verification-expired
+                      - internal-server-error
+                    description: |
+                      - `unverified`: Unverified credentials
+                      - `verification-expired`: Credentials verification expired. The verification is restarted
+                      - `internal-server-error`: An undefined error occurred
+                  message:
+                    type: string
   /services/auth/credential/forgot/complete:
     post:
       tags:

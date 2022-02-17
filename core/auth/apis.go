@@ -667,8 +667,9 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 		return errors.New("Invalid account auth type for reset link")
 	}
 	//do not allow to reset credential for unverified credentials
-	if !credential.Verified {
-		return errors.New("The credential is not verified").SetStatus(utils.ErrorStatusUnverified)
+	err = a.checkVerified(authImpl, accountAuthType, l)
+	if err != nil {
+		return err
 	}
 
 	authTypeCreds, err := authImpl.forgotCredential(credential, identifier, l)
