@@ -939,16 +939,22 @@ func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, a
 }
 
 //FindAccountsByAccountID finds accounts
-func (sa *Adapter) FindAccountsByAccountID(accountIDs []string) ([]model.Account, error) {
+func (sa *Adapter) FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error) {
+
+	//find app org id
+	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error getting cached application organization", "", nil, err)
+	}
 
 	accountFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}}}
-	var accountResult []model.Account
-	err := sa.db.accounts.Find(accountFilter, &accountResult, nil)
+	var accountResult []account
+	err = sa.db.accounts.Find(accountFilter, &accountResult, nil)
 	if err != nil {
 		return nil, err
 	}
-
-	return accountResult, nil
+	accounts := accountsFromStorage(accountResult, *appOrg)
+	return accounts, nil
 }
 
 //FindAccountByID finds an account by id
