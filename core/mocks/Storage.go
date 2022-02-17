@@ -551,29 +551,6 @@ func (_m *Storage) FindApplicationType(id string) (*model.ApplicationType, error
 	return r0, r1
 }
 
-// FindApplicationVersionByAppTypeID provides a mock function with given fields: context, appTypeID
-func (_m *Storage) FindApplicationVersionByAppTypeID(context storage.TransactionContext, appTypeID string) ([]model.Version, error) {
-	ret := _m.Called(context, appTypeID)
-
-	var r0 []model.Version
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) []model.Version); ok {
-		r0 = rf(context, appTypeID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.Version)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
-		r1 = rf(context, appTypeID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // FindApplications provides a mock function with given fields:
 func (_m *Storage) FindApplications() ([]model.Application, error) {
 	ret := _m.Called()
@@ -735,6 +712,29 @@ func (_m *Storage) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Per
 	return r0, r1
 }
 
+// FindVersionByAppTypeID provides a mock function with given fields: context, appTypeID
+func (_m *Storage) FindVersionByAppTypeID(context storage.TransactionContext, appTypeID string) ([]model.Version, error) {
+	ret := _m.Called(context, appTypeID)
+
+	var r0 []model.Version
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) []model.Version); ok {
+		r0 = rf(context, appTypeID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Version)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
+		r1 = rf(context, appTypeID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetGlobalConfig provides a mock function with given fields:
 func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	ret := _m.Called()
@@ -860,20 +860,6 @@ func (_m *Storage) InsertApplication(application model.Application) (*model.Appl
 	return r0, r1
 }
 
-// InsertApplicationTypeVersion provides a mock function with given fields: context, version, appTypeID
-func (_m *Storage) InsertApplicationTypeVersion(context storage.TransactionContext, version *model.Version, appTypeID string) error {
-	ret := _m.Called(context, version, appTypeID)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *model.Version, string) error); ok {
-		r0 = rf(context, version, appTypeID)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // InsertOrganization provides a mock function with given fields: organization
 func (_m *Storage) InsertOrganization(organization model.Organization) (*model.Organization, error) {
 	ret := _m.Called(organization)
@@ -904,6 +890,20 @@ func (_m *Storage) InsertPermission(item model.Permission) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(model.Permission) error); ok {
 		r0 = rf(item)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// InsertVersion provides a mock function with given fields: context, version, appTypeID
+func (_m *Storage) InsertVersion(context storage.TransactionContext, version *model.Version, appTypeID string) error {
+	ret := _m.Called(context, version, appTypeID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *model.Version, string) error); ok {
+		r0 = rf(context, version, appTypeID)
 	} else {
 		r0 = ret.Error(0)
 	}
