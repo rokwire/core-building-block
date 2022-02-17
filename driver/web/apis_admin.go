@@ -541,8 +541,8 @@ func (h AdminApisHandler) adminDeleteApplicationGroup(l *logs.Log, r *http.Reque
 	return l.HttpResponseSuccess()
 }
 
-//grantGroupAccounts grants a group the given account
-func (h AdminApisHandler) grantGroupAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+//addAccountsToGroup adds a group the given account
+func (h AdminApisHandler) addAccountsToGroup(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -554,7 +554,8 @@ func (h AdminApisHandler) grantGroupAccounts(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAccount, nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.Administration.AdmGrantGroupAccounts(requestData.GroupId, requestData.AccountIds)
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	err = h.coreAPIs.Administration.AdmAddAccountsToGroup(claims.AppID, claims.OrgID, requestData.GroupId, requestData.AccountIds, assignerPermissions, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(actionGrant, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
