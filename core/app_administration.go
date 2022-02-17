@@ -264,7 +264,10 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 	return nil
 }
 
-func (app *application) admGrantGroupAccounts(groupID string, accountIDs []string) error {
+func (app *application) admAddAccountsToGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error {
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from admin assigner")
+	}
 
 	if len(groupID) == 0 {
 		return nil
@@ -274,13 +277,26 @@ func (app *application) admGrantGroupAccounts(groupID string, accountIDs []strin
 		return nil
 	}
 
-	account, err := app.storage.FindAccountsByAccountID(accountIDs)
+	account, err := app.storage.FindAccountsByAccountID(appID, orgID, accountIDs)
 	if err != nil {
-		return err
+		return errors.Wrap("error finding account", err)
 	}
 
-	if account == nil {
-		return errors.Newf("no accounts found for ID: %v", account)
+	for i, currentAccount := range account {
+		if (currentAccount.AppOrg.Application.ID != appID) || (currentAccount.AppOrg.Organization.ID != orgID) {
+			l.Warnf("someone s trying to grant accounts to %s for different app/org", accountIDs)
+			return errors.New("not allowed")
+		}
+
+		account[i] = currentAccount
+		groups, err := app.storage.FindAppOrgGroup(groupID, currentAccount.AppOrg.ID)
+		if err != nil {
+			return errors.Wrap("error finding app org groups", err)
+		}
+		if groups == nil {
+			return errors.Wrap("error finding group", err)
+		}
+
 	}
 
 	err = app.storage.InsertGroupAccounts(groupID, account)
