@@ -479,6 +479,10 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	}
 
 	accountExists := (account != nil)
+	if accountExists {
+		aat := account.GetAccountAuthType(authType.ID, userIdentifier)
+		accountExists = aat == nil || !aat.Linked || !aat.Unverified
+	}
 
 	//check if it is sign in or sign up
 	isSignUp, err := a.isSignUp(accountExists, params, l)

@@ -4,7 +4,6 @@ required:
   - org_id
   - api_key
   - user_identifier
-  - operation
 type: object
 properties:
   auth_type:

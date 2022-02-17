@@ -555,12 +555,12 @@ type AdminReqGrantRolesToAccount struct {
 
 // ServicesReqAccountExists defines model for _services_req_account-exists.
 type ServicesReqAccountExists struct {
-	ApiKey            string                            `json:"api_key"`
-	AppTypeIdentifier string                            `json:"app_type_identifier"`
-	AuthType          ServicesReqAccountExistsAuthType  `json:"auth_type"`
-	Operation         ServicesReqAccountExistsOperation `json:"operation"`
-	OrgId             string                            `json:"org_id"`
-	UserIdentifier    string                            `json:"user_identifier"`
+	ApiKey            string                             `json:"api_key"`
+	AppTypeIdentifier string                             `json:"app_type_identifier"`
+	AuthType          ServicesReqAccountExistsAuthType   `json:"auth_type"`
+	Operation         *ServicesReqAccountExistsOperation `json:"operation,omitempty"`
+	OrgId             string                             `json:"org_id"`
+	UserIdentifier    string                             `json:"user_identifier"`
 }
 
 // ServicesReqAccountExistsAuthType defines model for ServicesReqAccountExists.AuthType.
