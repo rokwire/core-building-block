@@ -44,6 +44,7 @@ type Administration interface {
 	AdmGetAccount(accountID string) (*model.Account, error)
 
 	AdmGrantAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error
+	AdmRevokeAccountPermissions(accountID string, permissions []string, l *logs.Log) error
 
 	AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymoys *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
@@ -130,6 +131,7 @@ type Storage interface {
 	InsertPermission(item model.Permission) error
 	UpdatePermission(item model.Permission) error
 	DeletePermission(id string) error
+	RevokeAccountPermissions(permissionObj []model.Permission, permissons []string) error
 
 	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error)

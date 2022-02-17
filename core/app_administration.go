@@ -505,3 +505,19 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 	}
 	return nil
 }
+
+func (app *application) admRevokeAccountPermissions(accountID string, permissionNames []string, l *logs.Log) error {
+
+	account, err := app.storage.FindAccountByID(nil, accountID)
+	if account == nil {
+		return err
+	}
+	//валдации
+
+	//delete permissons from  account
+	err = app.storage.RevokeAccountPermissions(account.Permissions, permissionNames)
+	if err != nil {
+		return err
+	}
+	return nil
+}

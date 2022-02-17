@@ -1666,6 +1666,12 @@ func (sa *Adapter) DeletePermission(id string) error {
 	return errors.New(logutils.Unimplemented)
 }
 
+//RevokeAccountPermissions deletes permission from an account
+func (sa *Adapter) RevokeAccountPermissions(permissionObj []model.Permission, permissionNames []string) error {
+
+	return nil
+}
+
 //FindAppOrgRoles finds a set of application organization roles
 func (sa *Adapter) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error) {
 	var rolesFilter bson.D
