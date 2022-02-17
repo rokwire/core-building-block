@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -479,7 +478,6 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 	}
 
 	//check if authorized
-	//var authorizedPermissions []model.Permission
 	for _, permission := range permissions {
 		err = permission.CheckAssigners(assignerPermissions)
 		if err != nil {
@@ -533,25 +531,11 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 	}
 
 	//check if authorized
-	var authorizedPermissions []model.Permission
 	for _, cRole := range roles {
-		for _, permission := range cRole.Permissions {
-			authorizedAssigners := permission.Assigners
-
-			//grant all or nothing
-			if len(permission.Assigners) == 0 {
-				return errors.Newf("not defined assigners for %s permission", permission.Name)
-			}
-
-			for _, authorizedAssigner := range authorizedAssigners {
-				if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
-					authorizedPermissions = append(authorizedPermissions, permission)
-				}
-			}
+		err = cRole.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking assigners for %s role", err, cRole.Name)
 		}
-	}
-	if authorizedPermissions == nil {
-		return errors.Newf("Assigner is not authorized to assign roles for ids: %v", roleIDs)
 	}
 
 	//update account if authorized

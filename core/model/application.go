@@ -86,6 +86,22 @@ type AppOrgRole struct {
 	DateUpdated *time.Time
 }
 
+//CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
+func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
+	if len(c.Permissions) == 0 {
+		return nil //no permission
+	}
+
+	for _, permission := range c.Permissions {
+		err := permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			errors.Wrapf("error checking role permission assigners", err)
+		}
+	}
+	//it satisies all permissions
+	return nil
+}
+
 func (c AppOrgRole) String() string {
 	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s\tAppOrg:%s]", c.ID, c.Name, c.Permissions, c.AppOrg.ID)
 }
