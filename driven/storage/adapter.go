@@ -1668,7 +1668,18 @@ func (sa *Adapter) DeletePermission(id string) error {
 
 //RevokeAccountPermissions deletes permission from an account
 func (sa *Adapter) RevokeAccountPermissions(permissionObj []model.Permission, permissionNames []string) error {
-
+	filter := bson.M{"name": permissionNames}
+	result, err := sa.db.permissions.DeleteOne(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypePermission, &logutils.FieldArgs{"name": permissionNames}, err)
+	}
+	if result == nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"name": permissionNames}, err)
+	}
+	deletedCount := result.DeletedCount
+	if deletedCount == 0 {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypePermission, &logutils.FieldArgs{"name": permissionNames}, err)
+	}
 	return nil
 }
 

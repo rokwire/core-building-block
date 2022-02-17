@@ -506,13 +506,28 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 	return nil
 }
 
-func (app *application) admRevokeAccountPermissions(accountID string, permissionNames []string, l *logs.Log) error {
+func (app *application) admRevokeAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
+	if len(permissionNames) == 0 {
+		return errors.New("no permissions for granting")
+	}
 
 	account, err := app.storage.FindAccountByID(nil, accountID)
 	if account == nil {
 		return err
 	}
-	//валдации
+	if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
+		l.Warnf("someone is trying to grant permissions to %s for different app/org", accountID)
+		return errors.Newf("not allowed")
+	}
+
+	//find permissions
+	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	if err != nil {
+		return err
+	}
+	if len(permissions) == 0 {
+		return errors.Newf("no permissions found for names: %v", permissionNames)
+	}
 
 	//delete permissons from  account
 	err = app.storage.RevokeAccountPermissions(account.Permissions, permissionNames)

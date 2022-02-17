@@ -159,8 +159,8 @@ func (s *administrationImpl) AdmGrantAccountPermissions(appID string, orgID stri
 	return s.app.admGrantAccountPermissions(appID, orgID, accountID, permissionNames, assignerPermissions, l)
 }
 
-func (s *administrationImpl) AdmRevokeAccountPermissions(accountID string, permissions []string, l *logs.Log) error {
-	return s.app.admRevokeAccountPermissions(accountID, permissions, l)
+func (s *administrationImpl) AdmRevokeAccountPermissions(appID string, orgID string, accountID string, permissions []string, assignerPermissions []string, l *logs.Log) error {
+	return s.app.admRevokeAccountPermissions(appID, orgID, accountID, permissions, assignerPermissions, l)
 }
 
 func (s *administrationImpl) AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,

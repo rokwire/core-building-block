@@ -654,7 +654,8 @@ func (h AdminApisHandler) revokeAccountPermissions(l *logs.Log, r *http.Request,
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.Administration.AdmRevokeAccountPermissions(requestData.AccountId, requestData.Permissions, l)
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	err = h.coreAPIs.Administration.AdmRevokeAccountPermissions(claims.AppID, claims.OrgID, requestData.AccountId, requestData.Permissions, assignerPermissions, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(actionGrant, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
