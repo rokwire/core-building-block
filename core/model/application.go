@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rokwire/core-auth-library-go/authutils"
+	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
@@ -48,8 +50,24 @@ type Permission struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-func (c Permission) String() string {
-	return fmt.Sprintf("[ID:%s\nName:%s\nServiceID:%s]", c.ID, c.Name, c.ServiceID)
+//CheckAssigners checks if the passed permissions satisfy the needed assigners for the permission
+func (p Permission) CheckAssigners(assignerPermissions []string) error {
+	if len(p.Assigners) == 0 {
+		return errors.Newf("not defined assigners for %s permission", p.Name)
+	}
+
+	authorizedAssigners := p.Assigners
+	for _, authorizedAssigner := range authorizedAssigners {
+		if !authutils.ContainsString(assignerPermissions, authorizedAssigner) {
+			return errors.Newf("assigner %s is not satisfied", authorizedAssigner)
+		}
+	}
+	//all assigners are satisfied
+	return nil
+}
+
+func (p Permission) String() string {
+	return fmt.Sprintf("[ID:%s\nName:%s\nServiceID:%s]", p.ID, p.Name, p.ServiceID)
 }
 
 //AppOrgRole represents application organization role entity. It is a collection of permissions
