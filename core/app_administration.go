@@ -544,7 +544,26 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 	}
 
 	//check if authorized
-	//TODO
+	var authorizedPermissions []model.Permission
+	for _, cRole := range roles {
+		for _, permission := range cRole.Permissions {
+			authorizedAssigners := permission.Assigners
+
+			//grant all or nothing
+			if len(permission.Assigners) == 0 {
+				return errors.Newf("not defined assigners for %s permission", permission.Name)
+			}
+
+			for _, authorizedAssigner := range authorizedAssigners {
+				if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
+					authorizedPermissions = append(authorizedPermissions, permission)
+				}
+			}
+		}
+	}
+	if authorizedPermissions == nil {
+		return errors.Newf("Assigner is not authorized to assign roles for ids: %v", roleIDs)
+	}
 
 	//update account if authorized
 	//TODO
