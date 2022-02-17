@@ -2356,8 +2356,8 @@ func (sa *Adapter) FindApplicationType(id string) (*model.ApplicationType, error
 	return appType, nil
 }
 
-//InsertApplicationTypeVersion inserts version
-func (sa *Adapter) InsertApplicationTypeVersion(context TransactionContext, version *model.Version, appTypeID string) error {
+//InsertVersion inserts version
+func (sa *Adapter) InsertVersion(context TransactionContext, version *model.Version, appTypeID string) error {
 	if version == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("version"))
 	}
@@ -2403,8 +2403,8 @@ func (sa *Adapter) InsertApplicationTypeVersion(context TransactionContext, vers
 	return nil
 }
 
-//FindApplicationVersionByAppTypeID finds version
-func (sa *Adapter) FindApplicationVersionByAppTypeID(context TransactionContext, appTypeID string) ([]model.Version, error) {
+//FindVersionByAppTypeIDfinds version
+func (sa *Adapter) FindVersionByAppTypeID(context TransactionContext, appTypeID string) ([]model.Version, error) {
 
 	if len(appTypeID) == 0 {
 		return nil, nil

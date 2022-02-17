@@ -161,8 +161,8 @@ type Storage interface {
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 	FindApplicationType(id string) (*model.ApplicationType, error)
-	InsertApplicationTypeVersion(context storage.TransactionContext, version *model.Version, appTypeID string) error
-	FindApplicationVersionByAppTypeID(context storage.TransactionContext, appTypeID string) ([]model.Version, error)
+	InsertVersion(context storage.TransactionContext, version *model.Version, appTypeID string) error
+	FindVersionByAppTypeID(context storage.TransactionContext, appTypeID string) ([]model.Version, error)
 	DeleteVersion(context storage.TransactionContext, versionObj *model.Version, appTypeID string, versionID string) error
 
 	FindAppConfigs(appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)

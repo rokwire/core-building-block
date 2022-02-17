@@ -327,7 +327,7 @@ func (app *application) sysCreateAppTypeVersion(appTypeID string, major int, min
 	versionID, _ := uuid.NewUUID()
 	version := &model.Version{ID: versionID.String(), ApplicationType: appType, VersionNumbers: model.VersionNumbers{Major: major, Minor: minor, Patch: patch}}
 
-	err := app.storage.InsertApplicationTypeVersion(nil, version, appTypeID)
+	err := app.storage.InsertVersion(nil, version, appTypeID)
 	if err != nil {
 		return nil
 	}
@@ -335,7 +335,7 @@ func (app *application) sysCreateAppTypeVersion(appTypeID string, major int, min
 }
 
 func (app *application) sysGetApplicationTypeVersion(appTypeID string) ([]model.Version, error) {
-	appTypeVersion, err := app.storage.FindApplicationVersionByAppTypeID(nil, appTypeID)
+	appTypeVersion, err := app.storage.FindVersionByAppTypeID(nil, appTypeID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationTypeVersionList, nil, err)
 	}
