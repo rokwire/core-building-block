@@ -539,29 +539,11 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 	}
 
 	//update account if authorized
-	//TODO
+	accountRoles := model.AccountRolesFromAppOrgRoles(roles, true, true)
+	err = app.storage.InsertAccountRoles(accountID, account.AppOrg.ID, accountRoles)
+	if err != nil {
+		return errors.Wrap("error inserting account roles", err)
+	}
 
-	/*
-		account, err := app.storage.FindAccountByID(nil, accountID)
-		if err != nil {
-			return errors.Wrap("error finding an acount with that ID", err)
-		}
-		if account.AppOrg.ID != appOrgID {
-			l.Warnf("someone is trying to grand roles to %s for different app/org", accountID)
-		}
-
-		roles, err := app.storage.FindAppOrgRoles(roleIDs, appOrgID)
-		if err != nil {
-			return err
-		}
-
-		if len(roles) == 0 {
-			return errors.Newf("no roles found for IDs: %v", roleIDs)
-		}
-
-		err = app.storage.InsertAccountRoles(accountID, appOrgID, model.AccountRolesFromAppOrgRoles(roles, true, true))
-		if err != nil {
-			return err
-		} */
 	return nil
 }
