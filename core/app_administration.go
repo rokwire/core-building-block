@@ -547,3 +547,47 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 
 	return nil
 }
+
+func (app *application) admRevokeAccountRoles(appID string, orgID string, accountID string, roleIDs []string, assignerPermissions []string, l *logs.Log) error {
+	//check if there is data
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from admin assigner")
+	}
+	if len(roleIDs) == 0 {
+		return errors.New("no roles for granting")
+	}
+
+	//verify that the account is for the current app/org
+	account, err := app.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return errors.Wrap("error finding account on permissions granting", err)
+	}
+	if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
+		l.Warnf("someone is trying to grant roles to %s for different app/org", accountID)
+		return errors.Newf("not allowed")
+	}
+
+	//find roles
+	roles, err := app.storage.FindAppOrgRoles(roleIDs, account.AppOrg.ID)
+	if err != nil {
+		return errors.Wrap("error finding app org roles", err)
+	}
+	if len(roles) != len(roleIDs) {
+		return errors.New("not valid roles")
+	}
+
+	//check if authorized
+	for _, cRole := range roles {
+		err = cRole.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking assigners for %s role", err, cRole.Name)
+		}
+	}
+
+	//delete permissons from  account
+	err = app.storage.RevokeAccountRoles(nil, accountID, roleIDs)
+	if err != nil {
+		return err
+	}
+	return nil
+}
