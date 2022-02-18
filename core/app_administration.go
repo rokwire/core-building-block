@@ -529,8 +529,28 @@ func (app *application) admRevokeAccountPermissions(appID string, orgID string, 
 		return errors.Newf("no permissions found for names: %v", permissionNames)
 	}
 
+	//check if authorized
+	var authorizedPermissions []model.Permission
+	for _, permission := range permissions {
+		authorizedAssigners := permission.Assigners
+
+		//grant all or nothing
+		if len(permission.Assigners) == 0 {
+			return errors.Newf("not defined assigners for %s permission", permission.Name)
+		}
+
+		for _, authorizedAssigner := range authorizedAssigners {
+			if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
+				authorizedPermissions = append(authorizedPermissions, permission)
+			}
+		}
+	}
+	if authorizedPermissions == nil {
+		return errors.Newf("Assigner is not authorized to assign permissions for names: %v", permissionNames)
+	}
+
 	//delete permissons from  account
-	err = app.storage.RevokeAccountPermissions(account.Permissions, permissionNames)
+	err = app.storage.RevokeAccountPermissions(nil, account.Permissions, permissionNames, accountID)
 	if err != nil {
 		return err
 	}
