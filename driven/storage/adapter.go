@@ -1112,6 +1112,54 @@ func (sa *Adapter) InsertAccountRoles(accountID string, appOrgID string, roles [
 	return nil
 }
 
+func (sa *Adapter) RevokeAccountRoles(context TransactionContext, accountID string, roleIDs []string) error {
+	if len(roleIDs) == 0 {
+		return nil
+	}
+
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	var accountResult []account
+	err := sa.db.accounts.Find(filter, &accountResult, nil)
+	if err != nil {
+		return err
+	}
+
+	if len(accountResult) == 0 {
+		return errors.Newf("no account with this account ID: %v", accountID)
+	}
+
+	account := accountResult[0]
+
+	roles := account.Roles
+
+	for i, currentRole := range roles {
+		if currentRole.Role.ID == roleIDs[0] {
+			var newRole []accountRole
+			for _, role := range roles {
+				if role.Role.ID != roleIDs[0] {
+					newRole = append(newRole, role)
+				}
+			}
+			account.Roles = newRole
+			roles[i] = currentRole
+		}
+	}
+
+	accountFilter := bson.M{"_id": accountID}
+	opts := options.Replace().SetUpsert(true)
+	if context != nil {
+		err = sa.db.accounts.ReplaceOneWithContext(context, accountFilter, account, opts)
+	} else {
+		err = sa.db.accounts.ReplaceOne(accountFilter, account, opts)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSave, "account", &logutils.FieldArgs{"account_id": account.ID}, nil)
+	}
+
+	return nil
+}
+
 //UpdateAccountRoles updates the account roles
 func (sa *Adapter) UpdateAccountRoles(accountID string, roles []model.AccountRole) error {
 	stgRoles := accountRolesToStorage(roles)
