@@ -140,6 +140,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/account/{id}/devices", we.wrapFunc(we.adminApisHandler.getApplicationAccountDevices, we.auth.admin.permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/account/permissions/grant", we.wrapFunc(we.adminApisHandler.grantAccountPermissions, we.auth.admin.permissions)).Methods("PUT")
 	adminSubrouter.HandleFunc("/application/account/permissions/revoke", we.wrapFunc(we.adminApisHandler.revokeAccountPermissions, we.auth.admin.user)).Methods("DELETE")
+	adminSubrouter.HandleFunc("/application/account/roles/grant", we.wrapFunc(we.adminApisHandler.grantAccountRoles, we.auth.admin.user)).Methods("PUT")
 	///
 
 	///enc ///

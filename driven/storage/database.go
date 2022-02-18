@@ -245,13 +245,13 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 func (m *database) applyDevicesChecks(devices *collectionWrapper) error {
 	m.logger.Info("apply devices checks.....")
 
-	//add compound unique index - device_id + account_id
+	/*//add compound unique index - device_id + account_id
 	err := devices.AddIndex(bson.D{primitive.E{Key: "device_id", Value: 1}, primitive.E{Key: "account_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
 
-	m.logger.Info("devices check passed")
+	m.logger.Info("devices check passed")*/
 	return nil
 }
 

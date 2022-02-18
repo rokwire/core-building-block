@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -479,30 +478,73 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 	}
 
 	//check if authorized
-	var authorizedPermissions []model.Permission
 	for _, permission := range permissions {
-		authorizedAssigners := permission.Assigners
-
-		//grant all or nothing
-		if len(permission.Assigners) == 0 {
-			return errors.Newf("not defined assigners for %s permission", permission.Name)
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking permission assigners", err)
 		}
-
-		for _, authorizedAssigner := range authorizedAssigners {
-			if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
-				authorizedPermissions = append(authorizedPermissions, permission)
-			}
-		}
-	}
-	if authorizedPermissions == nil {
-		return errors.Newf("Assigner is not authorized to assign permissions for names: %v", permissionNames)
 	}
 
 	//update account if authorized
-	err = app.storage.InsertAccountPermissions(accountID, authorizedPermissions)
+	err = app.storage.InsertAccountPermissions(accountID, permissions)
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (app *application) admGrantAccountRoles(appID string, orgID string, accountID string, roleIDs []string, assignerPermissions []string, l *logs.Log) error {
+	//check if there is data
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from admin assigner")
+	}
+	if len(roleIDs) == 0 {
+		return errors.New("no roles for granting")
+	}
+
+	//verify that the account is for the current app/org
+	account, err := app.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return errors.Wrap("error finding account on permissions granting", err)
+	}
+	if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
+		l.Warnf("someone is trying to grant roles to %s for different app/org", accountID)
+		return errors.Newf("not allowed")
+	}
+
+	//find roles
+	roles, err := app.storage.FindAppOrgRoles(roleIDs, account.AppOrg.ID)
+	if err != nil {
+		return errors.Wrap("error finding app org roles", err)
+	}
+	if len(roles) != len(roleIDs) {
+		return errors.New("not valid roles")
+	}
+
+	//verify that the account do not have any of the roles which are supposed to be granted
+	for _, current := range roles {
+		hasR := account.GetRole(current.ID)
+		if hasR != nil {
+			l.Infof("trying to double grant %s for %s", current.Name, accountID)
+			return errors.Newf("account %s already has %s granted", accountID, current.Name)
+		}
+	}
+
+	//check if authorized
+	for _, cRole := range roles {
+		err = cRole.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking assigners for %s role", err, cRole.Name)
+		}
+	}
+
+	//update account if authorized
+	accountRoles := model.AccountRolesFromAppOrgRoles(roles, true, true)
+	err = app.storage.InsertAccountRoles(accountID, account.AppOrg.ID, accountRoles)
+	if err != nil {
+		return errors.Wrap("error inserting account roles", err)
+	}
+
 	return nil
 }
 
