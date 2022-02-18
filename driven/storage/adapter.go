@@ -1667,19 +1667,51 @@ func (sa *Adapter) DeletePermission(id string) error {
 }
 
 //RevokeAccountPermissions deletes permission from an account
-func (sa *Adapter) RevokeAccountPermissions(permissionObj []model.Permission, permissionNames []string) error {
-	filter := bson.M{"name": permissionNames}
-	result, err := sa.db.permissions.DeleteOne(filter, nil)
+func (sa *Adapter) RevokeAccountPermissions(context TransactionContext, permissionObj []model.Permission, permissionNames []string, accountID string) error {
+	if len(permissionNames) == 0 {
+		return nil
+	}
+
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	var accountResult []account
+	err := sa.db.accounts.Find(filter, &accountResult, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypePermission, &logutils.FieldArgs{"name": permissionNames}, err)
+		return err
 	}
-	if result == nil {
-		return errors.WrapErrorData(logutils.StatusInvalid, "result", &logutils.FieldArgs{"name": permissionNames}, err)
+
+	if len(accountResult) == 0 {
+		return errors.Newf("no account with those permission name: %v", permissionNames)
 	}
-	deletedCount := result.DeletedCount
-	if deletedCount == 0 {
-		return errors.WrapErrorData(logutils.StatusMissing, model.TypePermission, &logutils.FieldArgs{"name": permissionNames}, err)
+
+	account := accountResult[0]
+
+	permission := account.Permissions
+
+	for i, currentPermission := range permission {
+		if currentPermission.Name == permissionNames[0] {
+			var newPermission []model.Permission
+			for _, permissions := range permission {
+				if permissions.Name != permissionNames[0] {
+					newPermission = append(newPermission, permissions)
+				}
+			}
+			account.Permissions = newPermission
+			permission[i] = currentPermission
+		}
 	}
+
+	accountFilter := bson.M{"_id": accountID}
+	opts := options.Replace().SetUpsert(true)
+	if context != nil {
+		err = sa.db.accounts.ReplaceOneWithContext(context, accountFilter, account, opts)
+	} else {
+		err = sa.db.accounts.ReplaceOne(accountFilter, account, opts)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSave, "account", &logutils.FieldArgs{"account_id": account.ID}, nil)
+	}
+
 	return nil
 }
 
