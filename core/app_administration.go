@@ -547,3 +547,40 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 
 	return nil
 }
+
+func (app *application) admRemoveGroupAccounts(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error {
+	//check if there is data
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from admin assigner")
+	}
+	if len(groupID) == 0 {
+		return errors.New("no roles for granting")
+	}
+
+	//verify that the account is for the current app/org
+	accounts, err := app.storage.FindAccounts(appID, orgID, nil, nil)
+	if err != nil {
+		return errors.Wrap("error finding account on permissions granting", err)
+	}
+
+	for _, account := range accounts {
+		if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
+			l.Warnf("someone is trying to grant group to %s for different app/org", accountIDs[0])
+			return errors.Newf("not allowed")
+		}
+		accounts[0] = account
+		//find group
+		group, _ := app.storage.FindAppOrgGroup(groupID, account.AppOrg.ID)
+		if group == nil {
+			return errors.Wrap("error finding app org group", nil)
+		}
+
+	}
+
+	//delete accounts from  group
+	err = app.storage.RemoveGroupAccounts(nil, accountIDs, groupID)
+	if err != nil {
+		return err
+	}
+	return nil
+}

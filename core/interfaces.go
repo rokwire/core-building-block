@@ -33,6 +33,7 @@ type Administration interface {
 	AdmCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgGroup, error)
 	AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error)
 	AdmDeleteAppOrgGroup(ID string, appID string, orgID string) error
+	AdmRemoveGroupAccounts(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error
 
 	AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error)
 	AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error)
@@ -145,6 +146,7 @@ type Storage interface {
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
 	CountGroupsByRoleID(roleID string) (*int64, error)
+	RemoveGroupAccounts(context storage.TransactionContext, acountIDs []string, groupID string) error
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
