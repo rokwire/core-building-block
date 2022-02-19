@@ -1841,6 +1841,68 @@ func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 	return nil
 }
 
+func (sa *Adapter) RemoveGroupAccounts(context TransactionContext, accountIDs []string, groupID string) error {
+	if len(accountIDs) == 0 {
+		return nil
+	}
+
+	filter := bson.D{primitive.E{Key: "_id", Value: groupID}}
+	var groupResult []appOrgGroup
+	err := sa.db.applicationsOrganizationsGroups.Find(filter, &groupResult, nil)
+	if err != nil {
+		return err
+	}
+
+	if len(groupResult) == 0 {
+		return errors.Newf("no account with this account ID: %v", groupID)
+	}
+
+	group := groupResult[0]
+
+	accounts := group.Accounts
+
+	for i, currentGroup := range groupResult {
+		if currentGroup.ID == groupID {
+			var newAccount []account
+			for _, account := range accounts {
+				if account.ID != accountIDs[0] {
+
+					newAccount = append(newAccount, account)
+				}
+			}
+			group.Accounts = newAccount
+			groupResult[i] = currentGroup
+		}
+	}
+
+	/*for i, currentRole := range group {
+		if currentRole.Role.ID == roleIDs[0] {
+			var newRole []accountRole
+			for _, role := range roles {
+				if role.Role.ID != roleIDs[0] {
+					newRole = append(newRole, role)
+				}
+			}
+			account.Roles = newRole
+			roles[i] = currentRole
+		}
+	}*/
+
+	accountFilter := bson.M{"_id": groupID}
+	opts := options.Replace().SetUpsert(true)
+	if context != nil {
+		err = sa.db.applicationsOrganizationsGroups.ReplaceOneWithContext(context, accountFilter, group, opts)
+	} else {
+		err = sa.db.applicationsOrganizationsGroups.ReplaceOne(accountFilter, group, opts)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSave, "group", &logutils.FieldArgs{"group_id": group.ID}, nil)
+	}
+
+	return nil
+}
+
 //CountGroupsByRoleID counts how many groups there are with the passed role id
 func (sa *Adapter) CountGroupsByRoleID(roleID string) (*int64, error) {
 	filter := bson.D{primitive.E{Key: "roles._id", Value: roleID}}

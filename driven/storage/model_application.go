@@ -86,6 +86,7 @@ type appOrgGroup struct {
 
 	Permissions []model.Permission `bson:"permissions"`
 	Roles       []appOrgRole       `bson:"roles"`
+	Accounts    []account          `bson:"accounts"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
