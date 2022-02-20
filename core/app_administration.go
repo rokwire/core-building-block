@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -575,6 +576,34 @@ func (app *application) admRemoveGroupAccounts(appID string, orgID string, group
 			return errors.Wrap("error finding app org group", nil)
 		}
 
+		//find permissions
+		permissions, err := app.storage.FindPermissionsByName(account.GetPermissionNames())
+		if err != nil {
+			return err
+		}
+		if len(permissions) == 0 {
+			return errors.Newf("no permissions found for names: %v", permissions)
+		}
+
+		//check if authorized
+		var authorizedPermissions []model.Permission
+		for _, permission := range permissions {
+			authorizedAssigners := permission.Assigners
+
+			//grant all or nothing
+			if len(permission.Assigners) == 0 {
+				return errors.Newf("not defined assigners for %s permission", permission.Name)
+			}
+
+			for _, authorizedAssigner := range authorizedAssigners {
+				if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
+					authorizedPermissions = append(authorizedPermissions, permission)
+				}
+			}
+		}
+		if authorizedPermissions == nil {
+			return errors.Newf("Assigner is not authorized to assign permissions for names: %v", permissions)
+		}
 	}
 
 	//delete accounts from  group
