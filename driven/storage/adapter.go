@@ -1875,19 +1875,6 @@ func (sa *Adapter) RemoveGroupAccounts(context TransactionContext, accountIDs []
 		}
 	}
 
-	/*for i, currentRole := range group {
-		if currentRole.Role.ID == roleIDs[0] {
-			var newRole []accountRole
-			for _, role := range roles {
-				if role.Role.ID != roleIDs[0] {
-					newRole = append(newRole, role)
-				}
-			}
-			account.Roles = newRole
-			roles[i] = currentRole
-		}
-	}*/
-
 	accountFilter := bson.M{"_id": groupID}
 	opts := options.Replace().SetUpsert(true)
 	if context != nil {
