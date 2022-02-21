@@ -119,8 +119,8 @@ func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Applicati
 	return s.app.admGetApplications(orgID)
 }
 
-func (s *administrationImpl) AdmCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgGroup, error) {
-	return s.app.admCreateAppOrgGroup(name, permissionIDs, rolesIDs, appID, orgID, l)
+func (s *administrationImpl) AdmCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgGroup, error) {
+	return s.app.admCreateAppOrgGroup(name, permissionIDs, rolesIDs, appID, orgID, assignerPermissions, l)
 }
 
 func (s *administrationImpl) AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {

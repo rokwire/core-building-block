@@ -182,7 +182,7 @@ func (app *application) admGetApplications(orgID string) ([]model.Application, e
 	return apps, nil
 }
 
-func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgGroup, error) {
+func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgGroup, error) {
 	//1. get application organization entity
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -195,10 +195,24 @@ func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string
 		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
 	}
 
+	for _, permission := range groupPermissions {
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return nil, errors.Wrapf("error checking permission assigners", err)
+		}
+	}
+
 	//3. check roles
 	groupRoles, err := app.checkRoles(*appOrg, rolesIDs, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
+	}
+
+	for _, roles := range groupRoles {
+		err = roles.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return nil, errors.Wrapf("error checking role assigners", err)
+		}
 	}
 
 	id, _ := uuid.NewUUID()

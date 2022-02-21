@@ -521,7 +521,8 @@ func (h AdminApisHandler) adminCreateApplicationGroup(l *logs.Log, r *http.Reque
 		rolesIDs = *requestData.Roles
 	}
 
-	_, err = h.coreAPIs.Administration.AdmCreateAppOrgGroup(requestData.Name, permissionsIDs, rolesIDs, claims.AppID, claims.OrgID, l)
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	_, err = h.coreAPIs.Administration.AdmCreateAppOrgGroup(requestData.Name, permissionsIDs, rolesIDs, claims.AppID, claims.OrgID, assignerPermissions, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
 	}
