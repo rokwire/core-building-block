@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -264,20 +265,37 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 	return nil
 }
 
-func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error) {
-	//1. get application organization entity
+func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgRole, error) {
+
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
 
-	//2. check permissions
 	rolePermissions, err := app.checkPermissions(*appOrg, permissionIDs, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
 	}
+	//check if authorized
+	var authorizedPermissions []model.Permission
+	for _, permission := range rolePermissions {
+		authorizedAssigners := permission.Assigners
 
-	//3. create role
+		//grant all or nothing
+		if len(permission.Assigners) == 0 {
+			return nil, errors.Newf("not defined assigners for %s permission", permission.Name)
+		}
+
+		for _, authorizedAssigner := range authorizedAssigners {
+			if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
+				authorizedPermissions = append(authorizedPermissions, permission)
+			}
+		}
+	}
+	if authorizedPermissions == nil {
+		return nil, errors.Newf("Assigner is not authorized to assign permissions for names: %v", rolePermissions)
+	}
+
 	id, _ := uuid.NewUUID()
 	now := time.Now()
 	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: rolePermissions, AppOrg: *appOrg, DateCreated: now}
