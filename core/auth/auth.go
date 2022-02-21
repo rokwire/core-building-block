@@ -498,11 +498,11 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		return message, accountAuthType, nil, nil
 	}
 	///apply sign in
-	return a.applySignIn(authImpl, authType, account, userIdentifier, creds, false, l)
+	return a.applySignIn(authImpl, authType, account, userIdentifier, creds, l)
 }
 
 func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, account *model.Account,
-	userIdentifier string, creds string, link bool, l *logs.Log) (string, *model.AccountAuthType, []model.MFAType, error) {
+	userIdentifier string, creds string, l *logs.Log) (string, *model.AccountAuthType, []model.MFAType, error) {
 	if account == nil {
 		return "", nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil).SetStatus(utils.ErrorStatusNotFound)
 	}
@@ -515,40 +515,20 @@ func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, account *
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
 
-	if link {
-		if !accountAuthType.Linked {
-			return "", nil, nil, errors.New("cannot verify non-linked auth type")
-		}
-	} else {
-		if accountAuthType.Unverified && accountAuthType.Linked {
-			return "", nil, nil, errors.New("cannot verify linked auth type")
-		}
+	if accountAuthType.Unverified && accountAuthType.Linked {
+		return "", nil, nil, errors.New("cannot verify linked auth type")
 	}
 
-	//check is verified
-	if authType.UseCredentials {
-		err = a.checkVerified(authImpl, accountAuthType, l)
-		if err != nil {
-			return "", nil, nil, err
-		}
-	}
-
-	//check the credentials
-	message, err := authImpl.checkCredentials(*accountAuthType, creds, l)
+	var message string
+	message, err = a.checkCredentials(authImpl, authType, accountAuthType, creds, l)
 	if err != nil {
-		return "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
-	}
-
-	//if sign in was completed successfully, set auth type to verified
-	if message == "" && accountAuthType.Unverified {
-		accountAuthType.Unverified = false
-		a.storage.UpdateAccountAuthType(*accountAuthType)
+		return "", nil, nil, errors.WrapErrorAction("verifying", "credentials", nil, err)
 	}
 
 	return message, accountAuthType, mfaTypes, nil
 }
 
-func (a *Auth) checkVerified(authImpl authType, accountAuthType *model.AccountAuthType, l *logs.Log) error {
+func (a *Auth) checkCredentialVerified(authImpl authType, accountAuthType *model.AccountAuthType, l *logs.Log) error {
 	verified, expired, err := authImpl.isCredentialVerified(accountAuthType.Credential, l)
 	if err != nil {
 		return errors.Wrap("error checking is credential verified", err)
@@ -572,6 +552,33 @@ func (a *Auth) checkVerified(authImpl authType, accountAuthType *model.AccountAu
 	}
 
 	return nil
+}
+
+func (a *Auth) checkCredentials(authImpl authType, authType model.AuthType, accountAuthType *model.AccountAuthType, creds string, l *logs.Log) (string, error) {
+	//check is verified
+	if authType.UseCredentials {
+		err := a.checkCredentialVerified(authImpl, accountAuthType, l)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	//check the credentials
+	message, err := authImpl.checkCredentials(*accountAuthType, creds, l)
+	if err != nil {
+		return message, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
+	}
+
+	//if sign in was completed successfully, set auth type to verified
+	if message == "" && accountAuthType.Unverified {
+		accountAuthType.Unverified = false
+		err := a.storage.UpdateAccountAuthType(*accountAuthType)
+		if err != nil {
+			return "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
+		}
+	}
+
+	return "", nil
 }
 
 func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType model.AuthType, appType model.ApplicationType,
@@ -1307,7 +1314,7 @@ func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthTyp
 	if newCredsAccount != nil {
 		//if account is current account, attempt sign-in. Otherwise, handle conflict
 		if newCredsAccount.ID == account.ID {
-			message, aat, _, err := a.applySignIn(authImpl, authType, &account, userIdentifier, creds, true, l)
+			message, aat, err := a.applyLinkVerify(authImpl, authType, &account, userIdentifier, creds, l)
 			if err != nil {
 				return "", nil, err
 			}
@@ -1357,6 +1364,27 @@ func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthTyp
 	err = a.registerAccountAuthType(*accountAuthType, credential, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccountAuthType, nil, err)
+	}
+
+	return message, accountAuthType, nil
+}
+
+func (a *Auth) applyLinkVerify(authImpl authType, authType model.AuthType, account *model.Account,
+	userIdentifier string, creds string, l *logs.Log) (string, *model.AccountAuthType, error) {
+	//find account auth type
+	accountAuthType, err := a.findAccountAuthType(account, &authType, userIdentifier)
+	if accountAuthType == nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+	}
+
+	if !accountAuthType.Linked {
+		return "", nil, errors.New("cannot verify non-linked auth type")
+	}
+
+	var message string
+	message, err = a.checkCredentials(authImpl, authType, accountAuthType, creds, l)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction("verifying", "credentials", nil, err)
 	}
 
 	return message, accountAuthType, nil

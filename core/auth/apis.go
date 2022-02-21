@@ -672,7 +672,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 		return errors.New("Invalid account auth type for reset link")
 	}
 	//do not allow to reset credential for unverified credentials
-	err = a.checkVerified(authImpl, accountAuthType, l)
+	err = a.checkCredentialVerified(authImpl, accountAuthType, l)
 	if err != nil {
 		return err
 	}
