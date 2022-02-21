@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -276,24 +275,12 @@ func (app *application) admCreateAppOrgRole(name string, description string, per
 	if err != nil {
 		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
 	}
-	//check if authorized
-	var authorizedPermissions []model.Permission
+
 	for _, permission := range rolePermissions {
-		authorizedAssigners := permission.Assigners
-
-		//grant all or nothing
-		if len(permission.Assigners) == 0 {
-			return nil, errors.Newf("not defined assigners for %s permission", permission.Name)
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return nil, errors.Wrapf("error checking permission assigners", err)
 		}
-
-		for _, authorizedAssigner := range authorizedAssigners {
-			if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
-				authorizedPermissions = append(authorizedPermissions, permission)
-			}
-		}
-	}
-	if authorizedPermissions == nil {
-		return nil, errors.Newf("Assigner is not authorized to assign permissions for names: %v", rolePermissions)
 	}
 
 	id, _ := uuid.NewUUID()
@@ -322,7 +309,7 @@ func (app *application) AdmGetAppOrgRoles(appID string, orgID string) ([]model.A
 	return getAppOrgRoles, nil
 }
 
-func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID string) error {
+func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error {
 	//1. get application organization entity
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -338,6 +325,12 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 		return errors.Newf("there is no a role for id %s", ID)
 	}
 
+	for _, permission := range role.Permissions {
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking permission assigners", err)
+		}
+	}
 	//3. do not allow to delete system roles
 	if role.System {
 		return errors.Newf("%s role is a system role and cannot be deleted", role.Name)

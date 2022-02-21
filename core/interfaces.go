@@ -36,7 +36,7 @@ type Administration interface {
 
 	AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgRole, error)
 	AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error)
-	AdmDeleteAppOrgRole(ID string, appID string, orgID string) error
+	AdmDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error
 
 	AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error)
 
