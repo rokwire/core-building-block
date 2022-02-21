@@ -6108,7 +6108,7 @@
       },
       "_admin_req_grant-permissions-to-role": {
         "required": [
-          "persmissions"
+          "permissions"
         ],
         "type": "object",
         "properties": {

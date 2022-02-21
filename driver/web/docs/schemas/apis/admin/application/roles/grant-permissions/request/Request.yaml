@@ -1,5 +1,5 @@
 required:
-  - persmissions
+  - permissions
 type: object
 properties:
   permissions:
