@@ -2928,7 +2928,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_system_system_req_account-roles'
+              $ref: '#/components/schemas/_system_req_account-roles'
         required: true
       responses:
         '200':
@@ -4850,7 +4850,7 @@ components:
         params:
           type: object
           additionalProperties: true
-    _system_system_req_account-roles:
+    _system_req_account-roles:
       required:
         - account_id
         - app_id

@@ -258,7 +258,7 @@ _system_req_update_auth_type:
   $ref: "./apis/system/auth-typesID/request/Request.yaml"
 
 ### account roles API
-_system_system_req_account-roles:
+_system_req_account-roles:
   $ref: "./apis/system/account/roles/request/Request.yaml"
 
 ### application config API

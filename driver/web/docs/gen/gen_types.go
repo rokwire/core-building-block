@@ -899,6 +899,13 @@ type SystemReqAccountPermissions struct {
 	Permissions []string `json:"permissions"`
 }
 
+// SystemReqAccountRoles defines model for _system_req_account-roles.
+type SystemReqAccountRoles struct {
+	AccountId string   `json:"account_id"`
+	AppId     string   `json:"app_id"`
+	RoleIds   []string `json:"role_ids"`
+}
+
 // SystemReqApplicationRoles defines model for _system_req_application-roles.
 type SystemReqApplicationRoles struct {
 	AppId       string   `json:"app_id"`
@@ -1015,13 +1022,6 @@ type SystemResGetOrganizations struct {
 
 // SystemResGetOrganizationsType defines model for SystemResGetOrganizations.Type.
 type SystemResGetOrganizationsType string
-
-// SystemSystemReqAccountRoles defines model for _system_system_req_account-roles.
-type SystemSystemReqAccountRoles struct {
-	AccountId string   `json:"account_id"`
-	AppId     string   `json:"app_id"`
-	RoleIds   []string `json:"role_ids"`
-}
 
 // DeleteAdminAccountMfaParams defines parameters for DeleteAdminAccountMfa.
 type DeleteAdminAccountMfaParams struct {
@@ -1219,7 +1219,7 @@ type PostSystemAccountMfaParams struct {
 type PutSystemAccountPermissionsJSONBody SystemReqAccountPermissions
 
 // PutSystemAccountRolesJSONBody defines parameters for PutSystemAccountRoles.
-type PutSystemAccountRolesJSONBody SystemSystemReqAccountRoles
+type PutSystemAccountRolesJSONBody SystemReqAccountRoles
 
 // DeleteSystemApiKeysParams defines parameters for DeleteSystemApiKeys.
 type DeleteSystemApiKeysParams struct {
