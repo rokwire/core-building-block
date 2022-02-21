@@ -42,9 +42,6 @@ const (
 	typeAuth              logutils.MessageDataType = "auth"
 	typeAuthRefreshParams logutils.MessageDataType = "auth refresh params"
 
-	operationLink  string = "link"
-	operationLogin string = "login"
-
 	refreshTokenLength int = 256
 
 	sessionDeletePeriod int = 24
@@ -478,14 +475,10 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 
-	accountExists := (account != nil)
-	if accountExists {
-		aat := account.GetAccountAuthType(authType.ID, userIdentifier)
-		accountExists = aat == nil || !aat.Linked || !aat.Unverified
-	}
+	canSignIn := a.canSignIn(account, authType.ID, userIdentifier)
 
 	//check if it is sign in or sign up
-	isSignUp, err := a.isSignUp(accountExists, params, l)
+	isSignUp, err := a.isSignUp(canSignIn, params, l)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction("error checking is sign up", "", nil, err)
 	}
@@ -766,6 +759,15 @@ func (a *Auth) validateAPIKey(apiKey string, appID string) error {
 	}
 
 	return nil
+}
+
+func (a *Auth) canSignIn(account *model.Account, authTypeID string, userIdentifier string) bool {
+	if account != nil {
+		aat := account.GetAccountAuthType(authTypeID, userIdentifier)
+		return aat == nil || !aat.Linked || !aat.Unverified
+	}
+
+	return false
 }
 
 //isSignUp checks if the operation is sign in or sign up

@@ -151,38 +151,6 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	return nil, &model.LoginSession{ID: loginSession.ID, Identifier: loginSession.Identifier, Params: responseParams, State: loginSession.State}, mfaTypes, nil
 }
 
-//ShouldSignUp checks if a user should sign up or sign in
-//The authentication method must be one of the supported for the application.
-//	Input:
-//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
-//		userIdentifier (string): User identifier for the specified auth type
-//		apiKey (string): API key to validate the specified app
-//		appTypeIdentifier (string): identifier of the app type/client being used
-//		orgID (string): ID of the organization being used
-//		operation (string): auth method user is trying to perform (link or login)
-//	Returns:
-//		shouldSignUp (bool): valid when error is nil
-func (a *Auth) ShouldSignUp(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string, operation string) (bool, error) {
-	account, authTypeID, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
-	if err != nil {
-		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
-	}
-
-	if account != nil {
-		aat := account.GetAccountAuthType(authTypeID, userIdentifier)
-		if aat == nil {
-			return true, nil
-		}
-		if operation == operationLogin && (!aat.Linked || !aat.Unverified) {
-			return true, nil
-		} else if operation == operationLink && !aat.Unverified {
-			return true, nil
-		}
-	}
-
-	return false, nil
-}
-
 //AccountExists checks if a user is already registered
 //The authentication method must be one of the supported for the application.
 //	Input:
@@ -200,6 +168,49 @@ func (a *Auth) AccountExists(authenticationType string, userIdentifier string, a
 	}
 
 	return account != nil, nil
+}
+
+//CanSignIn checks if a user can sign in
+//The authentication method must be one of the supported for the application.
+//	Input:
+//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		userIdentifier (string): User identifier for the specified auth type
+//		apiKey (string): API key to validate the specified app
+//		appTypeIdentifier (string): identifier of the app type/client being used
+//		orgID (string): ID of the organization being used
+//	Returns:
+//		canSignIn (bool): valid when error is nil
+func (a *Auth) CanSignIn(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error) {
+	account, authTypeID, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
+	if err != nil {
+		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
+	}
+
+	return a.canSignIn(account, authTypeID, userIdentifier), nil
+}
+
+//CanLink checks if a user can link a new auth type
+//The authentication method must be one of the supported for the application.
+//	Input:
+//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		userIdentifier (string): User identifier for the specified auth type
+//		apiKey (string): API key to validate the specified app
+//		appTypeIdentifier (string): identifier of the app type/client being used
+//		orgID (string): ID of the organization being used
+//	Returns:
+//		canLink (bool): valid when error is nil
+func (a *Auth) CanLink(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error) {
+	account, authTypeID, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
+	if err != nil {
+		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
+	}
+
+	if account != nil {
+		aat := account.GetAccountAuthType(authTypeID, userIdentifier)
+		return (aat == nil || !aat.Unverified), nil
+	}
+
+	return false, nil
 }
 
 //Refresh refreshes an access token using a refresh token

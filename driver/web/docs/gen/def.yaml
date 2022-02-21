@@ -315,34 +315,6 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/auth/should-sign-up:
-    post:
-      tags:
-        - Services
-      summary: Check if a client should sign up
-      description: |
-        Checks if a client should sign up with a new account or sign in to an existing account for the provided user identifier and auth type
-      requestBody:
-        description: |
-          Account information to be checked
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_services_req_should-sign-up'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/_services_res_should-sign-up'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
   /services/auth/credential/verify:
     get:
       tags:
@@ -552,7 +524,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_services_req_account-exists'
+              $ref: '#/components/schemas/_shared_req_AccountCheck'
         required: true
       responses:
         '200':
@@ -560,7 +532,63 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_services_res_account-exists'
+                $ref: '#/components/schemas/_shared_res_AccountCheck'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/account/can-sign-in:
+    post:
+      tags:
+        - Services
+      summary: Check if a client can sign in
+      description: |
+        Checks if a client can sign in to an existing account for the provided user identifier and auth type
+      requestBody:
+        description: |
+          Account information to be checked
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_shared_req_AccountCheck'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_shared_res_AccountCheck'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/account/can-link:
+    post:
+      tags:
+        - Services
+      summary: Check if a client can link an auth type
+      description: |
+        Checks if a client is able to link a new auth type to an account
+      requestBody:
+        description: |
+          Account information to be checked
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_shared_req_AccountCheck'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_shared_res_AccountCheck'
         '400':
           description: Bad request
         '401':
@@ -3963,6 +3991,31 @@ components:
             - totp
         code:
           type: string
+    _shared_req_AccountCheck:
+      required:
+        - auth_type
+        - app_type_identifier
+        - org_id
+        - api_key
+        - user_identifier
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - username
+            - email
+            - twilio_phone
+            - illinois_oidc
+            - anonymous
+        app_type_identifier:
+          type: string
+        org_id:
+          type: string
+        api_key:
+          type: string
+        user_identifier:
+          type: string
     _shared_req_CredsEmail:
       required:
         - email
@@ -4206,6 +4259,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
+    _shared_res_AccountCheck:
+      type: boolean
     _shared_res_Mfa:
       type: object
       properties:
@@ -4269,66 +4324,6 @@ components:
           nullable: true
         date_created:
           type: string
-    _services_req_account-exists:
-      required:
-        - auth_type
-        - app_type_identifier
-        - org_id
-        - api_key
-        - user_identifier
-      type: object
-      properties:
-        auth_type:
-          type: string
-          enum:
-            - username
-            - email
-            - twilio_phone
-            - illinois_oidc
-            - anonymous
-        app_type_identifier:
-          type: string
-        org_id:
-          type: string
-        api_key:
-          type: string
-        user_identifier:
-          type: string
-    _services_res_account-exists:
-      type: boolean
-    _services_req_should-sign-up:
-      required:
-        - auth_type
-        - app_type_identifier
-        - org_id
-        - api_key
-        - user_identifier
-        - operation
-      type: object
-      properties:
-        auth_type:
-          type: string
-          enum:
-            - username
-            - email
-            - twilio_phone
-            - illinois_oidc
-            - anonymous
-        app_type_identifier:
-          type: string
-        org_id:
-          type: string
-        api_key:
-          type: string
-        user_identifier:
-          type: string
-        operation:
-          type: string
-          enum:
-            - link
-            - login
-    _services_res_should-sign-up:
-      type: boolean
     _services_req_account_auth-type-link:
       required:
         - auth_type

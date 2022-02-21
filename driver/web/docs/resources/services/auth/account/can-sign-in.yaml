@@ -1,16 +1,16 @@
 post:
   tags:
   - Services
-  summary: Check if a client should sign up
+  summary: Check if a client can sign in
   description: |
-    Checks if a client should sign up with a new account or sign in to an existing account for the provided user identifier and auth type
+    Checks if a client can sign in to an existing account for the provided user identifier and auth type
   requestBody:
     description: |
       Account information to be checked
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/services/should-sign-up/request/Request.yaml"
+          $ref: "../../../../schemas/apis/shared/requests/AccountCheck.yaml"
     required: true
   responses:
     200:
@@ -18,7 +18,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/apis/services/should-sign-up/response/Response.yaml"
+            $ref: "../../../../schemas/apis/shared/responses/AccountCheck.yaml"
     400:
       description: Bad request
     401:
