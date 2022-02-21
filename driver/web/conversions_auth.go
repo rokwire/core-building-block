@@ -256,8 +256,9 @@ func authTypeToDef(item *model.AuthType) *Def.AuthTypeFields {
 		return nil
 	}
 
-	return &Def.AuthTypeFields{Code: &item.Code, Description: &item.Description, IgnoreMfa: &item.IgnoreMFA,
-		IsExternal: &item.IsExternal, Params: &Def.AuthTypeFields_Params{AdditionalProperties: item.Params}}
+	return &Def.AuthTypeFields{Id: &item.ID, Code: &item.Code, Description: &item.Description,
+		IsExternal: &item.IsExternal, IsAnonymous: &item.IsAnonymous, UseCredentials: &item.UseCredentials,
+		IgnoreMfa: &item.IgnoreMFA, Params: &Def.AuthTypeFields_Params{AdditionalProperties: item.Params}}
 }
 
 func authTypesToDef(items []model.AuthType) []Def.AuthTypeFields {
