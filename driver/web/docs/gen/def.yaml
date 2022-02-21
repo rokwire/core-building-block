@@ -4843,16 +4843,27 @@ components:
           type: string
         is_external:
           type: boolean
+        is_anonymous:
+          type: boolean
+        use_credentials:
+          type: boolean
+        ignore_mfa:
+          type: boolean
+        params:
+          type: object
+          additionalProperties: true
     _system_req_update_auth_type:
       type: object
       properties:
-        id:
-          type: string
         code:
           type: string
         description:
           type: string
         is_external:
+          type: boolean
+        is_anonymous:
+          type: boolean
+        use_credentials:
           type: boolean
         ignore_mfa:
           type: boolean

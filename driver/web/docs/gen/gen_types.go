@@ -964,9 +964,18 @@ type SystemReqCreateApplicationConfigRequest struct {
 
 // SystemReqCreateAuthType defines model for _system_req_create_auth_type.
 type SystemReqCreateAuthType struct {
-	Code        *string `json:"code,omitempty"`
-	Description *string `json:"description,omitempty"`
-	IsExternal  *bool   `json:"is_external,omitempty"`
+	Code           *string                         `json:"code,omitempty"`
+	Description    *string                         `json:"description,omitempty"`
+	IgnoreMfa      *bool                           `json:"ignore_mfa,omitempty"`
+	IsAnonymous    *bool                           `json:"is_anonymous,omitempty"`
+	IsExternal     *bool                           `json:"is_external,omitempty"`
+	Params         *SystemReqCreateAuthType_Params `json:"params,omitempty"`
+	UseCredentials *bool                           `json:"use_credentials,omitempty"`
+}
+
+// SystemReqCreateAuthType_Params defines model for SystemReqCreateAuthType.Params.
+type SystemReqCreateAuthType_Params struct {
+	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
 // SystemReqGetApplication defines model for _system_req_get_Application.
@@ -999,12 +1008,13 @@ type SystemReqUpdateOrganizationType string
 
 // SystemReqUpdateAuthType defines model for _system_req_update_auth_type.
 type SystemReqUpdateAuthType struct {
-	Code        *string                         `json:"code,omitempty"`
-	Description *string                         `json:"description,omitempty"`
-	Id          *string                         `json:"id,omitempty"`
-	IgnoreMfa   *bool                           `json:"ignore_mfa,omitempty"`
-	IsExternal  *bool                           `json:"is_external,omitempty"`
-	Params      *SystemReqUpdateAuthType_Params `json:"params,omitempty"`
+	Code           *string                         `json:"code,omitempty"`
+	Description    *string                         `json:"description,omitempty"`
+	IgnoreMfa      *bool                           `json:"ignore_mfa,omitempty"`
+	IsAnonymous    *bool                           `json:"is_anonymous,omitempty"`
+	IsExternal     *bool                           `json:"is_external,omitempty"`
+	Params         *SystemReqUpdateAuthType_Params `json:"params,omitempty"`
+	UseCredentials *bool                           `json:"use_credentials,omitempty"`
 }
 
 // SystemReqUpdateAuthType_Params defines model for SystemReqUpdateAuthType.Params.
@@ -1562,6 +1572,59 @@ func (a *AuthTypeFields_Params) UnmarshalJSON(b []byte) error {
 
 // Override default JSON handling for AuthTypeFields_Params to handle AdditionalProperties
 func (a AuthTypeFields_Params) MarshalJSON() ([]byte, error) {
+	var err error
+	object := make(map[string]json.RawMessage)
+
+	for fieldName, field := range a.AdditionalProperties {
+		object[fieldName], err = json.Marshal(field)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("error marshaling '%s'", fieldName))
+		}
+	}
+	return json.Marshal(object)
+}
+
+// Getter for additional properties for SystemReqCreateAuthType_Params. Returns the specified
+// element and whether it was found
+func (a SystemReqCreateAuthType_Params) Get(fieldName string) (value interface{}, found bool) {
+	if a.AdditionalProperties != nil {
+		value, found = a.AdditionalProperties[fieldName]
+	}
+	return
+}
+
+// Setter for additional properties for SystemReqCreateAuthType_Params
+func (a *SystemReqCreateAuthType_Params) Set(fieldName string, value interface{}) {
+	if a.AdditionalProperties == nil {
+		a.AdditionalProperties = make(map[string]interface{})
+	}
+	a.AdditionalProperties[fieldName] = value
+}
+
+// Override default JSON handling for SystemReqCreateAuthType_Params to handle AdditionalProperties
+func (a *SystemReqCreateAuthType_Params) UnmarshalJSON(b []byte) error {
+	object := make(map[string]json.RawMessage)
+	err := json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if len(object) != 0 {
+		a.AdditionalProperties = make(map[string]interface{})
+		for fieldName, fieldBuf := range object {
+			var fieldVal interface{}
+			err := json.Unmarshal(fieldBuf, &fieldVal)
+			if err != nil {
+				return errors.Wrap(err, fmt.Sprintf("error unmarshaling field %s", fieldName))
+			}
+			a.AdditionalProperties[fieldName] = fieldVal
+		}
+	}
+	return nil
+}
+
+// Override default JSON handling for SystemReqCreateAuthType_Params to handle AdditionalProperties
+func (a SystemReqCreateAuthType_Params) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 
