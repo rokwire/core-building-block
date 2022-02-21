@@ -127,8 +127,8 @@ func (s *administrationImpl) AdmGetAppOrgGroups(appID string, orgID string) ([]m
 	return s.app.admGetAppOrgGroups(appID, orgID)
 }
 
-func (s *administrationImpl) AdmDeleteAppOrgGroup(ID string, appID string, orgID string) error {
-	return s.app.admDeleteAppOrgGroup(ID, appID, orgID)
+func (s *administrationImpl) AdmDeleteAppOrgGroup(ID string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error {
+	return s.app.admDeleteAppOrgGroup(ID, appID, orgID, assignerPermissions, l)
 }
 
 func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgRole, error) {

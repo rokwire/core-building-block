@@ -240,11 +240,33 @@ func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.
 	return getAppOrgGroups, nil
 }
 
-func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID string) error {
+func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error {
 	//1. get application organization entity
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+
+	permission, err := app.storage.FindPermissionsByServiceIDs(appOrg.ServicesIDs)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+	var permissionID []string
+	for _, findThePermissionID := range permission {
+		permissionID = append(permissionID, findThePermissionID.ID)
+	}
+
+	//2. check permissions
+	groupPermissions, err := app.checkPermissions(*appOrg, permissionID, l)
+	if err != nil {
+		return errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
+	}
+
+	for _, permission := range groupPermissions {
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking permission assigners", err)
+		}
 	}
 
 	//2. find the group
