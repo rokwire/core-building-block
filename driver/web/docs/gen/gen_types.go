@@ -943,8 +943,8 @@ type SystemReqCreateApplicationConfigRequest struct {
 	Version string `json:"version"`
 }
 
-// SystemReqCreateAuthTypeRequest defines model for _system_req_create_Auth_Type_Request.
-type SystemReqCreateAuthTypeRequest struct {
+// SystemReqCreateAuthType defines model for _system_req_create_auth_type.
+type SystemReqCreateAuthType struct {
 	Code        *string `json:"code,omitempty"`
 	Description *string `json:"description,omitempty"`
 	IsExternal  *bool   `json:"is_external,omitempty"`
@@ -967,21 +967,6 @@ type SystemReqPermissions struct {
 	ServiceId *string   `json:"service_id,omitempty"`
 }
 
-// SystemReqUpdateAuthTypeRequest defines model for _system_req_update_Auth_Type_Request.
-type SystemReqUpdateAuthTypeRequest struct {
-	Code        *string                                `json:"code,omitempty"`
-	Description *string                                `json:"description,omitempty"`
-	Id          *string                                `json:"id,omitempty"`
-	IgnoreMfa   *bool                                  `json:"ignore_mfa,omitempty"`
-	IsExternal  *bool                                  `json:"is_external,omitempty"`
-	Params      *SystemReqUpdateAuthTypeRequest_Params `json:"params,omitempty"`
-}
-
-// SystemReqUpdateAuthTypeRequest_Params defines model for SystemReqUpdateAuthTypeRequest.Params.
-type SystemReqUpdateAuthTypeRequest_Params struct {
-	AdditionalProperties map[string]interface{} `json:"-"`
-}
-
 // SystemReqUpdateOrganization defines model for _system_req_update_Organization.
 type SystemReqUpdateOrganization struct {
 	Config *OrganizationConfigFields       `json:"config,omitempty"`
@@ -992,6 +977,21 @@ type SystemReqUpdateOrganization struct {
 
 // SystemReqUpdateOrganizationType defines model for SystemReqUpdateOrganization.Type.
 type SystemReqUpdateOrganizationType string
+
+// SystemReqUpdateAuthType defines model for _system_req_update_auth_type.
+type SystemReqUpdateAuthType struct {
+	Code        *string                         `json:"code,omitempty"`
+	Description *string                         `json:"description,omitempty"`
+	Id          *string                         `json:"id,omitempty"`
+	IgnoreMfa   *bool                           `json:"ignore_mfa,omitempty"`
+	IsExternal  *bool                           `json:"is_external,omitempty"`
+	Params      *SystemReqUpdateAuthType_Params `json:"params,omitempty"`
+}
+
+// SystemReqUpdateAuthType_Params defines model for SystemReqUpdateAuthType.Params.
+type SystemReqUpdateAuthType_Params struct {
+	AdditionalProperties map[string]interface{} `json:"-"`
+}
 
 // SystemResGetApplications defines model for _system_res_get_Applications.
 type SystemResGetApplications struct {
@@ -1268,10 +1268,10 @@ type PutSystemApplicationConfigsIdJSONBody SystemReqCreateApplicationConfigReque
 type PostSystemApplicationsJSONBody SystemReqCreateApplication
 
 // PostSystemAuthTypesJSONBody defines parameters for PostSystemAuthTypes.
-type PostSystemAuthTypesJSONBody SystemReqCreateAuthTypeRequest
+type PostSystemAuthTypesJSONBody SystemReqCreateAuthType
 
 // PutSystemAuthTypesIdJSONBody defines parameters for PutSystemAuthTypesId.
-type PutSystemAuthTypesIdJSONBody SystemReqUpdateAuthTypeRequest
+type PutSystemAuthTypesIdJSONBody SystemReqUpdateAuthType
 
 // PostSystemGlobalConfigJSONBody defines parameters for PostSystemGlobalConfig.
 type PostSystemGlobalConfigJSONBody GlobalConfig
@@ -1562,25 +1562,25 @@ func (a AuthTypeFields_Params) MarshalJSON() ([]byte, error) {
 	return json.Marshal(object)
 }
 
-// Getter for additional properties for SystemReqUpdateAuthTypeRequest_Params. Returns the specified
+// Getter for additional properties for SystemReqUpdateAuthType_Params. Returns the specified
 // element and whether it was found
-func (a SystemReqUpdateAuthTypeRequest_Params) Get(fieldName string) (value interface{}, found bool) {
+func (a SystemReqUpdateAuthType_Params) Get(fieldName string) (value interface{}, found bool) {
 	if a.AdditionalProperties != nil {
 		value, found = a.AdditionalProperties[fieldName]
 	}
 	return
 }
 
-// Setter for additional properties for SystemReqUpdateAuthTypeRequest_Params
-func (a *SystemReqUpdateAuthTypeRequest_Params) Set(fieldName string, value interface{}) {
+// Setter for additional properties for SystemReqUpdateAuthType_Params
+func (a *SystemReqUpdateAuthType_Params) Set(fieldName string, value interface{}) {
 	if a.AdditionalProperties == nil {
 		a.AdditionalProperties = make(map[string]interface{})
 	}
 	a.AdditionalProperties[fieldName] = value
 }
 
-// Override default JSON handling for SystemReqUpdateAuthTypeRequest_Params to handle AdditionalProperties
-func (a *SystemReqUpdateAuthTypeRequest_Params) UnmarshalJSON(b []byte) error {
+// Override default JSON handling for SystemReqUpdateAuthType_Params to handle AdditionalProperties
+func (a *SystemReqUpdateAuthType_Params) UnmarshalJSON(b []byte) error {
 	object := make(map[string]json.RawMessage)
 	err := json.Unmarshal(b, &object)
 	if err != nil {
@@ -1601,8 +1601,8 @@ func (a *SystemReqUpdateAuthTypeRequest_Params) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// Override default JSON handling for SystemReqUpdateAuthTypeRequest_Params to handle AdditionalProperties
-func (a SystemReqUpdateAuthTypeRequest_Params) MarshalJSON() ([]byte, error) {
+// Override default JSON handling for SystemReqUpdateAuthType_Params to handle AdditionalProperties
+func (a SystemReqUpdateAuthType_Params) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 

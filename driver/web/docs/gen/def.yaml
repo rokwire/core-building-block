@@ -3186,7 +3186,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_system_req_create_Auth_Type_Request'
+              $ref: '#/components/schemas/_system_req_create_auth_type'
         required: true
       responses:
         '200':
@@ -3246,7 +3246,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_system_req_update_Auth_Type_Request'
+              $ref: '#/components/schemas/_system_req_update_auth_type'
         required: true
       responses:
         '200':
@@ -4825,7 +4825,7 @@ components:
           type: array
           items:
             type: string
-    _system_req_create_Auth_Type_Request:
+    _system_req_create_auth_type:
       type: object
       properties:
         code:
@@ -4834,7 +4834,7 @@ components:
           type: string
         is_external:
           type: boolean
-    _system_req_update_Auth_Type_Request:
+    _system_req_update_auth_type:
       type: object
       properties:
         id:

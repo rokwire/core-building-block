@@ -162,7 +162,7 @@ paths:
   /system/auth-types:
     $ref: "./resources/system/auth-types.yaml"
   /system/auth-types/{id}:
-    $ref: "./resources/system/auth-typeID.yaml"
+    $ref: "./resources/system/auth-typesID.yaml"
 
 
   #default

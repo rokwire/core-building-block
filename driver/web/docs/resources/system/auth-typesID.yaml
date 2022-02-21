@@ -18,7 +18,7 @@
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/system/update-auth-types/request/Request.yaml"
+          $ref: "../../schemas/apis/system/auth-typesID/request/Request.yaml"
     required: true
   responses:
     200:
