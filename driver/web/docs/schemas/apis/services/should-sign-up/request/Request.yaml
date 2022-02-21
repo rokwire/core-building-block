@@ -4,6 +4,7 @@ required:
   - org_id
   - api_key
   - user_identifier
+  - operation
 type: object
 properties:
   auth_type:
@@ -22,3 +23,8 @@ properties:
     type: string
   user_identifier:
     type: string
+  operation:
+    type: string
+    enum:
+      - link
+      - login

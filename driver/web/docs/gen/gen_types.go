@@ -66,13 +66,6 @@ const (
 	ServicesReqAccountExistsAuthTypeUsername ServicesReqAccountExistsAuthType = "username"
 )
 
-// Defines values for ServicesReqAccountExistsOperation.
-const (
-	ServicesReqAccountExistsOperationLink ServicesReqAccountExistsOperation = "link"
-
-	ServicesReqAccountExistsOperationLogin ServicesReqAccountExistsOperation = "login"
-)
-
 // Defines values for ServicesReqAccountAuthTypeLinkAuthType.
 const (
 	ServicesReqAccountAuthTypeLinkAuthTypeEmail ServicesReqAccountAuthTypeLinkAuthType = "email"
@@ -103,6 +96,26 @@ const (
 // Defines values for ServicesReqCredentialSendVerifyAuthType.
 const (
 	ServicesReqCredentialSendVerifyAuthTypeEmail ServicesReqCredentialSendVerifyAuthType = "email"
+)
+
+// Defines values for ServicesReqShouldSignUpAuthType.
+const (
+	ServicesReqShouldSignUpAuthTypeAnonymous ServicesReqShouldSignUpAuthType = "anonymous"
+
+	ServicesReqShouldSignUpAuthTypeEmail ServicesReqShouldSignUpAuthType = "email"
+
+	ServicesReqShouldSignUpAuthTypeIllinoisOidc ServicesReqShouldSignUpAuthType = "illinois_oidc"
+
+	ServicesReqShouldSignUpAuthTypeTwilioPhone ServicesReqShouldSignUpAuthType = "twilio_phone"
+
+	ServicesReqShouldSignUpAuthTypeUsername ServicesReqShouldSignUpAuthType = "username"
+)
+
+// Defines values for ServicesReqShouldSignUpOperation.
+const (
+	ServicesReqShouldSignUpOperationLink ServicesReqShouldSignUpOperation = "link"
+
+	ServicesReqShouldSignUpOperationLogin ServicesReqShouldSignUpOperation = "login"
 )
 
 // Defines values for ServicesResAuthorizeServiceTokenType.
@@ -555,19 +568,15 @@ type AdminReqGrantRolesToAccount struct {
 
 // ServicesReqAccountExists defines model for _services_req_account-exists.
 type ServicesReqAccountExists struct {
-	ApiKey            string                             `json:"api_key"`
-	AppTypeIdentifier string                             `json:"app_type_identifier"`
-	AuthType          ServicesReqAccountExistsAuthType   `json:"auth_type"`
-	Operation         *ServicesReqAccountExistsOperation `json:"operation,omitempty"`
-	OrgId             string                             `json:"org_id"`
-	UserIdentifier    string                             `json:"user_identifier"`
+	ApiKey            string                           `json:"api_key"`
+	AppTypeIdentifier string                           `json:"app_type_identifier"`
+	AuthType          ServicesReqAccountExistsAuthType `json:"auth_type"`
+	OrgId             string                           `json:"org_id"`
+	UserIdentifier    string                           `json:"user_identifier"`
 }
 
 // ServicesReqAccountExistsAuthType defines model for ServicesReqAccountExists.AuthType.
 type ServicesReqAccountExistsAuthType string
-
-// ServicesReqAccountExistsOperation defines model for ServicesReqAccountExists.Operation.
-type ServicesReqAccountExistsOperation string
 
 // ServicesReqAccountAuthTypeLink defines model for _services_req_account_auth-type-link.
 type ServicesReqAccountAuthTypeLink struct {
@@ -652,6 +661,22 @@ type ServicesReqCredentialUpdate struct {
 	Params            *interface{} `json:"params,omitempty"`
 }
 
+// ServicesReqShouldSignUp defines model for _services_req_should-sign-up.
+type ServicesReqShouldSignUp struct {
+	ApiKey            string                           `json:"api_key"`
+	AppTypeIdentifier string                           `json:"app_type_identifier"`
+	AuthType          ServicesReqShouldSignUpAuthType  `json:"auth_type"`
+	Operation         ServicesReqShouldSignUpOperation `json:"operation"`
+	OrgId             string                           `json:"org_id"`
+	UserIdentifier    string                           `json:"user_identifier"`
+}
+
+// ServicesReqShouldSignUpAuthType defines model for ServicesReqShouldSignUp.AuthType.
+type ServicesReqShouldSignUpAuthType string
+
+// ServicesReqShouldSignUpOperation defines model for ServicesReqShouldSignUp.Operation.
+type ServicesReqShouldSignUpOperation string
+
 // ServicesResAccountExists defines model for _services_res_account-exists.
 type ServicesResAccountExists bool
 
@@ -675,6 +700,9 @@ type ServicesResAuthorizeService struct {
 
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ServicesResAuthorizeServiceTokenType string
+
+// ServicesResShouldSignUp defines model for _services_res_should-sign-up.
+type ServicesResShouldSignUp bool
 
 // Auth login creds for auth_type="anonymous"
 type SharedReqCredsAPIKey struct {
@@ -1188,6 +1216,9 @@ type GetServicesAuthServiceRegsParams struct {
 	Ids string `json:"ids"`
 }
 
+// PostServicesAuthShouldSignUpJSONBody defines parameters for PostServicesAuthShouldSignUp.
+type PostServicesAuthShouldSignUpJSONBody ServicesReqShouldSignUp
+
 // PostServicesAuthVerifyMfaJSONBody defines parameters for PostServicesAuthVerifyMfa.
 type PostServicesAuthVerifyMfaJSONBody SharedReqMfa
 
@@ -1382,6 +1413,9 @@ type PostServicesAuthMfaJSONRequestBody PostServicesAuthMfaJSONBody
 
 // PostServicesAuthRefreshJSONRequestBody defines body for PostServicesAuthRefresh for application/json ContentType.
 type PostServicesAuthRefreshJSONRequestBody PostServicesAuthRefreshJSONBody
+
+// PostServicesAuthShouldSignUpJSONRequestBody defines body for PostServicesAuthShouldSignUp for application/json ContentType.
+type PostServicesAuthShouldSignUpJSONRequestBody PostServicesAuthShouldSignUpJSONBody
 
 // PostServicesAuthVerifyMfaJSONRequestBody defines body for PostServicesAuthVerifyMfa for application/json ContentType.
 type PostServicesAuthVerifyMfaJSONRequestBody PostServicesAuthVerifyMfaJSONBody

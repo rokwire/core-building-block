@@ -150,6 +150,12 @@ _services_req_account-exists:
 _services_res_account-exists:
   $ref: "./apis/services/account/exists/response/Response.yaml"
 
+### should sign up API
+_services_req_should-sign-up:
+  $ref: "./apis/services/should-sign-up/request/Request.yaml"
+_services_res_should-sign-up:
+  $ref: "./apis/services/should-sign-up/response/Response.yaml"
+
 ### account auth-type link API
 _services_req_account_auth-type-link:
   $ref: "./apis/services/account/auth-type/link/request/Link.yaml"
