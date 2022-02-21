@@ -34,5 +34,5 @@ p, all_account-roles, /core/system/account/roles, (GET)|(POST)|(DELETE)|(PUT)
 
 p, all_auth_types, /core/system/auth-types, (GET)|(POST)|(PUT)
 p, get_auth_types, /core/system/auth-types, (GET)
-p, create_auth_types, /core/system/auth-types, (POST)
+p, create_auth_types, /core/system/auth-types, (GET)|(POST)
 p, update_auth_types, /core/system/auth-types,  (GET)|(POST)
