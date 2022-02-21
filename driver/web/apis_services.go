@@ -200,12 +200,12 @@ func (h ServicesApisHandler) authShouldSignUp(l *logs.Log, r *http.Request, clai
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
 	}
 
-	accountExists, err := h.coreAPIs.Auth.ShouldSignUp(string(requestData.AuthType), requestData.UserIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, string(requestData.Operation))
+	shouldSignUp, err := h.coreAPIs.Auth.ShouldSignUp(string(requestData.AuthType), requestData.UserIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, string(requestData.Operation))
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, logutils.MessageDataType("should sign up"), nil, err, http.StatusInternalServerError, false)
 	}
 
-	respData, err := json.Marshal(accountExists)
+	respData, err := json.Marshal(shouldSignUp)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.TypeResponse, nil, err, http.StatusInternalServerError, false)
 	}
