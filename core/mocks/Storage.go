@@ -1018,13 +1018,13 @@ func (_m *Storage) UpdateAppOrgRole(item model.AppOrgRole) error {
 	return r0
 }
 
-// UpdateAuthTypes provides a mock function with given fields: ID, code, description
-func (_m *Storage) UpdateAuthTypes(ID string, code string, description string) error {
-	ret := _m.Called(ID, code, description)
+// UpdateAuthTypes provides a mock function with given fields: ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params
+func (_m *Storage) UpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error {
+	ret := _m.Called(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string, string) error); ok {
-		r0 = rf(ID, code, description)
+	if rf, ok := ret.Get(0).(func(string, string, string, bool, bool, bool, bool, map[string]interface{}) error); ok {
+		r0 = rf(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
 	} else {
 		r0 = ret.Error(0)
 	}
