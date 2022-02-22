@@ -4839,6 +4839,13 @@ components:
             type: string
     _system_req_create_auth_type:
       type: object
+      required:
+        - code
+        - description
+        - is_external
+        - is_anonymous
+        - use_credentials
+        - ignore_mfa
       properties:
         code:
           type: string

@@ -288,8 +288,8 @@ func (s *systemImpl) SysGrantAccountRoles(accountID string, appID string, roleID
 	return s.app.sysGrantAccountRoles(accountID, appID, roleIDs)
 }
 
-func (s *systemImpl) SysCreateAuthTypes(code string, description string, isExternal bool) (*model.AuthType, error) {
-	return s.app.sysCreateAuthTypes(code, description, isExternal)
+func (s *systemImpl) SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error) {
+	return s.app.sysCreateAuthTypes(code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
 }
 
 func (s *systemImpl) SysGetAuthTypes() ([]model.AuthType, error) {

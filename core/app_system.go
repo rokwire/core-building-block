@@ -370,10 +370,13 @@ func (app *application) sysGrantAccountRoles(accountID string, appOrgID string, 
 	return nil
 }
 
-func (app *application) sysCreateAuthTypes(code string, description string, isExternal bool) (*model.AuthType, error) {
+func (app *application) sysCreateAuthTypes(code string, description string, isExternal bool,
+	isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error) {
 
 	authTypeID, _ := uuid.NewUUID()
-	authType := model.AuthType{ID: authTypeID.String(), Code: code, Description: description, IsExternal: isExternal}
+	authType := model.AuthType{ID: authTypeID.String(), Code: code, Description: description,
+		IsExternal: isExternal, IsAnonymous: isAnonymous, UseCredentials: useCredentials,
+		IgnoreMFA: ignoreMFA, Params: params}
 
 	insertedAuthType, err := app.storage.InsertAuthType(authType)
 	if err != nil {

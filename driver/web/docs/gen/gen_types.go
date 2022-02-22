@@ -964,13 +964,13 @@ type SystemReqCreateApplicationConfigRequest struct {
 
 // SystemReqCreateAuthType defines model for _system_req_create_auth_type.
 type SystemReqCreateAuthType struct {
-	Code           *string                         `json:"code,omitempty"`
-	Description    *string                         `json:"description,omitempty"`
-	IgnoreMfa      *bool                           `json:"ignore_mfa,omitempty"`
-	IsAnonymous    *bool                           `json:"is_anonymous,omitempty"`
-	IsExternal     *bool                           `json:"is_external,omitempty"`
+	Code           string                          `json:"code"`
+	Description    string                          `json:"description"`
+	IgnoreMfa      bool                            `json:"ignore_mfa"`
+	IsAnonymous    bool                            `json:"is_anonymous"`
+	IsExternal     bool                            `json:"is_external"`
 	Params         *SystemReqCreateAuthType_Params `json:"params,omitempty"`
-	UseCredentials *bool                           `json:"use_credentials,omitempty"`
+	UseCredentials bool                            `json:"use_credentials"`
 }
 
 // SystemReqCreateAuthType_Params defines model for SystemReqCreateAuthType.Params.

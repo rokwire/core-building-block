@@ -93,7 +93,7 @@ type System interface {
 	SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
 	SysGrantAccountRoles(accountID string, appID string, roleIDs []string) error
 
-	SysCreateAuthTypes(code string, description string, isExternal bool) (*model.AuthType, error)
+	SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error)
 	SysGetAuthTypes() ([]model.AuthType, error)
 	SysUpdateAuthTypes(ID string, code string, description string) error
 }

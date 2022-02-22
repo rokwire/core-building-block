@@ -756,8 +756,12 @@ func (h SystemApisHandler) createAuthTypes(l *logs.Log, r *http.Request, claims 
 	code := requestData.Code
 	description := requestData.Description
 	isExternal := requestData.IsExternal
+	isAnonymous := requestData.IsAnonymous
+	useCredentials := requestData.UseCredentials
+	ignoreMFA := requestData.IgnoreMfa
+	params := requestData.Params
 
-	_, err = h.coreAPIs.System.SysCreateAuthTypes(*code, *description, *isExternal)
+	_, err = h.coreAPIs.System.SysCreateAuthTypes(code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params.AdditionalProperties)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAuthType, nil, err, http.StatusInternalServerError, true)
 	}
