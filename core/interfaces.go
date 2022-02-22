@@ -93,6 +93,10 @@ type System interface {
 
 	SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
 	SysGrantAccountRoles(accountID string, appID string, roleIDs []string) error
+
+	SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error)
+	SysGetAuthTypes() ([]model.AuthType, error)
+	SysUpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
 }
 
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
@@ -157,6 +161,10 @@ type Storage interface {
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
+
+	InsertAuthType(authType model.AuthType) (*model.AuthType, error)
+	LoadAuthTypes() ([]model.AuthType, error)
+	UpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
 
 	FindApplicationType(id string) (*model.ApplicationType, error)
 
