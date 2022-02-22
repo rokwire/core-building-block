@@ -292,4 +292,16 @@ func (s *systemImpl) SysGrantAccountRoles(accountID string, appID string, roleID
 	return s.app.sysGrantAccountRoles(accountID, appID, roleIDs)
 }
 
+func (s *systemImpl) SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error) {
+	return s.app.sysCreateAuthTypes(code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
+}
+
+func (s *systemImpl) SysGetAuthTypes() ([]model.AuthType, error) {
+	return s.app.sysGetAuthTypes()
+}
+
+func (s *systemImpl) SysUpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error {
+	return s.app.SysUpdateAuthTypes(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
+}
+
 ///
