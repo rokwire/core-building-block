@@ -3174,6 +3174,7 @@ paths:
           description: Internal error
   /system/auth-types:
     post:
+      deprecated: true
       tags:
         - System
       summary: Create auth-type
@@ -3203,6 +3204,7 @@ paths:
         '500':
           description: Internal error
     get:
+      deprecated: true
       tags:
         - System
       summary: Get auth-types
@@ -3227,6 +3229,7 @@ paths:
           description: Internal error
   '/system/auth-types/{id}':
     put:
+      deprecated: true
       tags:
         - System
       summary: Update auth type

@@ -1,4 +1,5 @@
  post:
+  deprecated: true
   tags:
   - System
   summary: Create auth-type
@@ -28,6 +29,7 @@
     500:
       description: Internal error
  get:
+  deprecated: true
   tags:
   - System
   summary: Get auth-types
