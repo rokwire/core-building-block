@@ -550,6 +550,7 @@ type AdminReqGrantPermissions struct {
 // AdminReqGrantPermissionsToRole defines model for _admin_req_grant-permissions-to-role.
 type AdminReqGrantPermissionsToRole struct {
 	Permissions []string `json:"permissions"`
+	RoleId      string   `json:"role_id"`
 }
 
 // AdminReqGrantRolesToAccount defines model for _admin_req_grant-roles-to-account.

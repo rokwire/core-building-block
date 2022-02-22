@@ -6265,10 +6265,14 @@
       },
       "_admin_req_grant-permissions-to-role": {
         "required": [
+          "role_id",
           "permissions"
         ],
         "type": "object",
         "properties": {
+          "role_id": {
+            "type": "string"
+          },
           "permissions": {
             "type": "array",
             "items": {
