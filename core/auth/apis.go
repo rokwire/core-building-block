@@ -207,10 +207,10 @@ func (a *Auth) CanLink(authenticationType string, userIdentifier string, apiKey 
 
 	if account != nil {
 		aat := account.GetAccountAuthType(authTypeID, userIdentifier)
-		return (aat == nil || !aat.Unverified), nil
+		return (aat != nil && aat.Unverified), nil
 	}
 
-	return false, nil
+	return true, nil
 }
 
 //Refresh refreshes an access token using a refresh token
