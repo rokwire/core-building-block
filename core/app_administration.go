@@ -195,6 +195,7 @@ func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string
 		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
 	}
 
+	//3. check group permission assigners
 	for _, permission := range groupPermissions {
 		err = permission.CheckAssigners(assignerPermissions)
 		if err != nil {
@@ -202,12 +203,13 @@ func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string
 		}
 	}
 
-	//3. check roles
+	//4. check roles
 	groupRoles, err := app.checkRoles(*appOrg, rolesIDs, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
 	}
 
+	//5. check roles permission assigners
 	for _, roles := range groupRoles {
 		err = roles.CheckAssigners(assignerPermissions)
 		if err != nil {
@@ -247,28 +249,6 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 		return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
 
-	permission, err := app.storage.FindPermissionsByServiceIDs(appOrg.ServicesIDs)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
-	}
-	var permissionID []string
-	for _, findThePermissionID := range permission {
-		permissionID = append(permissionID, findThePermissionID.ID)
-	}
-
-	//2. check permissions
-	groupPermissions, err := app.checkPermissions(*appOrg, permissionID, l)
-	if err != nil {
-		return errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
-	}
-
-	for _, permission := range groupPermissions {
-		err = permission.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.Wrapf("error checking permission assigners", err)
-		}
-	}
-
 	//2. find the group
 	group, err := app.storage.FindAppOrgGroup(ID, appOrg.ID)
 	if err != nil {
@@ -278,12 +258,28 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 		return errors.Newf("there is no a group for id %s", ID)
 	}
 
-	//3. do not allow to delete system groups
+	//3. check group permissions
+	for _, permission := range group.Permissions {
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking permission assigners", err)
+		}
+	}
+
+	//4. check group roles
+	for _, roles := range group.Roles {
+		err = roles.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking roles assigners", err)
+		}
+	}
+
+	//5. do not allow to delete system groups
 	if group.System {
 		return errors.Newf("%s group is a system grup and cannot be deleted", group.Name)
 	}
 
-	//4. check if the group has accounts relations
+	//6. check if the group has accounts relations
 	numberOfAccounts, err := app.storage.CountAccountsByGroupID(ID)
 	if err != nil {
 		return errors.WrapErrorAction("error checking the accounts count by group id", "", nil, err)
@@ -292,7 +288,7 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 		return errors.Newf("the %s is already used by account and cannot be deleted", group.Name)
 	}
 
-	//5. delete the group
+	//6. delete the group
 	err = app.storage.DeleteAppOrgGroup(ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgGroup, nil, err)
@@ -301,17 +297,19 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 }
 
 func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgRole, error) {
-
+	//1. get application organization entity
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
 
+	//2. check role permissions
 	rolePermissions, err := app.checkPermissions(*appOrg, permissionIDs, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
 	}
 
+	//3. check role permissions assigners
 	for _, permission := range rolePermissions {
 		err = permission.CheckAssigners(assignerPermissions)
 		if err != nil {
