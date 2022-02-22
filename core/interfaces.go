@@ -95,7 +95,7 @@ type System interface {
 
 	SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error)
 	SysGetAuthTypes() ([]model.AuthType, error)
-	SysUpdateAuthTypes(ID string, code string, description string) error
+	SysUpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
 }
 
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
@@ -162,7 +162,8 @@ type Storage interface {
 
 	InsertAuthType(authType model.AuthType) (*model.AuthType, error)
 	LoadAuthTypes() ([]model.AuthType, error)
-	UpdateAuthTypes(ID string, code string, description string) error
+	UpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
+
 	FindApplicationType(id string) (*model.ApplicationType, error)
 
 	FindAppConfigs(appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)

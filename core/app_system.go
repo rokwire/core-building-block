@@ -394,8 +394,8 @@ func (app *application) sysGetAuthTypes() ([]model.AuthType, error) {
 	return getAuthTypes, nil
 }
 
-func (app *application) SysUpdateAuthTypes(ID string, code string, description string) error {
-	err := app.storage.UpdateAuthTypes(ID, code, description)
+func (app *application) SysUpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error {
+	err := app.storage.UpdateAuthTypes(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthType, nil, err)
 	}

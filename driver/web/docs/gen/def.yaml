@@ -4864,6 +4864,13 @@ components:
           additionalProperties: true
     _system_req_update_auth_type:
       type: object
+      required:
+        - code
+        - description
+        - is_external
+        - is_anonymous
+        - use_credentials
+        - ignore_mfa
       properties:
         code:
           type: string

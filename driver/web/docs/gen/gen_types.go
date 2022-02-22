@@ -1008,13 +1008,13 @@ type SystemReqUpdateOrganizationType string
 
 // SystemReqUpdateAuthType defines model for _system_req_update_auth_type.
 type SystemReqUpdateAuthType struct {
-	Code           *string                         `json:"code,omitempty"`
-	Description    *string                         `json:"description,omitempty"`
-	IgnoreMfa      *bool                           `json:"ignore_mfa,omitempty"`
-	IsAnonymous    *bool                           `json:"is_anonymous,omitempty"`
-	IsExternal     *bool                           `json:"is_external,omitempty"`
+	Code           string                          `json:"code"`
+	Description    string                          `json:"description"`
+	IgnoreMfa      bool                            `json:"ignore_mfa"`
+	IsAnonymous    bool                            `json:"is_anonymous"`
+	IsExternal     bool                            `json:"is_external"`
 	Params         *SystemReqUpdateAuthType_Params `json:"params,omitempty"`
-	UseCredentials *bool                           `json:"use_credentials,omitempty"`
+	UseCredentials bool                            `json:"use_credentials"`
 }
 
 // SystemReqUpdateAuthType_Params defines model for SystemReqUpdateAuthType.Params.

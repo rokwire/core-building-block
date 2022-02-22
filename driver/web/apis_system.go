@@ -787,8 +787,9 @@ func (h SystemApisHandler) getAuthTypes(l *logs.Log, r *http.Request, claims *to
 
 //updateAuthTypes updates auth type
 func (h SystemApisHandler) updateAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	ID := r.URL.Query().Get("id")
-	if ID == "" {
+	rParams := mux.Vars(r)
+	ID := rParams["id"]
+	if len(ID) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
@@ -804,8 +805,13 @@ func (h SystemApisHandler) updateAuthTypes(l *logs.Log, r *http.Request, claims 
 
 	code := requestData.Code
 	description := requestData.Description
+	isExternal := requestData.IsExternal
+	isAnonymous := requestData.IsAnonymous
+	useCredentials := requestData.UseCredentials
+	ignoreMFA := requestData.IgnoreMfa
+	params := requestData.Params
 
-	err = h.coreAPIs.System.SysUpdateAuthTypes(ID, *code, *description)
+	err = h.coreAPIs.System.SysUpdateAuthTypes(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params.AdditionalProperties)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAuthType, nil, err, http.StatusInternalServerError, true)
 	}

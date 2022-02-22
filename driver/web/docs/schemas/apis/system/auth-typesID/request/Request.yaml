@@ -1,4 +1,11 @@
 type: object
+required:
+  - code
+  - description
+  - is_external
+  - is_anonymous
+  - use_credentials
+  - ignore_mfa
 properties:
   code:
     type: string

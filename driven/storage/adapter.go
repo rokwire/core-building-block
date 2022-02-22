@@ -2486,7 +2486,8 @@ func (sa *Adapter) InsertAuthType(authType model.AuthType) (*model.AuthType, err
 }
 
 //UpdateAuthTypes updates an auth type
-func (sa *Adapter) UpdateAuthTypes(ID string, code string, description string) error {
+func (sa *Adapter) UpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool,
+	useCredentials bool, ignoreMFA bool, params map[string]interface{}) error {
 
 	now := time.Now()
 	updateAuthTypeFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
@@ -2494,6 +2495,11 @@ func (sa *Adapter) UpdateAuthTypes(ID string, code string, description string) e
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "code", Value: code},
 			primitive.E{Key: "description", Value: description},
+			primitive.E{Key: "is_external", Value: isExternal},
+			primitive.E{Key: "is_anonymous", Value: isAnonymous},
+			primitive.E{Key: "use_credentials", Value: useCredentials},
+			primitive.E{Key: "ignore_mfa", Value: ignoreMFA},
+			primitive.E{Key: "params", Value: params},
 			primitive.E{Key: "date_updated", Value: now},
 		}},
 	}
