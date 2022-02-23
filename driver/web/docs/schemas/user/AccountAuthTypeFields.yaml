@@ -12,3 +12,5 @@ properties:
     nullable: true
   active:
     type: boolean
+  unverified:
+    type: boolean

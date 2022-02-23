@@ -2,8 +2,6 @@ package core
 
 import (
 	"core-building-block/core/model"
-	"core-building-block/driven/storage"
-	"time"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
@@ -67,70 +65,7 @@ func (app *application) serUpdateAccountPreferences(id string, preferences map[s
 }
 
 func (app *application) serDeleteAccount(id string) error {
-	transaction := func(context storage.TransactionContext) error {
-		//1. first find the account record
-		account, err := app.storage.FindAccountByID(context, id)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-		}
-		if account == nil {
-			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
-		}
-
-		//2. delete the account record
-		err = app.storage.DeleteAccount(context, id)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
-		}
-
-		//3. remove account auth types from or delete credentials
-		for _, aat := range account.AuthTypes {
-			if aat.Credential != nil {
-				credential, err := app.storage.FindCredential(context, aat.Credential.ID)
-				if err != nil {
-					return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
-				}
-
-				if len(credential.AccountsAuthTypes) > 1 {
-					now := time.Now().UTC()
-					for i, credAat := range credential.AccountsAuthTypes {
-						if credAat.ID == aat.ID {
-							credential.AccountsAuthTypes = append(credential.AccountsAuthTypes[:i], credential.AccountsAuthTypes[i+1:]...)
-							credential.DateUpdated = &now
-							err = app.storage.UpdateCredential(context, credential)
-							if err != nil {
-								return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
-							}
-							break
-						}
-					}
-				} else {
-					err = app.storage.DeleteCredential(context, credential.ID)
-					if err != nil {
-						return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
-					}
-				}
-			}
-		}
-
-		//4. delete login sessions
-		err = app.storage.DeleteLoginSessionsByIdentifier(context, id)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
-		}
-
-		//5. delete devices records
-		for _, device := range account.Devices {
-			err = app.storage.DeleteDevice(context, device.ID)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeDevice, nil, err)
-			}
-		}
-
-		return nil
-	}
-
-	return app.storage.PerformTransaction(transaction)
+	return app.auth.DeleteAccount(id)
 }
 
 func (app *application) serGetAuthTest(l *logs.Log) string {
