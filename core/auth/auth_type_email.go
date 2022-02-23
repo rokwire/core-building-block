@@ -159,7 +159,7 @@ func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, 
 	//compare stored and requets ones
 	err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(requestPassword))
 	if err != nil {
-		return "", errors.WrapErrorAction("bad credentials", "", nil, err)
+		return "", errors.WrapErrorAction("bad credentials", "", nil, err).SetStatus(utils.ErrorStatusInvalid)
 	}
 
 	return "", nil
