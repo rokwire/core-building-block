@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add app config endpoints [#261](https://github.com/rokwire/core-building-block/issues/261)
 
 ### Fixed
+- Fix issues with account linking [#408](https://github.com/rokwire/core-building-block/issues/408)
 - Fix creating application group admin API [#397](https://github.com/rokwire/core-building-block/issues/397)
 - Fix create role and create group Admin APIs [#386](https://github.com/rokwire/core-building-block/issues/386)
 - Fix broken app config API and CHANGELOG.md [#401](https://github.com/rokwire/core-building-block/issues/401)
