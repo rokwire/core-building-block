@@ -90,7 +90,7 @@ func accountAuthTypeFromStorage(item accountAuthType) model.AccountAuthType {
 	}
 	active := item.Active
 	return model.AccountAuthType{ID: id, AuthType: authType, Identifier: identifier, Params: params, Credential: credential,
-		Active: active, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Active: active, Unverified: item.Unverified, Linked: item.Linked, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func accountAuthTypesFromStorage(items []accountAuthType) []model.AccountAuthType {
@@ -111,7 +111,7 @@ func accountAuthTypeToStorage(item model.AccountAuthType) accountAuthType {
 		credentialID = &item.Credential.ID
 	}
 	return accountAuthType{ID: item.ID, AuthTypeID: item.AuthType.ID, AuthTypeCode: item.AuthType.Code, Identifier: item.Identifier,
-		Params: item.Params, CredentialID: credentialID, Active: item.Active, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Params: item.Params, CredentialID: credentialID, Active: item.Active, Unverified: item.Unverified, Linked: item.Linked, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func accountAuthTypesToStorage(items []model.AccountAuthType) []accountAuthType {
