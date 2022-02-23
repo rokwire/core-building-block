@@ -194,6 +194,9 @@ _admin_req_app-token:
 ### admin application_roles API
 _admin_req_create-application_role:
   $ref: "./apis/admin/application/roles/request/Request.yaml"
+_admin_req_revoke-permissions-from-role:
+  $ref: "./apis/admin/application/roles/remove-permissions/request/Request.yaml"
+
 
 ### admin application_groups API
 _admin_req_create-application_group:
