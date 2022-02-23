@@ -132,7 +132,7 @@
                         "internal-server-error",
                         "shared-credential-unverified"
                       ],
-                      "description": "- `invalid`: Invalid credentials\n- `unverified`: Unverified credentials\n- `verification-expired`: Credentials verification expired. The verification is restarted\n- `already-found`: Account already exists when `sign-up=true`\n- `not-found`: Account could not be found when `sign-up=false`\n- `internal-server-error`: An undefined error occurred\n- `shared-credential-unverified`: The shared credential has not been verified yet\n"
+                      "description": "- `invalid`: Invalid credentials\n- `unverified`: Unverified credentials\n- `verification-expired`: Credentials verification expired. The verification is restarted\n- `already-exists`: Account already exists when `sign-up=true`\n- `not-found`: Account could not be found when `sign-up=false`\n- `internal-server-error`: An undefined error occurred\n- `shared-credential-unverified`: The shared credential has not been verified yet\n"
                     },
                     "message": {
                       "type": "string"
@@ -412,7 +412,28 @@
             "description": "Unauthorized"
           },
           "500": {
-            "description": "Internal error"
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "unverified",
+                        "verification-expired",
+                        "internal-server-error"
+                      ],
+                      "description": "- `unverified`: Unverified credentials\n- `verification-expired`: Credentials verification expired. The verification is restarted\n- `internal-server-error`: An undefined error occurred\n"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -557,7 +578,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_services_req_account-exists"
+                "$ref": "#/components/schemas/_shared_req_AccountCheck"
               }
             }
           },
@@ -569,7 +590,89 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_services_res_account-exists"
+                  "$ref": "#/components/schemas/_shared_res_AccountCheck"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/services/auth/account/can-sign-in": {
+      "post": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Check if a client can sign in",
+        "description": "Checks if a client can sign in to an existing account for the provided user identifier and auth type\n",
+        "requestBody": {
+          "description": "Account information to be checked\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_shared_req_AccountCheck"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_shared_res_AccountCheck"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/services/auth/account/can-link": {
+      "post": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Check if a client can link an auth type",
+        "description": "Checks if a client is able to link a new auth type to an account\n",
+        "requestBody": {
+          "description": "Account information to be checked\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_shared_req_AccountCheck"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_shared_res_AccountCheck"
                 }
               }
             }
@@ -640,7 +743,31 @@
             "description": "Unauthorized"
           },
           "500": {
-            "description": "Internal error"
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "invalid",
+                        "unverified",
+                        "verification-expired",
+                        "already-exists",
+                        "not-found",
+                        "internal-server-error"
+                      ],
+                      "description": "- `invalid`: Invalid credentials\n- `unverified`: Unverified credentials\n- `verification-expired`: Credentials verification expired. The verification is restarted\n- `already-exists`: Auth type identifier already exists\n- `not-found`: Account could not be found when `sign-up=false`\n- `internal-server-error`: An undefined error occurred\n"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -5163,6 +5290,9 @@
           },
           "active": {
             "type": "boolean"
+          },
+          "unverified": {
+            "type": "boolean"
           }
         }
       },
@@ -5403,6 +5533,40 @@
             ]
           },
           "code": {
+            "type": "string"
+          }
+        }
+      },
+      "_shared_req_AccountCheck": {
+        "required": [
+          "auth_type",
+          "app_type_identifier",
+          "org_id",
+          "api_key",
+          "user_identifier"
+        ],
+        "type": "object",
+        "properties": {
+          "auth_type": {
+            "type": "string",
+            "enum": [
+              "username",
+              "email",
+              "twilio_phone",
+              "illinois_oidc",
+              "anonymous"
+            ]
+          },
+          "app_type_identifier": {
+            "type": "string"
+          },
+          "org_id": {
+            "type": "string"
+          },
+          "api_key": {
+            "type": "string"
+          },
+          "user_identifier": {
             "type": "string"
           }
         }
@@ -5769,6 +5933,9 @@
           }
         }
       },
+      "_shared_res_AccountCheck": {
+        "type": "boolean"
+      },
       "_shared_res_Mfa": {
         "type": "object",
         "properties": {
@@ -5861,43 +6028,6 @@
             "type": "string"
           }
         }
-      },
-      "_services_req_account-exists": {
-        "required": [
-          "auth_type",
-          "app_type_identifier",
-          "org_id",
-          "api_key",
-          "user_identifier"
-        ],
-        "type": "object",
-        "properties": {
-          "auth_type": {
-            "type": "string",
-            "enum": [
-              "username",
-              "email",
-              "twilio_phone",
-              "illinois_oidc",
-              "anonymous"
-            ]
-          },
-          "app_type_identifier": {
-            "type": "string"
-          },
-          "org_id": {
-            "type": "string"
-          },
-          "api_key": {
-            "type": "string"
-          },
-          "user_identifier": {
-            "type": "string"
-          }
-        }
-      },
-      "_services_res_account-exists": {
-        "type": "boolean"
       },
       "_services_req_account_auth-type-link": {
         "required": [

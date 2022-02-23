@@ -781,7 +781,7 @@ func (sa *Adapter) DeleteLoginSessionsByIDs(transaction TransactionContext, ids 
 
 //DeleteLoginSessionsByIdentifier deletes all login sessions with the identifier
 func (sa *Adapter) DeleteLoginSessionsByIdentifier(context TransactionContext, identifier string) error {
-	return sa.deleteLoginSessions(context, "identifier", identifier, true)
+	return sa.deleteLoginSessions(context, "identifier", identifier, false)
 }
 
 //DeleteLoginSessionByID deletes a login session by id
@@ -2001,7 +2001,7 @@ func (sa *Adapter) FindProfiles(appID string, authTypeID string, accountAuthType
 			"foreignField": "_id",
 			"as":           "app_org",
 		}},
-		{"$match": bson.M{"app_org.app_id": appID}},
+		{"$match": bson.M{"app_org.app_id": appID, "auth_types.auth_type_id": authTypeID, "auth_types.identifier": accountAuthTypeIdentifier}},
 	}
 	var accounts []account
 	err := sa.db.accounts.Aggregate(pipeline, &accounts, nil)

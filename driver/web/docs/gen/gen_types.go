@@ -53,19 +53,6 @@ const (
 	OrganizationFieldsTypeSmall OrganizationFieldsType = "small"
 )
 
-// Defines values for ServicesReqAccountExistsAuthType.
-const (
-	ServicesReqAccountExistsAuthTypeAnonymous ServicesReqAccountExistsAuthType = "anonymous"
-
-	ServicesReqAccountExistsAuthTypeEmail ServicesReqAccountExistsAuthType = "email"
-
-	ServicesReqAccountExistsAuthTypeIllinoisOidc ServicesReqAccountExistsAuthType = "illinois_oidc"
-
-	ServicesReqAccountExistsAuthTypeTwilioPhone ServicesReqAccountExistsAuthType = "twilio_phone"
-
-	ServicesReqAccountExistsAuthTypeUsername ServicesReqAccountExistsAuthType = "username"
-)
-
 // Defines values for ServicesReqAccountAuthTypeLinkAuthType.
 const (
 	ServicesReqAccountAuthTypeLinkAuthTypeEmail ServicesReqAccountAuthTypeLinkAuthType = "email"
@@ -101,6 +88,19 @@ const (
 // Defines values for ServicesResAuthorizeServiceTokenType.
 const (
 	ServicesResAuthorizeServiceTokenTypeBearer ServicesResAuthorizeServiceTokenType = "Bearer"
+)
+
+// Defines values for SharedReqAccountCheckAuthType.
+const (
+	SharedReqAccountCheckAuthTypeAnonymous SharedReqAccountCheckAuthType = "anonymous"
+
+	SharedReqAccountCheckAuthTypeEmail SharedReqAccountCheckAuthType = "email"
+
+	SharedReqAccountCheckAuthTypeIllinoisOidc SharedReqAccountCheckAuthType = "illinois_oidc"
+
+	SharedReqAccountCheckAuthTypeTwilioPhone SharedReqAccountCheckAuthType = "twilio_phone"
+
+	SharedReqAccountCheckAuthTypeUsername SharedReqAccountCheckAuthType = "username"
 )
 
 // Defines values for SharedReqLoginAuthType.
@@ -229,6 +229,7 @@ type AccountAuthTypeFields struct {
 	Id         *string                       `json:"id,omitempty"`
 	Identifier *string                       `json:"identifier,omitempty"`
 	Params     *AccountAuthTypeFields_Params `json:"params"`
+	Unverified *bool                         `json:"unverified,omitempty"`
 }
 
 // AccountAuthTypeFields_Params defines model for AccountAuthTypeFields.Params.
@@ -559,18 +560,6 @@ type AdminReqGrantRolesToAccount struct {
 	RoleIds   []string `json:"role_ids"`
 }
 
-// ServicesReqAccountExists defines model for _services_req_account-exists.
-type ServicesReqAccountExists struct {
-	ApiKey            string                           `json:"api_key"`
-	AppTypeIdentifier string                           `json:"app_type_identifier"`
-	AuthType          ServicesReqAccountExistsAuthType `json:"auth_type"`
-	OrgId             string                           `json:"org_id"`
-	UserIdentifier    string                           `json:"user_identifier"`
-}
-
-// ServicesReqAccountExistsAuthType defines model for ServicesReqAccountExists.AuthType.
-type ServicesReqAccountExistsAuthType string
-
 // ServicesReqAccountAuthTypeLink defines model for _services_req_account_auth-type-link.
 type ServicesReqAccountAuthTypeLink struct {
 	AppTypeIdentifier string                                 `json:"app_type_identifier"`
@@ -653,9 +642,6 @@ type ServicesReqCredentialUpdate struct {
 	Params            *interface{} `json:"params,omitempty"`
 }
 
-// ServicesResAccountExists defines model for _services_res_account-exists.
-type ServicesResAccountExists bool
-
 // ServicesResAccountAuthTypeLink defines model for _services_res_account_auth-type-link.
 type ServicesResAccountAuthTypeLink struct {
 	AuthTypes []AccountAuthTypeFields `json:"auth_types"`
@@ -676,6 +662,18 @@ type ServicesResAuthorizeService struct {
 
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type ServicesResAuthorizeServiceTokenType string
+
+// SharedReqAccountCheck defines model for _shared_req_AccountCheck.
+type SharedReqAccountCheck struct {
+	ApiKey            string                        `json:"api_key"`
+	AppTypeIdentifier string                        `json:"app_type_identifier"`
+	AuthType          SharedReqAccountCheckAuthType `json:"auth_type"`
+	OrgId             string                        `json:"org_id"`
+	UserIdentifier    string                        `json:"user_identifier"`
+}
+
+// SharedReqAccountCheckAuthType defines model for SharedReqAccountCheck.AuthType.
+type SharedReqAccountCheckAuthType string
 
 // Auth login creds for auth_type="anonymous"
 type SharedReqCredsAPIKey struct {
@@ -828,6 +826,9 @@ type SharedResAccount struct {
 	Profile     *ProfileFields           `json:"profile,omitempty"`
 	Roles       *[]AppOrgRoleFields      `json:"roles,omitempty"`
 }
+
+// SharedResAccountCheck defines model for _shared_res_AccountCheck.
+type SharedResAccountCheck bool
 
 // SharedResLogin defines model for _shared_res_Login.
 type SharedResLogin struct {
@@ -1160,8 +1161,14 @@ type DeleteServicesAuthAccountAuthTypeLinkJSONBody ServicesReqAccountAuthTypeUnl
 // PostServicesAuthAccountAuthTypeLinkJSONBody defines parameters for PostServicesAuthAccountAuthTypeLink.
 type PostServicesAuthAccountAuthTypeLinkJSONBody ServicesReqAccountAuthTypeLink
 
+// PostServicesAuthAccountCanLinkJSONBody defines parameters for PostServicesAuthAccountCanLink.
+type PostServicesAuthAccountCanLinkJSONBody SharedReqAccountCheck
+
+// PostServicesAuthAccountCanSignInJSONBody defines parameters for PostServicesAuthAccountCanSignIn.
+type PostServicesAuthAccountCanSignInJSONBody SharedReqAccountCheck
+
 // PostServicesAuthAccountExistsJSONBody defines parameters for PostServicesAuthAccountExists.
-type PostServicesAuthAccountExistsJSONBody ServicesReqAccountExists
+type PostServicesAuthAccountExistsJSONBody SharedReqAccountCheck
 
 // PostServicesAuthAuthorizeServiceJSONBody defines parameters for PostServicesAuthAuthorizeService.
 type PostServicesAuthAuthorizeServiceJSONBody ServicesReqAuthorizeService
@@ -1376,6 +1383,12 @@ type DeleteServicesAuthAccountAuthTypeLinkJSONRequestBody DeleteServicesAuthAcco
 
 // PostServicesAuthAccountAuthTypeLinkJSONRequestBody defines body for PostServicesAuthAccountAuthTypeLink for application/json ContentType.
 type PostServicesAuthAccountAuthTypeLinkJSONRequestBody PostServicesAuthAccountAuthTypeLinkJSONBody
+
+// PostServicesAuthAccountCanLinkJSONRequestBody defines body for PostServicesAuthAccountCanLink for application/json ContentType.
+type PostServicesAuthAccountCanLinkJSONRequestBody PostServicesAuthAccountCanLinkJSONBody
+
+// PostServicesAuthAccountCanSignInJSONRequestBody defines body for PostServicesAuthAccountCanSignIn for application/json ContentType.
+type PostServicesAuthAccountCanSignInJSONRequestBody PostServicesAuthAccountCanSignInJSONBody
 
 // PostServicesAuthAccountExistsJSONRequestBody defines body for PostServicesAuthAccountExists for application/json ContentType.
 type PostServicesAuthAccountExistsJSONRequestBody PostServicesAuthAccountExistsJSONBody
