@@ -351,6 +351,64 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 	return nil
 }
 
+func (app *application) admRemovePermissionsFromRole(roleID string, permissionNames []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error {
+
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from admin assigner")
+	}
+	if len(permissionNames) == 0 {
+		return errors.New("no permissions names")
+	}
+
+	//1. find the application organization
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return errors.Wrap("there is no applicationo organization with that IDs", err)
+	}
+
+	//2. find the application organization role entity
+	role, err := app.storage.FindAppOrgRole(roleID, appOrg.ID)
+	if err != nil {
+		return errors.Wrap("there is no roles with that ID", err)
+	}
+
+	//3. check role assigners
+	err = role.CheckAssigners(assignerPermissions)
+	if err != nil {
+		return errors.Wrapf("error checking assigners for %s role", err, role.Name)
+	}
+
+	//4. check permission assigners
+	for _, pcheck := range role.Permissions {
+		err = pcheck.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking permission assigners", err)
+		}
+	}
+
+	//5. find the permissions
+	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	if err != nil {
+		return errors.Wrapf("the are no permissions with those permission names", err)
+	}
+
+	//6. check the assigner
+	for _, permission := range permissions {
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking permission assigners", err)
+		}
+	}
+
+	//7.insert permission into a role
+	err = app.storage.RevokePermissionsFromRole(nil, roleID, permissionNames)
+	if err != nil {
+		return errors.Wrap("error inserting permissions to roles", err)
+	}
+
+	return nil
+}
+
 func (app *application) admGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error) {
 	//1. find application organization
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)

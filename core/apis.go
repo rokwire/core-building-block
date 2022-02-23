@@ -143,6 +143,10 @@ func (s *administrationImpl) AdmDeleteAppOrgRole(ID string, appID string, orgID 
 	return s.app.admDeleteAppOrgRole(ID, appID, orgID)
 }
 
+func (s *administrationImpl) AdmRemovePermissionsFromRole(roleID string, permissionNames []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error {
+	return s.app.admRemovePermissionsFromRole(roleID, permissionNames, appID, orgID, assignerPermissions, l)
+}
+
 func (s *administrationImpl) AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error) {
 	return s.app.admGetApplicationPermissions(appID, orgID, l)
 }
