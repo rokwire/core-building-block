@@ -105,3 +105,14 @@ type appOrgRole struct {
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
+
+type permission struct {
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
+
+	ServiceID string   `bson:"service_id"`
+	Assigners []string `bson:"assigners"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
