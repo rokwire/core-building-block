@@ -1753,6 +1753,54 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 	return nil
 }
 
+func (sa *Adapter) RevokePermissionsFromRole(context TransactionContext, roleID string, permissionNames []string) error {
+	if len(permissionNames) == 0 {
+		return nil
+	}
+
+	filter := bson.D{primitive.E{Key: "_id", Value: roleID}}
+	var roleResult []appOrgRole
+	err := sa.db.applicationsOrganizationsRoles.Find(filter, &roleResult, nil)
+	if err != nil {
+		return err
+	}
+
+	if len(roleResult) == 0 {
+		return errors.Newf("no role with this role ID: %v", roleID)
+	}
+
+	role := roleResult[0]
+
+	permissions := role.Permissions
+
+	for i, currentRole := range roleResult {
+		if currentRole.ID == roleID {
+			var newPermission []model.Permission
+			for _, permission := range permissions {
+				if permission.ID != permissionNames[0] {
+					newPermission = append(newPermission, permission)
+				}
+			}
+			role.Permissions = newPermission
+			roleResult[i] = currentRole
+		}
+	}
+
+	roleFilter := bson.M{"_id": roleID}
+	opts := options.Replace().SetUpsert(true)
+	if context != nil {
+		err = sa.db.applicationsOrganizationsRoles.ReplaceOneWithContext(context, roleFilter, role, opts)
+	} else {
+		err = sa.db.applicationsOrganizationsRoles.ReplaceOne(roleFilter, role, opts)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSave, "role", &logutils.FieldArgs{"role_id": role.ID}, nil)
+	}
+
+	return nil
+}
+
 //FindAppOrgGroups finds a set of application organization groups
 //	ids param is optional
 func (sa *Adapter) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
