@@ -102,6 +102,8 @@ _shared_req_Refresh:
   $ref: "./apis/shared/requests/refresh/Request.yaml"
 _shared_req_Mfa:
   $ref: "./apis/shared/requests/mfa/Request.yaml"
+_shared_req_AccountCheck:
+  $ref: "./apis/shared/requests/AccountCheck.yaml"
 _shared_req_CredsEmail:
   $ref: "./apis/shared/requests/CredsEmail.yaml"
 _shared_req_CredsTwilioPhone:
@@ -134,6 +136,8 @@ _shared_res_Refresh:
   $ref: "./apis/shared/responses/refresh/Response.yaml"
 _shared_res_Account:
   $ref: "./apis/shared/responses/Account.yaml"
+_shared_res_AccountCheck:
+  $ref: "./apis/shared/responses/AccountCheck.yaml"
 _shared_res_Mfa:
   $ref: "./apis/shared/responses/mfa/Response.yaml"
 _shared_res_RokwireToken:
@@ -143,12 +147,6 @@ _shared_res_LoginSession:
 ## end SHARED requests and responses
 
 ## SERVICES section
-
-### account exists API
-_services_req_account-exists:
-  $ref: "./apis/services/account/exists/request/Request.yaml"
-_services_res_account-exists:
-  $ref: "./apis/services/account/exists/response/Response.yaml"
 
 ### account auth-type link API
 _services_req_account_auth-type-link:
@@ -254,6 +252,12 @@ _system_req_application-roles:
 ### account permissions API
 _system_req_account-permissions:
   $ref: "./apis/system/account/permissions/request/Request.yaml"
+
+### auth_type API
+_system_req_create_auth_type:
+  $ref: "./apis/system/auth-types/request/Request.yaml"
+_system_req_update_auth_type:
+  $ref: "./apis/system/auth-typesID/request/Request.yaml"
 
 ### account roles API
 _system_req_account-roles:

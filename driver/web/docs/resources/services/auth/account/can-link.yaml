@@ -1,9 +1,9 @@
 post:
   tags:
   - Services
-  summary: Check if an account already exists
+  summary: Check if a client can link an auth type
   description: |
-    Account exists checks if an account exists for the provided user identifier and auth type
+    Checks if a client is able to link a new auth type to an account
   requestBody:
     description: |
       Account information to be checked

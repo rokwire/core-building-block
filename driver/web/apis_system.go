@@ -811,6 +811,86 @@ func (h SystemApisHandler) removeMFAType(l *logs.Log, r *http.Request, claims *t
 	return l.HttpResponseSuccess()
 }
 
+//createAuthTypes creates auth-type
+func (h SystemApisHandler) createAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.SystemReqCreateAuthType
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
+	}
+
+	code := requestData.Code
+	description := requestData.Description
+	isExternal := requestData.IsExternal
+	isAnonymous := requestData.IsAnonymous
+	useCredentials := requestData.UseCredentials
+	ignoreMFA := requestData.IgnoreMfa
+	params := requestData.Params
+
+	_, err = h.coreAPIs.System.SysCreateAuthTypes(code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params.AdditionalProperties)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAuthType, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+//getAuthTypes gets auth-types
+func (h SystemApisHandler) getAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	authTypes, err := h.coreAPIs.System.SysGetAuthTypes()
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+
+	response := authTypesToDef(authTypes)
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeOrganization, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
+//updateAuthTypes updates auth type
+func (h SystemApisHandler) updateAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	rParams := mux.Vars(r)
+	ID := rParams["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+	var requestData Def.SystemReqUpdateAuthType
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
+	}
+
+	code := requestData.Code
+	description := requestData.Description
+	isExternal := requestData.IsExternal
+	isAnonymous := requestData.IsAnonymous
+	useCredentials := requestData.UseCredentials
+	ignoreMFA := requestData.IgnoreMfa
+	params := requestData.Params
+
+	err = h.coreAPIs.System.SysUpdateAuthTypes(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params.AdditionalProperties)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAuthType, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 //NewSystemApisHandler creates new system Handler instance
 func NewSystemApisHandler(coreAPIs *core.APIs) SystemApisHandler {
 	return SystemApisHandler{coreAPIs: coreAPIs}

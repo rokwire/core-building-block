@@ -49,6 +49,10 @@ paths:
     $ref: "./resources/services/auth/verify-mfa.yaml"
   /services/auth/account/exists:
     $ref: "./resources/services/auth/account/exists.yaml"
+  /services/auth/account/can-sign-in:
+    $ref: "./resources/services/auth/account/can-sign-in.yaml"
+  /services/auth/account/can-link:
+    $ref: "./resources/services/auth/account/can-link.yaml"
   /services/auth/account/auth-type/link:
     $ref: "./resources/services/auth/account/auth-type/link.yaml"
   /services/auth/authorize-service:
@@ -163,6 +167,11 @@ paths:
     $ref: "./resources/system/account/mfa.yaml"
   /system/api-keys:
     $ref: "./resources/system/api-keys.yaml"
+  /system/auth-types:
+    $ref: "./resources/system/auth-types.yaml"
+  /system/auth-types/{id}:
+    $ref: "./resources/system/auth-typesID.yaml"
+
 
   #default
   /version:

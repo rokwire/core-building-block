@@ -96,6 +96,9 @@ type System interface {
 	SysCreateAppTypeVersion(appTypeID string, major int, minor int, patch int) error
 	SysGetApplicationTypeVersion(appTypeID string) ([]model.Version, error)
 	SysDeleteApplicationTypeVersion(appTypeID string, versionID string, l *logs.Log) error
+	SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error)
+	SysGetAuthTypes() ([]model.AuthType, error)
+	SysUpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
 }
 
 //Storage is used by core to storage data - DB storage adapter, file storage adapter etc
@@ -106,7 +109,7 @@ type Storage interface {
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
-	DeleteAccount(context storage.TransactionContext, id string) error
+
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
@@ -116,13 +119,8 @@ type Storage interface {
 
 	UpdateProfile(profile model.Profile) error
 
-	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
-	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
-	DeleteCredential(context storage.TransactionContext, ID string) error
-
 	FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
-	DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error
 	DeleteLoginSessionByID(context storage.TransactionContext, id string) error
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
@@ -160,6 +158,11 @@ type Storage interface {
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
+
+	InsertAuthType(authType model.AuthType) (*model.AuthType, error)
+	LoadAuthTypes() ([]model.AuthType, error)
+	UpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
+
 	FindApplicationType(id string) (*model.ApplicationType, error)
 	InsertVersion(context storage.TransactionContext, version *model.Version, appTypeID string) error
 	FindVersionByAppTypeID(context storage.TransactionContext, appTypeID string) ([]model.Version, error)
