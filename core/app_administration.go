@@ -547,3 +547,61 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 
 	return nil
 }
+
+func (app *application) admGrantPermissionsToRole(roleID string, permissionNames []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error {
+
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from admin assigner")
+	}
+	if len(permissionNames) == 0 {
+		return errors.New("no permissions names")
+	}
+
+	//1. find the application organization
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return errors.Wrap("there is no applicationo organization with that IDs", err)
+	}
+
+	//2. find the application organization role entity
+	role, err := app.storage.FindAppOrgRole(roleID, appOrg.ID)
+	if err != nil {
+		return errors.Wrap("there is no roles with that ID", err)
+	}
+
+	//3. check role assigners
+	err = role.CheckAssigners(assignerPermissions)
+	if err != nil {
+		return errors.Wrapf("error checking assigners for %s role", err, role.Name)
+	}
+
+	//4. check permission assigners
+	for _, pcheck := range role.Permissions {
+		err = pcheck.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking permission assigners", err)
+		}
+	}
+
+	//5. find the permissions
+	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	if err != nil {
+		return errors.Wrapf("the are no permissions with those permission names", err)
+	}
+
+	//6. check the assigner
+	for _, permission := range permissions {
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking permission assigners", err)
+		}
+	}
+
+	//7.insert permission into a role
+	err = app.storage.InsertRolePermissions(nil, roleID, permissions)
+	if err != nil {
+		return errors.Wrap("error inserting permissions to roles", err)
+	}
+
+	return nil
+}
