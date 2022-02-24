@@ -548,7 +548,7 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 	return nil
 }
 
-func (app *application) admGrantPermissionsToRole(roleID string, permissionNames []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error {
+func (app *application) admGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
 
 	if len(assignerPermissions) == 0 {
 		return errors.New("no permissions from admin assigner")

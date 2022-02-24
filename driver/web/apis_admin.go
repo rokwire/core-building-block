@@ -677,7 +677,7 @@ func (h AdminApisHandler) adminGrantPermissionsToRole(l *logs.Log, r *http.Reque
 	}
 
 	assignerPermissions := strings.Split(claims.Permissions, ",")
-	err = h.coreAPIs.Administration.AdmGrantPermissionsToRole(requestData.RoleId, requestData.Permissions, claims.AppID, claims.OrgID, assignerPermissions, l)
+	err = h.coreAPIs.Administration.AdmGrantPermissionsToRole(claims.AppID, claims.OrgID, requestData.RoleId, requestData.Permissions, assignerPermissions, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}
