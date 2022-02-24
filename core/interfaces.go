@@ -132,7 +132,7 @@ type Storage interface {
 	InsertPermission(item model.Permission) error
 	UpdatePermission(item model.Permission) error
 	DeletePermission(id string) error
-	RevokeAccountPermissions(cotext storage.TransactionContext, permissionObj []model.Permission, permissons []string, accountID string) error
+	DeleteAccountPermissions(cotext storage.TransactionContext, permissionObj []model.Permission, permissons []string, accountID string) error
 
 	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error)

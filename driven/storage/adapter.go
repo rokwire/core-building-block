@@ -1666,8 +1666,8 @@ func (sa *Adapter) DeletePermission(id string) error {
 	return errors.New(logutils.Unimplemented)
 }
 
-//RevokeAccountPermissions deletes permission from an account
-func (sa *Adapter) RevokeAccountPermissions(context TransactionContext, permissionObj []model.Permission, permissionNames []string, accountID string) error {
+//DeleteAccountPermissions deletes permission from an account
+func (sa *Adapter) DeleteAccountPermissions(context TransactionContext, permissionObj []model.Permission, permissionNames []string, accountID string) error {
 	if len(permissionNames) == 0 {
 		return nil
 	}
