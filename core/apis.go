@@ -119,28 +119,28 @@ func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Applicati
 	return s.app.admGetApplications(orgID)
 }
 
-func (s *administrationImpl) AdmCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgGroup, error) {
-	return s.app.admCreateAppOrgGroup(name, permissionIDs, rolesIDs, appID, orgID, l)
+func (s *administrationImpl) AdmCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgGroup, error) {
+	return s.app.admCreateAppOrgGroup(name, permissionIDs, rolesIDs, appID, orgID, assignerPermissions, l)
 }
 
 func (s *administrationImpl) AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
 	return s.app.admGetAppOrgGroups(appID, orgID)
 }
 
-func (s *administrationImpl) AdmDeleteAppOrgGroup(ID string, appID string, orgID string) error {
-	return s.app.admDeleteAppOrgGroup(ID, appID, orgID)
+func (s *administrationImpl) AdmDeleteAppOrgGroup(ID string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error {
+	return s.app.admDeleteAppOrgGroup(ID, appID, orgID, assignerPermissions, l)
 }
 
-func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, l *logs.Log) (*model.AppOrgRole, error) {
-	return s.app.admCreateAppOrgRole(name, description, permissionIDs, appID, orgID, l)
+func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgRole, error) {
+	return s.app.admCreateAppOrgRole(name, description, permissionIDs, appID, orgID, assignerPermissions, l)
 }
 
 func (s *administrationImpl) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
 	return s.app.AdmGetAppOrgRoles(appID, orgID)
 }
 
-func (s *administrationImpl) AdmDeleteAppOrgRole(ID string, appID string, orgID string) error {
-	return s.app.admDeleteAppOrgRole(ID, appID, orgID)
+func (s *administrationImpl) AdmDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error {
+	return s.app.admDeleteAppOrgRole(ID, appID, orgID, assignerPermissions, l)
 }
 
 func (s *administrationImpl) AdmGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
