@@ -1112,7 +1112,7 @@ func (sa *Adapter) InsertAccountRoles(accountID string, appOrgID string, roles [
 	return nil
 }
 
-func (sa *Adapter) RevokeAccountRoles(context TransactionContext, accountID string, roleIDs []string) error {
+func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID string, roleIDs []string) error {
 	if len(roleIDs) == 0 {
 		return nil
 	}
@@ -1168,26 +1168,6 @@ func (sa *Adapter) UpdateAccountRoles(accountID string, roles []model.AccountRol
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "roles", Value: stgRoles},
-		}},
-	}
-
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
-	}
-
-	return nil
-}
-
-//DeleteAccountRoles deletes account roles
-func (sa *Adapter) DeleteAccountRoles(accountID string, roleIDs []string) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
-	update := bson.D{
-		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "roles", Value: bson.M{"$each": roleIDs}},
 		}},
 	}
 

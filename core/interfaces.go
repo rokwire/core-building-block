@@ -111,7 +111,7 @@ type Storage interface {
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
-	RevokeAccountRoles(context storage.TransactionContext, accountID string, roleIDs []string) error
+	DeleteAccountRoles(context storage.TransactionContext, accountID string, roleIDs []string) error
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 

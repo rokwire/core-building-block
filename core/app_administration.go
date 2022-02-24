@@ -601,7 +601,7 @@ func (app *application) admRevokeAccountRoles(appID string, orgID string, accoun
 	}
 
 	//delete permissons from  account
-	err = app.storage.RevokeAccountRoles(nil, accountID, roleIDs)
+	err = app.storage.DeleteAccountRoles(nil, accountID, roleIDs)
 	if err != nil {
 		return err
 	}
