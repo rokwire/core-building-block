@@ -249,3 +249,22 @@ func jsonWebKeySetDef(items *model.JSONWebKeySet) *Def.JWKS {
 	}
 	return &Def.JWKS{Keys: out}
 }
+
+//AuthType
+func authTypeToDef(item *model.AuthType) *Def.AuthTypeFields {
+	if item == nil {
+		return nil
+	}
+
+	return &Def.AuthTypeFields{Id: &item.ID, Code: &item.Code, Description: &item.Description,
+		IsExternal: &item.IsExternal, IsAnonymous: &item.IsAnonymous, UseCredentials: &item.UseCredentials,
+		IgnoreMfa: &item.IgnoreMFA, Params: &Def.AuthTypeFields_Params{AdditionalProperties: item.Params}}
+}
+
+func authTypesToDef(items []model.AuthType) []Def.AuthTypeFields {
+	result := make([]Def.AuthTypeFields, len(items))
+	for i, item := range items {
+		result[i] = *authTypeToDef(&item)
+	}
+	return result
+}

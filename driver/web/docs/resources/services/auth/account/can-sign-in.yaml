@@ -1,9 +1,9 @@
 post:
   tags:
   - Services
-  summary: Check if an account already exists
+  summary: Check if a client can sign in
   description: |
-    Account exists checks if an account exists for the provided user identifier and auth type
+    Checks if a client can sign in to an existing account for the provided user identifier and auth type
   requestBody:
     description: |
       Account information to be checked
