@@ -587,6 +587,12 @@ func (app *application) admRevokeAccountPermissions(appID string, orgID string, 
 				authorizedPermissions = append(authorizedPermissions, permission)
 			}
 		}
+		for _, permission := range permissions {
+			err = permission.CheckAssigners(assignerPermissions)
+			if err != nil {
+				return errors.Wrapf("error checking permission assigners", err)
+			}
+		}
 	}
 	if authorizedPermissions == nil {
 		return errors.Newf("Assigner is not authorized to assign permissions for names: %v", permissionNames)
