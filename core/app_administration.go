@@ -217,6 +217,7 @@ func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string
 		}
 	}
 
+	//6. create and insert group
 	id, _ := uuid.NewUUID()
 	now := time.Now()
 	group := model.AppOrgGroup{ID: id.String(), Name: name, Roles: groupRoles, Permissions: groupPermissions, AppOrg: *appOrg, DateCreated: now}
@@ -288,7 +289,7 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 		return errors.Newf("the %s is already used by account and cannot be deleted", group.Name)
 	}
 
-	//6. delete the group
+	//7. delete the group
 	err = app.storage.DeleteAppOrgGroup(ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgGroup, nil, err)
@@ -317,6 +318,7 @@ func (app *application) admCreateAppOrgRole(name string, description string, per
 		}
 	}
 
+	//4. create and insert role
 	id, _ := uuid.NewUUID()
 	now := time.Now()
 	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: rolePermissions, AppOrg: *appOrg, DateCreated: now}
@@ -359,18 +361,20 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 		return errors.Newf("there is no a role for id %s", ID)
 	}
 
+	//3. check assigners field
 	for _, permission := range role.Permissions {
 		err = permission.CheckAssigners(assignerPermissions)
 		if err != nil {
 			return errors.Wrapf("error checking permission assigners", err)
 		}
 	}
-	//3. do not allow to delete system roles
+
+	//4. do not allow to delete system roles
 	if role.System {
 		return errors.Newf("%s role is a system role and cannot be deleted", role.Name)
 	}
 
-	//4. check if the role has accounts relations
+	//5. check if the role has accounts relations
 	numberOfAccounts, err := app.storage.CountAccountsByRoleID(ID)
 	if err != nil {
 		return errors.WrapErrorAction("error checking the accounts count by role id", "", nil, err)
@@ -379,7 +383,7 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 		return errors.Newf("the %s is already used by account and cannot be deleted", role.Name)
 	}
 
-	//5. check if the group has groups relations
+	//6. check if the group has groups relations
 	numberOfGroups, err := app.storage.CountGroupsByRoleID(ID)
 	if err != nil {
 		return errors.WrapErrorAction("error checking the groups count by role id", "", nil, err)
@@ -388,7 +392,7 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 		return errors.Newf("the %s is already used by groups and cannot be deleted", role.Name)
 	}
 
-	//6. delete the group
+	//7. delete the group
 	err = app.storage.DeleteAppOrgRole(ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgRole, nil, err)
