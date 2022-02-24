@@ -266,19 +266,3 @@ func applicationToStorage(item *model.Application) *application {
 		SharedIdentities: item.SharedIdentities, Admin: item.Admin,
 		Types: applicationTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
-
-func permissionToStorage(item model.Permission) permission {
-	return permission{ID: item.ID, Name: item.Name, ServiceID: item.ServiceID, Assigners: item.Assigners, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
-}
-
-func persmissionsToStorage(items []model.Permission) []permission {
-	if len(items) == 0 {
-		return make([]permission, 0)
-	}
-
-	res := make([]permission, len(items))
-	for i, persmissions := range items {
-		res[i] = permissionToStorage(persmissions)
-	}
-	return res
-}

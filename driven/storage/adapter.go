@@ -1755,12 +1755,11 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 
 //InsertRolePermissions inserts permissions to role
 func (sa *Adapter) InsertRolePermissions(context TransactionContext, roleID string, permissions []model.Permission) error {
-	storagePermission := persmissionsToStorage(permissions)
 
 	filter := bson.D{primitive.E{Key: "_id", Value: roleID}}
 	update := bson.D{
 		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "permissions", Value: bson.M{"$each": storagePermission}},
+			primitive.E{Key: "permissions", Value: bson.M{"$each": permissions}},
 		}},
 	}
 
