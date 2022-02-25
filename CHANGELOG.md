@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Expose revoke permissions from account Admin API [#411] (https://github.com/rokwire/core-building-block/issues/411)
+
+## [1.19.0] - 2022-02-25
+### Added
 - Expose System APIs for auth types [#362](https://github.com/rokwire/core-building-block/issues/362)
 - Expose grant roles to account Admin API [#383](https://github.com/rokwire/core-building-block/issues/383)
 - Expose grant permissions to account Admin API [#382](https://github.com/rokwire/core-building-block/issues/382)
@@ -238,7 +241,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.18.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.19.0...HEAD
+[1.19.0]: https://github.com/rokwire/core-building-block/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/rokwire/core-building-block/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/rokwire/core-building-block/compare/v1.16.0...v1.17.0
 [1.16.0]: https://github.com/rokwire/core-building-block/compare/v1.15.0...v1.16.0
