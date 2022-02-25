@@ -33,6 +33,8 @@ OrganizationConfig:
   $ref: "./application/OrganizationConfig.yaml"
 OrganizationConfigFields:
   $ref: "./application/OrganizationConfigFields.yaml"
+ApplicationConfig:
+  $ref: "./application/ApplicationConfig.yaml"
 
 # auth
 LoginSession:
@@ -100,6 +102,8 @@ _shared_req_Refresh:
   $ref: "./apis/shared/requests/refresh/Request.yaml"
 _shared_req_Mfa:
   $ref: "./apis/shared/requests/mfa/Request.yaml"
+_shared_req_AccountCheck:
+  $ref: "./apis/shared/requests/AccountCheck.yaml"
 _shared_req_CredsEmail:
   $ref: "./apis/shared/requests/CredsEmail.yaml"
 _shared_req_CredsTwilioPhone:
@@ -132,23 +136,25 @@ _shared_res_Refresh:
   $ref: "./apis/shared/responses/refresh/Response.yaml"
 _shared_res_Account:
   $ref: "./apis/shared/responses/Account.yaml"
+_shared_res_AccountCheck:
+  $ref: "./apis/shared/responses/AccountCheck.yaml"
 _shared_res_Mfa:
   $ref: "./apis/shared/responses/mfa/Response.yaml"
 _shared_res_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
+_shared_res_LoginSession:
+  $ref: "./apis/shared/responses/LoginSession.yaml"
 ## end SHARED requests and responses
 
 ## SERVICES section
 
-### account exists API
-_services_req_account-exists:
-  $ref: "./apis/services/account/exists/request/Request.yaml"
-_services_res_account-exists:
-  $ref: "./apis/services/account/exists/response/Response.yaml"
-
 ### account auth-type link API
 _services_req_account_auth-type-link:
-  $ref: "./apis/services/account/auth-type/link/request/Request.yaml"
+  $ref: "./apis/services/account/auth-type/link/request/Link.yaml"
+_services_req_account_auth-type-unlink:
+  $ref: "./apis/services/account/auth-type/link/request/Unlink.yaml"
+_services_res_account_auth-type-link:
+  $ref: "./apis/services/account/auth-type/link/response/Response.yaml"
 
 ### credential_update API
 _services_req_credential_update:
@@ -172,6 +178,11 @@ _services_req_authorize-service:
 _services_res_authorize-service:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
 
+### app-configs API
+_services_req_application_configs:
+  $ref: "./apis/services/application/configs/request/Request.yaml"
+_services_req_application_org-configs:
+  $ref: "./apis/services/application/organization/configs/request/Request.yaml"
 ## end SERVICES section
 
 ## ADMIN section
@@ -188,6 +199,14 @@ _admin_req_create-application_role:
 _admin_req_create-application_group:
   $ref: "./apis/admin/application/groups/request/Request.yaml"
 
+### account roles API
+_admin_req_grant-roles-to-account:
+  $ref: "./apis/admin/application/account/roles/grant/request/Request.yaml"
+
+### permissions API
+_admin_req_grant-permissions:
+  $ref: "./apis/admin/application/account/permissions/grant/request/Request.yaml"
+  
 ## end ADMIN section
 
 ## SYSTEM section
@@ -230,8 +249,18 @@ _system_req_application-roles:
 _system_req_account-permissions:
   $ref: "./apis/system/account/permissions/request/Request.yaml"
 
+### auth_type API
+_system_req_create_auth_type:
+  $ref: "./apis/system/auth-types/request/Request.yaml"
+_system_req_update_auth_type:
+  $ref: "./apis/system/auth-typesID/request/Request.yaml"
+
 ### account roles API
 _system_req_account-roles:
   $ref: "./apis/system/account/roles/request/Request.yaml"
+
+### application config API
+_system_req_create_ApplicationConfig_Request:
+  $ref: "./apis/system/application-config/request/Request.yaml"
 
 ## end SYSTEM section

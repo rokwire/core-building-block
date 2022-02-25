@@ -36,7 +36,7 @@ func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthTypeFields 
 	params := &Def.AccountAuthTypeFields_Params{}
 	params.AdditionalProperties = item.Params
 
-	return Def.AccountAuthTypeFields{Id: &item.ID, Code: &item.AuthType.Code, Identifier: &item.Identifier, Active: &item.Active, Params: params}
+	return Def.AccountAuthTypeFields{Id: &item.ID, Code: &item.AuthType.Code, Identifier: &item.Identifier, Active: &item.Active, Unverified: &item.Unverified, Params: params}
 }
 
 func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeFields {
@@ -159,6 +159,9 @@ func mfaDataToDef(item *model.MFAType) *Def.SharedResMfa {
 }
 
 func profileToDef(item *model.Profile) *Def.ProfileFields {
+	if item == nil {
+		return nil
+	}
 	birthYear := int(item.BirthYear)
 	return &Def.ProfileFields{Id: &item.ID, PhotoUrl: &item.PhotoURL, FirstName: &item.FirstName, LastName: &item.LastName,
 		Email: &item.Email, Phone: &item.Phone, BirthYear: &birthYear, Address: &item.Address, ZipCode: &item.ZipCode,
@@ -228,7 +231,7 @@ func deviceToDef(item *model.Device) *Def.DeviceFields {
 		return nil
 	}
 
-	return &Def.DeviceFields{Id: item.ID, Type: Def.DeviceFieldsType(item.Type), Os: &item.OS}
+	return &Def.DeviceFields{Id: item.ID, DeviceId: &item.DeviceID, Type: Def.DeviceFieldsType(item.Type), Os: &item.OS}
 }
 
 func deviceListToDef(items []model.Device) []Def.DeviceFields {

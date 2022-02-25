@@ -9,7 +9,7 @@ import (
 func applicationToDef(item model.Application) Def.ApplicationFields {
 
 	return Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
-		RequiresOwnUsers: &item.RequiresOwnUsers}
+		SharedIdentities: &item.SharedIdentities}
 }
 
 func applicationsToDef(item []model.Application) []Def.ApplicationFields {
@@ -72,6 +72,24 @@ func organizationsToDef(items []model.Organization) []Def.OrganizationFields {
 	result := make([]Def.OrganizationFields, len(items))
 	for i, item := range items {
 		result[i] = *organizationToDef(&item)
+	}
+	return result
+}
+
+//App Config
+func appConfigToDef(item model.ApplicationConfig) Def.ApplicationConfig {
+	defConfig := Def.ApplicationConfig{Id: item.ID, AppTypeId: item.ApplicationType.ID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
+	if item.AppOrg != nil {
+		defConfig.OrgId = &item.AppOrg.Organization.ID
+	}
+
+	return defConfig
+}
+
+func appConfigsToDef(items []model.ApplicationConfig) []Def.ApplicationConfig {
+	result := make([]Def.ApplicationConfig, len(items))
+	for i, item := range items {
+		result[i] = appConfigToDef(item)
 	}
 	return result
 }

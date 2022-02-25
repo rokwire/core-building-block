@@ -1,0 +1,17 @@
+required:
+  - auth_type
+  - app_type_identifier
+  - identifier
+type: object
+properties:
+  auth_type:
+    type: string
+    enum:
+      - email
+      - twilio_phone
+      - illinois_oidc
+      - username
+  app_type_identifier:
+    type: string
+  identifier:
+    type: string

@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.19.0] - 2022-02-25
+### Added
+- Expose System APIs for auth types [#362](https://github.com/rokwire/core-building-block/issues/362)
+- Expose grant roles to account Admin API [#383](https://github.com/rokwire/core-building-block/issues/383)
+- Expose grant permissions to account Admin API [#382](https://github.com/rokwire/core-building-block/issues/382)
+- Expose Admin API which gives an application account devices [#359](https://github.com/rokwire/core-building-block/issues/359)
+- Expose Admin API which logouts an account session for specific application [#371](https://github.com/rokwire/core-building-block/issues/371)
+- Unlink account auth types [#393](https://github.com/rokwire/core-building-block/issues/393)
+- Expose delete app org role admin API [#313](https://github.com/rokwire/core-building-block/issues/313)
+- Expose delete app org group admin API [#312](https://github.com/rokwire/core-building-block/issues/312)
+- Expose Admin API with the currently logged in accounts [#355](https://github.com/rokwire/core-building-block/issues/355)
+- Add app config endpoints [#261](https://github.com/rokwire/core-building-block/issues/261)
+
+### Security
+- Fix security vulnerability for roles and groups admin APIs [#414](https://github.com/rokwire/core-building-block/issues/414)
+
+### Fixed
+- Fix issues with account linking [#408](https://github.com/rokwire/core-building-block/issues/408)
+- Fix creating application group admin API [#397](https://github.com/rokwire/core-building-block/issues/397)
+- Fix create role and create group Admin APIs [#386](https://github.com/rokwire/core-building-block/issues/386)
+- Fix broken app config API and CHANGELOG.md [#401](https://github.com/rokwire/core-building-block/issues/401)
+- Fix shared profile feature [#405](https://github.com/rokwire/core-building-block/issues/405)
+
+### Changed
+- Update the filter capability for the get login sessions Admin API [#394](https://github.com/rokwire/core-building-block/issues/394)
+- Limit the returned items for get application accounts admin API [#375](https://github.com/rokwire/core-building-block/issues/375)
+- Return ordered list of account auth types on link account auth type [#376](https://github.com/rokwire/core-building-block/issues/376)
+
 ## [1.18.0] - 2022-01-25
 ### Added
 - Expose create app org group admin API [#309](https://github.com/rokwire/core-building-block/issues/309)
@@ -26,7 +54,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix yaml files paths [#352](https://github.com/rokwire/core-building-block/issues/352)
-
 
 ## [1.17.0] - 2021-12-06
 ### Fixed
@@ -212,7 +239,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.18.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.19.0...HEAD
+[1.19.0]: https://github.com/rokwire/core-building-block/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/rokwire/core-building-block/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/rokwire/core-building-block/compare/v1.16.0...v1.17.0
 [1.16.0]: https://github.com/rokwire/core-building-block/compare/v1.15.0...v1.16.0
