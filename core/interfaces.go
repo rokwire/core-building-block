@@ -21,6 +21,7 @@ type Services interface {
 	SerGetCommonTest(l *logs.Log) string
 
 	SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
+	SerDeleteApplicationLoginSession(appID string, orgID string, currentAccountID string, identifier string, l *logs.Log) error
 }
 
 //Administration exposes administration APIs for the driver adapters
@@ -118,6 +119,7 @@ type Storage interface {
 	FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
 	DeleteLoginSessionByID(context storage.TransactionContext, id string) error
+	DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error
