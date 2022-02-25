@@ -1413,7 +1413,7 @@
         }
       }
     },
-    "/services/application/account/{account_id}/session": {
+    "/services/application/account/{account_id}/login-sessions": {
       "delete": {
         "tags": [
           "Services"
