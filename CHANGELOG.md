@@ -6,10 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Expose application type versions system APIs [#404](https://github.com/rokwire/core-building-block/issues/404)
 
 ## [1.19.0] - 2022-02-25
 ### Added
-- Expose application type versions system APIs [#404](https://github.com/rokwire/core-building-block/issues/404)
 - Expose System APIs for auth types [#362](https://github.com/rokwire/core-building-block/issues/362)
 - Expose grant roles to account Admin API [#383](https://github.com/rokwire/core-building-block/issues/383)
 - Expose grant permissions to account Admin API [#382](https://github.com/rokwire/core-building-block/issues/382)
