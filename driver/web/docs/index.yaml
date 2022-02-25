@@ -73,6 +73,8 @@ paths:
     $ref: "./resources/services/application/configs.yaml"
   /services/application/organization/configs:
     $ref: "./resources/services/application/organization/configs.yaml"
+  /services/application/account/{account_id}/session:
+    $ref: "./resources/services/account/login-sessions.yaml"
 
   #admin
   /admin/auth/login:
