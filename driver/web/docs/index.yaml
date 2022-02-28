@@ -35,6 +35,8 @@ paths:
     $ref: "./resources/services/auth/refresh.yaml"
   /services/auth/login-url:
     $ref: "./resources/services/auth/login-url.yaml"
+  /services/auth/logout:
+    $ref: "./resources/services/auth/logout.yaml"
   /services/auth/credential/verify:
     $ref: "./resources/services/auth/credential/verify.yaml"
   /services/auth/credential/send-verify:
@@ -73,8 +75,6 @@ paths:
     $ref: "./resources/services/application/configs.yaml"
   /services/application/organization/configs:
     $ref: "./resources/services/application/organization/configs.yaml"
-  /services/application/account/{account_id}/login-sessions:
-    $ref: "./resources/services/account/login-sessions.yaml"
 
   #admin
   /admin/auth/login:

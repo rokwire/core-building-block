@@ -1,19 +1,11 @@
- delete:
+ post:
       tags:
         - Services
-      summary: logouts an account session
+      summary: logout an account session
       description: |
-        Logouts an account session for specific application
+        Logout an account session for specific application
       security:
         - bearerAuth: []
-      parameters:
-        - name: account_id
-          in: path
-          description: The accountID of the loggin session to delete
-          required: true
-          explode: false
-          schema:
-            type: string
       responses:
         '200':
           description: Success
