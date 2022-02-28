@@ -192,7 +192,8 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
-	if account != nil {
+	canSignIn := a.canSignIn(account, authType.ID, externalUser.Identifier)
+	if canSignIn {
 		//account exists
 		accountAuthType, mfaTypes, err = a.applySignInExternal(*account, authType, appOrg, *externalUser, l)
 		if err != nil {
