@@ -99,10 +99,6 @@ func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, orgID *string, 
 	return s.app.serGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey)
 }
 
-func (s *servicesImpl) SerDeleteApplicationLoginSession(appID string, orgID string, currentAccountID string, identifier string, l *logs.Log) error {
-	return s.app.serDeleteApplicationLoginSession(appID, orgID, currentAccountID, identifier, l)
-}
-
 ///
 
 //administrationImpl

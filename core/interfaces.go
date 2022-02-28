@@ -21,7 +21,6 @@ type Services interface {
 	SerGetCommonTest(l *logs.Log) string
 
 	SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
-	SerDeleteApplicationLoginSession(appID string, orgID string, currentAccountID string, identifier string, l *logs.Log) error
 }
 
 //Administration exposes administration APIs for the driver adapters
