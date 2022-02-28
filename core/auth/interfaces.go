@@ -118,6 +118,9 @@ type APIs interface {
 		authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
 		profile model.Profile, preferences map[string]interface{}, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
 
+	//Login logout user in a specific application using the specified credentials and authentication method.
+	Logout(appID string, orgID string, currentAccountID string, l *logs.Log) error
+
 	//AccountExists checks if a user is already registered
 	//The authentication method must be one of the supported for the application.
 	//	Input:
@@ -363,6 +366,8 @@ type Storage interface {
 	FindLoginSessions(context storage.TransactionContext, identifier string) ([]model.LoginSession, error)
 	FindLoginSession(refreshToken string) (*model.LoginSession, error)
 	FindAndUpdateLoginSession(context storage.TransactionContext, id string) (*model.LoginSession, error)
+	FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
+		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
 	UpdateLoginSession(context storage.TransactionContext, loginSession model.LoginSession) error
 	DeleteLoginSession(context storage.TransactionContext, id string) error
 	DeleteLoginSessionsByIDs(context storage.TransactionContext, ids []string) error

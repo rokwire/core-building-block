@@ -151,6 +151,26 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	return nil, &model.LoginSession{ID: loginSession.ID, Identifier: loginSession.Identifier, Params: responseParams, State: loginSession.State}, mfaTypes, nil
 }
 
+func (a *Auth) Logout(appID string, orgID string, currentAccountID string, l *logs.Log) error {
+	//1. validate if the session is for the current app/org and account
+
+	sessions, err := a.storage.FindLoginSessionsByParams(appID, orgID, nil, &currentAccountID, nil, nil, nil, nil, nil, nil)
+	if err != nil {
+		return errors.Wrap("error checking if it is valid to remove account session", err)
+	}
+	if len(sessions) == 0 {
+		return errors.New("not valid params")
+	}
+
+	//2. delete the session
+	err = a.storage.DeleteLoginSessionsByIdentifier(nil, currentAccountID)
+	if err != nil {
+		return errors.Wrap("error dleting session by id", err)
+	}
+
+	return nil
+}
+
 //AccountExists checks if a user is already registered
 //The authentication method must be one of the supported for the application.
 //	Input:
