@@ -3622,7 +3622,6 @@
         }
       },
       "post": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
@@ -3722,7 +3721,6 @@
         }
       },
       "put": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
@@ -3788,7 +3786,6 @@
         }
       },
       "delete": {
-        "deprecated": true,
         "tags": [
           "System"
         ],

@@ -29,7 +29,6 @@ get:
     500:
       description: Internal error
 put:
-  deprecated: true
   tags:
   - System
   summary: Updates app configs
@@ -72,7 +71,6 @@ put:
     500:
       description: Internal error
 delete:
-  deprecated: true
   tags:
   - System
   summary: Deletes app configs
