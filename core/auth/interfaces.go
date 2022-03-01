@@ -126,10 +126,33 @@ type APIs interface {
 	//		apiKey (string): API key to validate the specified app
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
-	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		accountExisted (bool): valid when error is nil
-	AccountExists(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string, l *logs.Log) (bool, error)
+	AccountExists(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
+
+	//CanSignIn checks if a user can sign in
+	//The authentication method must be one of the supported for the application.
+	//	Input:
+	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		userIdentifier (string): User identifier for the specified auth type
+	//		apiKey (string): API key to validate the specified app
+	//		appTypeIdentifier (string): identifier of the app type/client being used
+	//		orgID (string): ID of the organization being used
+	//	Returns:
+	//		canSignIn (bool): valid when error is nil
+	CanSignIn(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
+
+	//CanLink checks if a user can link a new auth type
+	//The authentication method must be one of the supported for the application.
+	//	Input:
+	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		userIdentifier (string): User identifier for the specified auth type
+	//		apiKey (string): API key to validate the specified app
+	//		appTypeIdentifier (string): identifier of the app type/client being used
+	//		orgID (string): ID of the organization being used
+	//	Returns:
+	//		canLink (bool): valid when error is nil
+	CanLink(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
@@ -285,6 +308,9 @@ type APIs interface {
 	//		account (*model.Account): account data after the operation
 	UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error)
 
+	//DeleteAccount deletes an account for the given id
+	DeleteAccount(id string) error
+
 	//GetAdminToken returns an admin token for the specified application
 	GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error)
 
@@ -341,6 +367,8 @@ type Storage interface {
 	DeleteLoginSession(context storage.TransactionContext, id string) error
 	DeleteLoginSessionsByIDs(context storage.TransactionContext, ids []string) error
 	DeleteLoginSessionsByAccountAuthTypeID(context storage.TransactionContext, id string) error
+	DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error
+
 	//LoginsSessions - predefined queries for manage deletion logic
 	DeleteMFAExpiredSessions() error
 	FindSessionsLazy(appID string, orgID string) ([]model.LoginSession, error)
@@ -351,6 +379,7 @@ type Storage interface {
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccount(account model.Account) (*model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
+	DeleteAccount(context storage.TransactionContext, id string) error
 
 	//Profiles
 	UpdateProfile(profile model.Profile) error
@@ -413,6 +442,7 @@ type Storage interface {
 	//Device
 	FindDevice(context storage.TransactionContext, deviceID string, accountID string) (*model.Device, error)
 	InsertDevice(context storage.TransactionContext, device model.Device) (*model.Device, error)
+	DeleteDevice(context storage.TransactionContext, id string) error
 
 	//ApplicationRoles
 	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)

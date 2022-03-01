@@ -3,7 +3,7 @@
   "info": {
     "title": "Rokwire Core Building Block API",
     "description": "Core Building Block API Documentation",
-    "version": "1.18.0"
+    "version": "1.20.0"
   },
   "servers": [
     {
@@ -132,7 +132,7 @@
                         "internal-server-error",
                         "shared-credential-unverified"
                       ],
-                      "description": "- `invalid`: Invalid credentials\n- `unverified`: Unverified credentials\n- `verification-expired`: Credentials verification expired. The verification is restarted\n- `already-found`: Account already exists when `sign-up=true`\n- `not-found`: Account could not be found when `sign-up=false`\n- `internal-server-error`: An undefined error occurred\n- `shared-credential-unverified`: The shared credential has not been verified yet\n"
+                      "description": "- `invalid`: Invalid credentials\n- `unverified`: Unverified credentials\n- `verification-expired`: Credentials verification expired. The verification is restarted\n- `already-exists`: Account already exists when `sign-up=true`\n- `not-found`: Account could not be found when `sign-up=false`\n- `internal-server-error`: An undefined error occurred\n- `shared-credential-unverified`: The shared credential has not been verified yet\n"
                     },
                     "message": {
                       "type": "string"
@@ -412,7 +412,28 @@
             "description": "Unauthorized"
           },
           "500": {
-            "description": "Internal error"
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "unverified",
+                        "verification-expired",
+                        "internal-server-error"
+                      ],
+                      "description": "- `unverified`: Unverified credentials\n- `verification-expired`: Credentials verification expired. The verification is restarted\n- `internal-server-error`: An undefined error occurred\n"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -557,7 +578,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/_services_req_account-exists"
+                "$ref": "#/components/schemas/_shared_req_AccountCheck"
               }
             }
           },
@@ -569,7 +590,89 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_services_res_account-exists"
+                  "$ref": "#/components/schemas/_shared_res_AccountCheck"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/services/auth/account/can-sign-in": {
+      "post": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Check if a client can sign in",
+        "description": "Checks if a client can sign in to an existing account for the provided user identifier and auth type\n",
+        "requestBody": {
+          "description": "Account information to be checked\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_shared_req_AccountCheck"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_shared_res_AccountCheck"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/services/auth/account/can-link": {
+      "post": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Check if a client can link an auth type",
+        "description": "Checks if a client is able to link a new auth type to an account\n",
+        "requestBody": {
+          "description": "Account information to be checked\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_shared_req_AccountCheck"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_shared_res_AccountCheck"
                 }
               }
             }
@@ -640,7 +743,31 @@
             "description": "Unauthorized"
           },
           "500": {
-            "description": "Internal error"
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "invalid",
+                        "unverified",
+                        "verification-expired",
+                        "already-exists",
+                        "not-found",
+                        "internal-server-error"
+                      ],
+                      "description": "- `invalid`: Invalid credentials\n- `unverified`: Unverified credentials\n- `verification-expired`: Credentials verification expired. The verification is restarted\n- `already-exists`: Auth type identifier already exists\n- `not-found`: Account could not be found when `sign-up=false`\n- `internal-server-error`: An undefined error occurred\n"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -1886,6 +2013,100 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/admin/application/account/permissions/grant": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Grant account permissions",
+        "description": "Grant account permissions\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Permissions",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_admin_req_grant-permissions"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/admin/application/account/roles/grant": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Grant account roles",
+        "description": "Grant account roles\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Roles",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_admin_req_grant-roles-to-account"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Success",
@@ -4014,6 +4235,152 @@
         }
       }
     },
+    "/system/auth-types": {
+      "post": {
+        "deprecated": true,
+        "tags": [
+          "System"
+        ],
+        "summary": "Create auth-type",
+        "description": "Creates auth-type\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "creates one auth-type",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_system_req_create_auth_type"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      },
+      "get": {
+        "deprecated": true,
+        "tags": [
+          "System"
+        ],
+        "summary": "Get auth-types",
+        "description": "Gets auth-types\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthTypeFields"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/system/auth-types/{id}": {
+      "put": {
+        "deprecated": true,
+        "tags": [
+          "System"
+        ],
+        "summary": "Update auth type",
+        "description": "Updates auth type\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the auth type that needs to be updated",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "update one auth type",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_system_req_update_auth_type"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthTypeFields"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/version": {
       "get": {
         "summary": "Get service version",
@@ -4453,16 +4820,27 @@
             "type": "string"
           },
           "code": {
-            "type": "string"
+            "type": "string",
+            "description": "username or email or phone or illinois_oidc etc"
           },
           "description": {
             "type": "string"
           },
           "is_external": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "says if the users source is external - identity providers"
+          },
+          "is_anonymous": {
+            "type": "boolean",
+            "description": "says if the auth type results in anonymous users"
+          },
+          "use_credentials": {
+            "type": "boolean",
+            "description": "says if the auth type uses credentials"
           },
           "ignore_mfa": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "says if login using this auth type may bypass account MFA"
           },
           "params": {
             "type": "object",
@@ -4842,6 +5220,9 @@
           },
           "active": {
             "type": "boolean"
+          },
+          "unverified": {
+            "type": "boolean"
           }
         }
       },
@@ -5082,6 +5463,40 @@
             ]
           },
           "code": {
+            "type": "string"
+          }
+        }
+      },
+      "_shared_req_AccountCheck": {
+        "required": [
+          "auth_type",
+          "app_type_identifier",
+          "org_id",
+          "api_key",
+          "user_identifier"
+        ],
+        "type": "object",
+        "properties": {
+          "auth_type": {
+            "type": "string",
+            "enum": [
+              "username",
+              "email",
+              "twilio_phone",
+              "illinois_oidc",
+              "anonymous"
+            ]
+          },
+          "app_type_identifier": {
+            "type": "string"
+          },
+          "org_id": {
+            "type": "string"
+          },
+          "api_key": {
+            "type": "string"
+          },
+          "user_identifier": {
             "type": "string"
           }
         }
@@ -5448,6 +5863,9 @@
           }
         }
       },
+      "_shared_res_AccountCheck": {
+        "type": "boolean"
+      },
       "_shared_res_Mfa": {
         "type": "object",
         "properties": {
@@ -5540,43 +5958,6 @@
             "type": "string"
           }
         }
-      },
-      "_services_req_account-exists": {
-        "required": [
-          "auth_type",
-          "app_type_identifier",
-          "org_id",
-          "api_key",
-          "user_identifier"
-        ],
-        "type": "object",
-        "properties": {
-          "auth_type": {
-            "type": "string",
-            "enum": [
-              "username",
-              "email",
-              "twilio_phone",
-              "illinois_oidc",
-              "anonymous"
-            ]
-          },
-          "app_type_identifier": {
-            "type": "string"
-          },
-          "org_id": {
-            "type": "string"
-          },
-          "api_key": {
-            "type": "string"
-          },
-          "user_identifier": {
-            "type": "string"
-          }
-        }
-      },
-      "_services_res_account-exists": {
-        "type": "boolean"
       },
       "_services_req_account_auth-type-link": {
         "required": [
@@ -5899,6 +6280,42 @@
             }
           },
           "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "_admin_req_grant-roles-to-account": {
+        "required": [
+          "account_id",
+          "role_ids"
+        ],
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "role_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "_admin_req_grant-permissions": {
+        "required": [
+          "account_id",
+          "permissions"
+        ],
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "permissions": {
             "type": "array",
             "items": {
               "type": "string"
@@ -6333,6 +6750,76 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "_system_req_create_auth_type": {
+        "type": "object",
+        "required": [
+          "code",
+          "description",
+          "is_external",
+          "is_anonymous",
+          "use_credentials",
+          "ignore_mfa"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "is_external": {
+            "type": "boolean"
+          },
+          "is_anonymous": {
+            "type": "boolean"
+          },
+          "use_credentials": {
+            "type": "boolean"
+          },
+          "ignore_mfa": {
+            "type": "boolean"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "_system_req_update_auth_type": {
+        "type": "object",
+        "required": [
+          "code",
+          "description",
+          "is_external",
+          "is_anonymous",
+          "use_credentials",
+          "ignore_mfa"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "is_external": {
+            "type": "boolean"
+          },
+          "is_anonymous": {
+            "type": "boolean"
+          },
+          "use_credentials": {
+            "type": "boolean"
+          },
+          "ignore_mfa": {
+            "type": "boolean"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": true
           }
         }
       },

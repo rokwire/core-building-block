@@ -800,6 +800,29 @@ func (_m *Storage) InsertApplication(application model.Application) (*model.Appl
 	return r0, r1
 }
 
+// InsertAuthType provides a mock function with given fields: authType
+func (_m *Storage) InsertAuthType(authType model.AuthType) (*model.AuthType, error) {
+	ret := _m.Called(authType)
+
+	var r0 *model.AuthType
+	if rf, ok := ret.Get(0).(func(model.AuthType) *model.AuthType); ok {
+		r0 = rf(authType)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.AuthType)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(model.AuthType) error); ok {
+		r1 = rf(authType)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // InsertOrganization provides a mock function with given fields: organization
 func (_m *Storage) InsertOrganization(organization model.Organization) (*model.Organization, error) {
 	ret := _m.Called(organization)
@@ -847,6 +870,29 @@ func (_m *Storage) LoadApplications() ([]model.Application, error) {
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Application)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// LoadAuthTypes provides a mock function with given fields:
+func (_m *Storage) LoadAuthTypes() ([]model.AuthType, error) {
+	ret := _m.Called()
+
+	var r0 []model.AuthType
+	if rf, ok := ret.Get(0).(func() []model.AuthType); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.AuthType)
 		}
 	}
 
@@ -965,6 +1011,20 @@ func (_m *Storage) UpdateAppOrgRole(item model.AppOrgRole) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(model.AppOrgRole) error); ok {
 		r0 = rf(item)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateAuthTypes provides a mock function with given fields: ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params
+func (_m *Storage) UpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error {
+	ret := _m.Called(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string, string, bool, bool, bool, bool, map[string]interface{}) error); ok {
+		r0 = rf(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
 	} else {
 		r0 = ret.Error(0)
 	}

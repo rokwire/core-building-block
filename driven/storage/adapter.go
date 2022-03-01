@@ -782,7 +782,7 @@ func (sa *Adapter) DeleteLoginSessionsByIDs(transaction TransactionContext, ids 
 
 //DeleteLoginSessionsByIdentifier deletes all login sessions with the identifier
 func (sa *Adapter) DeleteLoginSessionsByIdentifier(context TransactionContext, identifier string) error {
-	return sa.deleteLoginSessions(context, "identifier", identifier, true)
+	return sa.deleteLoginSessions(context, "identifier", identifier, false)
 }
 
 //DeleteLoginSessionByID deletes a login session by id
@@ -1980,7 +1980,7 @@ func (sa *Adapter) FindProfiles(appID string, authTypeID string, accountAuthType
 			"foreignField": "_id",
 			"as":           "app_org",
 		}},
-		{"$match": bson.M{"app_org.app_id": appID}},
+		{"$match": bson.M{"app_org.app_id": appID, "auth_types.auth_type_id": authTypeID, "auth_types.identifier": accountAuthTypeIdentifier}},
 	}
 	var accounts []account
 	err := sa.db.accounts.Aggregate(pipeline, &accounts, nil)
@@ -2475,6 +2475,46 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 	}
 
 	return &device, nil
+}
+
+//InsertAuthType inserts an auth type
+func (sa *Adapter) InsertAuthType(authType model.AuthType) (*model.AuthType, error) {
+	_, err := sa.db.authTypes.InsertOne(authType)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, nil, err)
+	}
+
+	return &authType, nil
+}
+
+//UpdateAuthTypes updates an auth type
+func (sa *Adapter) UpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool,
+	useCredentials bool, ignoreMFA bool, params map[string]interface{}) error {
+
+	now := time.Now()
+	updateAuthTypeFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	updateAuthType := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "code", Value: code},
+			primitive.E{Key: "description", Value: description},
+			primitive.E{Key: "is_external", Value: isExternal},
+			primitive.E{Key: "is_anonymous", Value: isAnonymous},
+			primitive.E{Key: "use_credentials", Value: useCredentials},
+			primitive.E{Key: "ignore_mfa", Value: ignoreMFA},
+			primitive.E{Key: "params", Value: params},
+			primitive.E{Key: "date_updated", Value: now},
+		}},
+	}
+
+	result, err := sa.db.authTypes.UpdateOne(updateAuthTypeFilter, updateAuthType, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthType, &logutils.FieldArgs{"id": ID}, err)
+	}
+	if result.MatchedCount == 0 {
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeAuthType, &logutils.FieldArgs{"id": ID}, err)
+	}
+
+	return nil
 }
 
 // ============================== ServiceRegs ==============================
