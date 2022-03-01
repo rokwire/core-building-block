@@ -192,7 +192,8 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
-	if account != nil {
+	canSignIn := a.canSignIn(account, authType.ID, externalUser.Identifier)
+	if canSignIn {
 		//account exists
 		accountAuthType, mfaTypes, err = a.applySignInExternal(*account, authType, appOrg, *externalUser, l)
 		if err != nil {
@@ -289,7 +290,7 @@ func (a *Auth) applySignUpExternal(authType model.AuthType, appOrg model.Applica
 	}
 
 	//5. register the account
-	accountAuthType, err = a.registerUser(authType, identifier, appOrg, nil, useSharedProfile, profile, preferences, roles, groups, l)
+	accountAuthType, err = a.registerUser(authType, identifier, accountAuthTypeParams, appOrg, nil, useSharedProfile, profile, preferences, roles, groups, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
@@ -645,7 +646,7 @@ func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType m
 		preferences = preparedPreferences
 	}
 
-	accountAuthType, err := a.registerUser(authType, userIdentifier, appOrg, credential, useSharedProfile, profile, preferences, nil, nil, l)
+	accountAuthType, err := a.registerUser(authType, userIdentifier, nil, appOrg, credential, useSharedProfile, profile, preferences, nil, nil, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
@@ -1213,6 +1214,7 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 //	Input:
 //		authType (AuthType): The authentication type
 //		userIdentifier (string): The user identifier
+//		accountAuthTypeParams (map[string]interface{}): Account auth type params
 //		appOrg (ApplicationOrganization): The application organization which the user is registering in
 //		credential (*Credential): Information for the user
 //		useSharedProfile (bool): It says if the system to look if the user has account in another application in the system and to use its profile instead of creating a new profile
@@ -1221,8 +1223,8 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		Registered account (AccountAuthType): Registered Account object
-func (a *Auth) registerUser(authType model.AuthType, userIdentifier string, appOrg model.ApplicationOrganization,
-	credential *model.Credential, useSharedProfile bool,
+func (a *Auth) registerUser(authType model.AuthType, userIdentifier string, accountAuthTypeParams map[string]interface{},
+	appOrg model.ApplicationOrganization, credential *model.Credential, useSharedProfile bool,
 	profile model.Profile, preferences map[string]interface{}, roleIDs []string, groupIDs []string, l *logs.Log) (*model.AccountAuthType, error) {
 
 	//TODO - analyse what should go in one transaction
@@ -1236,7 +1238,7 @@ func (a *Auth) registerUser(authType model.AuthType, userIdentifier string, appO
 	}
 
 	//create account auth type
-	accountAuthType, credential, err := a.prepareAccountAuthType(authType, userIdentifier, nil, credential, unverified, false)
+	accountAuthType, credential, err := a.prepareAccountAuthType(authType, userIdentifier, accountAuthTypeParams, credential, unverified, false)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
 	}
