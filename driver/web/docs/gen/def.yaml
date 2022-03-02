@@ -4232,7 +4232,6 @@
     },
     "/system/auth-types": {
       "post": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
@@ -4278,7 +4277,6 @@
         }
       },
       "get": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
@@ -4317,7 +4315,6 @@
     },
     "/system/auth-types/{id}": {
       "put": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
