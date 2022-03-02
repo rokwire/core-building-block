@@ -908,7 +908,7 @@ type SystemReqAccountPermissions struct {
 // SystemReqAccountRoles defines model for _system_req_account-roles.
 type SystemReqAccountRoles struct {
 	AccountId string   `json:"account_id"`
-	AppId     string   `json:"app_id"`
+	AppOrgId  string   `json:"app_org_id"`
 	RoleIds   []string `json:"role_ids"`
 }
 

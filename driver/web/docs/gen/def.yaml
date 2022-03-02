@@ -6884,7 +6884,7 @@
       "_system_req_account-roles": {
         "required": [
           "account_id",
-          "app_id",
+          "app_org_id",
           "role_ids"
         ],
         "type": "object",
@@ -6892,7 +6892,7 @@
           "account_id": {
             "type": "string"
           },
-          "app_id": {
+          "app_org_id": {
             "type": "string"
           },
           "role_ids": {
