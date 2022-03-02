@@ -37,6 +37,7 @@ type database struct {
 	applicationsOrganizations       *collectionWrapper
 	applicationsOrganizationsGroups *collectionWrapper
 	applicationsOrganizationsRoles  *collectionWrapper
+	applicationConfigs              *collectionWrapper
 	permissions                     *collectionWrapper
 
 	listeners []Listener
@@ -167,6 +168,12 @@ func (m *database) start() error {
 		return err
 	}
 
+	applicationConfigs := &collectionWrapper{database: m, coll: db.Collection("application_configs")}
+	err = m.applyApplicationConfigsChecks(applicationConfigs)
+	if err != nil {
+		return err
+	}
+
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
@@ -185,6 +192,7 @@ func (m *database) start() error {
 	m.organizations = organizations
 	m.applications = applications
 	m.applicationsOrganizations = applicationsOrganziations
+	m.applicationConfigs = applicationConfigs
 	m.applicationsOrganizationsGroups = applicationsOrganizationsGroups
 	m.applicationsOrganizationsRoles = applicationsOrganizationsRoles
 	m.permissions = permissions
@@ -196,6 +204,7 @@ func (m *database) start() error {
 	go m.organizations.Watch(nil, m.logger)
 	go m.applications.Watch(nil, m.logger)
 	go m.applicationsOrganizations.Watch(nil, m.logger)
+	go m.applicationConfigs.Watch(nil, m.logger)
 
 	m.listeners = []Listener{}
 
@@ -401,8 +410,14 @@ func (m *database) applyApplicationsOrganizationsChecks(applicationsOrganization
 func (m *database) applyApplicationsOrganizationsGroupsChecks(applicationsOrganizationGroups *collectionWrapper) error {
 	m.logger.Info("apply applications organziations groups checks.....")
 
+	//add compound unique index - name + app_org_id
+	err := applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
 	//add application organization index
-	err := applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
+	err = applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -432,8 +447,14 @@ func (m *database) applyApplicationsOrganizationsGroupsChecks(applicationsOrgani
 func (m *database) applyApplicationsOrganziationsRolesChecks(applicationsOrganziationsRoles *collectionWrapper) error {
 	m.logger.Info("apply applications organizations roles checks.....")
 
+	//add compound unique index - name + app_org_id
+	err := applicationsOrganziationsRoles.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
 	//add application organization index
-	err := applicationsOrganziationsRoles.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
+	err = applicationsOrganziationsRoles.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -458,6 +479,22 @@ func (m *database) applyPermissionsChecks(permissions *collectionWrapper) error 
 	}
 
 	m.logger.Info("applications permissions checks passed")
+	return nil
+}
+
+func (m *database) applyApplicationConfigsChecks(applicationConfigs *collectionWrapper) error {
+	m.logger.Info("apply applications configs checks.....")
+
+	//disable the problem index for now! Look at https://github.com/rokwire/core-building-block/issues/424
+	/*
+		//add appconfigs index
+		err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}, true)
+		if err != nil {
+			return err
+		}
+	*/
+
+	m.logger.Info("applications configs checks passed")
 	return nil
 }
 
@@ -515,6 +552,12 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 
 		for _, listener := range m.listeners {
 			go listener.OnApplicationsOrganizationsUpdated()
+		}
+	case "application_configs":
+		m.logger.Info("application configs collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnApplicationConfigsUpdated()
 		}
 	}
 }

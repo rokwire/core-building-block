@@ -65,8 +65,8 @@ func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, clai
 		return l.HttpResponseError("Error getting access token", err, http.StatusInternalServerError, false)
 	}
 
-	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
-	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, TokenType: &tokenType}
+	tokenType := Def.SharedResRokwireTokenTokenTypeBearer
+	rokwireToken := Def.SharedResRokwireToken{AccessToken: &accessToken, TokenType: &tokenType}
 
 	respData, err := json.Marshal(rokwireToken)
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"reflect"
+	"time"
 
 	"github.com/rokwire/logging-library-go/logs"
 
@@ -27,6 +28,8 @@ const (
 	ErrorStatusUnverified string = "unverified"
 	//ErrorStatusVerificationExpired ...
 	ErrorStatusVerificationExpired string = "verification-expired"
+	//ErrorStatusSharedCredentialUnverified ...
+	ErrorStatusSharedCredentialUnverified string = "shared-credential-unverified"
 )
 
 // SetRandomSeed sets the seed for random number generation
@@ -115,4 +118,12 @@ func GetLogValue(value string, n int) string {
 	}
 	lastN := value[len(value)-n:]
 	return fmt.Sprintf("***%s", lastN)
+}
+
+//FormatTime formats the time value which this pointer points. Gives empty string if the pointer is nil
+func FormatTime(v *time.Time) string {
+	if v == nil {
+		return ""
+	}
+	return v.Format("2006-01-02T15:04:05.000Z")
 }
