@@ -159,29 +159,58 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 //		apiKey (string): API key to validate the specified app
 //		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
-//		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		accountExisted (bool): valid when error is nil
-func (a *Auth) AccountExists(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string, l *logs.Log) (bool, error) {
-	//validate if the provided auth type is supported by the provided application and organization
-	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+func (a *Auth) AccountExists(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error) {
+	account, _, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
 	if err != nil {
-		return false, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
-	}
-
-	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
-	err = a.validateAPIKey(apiKey, appType.Application.ID)
-	if err != nil {
-		return false, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
-	}
-
-	//check if the account exists check
-	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, userIdentifier)
-	if err != nil {
-		return false, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
 	}
 
 	return account != nil, nil
+}
+
+//CanSignIn checks if a user can sign in
+//The authentication method must be one of the supported for the application.
+//	Input:
+//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		userIdentifier (string): User identifier for the specified auth type
+//		apiKey (string): API key to validate the specified app
+//		appTypeIdentifier (string): identifier of the app type/client being used
+//		orgID (string): ID of the organization being used
+//	Returns:
+//		canSignIn (bool): valid when error is nil
+func (a *Auth) CanSignIn(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error) {
+	account, authTypeID, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
+	if err != nil {
+		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
+	}
+
+	return a.canSignIn(account, authTypeID, userIdentifier), nil
+}
+
+//CanLink checks if a user can link a new auth type
+//The authentication method must be one of the supported for the application.
+//	Input:
+//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		userIdentifier (string): User identifier for the specified auth type
+//		apiKey (string): API key to validate the specified app
+//		appTypeIdentifier (string): identifier of the app type/client being used
+//		orgID (string): ID of the organization being used
+//	Returns:
+//		canLink (bool): valid when error is nil
+func (a *Auth) CanLink(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error) {
+	account, authTypeID, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
+	if err != nil {
+		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
+	}
+
+	if account != nil {
+		aat := account.GetAccountAuthType(authTypeID, userIdentifier)
+		return (aat != nil && aat.Unverified), nil
+	}
+
+	return true, nil
 }
 
 //Refresh refreshes an access token using a refresh token
@@ -274,13 +303,13 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 			return nil, errors.WrapErrorAction("error refreshing external auth type on refresh", "", nil, err)
 		}
 
-		//check if need to update the account
+		//check if need to update the account data
 		authType, err := a.storage.FindAuthType(loginSession.AuthType.ID)
 		if err != nil {
 			l.Infof("error getting auth type - %s", refreshToken)
 			return nil, errors.WrapErrorAction("error getting auth type", "", nil, err)
 		}
-		err = a.updateAccountIfNeeded(*loginSession.AccountAuthType, *externalUser, *authType, loginSession.AppOrg)
+		err = a.updateDataIfNeeded(*loginSession.AccountAuthType, *externalUser, *authType, loginSession.AppOrg, l)
 		if err != nil {
 			return nil, errors.WrapErrorAction("update account if needed on refresh", "", nil, err)
 		}
@@ -654,8 +683,9 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 		return errors.New("Invalid account auth type for reset link")
 	}
 	//do not allow to reset credential for unverified credentials
-	if !credential.Verified {
-		return errors.New("The credential is not verified")
+	err = a.checkCredentialVerified(authImpl, accountAuthType, l)
+	if err != nil {
+		return err
 	}
 
 	authTypeCreds, err := authImpl.forgotCredential(credential, identifier, l)
@@ -939,7 +969,7 @@ func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, appro
 //GetAdminToken returns an admin token for the specified application
 func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error) {
 	//verify that the provided appID is valid for the organization
-	appOrg, err := a.storage.FindApplicationOrganizations(appID, claims.OrgID)
+	appOrg, err := a.storage.FindApplicationOrganization(appID, claims.OrgID)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": claims.OrgID, "app_id": appID}, err)
 	}
@@ -963,35 +993,81 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log)
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		message (*string): response message
-func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, error) {
+//		account (*model.Account): account data after the operation
+func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error) {
 	message := ""
+	var newAccountAuthType *model.AccountAuthType
 
 	account, err := a.storage.FindAccountByID(nil, accountID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if account == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"id": accountID})
 	}
 
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, account.AppOrg.Organization.ID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
 	if authType.IsAnonymous {
-		return nil, errors.New("cannot link anonymous auth type to an account")
+		return nil, nil, errors.New("cannot link anonymous auth type to an account")
 	} else if authType.IsExternal {
-		_, err = a.linkAccountAuthTypeExternal(*account, *authType, *appType, *appOrg, creds, params, l)
+		newAccountAuthType, err = a.linkAccountAuthTypeExternal(*account, *authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
+			return nil, nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
 		}
 	} else {
-		message, _, err = a.linkAccountAuthType(*account, *authType, *appType, *appOrg, creds, params, l)
+		message, newAccountAuthType, err = a.linkAccountAuthType(*account, *authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
-			return nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
+			return nil, nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
 		}
 	}
 
-	return &message, nil
+	if newAccountAuthType != nil {
+		account.AuthTypes = append(account.AuthTypes, *newAccountAuthType)
+	}
+
+	return &message, account, nil
+}
+
+//UnlinkAccountAuthType unlinks credentials from an existing account.
+//The authentication method must be one of the supported for the application.
+//	Input:
+//		accountID (string): ID of the account to unlink creds from
+//		authenticationType (string): Name of the authentication method of account auth type to unlink
+//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
+//		identifier (string): Identifier of account auth type to unlink
+//		l (*logs.Log): Log object pointer for request
+//	Returns:
+//		account (*model.Account): account data after the operation
+func (a *Auth) UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error) {
+	return a.unlinkAccountAuthType(accountID, authenticationType, appTypeIdentifier, identifier, l)
+}
+
+//DeleteAccount deletes an account for the given id
+func (a *Auth) DeleteAccount(id string) error {
+	transaction := func(context storage.TransactionContext) error {
+		//1. first find the account record
+		account, err := a.storage.FindAccountByID(context, id)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		if account == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+		}
+
+		err = a.deleteAccount(context, *account)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+		}
+
+		return nil
+	}
+
+	return a.storage.PerformTransaction(transaction)
 }
 
 //GetServiceRegistrations retrieves all service registrations
@@ -1075,4 +1151,9 @@ func (a *Auth) UpdateAPIKey(apiKey model.APIKey) error {
 //DeleteAPIKey deletes an API key
 func (a *Auth) DeleteAPIKey(ID string) error {
 	return a.storage.DeleteAPIKey(ID)
+}
+
+//ValidateAPIKey validates the given API key for the given app ID
+func (a *Auth) ValidateAPIKey(appID string, apiKey string) error {
+	return a.validateAPIKey(apiKey, appID)
 }

@@ -1,0 +1,34 @@
+post:
+  tags:
+  - Services
+  summary: Gets default app config
+  description: |
+    Returns the default app config for the highest version that is equal to or less than the provided version
+
+    **Auth:** Requires a valid API Key for access.
+  requestBody:
+    description: |
+      App config query
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schemas/apis/services/application/configs/request/Request.yaml"
+        example:
+          version: "1.0.1"
+          app_type_identifier: "edu.illinois.rokwire.android"
+          api_key: ""
+  responses:
+    200:
+      description: successfully read app configuration
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schemas/application/ApplicationConfig.yaml"
+    400:
+      description: Bad request.
+    401:
+      description: Unauthorized
+    404:
+      description: AppConfig not found
+    500:
+      description: Internal error

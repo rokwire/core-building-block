@@ -10,7 +10,7 @@ type application struct {
 	Name string `bson:"name"`
 
 	MultiTenant      bool `bson:"multi_tenant"`
-	RequiresOwnUsers bool `bson:"requires_own_users"`
+	SharedIdentities bool `bson:"shared_identities"`
 	Admin            bool `bson:"admin"`
 
 	Types []applicationType `bson:"types"`
@@ -20,10 +20,31 @@ type application struct {
 }
 
 type applicationType struct {
-	ID         string   `bson:"id"`
-	Identifier string   `bson:"identifier"`
-	Name       string   `bson:"name"`
-	Versions   []string `bson:"versions"`
+	ID         string    `bson:"id"`
+	Identifier string    `bson:"identifier"`
+	Name       string    `bson:"name"`
+	Versions   []version `bson:"versions"`
+}
+
+type version struct {
+	ID             string               `bson:"_id"`
+	VersionNumbers model.VersionNumbers `bson:"version_numbers"`
+	AppTypeID      string               `bson:"app_type_id"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type applicationConfig struct {
+	ID        string  `bson:"_id"`
+	AppTypeID string  `bson:"app_type_id"`
+	Version   version `bson:"version"`
+	AppOrgID  *string `bson:"app_org_id"`
+
+	Data map[string]interface{} `bson:"data"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 type organization struct {
@@ -54,6 +75,7 @@ type applicationOrganization struct {
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
+
 type appOrgGroup struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`

@@ -6,6 +6,8 @@ import (
 )
 
 //Application
+//TODO
+/*
 func applicationToDef(item *model.Application) *Def.Application {
 	if item == nil {
 		return nil
@@ -41,6 +43,20 @@ func applicationTypeToDef(item *model.ApplicationType) *Def.ApplicationType {
 	}
 
 	return &Def.ApplicationType{Fields: &Def.ApplicationTypeFields{Id: item.ID, Identifier: item.Identifier, Name: name, Versions: versions}}
+} */
+
+func applicationToDef(item model.Application) Def.ApplicationFields {
+
+	return Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
+		SharedIdentities: &item.SharedIdentities}
+}
+
+func applicationsToDef(item []model.Application) []Def.ApplicationFields {
+	result := make([]Def.ApplicationFields, len(item))
+	for i, item := range item {
+		result[i] = applicationToDef(item)
+	}
+	return result
 }
 
 //ApplicationPermission
@@ -116,4 +132,22 @@ func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationCo
 	}
 
 	return &Def.OrganizationConfig{Fields: &Def.OrganizationConfigFields{Id: id, Domains: domains}}
+}
+
+//App Config
+func appConfigToDef(item model.ApplicationConfig) Def.ApplicationConfig {
+	defConfig := Def.ApplicationConfig{Id: item.ID, AppTypeId: item.ApplicationType.ID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
+	if item.AppOrg != nil {
+		defConfig.OrgId = &item.AppOrg.Organization.ID
+	}
+
+	return defConfig
+}
+
+func appConfigsToDef(items []model.ApplicationConfig) []Def.ApplicationConfig {
+	result := make([]Def.ApplicationConfig, len(items))
+	for i, item := range items {
+		result[i] = appConfigToDef(item)
+	}
+	return result
 }

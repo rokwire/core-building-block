@@ -1,0 +1,15 @@
+required:
+  - app_type_id
+  - version
+  - data
+type: object
+properties:
+  app_type_id:
+    type: string
+  org_id:
+    type: string
+  version:
+    type: string
+    description: conforms major.minor.patch format
+  data:
+    type: object
