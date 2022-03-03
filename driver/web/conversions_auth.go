@@ -119,14 +119,14 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 	for i, p := range item.Permissions {
 		permissions[i] = p.Name
 	}
-	roles := make([]string, len(item.Roles))
-	for i, r := range item.Roles {
-		roles[i] = r.Role.ID
-	}
+	// roles := make([]string, len(item.Roles))
+	// for i, r := range item.Roles {
+	// 	roles[i] = r.Role.ID
+	// }
 
 	creds := serviceAccountCredentialListToDef(item.Credentials)
 
-	return &Def.ServiceAccount{Id: &id, Name: name, OrgId: orgID, AppId: appID, Permissions: permissions, Roles: roles, Creds: &creds}
+	return &Def.ServiceAccount{Id: id, Name: name, OrgId: orgID, AppId: appID, Permissions: permissions, Creds: &creds}
 }
 
 func serviceAccountCredentialFromDef(item *Def.ServiceAccountCredential) *model.ServiceAccountCredential {

@@ -303,14 +303,15 @@ type ServiceScope struct {
 
 //ServiceAccount represents a service account entity
 type ServiceAccount struct {
-	ID   string //this is ID for the service account
-	Name string
+	ID        string
+	AccountID string
+	Name      string
 
 	Application  *Application
 	Organization *Organization
 
 	Permissions []Permission
-	Roles       []AccountRole
+	Scopes      []authorization.Scope
 
 	Credentials []ServiceAccountCredential
 
@@ -320,41 +321,31 @@ type ServiceAccount struct {
 
 //GetPermissionNames returns all names of permissions granted to this account
 func (s ServiceAccount) GetPermissionNames() []string {
-	permissionsMap := s.GetPermissionsMap()
-	permissions := make([]string, len(permissionsMap))
-	i := 0
-	for name := range permissionsMap {
-		permissions[i] = name
-		i++
+	permissions := make([]string, len(s.Permissions))
+	for i, permission := range s.Permissions {
+		permissions[i] = permission.Name
 	}
 	return permissions
 }
 
-//GetPermissionsMap returns a map of all permissions granted to this account
-func (s ServiceAccount) GetPermissionsMap() map[string]Permission {
-	permissionsMap := make(map[string]Permission, len(s.Permissions))
-	for _, permission := range s.Permissions {
-		permissionsMap[permission.Name] = permission
+//GetScopeNames returns all names of scopes granted to this account
+func (s ServiceAccount) GetScopeNames() []string {
+	scopes := make([]string, len(s.Scopes))
+	for i, scope := range s.Scopes {
+		scopes[i] = scope.String()
 	}
-	for _, role := range s.Roles {
-		if role.Active {
-			for _, permission := range role.Role.Permissions {
-				permissionsMap[permission.Name] = permission
-			}
-		}
-	}
-	return permissionsMap
+	return scopes
 }
 
 //ServiceAccountCredential represents a service account credential entity
 type ServiceAccountCredential struct {
-	ID   string `bson:"id"`
-	Name string `bson:"name"`
-	Type string `bson:"type"`
+	ID   string `json:"id" bson:"id"`
+	Name string `json:"name" bson:"name"`
+	Type string `json:"type" bson:"type"`
 
-	Params map[string]interface{} `bson:"params"`
+	Params map[string]interface{} `json:"params" bson:"params"`
 
-	DateCreated time.Time `bson:"date_created"`
+	DateCreated time.Time `json:"date_created" bson:"date_created"`
 }
 
 // ServiceAccountTokenRequest represents a service account token request entity

@@ -3,6 +3,8 @@ package storage
 import (
 	"core-building-block/core/model"
 	"time"
+
+	"github.com/rokwire/core-auth-library-go/authorization"
 )
 
 type loginSession struct {
@@ -41,16 +43,17 @@ type loginSession struct {
 }
 
 type serviceAccount struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	ID        string `bson:"_id"`
+	AccountID string `bson:"account_id"`
+	Name      string `bson:"name"`
 
 	AppID *string `bson:"app_id"`
 	OrgID *string `bson:"org_id"`
 
-	Permissions []model.Permission `bson:"permissions,omitempty"`
-	Roles       []accountRole      `bson:"roles,omitempty"`
+	Permissions []model.Permission    `bson:"permissions"`
+	Scopes      []authorization.Scope `bson:"scopes"`
 
-	Credentials []model.ServiceAccountCredential `bson:"credentials,omitempty"`
+	Credentials []model.ServiceAccountCredential `bson:"credentials"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

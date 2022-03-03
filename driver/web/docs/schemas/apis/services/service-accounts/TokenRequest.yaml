@@ -1,7 +1,18 @@
 required:
+  - account_id
+  - org_id
+  - app_id
   - auth_type
 type: object
 properties:
+  account_id:
+    type: string
+  org_id:
+    nullable: true
+    type: string
+  app_id:
+    nullable: true
+    type: string
   auth_type:
     type: string
     enum:

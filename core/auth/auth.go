@@ -1613,7 +1613,7 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 	return nil
 }
 
-func (a *Auth) constructServiceAccount(id string, name string, orgID *string, appID *string, permissions []string, roles []string) (*model.ServiceAccount, error) {
+func (a *Auth) constructServiceAccount(id string, name string, orgID *string, appID *string, permissions []string) (*model.ServiceAccount, error) {
 	permissionList, err := a.storage.FindPermissionsByName(permissions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
@@ -1634,23 +1634,8 @@ func (a *Auth) constructServiceAccount(id string, name string, orgID *string, ap
 		}
 	}
 
-	var rolesList []model.AccountRole
-	if appID != nil && orgID != nil {
-		appOrg, err := a.storage.FindApplicationOrganization(*appID, *orgID)
-		if err != nil || appOrg == nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
-		}
-
-		appOrgRoles, err := a.storage.FindAppOrgRoles(roles, appOrg.ID)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
-		}
-
-		rolesList = model.AccountRolesFromAppOrgRoles(appOrgRoles, true, false)
-	}
-
 	return &model.ServiceAccount{ID: id, Name: name, Application: application, Organization: organization,
-		Permissions: permissionList, Roles: rolesList}, nil
+		Permissions: permissionList}, nil
 }
 
 func (a *Auth) hideServiceCredentialParams(creds []model.ServiceAccountCredential, l *logs.Log) {
@@ -1836,7 +1821,7 @@ func (a *Auth) getScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 	aud := strings.Join(services, ",")
 	scope := strings.Join(scopeStrings, " ")
 
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false, false)
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false, claims.Service)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 

@@ -998,7 +998,7 @@ func (a *Auth) GetServiceAccounts(params map[string]interface{}, l *logs.Log) ([
 //RegisterServiceAccount registers a service account
 func (a *Auth) RegisterServiceAccount(name string, orgID *string, appID *string, permissions []string, roles []string, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
 	id, _ := uuid.NewUUID()
-	newAccount, err := a.constructServiceAccount(id.String(), name, orgID, appID, permissions, roles)
+	newAccount, err := a.constructServiceAccount(id.String(), name, orgID, appID, permissions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 	}
@@ -1046,7 +1046,7 @@ func (a *Auth) UpdateServiceAccount(id string, name string, orgID *string, appID
 		}
 
 		//2. update account
-		updatedAccount, err = a.constructServiceAccount(id, name, orgID, appID, permissions, roles)
+		updatedAccount, err = a.constructServiceAccount(id, name, orgID, appID, permissions)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 		}

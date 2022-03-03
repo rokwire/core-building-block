@@ -522,19 +522,20 @@ type PubKey struct {
 
 // ServiceAccount defines model for ServiceAccount.
 type ServiceAccount struct {
+	AccountId   string                      `json:"account_id"`
 	AppId       *string                     `json:"app_id"`
 	Creds       *[]ServiceAccountCredential `json:"creds,omitempty"`
-	Id          *string                     `json:"id,omitempty"`
+	Id          string                      `json:"id"`
 	Name        string                      `json:"name"`
 	OrgId       *string                     `json:"org_id"`
 	Permissions []string                    `json:"permissions"`
-	Roles       []string                    `json:"roles"`
+	Scopes      []string                    `json:"scopes"`
 }
 
 // ServiceAccountCredential defines model for ServiceAccountCredential.
 type ServiceAccountCredential struct {
 	DateCreated *string                      `json:"date_created,omitempty"`
-	Id          *string                      `json:"id,omitempty"`
+	Id          *string                      `json:"id"`
 	Name        string                       `json:"name"`
 	Params      *map[string]interface{}      `json:"params"`
 	Type        ServiceAccountCredentialType `json:"type"`
@@ -687,8 +688,11 @@ type ServicesReqServiceAccountsCredsStaticToken struct {
 
 // ServicesReqServiceAccountsTokenRequest defines model for _services_req_service-accounts_TokenRequest.
 type ServicesReqServiceAccountsTokenRequest struct {
-	AuthType ServicesReqServiceAccountsTokenRequestAuthType `json:"auth_type"`
-	Creds    *interface{}                                   `json:"creds,omitempty"`
+	AccountId string                                         `json:"account_id"`
+	AppId     *string                                        `json:"app_id"`
+	AuthType  ServicesReqServiceAccountsTokenRequestAuthType `json:"auth_type"`
+	Creds     *interface{}                                   `json:"creds,omitempty"`
+	OrgId     *string                                        `json:"org_id"`
 }
 
 // ServicesReqServiceAccountsTokenRequestAuthType defines model for ServicesReqServiceAccountsTokenRequest.AuthType.
@@ -1379,6 +1383,9 @@ type PutSystemPermissionsJSONBody SystemReqPermissions
 // GetSystemServiceAccountsParams defines parameters for GetSystemServiceAccounts.
 type GetSystemServiceAccountsParams struct {
 
+	// Service account ID to search for
+	AccountId *string `json:"account_id,omitempty"`
+
 	// Service account name to search for
 	Name *string `json:"name,omitempty"`
 
@@ -1391,8 +1398,8 @@ type GetSystemServiceAccountsParams struct {
 	// A comma-separated list of service account permissions to search for
 	Permissions *string `json:"permissions,omitempty"`
 
-	// A comma-separated list of service account roles to search for
-	Roles *string `json:"roles,omitempty"`
+	// A comma-separated list of service account scopes to search for
+	Scopes *string `json:"scopes,omitempty"`
 }
 
 // PostSystemServiceAccountsJSONBody defines parameters for PostSystemServiceAccounts.

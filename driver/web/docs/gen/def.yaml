@@ -2659,9 +2659,9 @@ paths:
       deprecated: true
       tags:
         - System
-      summary: Get service account
+      summary: Get service account document
       description: |
-        Get service account by ID
+        Get service account document by ID
 
         **Auth:** Requires auth token with permission to read service accounts
       security:
@@ -2669,7 +2669,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: ID of the service account to return
+          description: ID of the service account document to return
           required: true
           style: simple
           explode: false
@@ -2692,9 +2692,9 @@ paths:
       deprecated: true
       tags:
         - System
-      summary: Update service account
+      summary: Update service account document
       description: |
-        Updates a service account
+        Updates a service account document
 
         **Auth:** Requires auth token with permission to update service accounts
       security:
@@ -2702,7 +2702,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: ID of the service account to update
+          description: ID of the service account document to update
           required: true
           style: simple
           explode: false
@@ -2724,7 +2724,7 @@ paths:
                     "app_id": "9766",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "permissions": ["permission1", "new_permission1"],
-                    "roles": ["role1", "role2", "new_role1"]
+                    "scopes": ["scope1", "scope2", "new_scope1"]
                   }
         required: true
       responses:
@@ -2744,9 +2744,9 @@ paths:
       deprecated: true
       tags:
         - System
-      summary: Deregister service account
+      summary: Deregister service account document
       description: |
-        Removes a service account
+        Removes a service account document
 
         **Auth:** Requires auth token with permission to delete service accounts
       security:
@@ -2754,7 +2754,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: ID of the service account that needs to be deleted
+          description: ID of the service account document to delete
           required: true
           style: simple
           explode: false
@@ -2782,6 +2782,14 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - name: account_id
+          in: query
+          description: Service account ID to search for
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
         - name: name
           in: query
           description: Service account name to search for
@@ -2814,9 +2822,9 @@ paths:
           explode: false
           schema:
             type: string
-        - name: roles
+        - name: scopes
           in: query
-          description: A comma-separated list of service account roles to search for
+          description: A comma-separated list of service account scopes to search for
           required: false
           style: form
           explode: false
@@ -2864,7 +2872,7 @@ paths:
                     "app_id": "9766",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "permissions": ["permission1", "permission2"],
-                    "roles": ["role1", "role2"],
+                    "scopes": ["scope1", "scope2"],
                     "creds": [
                       {
                         "name": "initial_token",
@@ -2887,7 +2895,7 @@ paths:
                     "app_id": "9766",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "permissions": ["permission1", "permission2"],
-                    "roles": ["role1", "role2"],
+                    "scopes": ["scope1", "scope2"],
                   }
         required: true
       responses:
@@ -2918,7 +2926,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: ID of the service account to which new credential should be added
+          description: ID of the service account to add new credential
           required: true
           style: simple
           explode: false
@@ -4133,14 +4141,18 @@ components:
           type: object
     ServiceAccount:
       required:
+        - id
+        - account_id
         - name
         - app_id
         - org_id
         - permissions
-        - roles
+        - scopes
       type: object
       properties:
         id:
+          type: string
+        account_id:
           type: string
         name:
           type: string
@@ -4154,7 +4166,7 @@ components:
           type: array
           items:
             type: string
-        roles:
+        scopes:
           type: array
           items:
             type: string
@@ -4164,11 +4176,13 @@ components:
             $ref: '#/components/schemas/ServiceAccountCredential'
     ServiceAccountCredential:
       required:
+        - id
         - name
         - type
       type: object
       properties:
         id:
+          nullable: true
           type: string
         name:
           type: string
@@ -5077,9 +5091,20 @@ components:
           $ref: '#/components/schemas/ServiceReg'
     _services_req_service-accounts_TokenRequest:
       required:
+        - account_id
+        - org_id
+        - app_id
         - auth_type
       type: object
       properties:
+        account_id:
+          type: string
+        org_id:
+          nullable: true
+          type: string
+        app_id:
+          nullable: true
+          type: string
         auth_type:
           type: string
           enum:
@@ -5091,7 +5116,7 @@ components:
             - required:
                 - id
               type: object
-              description: Service account ID for auth_type="signature"
+              description: Credential ID for auth_type="signature"
               properties:
                 id:
                   type: string

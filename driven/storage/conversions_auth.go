@@ -121,17 +121,8 @@ func serviceAccountFromStorage(item serviceAccount, sa *Adapter) (*model.Service
 		}
 	}
 
-	roles := make([]model.AccountRole, len(item.Roles))
-	for i, role := range item.Roles {
-		appOrg, err := sa.getCachedApplicationOrganizationByKey(role.Role.AppOrgID)
-		if err != nil || appOrg == nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": role.Role.AppOrgID}, err)
-		}
-		roles[i] = accountRoleFromStorage(&role, *appOrg)
-	}
-
 	return &model.ServiceAccount{ID: item.ID, Name: item.Name, Application: application, Organization: organization, Permissions: item.Permissions,
-		Roles: roles, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}, nil
+		Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}, nil
 }
 
 func serviceAccountListFromStorage(items []serviceAccount, sa *Adapter) []model.ServiceAccount {
@@ -148,8 +139,6 @@ func serviceAccountListFromStorage(items []serviceAccount, sa *Adapter) []model.
 }
 
 func serviceAccountToStorage(item model.ServiceAccount) *serviceAccount {
-	roles := accountRolesToStorage(item.Roles)
-
 	var appID *string
 	if item.Application != nil {
 		appID = &item.Application.ID
@@ -159,6 +148,6 @@ func serviceAccountToStorage(item model.ServiceAccount) *serviceAccount {
 		orgID = &item.Organization.ID
 	}
 
-	return &serviceAccount{ID: item.ID, Name: item.Name, AppID: appID, OrgID: orgID, Permissions: item.Permissions, Roles: roles,
+	return &serviceAccount{ID: item.ID, Name: item.Name, AppID: appID, OrgID: orgID, Permissions: item.Permissions,
 		Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

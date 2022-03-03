@@ -279,8 +279,8 @@ func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, clai
 	if query.Get("permissions") != "" {
 		searchParams["permissions"] = strings.Split(query.Get("permissions"), ",")
 	}
-	if query.Get("roles") != "" {
-		searchParams["roles"] = strings.Split(query.Get("roles"), ",")
+	if query.Get("scopes") != "" {
+		searchParams["scopes"] = strings.Split(query.Get("scopes"), ",")
 	}
 
 	serviceAccounts, err := h.coreAPIs.Auth.GetServiceAccounts(searchParams, l)
@@ -315,7 +315,7 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 		creds = serviceAccountCredentialListFromDef(*requestData.Creds)
 	}
 
-	serviceAccount, err := h.coreAPIs.Auth.RegisterServiceAccount(requestData.Name, requestData.OrgId, requestData.AppId, requestData.Permissions, requestData.Roles, creds, l)
+	serviceAccount, err := h.coreAPIs.Auth.RegisterServiceAccount(requestData.Name, requestData.OrgId, requestData.AppId, requestData.Permissions, requestData.Scopes, creds, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRegister, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -370,7 +370,7 @@ func (h SystemApisHandler) updateServiceAccount(l *logs.Log, r *http.Request, cl
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeServiceAccount, nil, err, http.StatusBadRequest, true)
 	}
 
-	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccount(id, requestData.Name, requestData.OrgId, requestData.AppId, requestData.Permissions, requestData.Roles, l)
+	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccount(id, requestData.Name, requestData.OrgId, requestData.AppId, requestData.Permissions, requestData.Scopes, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
