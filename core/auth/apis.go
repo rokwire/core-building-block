@@ -151,10 +151,10 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	return nil, &model.LoginSession{ID: loginSession.ID, Identifier: loginSession.Identifier, Params: responseParams, State: loginSession.State}, mfaTypes, nil
 }
 
-func (a *Auth) Logout(appID string, orgID string, currentAccountID string, l *logs.Log) error {
+func (a *Auth) Logout(appID string, orgID string, currentAccountID string, sessionID string, l *logs.Log) error {
 	//1. validate if the session is for the current app/org and account
 
-	sessions, err := a.storage.FindLoginSessionsByParams(appID, orgID, nil, &currentAccountID, nil, nil, nil, nil, nil, nil)
+	sessions, err := a.storage.FindLoginSessionsByParams(appID, orgID, &sessionID, &currentAccountID, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		return errors.Wrap("error checking if it is valid to remove account session", err)
 	}
@@ -349,7 +349,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, nil, anonymous, false, loginSession.AppOrg.Application.Admin)
+	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, nil, anonymous, false, loginSession.AppOrg.Application.Admin, loginSession.ID)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
@@ -995,7 +995,7 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log)
 	}
 
 	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, claims.OrgID, appID, claims.AuthType,
-		&claims.ExpiresAt, false, false, true)
+		&claims.ExpiresAt, false, false, true, claims.SessionID)
 	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }
 
