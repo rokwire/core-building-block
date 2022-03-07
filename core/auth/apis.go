@@ -67,12 +67,12 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
-	if appOrg.Application.Admin != admin {
+	/*if appOrg.Application.Admin != admin {
 		if admin {
 			return nil, nil, nil, errors.New("use services login endpoint")
 		}
 		return nil, nil, nil, errors.New("use admin login endpoint")
-	}
+	}*/
 
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
 	err = a.validateAPIKey(apiKey, appType.Application.ID)
@@ -162,10 +162,18 @@ func (a *Auth) Logout(appID string, orgID string, currentAccountID string, sessi
 		return errors.New("not valid params")
 	}
 
-	//2. delete the session
-	err = a.storage.DeleteLoginSessionsByIdentifier(nil, currentAccountID)
-	if err != nil {
-		return errors.Wrap("error dleting session by id", err)
+	//2. delete all sessions
+	if allSessions == true {
+		err = a.storage.DeleteLoginSessionsByIdentifier(nil, currentAccountID)
+		if err != nil {
+			return errors.Wrap("error deleting session by accountID", err)
+		}
+		//3.delete only the login session with current sessionID
+	} else {
+		err = a.storage.DeleteLoginSession(nil, sessionID)
+		if err != nil {
+			return errors.Wrap("error deleting session", err)
+		}
 	}
 
 	return nil
