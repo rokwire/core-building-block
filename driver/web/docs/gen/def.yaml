@@ -285,13 +285,32 @@
         "tags": [
           "Services"
         ],
-        "summary": "logout an account session",
-        "description": "Logout an account session for specific application\n",
+        "summary": "logout",
+        "description": "logout an account\n",
         "security": [
           {
             "bearerAuth": []
           }
         ],
+        "requestBody": {
+          "description": "all_session",
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "all_sessions"
+                ],
+                "type": "object",
+                "properties": {
+                  "all_sessions": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Success",
