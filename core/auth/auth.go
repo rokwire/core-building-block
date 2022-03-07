@@ -2127,7 +2127,7 @@ func (a *Auth) deleteExpiredSessions() {
 	}
 }
 
-//LocalServiceRegLoaderImpl provides a local implementation for ServiceRegLoader
+//LocalServiceRegLoaderImpl provides a local implementation for AuthDataLoader
 type LocalServiceRegLoaderImpl struct {
 	storage Storage
 	*authservice.ServiceRegSubscriptions
@@ -2148,6 +2148,16 @@ func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, er
 	}
 
 	return authRegs, nil
+}
+
+//GetAccessToken implements AuthDataLoader interface
+func (l *LocalServiceRegLoaderImpl) GetAccessToken() error {
+	return errors.New("not implemented")
+}
+
+//GetDeletedAccounts implements AuthDataLoader interface
+func (l *LocalServiceRegLoaderImpl) GetDeletedAccounts() ([]string, error) {
+	return nil, errors.New("not implemented")
 }
 
 //NewLocalServiceRegLoader creates and configures a new LocalServiceRegLoaderImpl instance
