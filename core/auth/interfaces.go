@@ -119,7 +119,7 @@ type APIs interface {
 		profile model.Profile, preferences map[string]interface{}, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
 
 	//Login logout user in a specific application using the specified credentials and authentication method.
-	Logout(appID string, orgID string, currentAccountID string, sessionID string, l *logs.Log) error
+	Logout(appID string, orgID string, currentAccountID string, sessionID string, allSessions bool, l *logs.Log) error
 
 	//AccountExists checks if a user is already registered
 	//The authentication method must be one of the supported for the application.

@@ -151,7 +151,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	return nil, &model.LoginSession{ID: loginSession.ID, Identifier: loginSession.Identifier, Params: responseParams, State: loginSession.State}, mfaTypes, nil
 }
 
-func (a *Auth) Logout(appID string, orgID string, currentAccountID string, sessionID string, l *logs.Log) error {
+func (a *Auth) Logout(appID string, orgID string, currentAccountID string, sessionID string, allSessions bool, l *logs.Log) error {
 	//1. validate if the session is for the current app/org and account
 
 	sessions, err := a.storage.FindLoginSessionsByParams(appID, orgID, &sessionID, &currentAccountID, nil, nil, nil, nil, nil, nil)
