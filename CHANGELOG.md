@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Expose revoke roles from account Admin API [#412](https://github.com/rokwire/core-building-block/issues/412)
 
+## [1.20.1] - 2022-03-07
+### Fixed
+- Unable to login in the Admin app [#430](https://github.com/rokwire/core-building-block/issues/430)
+
 ## [1.20.0] - 2022-03-01
 ### Fixed
 - Fix broken external login [#427](https://github.com/rokwire/core-building-block/issues/427)
@@ -245,7 +249,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.20.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.20.1...HEAD
+[1.20.1]: https://github.com/rokwire/core-building-block/compare/v1.20.0...v1.20.1
 [1.20.0]: https://github.com/rokwire/core-building-block/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/rokwire/core-building-block/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/rokwire/core-building-block/compare/v1.17.0...v1.18.0
