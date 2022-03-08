@@ -67,12 +67,12 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
-	/*if appOrg.Application.Admin != admin {
+	if appOrg.Application.Admin != admin {
 		if admin {
 			return nil, nil, nil, errors.New("use services login endpoint")
 		}
 		return nil, nil, nil, errors.New("use admin login endpoint")
-	}*/
+	}
 
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
 	err = a.validateAPIKey(apiKey, appType.Application.ID)
