@@ -13,7 +13,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rokwire/core-auth-library-go/authorization"
-	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -922,6 +921,11 @@ func (a *Auth) RemoveMFAType(accountID string, identifier string, mfaType string
 	return nil
 }
 
+//GetServiceAccountParams returns a list of app, org pairs a service account has access to
+func (a *Auth) GetServiceAccountParams(r *http.Request, l *logs.Log) (*string, []model.AppOrgPair, error) {
+	return nil, nil, errors.New(logutils.Unimplemented)
+}
+
 //GetServiceAccessToken returns an access token for a non-human client
 func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, string, error) {
 	data, err := ioutil.ReadAll(r.Body)
@@ -946,8 +950,7 @@ func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, str
 		return nil, "", errors.WrapErrorAction("error getting service auth type on get service access token", "", nil, err)
 	}
 
-	authutils.ResetRequestBody(r, data)
-	message, account, err := serviceAuthType.checkCredentials(r, requestData.Creds, l)
+	message, account, err := serviceAuthType.checkCredentials(r, data, requestData.Creds, l)
 	if err != nil {
 		return message, "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}
@@ -961,7 +964,7 @@ func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, str
 	if account.Organization != nil {
 		orgID = account.Organization.ID
 	}
-	claims := a.getStandardClaims(account.ID, "", "", "", "", "rokwire", orgID, appID, requestData.AuthType, nil, false, true, false, true)
+	claims := a.getStandardClaims(account.AccountID, "", "", "", "", "rokwire", orgID, appID, requestData.AuthType, nil, false, true, false, true)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)

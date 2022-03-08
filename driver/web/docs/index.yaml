@@ -125,6 +125,8 @@ paths:
     $ref: "./resources/bbs/test.yaml"
   /bbs/service-regs:
     $ref: "./resources/bbs/service-regs.yaml"
+  /bbs/service-account/{id}:
+    $ref: "./resources/bbs/service-account.yaml"
   /bbs/access-token:
     $ref: "./resources/bbs/access-token.yaml"
 
@@ -133,6 +135,8 @@ paths:
     $ref: "./resources/tps/service-regs.yaml"
   /tps/auth-keys:
     $ref: "./resources/tps/auth-keys.yaml"
+  /tps/service-account/{id}:
+    $ref: "./resources/tps/service-account.yaml"
   /tps/access-token:
     $ref: "./resources/tps/access-token.yaml"
 

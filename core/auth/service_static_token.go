@@ -33,7 +33,7 @@ type staticTokenServiceAuthImpl struct {
 	serviceAuthType string
 }
 
-func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, creds interface{}, l *logs.Log) (*string, *model.ServiceAccount, error) {
+func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, _ []byte, creds interface{}, l *logs.Log) (*string, *model.ServiceAccount, error) {
 	credsData, err := json.Marshal(creds)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionMarshal, TypeStaticTokenCreds, nil, err)

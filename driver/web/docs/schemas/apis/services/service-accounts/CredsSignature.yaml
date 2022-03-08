@@ -1,7 +1,0 @@
-required:
-  - id
-type: object
-description: Credential ID for auth_type="signature"
-properties:
-  id:
-    type: string

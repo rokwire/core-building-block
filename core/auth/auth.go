@@ -144,7 +144,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	auth.AuthService = authService
 
-	signatureAuth, err := sigauth.NewSignatureAuth(authPrivKey, authService)
+	signatureAuth, err := sigauth.NewSignatureAuth(authPrivKey, authService, true)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "signature auth", nil, err)
 	}
@@ -1613,7 +1613,7 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 	return nil
 }
 
-func (a *Auth) constructServiceAccount(id string, name string, orgID *string, appID *string, permissions []string) (*model.ServiceAccount, error) {
+func (a *Auth) constructServiceAccount(accountID string, name string, orgID *string, appID *string, permissions []string) (*model.ServiceAccount, error) {
 	permissionList, err := a.storage.FindPermissionsByName(permissions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
@@ -1634,7 +1634,7 @@ func (a *Auth) constructServiceAccount(id string, name string, orgID *string, ap
 		}
 	}
 
-	return &model.ServiceAccount{ID: id, Name: name, Application: application, Organization: organization,
+	return &model.ServiceAccount{AccountID: accountID, Name: name, Application: application, Organization: organization,
 		Permissions: permissionList}, nil
 }
 

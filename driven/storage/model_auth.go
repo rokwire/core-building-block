@@ -43,7 +43,6 @@ type loginSession struct {
 }
 
 type serviceAccount struct {
-	ID        string `bson:"_id"`
 	AccountID string `bson:"account_id"`
 	Name      string `bson:"name"`
 

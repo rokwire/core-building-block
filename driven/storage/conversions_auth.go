@@ -121,8 +121,8 @@ func serviceAccountFromStorage(item serviceAccount, sa *Adapter) (*model.Service
 		}
 	}
 
-	return &model.ServiceAccount{ID: item.ID, Name: item.Name, Application: application, Organization: organization, Permissions: item.Permissions,
-		Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}, nil
+	return &model.ServiceAccount{AccountID: item.AccountID, Name: item.Name, Application: application, Organization: organization, Permissions: item.Permissions,
+		Scopes: item.Scopes, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}, nil
 }
 
 func serviceAccountListFromStorage(items []serviceAccount, sa *Adapter) []model.ServiceAccount {
@@ -148,6 +148,6 @@ func serviceAccountToStorage(item model.ServiceAccount) *serviceAccount {
 		orgID = &item.Organization.ID
 	}
 
-	return &serviceAccount{ID: item.ID, Name: item.Name, AppID: appID, OrgID: orgID, Permissions: item.Permissions,
-		Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return &serviceAccount{AccountID: item.AccountID, Name: item.Name, AppID: appID, OrgID: orgID, Permissions: item.Permissions,
+		Scopes: item.Scopes, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

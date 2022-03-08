@@ -1153,7 +1153,7 @@ func (sa *Adapter) SaveServiceAccount(context TransactionContext, account *model
 
 	storageAccount := serviceAccountToStorage(*account)
 
-	filter := bson.D{primitive.E{Key: "_id", Value: account.ID}}
+	filter := bson.D{primitive.E{Key: "account_id", Value: storageAccount.AccountID}, primitive.E{Key: "app_id", Value: storageAccount.AppID}, primitive.E{Key: "org_id", Value: storageAccount.OrgID}}
 
 	var err error
 	if context != nil {
@@ -1163,7 +1163,7 @@ func (sa *Adapter) SaveServiceAccount(context TransactionContext, account *model
 	}
 
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, &logutils.FieldArgs{"_id": account.ID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": storageAccount.AppID, "org_id": storageAccount.OrgID}, err)
 	}
 
 	return nil

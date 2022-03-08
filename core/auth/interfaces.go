@@ -73,7 +73,7 @@ type anonymousAuthType interface {
 
 //serviceAuthType is the interface for authentication for non-human clients
 type serviceAuthType interface {
-	checkCredentials(r *http.Request, creds interface{}, l *logs.Log) (*string, *model.ServiceAccount, error)
+	checkCredentials(r *http.Request, body []byte, creds interface{}, l *logs.Log) (*string, *model.ServiceAccount, error)
 	addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, string, error)
 	hiddenParams() []string
 }
@@ -275,6 +275,9 @@ type APIs interface {
 	//		identifier (string): Email, phone, or TOTP device name
 	//		mfaType (string): Type of MFA to remove
 	RemoveMFAType(accountID string, identifier string, mfaType string) error
+
+	//GetServiceAccountParams returns a list of app, org pairs a service account has access to
+	GetServiceAccountParams(r *http.Request, l *logs.Log) (*string, []model.AppOrgPair, error)
 
 	//GetServiceAccessToken returns an access token for a non-human client
 	GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, string, error)

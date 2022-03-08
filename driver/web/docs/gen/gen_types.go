@@ -92,6 +92,13 @@ const (
 	ServicesReqCredentialSendVerifyAuthTypeEmail ServicesReqCredentialSendVerifyAuthType = "email"
 )
 
+// Defines values for ServicesReqServiceAccountsParamsRequestAuthType.
+const (
+	ServicesReqServiceAccountsParamsRequestAuthTypeSignature ServicesReqServiceAccountsParamsRequestAuthType = "signature"
+
+	ServicesReqServiceAccountsParamsRequestAuthTypeStaticToken ServicesReqServiceAccountsParamsRequestAuthType = "static_token"
+)
+
 // Defines values for ServicesReqServiceAccountsTokenRequestAuthType.
 const (
 	ServicesReqServiceAccountsTokenRequestAuthTypeSignature ServicesReqServiceAccountsTokenRequestAuthType = "signature"
@@ -269,6 +276,12 @@ type AppOrgGroupFields struct {
 	Id     string `json:"id"`
 	Name   string `json:"name"`
 	System *bool  `json:"system,omitempty"`
+}
+
+// AppOrgPair defines model for AppOrgPair.
+type AppOrgPair struct {
+	AppId *string `json:"app_id"`
+	OrgId *string `json:"org_id"`
 }
 
 // AppOrgRole defines model for AppOrgRole.
@@ -525,7 +538,6 @@ type ServiceAccount struct {
 	AccountId   string                      `json:"account_id"`
 	AppId       *string                     `json:"app_id"`
 	Creds       *[]ServiceAccountCredential `json:"creds,omitempty"`
-	Id          string                      `json:"id"`
 	Name        string                      `json:"name"`
 	OrgId       *string                     `json:"org_id"`
 	Permissions []string                    `json:"permissions"`
@@ -686,13 +698,26 @@ type ServicesReqServiceAccountsCredsStaticToken struct {
 	Token string `json:"token"`
 }
 
+// ServicesReqServiceAccountsParamsRequest defines model for _services_req_service-accounts_ParamsRequest.
+type ServicesReqServiceAccountsParamsRequest struct {
+	AuthType ServicesReqServiceAccountsParamsRequestAuthType `json:"auth_type"`
+
+	// Service account token for auth_type="static_token"
+	Creds *ServicesReqServiceAccountsCredsStaticToken `json:"creds,omitempty"`
+}
+
+// ServicesReqServiceAccountsParamsRequestAuthType defines model for ServicesReqServiceAccountsParamsRequest.AuthType.
+type ServicesReqServiceAccountsParamsRequestAuthType string
+
 // ServicesReqServiceAccountsTokenRequest defines model for _services_req_service-accounts_TokenRequest.
 type ServicesReqServiceAccountsTokenRequest struct {
-	AccountId string                                         `json:"account_id"`
-	AppId     *string                                        `json:"app_id"`
-	AuthType  ServicesReqServiceAccountsTokenRequestAuthType `json:"auth_type"`
-	Creds     *interface{}                                   `json:"creds,omitempty"`
-	OrgId     *string                                        `json:"org_id"`
+	AppId    *string                                        `json:"app_id"`
+	AuthType ServicesReqServiceAccountsTokenRequestAuthType `json:"auth_type"`
+
+	// Service account token for auth_type="static_token"
+	Creds *ServicesReqServiceAccountsCredsStaticToken `json:"creds,omitempty"`
+	Id    string                                      `json:"id"`
+	OrgId *string                                     `json:"org_id"`
 }
 
 // ServicesReqServiceAccountsTokenRequestAuthType defines model for ServicesReqServiceAccountsTokenRequest.AuthType.
@@ -1196,6 +1221,9 @@ type PostAdminAuthVerifyMfaJSONBody SharedReqMfa
 // PostBbsAccessTokenJSONBody defines parameters for PostBbsAccessToken.
 type PostBbsAccessTokenJSONBody ServicesReqServiceAccountsTokenRequest
 
+// PostBbsServiceAccountIdJSONBody defines parameters for PostBbsServiceAccountId.
+type PostBbsServiceAccountIdJSONBody ServicesReqServiceAccountsParamsRequest
+
 // GetBbsServiceRegsParams defines parameters for GetBbsServiceRegs.
 type GetBbsServiceRegsParams struct {
 
@@ -1441,6 +1469,9 @@ type PutSystemServiceRegsJSONBody ServiceReg
 // PostTpsAccessTokenJSONBody defines parameters for PostTpsAccessToken.
 type PostTpsAccessTokenJSONBody ServicesReqServiceAccountsTokenRequest
 
+// PostTpsServiceAccountIdJSONBody defines parameters for PostTpsServiceAccountId.
+type PostTpsServiceAccountIdJSONBody ServicesReqServiceAccountsParamsRequest
+
 // GetTpsServiceRegsParams defines parameters for GetTpsServiceRegs.
 type GetTpsServiceRegsParams struct {
 
@@ -1477,6 +1508,9 @@ type PostAdminAuthVerifyMfaJSONRequestBody PostAdminAuthVerifyMfaJSONBody
 
 // PostBbsAccessTokenJSONRequestBody defines body for PostBbsAccessToken for application/json ContentType.
 type PostBbsAccessTokenJSONRequestBody PostBbsAccessTokenJSONBody
+
+// PostBbsServiceAccountIdJSONRequestBody defines body for PostBbsServiceAccountId for application/json ContentType.
+type PostBbsServiceAccountIdJSONRequestBody PostBbsServiceAccountIdJSONBody
 
 // DeleteServicesAccountMfaJSONRequestBody defines body for DeleteServicesAccountMfa for application/json ContentType.
 type DeleteServicesAccountMfaJSONRequestBody DeleteServicesAccountMfaJSONBody
@@ -1606,6 +1640,9 @@ type PutSystemServiceRegsJSONRequestBody PutSystemServiceRegsJSONBody
 
 // PostTpsAccessTokenJSONRequestBody defines body for PostTpsAccessToken for application/json ContentType.
 type PostTpsAccessTokenJSONRequestBody PostTpsAccessTokenJSONBody
+
+// PostTpsServiceAccountIdJSONRequestBody defines body for PostTpsServiceAccountId for application/json ContentType.
+type PostTpsServiceAccountIdJSONRequestBody PostTpsServiceAccountIdJSONBody
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found

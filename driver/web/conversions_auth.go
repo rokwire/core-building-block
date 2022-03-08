@@ -105,7 +105,7 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 		return nil
 	}
 
-	id := item.ID
+	accountID := item.AccountID
 	name := item.Name
 	var appID *string
 	if item.Application != nil {
@@ -119,14 +119,13 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 	for i, p := range item.Permissions {
 		permissions[i] = p.Name
 	}
-	// roles := make([]string, len(item.Roles))
-	// for i, r := range item.Roles {
-	// 	roles[i] = r.Role.ID
-	// }
-
+	scopes := make([]string, len(item.Scopes))
+	for i, s := range item.Scopes {
+		scopes[i] = s.String()
+	}
 	creds := serviceAccountCredentialListToDef(item.Credentials)
 
-	return &Def.ServiceAccount{Id: id, Name: name, OrgId: orgID, AppId: appID, Permissions: permissions, Creds: &creds}
+	return &Def.ServiceAccount{AccountId: accountID, Name: name, AppId: appID, OrgId: orgID, Permissions: permissions, Scopes: scopes, Creds: &creds}
 }
 
 func serviceAccountCredentialFromDef(item *Def.ServiceAccountCredential) *model.ServiceAccountCredential {
@@ -182,6 +181,18 @@ func serviceAccountCredentialListToDef(items []model.ServiceAccountCredential) [
 		} else {
 			out[i] = Def.ServiceAccountCredential{}
 		}
+	}
+	return out
+}
+
+func appOrgPairToDef(item model.AppOrgPair) Def.AppOrgPair {
+	return Def.AppOrgPair{AppId: item.AppID, OrgId: item.OrgID}
+}
+
+func appOrgPairListToDef(items []model.AppOrgPair) []Def.AppOrgPair {
+	out := make([]Def.AppOrgPair, len(items))
+	for i, item := range items {
+		out[i] = appOrgPairToDef(item)
 	}
 	return out
 }

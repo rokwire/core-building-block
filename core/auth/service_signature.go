@@ -33,7 +33,7 @@ type signatureServiceAuthImpl struct {
 	serviceAuthType string
 }
 
-func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, creds interface{}, l *logs.Log) (*string, *model.ServiceAccount, error) {
+func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, body []byte, creds interface{}, l *logs.Log) (*string, *model.ServiceAccount, error) {
 	credsData, err := json.Marshal(creds)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionMarshal, TypeSignatureCreds, nil, err)
@@ -69,7 +69,7 @@ func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, creds inter
 				return nil, nil, errors.WrapErrorAction(logutils.ActionParse, "service account public key", nil, err)
 			}
 
-			err = s.auth.SignatureAuth.CheckRequestSignature(r, pubKey)
+			err = s.auth.SignatureAuth.CheckRequestSignature(r, body, pubKey)
 			if err == nil {
 				return nil, account, nil
 			}

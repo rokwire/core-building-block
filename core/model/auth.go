@@ -303,7 +303,6 @@ type ServiceScope struct {
 
 //ServiceAccount represents a service account entity
 type ServiceAccount struct {
-	ID        string
 	AccountID string
 	Name      string
 
@@ -335,6 +334,12 @@ func (s ServiceAccount) GetScopeNames() []string {
 		scopes[i] = scope.String()
 	}
 	return scopes
+}
+
+//AppOrgPair represents an appID, orgID pair entity
+type AppOrgPair struct {
+	AppID *string
+	OrgID *string
 }
 
 //ServiceAccountCredential represents a service account credential entity

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -54,6 +55,31 @@ func (h TPSApisHandler) getAuthKeys(l *logs.Log, r *http.Request, claims *tokena
 	}
 
 	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h TPSApisHandler) getServiceAccountParams(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	accountID := params["id"]
+	if len(accountID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	message, accountParams, err := h.coreAPIs.Auth.GetServiceAccountParams(r, l)
+	if err != nil {
+		if message != nil {
+			return l.HttpResponseError(*message, err, http.StatusUnauthorized, false)
+		}
+		return l.HttpResponseError("Error getting service account params", err, http.StatusInternalServerError, false)
+	}
+
+	appOrgPairs := appOrgPairListToDef(accountParams)
+
+	respData, err := json.Marshal(appOrgPairs)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service account params response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
 }
 
 func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
