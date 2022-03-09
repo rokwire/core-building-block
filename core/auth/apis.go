@@ -154,6 +154,24 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	return nil, &model.LoginSession{ID: loginSession.ID, Identifier: loginSession.Identifier, Params: responseParams, State: loginSession.State}, mfaTypes, nil
 }
 
+//Logout logouts an account from app/org
+//	Input:
+//		allSessions (bool): If to remove the current session only or all sessions for the app/org for the account
+func (a *Auth) Logout(appID string, orgID string, currentAccountID string, sessionID string, allSessions bool, l *logs.Log) error {
+	if allSessions {
+		err := a.storage.DeleteLoginSessionsByIdentifier(nil, currentAccountID)
+		if err != nil {
+			return errors.Wrapf("error deleting session by accountID - %s", err, currentAccountID)
+		}
+	} else {
+		err := a.storage.DeleteLoginSession(nil, sessionID)
+		if err != nil {
+			return errors.Wrapf("error deleting session - %s", err, sessionID)
+		}
+	}
+	return nil
+}
+
 //AccountExists checks if a user is already registered
 //The authentication method must be one of the supported for the application.
 //	Input:
@@ -332,7 +350,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, nil, anonymous, false, loginSession.AppOrg.Application.Admin, false)
+	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, nil, anonymous, false, loginSession.AppOrg.Application.Admin, false, loginSession.ID)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
@@ -964,7 +982,7 @@ func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, str
 	if account.Organization != nil {
 		orgID = account.Organization.ID
 	}
-	claims := a.getStandardClaims(account.AccountID, "", "", "", "", "rokwire", orgID, appID, requestData.AuthType, nil, false, true, false, true)
+	claims := a.getStandardClaims(account.AccountID, "", "", "", "", "rokwire", orgID, appID, requestData.AuthType, nil, false, true, false, true, "")
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -1235,7 +1253,7 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log)
 	}
 
 	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, claims.OrgID, appID, claims.AuthType,
-		&claims.ExpiresAt, false, false, true, claims.Service)
+		&claims.ExpiresAt, false, false, true, claims.Service, claims.SessionID)
 	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }
 
