@@ -1,13 +1,12 @@
 post:
   tags:
   - Services
-  summary: logout
+  summary: Logout
   description: |
-    logout an account
+    Logouts an account
   security:
     - bearerAuth: []
   requestBody:
-    description: all_session
     content:
       application/json:
         schema:
