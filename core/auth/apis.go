@@ -151,6 +151,9 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	return nil, &model.LoginSession{ID: loginSession.ID, Identifier: loginSession.Identifier, Params: responseParams, State: loginSession.State}, mfaTypes, nil
 }
 
+//Logout logouts an account from app/org
+//	Input:
+//		allSessions (bool): If to remove the current session only or all sessions for the app/org for the account
 func (a *Auth) Logout(appID string, orgID string, currentAccountID string, sessionID string, allSessions bool, l *logs.Log) error {
 	//1. validate if the session is for the current app/org and account
 
