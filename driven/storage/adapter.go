@@ -1079,11 +1079,6 @@ func (sa *Adapter) FindServiceAccountByID(context TransactionContext, id string)
 	return sa.findServiceAccount(context, "_id", id)
 }
 
-//FindServiceAccountByToken finds a service account by token
-func (sa *Adapter) FindServiceAccountByToken(tokenHash string) (*model.ServiceAccount, error) {
-	return sa.findServiceAccount(nil, "credentials.params.token", tokenHash)
-}
-
 func (sa *Adapter) findServiceAccount(context TransactionContext, key string, value string) (*model.ServiceAccount, error) {
 	filter := bson.D{primitive.E{Key: key, Value: value}}
 
@@ -1111,7 +1106,7 @@ func (sa *Adapter) findServiceAccount(context TransactionContext, key string, va
 func (sa *Adapter) FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error) {
 	filter := bson.D{}
 	for k, v := range params {
-		if k == "permissions" || k == "roles" {
+		if k == "permissions" {
 			filter = append(filter, primitive.E{Key: k + ".name", Value: bson.M{"$in": v}})
 		} else {
 			filter = append(filter, primitive.E{Key: k, Value: v})
@@ -1121,7 +1116,8 @@ func (sa *Adapter) FindServiceAccounts(params map[string]interface{}) ([]model.S
 	var accounts []serviceAccount
 	err := sa.db.serviceAccounts.Find(filter, &accounts, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+		logParams := logutils.FieldArgs(params)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &logParams, err)
 	}
 
 	modelAccounts := serviceAccountListFromStorage(accounts, sa)

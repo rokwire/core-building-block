@@ -279,4 +279,10 @@ _system_req_account-roles:
 _system_req_create_ApplicationConfig_Request:
   $ref: "./apis/system/application-config/request/Request.yaml"
 
+### service accounts API
+_system_req_create_service-account:
+  $ref: "./apis/system/create-service-account/request/Request.yaml"
+_system_req_update_service-account:
+  $ref: "./apis/system/update-service-account/request/Request.yaml"
+
 ## end SYSTEM section

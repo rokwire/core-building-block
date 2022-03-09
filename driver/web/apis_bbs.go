@@ -55,7 +55,7 @@ func (h BBsApisHandler) getServiceAccountParams(l *logs.Log, r *http.Request, cl
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	message, accountParams, err := h.coreAPIs.Auth.GetServiceAccountParams(r, l)
+	message, accountParams, err := h.coreAPIs.Auth.GetServiceAccountParams(accountID, r, l)
 	if err != nil {
 		if message != nil {
 			return l.HttpResponseError(*message, err, http.StatusUnauthorized, false)

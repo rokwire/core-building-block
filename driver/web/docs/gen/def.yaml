@@ -2256,6 +2256,9 @@ paths:
                 summary: Static token
                 value: |
                   {
+                    "account_id": "service_account_id",
+                    "app_id": "9766",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "auth_type": "static_token",
                     "creds": {
                       "token": "account_token"
@@ -2265,10 +2268,10 @@ paths:
                 summary: Signature
                 value: |
                   {
+                    "account_id": "service_account_id",
+                    "app_id": "9766",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "auth_type": "signature",
-                    "creds": {
-                      "id": "service_account_id"
-                    }
                   }
         required: true
       responses:
@@ -2409,6 +2412,9 @@ paths:
                 summary: Static token
                 value: |
                   {
+                    "account_id": "service_account_id",
+                    "app_id": "9766",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "auth_type": "static_token",
                     "creds": {
                       "token": "account_token"
@@ -2418,10 +2424,10 @@ paths:
                 summary: Signature
                 value: |
                   {
+                    "account_id": "service_account_id",
+                    "app_id": "9766",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "auth_type": "signature",
-                    "creds": {
-                      "id": "service_account_id"
-                    }
                   }
         required: true
       responses:
@@ -2803,9 +2809,9 @@ paths:
       deprecated: true
       tags:
         - System
-      summary: Get service account document
+      summary: Get service account instance
       description: |
-        Get service account document by ID
+        Get service account instance by account_id, app_id, org_id
 
         **Auth:** Requires auth token with permission to read service accounts
       security:
@@ -2813,9 +2819,25 @@ paths:
       parameters:
         - name: id
           in: path
-          description: ID of the service account document to return
+          description: ID of the service account
           required: true
           style: simple
+          explode: false
+          schema:
+            type: string
+        - name: app_id
+          in: query
+          description: Application ID of the service account instance
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: org_id
+          in: query
+          description: Organization ID of the service account instance
+          required: false
+          style: form
           explode: false
           schema:
             type: string
@@ -2836,9 +2858,9 @@ paths:
       deprecated: true
       tags:
         - System
-      summary: Update service account document
+      summary: Update service account instance
       description: |
-        Updates a service account document
+        Updates a service account instance
 
         **Auth:** Requires auth token with permission to update service accounts
       security:
@@ -2846,9 +2868,25 @@ paths:
       parameters:
         - name: id
           in: path
-          description: ID of the service account document to update
+          description: ID of the service account instance
           required: true
           style: simple
+          explode: false
+          schema:
+            type: string
+        - name: app_id
+          in: query
+          description: Application ID of the service account instance
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: org_id
+          in: query
+          description: Organization ID of the service account instance
+          required: false
+          style: form
           explode: false
           schema:
             type: string
@@ -2858,15 +2896,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ServiceAccount'
+              $ref: '#/components/schemas/_system_req_update_service-account'
             examples:
               update_account:
                 summary: Update service account
                 value: |
                   {
                     "name": "updated_name",
-                    "app_id": "9766",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "permissions": ["permission1", "new_permission1"],
                     "scopes": ["scope1", "scope2", "new_scope1"]
                   }
@@ -2888,9 +2924,9 @@ paths:
       deprecated: true
       tags:
         - System
-      summary: Deregister service account document
+      summary: Deregister service account instance
       description: |
-        Removes a service account document
+        Removes a service account instance
 
         **Auth:** Requires auth token with permission to delete service accounts
       security:
@@ -2898,9 +2934,25 @@ paths:
       parameters:
         - name: id
           in: path
-          description: ID of the service account document to delete
+          description: ID of the service account instance to delete
           required: true
           style: simple
+          explode: false
+          schema:
+            type: string
+        - name: app_id
+          in: query
+          description: Application ID of the service account instance
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: org_id
+          in: query
+          description: Organization ID of the service account instance
+          required: false
+          style: form
           explode: false
           schema:
             type: string
@@ -2920,7 +2972,7 @@ paths:
         - System
       summary: Get service accounts
       description: |
-        Get list of all service accounts
+        Get list of all service accounts matching a search
 
         **Auth:** Requires auth token with permission to read service accounts
       security:
@@ -3000,16 +3052,33 @@ paths:
         **Auth:** Requires auth token with permission to create service accounts
       security:
         - bearerAuth: []
+      parameters:
+        - name: app_id
+          in: query
+          description: Service account app ID to copy from
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: org_id
+          in: query
+          description: Service account org ID to copy from
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
       requestBody:
         description: |
           Service account
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ServiceAccount'
+              $ref: '#/components/schemas/_system_req_create_service-account'
             examples:
               initial_creds:
-                summary: Register account with initial credentials
+                summary: Register new account with initial credentials
                 value: |
                   {
                     "name": "test_account",
@@ -3032,9 +3101,20 @@ paths:
                     ]
                   }
               no_initial_creds:
-                summary: Register account without initial credentials
+                summary: Register new account without initial credentials
                 value: |
                   {
+                    "name": "test_account",
+                    "app_id": "9766",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "permissions": ["permission1", "permission2"],
+                    "scopes": ["scope1", "scope2"],
+                  }
+              copy_from:
+                summary: Register account instance by copying some data from existing account instance
+                value: |
+                  {
+                    "account_id": "12345678-e2cd-11eb-af68-60f81db5ecc0",
                     "name": "test_account",
                     "app_id": "9766",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
@@ -3049,6 +3129,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      deprecated: true
+      tags:
+        - System
+      summary: Delete service accounts
+      description: |
+        Delete service accounts matching an account ID
+
+        **Auth:** Requires auth token with permission to delete service accounts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: account_id
+          in: query
+          description: Service account ID to search for
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
         '400':
           description: Bad request
         '401':
@@ -3129,7 +3238,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: ID of the service account from which credential should be removed
+          description: ID of the service account to remove credential
           required: true
           style: simple
           explode: false
@@ -5256,18 +5365,18 @@ components:
           $ref: '#/components/schemas/_services_req_service-accounts_CredsStaticToken'
     _services_req_service-accounts_TokenRequest:
       required:
-        - id
-        - org_id
+        - account_id
         - app_id
+        - org_id
         - auth_type
       type: object
       properties:
-        id:
-          type: string
-        org_id:
-          nullable: true
+        account_id:
           type: string
         app_id:
+          nullable: true
+          type: string
+        org_id:
           nullable: true
           type: string
         auth_type:
@@ -5726,3 +5835,45 @@ components:
           description: conforms major.minor.patch format
         data:
           type: object
+    _system_req_create_service-account:
+      required:
+        - name
+        - app_id
+        - org_id
+      type: object
+      properties:
+        account_id:
+          type: string
+        name:
+          type: string
+        app_id:
+          type: string
+          nullable: true
+        org_id:
+          type: string
+          nullable: true
+        permissions:
+          type: array
+          items:
+            type: string
+        scopes:
+          type: array
+          items:
+            type: string
+        creds:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceAccountCredential'
+    _system_req_update_service-account:
+      type: object
+      properties:
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        scopes:
+          type: array
+          items:
+            type: string

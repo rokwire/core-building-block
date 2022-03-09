@@ -1,0 +1,28 @@
+required:
+  - name
+  - app_id
+  - org_id
+type: object
+properties:
+  account_id:
+    type: string
+  name:
+    type: string
+  app_id:
+    type: string
+    nullable: true
+  org_id:
+    type: string
+    nullable: true
+  permissions:
+    type: array
+    items:
+      type: string
+  scopes:
+    type: array
+    items:
+      type: string
+  creds:
+    type: array
+    items:
+      $ref: '../../../../auth/ServiceAccountCredential.yaml'

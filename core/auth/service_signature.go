@@ -2,7 +2,6 @@ package auth
 
 import (
 	"core-building-block/core/model"
-	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -10,9 +9,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 const (
@@ -22,47 +19,28 @@ const (
 	TypeSignatureCreds logutils.MessageDataType = "signature creds"
 )
 
-//signatureCreds represents the creds struct for signature auth
-type signatureCreds struct {
-	ID string `json:"id" validate:"required"`
-}
-
 // Signature implementation of serviceAuthType
 type signatureServiceAuthImpl struct {
 	auth            *Auth
 	serviceAuthType string
 }
 
-func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, body []byte, creds interface{}, l *logs.Log) (*string, *model.ServiceAccount, error) {
-	credsData, err := json.Marshal(creds)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionMarshal, TypeSignatureCreds, nil, err)
-	}
-
-	var sigCreds signatureCreds
-	err = json.Unmarshal([]byte(credsData), &sigCreds)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, TypeSignatureCreds, nil, err)
-	}
-
-	validate := validator.New()
-	err = validate.Struct(sigCreds)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, TypeSignatureCreds, nil, err)
-	}
-
-	account, err := s.auth.storage.FindServiceAccountByID(nil, sigCreds.ID)
+func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, body []byte, _ interface{}, params map[string]interface{}) (*string, []model.ServiceAccount, error) {
+	accounts, err := s.auth.storage.FindServiceAccounts(params)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 	}
+	if len(accounts) == 0 {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
+	}
 
-	for _, credential := range account.Credentials {
+	for _, credential := range accounts[0].Credentials {
 		if credential.Type == ServiceAuthTypeSignature && credential.Params != nil {
 			pubKeyPem, ok := credential.Params["pub_key"].(string)
 			if !ok || pubKeyPem == "" {
 				continue
 			}
-			pubKeyPem = strings.Replace(pubKeyPem, `\n`, "\n", -1)
+			pubKeyPem = strings.ReplaceAll(pubKeyPem, `\n`, "\n")
 
 			pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(pubKeyPem))
 			if err != nil {
@@ -71,17 +49,16 @@ func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, body []byte
 
 			err = s.auth.SignatureAuth.CheckRequestSignature(r, body, pubKey)
 			if err == nil {
-				return nil, account, nil
+				return nil, accounts, nil
 			}
-
-			l.WarnError("error checking request signature", err)
 		}
 	}
 
-	return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "request signature", nil, err)
+	message := "invalid signature"
+	return &message, nil, errors.WrapErrorAction(logutils.ActionValidate, "request signature", nil, err)
 }
 
-func (s *signatureServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, string, error) {
+func (s *signatureServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential) (*model.ServiceAccount, string, error) {
 	if account == nil {
 		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
 	}

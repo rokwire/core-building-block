@@ -16,6 +16,9 @@ post:
             summary: Static token
             value: |
               {
+                "account_id": "service_account_id",
+                "app_id": "9766",
+                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                 "auth_type": "static_token",
                 "creds": {
                   "token": "account_token"
@@ -25,10 +28,10 @@ post:
             summary: Signature
             value: |
               {
+                "account_id": "service_account_id",
+                "app_id": "9766",
+                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                 "auth_type": "signature",
-                "creds": {
-                  "id": "service_account_id"
-                }
               }
     required: true
   responses:

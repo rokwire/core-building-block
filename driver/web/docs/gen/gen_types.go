@@ -711,12 +711,12 @@ type ServicesReqServiceAccountsParamsRequestAuthType string
 
 // ServicesReqServiceAccountsTokenRequest defines model for _services_req_service-accounts_TokenRequest.
 type ServicesReqServiceAccountsTokenRequest struct {
-	AppId    *string                                        `json:"app_id"`
-	AuthType ServicesReqServiceAccountsTokenRequestAuthType `json:"auth_type"`
+	AccountId string                                         `json:"account_id"`
+	AppId     *string                                        `json:"app_id"`
+	AuthType  ServicesReqServiceAccountsTokenRequestAuthType `json:"auth_type"`
 
 	// Service account token for auth_type="static_token"
 	Creds *ServicesReqServiceAccountsCredsStaticToken `json:"creds,omitempty"`
-	Id    string                                      `json:"id"`
 	OrgId *string                                     `json:"org_id"`
 }
 
@@ -1061,6 +1061,17 @@ type SystemReqCreateAuthType_Params struct {
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
+// SystemReqCreateServiceAccount defines model for _system_req_create_service-account.
+type SystemReqCreateServiceAccount struct {
+	AccountId   *string                     `json:"account_id,omitempty"`
+	AppId       *string                     `json:"app_id"`
+	Creds       *[]ServiceAccountCredential `json:"creds,omitempty"`
+	Name        string                      `json:"name"`
+	OrgId       *string                     `json:"org_id"`
+	Permissions *[]string                   `json:"permissions,omitempty"`
+	Scopes      *[]string                   `json:"scopes,omitempty"`
+}
+
 // SystemReqGetApplication defines model for _system_req_get_Application.
 type SystemReqGetApplication string
 
@@ -1103,6 +1114,13 @@ type SystemReqUpdateAuthType struct {
 // SystemReqUpdateAuthType_Params defines model for SystemReqUpdateAuthType.Params.
 type SystemReqUpdateAuthType_Params struct {
 	AdditionalProperties map[string]interface{} `json:"-"`
+}
+
+// SystemReqUpdateServiceAccount defines model for _system_req_update_service-account.
+type SystemReqUpdateServiceAccount struct {
+	Name        *string   `json:"name,omitempty"`
+	Permissions *[]string `json:"permissions,omitempty"`
+	Scopes      *[]string `json:"scopes,omitempty"`
 }
 
 // SystemResGetApplications defines model for _system_res_get_Applications.
@@ -1413,6 +1431,13 @@ type PostSystemPermissionsJSONBody SystemReqPermissions
 // PutSystemPermissionsJSONBody defines parameters for PutSystemPermissions.
 type PutSystemPermissionsJSONBody SystemReqPermissions
 
+// DeleteSystemServiceAccountsParams defines parameters for DeleteSystemServiceAccounts.
+type DeleteSystemServiceAccountsParams struct {
+
+	// Service account ID to search for
+	AccountId string `json:"account_id"`
+}
+
 // GetSystemServiceAccountsParams defines parameters for GetSystemServiceAccounts.
 type GetSystemServiceAccountsParams struct {
 
@@ -1436,10 +1461,50 @@ type GetSystemServiceAccountsParams struct {
 }
 
 // PostSystemServiceAccountsJSONBody defines parameters for PostSystemServiceAccounts.
-type PostSystemServiceAccountsJSONBody ServiceAccount
+type PostSystemServiceAccountsJSONBody SystemReqCreateServiceAccount
+
+// PostSystemServiceAccountsParams defines parameters for PostSystemServiceAccounts.
+type PostSystemServiceAccountsParams struct {
+
+	// Service account app ID to copy from
+	AppId *string `json:"app_id,omitempty"`
+
+	// Service account org ID to copy from
+	OrgId *string `json:"org_id,omitempty"`
+}
+
+// DeleteSystemServiceAccountsIdParams defines parameters for DeleteSystemServiceAccountsId.
+type DeleteSystemServiceAccountsIdParams struct {
+
+	// Application ID of the service account instance
+	AppId *string `json:"app_id,omitempty"`
+
+	// Organization ID of the service account instance
+	OrgId *string `json:"org_id,omitempty"`
+}
+
+// GetSystemServiceAccountsIdParams defines parameters for GetSystemServiceAccountsId.
+type GetSystemServiceAccountsIdParams struct {
+
+	// Application ID of the service account instance
+	AppId *string `json:"app_id,omitempty"`
+
+	// Organization ID of the service account instance
+	OrgId *string `json:"org_id,omitempty"`
+}
 
 // PutSystemServiceAccountsIdJSONBody defines parameters for PutSystemServiceAccountsId.
-type PutSystemServiceAccountsIdJSONBody ServiceAccount
+type PutSystemServiceAccountsIdJSONBody SystemReqUpdateServiceAccount
+
+// PutSystemServiceAccountsIdParams defines parameters for PutSystemServiceAccountsId.
+type PutSystemServiceAccountsIdParams struct {
+
+	// Application ID of the service account instance
+	AppId *string `json:"app_id,omitempty"`
+
+	// Organization ID of the service account instance
+	OrgId *string `json:"org_id,omitempty"`
+}
 
 // DeleteSystemServiceAccountsIdCredsParams defines parameters for DeleteSystemServiceAccountsIdCreds.
 type DeleteSystemServiceAccountsIdCredsParams struct {

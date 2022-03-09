@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 	"gopkg.in/go-playground/validator.v9"
 )
@@ -33,7 +32,7 @@ type staticTokenServiceAuthImpl struct {
 	serviceAuthType string
 }
 
-func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, _ []byte, creds interface{}, l *logs.Log) (*string, *model.ServiceAccount, error) {
+func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, _ []byte, creds interface{}, params map[string]interface{}) (*string, []model.ServiceAccount, error) {
 	credsData, err := json.Marshal(creds)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionMarshal, TypeStaticTokenCreds, nil, err)
@@ -53,15 +52,33 @@ func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, _ []byte,
 
 	encodedToken := s.hashAndEncodeToken(tokenCreds.Token)
 
-	account, err := s.auth.storage.FindServiceAccountByToken(string(encodedToken))
+	accounts, err := s.auth.storage.FindServiceAccounts(params)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 	}
+	if len(accounts) == 0 {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
+	}
 
-	return nil, account, nil
+	accountCreds := accounts[0].Credentials
+	if len(accountCreds) == 0 {
+		message := "service account credentials missing"
+		return &message, nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
+	}
+
+	storedToken, ok := accountCreds[0].Params["token"].(string)
+	if !ok {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, TypeStaticTokenCreds, nil, err)
+	}
+	if encodedToken != storedToken {
+		message := "invalid token"
+		return &message, nil, errors.ErrorData(logutils.StatusInvalid, "service account token", nil)
+	}
+
+	return nil, accounts, nil
 }
 
-func (s *staticTokenServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, string, error) {
+func (s *staticTokenServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential) (*model.ServiceAccount, string, error) {
 	if account == nil {
 		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
 	}
@@ -71,7 +88,6 @@ func (s *staticTokenServiceAuthImpl) addCredentials(account *model.ServiceAccoun
 
 	token, err := s.auth.buildRefreshToken()
 	if err != nil {
-		l.Info("error generating service account token")
 		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 

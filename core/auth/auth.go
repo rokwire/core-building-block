@@ -8,6 +8,8 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -1636,6 +1638,36 @@ func (a *Auth) constructServiceAccount(accountID string, name string, orgID *str
 
 	return &model.ServiceAccount{AccountID: accountID, Name: name, Application: application, Organization: organization,
 		Permissions: permissionList}, nil
+}
+
+func (a *Auth) checkServiceAccountCreds(r *http.Request, params map[string]interface{}, l *logs.Log) (*string, []model.ServiceAccount, string, error) {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, nil, "", errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
+	}
+	defer r.Body.Close()
+
+	var requestData model.ServiceAccountTokenRequest
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return nil, nil, "", errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("service account access token request"), nil, err)
+	}
+
+	serviceAuthType, err := a.getServiceAuthTypeImpl(requestData.AuthType)
+	if err != nil {
+		l.Info("error getting service auth type on get service access token")
+		return nil, nil, "", errors.WrapErrorAction("error getting service auth type on get service access token", "", nil, err)
+	}
+
+	if params == nil {
+		params = map[string]interface{}{"account_id": requestData.AccountID, "app_id": requestData.AppID, "org_id": requestData.OrgID}
+	}
+	message, accounts, err := serviceAuthType.checkCredentials(r, data, requestData.Creds, params)
+	if err != nil {
+		return message, nil, "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
+	}
+
+	return nil, accounts, requestData.AuthType, nil
 }
 
 func (a *Auth) hideServiceCredentialParams(creds []model.ServiceAccountCredential, l *logs.Log) {

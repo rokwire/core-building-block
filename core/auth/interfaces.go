@@ -73,8 +73,8 @@ type anonymousAuthType interface {
 
 //serviceAuthType is the interface for authentication for non-human clients
 type serviceAuthType interface {
-	checkCredentials(r *http.Request, body []byte, creds interface{}, l *logs.Log) (*string, *model.ServiceAccount, error)
-	addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, string, error)
+	checkCredentials(r *http.Request, body []byte, creds interface{}, params map[string]interface{}) (*string, []model.ServiceAccount, error)
+	addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential) (*model.ServiceAccount, string, error)
 	hiddenParams() []string
 }
 
@@ -282,7 +282,7 @@ type APIs interface {
 	RemoveMFAType(accountID string, identifier string, mfaType string) error
 
 	//GetServiceAccountParams returns a list of app, org pairs a service account has access to
-	GetServiceAccountParams(r *http.Request, l *logs.Log) (*string, []model.AppOrgPair, error)
+	GetServiceAccountParams(accountID string, r *http.Request, l *logs.Log) (*string, []model.AppOrgPair, error)
 
 	//GetServiceAccessToken returns an access token for a non-human client
 	GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, string, error)
@@ -427,7 +427,6 @@ type Storage interface {
 
 	//ServiceAccounts
 	FindServiceAccountByID(context storage.TransactionContext, id string) (*model.ServiceAccount, error)
-	FindServiceAccountByToken(tokenHash string) (*model.ServiceAccount, error)
 	FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
 	InsertServiceAccount(account *model.ServiceAccount) error
 	SaveServiceAccount(context storage.TransactionContext, account *model.ServiceAccount) error

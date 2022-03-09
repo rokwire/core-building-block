@@ -4,9 +4,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -940,49 +938,47 @@ func (a *Auth) RemoveMFAType(accountID string, identifier string, mfaType string
 }
 
 //GetServiceAccountParams returns a list of app, org pairs a service account has access to
-func (a *Auth) GetServiceAccountParams(r *http.Request, l *logs.Log) (*string, []model.AppOrgPair, error) {
-	return nil, nil, errors.New(logutils.Unimplemented)
+func (a *Auth) GetServiceAccountParams(accountID string, r *http.Request, l *logs.Log) (*string, []model.AppOrgPair, error) {
+	params := map[string]interface{}{"account_id": accountID}
+	message, accounts, _, err := a.checkServiceAccountCreds(r, params, l)
+	if err != nil {
+		return message, nil, errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
+	}
+
+	appOrgPairs := make([]model.AppOrgPair, len(accounts))
+	for i, account := range accounts {
+		var appID *string
+		if account.Application != nil {
+			appID = &account.Application.ID
+		}
+		var orgID *string
+		if account.Organization != nil {
+			orgID = &account.Organization.ID
+		}
+		appOrgPairs[i] = model.AppOrgPair{AppID: appID, OrgID: orgID}
+	}
+
+	return nil, appOrgPairs, nil
 }
 
 //GetServiceAccessToken returns an access token for a non-human client
 func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, string, error) {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return nil, "", errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
-	}
-	r.Body.Close()
-
-	var requestData model.ServiceAccountTokenRequest
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return nil, "", errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("service account access token request"), nil, err)
-	}
-
-	if requestData.Creds == nil {
-		return nil, "", errors.ErrorData(logutils.StatusMissing, "service account creds", nil)
-	}
-
-	serviceAuthType, err := a.getServiceAuthTypeImpl(requestData.AuthType)
-	if err != nil {
-		l.Info("error getting service auth type on get service access token")
-		return nil, "", errors.WrapErrorAction("error getting service auth type on get service access token", "", nil, err)
-	}
-
-	message, account, err := serviceAuthType.checkCredentials(r, data, requestData.Creds, l)
+	message, accounts, authType, err := a.checkServiceAccountCreds(r, nil, l)
 	if err != nil {
 		return message, "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}
 
-	permissions := account.GetPermissionNames()
+	permissions := accounts[0].GetPermissionNames()
 	var appID string
-	if account.Application != nil {
-		appID = account.Application.ID
+	if accounts[0].Application != nil {
+		appID = accounts[0].Application.ID
 	}
 	var orgID string
-	if account.Organization != nil {
-		orgID = account.Organization.ID
+	if accounts[0].Organization != nil {
+		orgID = accounts[0].Organization.ID
 	}
-	claims := a.getStandardClaims(account.AccountID, "", "", "", "", "rokwire", orgID, appID, requestData.AuthType, nil, false, true, false, true, "")
+	//TODO: fix
+	claims := a.getStandardClaims(accounts[0].AccountID, "", "", "", "", rokwireTokenAud, orgID, appID, authType, nil, false, true, false, true, "")
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -1033,7 +1029,7 @@ func (a *Auth) RegisterServiceAccount(name string, orgID *string, appID *string,
 			continue
 		}
 
-		newAccount, rawToken, err = serviceAuthType.addCredentials(newAccount, &cred, l)
+		newAccount, rawToken, err = serviceAuthType.addCredentials(newAccount, &cred)
 		if err != nil {
 			l.Warnf("error adding %s credential on register service account: %s", cred.Type, err.Error())
 		}
@@ -1126,7 +1122,7 @@ func (a *Auth) AddServiceCredential(accountID string, creds *model.ServiceAccoun
 			return errors.WrapErrorAction("error getting service auth type on add service credential", "", nil, err)
 		}
 
-		account, rawToken, err = serviceAuthType.addCredentials(account, creds, l)
+		account, rawToken, err = serviceAuthType.addCredentials(account, creds)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionInsert, "service account creds", nil, err)
 		}

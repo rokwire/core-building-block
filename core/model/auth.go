@@ -355,8 +355,12 @@ type ServiceAccountCredential struct {
 
 // ServiceAccountTokenRequest represents a service account token request entity
 type ServiceAccountTokenRequest struct {
-	AuthType string       `json:"auth_type"`
-	Creds    *interface{} `json:"creds,omitempty"`
+	AccountID string  `json:"account_id"`
+	AppID     *string `json:"app_id"`
+	OrgID     *string `json:"org_id"`
+	AuthType  string  `json:"auth_type"`
+
+	Creds *interface{} `json:"creds,omitempty"`
 }
 
 //ServiceAuthorization represents service authorization entity
