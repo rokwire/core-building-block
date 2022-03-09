@@ -118,6 +118,11 @@ type APIs interface {
 		authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
 		profile model.Profile, preferences map[string]interface{}, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
 
+	//Logout logouts an account from app/org
+	//	Input:
+	//		allSessions (bool): If to remove the current session only or all sessions for the app/org for the account
+	Logout(appID string, orgID string, currentAccountID string, sessionID string, allSessions bool, l *logs.Log) error
+
 	//AccountExists checks if a user is already registered
 	//The authentication method must be one of the supported for the application.
 	//	Input:
