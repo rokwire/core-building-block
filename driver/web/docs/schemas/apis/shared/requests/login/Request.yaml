@@ -3,6 +3,7 @@ required:
   - app_type_identifier
   - org_id
   - api_key
+  - code
   - device
 type: object
 properties:
@@ -11,6 +12,7 @@ properties:
     enum:
       - email
       - twilio_phone
+      - twilio_phone_password
       - illinois_oidc
       - anonymous
   app_type_identifier:
@@ -18,6 +20,8 @@ properties:
   org_id:
     type: string
   api_key:
+    type: string
+  code:
     type: string
   creds:
     anyOf:
