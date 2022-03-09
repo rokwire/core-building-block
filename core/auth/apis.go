@@ -155,30 +155,17 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 //	Input:
 //		allSessions (bool): If to remove the current session only or all sessions for the app/org for the account
 func (a *Auth) Logout(appID string, orgID string, currentAccountID string, sessionID string, allSessions bool, l *logs.Log) error {
-	//1. validate if the session is for the current app/org and account
-
-	sessions, err := a.storage.FindLoginSessionsByParams(appID, orgID, &sessionID, &currentAccountID, nil, nil, nil, nil, nil, nil)
-	if err != nil {
-		return errors.Wrap("error checking if it is valid to remove account session", err)
-	}
-	if len(sessions) == 0 {
-		return errors.New("not valid params")
-	}
-
-	//2. delete all sessions
-	if allSessions == true {
-		err = a.storage.DeleteLoginSessionsByIdentifier(nil, currentAccountID)
+	if allSessions {
+		err := a.storage.DeleteLoginSessionsByIdentifier(nil, currentAccountID)
 		if err != nil {
-			return errors.Wrap("error deleting session by accountID", err)
+			return errors.Wrapf("error deleting session by accountID - %s", err, currentAccountID)
 		}
-		//3.delete only the login session with current sessionID
 	} else {
-		err = a.storage.DeleteLoginSession(nil, sessionID)
+		err := a.storage.DeleteLoginSession(nil, sessionID)
 		if err != nil {
-			return errors.Wrap("error deleting session", err)
+			return errors.Wrapf("error deleting session - %s", err, sessionID)
 		}
 	}
-
 	return nil
 }
 
