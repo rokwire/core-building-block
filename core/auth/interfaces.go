@@ -469,8 +469,3 @@ type ProfileBuildingBlock interface {
 type Emailer interface {
 	Send(toEmail string, subject string, body string, attachmentFilename *string) error
 }
-
-//Phone is used by core to send phone number
-type Phone interface {
-	Send(toPhone string, subject string, body string, attachmentFilename *string) error
-}
