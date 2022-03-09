@@ -59,6 +59,7 @@ const (
 type Auth struct {
 	storage Storage
 	emailer Emailer
+	phone   Phone
 
 	logger *logs.Logger
 
