@@ -1191,6 +1191,11 @@ type PostServicesAuthLoginJSONBody SharedReqLogin
 // PostServicesAuthLoginUrlJSONBody defines parameters for PostServicesAuthLoginUrl.
 type PostServicesAuthLoginUrlJSONBody SharedReqLoginUrl
 
+// PostServicesAuthLogoutJSONBody defines parameters for PostServicesAuthLogout.
+type PostServicesAuthLogoutJSONBody struct {
+	AllSessions bool `json:"all_sessions"`
+}
+
 // PostServicesAuthMfaJSONBody defines parameters for PostServicesAuthMfa.
 type PostServicesAuthMfaJSONBody SharedReqLoginMfa
 
@@ -1401,6 +1406,9 @@ type PostServicesAuthLoginJSONRequestBody PostServicesAuthLoginJSONBody
 
 // PostServicesAuthLoginUrlJSONRequestBody defines body for PostServicesAuthLoginUrl for application/json ContentType.
 type PostServicesAuthLoginUrlJSONRequestBody PostServicesAuthLoginUrlJSONBody
+
+// PostServicesAuthLogoutJSONRequestBody defines body for PostServicesAuthLogout for application/json ContentType.
+type PostServicesAuthLogoutJSONRequestBody PostServicesAuthLogoutJSONBody
 
 // PostServicesAuthMfaJSONRequestBody defines body for PostServicesAuthMfa for application/json ContentType.
 type PostServicesAuthMfaJSONRequestBody PostServicesAuthMfaJSONBody
