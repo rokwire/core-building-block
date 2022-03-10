@@ -74,7 +74,7 @@ type anonymousAuthType interface {
 //serviceAuthType is the interface for authentication for non-human clients
 type serviceAuthType interface {
 	checkCredentials(r *http.Request, body []byte, creds interface{}, params map[string]interface{}) (*string, []model.ServiceAccount, error)
-	addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential) (*model.ServiceAccount, string, error)
+	addCredentials(creds *model.ServiceAccountCredential) (string, error)
 	hiddenParams() []string
 }
 
@@ -287,26 +287,29 @@ type APIs interface {
 	//GetServiceAccessToken returns an access token for a non-human client
 	GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, string, error)
 
-	//GetServiceAccount gets a service account by ID
-	GetServiceAccount(id string, l *logs.Log) (*model.ServiceAccount, error)
-
-	//GetServiceAccounts gets all service accounts
+	//GetServiceAccounts gets all service accounts matching a search
 	GetServiceAccounts(params map[string]interface{}, l *logs.Log) ([]model.ServiceAccount, error)
 
 	//RegisterServiceAccount registers a service account
-	RegisterServiceAccount(name string, orgID *string, appID *string, permissions []string, roles []string, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error)
-
-	//UpdateServiceAccount updates a service account
-	UpdateServiceAccount(id string, name string, orgID *string, appID *string, permissions []string, roles []string, l *logs.Log) (*model.ServiceAccount, error)
+	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name string, appID *string, orgID *string, permissions *[]string, scopes *[]string, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccount deregisters a service account
-	DeregisterServiceAccount(id string) error
+	DeregisterServiceAccount(accountID string) error
 
-	//AddServiceCredential adds a credential to a service account
-	AddServiceCredential(accountID string, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccountCredential, error)
+	//GetServiceAccountInstance gets a service account instance
+	GetServiceAccountInstance(accountID string, appID *string, orgID *string, l *logs.Log) (*model.ServiceAccount, error)
 
-	//RemoveServiceCredential removes a credential from a service account
-	RemoveServiceCredential(accountID string, credID string) error
+	//UpdateServiceAccountInstance updates a service account instance
+	UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string, scopes []string, l *logs.Log) (*model.ServiceAccount, error)
+
+	//DeregisterServiceAccountInstance deregisters a service account instance
+	DeregisterServiceAccountInstance(id string, appID *string, orgID *string) error
+
+	//AddServiceAccountCredential adds a credential to a service account
+	AddServiceAccountCredential(accountID string, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccountCredential, error)
+
+	//RemoveServiceAccountCredential removes a credential from a service account
+	RemoveServiceAccountCredential(accountID string, credID string) error
 
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
@@ -426,11 +429,16 @@ type Storage interface {
 	FindProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)
 
 	//ServiceAccounts
-	FindServiceAccountByID(context storage.TransactionContext, id string) (*model.ServiceAccount, error)
+	FindServiceAccount(context storage.TransactionContext, accountID string, appID *string, orgID *string) (*model.ServiceAccount, error)
 	FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
 	InsertServiceAccount(account *model.ServiceAccount) error
-	SaveServiceAccount(context storage.TransactionContext, account *model.ServiceAccount) error
-	DeleteServiceAccount(id string) error
+	UpdateServiceAccount(account *model.ServiceAccount) error
+	DeleteServiceAccount(accountID string, appID *string, orgID *string) error
+	DeleteServiceAccounts(accountID string) error
+
+	//ServiceAccountCredentials
+	InsertServiceAccountCredential(accountID string, creds *model.ServiceAccountCredential) error
+	DeleteServiceAccountCredential(accountID string, credID string) error
 
 	//AccountAuthTypes
 	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)

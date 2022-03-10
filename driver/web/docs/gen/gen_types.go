@@ -1118,9 +1118,9 @@ type SystemReqUpdateAuthType_Params struct {
 
 // SystemReqUpdateServiceAccount defines model for _system_req_update_service-account.
 type SystemReqUpdateServiceAccount struct {
-	Name        *string   `json:"name,omitempty"`
-	Permissions *[]string `json:"permissions,omitempty"`
-	Scopes      *[]string `json:"scopes,omitempty"`
+	Name        string   `json:"name"`
+	Permissions []string `json:"permissions"`
+	Scopes      []string `json:"scopes"`
 }
 
 // SystemResGetApplications defines model for _system_res_get_Applications.
@@ -1434,7 +1434,7 @@ type PutSystemPermissionsJSONBody SystemReqPermissions
 // DeleteSystemServiceAccountsParams defines parameters for DeleteSystemServiceAccounts.
 type DeleteSystemServiceAccountsParams struct {
 
-	// Service account ID to search for
+	// Service account ID to delete
 	AccountId string `json:"account_id"`
 }
 

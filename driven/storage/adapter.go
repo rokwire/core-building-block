@@ -1074,13 +1074,9 @@ func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
 	return nil
 }
 
-//FindServiceAccountByID finds a service account by id
-func (sa *Adapter) FindServiceAccountByID(context TransactionContext, id string) (*model.ServiceAccount, error) {
-	return sa.findServiceAccount(context, "_id", id)
-}
-
-func (sa *Adapter) findServiceAccount(context TransactionContext, key string, value string) (*model.ServiceAccount, error) {
-	filter := bson.D{primitive.E{Key: key, Value: value}}
+//FindServiceAccount finds a service account by accountID, appID, and orgID
+func (sa *Adapter) FindServiceAccount(context TransactionContext, accountID string, appID *string, orgID *string) (*model.ServiceAccount, error) {
+	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
 
 	var account serviceAccount
 	var err error
@@ -1091,18 +1087,18 @@ func (sa *Adapter) findServiceAccount(context TransactionContext, key string, va
 	}
 
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &logutils.FieldArgs{key: value}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": appID, "org_id": orgID}, err)
 	}
 
 	modelAccount, err := serviceAccountFromStorage(account, sa)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCast, model.TypeServiceAccount, &logutils.FieldArgs{key: value}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCast, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": appID, "org_id": orgID}, err)
 	}
 
 	return modelAccount, nil
 }
 
-//FindServiceAccounts gets all service accounts
+//FindServiceAccounts gets all service accounts matching a search
 func (sa *Adapter) FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error) {
 	filter := bson.D{}
 	for k, v := range params {
@@ -1141,8 +1137,8 @@ func (sa *Adapter) InsertServiceAccount(account *model.ServiceAccount) error {
 	return nil
 }
 
-//SaveServiceAccount saves a service account
-func (sa *Adapter) SaveServiceAccount(context TransactionContext, account *model.ServiceAccount) error {
+//UpdateServiceAccount updates a service account
+func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) error {
 	if account == nil {
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeServiceAccount, nil)
 	}
@@ -1150,34 +1146,100 @@ func (sa *Adapter) SaveServiceAccount(context TransactionContext, account *model
 	storageAccount := serviceAccountToStorage(*account)
 
 	filter := bson.D{primitive.E{Key: "account_id", Value: storageAccount.AccountID}, primitive.E{Key: "app_id", Value: storageAccount.AppID}, primitive.E{Key: "org_id", Value: storageAccount.OrgID}}
-
-	var err error
-	if context != nil {
-		err = sa.db.serviceAccounts.ReplaceOneWithContext(context, filter, storageAccount, nil)
-	} else {
-		err = sa.db.serviceAccounts.ReplaceOne(filter, storageAccount, nil)
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "name", Value: storageAccount.Name},
+			primitive.E{Key: "permissions", Value: storageAccount.Permissions},
+			primitive.E{Key: "scopes", Value: storageAccount.Scopes},
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
 	}
-
+	res, err := sa.db.serviceAccounts.UpdateOne(filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": storageAccount.AppID, "org_id": storageAccount.OrgID}, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, logutils.StringArgs("unexpected modified count"))
 	}
 
 	return nil
 }
 
 //DeleteServiceAccount deletes a service account
-func (sa *Adapter) DeleteServiceAccount(id string) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+func (sa *Adapter) DeleteServiceAccount(accountID string, appID *string, orgID *string) error {
+	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
 
 	res, err := sa.db.serviceAccounts.DeleteOne(filter, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"_id": id}, err)
-	}
-	if res.DeletedCount == 0 {
-		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, nil)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": appID, "org_id": orgID}, err)
 	}
 	if res.DeletedCount != 1 {
 		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, logutils.StringArgs("unexpected deleted count"))
+	}
+
+	return nil
+}
+
+//DeleteServiceAccounts deletes service accounts by accountID
+func (sa *Adapter) DeleteServiceAccounts(accountID string) error {
+	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
+
+	res, err := sa.db.serviceAccounts.DeleteMany(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID}, err)
+	}
+	if res.DeletedCount <= 0 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, logutils.StringArgs("unexpected deleted count"))
+	}
+
+	return nil
+}
+
+//InsertServiceAccountCredential inserts a service account credential
+func (sa *Adapter) InsertServiceAccountCredential(accountID string, creds *model.ServiceAccountCredential) error {
+	if creds != nil {
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("credentials"))
+	}
+
+	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "credentials", Value: creds},
+		}},
+	}
+
+	res, err := sa.db.serviceAccounts.UpdateMany(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceAccountCredential, &logutils.FieldArgs{"account_id": accountID}, err)
+	}
+	if res.ModifiedCount == 0 {
+		return errors.ErrorAction(logutils.ActionInsert, model.TypeServiceAccountCredential, logutils.StringArgs("unexpected modified count"))
+	}
+
+	return nil
+}
+
+//DeleteServiceAccountCredential deletes a service account credential
+func (sa *Adapter) DeleteServiceAccountCredential(accountID string, credID string) error {
+	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "credentials", Value: bson.M{"id": credID}},
+		}},
+	}
+
+	res, err := sa.db.serviceAccounts.UpdateMany(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccountCredential, &logutils.FieldArgs{"account_id": accountID, "credentials.id": credID}, err)
+	}
+	if res.ModifiedCount == 0 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccountCredential, logutils.StringArgs("unexpected modified count"))
 	}
 
 	return nil

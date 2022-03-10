@@ -267,6 +267,9 @@ func (h SystemApisHandler) deregisterService(l *logs.Log, r *http.Request, claim
 func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	searchParams := make(map[string]interface{})
 	query := r.URL.Query()
+	if query.Get("account_id") != "" {
+		searchParams["account_id"] = query.Get("account_id")
+	}
 	if query.Get("name") != "" {
 		searchParams["name"] = query.Get("name")
 	}
@@ -299,12 +302,23 @@ func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, clai
 }
 
 func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	var fromAppID *string
+	appIDQuery := r.URL.Query().Get("app_id")
+	if appIDQuery != "" {
+		fromAppID = &appIDQuery
+	}
+	var fromOrgID *string
+	orgIDQuery := r.URL.Query().Get("org_id")
+	if orgIDQuery != "" {
+		fromOrgID = &orgIDQuery
+	}
+
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ServiceAccount
+	var requestData Def.SystemReqCreateServiceAccount
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeServiceAccount, nil, err, http.StatusBadRequest, true)
@@ -315,7 +329,7 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 		creds = serviceAccountCredentialListFromDef(*requestData.Creds)
 	}
 
-	serviceAccount, err := h.coreAPIs.Auth.RegisterServiceAccount(requestData.Name, requestData.OrgId, requestData.AppId, requestData.Permissions, requestData.Scopes, creds, l)
+	serviceAccount, err := h.coreAPIs.Auth.RegisterServiceAccount(requestData.AccountId, fromAppID, fromOrgID, requestData.Name, requestData.AppId, requestData.OrgId, requestData.Permissions, requestData.Scopes, creds, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRegister, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -330,14 +344,39 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h SystemApisHandler) getServiceAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h SystemApisHandler) deregisterServiceAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	accountID := r.URL.Query().Get("account_id")
+	if accountID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("account_id"), nil, http.StatusBadRequest, false)
+	}
+
+	err := h.coreAPIs.Auth.DeregisterServiceAccount(accountID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h SystemApisHandler) getServiceAccountInstance(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	id := params["id"]
 	if len(id) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	serviceAccount, err := h.coreAPIs.Auth.GetServiceAccount(id, l)
+	var appID *string
+	appIDQuery := r.URL.Query().Get("app_id")
+	if appIDQuery != "" {
+		appID = &appIDQuery
+	}
+	var orgID *string
+	orgIDQuery := r.URL.Query().Get("org_id")
+	if orgIDQuery != "" {
+		orgID = &orgIDQuery
+	}
+
+	serviceAccount, err := h.coreAPIs.Auth.GetServiceAccountInstance(id, appID, orgID, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -352,11 +391,22 @@ func (h SystemApisHandler) getServiceAccount(l *logs.Log, r *http.Request, claim
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h SystemApisHandler) updateServiceAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h SystemApisHandler) updateServiceAccountInstance(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	id := params["id"]
 	if len(id) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	var appID *string
+	appIDQuery := r.URL.Query().Get("app_id")
+	if appIDQuery != "" {
+		appID = &appIDQuery
+	}
+	var orgID *string
+	orgIDQuery := r.URL.Query().Get("org_id")
+	if orgIDQuery != "" {
+		orgID = &orgIDQuery
 	}
 
 	data, err := ioutil.ReadAll(r.Body)
@@ -364,13 +414,13 @@ func (h SystemApisHandler) updateServiceAccount(l *logs.Log, r *http.Request, cl
 		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ServiceAccount
+	var requestData Def.SystemReqUpdateServiceAccount
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeServiceAccount, nil, err, http.StatusBadRequest, true)
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "service account update request", nil, err, http.StatusBadRequest, true)
 	}
 
-	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccount(id, requestData.Name, requestData.OrgId, requestData.AppId, requestData.Permissions, requestData.Scopes, l)
+	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccountInstance(id, appID, orgID, requestData.Name, requestData.Permissions, requestData.Scopes, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -385,14 +435,25 @@ func (h SystemApisHandler) updateServiceAccount(l *logs.Log, r *http.Request, cl
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h SystemApisHandler) deregisterServiceAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h SystemApisHandler) deregisterServiceAccountInstance(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	id := params["id"]
 	if len(id) <= 0 {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	err := h.coreAPIs.Auth.DeregisterServiceAccount(id)
+	var appID *string
+	appIDQuery := r.URL.Query().Get("app_id")
+	if appIDQuery != "" {
+		appID = &appIDQuery
+	}
+	var orgID *string
+	orgIDQuery := r.URL.Query().Get("org_id")
+	if orgIDQuery != "" {
+		orgID = &orgIDQuery
+	}
+
+	err := h.coreAPIs.Auth.DeregisterServiceAccountInstance(id, appID, orgID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionDeregister, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -420,7 +481,7 @@ func (h SystemApisHandler) addServiceAccountCredential(l *logs.Log, r *http.Requ
 
 	creds := serviceAccountCredentialFromDef(&requestData)
 
-	creds, err = h.coreAPIs.Auth.AddServiceCredential(id, creds, l)
+	creds, err = h.coreAPIs.Auth.AddServiceAccountCredential(id, creds, l)
 	if err != nil {
 		return l.HttpResponseError("Error adding service account credential", err, http.StatusInternalServerError, true)
 	}
@@ -444,10 +505,10 @@ func (h SystemApisHandler) removeServiceAccountCredential(l *logs.Log, r *http.R
 
 	credID := r.URL.Query().Get("cred_id")
 	if credID == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("name"), nil, http.StatusBadRequest, false)
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("cred_id"), nil, http.StatusBadRequest, false)
 	}
 
-	err := h.coreAPIs.Auth.RemoveServiceCredential(id, credID)
+	err := h.coreAPIs.Auth.RemoveServiceAccountCredential(id, credID)
 	if err != nil {
 		return l.HttpResponseError("Error removing service account credential", err, http.StatusInternalServerError, true)
 	}

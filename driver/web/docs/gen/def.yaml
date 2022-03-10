@@ -2811,7 +2811,7 @@ paths:
         - System
       summary: Get service account instance
       description: |
-        Get service account instance by account_id, app_id, org_id
+        Get service account instance by account ID, app ID, and org ID
 
         **Auth:** Requires auth token with permission to read service accounts
       security:
@@ -3111,7 +3111,7 @@ paths:
                     "scopes": ["scope1", "scope2"],
                   }
               copy_from:
-                summary: Register account instance by copying some data from existing account instance
+                summary: Register new account instance by copying from existing account instance
                 value: |
                   {
                     "account_id": "12345678-e2cd-11eb-af68-60f81db5ecc0",
@@ -3149,7 +3149,7 @@ paths:
       parameters:
         - name: account_id
           in: query
-          description: Service account ID to search for
+          description: Service account ID to delete
           required: true
           style: form
           explode: false
@@ -5865,6 +5865,10 @@ components:
           items:
             $ref: '#/components/schemas/ServiceAccountCredential'
     _system_req_update_service-account:
+      required:
+        - name
+        - permissions
+        - scopes
       type: object
       properties:
         name:

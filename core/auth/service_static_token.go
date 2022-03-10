@@ -78,17 +78,14 @@ func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, _ []byte,
 	return nil, accounts, nil
 }
 
-func (s *staticTokenServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential) (*model.ServiceAccount, string, error) {
-	if account == nil {
-		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
-	}
+func (s *staticTokenServiceAuthImpl) addCredentials(creds *model.ServiceAccountCredential) (string, error) {
 	if creds == nil {
-		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
+		return "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
 	}
 
 	token, err := s.auth.buildRefreshToken()
 	if err != nil {
-		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
 	encodedToken := s.hashAndEncodeToken(token)
@@ -101,9 +98,8 @@ func (s *staticTokenServiceAuthImpl) addCredentials(account *model.ServiceAccoun
 		"token": encodedToken,
 	}
 	creds.DateCreated = now
-	account.Credentials = append(account.Credentials, *creds)
 
-	return account, token, nil
+	return token, nil
 }
 
 func (s *staticTokenServiceAuthImpl) hiddenParams() []string {

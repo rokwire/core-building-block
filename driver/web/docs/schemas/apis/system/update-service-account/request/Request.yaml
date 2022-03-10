@@ -1,3 +1,7 @@
+required:
+  - name
+  - permissions
+  - scopes
 type: object
 properties:
   name:

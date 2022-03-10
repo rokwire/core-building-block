@@ -58,12 +58,9 @@ func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, body []byte
 	return &message, nil, errors.WrapErrorAction(logutils.ActionValidate, "request signature", nil, err)
 }
 
-func (s *signatureServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential) (*model.ServiceAccount, string, error) {
-	if account == nil {
-		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
-	}
+func (s *signatureServiceAuthImpl) addCredentials(creds *model.ServiceAccountCredential) (string, error) {
 	if creds == nil {
-		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
+		return "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
 	}
 
 	now := time.Now().UTC()
@@ -71,9 +68,8 @@ func (s *signatureServiceAuthImpl) addCredentials(account *model.ServiceAccount,
 
 	creds.ID = id.String()
 	creds.DateCreated = now
-	account.Credentials = append(account.Credentials, *creds)
 
-	return account, "", nil
+	return "", nil
 }
 
 // no hidden params for signature service auth

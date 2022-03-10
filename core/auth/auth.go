@@ -1615,10 +1615,19 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 	return nil
 }
 
-func (a *Auth) constructServiceAccount(accountID string, name string, orgID *string, appID *string, permissions []string) (*model.ServiceAccount, error) {
+func (a *Auth) constructServiceAccount(accountID string, name string, appID *string, orgID *string, permissions []string, scopes []string) (*model.ServiceAccount, error) {
 	permissionList, err := a.storage.FindPermissionsByName(permissions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+	}
+
+	scopeList := make([]authorization.Scope, len(scopes))
+	for i, scope := range scopes {
+		newScope, err := authorization.ScopeFromString(scope)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionParse, model.TypeScope, nil, err)
+		}
+		scopeList[i] = *newScope
 	}
 
 	var application *model.Application
@@ -1637,7 +1646,7 @@ func (a *Auth) constructServiceAccount(accountID string, name string, orgID *str
 	}
 
 	return &model.ServiceAccount{AccountID: accountID, Name: name, Application: application, Organization: organization,
-		Permissions: permissionList}, nil
+		Permissions: permissionList, Scopes: scopeList}, nil
 }
 
 func (a *Auth) checkServiceAccountCreds(r *http.Request, params map[string]interface{}, l *logs.Log) (*string, []model.ServiceAccount, string, error) {
@@ -1679,6 +1688,8 @@ func (a *Auth) hideServiceCredentialParams(creds []model.ServiceAccountCredentia
 		serviceAuthType, err := a.getServiceAuthTypeImpl(cred.Type)
 		if err != nil {
 			l.Infof("error getting service auth type on hide service credential params: %s", err.Error())
+			cred.Params = nil
+			continue
 		}
 
 		for _, hidden := range serviceAuthType.hiddenParams() {
