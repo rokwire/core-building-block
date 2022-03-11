@@ -706,7 +706,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 		return err
 	}
 
-	authTypeCreds, err := authImpl.forgotCredential(credential, identifier, l)
+	authTypeCreds, err := authImpl.forgotCredential(credential, identifier, appType.Application.Name, l)
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "forgot password", nil, err)
 	}
@@ -755,7 +755,7 @@ func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier
 		return errors.New("credential has already been verified")
 	}
 
-	err = authImpl.sendVerifyCredential(credential, l)
+	err = authImpl.sendVerifyCredential(credential, appType.Application.Name, l)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
 	}

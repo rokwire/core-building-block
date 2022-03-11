@@ -103,7 +103,7 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appType model.Applicatio
 
 	if verifyEmail {
 		//send verification code
-		if err = a.sendVerificationCode(email, code, newCredentialID); err != nil {
+		if err = a.sendVerificationCode(email, appType.Application.Name, code, newCredentialID); err != nil {
 			return "", nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
 		}
 	}
@@ -196,22 +196,34 @@ func (a *emailAuthImpl) getVerifyExpiry(authType model.AuthType) int {
 	return verifyExpiry
 }
 
-func (a *emailAuthImpl) sendVerificationCode(email string, verificationCode string, credentialID string) error {
+func (a *emailAuthImpl) sendVerificationCode(email string, appName string, verificationCode string, credentialID string) error {
 	params := url.Values{}
 	params.Add("id", credentialID)
 	params.Add("code", verificationCode)
 
 	verificationLink := a.auth.host + fmt.Sprintf("/services/auth/credential/verify?%s", params.Encode())
 
-	return a.auth.emailer.Send(email, "Verify your email address", "Please click the link below to verify your email address:\n"+verificationLink+"\n\nIf you did not request this verification link, please ignore this message.", nil)
+	subject := "Verify your email address"
+	if appName != "" {
+		subject += " for " + appName
+	}
+
+	body := "Please click the link below to verify your email address:<br><a href=" + verificationLink + ">" + verificationLink + "</a><br><br>If you did not request this verification link, please ignore this message."
+
+	return a.auth.emailer.Send(email, subject, body, nil)
 }
 
-func (a *emailAuthImpl) sendPasswordResetEmail(credentialID string, resetCode string, email string) error {
+func (a *emailAuthImpl) sendPasswordResetEmail(credentialID string, resetCode string, email string, appName string) error {
 	params := url.Values{}
 	params.Add("id", credentialID)
 	params.Add("code", resetCode)
 	passwordResetLink := a.auth.host + fmt.Sprintf("/ui/reset-credential?%s", params.Encode())
-	return a.auth.emailer.Send(email, "Password Reset", "Please click the link below to reset your password:\n"+passwordResetLink+"\n\nIf you did not request a password reset, please ignore this message.", nil)
+	subject := "Reset Password"
+	if appName != "" {
+		subject += " for " + appName
+	}
+	body := "Please click the link below to reset your password:<br><a href=" + passwordResetLink + ">" + passwordResetLink + "</a><br><br>If you did not request a password reset, please ignore this message."
+	return a.auth.emailer.Send(email, subject, body, nil)
 }
 
 func (a *emailAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
@@ -241,7 +253,7 @@ func (a *emailAuthImpl) verifyCredential(credential *model.Credential, verificat
 	return credsMap, nil
 }
 
-func (a *emailAuthImpl) sendVerifyCredential(credential *model.Credential, l *logs.Log) error {
+func (a *emailAuthImpl) sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error {
 	//Check if verify email is disabled for the given authType
 	authType := credential.AuthType
 	verifyEmail := a.getVerifyEmail(authType)
@@ -269,7 +281,7 @@ func (a *emailAuthImpl) sendVerifyCredential(credential *model.Credential, l *lo
 	}
 
 	//send verification email
-	if err = a.sendVerificationCode(emailCreds.Email, code, credential.ID); err != nil {
+	if err = a.sendVerificationCode(emailCreds.Email, appName, code, credential.ID); err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
 	}
 
@@ -289,7 +301,7 @@ func (a *emailAuthImpl) sendVerifyCredential(credential *model.Credential, l *lo
 	return nil
 }
 
-func (a *emailAuthImpl) restartCredentialVerification(credential *model.Credential, l *logs.Log) error {
+func (a *emailAuthImpl) restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error {
 	storedCreds, err := mapToEmailCreds(credential.Value)
 	if err != nil {
 		return errors.WrapErrorAction("error on map to email creds when checking is credential verified", "", nil, err)
@@ -301,7 +313,7 @@ func (a *emailAuthImpl) restartCredentialVerification(credential *model.Credenti
 
 	}
 	//send new verification code for future
-	if err = a.sendVerificationCode(storedCreds.Email, newCode, credential.ID); err != nil {
+	if err = a.sendVerificationCode(storedCreds.Email, appName, newCode, credential.ID); err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
 	}
 	//update new verification data in credential value
@@ -396,7 +408,7 @@ func (a *emailAuthImpl) resetCredential(credential *model.Credential, resetCode 
 	return credsMap, nil
 }
 
-func (a *emailAuthImpl) forgotCredential(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
+func (a *emailAuthImpl) forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error) {
 	emailCreds, err := mapToEmailCreds(credential.Value)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error on map to email creds", "", nil, err)
@@ -412,7 +424,7 @@ func (a *emailAuthImpl) forgotCredential(credential *model.Credential, identifie
 	}
 	emailCreds.ResetCode = string(hashedResetCode)
 	emailCreds.ResetExpiry = time.Now().Add(time.Hour * 24)
-	err = a.sendPasswordResetEmail(credential.ID, resetCode, identifier)
+	err = a.sendPasswordResetEmail(credential.ID, resetCode, identifier, appName)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeString, nil, err)
 	}
