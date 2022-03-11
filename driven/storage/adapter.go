@@ -3009,6 +3009,10 @@ func (sl *storageListener) OnAuthTypesUpdated() {
 	sl.adapter.cacheAuthTypes()
 }
 
+func (sl *storageListener) OnServiceRegsUpdated() {
+	sl.adapter.cacheServiceRegs()
+}
+
 func (sl *storageListener) OnOrganizationsUpdated() {
 	sl.adapter.cacheOrganizations()
 }
