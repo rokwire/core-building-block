@@ -547,7 +547,7 @@ type ServiceAccount struct {
 // ServiceAccountCredential defines model for ServiceAccountCredential.
 type ServiceAccountCredential struct {
 	DateCreated *string                      `json:"date_created,omitempty"`
-	Id          *string                      `json:"id"`
+	Id          *string                      `json:"id,omitempty"`
 	Name        string                       `json:"name"`
 	Params      *map[string]interface{}      `json:"params"`
 	Type        ServiceAccountCredentialType `json:"type"`

@@ -4438,13 +4438,11 @@ components:
           nullable: true
     ServiceAccountCredential:
       required:
-        - id
         - name
         - type
       type: object
       properties:
         id:
-          nullable: true
           type: string
         name:
           type: string

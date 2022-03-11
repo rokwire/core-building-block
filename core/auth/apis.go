@@ -1028,6 +1028,7 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 		}
+		newAccount.Credentials = fromAccount.Credentials
 	} else {
 		id, _ := uuid.NewUUID()
 		if permissions != nil {
@@ -1041,6 +1042,7 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 		}
+		newAccount.Credentials = make([]model.ServiceAccountCredential, 0)
 
 		rawTokens = make([]string, len(creds))
 		for i, cred := range creds {
@@ -1055,6 +1057,7 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 				l.Warnf("error adding %s credential on register service account: %s", cred.Type, err.Error())
 			}
 
+			newAccount.Credentials = append(newAccount.Credentials, cred)
 			rawTokens[i] = rawToken
 		}
 	}

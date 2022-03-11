@@ -4,6 +4,7 @@ import (
 	"core-building-block/core"
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -274,10 +275,10 @@ func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, clai
 		searchParams["name"] = query.Get("name")
 	}
 	if query.Get("app_id") != "" {
-		searchParams["app_id"] = query.Get("app_id")
+		searchParams["app_id"] = utils.StringOrNil(query.Get("app_id"))
 	}
 	if query.Get("org_id") != "" {
-		searchParams["org_id"] = query.Get("org_id")
+		searchParams["org_id"] = utils.StringOrNil(query.Get("org_id"))
 	}
 	if query.Get("permissions") != "" {
 		searchParams["permissions"] = strings.Split(query.Get("permissions"), ",")
@@ -302,16 +303,8 @@ func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, clai
 }
 
 func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	var fromAppID *string
-	appIDQuery := r.URL.Query().Get("app_id")
-	if appIDQuery != "" {
-		fromAppID = &appIDQuery
-	}
-	var fromOrgID *string
-	orgIDQuery := r.URL.Query().Get("org_id")
-	if orgIDQuery != "" {
-		fromOrgID = &orgIDQuery
-	}
+	fromAppID := utils.StringOrNil(r.URL.Query().Get("app_id"))
+	fromOrgID := utils.StringOrNil(r.URL.Query().Get("org_id"))
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -365,16 +358,8 @@ func (h SystemApisHandler) getServiceAccountInstance(l *logs.Log, r *http.Reques
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	var appID *string
-	appIDQuery := r.URL.Query().Get("app_id")
-	if appIDQuery != "" {
-		appID = &appIDQuery
-	}
-	var orgID *string
-	orgIDQuery := r.URL.Query().Get("org_id")
-	if orgIDQuery != "" {
-		orgID = &orgIDQuery
-	}
+	appID := utils.StringOrNil(r.URL.Query().Get("app_id"))
+	orgID := utils.StringOrNil(r.URL.Query().Get("org_id"))
 
 	serviceAccount, err := h.coreAPIs.Auth.GetServiceAccountInstance(id, appID, orgID, l)
 	if err != nil {
@@ -398,16 +383,8 @@ func (h SystemApisHandler) updateServiceAccountInstance(l *logs.Log, r *http.Req
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	var appID *string
-	appIDQuery := r.URL.Query().Get("app_id")
-	if appIDQuery != "" {
-		appID = &appIDQuery
-	}
-	var orgID *string
-	orgIDQuery := r.URL.Query().Get("org_id")
-	if orgIDQuery != "" {
-		orgID = &orgIDQuery
-	}
+	appID := utils.StringOrNil(r.URL.Query().Get("app_id"))
+	orgID := utils.StringOrNil(r.URL.Query().Get("org_id"))
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -442,16 +419,8 @@ func (h SystemApisHandler) deregisterServiceAccountInstance(l *logs.Log, r *http
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	var appID *string
-	appIDQuery := r.URL.Query().Get("app_id")
-	if appIDQuery != "" {
-		appID = &appIDQuery
-	}
-	var orgID *string
-	orgIDQuery := r.URL.Query().Get("org_id")
-	if orgIDQuery != "" {
-		orgID = &orgIDQuery
-	}
+	appID := utils.StringOrNil(r.URL.Query().Get("app_id"))
+	orgID := utils.StringOrNil(r.URL.Query().Get("org_id"))
 
 	err := h.coreAPIs.Auth.DeregisterServiceAccountInstance(id, appID, orgID)
 	if err != nil {

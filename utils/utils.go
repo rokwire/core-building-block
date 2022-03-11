@@ -127,3 +127,17 @@ func FormatTime(v *time.Time) string {
 	}
 	return v.Format("2006-01-02T15:04:05.000Z")
 }
+
+func StringOrNil(v string) *string {
+	if v == "" {
+		return nil
+	}
+	return &v
+}
+
+func GetPrintableString(v *string) string {
+	if v != nil {
+		return *v
+	}
+	return "nil"
+}

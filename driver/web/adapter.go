@@ -209,7 +209,7 @@ func (we Adapter) Start() {
 
 		systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.getServiceAccounts, we.auth.systemAuth)).Methods("GET")
 		systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.registerServiceAccount, we.auth.systemAuth)).Methods("POST")
-		systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.deregisterServiceAccounts, we.auth.systemAuth)).Methods("DELETE")
+		systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.deregisterServiceAccount, we.auth.systemAuth)).Methods("DELETE")
 		systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.getServiceAccountInstance, we.auth.systemAuth)).Methods("GET")
 		systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.updateServiceAccountInstance, we.auth.systemAuth)).Methods("PUT")
 		systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.deregisterServiceAccountInstance, we.auth.systemAuth)).Methods("DELETE")

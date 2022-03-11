@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"core-building-block/core/model"
+	"core-building-block/utils"
 	"fmt"
 	"strconv"
 	"sync"
@@ -1169,12 +1170,12 @@ func (sa *Adapter) FindServiceAccount(context TransactionContext, accountID stri
 	}
 
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": appID, "org_id": orgID}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID), "org_id": utils.GetPrintableString(orgID)}, err)
 	}
 
 	modelAccount, err := serviceAccountFromStorage(account, sa)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCast, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": appID, "org_id": orgID}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCast, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID), "org_id": utils.GetPrintableString(orgID)}, err)
 	}
 
 	return modelAccount, nil
@@ -1238,7 +1239,7 @@ func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) error {
 	}
 	res, err := sa.db.serviceAccounts.UpdateOne(filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": storageAccount.AppID, "org_id": storageAccount.OrgID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": utils.GetPrintableString(storageAccount.AppID), "org_id": utils.GetPrintableString(storageAccount.OrgID)}, err)
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, logutils.StringArgs("unexpected modified count"))
@@ -1253,7 +1254,7 @@ func (sa *Adapter) DeleteServiceAccount(accountID string, appID *string, orgID *
 
 	res, err := sa.db.serviceAccounts.DeleteOne(filter, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": appID, "org_id": orgID}, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID), "org_id": utils.GetPrintableString(orgID)}, err)
 	}
 	if res.DeletedCount != 1 {
 		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, logutils.StringArgs("unexpected deleted count"))
