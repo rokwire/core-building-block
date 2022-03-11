@@ -12,17 +12,17 @@ post:
         schema:
           $ref: "../../../schemas/apis/shared/requests/login/Request.yaml"
         examples:
-          phone-sign_in:
+           phonePassword-sign_in:
             summary: Phone_password - sign in
             value: |
               {
                 "auth_type": "twilio_phone_password",
-                "app_type_identifier": "edu.illinois.rokwire",
+                "app_type_identifier": "edu.illinois.rokwire.safercommunity",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                 "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                 "creds": {
-                  "phone": "+12223334444", 
-                  "code": "123456"
+                  "phone": "+123456789", 
+                  "password": "test1235"
                 },
                 "device": {
                   "type": "mobile",
@@ -30,21 +30,21 @@ post:
                   "os": "Android"
                 }
               }
-          phone-sign_up:
+           phonePassword-sign_up:
             summary: Phone_password - sign up
             value: |
               {
-                "auth_type": "twillio_phone_password",
-                "app_type_identifier": "edu.illinois.rokwire",
+                "auth_type": "twilio_phone_password",
+                "app_type_identifier": "edu.illinois.rokwire.safercommunity",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                 "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                 "creds": {
-                  "phone": "+12223334444", 
-                  "code": "123456"
+                  "phone": "+123456789", 
+                  "password": "test1235"
                 },
                 "params":{
                     "sign_up":true,
-                    "code": "123456"
+                    "confirm_password": "test1235"
                 },
                 "preferences":{
                     "key1":"value1",
@@ -68,7 +68,7 @@ post:
                   "os": "Android"
                 }
               }
-          email-sign_in:
+           email-sign_in:
             summary: Email - sign in
             value: |
               {
@@ -86,7 +86,7 @@ post:
                   "os": "Android"
                 }
               }
-          email-sign_up:
+           email-sign_up:
             summary: Email - sign up
             value: |
               {
@@ -124,7 +124,7 @@ post:
                   "os": "Android"
                 }
               }
-          phone:
+           phone:
             summary: Phone - sign in OR sign up
             value: |
               {
@@ -158,7 +158,7 @@ post:
                   "os": "Android"
                 }
               }
-          illinois_oidc:
+           illinois_oidc:
             summary: Illinois OIDC login
             value: |
               {
@@ -193,7 +193,7 @@ post:
                   "os": "Android"
                 }
               }
-          anonymous:
+           anonymous:
             summary: Anonymous login
             value: |
               {

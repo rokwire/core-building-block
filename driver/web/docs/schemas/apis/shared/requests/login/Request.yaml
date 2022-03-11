@@ -27,12 +27,14 @@ properties:
     anyOf:
       - $ref: "../CredsEmail.yaml"
       - $ref: "../CredsTwilioPhone.yaml"
+      - $ref: "../CredsTwilioPhonePassword.yaml"
       - $ref: "../CredsOIDC.yaml"
       - $ref: "../CredsAPIKey.yaml"
   params:
     type: object
     anyOf:
       - $ref: "../ParamsEmail.yaml"
+      - $ref: "../ParamsPhonePassword.yaml"
       - $ref: "../ParamsOIDC.yaml"
       - $ref: "../ParamsNone.yaml"
   device:
