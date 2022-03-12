@@ -1221,9 +1221,9 @@ func (sa *Adapter) InsertServiceAccount(account *model.ServiceAccount) error {
 }
 
 //UpdateServiceAccount updates a service account
-func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) error {
+func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) (*model.ServiceAccount, error) {
 	if account == nil {
-		return errors.ErrorData(logutils.StatusInvalid, model.TypeServiceAccount, nil)
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeServiceAccount, nil)
 	}
 
 	storageAccount := serviceAccountToStorage(*account)
@@ -1237,15 +1237,21 @@ func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) error {
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
-	res, err := sa.db.serviceAccounts.UpdateOne(filter, update, nil)
+	opts := options.FindOneAndUpdateOptions{}
+	opts.SetReturnDocument(options.After)
+
+	var updated serviceAccount
+	err := sa.db.serviceAccounts.FindOneAndUpdate(filter, update, &updated, &opts)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": utils.GetPrintableString(storageAccount.AppID), "org_id": utils.GetPrintableString(storageAccount.OrgID)}, err)
-	}
-	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, logutils.StringArgs("unexpected modified count"))
+		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": utils.GetPrintableString(storageAccount.AppID), "org_id": utils.GetPrintableString(storageAccount.OrgID)}, err)
 	}
 
-	return nil
+	modelAccount, err := serviceAccountFromStorage(updated, sa)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCast, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": utils.GetPrintableString(storageAccount.AppID), "org_id": utils.GetPrintableString(storageAccount.OrgID)}, err)
+	}
+
+	return modelAccount, nil
 }
 
 //DeleteServiceAccount deletes a service account
@@ -1298,6 +1304,9 @@ func (sa *Adapter) InsertServiceAccountCredential(accountID string, creds *model
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceAccountCredential, &logutils.FieldArgs{"account_id": accountID}, err)
 	}
+	if res.MatchedCount == 0 {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID})
+	}
 	if res.ModifiedCount == 0 {
 		return errors.ErrorAction(logutils.ActionInsert, model.TypeServiceAccountCredential, logutils.StringArgs("unexpected modified count"))
 	}
@@ -1319,7 +1328,10 @@ func (sa *Adapter) DeleteServiceAccountCredential(accountID string, credID strin
 
 	res, err := sa.db.serviceAccounts.UpdateMany(filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccountCredential, &logutils.FieldArgs{"account_id": accountID, "credentials.id": credID}, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccountCredential, &logutils.FieldArgs{"account_id": accountID, "cred_id": credID}, err)
+	}
+	if res.MatchedCount == 0 {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "cred_id": credID})
 	}
 	if res.ModifiedCount == 0 {
 		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccountCredential, logutils.StringArgs("unexpected modified count"))

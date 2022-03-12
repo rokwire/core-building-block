@@ -128,6 +128,7 @@ func FormatTime(v *time.Time) string {
 	return v.Format("2006-01-02T15:04:05.000Z")
 }
 
+//StringOrNil returns a pointer to the input string, but returns nil if input is empty
 func StringOrNil(v string) *string {
 	if v == "" {
 		return nil
@@ -135,6 +136,7 @@ func StringOrNil(v string) *string {
 	return &v
 }
 
+//GetPrintableString returns the string content of a pointer, and "nil" if pointer is nil
 func GetPrintableString(v *string) string {
 	if v != nil {
 		return *v

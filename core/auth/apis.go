@@ -1111,7 +1111,7 @@ func (a *Auth) UpdateServiceAccountInstance(id string, appID *string, orgID *str
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 	}
 
-	err = a.storage.UpdateServiceAccount(updatedAccount)
+	updatedAccount, err = a.storage.UpdateServiceAccount(updatedAccount)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
 	}

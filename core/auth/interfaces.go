@@ -432,7 +432,7 @@ type Storage interface {
 	FindServiceAccount(context storage.TransactionContext, accountID string, appID *string, orgID *string) (*model.ServiceAccount, error)
 	FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
 	InsertServiceAccount(account *model.ServiceAccount) error
-	UpdateServiceAccount(account *model.ServiceAccount) error
+	UpdateServiceAccount(account *model.ServiceAccount) (*model.ServiceAccount, error)
 	DeleteServiceAccount(accountID string, appID *string, orgID *string) error
 	DeleteServiceAccounts(accountID string) error
 
