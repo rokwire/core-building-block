@@ -345,7 +345,7 @@ func (h SystemApisHandler) deregisterServiceAccount(l *logs.Log, r *http.Request
 
 	err := h.coreAPIs.Auth.DeregisterServiceAccount(accountID)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionDeregister, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()
@@ -452,7 +452,7 @@ func (h SystemApisHandler) addServiceAccountCredential(l *logs.Log, r *http.Requ
 
 	creds, err = h.coreAPIs.Auth.AddServiceAccountCredential(id, creds, l)
 	if err != nil {
-		return l.HttpResponseError("Error adding service account credential", err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionInsert, model.TypeServiceAccountCredential, nil, err, http.StatusInternalServerError, true)
 	}
 
 	credsResp := serviceAccountCredentialToDef(creds)
@@ -479,7 +479,7 @@ func (h SystemApisHandler) removeServiceAccountCredential(l *logs.Log, r *http.R
 
 	err := h.coreAPIs.Auth.RemoveServiceAccountCredential(id, credID)
 	if err != nil {
-		return l.HttpResponseError("Error removing service account credential", err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeServiceAccountCredential, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()

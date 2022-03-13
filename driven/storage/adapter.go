@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rokwire/core-auth-library-go/authorization"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -1183,18 +1184,28 @@ func (sa *Adapter) FindServiceAccount(context TransactionContext, accountID stri
 
 //FindServiceAccounts gets all service accounts matching a search
 func (sa *Adapter) FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error) {
-	//TODO: fix permissions and scopes search, possibly store strings, not objects
+	//TODO: for scopes, possibly store strings not objects
 	filter := bson.D{}
 	for k, v := range params {
 		if k == "permissions" {
 			filter = append(filter, primitive.E{Key: k + ".name", Value: bson.M{"$in": v}})
 		} else if k == "scopes" {
-			filter = append(filter, primitive.E{Key: k, Value: bson.M{"$in": v}})
+			scopeParams, ok := v.([]string)
+			if !ok {
+				return nil, errors.ErrorAction(logutils.ActionParse, model.TypeScope, &logutils.FieldArgs{k: v})
+			}
+			scopes := make([]authorization.Scope, len(scopeParams))
+			for i, scope := range scopeParams {
+				scopeObj, _ := authorization.ScopeFromString(scope)
+				if scopeObj != nil {
+					scopes[i] = *scopeObj
+				}
+			}
+			filter = append(filter, primitive.E{Key: k, Value: bson.M{"$in": scopes}})
 		} else {
 			filter = append(filter, primitive.E{Key: k, Value: v})
 		}
 	}
-	fmt.Println(filter)
 
 	var accounts []serviceAccount
 	err := sa.db.serviceAccounts.Find(filter, &accounts, nil)
@@ -1266,7 +1277,10 @@ func (sa *Adapter) DeleteServiceAccount(accountID string, appID *string, orgID *
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID), "org_id": utils.GetPrintableString(orgID)}, err)
 	}
-	if res.DeletedCount != 1 {
+	if res.DeletedCount == 0 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID), "org_id": utils.GetPrintableString(orgID)})
+	}
+	if res.DeletedCount > 1 {
 		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, logutils.StringArgs("unexpected deleted count"))
 	}
 
@@ -1281,7 +1295,10 @@ func (sa *Adapter) DeleteServiceAccounts(accountID string) error {
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID}, err)
 	}
-	if res.DeletedCount <= 0 {
+	if res.DeletedCount == 0 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID})
+	}
+	if res.DeletedCount > 1 {
 		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, logutils.StringArgs("unexpected deleted count"))
 	}
 
@@ -1927,7 +1944,7 @@ func (sa *Adapter) UpdatePermission(item model.Permission) error {
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
 	//TODO
-	//Update the permission in all collection where there is a copy of it - accounts, application_roles, application_groups
+	//Update the permission in all collection where there is a copy of it - accounts, application_roles, application_groups, service_accounts
 
 	// Update serviceIDs
 	filter := bson.D{primitive.E{Key: "name", Value: item.Name}}
