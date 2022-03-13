@@ -1183,14 +1183,18 @@ func (sa *Adapter) FindServiceAccount(context TransactionContext, accountID stri
 
 //FindServiceAccounts gets all service accounts matching a search
 func (sa *Adapter) FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error) {
+	//TODO: fix permissions and scopes search, possibly store strings, not objects
 	filter := bson.D{}
 	for k, v := range params {
 		if k == "permissions" {
 			filter = append(filter, primitive.E{Key: k + ".name", Value: bson.M{"$in": v}})
+		} else if k == "scopes" {
+			filter = append(filter, primitive.E{Key: k, Value: bson.M{"$in": v}})
 		} else {
 			filter = append(filter, primitive.E{Key: k, Value: v})
 		}
 	}
+	fmt.Println(filter)
 
 	var accounts []serviceAccount
 	err := sa.db.serviceAccounts.Find(filter, &accounts, nil)
@@ -1286,7 +1290,7 @@ func (sa *Adapter) DeleteServiceAccounts(accountID string) error {
 
 //InsertServiceAccountCredential inserts a service account credential
 func (sa *Adapter) InsertServiceAccountCredential(accountID string, creds *model.ServiceAccountCredential) error {
-	if creds != nil {
+	if creds == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("credentials"))
 	}
 

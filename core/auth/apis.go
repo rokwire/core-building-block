@@ -969,6 +969,7 @@ func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, str
 	}
 
 	permissions := accounts[0].GetPermissionNames()
+	scopes := accounts[0].GetScopeNames()
 	var appID string
 	if accounts[0].Application != nil {
 		appID = accounts[0].Application.ID
@@ -979,7 +980,7 @@ func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, str
 	}
 
 	claims := a.getStandardClaims(accounts[0].AccountID, "", "", "", "", rokwireTokenAud, orgID, appID, authType, nil, false, true, false, true, "")
-	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, ","))
 	if err != nil {
 		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}

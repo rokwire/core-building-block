@@ -66,16 +66,20 @@ func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, _ []byte,
 		return &message, nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
 	}
 
-	storedToken, ok := accountCreds[0].Params["token"].(string)
-	if !ok {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, TypeStaticTokenCreds, nil, err)
-	}
-	if encodedToken != storedToken {
-		message := "invalid token"
-		return &message, nil, errors.ErrorData(logutils.StatusInvalid, "service account token", nil)
+	for _, credential := range accountCreds {
+		if credential.Type == ServiceAuthTypeStaticToken && credential.Params != nil {
+			storedToken, ok := credential.Params["token"].(string)
+			if !ok {
+				return nil, nil, errors.WrapErrorAction(logutils.ActionParse, TypeStaticTokenCreds, nil, err)
+			}
+			if encodedToken == storedToken {
+				return nil, accounts, nil
+			}
+		}
 	}
 
-	return nil, accounts, nil
+	message := "invalid token"
+	return &message, nil, errors.ErrorData(logutils.StatusInvalid, "service account token", nil)
 }
 
 func (s *staticTokenServiceAuthImpl) addCredentials(creds *model.ServiceAccountCredential) (string, error) {
