@@ -57,9 +57,8 @@ const (
 
 //Auth represents the auth functionality unit
 type Auth struct {
-	storage       Storage
-	emailer       Emailer
-	phonePassword PhonePassword
+	storage Storage
+	emailer Emailer
 
 	logger *logs.Logger
 
