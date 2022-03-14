@@ -1,0 +1,80 @@
+get:
+  tags:
+  - Admin
+  summary: Get application sessions
+  description: |
+    Get application sessions
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: identifier
+      in: query
+      description: identifier
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: account-auth-type-identifier
+      in: query
+      description: account auth type identifier
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: app-type-id
+      in: query
+      description: app type id
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: app-type-identifier
+      in: query
+      description: app type identifier
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: anonymous
+      in: query
+      description: anonymous
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: boolean
+    - name: device-id
+      in: query
+      description: device id
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: ip-address
+      in: query
+      description: ip address
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "../../../schemas/apis/shared/responses/LoginSession.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error

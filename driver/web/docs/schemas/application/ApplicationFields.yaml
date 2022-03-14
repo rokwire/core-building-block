@@ -10,5 +10,5 @@ properties:
     type: string
   multi_tenant:
     type: boolean
-  requires_own_users:
+  shared_identities:
     type: boolean
