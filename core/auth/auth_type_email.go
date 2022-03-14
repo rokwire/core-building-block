@@ -214,7 +214,7 @@ func (a *emailAuthImpl) sendPasswordResetEmail(credentialID string, resetCode st
 	params.Add("id", credentialID)
 	params.Add("code", resetCode)
 	passwordResetLink := a.auth.host + fmt.Sprintf("/ui/credential/reset?%s", params.Encode())
-	subject := "Reset Password"
+	subject := "Reset your password"
 	if appName != "" {
 		subject += " for " + appName
 	}
