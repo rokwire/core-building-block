@@ -200,16 +200,12 @@ func (a *emailAuthImpl) sendVerificationCode(email string, appName string, verif
 	params := url.Values{}
 	params.Add("id", credentialID)
 	params.Add("code", verificationCode)
-
-	verificationLink := a.auth.host + fmt.Sprintf("/services/auth/credential/verify?%s", params.Encode())
-
+	verificationLink := a.auth.host + fmt.Sprintf("/ui/credential/verify?%s", params.Encode())
 	subject := "Verify your email address"
 	if appName != "" {
 		subject += " for " + appName
 	}
-
 	body := "Please click the link below to verify your email address:<br><a href=" + verificationLink + ">" + verificationLink + "</a><br><br>If you did not request this verification link, please ignore this message."
-
 	return a.auth.emailer.Send(email, subject, body, nil)
 }
 
@@ -217,7 +213,7 @@ func (a *emailAuthImpl) sendPasswordResetEmail(credentialID string, resetCode st
 	params := url.Values{}
 	params.Add("id", credentialID)
 	params.Add("code", resetCode)
-	passwordResetLink := a.auth.host + fmt.Sprintf("/ui/reset-credential?%s", params.Encode())
+	passwordResetLink := a.auth.host + fmt.Sprintf("/ui/credential/reset?%s", params.Encode())
 	subject := "Reset Password"
 	if appName != "" {
 		subject += " for " + appName
