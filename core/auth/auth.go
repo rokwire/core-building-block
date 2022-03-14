@@ -57,8 +57,9 @@ const (
 
 //Auth represents the auth functionality unit
 type Auth struct {
-	storage Storage
-	emailer Emailer
+	storage       Storage
+	emailer       Emailer
+	phonePassword PhonePassword
 
 	logger *logs.Logger
 
@@ -143,7 +144,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initUsernameAuth(auth)
 	initEmailAuth(auth)
 	initPhoneAuth(auth, twilioAccountSID, twilioToken, twilioServiceSID)
-	initPhonePasswordAuth(auth, twilioAccountSID, twilioToken, twilioServiceSID)
+	initPhonePasswordAuth(auth)
 	initFirebaseAuth(auth)
 	initAnonymousAuth(auth)
 	initSignatureAuth(auth)

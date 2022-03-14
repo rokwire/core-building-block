@@ -61,6 +61,8 @@ const (
 
 	ServicesReqAccountAuthTypeLinkAuthTypeTwilioPhone ServicesReqAccountAuthTypeLinkAuthType = "twilio_phone"
 
+	ServicesReqAccountAuthTypeLinkAuthTypeTwilioPhonePassword ServicesReqAccountAuthTypeLinkAuthType = "twilio_phone_password"
+
 	ServicesReqAccountAuthTypeLinkAuthTypeUsername ServicesReqAccountAuthTypeLinkAuthType = "username"
 )
 
@@ -99,6 +101,8 @@ const (
 	SharedReqAccountCheckAuthTypeIllinoisOidc SharedReqAccountCheckAuthType = "illinois_oidc"
 
 	SharedReqAccountCheckAuthTypeTwilioPhone SharedReqAccountCheckAuthType = "twilio_phone"
+
+	SharedReqAccountCheckAuthTypeTwilioPhonePassword SharedReqAccountCheckAuthType = "twilio_phone_password"
 
 	SharedReqAccountCheckAuthTypeUsername SharedReqAccountCheckAuthType = "username"
 )
@@ -694,8 +698,8 @@ type SharedReqCredsTwilioPhone struct {
 
 // Auth login creds for auth_type="twilio_phone_password"
 type SharedReqCredsTwilioPhonePassword struct {
-	Password string `json:"password"`
-	Phone    string `json:"phone"`
+	Password      string `json:"password"`
+	PhonePassword string `json:"phone_password"`
 }
 
 // SharedReqLogin defines model for _shared_req_Login.

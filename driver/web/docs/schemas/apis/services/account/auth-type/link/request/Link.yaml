@@ -9,6 +9,7 @@ properties:
     enum:
       - email
       - twilio_phone
+      - twilio_phone_password
       - illinois_oidc
       - username
   app_type_identifier:
@@ -17,6 +18,7 @@ properties:
     anyOf:
       - $ref: "../../../../../shared/requests/CredsEmail.yaml"
       - $ref: "../../../../../shared/requests/CredsTwilioPhone.yaml"
+      - $ref: "../../../../../shared/requests/CredsTwilioPhonePassword.yaml"
       - $ref: "../../../../../shared/requests/CredsOIDC.yaml"
   params:
     type: object
@@ -24,3 +26,4 @@ properties:
       - $ref: "../../../../../shared/requests/ParamsEmail.yaml"
       - $ref: "../../../../../shared/requests/ParamsOIDC.yaml"
       - $ref: "../../../../../shared/requests/ParamsNone.yaml"
+      - $ref: "../../../../../shared/requests/ParamsPhonePassword.yaml"

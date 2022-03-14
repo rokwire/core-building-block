@@ -12,6 +12,7 @@ properties:
       - username
       - email
       - twilio_phone
+      - twilio_phone_password
       - illinois_oidc
       - anonymous
   app_type_identifier:
