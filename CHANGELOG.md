@@ -7,11 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-<<<<<<< HEAD
 - Service accounts [#306](https://github.com/rokwire/core-building-block/issues/306)
-=======
 - Implement logout for users accounts [#329](https://github.com/rokwire/core-building-block/issues/329)
->>>>>>> develop
 
 ## [1.20.1] - 2022-03-07
 ### Fixed
