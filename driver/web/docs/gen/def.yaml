@@ -855,6 +855,10 @@
                 "$ref": "#/components/schemas/_services_req_account_auth-type-unlink"
               },
               "examples": {
+                "phone_password": {
+                  "summary": "Phone_password",
+                  "value": "{\n  \"auth_type\": \"twilio_phone_password\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"identifier\": \"+123456789\"\n}\n"
+                },
                 "email": {
                   "summary": "Email",
                   "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"identifier\": \"test@example.com\"\n}\n"
@@ -5367,7 +5371,6 @@
           "app_type_identifier",
           "org_id",
           "api_key",
-          "code",
           "device"
         ],
         "type": "object",
@@ -5389,9 +5392,6 @@
             "type": "string"
           },
           "api_key": {
-            "type": "string"
-          },
-          "code": {
             "type": "string"
           },
           "creds": {
@@ -6238,7 +6238,8 @@
           "auth_type": {
             "type": "string",
             "enum": [
-              "email"
+              "email",
+              "twilio_phone_password"
             ]
           }
         }

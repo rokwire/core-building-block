@@ -3,7 +3,6 @@ required:
   - app_type_identifier
   - org_id
   - api_key
-  - code
   - device
 type: object
 properties:
@@ -20,8 +19,6 @@ properties:
   org_id:
     type: string
   api_key:
-    type: string
-  code:
     type: string
   creds:
     anyOf:

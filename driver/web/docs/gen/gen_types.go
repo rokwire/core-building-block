@@ -85,6 +85,8 @@ const (
 // Defines values for ServicesReqCredentialSendVerifyAuthType.
 const (
 	ServicesReqCredentialSendVerifyAuthTypeEmail ServicesReqCredentialSendVerifyAuthType = "email"
+
+	ServicesReqCredentialSendVerifyAuthTypeTwilioPhonePassword ServicesReqCredentialSendVerifyAuthType = "twilio_phone_password"
 )
 
 // Defines values for ServicesResAuthorizeServiceTokenType.
@@ -707,7 +709,6 @@ type SharedReqLogin struct {
 	ApiKey            string                 `json:"api_key"`
 	AppTypeIdentifier string                 `json:"app_type_identifier"`
 	AuthType          SharedReqLoginAuthType `json:"auth_type"`
-	Code              string                 `json:"code"`
 	Creds             *interface{}           `json:"creds,omitempty"`
 
 	// Client device

@@ -125,6 +125,14 @@ delete:
         schema:
           $ref: "../../../../../schemas/apis/services/account/auth-type/link/request/Unlink.yaml"
         examples:
+          phone_password:
+            summary: Phone_password
+            value: |
+              {
+                "auth_type": "twilio_phone_password",
+                "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                "identifier": "+123456789"
+              }
           email:
             summary: Email
             value: |
