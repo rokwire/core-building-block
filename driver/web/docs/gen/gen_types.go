@@ -698,8 +698,8 @@ type SharedReqCredsTwilioPhone struct {
 
 // Auth login creds for auth_type="twilio_phone_password"
 type SharedReqCredsTwilioPhonePassword struct {
-	Password      string `json:"password"`
-	PhonePassword string `json:"phone_password"`
+	Password string `json:"password"`
+	Phone    string `json:"phone"`
 }
 
 // SharedReqLogin defines model for _shared_req_Login.

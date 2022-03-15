@@ -5654,13 +5654,13 @@
       },
       "_shared_req_CredsTwilioPhonePassword": {
         "required": [
-          "phone_password",
+          "phone",
           "password"
         ],
         "type": "object",
         "description": "Auth login creds for auth_type=\"twilio_phone_password\"",
         "properties": {
-          "phone_password": {
+          "phone": {
             "type": "string"
           },
           "password": {
