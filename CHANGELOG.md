@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Clean up verification email messaging and UI [#444](https://github.com/rokwire/core-building-block/issues/444)
 - Implement logout for users accounts [#329](https://github.com/rokwire/core-building-block/issues/329)
 
 ## [1.20.1] - 2022-03-07

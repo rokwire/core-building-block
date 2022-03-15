@@ -30,11 +30,11 @@ func (a *usernameAuthImpl) verifyCredential(credential *model.Credential, verifi
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *usernameAuthImpl) sendVerifyCredential(credential *model.Credential, l *logs.Log) error {
+func (a *usernameAuthImpl) sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error {
 	return nil
 }
 
-func (a *usernameAuthImpl) restartCredentialVerification(credential *model.Credential, l *logs.Log) error {
+func (a *usernameAuthImpl) restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error {
 	return nil
 }
 
@@ -50,7 +50,7 @@ func (a *usernameAuthImpl) resetCredential(credential *model.Credential, resetCo
 	return nil, nil
 }
 
-func (a *usernameAuthImpl) forgotCredential(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
+func (a *usernameAuthImpl) forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, nil
 }
 
