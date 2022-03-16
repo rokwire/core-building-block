@@ -24,10 +24,10 @@ type authType interface {
 	verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error)
 
 	//sends the verification code to the identifier
-	sendVerifyCredential(credential *model.Credential, l *logs.Log) error
+	sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error
 
 	//restarts the credential verification
-	restartCredentialVerification(credential *model.Credential, l *logs.Log) error
+	restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error
 
 	//updates the value of the credential object with new value
 	// Returns:
@@ -35,7 +35,7 @@ type authType interface {
 	resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error)
 
 	//apply forgot credential for the auth type (generates a reset password link with code and expiry and sends it to given identifier for email auth type)
-	forgotCredential(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error)
+	forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error)
 
 	//getUserIdentifier parses the credentials and returns the user identifier
 	// Returns:

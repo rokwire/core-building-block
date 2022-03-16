@@ -328,11 +328,6 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	identityProviderID, _ := authType.Params["identity_provider"].(string)
 	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
 
-	externalIDs := make(map[string]string)
-	for k, v := range identityProviderSetting.ExternalIDFields {
-		externalIDs[fmt.Sprintf("%s.%s", authType.Code, k)] = userClaims[v].(string)
-	}
-
 	//identifier
 	identifier, _ := userClaims[identityProviderSetting.UserIdentifierField].(string)
 	//first name
@@ -364,6 +359,15 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 		for _, field := range userSpecificFields {
 			fieldValue, _ := userClaims[field].(string)
 			systemSpecific[field] = fieldValue
+		}
+	}
+	//external ids
+	externalIDs := make(map[string]string)
+	for k, v := range identityProviderSetting.ExternalIDFields {
+		key := fmt.Sprintf("%s.%s.%s", authType.Code, k, identifier)
+		externalIDs[key], _ = userClaims[v].(string)
+		if externalIDs[key] == "" {
+			a.auth.logger.ErrorWithFields("failed to parse external id", logutils.Fields{key: userClaims[v]})
 		}
 	}
 

@@ -534,7 +534,7 @@ func (a *Auth) checkCredentialVerified(authImpl authType, accountAuthType *model
 		//expired, first restart the verification and then notify the client that it is unverified and verification is restarted
 
 		//restart credential verification
-		err = authImpl.restartCredentialVerification(accountAuthType.Credential, l)
+		err = authImpl.restartCredentialVerification(accountAuthType.Credential, accountAuthType.Account.AppOrg.Application.Name, l)
 		if err != nil {
 			return errors.Wrap("error restarting creation verification", err)
 		}
