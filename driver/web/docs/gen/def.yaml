@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.20.1
+  version: 1.21.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -23,6 +23,8 @@ tags:
     description: APIs consumed by the platform building blocks.
   - name: Third-Party Services
     description: APIs consumed by third-party services.
+  - name: UI
+    description: Endpoints for HTML webpages
   - name: System
     description: System APIs.
 paths:
@@ -309,6 +311,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/_shared_res_LoginUrl'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/logout:
+    post:
+      tags:
+        - Services
+      summary: Logout
+      description: |
+        Logouts an account
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - all_sessions
+              type: object
+              properties:
+                all_sessions:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -3356,6 +3392,72 @@ paths:
                 type: string
                 items:
                   $ref: '#/components/schemas/AuthTypeFields'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /ui/credential/reset:
+    get:
+      tags:
+        - UI
+      summary: Display HTML password reset page
+      description: |
+        Serves an HTML page with password reset form
+      parameters:
+        - name: id
+          in: query
+          description: Credential ID
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: code
+          in: query
+          description: Reset code
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation (HTML)
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /ui/credential/verify:
+    get:
+      tags:
+        - UI
+      summary: Validate verification code
+      description: |
+        Validates verification code to verify account ownership and displays result in an HTML page
+      parameters:
+        - name: id
+          in: query
+          description: Credential ID
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: code
+          in: query
+          description: Verification code
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation (HTML page)
         '400':
           description: Bad request
         '401':
