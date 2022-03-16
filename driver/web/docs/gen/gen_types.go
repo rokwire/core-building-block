@@ -1549,6 +1549,26 @@ type GetTpsServiceRegsParams struct {
 	Ids string `json:"ids"`
 }
 
+// GetUiCredentialResetParams defines parameters for GetUiCredentialReset.
+type GetUiCredentialResetParams struct {
+
+	// Credential ID
+	Id string `json:"id"`
+
+	// Reset code
+	Code string `json:"code"`
+}
+
+// GetUiCredentialVerifyParams defines parameters for GetUiCredentialVerify.
+type GetUiCredentialVerifyParams struct {
+
+	// Credential ID
+	Id string `json:"id"`
+
+	// Verification code
+	Code string `json:"code"`
+}
+
 // PutAdminApplicationAccountPermissionsGrantJSONRequestBody defines body for PutAdminApplicationAccountPermissionsGrant for application/json ContentType.
 type PutAdminApplicationAccountPermissionsGrantJSONRequestBody PutAdminApplicationAccountPermissionsGrantJSONBody
 
