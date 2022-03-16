@@ -364,7 +364,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	//external ids
 	externalIDs := make(map[string]string)
 	for k, v := range identityProviderSetting.ExternalIDFields {
-		key := fmt.Sprintf("%s.%s.%s", authType.Code, k, identifier)
+		key := fmt.Sprintf("%s.%s", authType.Code, k)
 		externalIDs[key], _ = userClaims[v].(string)
 		if externalIDs[key] == "" {
 			a.auth.logger.ErrorWithFields("failed to parse external id", logutils.Fields{key: userClaims[v]})

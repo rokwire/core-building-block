@@ -196,40 +196,48 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	canSignIn := a.canSignIn(account, authType.ID, externalUser.Identifier)
 	if canSignIn {
 		//account exists
-		mfaTypes = account.GetVerifiedMFATypes()
-		externalIDs = account.ExternalIDs
-		accountAuthType, err = a.applySignInExternal(*account, authType, appOrg, *externalUser, l)
+		accountAuthType, err = a.applySignInExternal(account, authType, appOrg, *externalUser, l)
 		if err != nil {
 			return nil, nil, nil, nil, errors.Wrap("error on apply sign in external", err)
 		}
+		mfaTypes = account.GetVerifiedMFATypes()
+		externalIDs = account.ExternalIDs
 	} else {
 		//user does not exist, we need to register it
-		externalIDs = externalUser.ExternalIDs
 		accountAuthType, err = a.applySignUpExternal(authType, appOrg, *externalUser, regProfile, regPreferences, l)
 		if err != nil {
 			return nil, nil, nil, nil, errors.Wrap("error on apply sign up external", err)
 		}
+		externalIDs = externalUser.ExternalIDs
 	}
 
 	//TODO: make sure we do not return any refresh tokens in extParams
 	return accountAuthType, extParams, mfaTypes, externalIDs, nil
 }
 
-func (a *Auth) applySignInExternal(account model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
+func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
 	externalUser model.ExternalSystemUser, l *logs.Log) (*model.AccountAuthType, error) {
 	var accountAuthType *model.AccountAuthType
+	var externalIDChanges map[string]string
 	var err error
 
 	//find account auth type
-	accountAuthType, err = a.findAccountAuthType(&account, &authType, externalUser.Identifier)
+	accountAuthType, err = a.findAccountAuthType(account, &authType, externalUser.Identifier)
 	if err != nil {
 		return nil, err
 	}
 
 	//check if need to update the account data
-	err = a.updateDataIfNeeded(*accountAuthType, externalUser, authType, appOrg, l)
+	externalIDChanges, err = a.updateDataIfNeeded(*accountAuthType, externalUser, authType, appOrg, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("update account if needed", "", nil, err)
+	}
+
+	//apply external id changes to account
+	if account != nil {
+		for k, v := range externalIDChanges {
+			account.ExternalIDs[k] = v
+		}
 	}
 
 	return accountAuthType, nil
@@ -326,42 +334,43 @@ func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, external
 }
 
 func (a *Auth) updateDataIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
-	authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) error {
+	authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) (map[string]string, error) {
 	l.Info("updateDataIfNeeded")
 
 	//1. check if need to update the external user data
-	err := a.updateExternalUserIfNeeded(accountAuthType, externalUser, authType, appOrg, l)
+	externalIDs, err := a.updateExternalUserIfNeeded(accountAuthType, externalUser, authType, appOrg, l)
 	if err != nil {
-		return errors.WrapErrorAction("error on updating external user if needed", "", nil, err)
+		return nil, errors.WrapErrorAction("error on updating external user if needed", "", nil, err)
 	}
 
 	//2. check if need to update the profile data
 	err = a.updateProfileIfNeeded(accountAuthType.Account, externalUser, l)
 	if err != nil {
-		return errors.WrapErrorAction("error on updating profile if needed", "", nil, err)
+		return nil, errors.WrapErrorAction("error on updating profile if needed", "", nil, err)
 	}
-	return nil
+	return externalIDs, nil
 }
 
 func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
-	authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) error {
+	authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) (map[string]string, error) {
 	l.Info("updateExternalUserIfNeeded")
 
 	//get the current external user
 	currentDataMap := accountAuthType.Params["user"]
 	currentDataJSON, err := utils.ConvertToJSON(currentDataMap)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionMarshal, "external user", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "external user", nil, err)
 	}
 	var currentData *model.ExternalSystemUser
 	err = json.Unmarshal(currentDataJSON, &currentData)
 	if err != nil {
-		return errors.ErrorAction(logutils.ActionUnmarshal, "external user", nil)
+		return nil, errors.ErrorAction(logutils.ActionUnmarshal, "external user", nil)
 	}
 
 	newData := externalUser
 
 	//check if external system user needs to be updated
+	externalIDChanges := make(map[string]string)
 	if !currentData.Equals(newData) {
 		//there is changes so we need to update it
 		//TODO: Can we do this all in a single storage operation?
@@ -390,7 +399,15 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 			}
 			account.AuthTypes = newAccountAuthTypes
 
-			//3. update roles and groups mapping
+			//3. update external ids
+			for k, v := range externalUser.ExternalIDs {
+				if account.ExternalIDs[k] != v {
+					account.ExternalIDs[k] = v
+					externalIDChanges[k] = v
+				}
+			}
+
+			//4. update roles and groups mapping
 			roles, groups, err := a.getExternalUserAuthorization(externalUser, appOrg, authType)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionGet, "external authorization", nil, err)
@@ -405,7 +422,7 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountGroups, nil, err)
 			}
 
-			//4. update the account record
+			//5. update the account record
 			err = a.storage.SaveAccount(context, account)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, nil, err)
@@ -416,11 +433,12 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 
 		err = a.storage.PerformTransaction(transaction)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
+			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
 		}
-		return nil
+		return externalIDChanges, nil
 	}
-	return nil
+
+	return nil, nil
 }
 
 func (a *Auth) updateProfileIfNeeded(account model.Account, externalUser model.ExternalSystemUser, l *logs.Log) error {
@@ -1424,7 +1442,9 @@ func (a *Auth) linkAccountAuthTypeExternal(account model.Account, authType model
 	accountAuthType.Account = account
 
 	for k, v := range externalUser.ExternalIDs {
-		account.ExternalIDs[k] = v
+		if account.ExternalIDs[k] == "" {
+			account.ExternalIDs[k] = v
+		}
 	}
 
 	err = a.registerAccountAuthType(*accountAuthType, credential, account.ExternalIDs, l)
