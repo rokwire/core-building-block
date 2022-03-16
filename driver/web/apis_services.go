@@ -590,7 +590,7 @@ func (h ServicesApisHandler) verifyCredential(l *logs.Log, r *http.Request, clai
 		return l.HttpResponseErrorAction(logutils.ActionValidate, "code", nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HttpResponseSuccessMessage("Code verified!")
+	return l.HttpResponseSuccessMessage("Code verified successfully!")
 }
 
 func (h ServicesApisHandler) getApplicationConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
@@ -810,4 +810,9 @@ func (h ServicesApisHandler) authLogout(l *logs.Log, r *http.Request, claims *to
 //NewServicesApisHandler creates new rest services Handler instance
 func NewServicesApisHandler(coreAPIs *core.APIs) ServicesApisHandler {
 	return ServicesApisHandler{coreAPIs: coreAPIs}
+}
+
+//HTMLResponseTemplate represents html response template
+type HTMLResponseTemplate struct {
+	Message string
 }
