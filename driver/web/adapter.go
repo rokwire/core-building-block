@@ -354,6 +354,7 @@ func (we Adapter) serveResponseUI(w http.ResponseWriter, message string, isErr b
 	tmpl, err := template.ParseFiles(file)
 	if err != nil {
 		l.RequestErrorAction(w, logutils.ActionLoad, "page template", nil, err, http.StatusInternalServerError, true)
+		return
 	}
 	data := HTMLResponseTemplate{Message: message}
 	// w.Header().Add("access-control-allow-origin", "*")
