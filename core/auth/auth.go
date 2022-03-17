@@ -536,7 +536,7 @@ func (a *Auth) checkCredentialVerified(authImpl authType, accountAuthType *model
 		//expired, first restart the verification and then notify the client that it is unverified and verification is restarted
 
 		//restart credential verification
-		err = authImpl.restartCredentialVerification(accountAuthType.Credential, l)
+		err = authImpl.restartCredentialVerification(accountAuthType.Credential, accountAuthType.Account.AppOrg.Application.Name, l)
 		if err != nil {
 			return errors.Wrap("error restarting creation verification", err)
 		}
@@ -1038,7 +1038,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType.Code, nil, anonymous, true, appOrg.Application.Admin)
+	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType.Code, nil, anonymous, true, appOrg.Application.Admin, idUUID.String())
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -1749,12 +1749,12 @@ func (a *Auth) getScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 	aud := strings.Join(services, ",")
 	scope := strings.Join(scopeStrings, " ")
 
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false)
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false, claims.SessionID)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
 func (a *Auth) getStandardClaims(sub string, uid string, name string, email string, phone string, aud string, orgID string, appID string,
-	authType string, exp *int64, anonymous bool, authenticated bool, admin bool) tokenauth.Claims {
+	authType string, exp *int64, anonymous bool, authenticated bool, admin bool, sessionID string) tokenauth.Claims {
 	return tokenauth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			Audience:  aud,
@@ -1763,7 +1763,7 @@ func (a *Auth) getStandardClaims(sub string, uid string, name string, email stri
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    a.host,
 		}, OrgID: orgID, AppID: appID, AuthType: authType, UID: uid, Name: name, Email: email, Phone: phone,
-		Anonymous: anonymous, Authenticated: authenticated, Admin: admin,
+		Anonymous: anonymous, Authenticated: authenticated, Admin: admin, SessionID: sessionID,
 	}
 }
 
@@ -2130,7 +2130,7 @@ func (a *Auth) deleteExpiredSessions() {
 	}
 }
 
-//LocalServiceRegLoaderImpl provides a local implementation for ServiceRegLoader
+//LocalServiceRegLoaderImpl provides a local implementation for AuthDataLoader
 type LocalServiceRegLoaderImpl struct {
 	storage Storage
 	*authservice.ServiceRegSubscriptions
@@ -2151,6 +2151,16 @@ func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, er
 	}
 
 	return authRegs, nil
+}
+
+//GetAccessToken implements AuthDataLoader interface
+func (l *LocalServiceRegLoaderImpl) GetAccessToken() error {
+	return errors.New("not implemented")
+}
+
+//GetDeletedAccounts implements AuthDataLoader interface
+func (l *LocalServiceRegLoaderImpl) GetDeletedAccounts() ([]string, error) {
+	return nil, errors.New("not implemented")
 }
 
 //NewLocalServiceRegLoader creates and configures a new LocalServiceRegLoaderImpl instance
