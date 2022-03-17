@@ -812,6 +812,7 @@ func NewServicesApisHandler(coreAPIs *core.APIs) ServicesApisHandler {
 	return ServicesApisHandler{coreAPIs: coreAPIs}
 }
 
+//HTMLResponseTemplate represents html response template
 type HTMLResponseTemplate struct {
 	Message string
 }
