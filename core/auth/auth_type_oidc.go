@@ -365,10 +365,12 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	externalIDs := make(map[string]string)
 	for k, v := range identityProviderSetting.ExternalIDFields {
 		key := fmt.Sprintf("%s.%s", authType.Code, k)
-		externalIDs[key], _ = userClaims[v].(string)
-		if externalIDs[key] == "" {
+		externalID, ok := userClaims[v].(string)
+		if !ok {
 			a.auth.logger.ErrorWithFields("failed to parse external id", logutils.Fields{key: userClaims[v]})
+			continue
 		}
+		externalIDs[key] = externalID
 	}
 
 	externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs, FirstName: firstName,
