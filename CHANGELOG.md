@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Phone password auth type [#434](https://github.com/rokwire/core-building-block/issues/434)
 
 
+## [1.21.1] - 2022-03-17
+### Fixed
+- Fix verify credential HTML template loading issues [#451](https://github.com/rokwire/core-building-block/issues/451)
+
 ## [1.21.0] - 2022-03-16
 ### Added
 - Clean up verification email messaging and UI [#444](https://github.com/rokwire/core-building-block/issues/444)
@@ -254,7 +258,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.21.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.21.1...HEAD
+[1.21.0]: https://github.com/rokwire/core-building-block/compare/v1.21.0...v1.21.1
 [1.21.0]: https://github.com/rokwire/core-building-block/compare/v1.20.1...v1.21.0
 [1.20.1]: https://github.com/rokwire/core-building-block/compare/v1.20.0...v1.20.1
 [1.20.0]: https://github.com/rokwire/core-building-block/compare/v1.19.0...v1.20.0
