@@ -518,6 +518,29 @@ func (_m *Storage) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.A
 	return r0, r1
 }
 
+// FindAuthType provides a mock function with given fields: codeOrID
+func (_m *Storage) FindAuthType(codeOrID string) (*model.AuthType, error) {
+	ret := _m.Called(codeOrID)
+
+	var r0 *model.AuthType
+	if rf, ok := ret.Get(0).(func(string) *model.AuthType); ok {
+		r0 = rf(codeOrID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.AuthType)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(codeOrID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindLoginSessionsByParams provides a mock function with given fields: appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress
 func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string, appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
 	ret := _m.Called(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
@@ -728,6 +751,29 @@ func (_m *Storage) InsertApplication(application model.Application) (*model.Appl
 	var r1 error
 	if rf, ok := ret.Get(1).(func(model.Application) error); ok {
 		r1 = rf(application)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// InsertApplicationOrganization provides a mock function with given fields: applicationOrganization
+func (_m *Storage) InsertApplicationOrganization(applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error) {
+	ret := _m.Called(applicationOrganization)
+
+	var r0 *model.ApplicationOrganization
+	if rf, ok := ret.Get(0).(func(model.ApplicationOrganization) *model.ApplicationOrganization); ok {
+		r0 = rf(applicationOrganization)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.ApplicationOrganization)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(model.ApplicationOrganization) error); ok {
+		r1 = rf(applicationOrganization)
 	} else {
 		r1 = ret.Error(1)
 	}

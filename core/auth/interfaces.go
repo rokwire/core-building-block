@@ -448,6 +448,10 @@ type Storage interface {
 	UpdateAccountAuthType(item model.AccountAuthType) error
 	DeleteAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
 
+	//ExternalIDs
+	UpdateAccountExternalIDs(accountID string, externalIDs map[string]string) error
+	UpdateLoginSessionExternalIDs(accountID string, externalIDs map[string]string) error
+
 	//Applications
 	FindApplication(ID string) (*model.Application, error)
 

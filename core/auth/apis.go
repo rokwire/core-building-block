@@ -87,6 +87,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	var message string
 	var accountAuthType *model.AccountAuthType
 	var responseParams map[string]interface{}
+	var externalIDs map[string]string
 	var mfaTypes []model.MFAType
 	var state string
 
@@ -102,7 +103,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		sub = anonymousID
 
 	} else if authType.IsExternal {
-		accountAuthType, responseParams, mfaTypes, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+		accountAuthType, responseParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 
@@ -110,7 +111,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 
 		sub = accountAuthType.Account.ID
 	} else {
-		message, accountAuthType, mfaTypes, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+		message, accountAuthType, mfaTypes, externalIDs, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
@@ -140,7 +141,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	}
 
 	//now we are ready to apply login for the user or anonymous
-	loginSession, err := a.applyLogin(anonymous, sub, *authType, *appOrg, accountAuthType, *appType, ipAddress, deviceType, deviceOS, deviceID, responseParams, state, l)
+	loginSession, err := a.applyLogin(anonymous, sub, *authType, *appOrg, accountAuthType, *appType, externalIDs, ipAddress, deviceType, deviceOS, deviceID, responseParams, state, l)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}
@@ -309,6 +310,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 	permissions := []string{}
 
 	// - generate new params and update the account if needed(if external auth type)
+	var externalIDChanges map[string]string
 	if loginSession.AuthType.IsExternal {
 		extAuthType, err := a.getExternalAuthTypeImpl(loginSession.AuthType)
 		if err != nil {
@@ -328,12 +330,16 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 			l.Infof("error getting auth type - %s", refreshToken)
 			return nil, errors.WrapErrorAction("error getting auth type", "", nil, err)
 		}
-		err = a.updateDataIfNeeded(*loginSession.AccountAuthType, *externalUser, *authType, loginSession.AppOrg, l)
+		externalIDChanges, err = a.updateDataIfNeeded(*loginSession.AccountAuthType, *externalUser, *authType, loginSession.AppOrg, l)
 		if err != nil {
 			return nil, errors.WrapErrorAction("update account if needed on refresh", "", nil, err)
 		}
 
 		loginSession.Params = refreshedData //assing the refreshed data
+	}
+
+	for k, v := range externalIDChanges {
+		loginSession.ExternalIDs[k] = v
 	}
 
 	if !anonymous {
@@ -348,7 +354,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, nil, anonymous, false, loginSession.AppOrg.Application.Admin, false, loginSession.ID)
+	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, loginSession.ExternalIDs, nil, anonymous, false, loginSession.AppOrg.Application.Admin, false, loginSession.ID)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
@@ -979,7 +985,7 @@ func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, str
 		orgID = accounts[0].Organization.ID
 	}
 
-	claims := a.getStandardClaims(accounts[0].AccountID, "", "", "", "", rokwireTokenAud, orgID, appID, authType, nil, false, true, false, true, "")
+	claims := a.getStandardClaims(accounts[0].AccountID, "", "", "", "", rokwireTokenAud, orgID, appID, authType, nil, nil, false, true, false, true, "")
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, ","))
 	if err != nil {
 		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -1234,13 +1240,16 @@ func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, appro
 //GetAdminToken returns an admin token for the specified application
 func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error) {
 	//verify that the provided appID is valid for the organization
-	_, err := a.storage.FindApplicationOrganization(appID, claims.OrgID)
+	appOrg, err := a.storage.FindApplicationOrganization(appID, claims.OrgID)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": claims.OrgID, "app_id": appID}, err)
 	}
+	if appOrg == nil {
+		return "", errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": claims.OrgID, "app_id": appID})
+	}
 
 	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, claims.OrgID, appID, claims.AuthType,
-		&claims.ExpiresAt, false, false, true, claims.Service, claims.SessionID)
+		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, claims.Service, claims.SessionID)
 	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }
 

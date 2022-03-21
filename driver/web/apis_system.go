@@ -635,22 +635,24 @@ func (h SystemApisHandler) createApplication(l *logs.Log, r *http.Request, claim
 }
 
 func (h SystemApisHandler) getApplications(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	//TODO
+	return l.HttpResponseSuccess()
+	/*
+		applications, err := h.coreAPIs.System.SysGetApplications()
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
+		}
+		var response []Def.Application
+		for _, application := range applications {
+			r := applicationToDef(application)
+			response = append(response, r)
+		}
 
-	applications, err := h.coreAPIs.System.SysGetApplications()
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
-	}
-	var response []Def.ApplicationFields
-	for _, application := range applications {
-		r := applicationToDef(application)
-		response = append(response, r)
-	}
-
-	data, err := json.Marshal(response)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
-	}
-	return l.HttpResponseSuccessJSON(data)
+		data, err := json.Marshal(response)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+		}
+		return l.HttpResponseSuccessJSON(data) */
 }
 
 //createPermission creates an permission

@@ -104,6 +104,8 @@ type Storage interface {
 
 	PerformTransaction(func(context storage.TransactionContext) error) error
 
+	FindAuthType(codeOrID string) (*model.AuthType, error)
+
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 
@@ -170,6 +172,7 @@ type Storage interface {
 
 	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
+	InsertApplicationOrganization(applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
 }
 
 //StorageListener listenes for change data storage events

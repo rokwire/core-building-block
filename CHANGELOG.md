@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Service accounts [#306](https://github.com/rokwire/core-building-block/issues/306)
+- Handle external ID management [#364](https://github.com/rokwire/core-building-block/issues/364)
 
 ## [1.21.1] - 2022-03-17
 ### Fixed
@@ -25,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.20.0] - 2022-03-01
 ### Fixed
 - Fix broken external login [#427](https://github.com/rokwire/core-building-block/issues/427)
+
+### Added
+- Implement system accounts [#278](https://github.com/rokwire/core-building-block/issues/278)
 
 ## [1.19.0] - 2022-02-25
 ### Added

@@ -16,6 +16,7 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 
 	anonymous := item.Anonymous
 	identifier := item.Identifier
+	externalIDs := item.ExternalIDs
 	var accountAuthType *model.AccountAuthType
 	if item.AccountAuthTypeID != nil && account != nil {
 		accountAuthType = account.GetAccountAuthTypeByID(*item.AccountAuthTypeID)
@@ -46,7 +47,7 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 	dateCreated := item.DateCreated
 
 	return model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType, AppType: appType,
-		Anonymous: anonymous, Identifier: identifier, AccountAuthType: accountAuthType,
+		Anonymous: anonymous, Identifier: identifier, ExternalIDs: externalIDs, AccountAuthType: accountAuthType,
 		Device: device, IPAddress: idAddress, AccessToken: accessToken, RefreshTokens: refreshTokens, Params: params,
 		State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
 		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
@@ -65,6 +66,7 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 
 	anonymous := item.Anonymous
 	identifier := item.Identifier
+	externalIDs := item.ExternalIDs
 	var accountAuthTypeID *string
 	var accountAuthTypeIdentifier *string
 	if item.AccountAuthType != nil {
@@ -97,7 +99,7 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 
 	return &loginSession{ID: id, AppID: appID, OrgID: orgID, AuthTypeCode: authTypeCode,
 		AppTypeID: appTypeID, AppTypeIdentifier: appTypeIdentifier, Anonymous: anonymous,
-		Identifier: identifier, AccountAuthTypeID: accountAuthTypeID, AccountAuthTypeIdentifier: accountAuthTypeIdentifier,
+		Identifier: identifier, ExternalIDs: externalIDs, AccountAuthTypeID: accountAuthTypeID, AccountAuthTypeIdentifier: accountAuthTypeIdentifier,
 		DeviceID: deviceID, IPAddress: ipAddress, AccessToken: accessToken, RefreshTokens: refreshTokens,
 		Params: params, State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
 		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
