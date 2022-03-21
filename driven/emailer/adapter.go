@@ -38,7 +38,7 @@ func (a *Adapter) Send(toEmail string, subject string, body string, attachmentFi
 	m.SetHeader("From", a.smtpFrom)
 	m.SetHeader("To", emails...)
 	m.SetHeader("Subject", subject)
-	m.SetBody("text/plain", body)
+	m.SetBody("text/html", body)
 	if attachmentFilename != nil {
 		m.Attach(*attachmentFilename)
 	}

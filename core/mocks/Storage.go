@@ -98,20 +98,6 @@ func (_m *Storage) CreateGlobalConfig(context storage.TransactionContext, global
 	return r0
 }
 
-// DeleteAccount provides a mock function with given fields: context, id
-func (_m *Storage) DeleteAccount(context storage.TransactionContext, id string) error {
-	ret := _m.Called(context, id)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
-		r0 = rf(context, id)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // DeleteAppConfig provides a mock function with given fields: ID
 func (_m *Storage) DeleteAppConfig(ID string) error {
 	ret := _m.Called(ID)

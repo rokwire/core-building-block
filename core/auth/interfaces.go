@@ -24,10 +24,10 @@ type authType interface {
 	verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error)
 
 	//sends the verification code to the identifier
-	sendVerifyCredential(credential *model.Credential, l *logs.Log) error
+	sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error
 
 	//restarts the credential verification
-	restartCredentialVerification(credential *model.Credential, l *logs.Log) error
+	restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error
 
 	//updates the value of the credential object with new value
 	// Returns:
@@ -35,7 +35,7 @@ type authType interface {
 	resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error)
 
 	//apply forgot credential for the auth type (generates a reset password link with code and expiry and sends it to given identifier for email auth type)
-	forgotCredential(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error)
+	forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error)
 
 	//getUserIdentifier parses the credentials and returns the user identifier
 	// Returns:
@@ -117,6 +117,11 @@ type APIs interface {
 	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
 		authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
 		profile model.Profile, preferences map[string]interface{}, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
+
+	//Logout logouts an account from app/org
+	//	Input:
+	//		allSessions (bool): If to remove the current session only or all sessions for the app/org for the account
+	Logout(appID string, orgID string, currentAccountID string, sessionID string, allSessions bool, l *logs.Log) error
 
 	//AccountExists checks if a user is already registered
 	//The authentication method must be one of the supported for the application.
@@ -390,6 +395,9 @@ type Storage interface {
 	InsertAccountAuthType(item model.AccountAuthType) error
 	UpdateAccountAuthType(item model.AccountAuthType) error
 	DeleteAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
+
+	UpdateAccountExternalIDs(accountID string, externalIDs map[string]string) error
+	UpdateLoginSessionExternalIDs(accountID string, externalIDs map[string]string) error
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)

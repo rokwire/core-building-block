@@ -4,12 +4,14 @@ import (
 	"context"
 	"core-building-block/core"
 	"fmt"
+	"html/template"
 	"net/http"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
+	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 
@@ -57,15 +59,14 @@ func (we Adapter) Start() {
 	router := mux.NewRouter().StrictSlash(true)
 	subRouter := router.PathPrefix("/core").Subrouter()
 
-	///UI
-
-	//reset credential
-	subRouter.HandleFunc("/ui/reset-credential", we.serveResetCredential) //Public
-
 	//docs
 	subRouter.PathPrefix("/doc/ui").Handler(we.serveDocUI()) //Public
 	subRouter.HandleFunc("/doc", we.serveDoc)                //Public
 	///
+
+	//ui
+	subRouter.HandleFunc("/ui/credential/reset", we.serveResetCredential)                                                     //Public
+	subRouter.HandleFunc("/ui/credential/verify", we.uiWrapFunc(we.servicesApisHandler.verifyCredential, nil)).Methods("GET") //Public (validates code)
 
 	///default ///
 	subRouter.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion, nil)).Methods("GET")                                      //Public
@@ -74,10 +75,11 @@ func (we Adapter) Start() {
 
 	///services ///
 	servicesSubRouter := subRouter.PathPrefix("/services").Subrouter()
-	servicesSubRouter.HandleFunc("/auth/login", we.wrapFunc(we.servicesApisHandler.authLogin, nil)).Methods("POST")               //Requires API key in request
-	servicesSubRouter.HandleFunc("/auth/mfa", we.wrapFunc(we.servicesApisHandler.authLoginMFA, nil)).Methods("POST")              //Requires API key in request
-	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL, nil)).Methods("POST")        //Requires API key in request
-	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh, nil)).Methods("POST")           //Requires API key in request
+	servicesSubRouter.HandleFunc("/auth/login", we.wrapFunc(we.servicesApisHandler.authLogin, nil)).Methods("POST")        //Requires API key in request
+	servicesSubRouter.HandleFunc("/auth/mfa", we.wrapFunc(we.servicesApisHandler.authLoginMFA, nil)).Methods("POST")       //Requires API key in request
+	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.authLoginURL, nil)).Methods("POST") //Requires API key in request
+	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.authRefresh, nil)).Methods("POST")    //Requires API key in request
+	servicesSubRouter.HandleFunc("/auth/logout", we.wrapFunc(we.servicesApisHandler.authLogout, we.auth.services.user)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/account/exists", we.wrapFunc(we.servicesApisHandler.accountExists, nil)).Methods("POST")  //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/account/can-sign-in", we.wrapFunc(we.servicesApisHandler.canSignIn, nil)).Methods("POST") //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/account/can-link", we.wrapFunc(we.servicesApisHandler.canLink, nil)).Methods("POST")      //Requires API key in request
@@ -291,6 +293,58 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization Authorization) htt
 		//5. print
 		logObj.RequestComplete()
 	}
+}
+
+func (we Adapter) uiWrapFunc(handler handlerFunc, authorization Authorization) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		logObj := we.logger.NewRequestLog(req)
+
+		logObj.RequestReceived()
+
+		//1. validate request
+		_, err := we.validateRequest(req)
+		if err != nil {
+			message := errors.WrapErrorAction(logutils.ActionValidate, logutils.TypeRequest, nil, err)
+			we.serveResponseUI(w, message.Error(), true, logObj)
+			return
+		}
+
+		//2. process it
+		var response logs.HttpResponse
+		if authorization != nil {
+			_, claims, err := authorization.check(req)
+			if err != nil {
+				message := errors.WrapErrorAction(logutils.ActionValidate, logutils.TypeRequest, nil, err)
+				we.serveResponseUI(w, message.Error(), true, logObj)
+				return
+			}
+			response = handler(logObj, req, claims)
+		} else {
+			response = handler(logObj, req, nil)
+		}
+
+		we.serveResponseUI(w, string(response.Body), response.ResponseCode != 200, logObj)
+		//5. print
+		logObj.RequestComplete()
+	}
+}
+
+func (we Adapter) serveResponseUI(w http.ResponseWriter, message string, isErr bool, l *logs.Log) {
+	file := ""
+	if isErr {
+		file = "./driver/web/ui/error.html"
+		l.Error(message)
+	} else {
+		file = "./driver/web/ui/success.html"
+	}
+	tmpl, err := template.ParseFiles(file)
+	if err != nil {
+		l.RequestErrorAction(w, logutils.ActionLoad, "page template", nil, err, http.StatusInternalServerError, true)
+		return
+	}
+	data := HTMLResponseTemplate{Message: message}
+	// w.Header().Add("access-control-allow-origin", "*")
+	tmpl.Execute(w, data)
 }
 
 func (we Adapter) validateRequest(req *http.Request) (*openapi3filter.RequestValidationInput, error) {
