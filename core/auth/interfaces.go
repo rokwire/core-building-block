@@ -291,7 +291,7 @@ type APIs interface {
 	GetServiceAccounts(params map[string]interface{}, l *logs.Log) ([]model.ServiceAccount, error)
 
 	//RegisterServiceAccount registers a service account
-	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name string, appID *string, orgID *string, permissions *[]string, scopes *[]string, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error)
+	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string, orgID *string, permissions *[]string, scopes *[]string, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccount deregisters a service account
 	DeregisterServiceAccount(accountID string) error

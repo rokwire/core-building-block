@@ -1,5 +1,4 @@
 required:
-  - name
   - app_id
   - org_id
 type: object

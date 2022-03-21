@@ -1002,9 +1002,10 @@ func (a *Auth) GetServiceAccounts(params map[string]interface{}, l *logs.Log) ([
 }
 
 //RegisterServiceAccount registers a service account
-func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name string, appID *string, orgID *string, permissions *[]string, scopes *[]string, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
+func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string, orgID *string, permissions *[]string, scopes *[]string, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
 	var newAccount *model.ServiceAccount
 	var err error
+	var newName string
 	var permissionList []string
 	var scopeList []string
 	var rawTokens []string
@@ -1016,22 +1017,29 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 		}
 
-		newPermissions := fromAccount.GetPermissionNames()
-		if permissions != nil {
-			newPermissions = *permissions
+		newName = fromAccount.Name
+		if name != nil {
+			newName = *name
 		}
-		newScopes := fromAccount.GetScopeNames()
+		permissionList = fromAccount.GetPermissionNames()
+		if permissions != nil {
+			permissionList = *permissions
+		}
+		scopeList = fromAccount.GetScopeNames()
 		if scopes != nil {
-			newScopes = *scopes
+			scopeList = *scopes
 		}
 
-		newAccount, err = a.constructServiceAccount(fromAccount.AccountID, name, appID, orgID, newPermissions, newScopes)
+		newAccount, err = a.constructServiceAccount(fromAccount.AccountID, newName, appID, orgID, permissionList, scopeList)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 		}
 		newAccount.Credentials = fromAccount.Credentials
 	} else {
 		id, _ := uuid.NewUUID()
+		if name != nil {
+			newName = *name
+		}
 		if permissions != nil {
 			permissionList = *permissions
 		}
@@ -1039,7 +1047,7 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 			scopeList = *scopes
 		}
 
-		newAccount, err = a.constructServiceAccount(id.String(), name, appID, orgID, permissionList, scopeList)
+		newAccount, err = a.constructServiceAccount(id.String(), newName, appID, orgID, permissionList, scopeList)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 		}

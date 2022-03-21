@@ -1066,7 +1066,7 @@ type SystemReqCreateServiceAccount struct {
 	AccountId   *string                     `json:"account_id,omitempty"`
 	AppId       *string                     `json:"app_id"`
 	Creds       *[]ServiceAccountCredential `json:"creds,omitempty"`
-	Name        string                      `json:"name"`
+	Name        *string                     `json:"name,omitempty"`
 	OrgId       *string                     `json:"org_id"`
 	Permissions *[]string                   `json:"permissions,omitempty"`
 	Scopes      *[]string                   `json:"scopes,omitempty"`

@@ -1681,10 +1681,6 @@ func (a *Auth) checkServiceAccountCreds(r *http.Request, params map[string]inter
 
 func (a *Auth) hideServiceCredentialParams(creds []model.ServiceAccountCredential, l *logs.Log) {
 	for _, cred := range creds {
-		if creds == nil {
-			continue
-		}
-
 		serviceAuthType, err := a.getServiceAuthTypeImpl(cred.Type)
 		if err != nil {
 			l.Infof("error getting service auth type on hide service credential params: %s", err.Error())

@@ -4511,6 +4511,7 @@ components:
       type: object
       properties:
         id:
+          readOnly: true
           type: string
         name:
           type: string
@@ -5903,7 +5904,6 @@ components:
           type: object
     _system_req_create_service-account:
       required:
-        - name
         - app_id
         - org_id
       type: object
