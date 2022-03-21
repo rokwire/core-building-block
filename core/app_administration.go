@@ -337,6 +337,8 @@ func (app *application) admAddAccountsToGroup(appID string, orgID string, groupI
 		return errors.Wrap("not allowed", err)
 	}
 
+	//TODO - ensure that the accounts do not have the group before adding
+
 	//TODO wrong
 	/*
 		//insert accounts to group
