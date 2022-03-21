@@ -109,8 +109,9 @@ func organizationToDef(item *model.Organization) *Def.Organization {
 	}
 
 	fields := Def.OrganizationFields{Id: item.ID, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
+	config := item.Config
 
-	return &Def.Organization{Config: organizationConfigToDef(&item.Config), Fields: &fields}
+	return &Def.Organization{Config: organizationConfigToDef(&config), Fields: &fields}
 }
 
 func organizationsToDef(items []model.Organization) []Def.Organization {
@@ -121,7 +122,7 @@ func organizationsToDef(items []model.Organization) []Def.Organization {
 	return result
 }
 
-func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationConfig {
+func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationConfigFields {
 	if item == nil {
 		return nil
 	}
@@ -135,7 +136,7 @@ func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationCo
 		domains = &item.Domains
 	}
 
-	return &Def.OrganizationConfig{Fields: &Def.OrganizationConfigFields{Id: id, Domains: domains}}
+	return &Def.OrganizationConfigFields{Id: id, Domains: domains}
 }
 
 //App Config

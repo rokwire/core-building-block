@@ -3638,7 +3638,7 @@ components:
         fields:
           $ref: '#/components/schemas/OrganizationFields'
         config:
-          $ref: '#/components/schemas/OrganizationConfig'
+          $ref: '#/components/schemas/OrganizationConfigFields'
     OrganizationFields:
       required:
         - id
@@ -4904,9 +4904,7 @@ components:
             - large
             - huge
         config:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrganizationConfigFields'
+          $ref: '#/components/schemas/OrganizationConfigFields'
     _system_req_create_Application:
       required:
         - name

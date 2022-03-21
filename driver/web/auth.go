@@ -255,6 +255,7 @@ func (auth *SystemAuth) check(req *http.Request) (int, *tokenauth.Claims, error)
 		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
 	}
 
+	// TODO: use system flag in token claims rather than orgID matching
 	if claims.OrgID != auth.coreAPIs.SystemOrgID {
 		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "org id", logutils.StringArgs(claims.OrgID))
 	}

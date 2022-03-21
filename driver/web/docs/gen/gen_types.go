@@ -423,13 +423,8 @@ type OIDCDiscovery struct {
 
 // Organization defines model for Organization.
 type Organization struct {
-	Config *OrganizationConfig `json:"config,omitempty"`
-	Fields *OrganizationFields `json:"fields,omitempty"`
-}
-
-// OrganizationConfig defines model for OrganizationConfig.
-type OrganizationConfig struct {
-	Fields *OrganizationConfigFields `json:"fields,omitempty"`
+	Config *OrganizationConfigFields `json:"config,omitempty"`
+	Fields *OrganizationFields       `json:"fields,omitempty"`
 }
 
 // OrganizationConfigFields defines model for OrganizationConfigFields.

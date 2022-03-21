@@ -58,7 +58,7 @@ func (c *APIs) storeSystemData() error {
 			newAndroidAppType := model.ApplicationType{ID: id.String(), Identifier: "edu.illinois.rokwire.admin.android",
 				Name: "System Admin Android", Versions: nil /*[]string{"1.0.0"}*/}
 			newSystemAdminApp := model.Application{ID: c.SystemAdminAppID, Name: "System Admin Application", MultiTenant: false, Admin: true,
-				/*RequiresOwnUsers: false,*/ Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
+				SharedIdentities: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplication(newSystemAdminApp)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, nil, err)
