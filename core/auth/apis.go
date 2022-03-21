@@ -994,7 +994,7 @@ func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, str
 }
 
 //GetServiceAccounts gets all service accounts matching a search
-func (a *Auth) GetServiceAccounts(params map[string]interface{}, l *logs.Log) ([]model.ServiceAccount, error) {
+func (a *Auth) GetServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error) {
 	serviceAccounts, err := a.storage.FindServiceAccounts(params)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
@@ -1104,7 +1104,7 @@ func (a *Auth) DeregisterServiceAccount(accountID string) error {
 }
 
 //GetServiceAccountInstance gets a service account instance
-func (a *Auth) GetServiceAccountInstance(accountID string, appID *string, orgID *string, l *logs.Log) (*model.ServiceAccount, error) {
+func (a *Auth) GetServiceAccountInstance(accountID string, appID *string, orgID *string) (*model.ServiceAccount, error) {
 	serviceAccount, err := a.storage.FindServiceAccount(nil, accountID, appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
@@ -1114,8 +1114,8 @@ func (a *Auth) GetServiceAccountInstance(accountID string, appID *string, orgID 
 }
 
 //UpdateServiceAccountInstance updates a service account instance
-func (a *Auth) UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string, scopes []string, firstParty bool, l *logs.Log) (*model.ServiceAccount, error) {
-	updatedAccount, err := a.constructServiceAccount(id, name, appID, orgID, permissions, scopes, firstParty)
+func (a *Auth) UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string, scopes []string) (*model.ServiceAccount, error) {
+	updatedAccount, err := a.constructServiceAccount(id, name, appID, orgID, permissions, scopes, false)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 	}

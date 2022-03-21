@@ -67,7 +67,7 @@ func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, _ []byte,
 	}
 
 	for _, credential := range accountCreds {
-		if credential.Type == ServiceAuthTypeStaticToken && credential.Params != nil {
+		if credential.Type == ServiceAuthTypeStaticToken && credential.Secrets != nil {
 			storedToken, ok := credential.Secrets["token"].(string)
 			if !ok {
 				return nil, nil, errors.WrapErrorAction(logutils.ActionParse, TypeStaticTokenCreds, nil, err)

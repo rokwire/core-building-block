@@ -346,14 +346,14 @@ type AppOrgPair struct {
 
 //ServiceAccountCredential represents a service account credential entity
 type ServiceAccountCredential struct {
-	ID   string `json:"id" bson:"id"`
-	Name string `json:"name" bson:"name"`
-	Type string `json:"type" bson:"type"`
+	ID   string `bson:"id"`
+	Name string `bson:"name"`
+	Type string `bson:"type"`
 
-	Params  map[string]interface{} `json:"params" bson:"params"`
-	Secrets map[string]interface{} `json:"secrets" bson:"secrets"`
+	Params  map[string]interface{} `bson:"params,omitempty"`
+	Secrets map[string]interface{} `bson:"secrets,omitempty"`
 
-	DateCreated time.Time `json:"date_created" bson:"date_created"`
+	DateCreated time.Time `bson:"date_created"`
 }
 
 // ServiceAccountTokenRequest represents a service account token request entity

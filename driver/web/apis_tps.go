@@ -67,9 +67,9 @@ func (h TPSApisHandler) getServiceAccountParams(l *logs.Log, r *http.Request, cl
 	message, accountParams, err := h.coreAPIs.Auth.GetServiceAccountParams(accountID, r, l)
 	if err != nil {
 		if message != nil {
-			return l.HttpResponseError(*message, err, http.StatusUnauthorized, false)
+			return l.HttpResponseError(*message, err, http.StatusUnauthorized, true)
 		}
-		return l.HttpResponseError("Error getting service account params", err, http.StatusInternalServerError, false)
+		return l.HttpResponseError("Error getting service account params", err, http.StatusInternalServerError, true)
 	}
 
 	appOrgPairs := appOrgPairListToDef(accountParams)
@@ -86,9 +86,9 @@ func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, clai
 	message, accessToken, err := h.coreAPIs.Auth.GetServiceAccessToken(r, l)
 	if err != nil {
 		if message != nil {
-			return l.HttpResponseError(*message, err, http.StatusUnauthorized, false)
+			return l.HttpResponseError(*message, err, http.StatusUnauthorized, true)
 		}
-		return l.HttpResponseError("Error getting access token", err, http.StatusInternalServerError, false)
+		return l.HttpResponseError("Error getting access token", err, http.StatusInternalServerError, true)
 	}
 
 	tokenType := Def.SharedResRokwireTokenTokenTypeBearer

@@ -287,7 +287,7 @@ func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, clai
 		searchParams["scopes"] = strings.Split(query.Get("scopes"), ",")
 	}
 
-	serviceAccounts, err := h.coreAPIs.Auth.GetServiceAccounts(searchParams, l)
+	serviceAccounts, err := h.coreAPIs.Auth.GetServiceAccounts(searchParams)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -362,7 +362,7 @@ func (h SystemApisHandler) getServiceAccountInstance(l *logs.Log, r *http.Reques
 	appID := utils.StringOrNil(r.URL.Query().Get("app_id"))
 	orgID := utils.StringOrNil(r.URL.Query().Get("org_id"))
 
-	serviceAccount, err := h.coreAPIs.Auth.GetServiceAccountInstance(id, appID, orgID, l)
+	serviceAccount, err := h.coreAPIs.Auth.GetServiceAccountInstance(id, appID, orgID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -398,7 +398,7 @@ func (h SystemApisHandler) updateServiceAccountInstance(l *logs.Log, r *http.Req
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "service account update request", nil, err, http.StatusBadRequest, true)
 	}
 
-	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccountInstance(id, appID, orgID, requestData.Name, requestData.Permissions, requestData.Scopes, requestData.FirstParty, l)
+	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccountInstance(id, appID, orgID, requestData.Name, requestData.Permissions, requestData.Scopes)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}

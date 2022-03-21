@@ -183,7 +183,7 @@ func (sa *Adapter) getCachedServiceRegs(serviceIDs []string) ([]model.ServiceReg
 
 	var serviceRegList []model.ServiceReg
 	var err error
-	if !utils.DeepEqual(serviceIDs, []string{"all"}) {
+	if !logutils.ContainsString(serviceIDs, "all") {
 		serviceRegList = make([]model.ServiceReg, len(serviceIDs))
 		for i, serviceID := range serviceIDs {
 			item, _ := sa.cachedServiceRegs.Load(serviceID)
@@ -1285,7 +1285,6 @@ func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) (*model.S
 			primitive.E{Key: "name", Value: storageAccount.Name},
 			primitive.E{Key: "permissions", Value: storageAccount.Permissions},
 			primitive.E{Key: "scopes", Value: storageAccount.Scopes},
-			primitive.E{Key: "first_party", Value: storageAccount.FirstParty},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}

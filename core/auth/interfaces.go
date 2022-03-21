@@ -287,7 +287,7 @@ type APIs interface {
 	GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, string, error)
 
 	//GetServiceAccounts gets all service accounts matching a search
-	GetServiceAccounts(params map[string]interface{}, l *logs.Log) ([]model.ServiceAccount, error)
+	GetServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
 
 	//RegisterServiceAccount registers a service account
 	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string, orgID *string,
@@ -297,11 +297,10 @@ type APIs interface {
 	DeregisterServiceAccount(accountID string) error
 
 	//GetServiceAccountInstance gets a service account instance
-	GetServiceAccountInstance(accountID string, appID *string, orgID *string, l *logs.Log) (*model.ServiceAccount, error)
+	GetServiceAccountInstance(accountID string, appID *string, orgID *string) (*model.ServiceAccount, error)
 
 	//UpdateServiceAccountInstance updates a service account instance
-	UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string, scopes []string,
-		firstParty bool, l *logs.Log) (*model.ServiceAccount, error)
+	UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string, scopes []string) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccountInstance deregisters a service account instance
 	DeregisterServiceAccountInstance(id string, appID *string, orgID *string) error

@@ -1099,7 +1099,6 @@ type SystemReqUpdateAuthType_Params struct {
 
 // SystemReqUpdateServiceAccount defines model for _system_req_update_service-account.
 type SystemReqUpdateServiceAccount struct {
-	FirstParty  bool     `json:"first_party"`
 	Name        string   `json:"name"`
 	Permissions []string `json:"permissions"`
 	Scopes      []string `json:"scopes"`

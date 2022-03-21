@@ -5941,7 +5941,6 @@ components:
         - name
         - permissions
         - scopes
-        - first_party
       type: object
       properties:
         name:
@@ -5954,5 +5953,3 @@ components:
           type: array
           items:
             type: string
-        first_party:
-          type: boolean
