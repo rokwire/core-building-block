@@ -6,7 +6,6 @@ import (
 	"core-building-block/utils"
 	"crypto/subtle"
 	"encoding/json"
-	"fmt"
 	"net/url"
 	"regexp"
 	"time"
@@ -243,16 +242,15 @@ func (a *twilioPhonePasswordAuthImpl) handlePhonePasswordVerify(phonePassword st
 	}
 
 	data := url.Values{}
-	//verificationLink := a.auth.host + fmt.Sprintf("/ui/credential/verify?%s", data.Encode())
 	data.Add("To", phonePassword)
-	//data.Add("id", credentialID)
-	//data.Add("link", verificationLink)
-	data.Add("Channel", "sms")
 	if verificationCode != "" {
 		// check verification
 		data.Add("Code", verificationCode)
 		return "", a.checkVerification(phonePassword, data, l)
 	}
+
+	// start verification
+	data.Add("Channel", "sms")
 
 	message := ""
 	err := a.startVerification(phonePassword, data, l)
@@ -288,11 +286,27 @@ func (a *twilioPhonePasswordAuthImpl) checkVerification(phonePassword string, da
 }
 
 func (a *twilioPhonePasswordAuthImpl) startVerification(phonePassword string, data url.Values, l *logs.Log) error {
-	verificationLink := a.auth.host + fmt.Sprintf("/ui/credential/verify?%s", data.Encode())
-	body := "Please click the link below to verify your email address:<br><a href=" + verificationLink + ">" + verificationLink + "</a><br><br>If you did not request this verification link, please ignore this message."
-	err := json.Unmarshal(nil, body)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationsPathPart, data, a.twilioAccountSID, a.twilioToken)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUnmarshal, typePhonePasswordVerificationResponse, nil, err)
+		return errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, &logutils.FieldArgs{"verification params": data}, err)
+	}
+
+	var verifyResult verifyPhoneResponse
+	err = json.Unmarshal(body, &verifyResult)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUnmarshal, typeVerificationResponse, nil, err)
+	}
+
+	if verifyResult.To != phonePassword {
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, &logutils.FieldArgs{"expected phone": phonePassword, "actual phone": verifyResult.To})
+	}
+	if verifyResult.Status != "pending" {
+		return errors.ErrorData(logutils.StatusInvalid, typeVerificationStatus, &logutils.FieldArgs{"expected pending, actual:": verifyResult.Status})
+	}
+	if verifyResult.Sid == "" {
+		return errors.ErrorData(logutils.StatusMissing, typeVerificationSID, nil)
 	}
 
 	return nil
