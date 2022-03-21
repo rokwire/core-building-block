@@ -337,7 +337,13 @@ func (app *application) admAddAccountsToGroup(appID string, orgID string, groupI
 		return errors.Wrap("not allowed", err)
 	}
 
-	//TODO - ensure that the accounts do not have the group before adding
+	//ensure that the accounts do not have the group before adding
+	for _, account := range accounts {
+		gr := account.GetGroup(groupID)
+		if gr != nil {
+			return errors.Newf("account %s already is a member of the group", account.ID)
+		}
+	}
 
 	//TODO wrong
 	/*
