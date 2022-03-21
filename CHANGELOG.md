@@ -27,9 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fix broken external login [#427](https://github.com/rokwire/core-building-block/issues/427)
 
-### Added
-- Implement system accounts [#278](https://github.com/rokwire/core-building-block/issues/278)
-
 ## [1.19.0] - 2022-02-25
 ### Added
 - Expose System APIs for auth types [#362](https://github.com/rokwire/core-building-block/issues/362)

@@ -25,7 +25,7 @@ type Auth struct {
 	admin      *TokenAuthHandlers
 	encAuth    *EncAuth
 	bbsAuth    *BBsAuth
-	systemAuth *TokenAuthHandlers
+	systemAuth *SystemAuth
 
 	logger *logs.Logger
 }
@@ -77,16 +77,12 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 
 	encAuth := newEncAuth(coreAPIs, logger)
 	bbsAuth := newBBsAuth(coreAPIs, logger)
-	systemAuth, err := newSystemAuth(coreAPIs, authService, logger)
+	systemAuth, err := newSystemAuth(authService, logger)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "auth handler", nil, err)
 	}
-	systemHandlers, err := newTokenAuthHandlers(systemAuth)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionStart, "system auth handlers", nil, err)
-	}
 
-	auth := Auth{services: serviceHandlers, admin: adminHandlers, encAuth: encAuth, bbsAuth: bbsAuth, systemAuth: systemHandlers, logger: logger}
+	auth := Auth{services: serviceHandlers, admin: adminHandlers, encAuth: encAuth, bbsAuth: bbsAuth, systemAuth: systemAuth, logger: logger}
 
 	return &auth, nil
 }
@@ -236,7 +232,7 @@ func newBBsAuth(coreAPIs *core.APIs, logger *logs.Logger) *BBsAuth {
 
 //SystemAuth entity
 type SystemAuth struct {
-	coreAPIs  *core.APIs
+	//TODO
 	tokenAuth *tokenauth.TokenAuth
 	logger    *logs.Logger
 }
@@ -246,27 +242,10 @@ func (auth *SystemAuth) start() {
 }
 
 func (auth *SystemAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
-	claims, err := auth.tokenAuth.CheckRequestTokens(req)
-	if err != nil {
-		return http.StatusUnauthorized, nil, errors.WrapErrorAction(typeCheckAdminAuthRequestToken, logutils.TypeToken, nil, err)
-	}
-
-	if !claims.Admin {
-		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
-	}
-
-	if claims.OrgID != auth.coreAPIs.SystemOrgID {
-		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "org id", logutils.StringArgs(claims.OrgID))
-	}
-
-	return http.StatusOK, claims, nil
+	return 0, nil, nil
 }
 
-func (auth *SystemAuth) getTokenAuth() *tokenauth.TokenAuth {
-	return auth.tokenAuth
-}
-
-func newSystemAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) (*SystemAuth, error) {
+func newSystemAuth(authService *authservice.AuthService, logger *logs.Logger) (*SystemAuth, error) {
 	systemPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_system_policy.csv")
 	systemTokenAuth, err := tokenauth.NewTokenAuth(true, authService, systemPermissionAuth, nil)
 
@@ -274,7 +253,7 @@ func newSystemAuth(coreAPIs *core.APIs, authService *authservice.AuthService, lo
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for adminAuth", nil, err)
 	}
 
-	auth := SystemAuth{coreAPIs: coreAPIs, tokenAuth: systemTokenAuth, logger: logger}
+	auth := SystemAuth{tokenAuth: systemTokenAuth, logger: logger}
 	return &auth, nil
 }
 

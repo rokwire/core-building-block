@@ -202,6 +202,19 @@ const (
 	SystemReqUpdateOrganizationTypeSmall SystemReqUpdateOrganizationType = "small"
 )
 
+// Defines values for SystemResGetOrganizationsType.
+const (
+	SystemResGetOrganizationsTypeHuge SystemResGetOrganizationsType = "huge"
+
+	SystemResGetOrganizationsTypeLarge SystemResGetOrganizationsType = "large"
+
+	SystemResGetOrganizationsTypeMedium SystemResGetOrganizationsType = "medium"
+
+	SystemResGetOrganizationsTypeMicro SystemResGetOrganizationsType = "micro"
+
+	SystemResGetOrganizationsTypeSmall SystemResGetOrganizationsType = "small"
+)
+
 // API key record
 type APIKey struct {
 	AppId string  `json:"app_id"`
@@ -1061,6 +1074,14 @@ type SystemReqCreateServiceAccount struct {
 	Scopes      *[]string                   `json:"scopes,omitempty"`
 }
 
+// SystemReqGetApplication defines model for _system_req_get_Application.
+type SystemReqGetApplication string
+
+// SystemReqGetOrganization defines model for _system_req_get_Organization.
+type SystemReqGetOrganization struct {
+	Id string `json:"id"`
+}
+
 // SystemReqPermissions defines model for _system_req_permissions.
 type SystemReqPermissions struct {
 
@@ -1103,6 +1124,29 @@ type SystemReqUpdateServiceAccount struct {
 	Permissions []string `json:"permissions"`
 	Scopes      []string `json:"scopes"`
 }
+
+// SystemResGetApplications defines model for _system_res_get_Applications.
+type SystemResGetApplications struct {
+	ApplicationTypes *ApplicationTypeFields `json:"application_types,omitempty"`
+	Id               string                 `json:"id"`
+
+	// The maximum allowed duration (in hours) of a user's login session for this application
+	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
+	MultiTenant             bool   `json:"multi_tenant"`
+	Name                    string `json:"name"`
+	SharedIdentities        bool   `json:"shared_identities"`
+}
+
+// SystemResGetOrganizations defines model for _system_res_get_Organizations.
+type SystemResGetOrganizations struct {
+	Config *[]OrganizationConfigFields   `json:"config,omitempty"`
+	Id     string                        `json:"id"`
+	Name   string                        `json:"name"`
+	Type   SystemResGetOrganizationsType `json:"type"`
+}
+
+// SystemResGetOrganizationsType defines model for SystemResGetOrganizations.Type.
+type SystemResGetOrganizationsType string
 
 // DeleteAdminAccountMfaParams defines parameters for DeleteAdminAccountMfa.
 type DeleteAdminAccountMfaParams struct {

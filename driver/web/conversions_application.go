@@ -6,45 +6,6 @@ import (
 )
 
 //Application
-//TODO
-/*
-func applicationToDef(item *model.Application) *Def.Application {
-	if item == nil {
-		return nil
-	}
-
-	fields := Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
-		RequiresOwnUsers: &item.RequiresOwnUsers}
-	types := applicationTypeListToDef(item.Types)
-
-	return &Def.Application{Fields: &fields, Types: &types}
-}
-
-func applicationTypeListToDef(items []model.ApplicationType) []Def.ApplicationType {
-	result := make([]Def.ApplicationType, len(items))
-	for i, item := range items {
-		result[i] = *applicationTypeToDef(&item)
-	}
-	return result
-}
-
-func applicationTypeToDef(item *model.ApplicationType) *Def.ApplicationType {
-	if item == nil {
-		return nil
-	}
-
-	var name *string
-	if len(item.Name) > 0 {
-		name = &item.Name
-	}
-	var versions *[]string
-	if len(item.Versions) > 0 {
-		versions = &item.Versions
-	}
-
-	return &Def.ApplicationType{Fields: &Def.ApplicationTypeFields{Id: item.ID, Identifier: item.Identifier, Name: name, Versions: versions}}
-} */
-
 func applicationToDef(item model.Application) Def.ApplicationFields {
 
 	return Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
@@ -103,39 +64,20 @@ func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroupFields {
 }
 
 //Organization
-func organizationToDef(item *model.Organization) *Def.Organization {
+func organizationToDef(item *model.Organization) *Def.OrganizationFields {
 	if item == nil {
 		return nil
 	}
 
-	fields := Def.OrganizationFields{Id: item.ID, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
-
-	return &Def.Organization{Config: organizationConfigToDef(&item.Config), Fields: &fields}
+	return &Def.OrganizationFields{Id: item.ID, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
 }
 
-func organizationsToDef(items []model.Organization) []Def.Organization {
-	result := make([]Def.Organization, len(items))
+func organizationsToDef(items []model.Organization) []Def.OrganizationFields {
+	result := make([]Def.OrganizationFields, len(items))
 	for i, item := range items {
 		result[i] = *organizationToDef(&item)
 	}
 	return result
-}
-
-func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationConfig {
-	if item == nil {
-		return nil
-	}
-
-	var id *string
-	if len(item.ID) > 0 {
-		id = &item.ID
-	}
-	var domains *[]string
-	if len(item.Domains) > 0 {
-		domains = &item.Domains
-	}
-
-	return &Def.OrganizationConfig{Fields: &Def.OrganizationConfigFields{Id: id, Domains: domains}}
 }
 
 //App Config

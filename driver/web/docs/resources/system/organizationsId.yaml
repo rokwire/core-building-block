@@ -65,7 +65,7 @@ get:
       content:
         application/json:
             schema:
-              $ref: "../../schemas/application/Organization.yaml"
+              $ref: "../../schemas/apis/system/get-organization/request/Request.yaml"
     400:
       description: Bad request
     401:

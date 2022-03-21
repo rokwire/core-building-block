@@ -17,7 +17,7 @@
             schema:
               type: array
               items:
-                $ref: "../../schemas/application/Application.yaml"
+                $ref: "../../schemas/apis/system/get-applications/response/Response.yaml"
       400:
         description: Bad request
       401:
