@@ -1713,21 +1713,6 @@ func (a *Auth) checkServiceAccountCreds(r *http.Request, params map[string]inter
 	return nil, accounts, requestData.AuthType, nil
 }
 
-func (a *Auth) hideServiceCredentialParams(creds []model.ServiceAccountCredential, l *logs.Log) {
-	for _, cred := range creds {
-		serviceAuthType, err := a.getServiceAuthTypeImpl(cred.Type)
-		if err != nil {
-			l.Infof("error getting service auth type on hide service credential params: %s", err.Error())
-			cred.Params = nil
-			continue
-		}
-
-		for _, hidden := range serviceAuthType.hiddenParams() {
-			delete(cred.Params, hidden)
-		}
-	}
-}
-
 func (a *Auth) registerAuthType(name string, auth authType) error {
 	if _, ok := a.authTypes[name]; ok {
 		return errors.Newf("the requested auth type name has already been registered: %s", name)

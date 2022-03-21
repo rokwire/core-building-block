@@ -74,8 +74,7 @@ type anonymousAuthType interface {
 //serviceAuthType is the interface for authentication for non-human clients
 type serviceAuthType interface {
 	checkCredentials(r *http.Request, body []byte, creds interface{}, params map[string]interface{}) (*string, []model.ServiceAccount, error)
-	addCredentials(creds *model.ServiceAccountCredential) (string, error)
-	hiddenParams() []string
+	addCredentials(creds *model.ServiceAccountCredential) (map[string]interface{}, error)
 }
 
 //mfaType is the interface for multi-factor authentication

@@ -1000,10 +1000,6 @@ func (a *Auth) GetServiceAccounts(params map[string]interface{}, l *logs.Log) ([
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 	}
 
-	for _, account := range serviceAccounts {
-		a.hideServiceCredentialParams(account.Credentials, l)
-	}
-
 	return serviceAccounts, nil
 }
 
@@ -1015,7 +1011,7 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 	var newName string
 	var permissionList []string
 	var scopeList []string
-	var rawTokens []string
+	var displayParamsList []map[string]interface{}
 
 	if accountID != nil {
 		var fromAccount *model.ServiceAccount
@@ -1062,23 +1058,24 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 		}
-		newAccount.Credentials = make([]model.ServiceAccountCredential, 0)
 
-		rawTokens = make([]string, len(creds))
-		for i, cred := range creds {
+		newAccount.Credentials = make([]model.ServiceAccountCredential, 0)
+		displayParamsList = make([]map[string]interface{}, 0)
+		for _, cred := range creds {
 			serviceAuthType, err := a.getServiceAuthTypeImpl(cred.Type)
 			if err != nil {
 				l.Infof("error getting service auth type on register service account: %s", err.Error())
 				continue
 			}
 
-			rawToken, err := serviceAuthType.addCredentials(&cred)
+			displayParams, err := serviceAuthType.addCredentials(&cred)
 			if err != nil {
 				l.Warnf("error adding %s credential on register service account: %s", cred.Type, err.Error())
+				continue
 			}
 
 			newAccount.Credentials = append(newAccount.Credentials, cred)
-			rawTokens[i] = rawToken
+			displayParamsList = append(displayParamsList, displayParams)
 		}
 	}
 
@@ -1088,14 +1085,8 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceAccount, nil, err)
 	}
 
-	if accountID != nil {
-		a.hideServiceCredentialParams(newAccount.Credentials, l)
-	}
-
-	for i, token := range rawTokens {
-		if token != "" {
-			newAccount.Credentials[i].Params["token"] = token
-		}
+	for i, params := range displayParamsList {
+		newAccount.Credentials[i].Params = params
 	}
 
 	return newAccount, nil
@@ -1119,8 +1110,6 @@ func (a *Auth) GetServiceAccountInstance(accountID string, appID *string, orgID 
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 	}
 
-	a.hideServiceCredentialParams(serviceAccount.Credentials, l)
-
 	return serviceAccount, nil
 }
 
@@ -1135,8 +1124,6 @@ func (a *Auth) UpdateServiceAccountInstance(id string, appID *string, orgID *str
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
 	}
-
-	a.hideServiceCredentialParams(updatedAccount.Credentials, l)
 
 	return updatedAccount, nil
 }
@@ -1163,7 +1150,7 @@ func (a *Auth) AddServiceAccountCredential(accountID string, creds *model.Servic
 		return nil, errors.WrapErrorAction("error getting service auth type on add service credential", "", nil, err)
 	}
 
-	rawToken, err := serviceAuthType.addCredentials(creds)
+	displayParams, err := serviceAuthType.addCredentials(creds)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, "service account creds", nil, err)
 	}
@@ -1173,9 +1160,7 @@ func (a *Auth) AddServiceAccountCredential(accountID string, creds *model.Servic
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceAccountCredential, nil, err)
 	}
 
-	if rawToken != "" {
-		creds.Params["token"] = rawToken
-	}
+	creds.Params = displayParams
 	return creds, nil
 }
 

@@ -68,7 +68,7 @@ func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, _ []byte,
 
 	for _, credential := range accountCreds {
 		if credential.Type == ServiceAuthTypeStaticToken && credential.Params != nil {
-			storedToken, ok := credential.Params["token"].(string)
+			storedToken, ok := credential.Secrets["token"].(string)
 			if !ok {
 				return nil, nil, errors.WrapErrorAction(logutils.ActionParse, TypeStaticTokenCreds, nil, err)
 			}
@@ -82,14 +82,14 @@ func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, _ []byte,
 	return &message, nil, errors.ErrorData(logutils.StatusInvalid, "service account token", nil)
 }
 
-func (s *staticTokenServiceAuthImpl) addCredentials(creds *model.ServiceAccountCredential) (string, error) {
+func (s *staticTokenServiceAuthImpl) addCredentials(creds *model.ServiceAccountCredential) (map[string]interface{}, error) {
 	if creds == nil {
-		return "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
 	}
 
 	token, err := s.auth.buildRefreshToken()
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
 	encodedToken := s.hashAndEncodeToken(token)
@@ -98,16 +98,16 @@ func (s *staticTokenServiceAuthImpl) addCredentials(creds *model.ServiceAccountC
 	id, _ := uuid.NewUUID()
 
 	creds.ID = id.String()
-	creds.Params = map[string]interface{}{
+	creds.Secrets = map[string]interface{}{
 		"token": encodedToken,
 	}
 	creds.DateCreated = now
 
-	return token, nil
-}
+	displayParams := map[string]interface{}{
+		"token": token,
+	}
 
-func (s *staticTokenServiceAuthImpl) hiddenParams() []string {
-	return []string{"token"}
+	return displayParams, nil
 }
 
 func (s *staticTokenServiceAuthImpl) hashAndEncodeToken(token string) string {

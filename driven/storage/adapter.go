@@ -1291,6 +1291,7 @@ func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) (*model.S
 	}
 	opts := options.FindOneAndUpdateOptions{}
 	opts.SetReturnDocument(options.After)
+	opts.SetProjection(bson.D{bson.E{Key: "secrets", Value: 0}})
 
 	var updated serviceAccount
 	err := sa.db.serviceAccounts.FindOneAndUpdate(filter, update, &updated, &opts)

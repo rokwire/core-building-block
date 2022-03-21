@@ -350,7 +350,8 @@ type ServiceAccountCredential struct {
 	Name string `json:"name" bson:"name"`
 	Type string `json:"type" bson:"type"`
 
-	Params map[string]interface{} `json:"params" bson:"params"`
+	Params  map[string]interface{} `json:"params" bson:"params"`
+	Secrets map[string]interface{} `json:"secrets" bson:"secrets"`
 
 	DateCreated time.Time `json:"date_created" bson:"date_created"`
 }
