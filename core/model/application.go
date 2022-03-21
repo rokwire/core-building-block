@@ -122,6 +122,30 @@ type AppOrgGroup struct {
 	DateUpdated *time.Time
 }
 
+//CheckAssigners checks if the passed permissions satisfy the needed assigners for the group
+func (p AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
+	//check permission
+	if len(p.Permissions) > 0 {
+		for _, permission := range p.Permissions {
+			err := permission.CheckAssigners(assignerPermissions)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	//check roles
+	if len(p.Roles) > 0 {
+		for _, role := range p.Roles {
+			err := role.CheckAssigners(assignerPermissions)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	//all assigners are satisfied
+	return nil
+}
+
 func (cg AppOrgGroup) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nAppOrg:%s]", cg.ID, cg.Name, cg.AppOrg.ID)
 }

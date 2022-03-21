@@ -298,88 +298,111 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 }
 
 func (app *application) admAddAccountsToGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error {
+	//validate
 	if len(assignerPermissions) == 0 {
 		return errors.New("no permissions from admin assigner")
 	}
-
 	if len(groupID) == 0 {
-		return nil
+		return errors.New("no group id")
+	}
+	if len(accountIDs) == 0 {
+		return errors.New("no accounts ids")
 	}
 
-	if len(accountIDs) == 0 {
-		return nil
-	}
 	//find accounts
-	account, err := app.storage.FindAccountsByAccountID(appID, orgID, accountIDs)
+	accounts, err := app.storage.FindAccountsByAccountID(appID, orgID, accountIDs)
 	if err != nil {
 		return errors.Wrap("error finding account", err)
 	}
-
-	for i, currentAccount := range account {
-		if (currentAccount.AppOrg.Application.ID != appID) || (currentAccount.AppOrg.Organization.ID != orgID) {
-			l.Warnf("someone s trying to grant accounts to %s for different app/org", accountIDs)
-			return errors.New("not allowed")
-		}
-
-		account[i] = currentAccount
-		group, err := app.storage.FindAppOrgGroup(groupID, currentAccount.AppOrg.ID)
-		if err != nil {
-			return errors.Wrap("error finding app org groups", err)
-		}
-		if group == nil {
-			return errors.Wrap("error finding group", err)
-		}
-
-		var roleID string
-		for _, role := range group.Roles {
-			role.ID = roleID
-		}
-		//find the application organization
-		appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
-		if err != nil {
-			return errors.Wrap("there is no applicationo organization with that IDs", err)
-		}
-		//find the application organization role
-		role, err := app.storage.FindAppOrgRole(roleID, appOrg.ID)
-		if err != nil {
-			return errors.Wrap("there is no roles with that ID", err)
-		}
-		// check the assigners
-		err = role.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.Wrapf("error checking assigners for %s role", err, role.Name)
-		}
-		//check the assigners
-		for _, pcheck := range role.Permissions {
-			err = pcheck.CheckAssigners(assignerPermissions)
-			if err != nil {
-				return errors.Wrapf("error checking permission assigners", err)
-			}
-		}
-
-		var permissionNames []string
-		for _, permission := range group.Permissions {
-			permissionNames = append(permissionNames, permission.Name)
-		}
-		//find the permissions
-		permissions, err := app.storage.FindPermissionsByName(permissionNames)
-		if err != nil {
-			return errors.Wrapf("the are no permissions with those permission names", err)
-		}
-
-		//check the assigner
-		for _, permission := range permissions {
-			err = permission.CheckAssigners(assignerPermissions)
-			if err != nil {
-				return errors.Wrapf("error checking permission assigners", err)
-			}
-		}
+	if len(accounts) != len(accountIDs) {
+		return errors.New("bad accounts ids params")
 	}
 
-	err = app.storage.InsertGroupAccounts(groupID, account)
+	//find group
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
-		return err
+		return errors.Wrap("error getting app org on add accounts to group", err)
 	}
+	group, err := app.storage.FindAppOrgGroup(groupID, appOrg.ID)
+	if err != nil {
+		return errors.Wrap("error finding app org group", err)
+	}
+	if group == nil {
+		return errors.New("bad group id params")
+	}
+
+	//check assigners
+	err = group.CheckAssigners(assignerPermissions)
+	if err != nil {
+		return errors.Wrap("not allowed", err)
+	}
+
+	/*
+		for i, currentAccount := range accounts {
+			if (currentAccount.AppOrg.Application.ID != appID) || (currentAccount.AppOrg.Organization.ID != orgID) {
+				l.Warnf("someone s trying to grant accounts to %s for different app/org", accountIDs)
+				return errors.New("not allowed")
+			}
+
+			accounts[i] = currentAccount
+			group, err := app.storage.FindAppOrgGroup(groupID, currentAccount.AppOrg.ID)
+			if err != nil {
+				return errors.Wrap("error finding app org groups", err)
+			}
+			if group == nil {
+				return errors.Wrap("error finding group", err)
+			}
+
+			var roleID string
+			for _, role := range group.Roles {
+				role.ID = roleID
+			}
+			//find the application organization
+			appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+			if err != nil {
+				return errors.Wrap("there is no applicationo organization with that IDs", err)
+			}
+			//find the application organization role
+			role, err := app.storage.FindAppOrgRole(roleID, appOrg.ID)
+			if err != nil {
+				return errors.Wrap("there is no roles with that ID", err)
+			}
+			// check the assigners
+			err = role.CheckAssigners(assignerPermissions)
+			if err != nil {
+				return errors.Wrapf("error checking assigners for %s role", err, role.Name)
+			}
+			//check the assigners
+			for _, pcheck := range role.Permissions {
+				err = pcheck.CheckAssigners(assignerPermissions)
+				if err != nil {
+					return errors.Wrapf("error checking permission assigners", err)
+				}
+			}
+
+			var permissionNames []string
+			for _, permission := range group.Permissions {
+				permissionNames = append(permissionNames, permission.Name)
+			}
+			//find the permissions
+			permissions, err := app.storage.FindPermissionsByName(permissionNames)
+			if err != nil {
+				return errors.Wrapf("the are no permissions with those permission names", err)
+			}
+
+			//check the assigner
+			for _, permission := range permissions {
+				err = permission.CheckAssigners(assignerPermissions)
+				if err != nil {
+					return errors.Wrapf("error checking permission assigners", err)
+				}
+			}
+		}
+
+		err = app.storage.InsertGroupAccounts(groupID, accounts)
+		if err != nil {
+			return err
+		} */
 	return nil
 }
 
