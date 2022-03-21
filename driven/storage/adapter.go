@@ -1270,6 +1270,7 @@ func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) (*model.S
 			primitive.E{Key: "name", Value: storageAccount.Name},
 			primitive.E{Key: "permissions", Value: storageAccount.Permissions},
 			primitive.E{Key: "scopes", Value: storageAccount.Scopes},
+			primitive.E{Key: "first_party", Value: storageAccount.FirstParty},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}

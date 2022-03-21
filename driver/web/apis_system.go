@@ -322,7 +322,8 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 		creds = serviceAccountCredentialListFromDef(*requestData.Creds)
 	}
 
-	serviceAccount, err := h.coreAPIs.Auth.RegisterServiceAccount(requestData.AccountId, fromAppID, fromOrgID, requestData.Name, requestData.AppId, requestData.OrgId, requestData.Permissions, requestData.Scopes, creds, l)
+	serviceAccount, err := h.coreAPIs.Auth.RegisterServiceAccount(requestData.AccountId, fromAppID, fromOrgID, requestData.Name,
+		requestData.AppId, requestData.OrgId, requestData.Permissions, requestData.Scopes, requestData.FirstParty, creds, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRegister, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -397,7 +398,7 @@ func (h SystemApisHandler) updateServiceAccountInstance(l *logs.Log, r *http.Req
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "service account update request", nil, err, http.StatusBadRequest, true)
 	}
 
-	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccountInstance(id, appID, orgID, requestData.Name, requestData.Permissions, requestData.Scopes, l)
+	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccountInstance(id, appID, orgID, requestData.Name, requestData.Permissions, requestData.Scopes, requestData.FirstParty, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}

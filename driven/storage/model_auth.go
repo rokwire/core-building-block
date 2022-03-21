@@ -51,6 +51,7 @@ type serviceAccount struct {
 
 	Permissions []model.Permission    `bson:"permissions"`
 	Scopes      []authorization.Scope `bson:"scopes"`
+	FirstParty  bool                  `bson:"first_party"`
 
 	Credentials []model.ServiceAccountCredential `bson:"credentials"`
 

@@ -538,6 +538,7 @@ type ServiceAccount struct {
 	AccountId   string                      `json:"account_id"`
 	AppId       *string                     `json:"app_id"`
 	Creds       *[]ServiceAccountCredential `json:"creds,omitempty"`
+	FirstParty  bool                        `json:"first_party"`
 	Name        string                      `json:"name"`
 	OrgId       *string                     `json:"org_id"`
 	Permissions []string                    `json:"permissions"`
@@ -1066,6 +1067,7 @@ type SystemReqCreateServiceAccount struct {
 	AccountId   *string                     `json:"account_id,omitempty"`
 	AppId       *string                     `json:"app_id"`
 	Creds       *[]ServiceAccountCredential `json:"creds,omitempty"`
+	FirstParty  *bool                       `json:"first_party,omitempty"`
 	Name        *string                     `json:"name,omitempty"`
 	OrgId       *string                     `json:"org_id"`
 	Permissions *[]string                   `json:"permissions,omitempty"`
@@ -1118,6 +1120,7 @@ type SystemReqUpdateAuthType_Params struct {
 
 // SystemReqUpdateServiceAccount defines model for _system_req_update_service-account.
 type SystemReqUpdateServiceAccount struct {
+	FirstParty  bool     `json:"first_party"`
 	Name        string   `json:"name"`
 	Permissions []string `json:"permissions"`
 	Scopes      []string `json:"scopes"`

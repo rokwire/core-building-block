@@ -21,6 +21,8 @@ properties:
     type: array
     items:
       type: string
+  first_party:
+    type: boolean
   creds:
     type: array
     items:

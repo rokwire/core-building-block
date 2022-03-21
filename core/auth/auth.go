@@ -1615,7 +1615,7 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 	return nil
 }
 
-func (a *Auth) constructServiceAccount(accountID string, name string, appID *string, orgID *string, permissions []string, scopes []string) (*model.ServiceAccount, error) {
+func (a *Auth) constructServiceAccount(accountID string, name string, appID *string, orgID *string, permissions []string, scopes []string, firstParty bool) (*model.ServiceAccount, error) {
 	permissionList, err := a.storage.FindPermissionsByName(permissions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
@@ -1646,7 +1646,7 @@ func (a *Auth) constructServiceAccount(accountID string, name string, appID *str
 	}
 
 	return &model.ServiceAccount{AccountID: accountID, Name: name, Application: application, Organization: organization,
-		Permissions: permissionList, Scopes: scopeList}, nil
+		Permissions: permissionList, Scopes: scopeList, FirstParty: firstParty}, nil
 }
 
 func (a *Auth) checkServiceAccountCreds(r *http.Request, params map[string]interface{}, l *logs.Log) (*string, []model.ServiceAccount, string, error) {

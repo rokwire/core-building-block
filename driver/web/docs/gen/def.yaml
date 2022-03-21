@@ -4468,6 +4468,7 @@ components:
         - org_id
         - permissions
         - scopes
+        - first_party
       type: object
       properties:
         account_id:
@@ -4488,6 +4489,8 @@ components:
           type: array
           items:
             type: string
+        first_party:
+          type: boolean
         creds:
           type: array
           items:
@@ -4524,6 +4527,7 @@ components:
           type: object
           nullable: true
         date_created:
+          readOnly: true
           type: string
     ServiceReg:
       required:
@@ -5926,6 +5930,8 @@ components:
           type: array
           items:
             type: string
+        first_party:
+          type: boolean
         creds:
           type: array
           items:
@@ -5935,6 +5941,7 @@ components:
         - name
         - permissions
         - scopes
+        - first_party
       type: object
       properties:
         name:
@@ -5947,3 +5954,5 @@ components:
           type: array
           items:
             type: string
+        first_party:
+          type: boolean

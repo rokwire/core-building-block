@@ -123,9 +123,11 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 	for i, s := range item.Scopes {
 		scopes[i] = s.String()
 	}
+	firstParty := item.FirstParty
 	creds := serviceAccountCredentialListToDef(item.Credentials)
 
-	return &Def.ServiceAccount{AccountId: accountID, Name: name, AppId: appID, OrgId: orgID, Permissions: permissions, Scopes: scopes, Creds: &creds}
+	return &Def.ServiceAccount{AccountId: accountID, Name: name, AppId: appID, OrgId: orgID, Permissions: permissions, Scopes: scopes,
+		FirstParty: firstParty, Creds: &creds}
 }
 
 func serviceAccountCredentialFromDef(item *Def.ServiceAccountCredential) *model.ServiceAccountCredential {

@@ -1002,7 +1002,8 @@ func (a *Auth) GetServiceAccounts(params map[string]interface{}, l *logs.Log) ([
 }
 
 //RegisterServiceAccount registers a service account
-func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string, orgID *string, permissions *[]string, scopes *[]string, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
+func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string,
+	orgID *string, permissions *[]string, scopes *[]string, firstParty *bool, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
 	var newAccount *model.ServiceAccount
 	var err error
 	var newName string
@@ -1030,12 +1031,16 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 			scopeList = *scopes
 		}
 
-		newAccount, err = a.constructServiceAccount(fromAccount.AccountID, newName, appID, orgID, permissionList, scopeList)
+		newAccount, err = a.constructServiceAccount(fromAccount.AccountID, newName, appID, orgID, permissionList, scopeList, fromAccount.FirstParty)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 		}
 		newAccount.Credentials = fromAccount.Credentials
 	} else {
+		if firstParty == nil {
+			return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeArg, logutils.StringArgs("first party"))
+		}
+
 		id, _ := uuid.NewUUID()
 		if name != nil {
 			newName = *name
@@ -1047,7 +1052,7 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 			scopeList = *scopes
 		}
 
-		newAccount, err = a.constructServiceAccount(id.String(), newName, appID, orgID, permissionList, scopeList)
+		newAccount, err = a.constructServiceAccount(id.String(), newName, appID, orgID, permissionList, scopeList, *firstParty)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 		}
@@ -1114,8 +1119,8 @@ func (a *Auth) GetServiceAccountInstance(accountID string, appID *string, orgID 
 }
 
 //UpdateServiceAccountInstance updates a service account instance
-func (a *Auth) UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string, scopes []string, l *logs.Log) (*model.ServiceAccount, error) {
-	updatedAccount, err := a.constructServiceAccount(id, name, appID, orgID, permissions, scopes)
+func (a *Auth) UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string, scopes []string, firstParty bool, l *logs.Log) (*model.ServiceAccount, error) {
+	updatedAccount, err := a.constructServiceAccount(id, name, appID, orgID, permissions, scopes, firstParty)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 	}

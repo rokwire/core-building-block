@@ -2,6 +2,7 @@ required:
   - name
   - permissions
   - scopes
+  - first_party
 type: object
 properties:
   name:
@@ -14,3 +15,5 @@ properties:
     type: array
     items:
       type: string
+  first_party:
+    type: boolean
