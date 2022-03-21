@@ -337,72 +337,14 @@ func (app *application) admAddAccountsToGroup(appID string, orgID string, groupI
 		return errors.Wrap("not allowed", err)
 	}
 
+	//TODO wrong
 	/*
-		for i, currentAccount := range accounts {
-			if (currentAccount.AppOrg.Application.ID != appID) || (currentAccount.AppOrg.Organization.ID != orgID) {
-				l.Warnf("someone s trying to grant accounts to %s for different app/org", accountIDs)
-				return errors.New("not allowed")
-			}
-
-			accounts[i] = currentAccount
-			group, err := app.storage.FindAppOrgGroup(groupID, currentAccount.AppOrg.ID)
-			if err != nil {
-				return errors.Wrap("error finding app org groups", err)
-			}
-			if group == nil {
-				return errors.Wrap("error finding group", err)
-			}
-
-			var roleID string
-			for _, role := range group.Roles {
-				role.ID = roleID
-			}
-			//find the application organization
-			appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
-			if err != nil {
-				return errors.Wrap("there is no applicationo organization with that IDs", err)
-			}
-			//find the application organization role
-			role, err := app.storage.FindAppOrgRole(roleID, appOrg.ID)
-			if err != nil {
-				return errors.Wrap("there is no roles with that ID", err)
-			}
-			// check the assigners
-			err = role.CheckAssigners(assignerPermissions)
-			if err != nil {
-				return errors.Wrapf("error checking assigners for %s role", err, role.Name)
-			}
-			//check the assigners
-			for _, pcheck := range role.Permissions {
-				err = pcheck.CheckAssigners(assignerPermissions)
-				if err != nil {
-					return errors.Wrapf("error checking permission assigners", err)
-				}
-			}
-
-			var permissionNames []string
-			for _, permission := range group.Permissions {
-				permissionNames = append(permissionNames, permission.Name)
-			}
-			//find the permissions
-			permissions, err := app.storage.FindPermissionsByName(permissionNames)
-			if err != nil {
-				return errors.Wrapf("the are no permissions with those permission names", err)
-			}
-
-			//check the assigner
-			for _, permission := range permissions {
-				err = permission.CheckAssigners(assignerPermissions)
-				if err != nil {
-					return errors.Wrapf("error checking permission assigners", err)
-				}
-			}
-		}
-
+		//insert accounts to group
 		err = app.storage.InsertGroupAccounts(groupID, accounts)
 		if err != nil {
 			return err
 		} */
+
 	return nil
 }
 
