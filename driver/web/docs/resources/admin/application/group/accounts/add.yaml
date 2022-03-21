@@ -13,7 +13,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../../../../schemas/apis/admin/application/add-account-group/request/Request.yaml"
+          $ref: "../../../../../schemas/apis/admin/application/group/accounts/add/request/Request.yaml"
     required: true
   responses:
     200:
