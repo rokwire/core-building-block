@@ -2003,7 +2003,7 @@ paths:
       description: |
         Add account 
 
-        **Auth:** Requires auth token with `auth_admin` permission
+        **Auth:** Requires auth token with `all_admin_core` permission
       security:
         - bearerAuth: []
       requestBody:
