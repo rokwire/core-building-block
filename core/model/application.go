@@ -123,10 +123,10 @@ type AppOrgGroup struct {
 }
 
 //CheckAssigners checks if the passed permissions satisfy the needed assigners for the group
-func (p AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
+func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
 	//check permission
-	if len(p.Permissions) > 0 {
-		for _, permission := range p.Permissions {
+	if len(cg.Permissions) > 0 {
+		for _, permission := range cg.Permissions {
 			err := permission.CheckAssigners(assignerPermissions)
 			if err != nil {
 				return err
@@ -134,8 +134,8 @@ func (p AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
 		}
 	}
 	//check roles
-	if len(p.Roles) > 0 {
-		for _, role := range p.Roles {
+	if len(cg.Roles) > 0 {
+		for _, role := range cg.Roles {
 			err := role.CheckAssigners(assignerPermissions)
 			if err != nil {
 				return err
