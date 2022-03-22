@@ -1,0 +1,28 @@
+post:
+  deprecated: true
+  tags:
+  - System
+  summary: Refresh
+  description: |
+    Refresh access token using a refresh token
+  requestBody:
+    description: |
+      Refresh token
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schemas/apis/shared/requests/refresh/Request.yaml"
+    required: true
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schemas/apis/shared/responses/refresh/Response.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error

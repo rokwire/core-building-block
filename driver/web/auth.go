@@ -21,11 +21,11 @@ const (
 
 //Auth handler
 type Auth struct {
-	services   *TokenAuthHandlers
-	admin      *TokenAuthHandlers
-	encAuth    *EncAuth
-	bbsAuth    *BBsAuth
-	systemAuth *TokenAuthHandlers
+	services *TokenAuthHandlers
+	admin    *TokenAuthHandlers
+	encAuth  *EncAuth
+	bbsAuth  *BBsAuth
+	system   *TokenAuthHandlers
 
 	logger *logs.Logger
 }
@@ -50,7 +50,7 @@ func (auth *Auth) Start() error {
 	auth.admin.start()
 	auth.encAuth.start()
 	auth.bbsAuth.start()
-	auth.systemAuth.start()
+	auth.system.start()
 
 	return nil
 }
@@ -86,7 +86,7 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "system auth handlers", nil, err)
 	}
 
-	auth := Auth{services: serviceHandlers, admin: adminHandlers, encAuth: encAuth, bbsAuth: bbsAuth, systemAuth: systemHandlers, logger: logger}
+	auth := Auth{services: serviceHandlers, admin: adminHandlers, encAuth: encAuth, bbsAuth: bbsAuth, system: systemHandlers, logger: logger}
 
 	return &auth, nil
 }
