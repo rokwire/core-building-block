@@ -1043,6 +1043,25 @@ func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, a
 	return accounts, nil
 }
 
+//FindAccountsByAccountID finds accounts
+func (sa *Adapter) FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error) {
+
+	//find app org id
+	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error getting cached application organization", "", nil, err)
+	}
+
+	accountFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}}}
+	var accountResult []account
+	err = sa.db.accounts.Find(accountFilter, &accountResult, nil)
+	if err != nil {
+		return nil, err
+	}
+	accounts := accountsFromStorage(accountResult, *appOrg)
+	return accounts, nil
+}
+
 //FindAccountByID finds an account by id
 func (sa *Adapter) FindAccountByID(context TransactionContext, id string) (*model.Account, error) {
 	return sa.findAccount(context, "_id", id)
@@ -1415,6 +1434,30 @@ func (sa *Adapter) InsertAccountRoles(accountID string, appOrgID string, roles [
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
+	return nil
+}
+
+//InsertAccountsGroup inserts accounts into a group
+func (sa *Adapter) InsertAccountsGroup(group model.AccountGroup, accounts []model.Account) error {
+	//prepare filter
+	accountsIDs := make([]string, len(accounts))
+	for i, cur := range accounts {
+		accountsIDs[i] = cur.ID
+	}
+	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountsIDs}}}
+
+	//update
+	update := bson.D{
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "groups", Value: group},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateMany(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
+	}
+	sa.logger.Infof("modified %d accounts with added group", res.ModifiedCount)
 	return nil
 }
 
