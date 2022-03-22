@@ -149,16 +149,15 @@ type Storage interface {
 
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
-	LoadOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)
+	FindOrganizations() ([]model.Organization, error)
 
-	LoadApplications() ([]model.Application, error)
 	InsertApplication(application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 
 	InsertAuthType(authType model.AuthType) (*model.AuthType, error)
-	LoadAuthTypes() ([]model.AuthType, error)
+	FindAuthTypes() ([]model.AuthType, error)
 	UpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
 
 	FindApplicationType(id string) (*model.ApplicationType, error)

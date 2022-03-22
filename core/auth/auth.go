@@ -2095,7 +2095,7 @@ func (a *Auth) deleteNotCompletedMFASessions() {
 func (a *Auth) deleteExpiredSessions() {
 	a.logger.Info("deleteExpiredSessions")
 
-	appsOrgs, err := a.storage.LoadApplicationsOrganizations()
+	appsOrgs, err := a.storage.FindApplicationsOrganizations()
 	if err != nil {
 		a.logger.Error(err.Error())
 	}

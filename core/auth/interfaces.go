@@ -360,7 +360,6 @@ type Storage interface {
 	PerformTransaction(func(context storage.TransactionContext) error) error
 
 	//AuthTypes
-	LoadAuthTypes() ([]model.AuthType, error)
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
 	//LoginsSessions
@@ -444,7 +443,7 @@ type Storage interface {
 	FindApplicationType(id string) (*model.ApplicationType, error)
 
 	//ApplicationsOrganizations
-	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
+	FindApplicationsOrganizations() ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 
 	//Device

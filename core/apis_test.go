@@ -121,7 +121,7 @@ func TestSysGetOrganization(t *testing.T) {
 
 func TestSysGetOrganizations(t *testing.T) {
 	storage := genmocks.Storage{}
-	storage.On("LoadOrganizations").Return([]model.Organization{}, nil)
+	storage.On("FindOrganizations").Return([]model.Organization{}, nil)
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, "53204ee9-a1d2-4a51-8286-966aa4cf9830", "f8034983-f8c9-4987-8385-f1dc7d2a76fb")
 
 	getOrganization, _ := app.System.SysGetOrganizations()
@@ -131,7 +131,7 @@ func TestSysGetOrganizations(t *testing.T) {
 	}
 	// second case error
 	storage2 := genmocks.Storage{}
-	storage2.On("LoadOrganizations").Return([]model.Organization{}, nil)
+	storage2.On("FindOrganizations").Return([]model.Organization{}, nil)
 	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, "53204ee9-a1d2-4a51-8286-966aa4cf9830", "f8034983-f8c9-4987-8385-f1dc7d2a76fb")
 
 	err, _ := app.System.SysGetOrganizations()

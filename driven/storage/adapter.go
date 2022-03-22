@@ -122,7 +122,7 @@ func (sa *Adapter) PerformTransaction(transaction func(context TransactionContex
 func (sa *Adapter) cacheOrganizations() error {
 	sa.logger.Info("cacheOrganizations..")
 
-	organizations, err := sa.LoadOrganizations()
+	organizations, err := sa.loadOrganizations()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
@@ -195,7 +195,7 @@ func (sa *Adapter) getCachedOrganizations() ([]model.Organization, error) {
 func (sa *Adapter) cacheApplications() error {
 	sa.logger.Info("cacheApplications..")
 
-	applications, err := sa.LoadApplications()
+	applications, err := sa.loadApplications()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 	}
@@ -299,7 +299,7 @@ func (sa *Adapter) getCachedApplicationType(id string) (*model.Application, *mod
 func (sa *Adapter) cacheAuthTypes() error {
 	sa.logger.Info("cacheAuthTypes..")
 
-	authTypes, err := sa.LoadAuthTypes()
+	authTypes, err := sa.loadAuthTypes()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 	}
@@ -344,11 +344,42 @@ func (sa *Adapter) getCachedAuthType(key string) (*model.AuthType, error) {
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthType, errArgs)
 }
 
+func (sa *Adapter) getCachedAuthTypes() ([]model.AuthType, error) {
+	sa.authTypesLock.RLock()
+	defer sa.authTypesLock.RUnlock()
+
+	var err error
+	authTypeList := make([]model.AuthType, 0)
+	idsFound := make([]string, 0)
+	sa.cachedAuthTypes.Range(func(key, item interface{}) bool {
+		errArgs := &logutils.FieldArgs{"code or id": key}
+		if item == nil {
+			err = errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, errArgs)
+			return false
+		}
+
+		authType, ok := item.(model.AuthType)
+		if !ok {
+			err = errors.ErrorAction(logutils.ActionCast, model.TypeAuthType, errArgs)
+			return false
+		}
+
+		if !logutils.ContainsString(idsFound, authType.ID) {
+			authTypeList = append(authTypeList, authType)
+			idsFound = append(idsFound, authType.ID)
+		}
+
+		return true
+	})
+
+	return authTypeList, err
+}
+
 //cacheApplicationsOrganizations caches the applications organizations
 func (sa *Adapter) cacheApplicationsOrganizations() error {
 	sa.logger.Info("cacheApplicationsOrganizations..")
 
-	applicationsOrganizations, err := sa.LoadApplicationsOrganizations()
+	applicationsOrganizations, err := sa.loadApplicationsOrganizations()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 	}
@@ -402,10 +433,41 @@ func (sa *Adapter) getCachedApplicationOrganizationByKey(key string) (*model.App
 	return nil, nil
 }
 
+func (sa *Adapter) getCachedApplicationOrganizations() ([]model.ApplicationOrganization, error) {
+	sa.applicationsOrganizationsLock.RLock()
+	defer sa.applicationsOrganizationsLock.RUnlock()
+
+	var err error
+	appOrgList := make([]model.ApplicationOrganization, 0)
+	idsFound := make([]string, 0)
+	sa.cachedApplicationsOrganizations.Range(func(key, item interface{}) bool {
+		errArgs := &logutils.FieldArgs{"key": key}
+		if item == nil {
+			err = errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationOrganization, errArgs)
+			return false
+		}
+
+		appOrg, ok := item.(model.ApplicationOrganization)
+		if !ok {
+			err = errors.ErrorAction(logutils.ActionCast, model.TypeApplicationOrganization, errArgs)
+			return false
+		}
+
+		if !logutils.ContainsString(idsFound, appOrg.ID) {
+			appOrgList = append(appOrgList, appOrg)
+			idsFound = append(idsFound, appOrg.ID)
+		}
+
+		return true
+	})
+
+	return appOrgList, err
+}
+
 func (sa *Adapter) cacheApplicationConfigs() error {
 	sa.logger.Info("cacheApplicationConfigs..")
 
-	applicationConfigs, err := sa.LoadAppConfigs()
+	applicationConfigs, err := sa.loadAppConfigs()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
 	}
@@ -462,7 +524,6 @@ func (sa *Adapter) getCachedApplicationConfigByAppTypeIDAndVersion(appTypeID str
 	sa.applicationConfigsLock.RLock()
 	defer sa.applicationConfigsLock.RUnlock()
 
-	var err error
 	appConfigs := make([]model.ApplicationConfig, 0)
 
 	key := appTypeID
@@ -496,7 +557,7 @@ func (sa *Adapter) getCachedApplicationConfigByAppTypeIDAndVersion(appTypeID str
 		}
 	}
 
-	return appConfigs, err
+	return appConfigs, nil
 }
 
 // get app config by id
@@ -521,8 +582,8 @@ func (sa *Adapter) getCachedApplicationConfigByID(id string) (*model.Application
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationConfig, errArgs)
 }
 
-//LoadAuthTypes loads all auth types
-func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
+//loadAuthTypes loads all auth types
+func (sa *Adapter) loadAuthTypes() ([]model.AuthType, error) {
 	filter := bson.D{}
 	var result []model.AuthType
 	err := sa.db.authTypes.Find(filter, &result, nil)
@@ -539,6 +600,11 @@ func (sa *Adapter) LoadAuthTypes() ([]model.AuthType, error) {
 //FindAuthType finds auth type by id or code
 func (sa *Adapter) FindAuthType(codeOrID string) (*model.AuthType, error) {
 	return sa.getCachedAuthType(codeOrID)
+}
+
+//FindAuthTypes finds all auth types
+func (sa *Adapter) FindAuthTypes() ([]model.AuthType, error) {
+	return sa.getCachedAuthTypes()
 }
 
 //InsertLoginSession inserts login session
@@ -2145,40 +2211,12 @@ func (sa *Adapter) DeleteGlobalConfig(context TransactionContext) error {
 
 //FindOrganization finds an organization
 func (sa *Adapter) FindOrganization(id string) (*model.Organization, error) {
-	//no transactions for get operations..
-	cachedOrg, err := sa.getCachedOrganization(id)
-	if cachedOrg != nil {
-		return cachedOrg, nil
-	}
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
-	}
+	return sa.getCachedOrganization(id)
+}
 
-	//1. find organization
-	orgFilter := bson.D{primitive.E{Key: "_id", Value: id}}
-	var result organization
-
-	err = sa.db.organizations.FindOne(orgFilter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"id": id}, err)
-	}
-
-	//TODO
-	//2. find the organization applications
-	/*	var applications []model.Application
-			if len(org.Applications) > 0 {
-				appsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": org.Applications}}}
-				err := sa.db.applications.Find(appsFilter, &applications, nil)
-				if err != nil {
-					return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-				}
-			}
-
-		organization := organizationFromStorage(&org, applications)
-		return &organization, nil */
-
-	org := organizationFromStorage(&result)
-	return &org, nil
+//FindOrganizations finds all organizations
+func (sa *Adapter) FindOrganizations() ([]model.Organization, error) {
+	return sa.getCachedOrganizations()
 }
 
 //InsertOrganization inserts an organization
@@ -2219,22 +2257,14 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 	return nil
 }
 
-//LoadOrganizations gets the organizations
-func (sa *Adapter) LoadOrganizations() ([]model.Organization, error) {
-	//1. check the cached organizations
-	cachedOrgs, err := sa.getCachedOrganizations()
-	if err != nil {
-		sa.logger.Warn(err.Error())
-	} else if len(cachedOrgs) > 0 {
-		return cachedOrgs, nil
-	}
-
+//loadOrganizations gets the organizations
+func (sa *Adapter) loadOrganizations() ([]model.Organization, error) {
 	//no transactions for get operations..
 
-	//2. find the organizations
+	//1. find the organizations
 	orgsFilter := bson.D{}
 	var orgsResult []organization
-	err = sa.db.organizations.Find(orgsFilter, &orgsResult, nil)
+	err := sa.db.organizations.Find(orgsFilter, &orgsResult, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
@@ -2243,13 +2273,13 @@ func (sa *Adapter) LoadOrganizations() ([]model.Organization, error) {
 		return make([]model.Organization, 0), nil
 	}
 
-	//3. prepare the response
+	//2. prepare the response
 	organizations := organizationsFromStorage(orgsResult)
 	return organizations, nil
 }
 
-//LoadApplications loads all applications
-func (sa *Adapter) LoadApplications() ([]model.Application, error) {
+//loadApplications loads all applications
+func (sa *Adapter) loadApplications() ([]model.Application, error) {
 	filter := bson.D{}
 	var result []application
 	err := sa.db.applications.Find(filter, &result, nil)
@@ -2279,56 +2309,16 @@ func (sa *Adapter) InsertApplication(application model.Application) (*model.Appl
 
 //FindApplication finds application
 func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
-	//1. check the cached applications
-	cachedApp, err := sa.getCachedApplication(ID)
-	if cachedApp != nil {
-		return cachedApp, nil
-	}
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-	}
-
-	//2. find the application
-	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	var result application
-	err = sa.db.applications.FindOne(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, &logutils.FieldArgs{"_id": ID}, err)
-	}
-
-	appRes := applicationFromStorage(&result)
-	return &appRes, nil
+	return sa.getCachedApplication(ID)
 }
 
 //FindApplications finds applications
 func (sa *Adapter) FindApplications() ([]model.Application, error) {
-	//1. check the cached applications
-	cachedApps, err := sa.getCachedApplications()
-	if err != nil {
-		sa.logger.Warn(err.Error())
-	} else if len(cachedApps) > 0 {
-		return cachedApps, nil
-	}
-
-	//2. find the applications
-	filter := bson.D{}
-	var result []application
-	err = sa.db.applications.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-	}
-
-	if len(result) == 0 {
-		//no data
-		return make([]model.Application, 0), nil
-	}
-
-	appsRes := applicationsFromStorage(result)
-	return appsRes, nil
+	return sa.getCachedApplications()
 }
 
-//LoadAppConfigs loads all application configs
-func (sa *Adapter) LoadAppConfigs() ([]model.ApplicationConfig, error) {
+//loadAppConfigs loads all application configs
+func (sa *Adapter) loadAppConfigs() ([]model.ApplicationConfig, error) {
 	filter := bson.D{}
 	options := options.Find()
 	options.SetSort(bson.D{primitive.E{Key: "app_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}) //sort by version numbers
@@ -2491,8 +2481,8 @@ func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.A
 	return result, nil
 }
 
-//LoadApplicationsOrganizations loads all applications organizations
-func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error) {
+//loadApplicationsOrganizations loads all applications organizations
+func (sa *Adapter) loadApplicationsOrganizations() ([]model.ApplicationOrganization, error) {
 	filter := bson.D{}
 	var list []applicationOrganization
 	err := sa.db.applicationsOrganizations.Find(filter, &list, nil)
@@ -2531,6 +2521,11 @@ func (sa *Adapter) LoadApplicationsOrganizations() ([]model.ApplicationOrganizat
 //FindApplicationOrganization finds application organization
 func (sa *Adapter) FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
 	return sa.getCachedApplicationOrganization(appID, orgID)
+}
+
+//FindApplicationsOrganizations finds application organizations
+func (sa *Adapter) FindApplicationsOrganizations() ([]model.ApplicationOrganization, error) {
+	return sa.getCachedApplicationOrganizations()
 }
 
 // InsertApplicationOrganization inserts an application organization

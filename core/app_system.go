@@ -86,12 +86,15 @@ func (app *application) sysGetOrganization(ID string) (*model.Organization, erro
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err)
 	}
+	if organization == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, nil)
+	}
 
 	return organization, nil
 }
 
 func (app *application) sysGetOrganizations() ([]model.Organization, error) {
-	getOrganization, err := app.storage.LoadOrganizations()
+	getOrganization, err := app.storage.FindOrganizations()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err)
 	}
@@ -113,6 +116,9 @@ func (app *application) sysGetApplication(ID string) (*model.Application, error)
 	appAdm, err := app.storage.FindApplication(ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplication, nil, err)
+	}
+	if appAdm == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplication, nil)
 	}
 
 	return appAdm, nil
@@ -386,7 +392,7 @@ func (app *application) sysCreateAuthTypes(code string, description string, isEx
 }
 
 func (app *application) sysGetAuthTypes() ([]model.AuthType, error) {
-	getAuthTypes, err := app.storage.LoadAuthTypes()
+	getAuthTypes, err := app.storage.FindAuthTypes()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAuthType, nil, err)
 	}
