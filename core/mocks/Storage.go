@@ -98,20 +98,6 @@ func (_m *Storage) CreateGlobalConfig(context storage.TransactionContext, global
 	return r0
 }
 
-// DeleteAccount provides a mock function with given fields: context, id
-func (_m *Storage) DeleteAccount(context storage.TransactionContext, id string) error {
-	ret := _m.Called(context, id)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
-		r0 = rf(context, id)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // DeleteAppConfig provides a mock function with given fields: ID
 func (_m *Storage) DeleteAppConfig(ID string) error {
 	ret := _m.Called(ID)
@@ -154,20 +140,6 @@ func (_m *Storage) DeleteAppOrgRole(id string) error {
 	return r0
 }
 
-// DeleteCredential provides a mock function with given fields: context, ID
-func (_m *Storage) DeleteCredential(context storage.TransactionContext, ID string) error {
-	ret := _m.Called(context, ID)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
-		r0 = rf(context, ID)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // DeleteDevice provides a mock function with given fields: context, id
 func (_m *Storage) DeleteDevice(context storage.TransactionContext, id string) error {
 	ret := _m.Called(context, id)
@@ -203,20 +175,6 @@ func (_m *Storage) DeleteLoginSessionByID(context storage.TransactionContext, id
 	var r0 error
 	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
 		r0 = rf(context, id)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// DeleteLoginSessionsByIdentifier provides a mock function with given fields: context, identifier
-func (_m *Storage) DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error {
-	ret := _m.Called(context, identifier)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
-		r0 = rf(context, identifier)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -277,6 +235,29 @@ func (_m *Storage) FindAccounts(appID string, orgID string, accountID *string, a
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, string, *string, *string) error); ok {
 		r1 = rf(appID, orgID, accountID, authTypeIdentifier)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindAccountsByAccountID provides a mock function with given fields: appID, orgID, accountIDs
+func (_m *Storage) FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error) {
+	ret := _m.Called(appID, orgID, accountIDs)
+
+	var r0 []model.Account
+	if rf, ok := ret.Get(0).(func(string, string, []string) []model.Account); ok {
+		r0 = rf(appID, orgID, accountIDs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Account)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string, []string) error); ok {
+		r1 = rf(appID, orgID, accountIDs)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -560,29 +541,6 @@ func (_m *Storage) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.A
 	return r0, r1
 }
 
-// FindCredential provides a mock function with given fields: context, ID
-func (_m *Storage) FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error) {
-	ret := _m.Called(context, ID)
-
-	var r0 *model.Credential
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) *model.Credential); ok {
-		r0 = rf(context, ID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.Credential)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
-		r1 = rf(context, ID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // FindLoginSessionsByParams provides a mock function with given fields: appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress
 func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string, appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
 	ret := _m.Called(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
@@ -719,6 +677,20 @@ func (_m *Storage) InsertAccountRoles(accountID string, appOrgID string, roles [
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string, []model.AccountRole) error); ok {
 		r0 = rf(accountID, appOrgID, roles)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// InsertAccountsGroup provides a mock function with given fields: group, account
+func (_m *Storage) InsertAccountsGroup(group model.AccountGroup, account []model.Account) error {
+	ret := _m.Called(group, account)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.AccountGroup, []model.Account) error); ok {
+		r0 = rf(group, account)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -1039,20 +1011,6 @@ func (_m *Storage) UpdateAuthTypes(ID string, code string, description string, i
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string, string, bool, bool, bool, bool, map[string]interface{}) error); ok {
 		r0 = rf(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// UpdateCredential provides a mock function with given fields: context, creds
-func (_m *Storage) UpdateCredential(context storage.TransactionContext, creds *model.Credential) error {
-	ret := _m.Called(context, creds)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *model.Credential) error); ok {
-		r0 = rf(context, creds)
 	} else {
 		r0 = ret.Error(0)
 	}

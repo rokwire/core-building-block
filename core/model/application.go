@@ -122,6 +122,30 @@ type AppOrgGroup struct {
 	DateUpdated *time.Time
 }
 
+//CheckAssigners checks if the passed permissions satisfy the needed assigners for the group
+func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
+	//check permission
+	if len(cg.Permissions) > 0 {
+		for _, permission := range cg.Permissions {
+			err := permission.CheckAssigners(assignerPermissions)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	//check roles
+	if len(cg.Roles) > 0 {
+		for _, role := range cg.Roles {
+			err := role.CheckAssigners(assignerPermissions)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	//all assigners are satisfied
+	return nil
+}
+
 func (cg AppOrgGroup) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nAppOrg:%s]", cg.ID, cg.Name, cg.AppOrg.ID)
 }
@@ -230,7 +254,8 @@ func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, a
 type IdentityProviderSetting struct {
 	IdentityProviderID string `bson:"identity_provider_id"`
 
-	UserIdentifierField string `bson:"user_identifier_field"`
+	UserIdentifierField string            `bson:"user_identifier_field"`
+	ExternalIDFields    map[string]string `bson:"external_id_fields"`
 
 	FirstNameField  string `bson:"first_name_field"`
 	MiddleNameField string `bson:"middle_name_field"`

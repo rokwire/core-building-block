@@ -17,8 +17,8 @@ func accountFromStorage(item account, appOrg model.ApplicationOrganization) mode
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 	return model.Account{ID: id, AppOrg: appOrg, Permissions: permissions,
-		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile,
-		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs,
+		Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountsFromStorage(items []account, appOrg model.ApplicationOrganization) []model.Account {
@@ -47,7 +47,8 @@ func accountToStorage(item *model.Account) *account {
 	dateUpdated := item.DateUpdated
 
 	return &account{ID: id, AppOrgID: appOrgID, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
-		MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+		MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, Devices: devices,
+		DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountDevicesFromStorage(item account) []model.Device {
