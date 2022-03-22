@@ -297,6 +297,64 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 	return nil
 }
 
+func (app *application) admAddAccountsToGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error {
+	//validate
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from admin assigner")
+	}
+	if len(groupID) == 0 {
+		return errors.New("no group id")
+	}
+	if len(accountIDs) == 0 {
+		return errors.New("no accounts ids")
+	}
+
+	//find accounts
+	accounts, err := app.storage.FindAccountsByAccountID(appID, orgID, accountIDs)
+	if err != nil {
+		return errors.Wrap("error finding account", err)
+	}
+	if len(accounts) != len(accountIDs) {
+		return errors.New("bad accounts ids params")
+	}
+
+	//find group
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return errors.Wrap("error getting app org on add accounts to group", err)
+	}
+	group, err := app.storage.FindAppOrgGroup(groupID, appOrg.ID)
+	if err != nil {
+		return errors.Wrap("error finding app org group", err)
+	}
+	if group == nil {
+		return errors.New("bad group id params")
+	}
+
+	//check assigners
+	err = group.CheckAssigners(assignerPermissions)
+	if err != nil {
+		return errors.Wrap("not allowed", err)
+	}
+
+	//ensure that the accounts do not have the group before adding
+	for _, account := range accounts {
+		gr := account.GetGroup(groupID)
+		if gr != nil {
+			return errors.Newf("account %s already is a member of the group", account.ID)
+		}
+	}
+
+	//insert accounts to group
+	accountGroup := model.AccountGroup{Group: *group, Active: true, AdminSet: true}
+	err = app.storage.InsertAccountsGroup(accountGroup, accounts)
+	if err != nil {
+		return errors.Wrapf("error inserting accounts group - %s", err, groupID)
+	}
+
+	return nil
+}
+
 func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgRole, error) {
 	//1. get application organization entity
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
