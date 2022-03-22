@@ -509,6 +509,12 @@ type ServiceScope struct {
 	Scope       string  `json:"scope"`
 }
 
+// AdminReqAddApplicationAccountGroup defines model for _admin_req_add-application_account_group.
+type AdminReqAddApplicationAccountGroup struct {
+	AccountIds []string `json:"account_ids"`
+	GroupId    string   `json:"group_id"`
+}
+
 // AdminReqAppToken defines model for _admin_req_app-token.
 type AdminReqAppToken struct {
 	Token string `json:"token"`
@@ -1027,6 +1033,9 @@ type GetAdminApplicationAccountsParams struct {
 	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
 }
 
+// PutAdminApplicationGroupAccountsAddJSONBody defines parameters for PutAdminApplicationGroupAccountsAdd.
+type PutAdminApplicationGroupAccountsAddJSONBody AdminReqAddApplicationAccountGroup
+
 // PostAdminApplicationGroupsJSONBody defines parameters for PostAdminApplicationGroups.
 type PostAdminApplicationGroupsJSONBody AdminReqCreateApplicationGroup
 
@@ -1328,6 +1337,9 @@ type PutAdminApplicationAccountPermissionsGrantJSONRequestBody PutAdminApplicati
 
 // PutAdminApplicationAccountRolesGrantJSONRequestBody defines body for PutAdminApplicationAccountRolesGrant for application/json ContentType.
 type PutAdminApplicationAccountRolesGrantJSONRequestBody PutAdminApplicationAccountRolesGrantJSONBody
+
+// PutAdminApplicationGroupAccountsAddJSONRequestBody defines body for PutAdminApplicationGroupAccountsAdd for application/json ContentType.
+type PutAdminApplicationGroupAccountsAddJSONRequestBody PutAdminApplicationGroupAccountsAddJSONBody
 
 // PostAdminApplicationGroupsJSONRequestBody defines body for PostAdminApplicationGroups for application/json ContentType.
 type PostAdminApplicationGroupsJSONRequestBody PostAdminApplicationGroupsJSONBody
