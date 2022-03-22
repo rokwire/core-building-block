@@ -112,7 +112,7 @@ type Storage interface {
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
-	InsertAccountsGroup(group model.AccountGroup, account []model.Account) error
+	InsertAccountsGroup(group model.AccountGroup, accounts []model.Account) error
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 

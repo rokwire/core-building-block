@@ -345,13 +345,12 @@ func (app *application) admAddAccountsToGroup(appID string, orgID string, groupI
 		}
 	}
 
-	//TODO wrong
-	/*
-		//insert accounts to group
-		err = app.storage.InsertGroupAccounts(groupID, accounts)
-		if err != nil {
-			return err
-		} */
+	//insert accounts to group
+	accountGroup := model.AccountGroup{Group: *group, Active: true, AdminSet: true}
+	err = app.storage.InsertAccountsGroup(accountGroup, accounts)
+	if err != nil {
+		return errors.Wrapf("error inserting accounts group - %s", err, groupID)
+	}
 
 	return nil
 }
