@@ -1131,6 +1131,26 @@ func (sa *Adapter) InsertAccountRoles(accountID string, appOrgID string, roles [
 	return nil
 }
 
+//InsertAccountsGroup inserts accounts into a group
+func (sa *Adapter) InsertAccountsGroup(group model.AccountGroup, account []model.Account) error {
+	/*	filter := bson.D{primitive.E{Key: "_id", Value: groupID}}
+		update := bson.D{
+			primitive.E{Key: "$push", Value: bson.D{
+				primitive.E{Key: "accounts", Value: bson.M{"$each": account}},
+			}},
+		}
+
+		res, err := sa.db.applicationsOrganizationsGroups.UpdateOne(filter, update, nil)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+		}
+		if res.ModifiedCount != 1 {
+			return errors.ErrorAction(logutils.ActionUpdate, model.TypeAppOrgGroup, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		} */
+
+	return nil
+}
+
 //UpdateAccountRoles updates the account roles
 func (sa *Adapter) UpdateAccountRoles(accountID string, roles []model.AccountRole) error {
 	stgRoles := accountRolesToStorage(roles)
@@ -1870,26 +1890,6 @@ func (sa *Adapter) InsertAppOrgGroup(item model.AppOrgGroup) error {
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgGroup, nil, err)
 	}
-	return nil
-}
-
-//InsertGroupAccounts inserts account in group
-func (sa *Adapter) InsertGroupAccounts(groupID string, account []model.Account) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: groupID}}
-	update := bson.D{
-		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "accounts", Value: bson.M{"$each": account}},
-		}},
-	}
-
-	res, err := sa.db.applicationsOrganizationsGroups.UpdateOne(filter, update, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-	}
-	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAppOrgGroup, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
-	}
-
 	return nil
 }
 
