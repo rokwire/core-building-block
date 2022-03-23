@@ -113,6 +113,8 @@ paths:
     $ref: "./resources/admin/application/groupsID.yaml"
   /admin/application/group/accounts/add:
     $ref: "./resources/admin/application/group/accounts/add.yaml"
+  /admin/application/group/accounts/remove:
+    $ref: "./resources/admin/application/group/accounts/remove.yaml"
   /admin/application/permissions:
     $ref: "./resources/admin/application/permissions.yaml"
   /admin/application/roles:
