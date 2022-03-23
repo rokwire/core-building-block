@@ -1141,9 +1141,10 @@ func (sa *Adapter) InsertAccountsGroup(group model.AccountGroup, accounts []mode
 	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountsIDs}}}
 
 	//update
+	storageGroup := accountGroupToStorage(group)
 	update := bson.D{
 		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "groups", Value: group},
+			primitive.E{Key: "groups", Value: storageGroup},
 		}},
 	}
 
