@@ -920,13 +920,13 @@ func (_m *Storage) RegisterStorageListener(storageListener storage.Listener) {
 	_m.Called(storageListener)
 }
 
-// RemoveAccountsGroup provides a mock function with given fields: group, accounts
-func (_m *Storage) RemoveAccountsGroup(group model.AccountGroup, accounts []model.Account) error {
-	ret := _m.Called(group, accounts)
+// RemoveAccountsGroup provides a mock function with given fields: groupID, accounts
+func (_m *Storage) RemoveAccountsGroup(groupID string, accounts []model.Account) error {
+	ret := _m.Called(groupID, accounts)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(model.AccountGroup, []model.Account) error); ok {
-		r0 = rf(group, accounts)
+	if rf, ok := ret.Get(0).(func(string, []model.Account) error); ok {
+		r0 = rf(groupID, accounts)
 	} else {
 		r0 = ret.Error(0)
 	}
