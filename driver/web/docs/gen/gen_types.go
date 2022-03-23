@@ -509,8 +509,8 @@ type ServiceScope struct {
 	Scope       string  `json:"scope"`
 }
 
-// AdminReqAddApplicationAccountGroup defines model for _admin_req_add-application_account_group.
-type AdminReqAddApplicationAccountGroup struct {
+// AdminReqAddAccountsToGroup defines model for _admin_req_add-accounts-to-group.
+type AdminReqAddAccountsToGroup struct {
 	AccountIds []string `json:"account_ids"`
 	GroupId    string   `json:"group_id"`
 }
@@ -544,6 +544,12 @@ type AdminReqGrantPermissions struct {
 type AdminReqGrantRolesToAccount struct {
 	AccountId string   `json:"account_id"`
 	RoleIds   []string `json:"role_ids"`
+}
+
+// AdminReqRemoveAccountFromGroup defines model for _admin_req_remove-account-from-group.
+type AdminReqRemoveAccountFromGroup struct {
+	AccountIds []string `json:"account_ids"`
+	GroupId    string   `json:"group_id"`
 }
 
 // ServicesReqAccountAuthTypeLink defines model for _services_req_account_auth-type-link.
@@ -1034,7 +1040,10 @@ type GetAdminApplicationAccountsParams struct {
 }
 
 // PutAdminApplicationGroupAccountsAddJSONBody defines parameters for PutAdminApplicationGroupAccountsAdd.
-type PutAdminApplicationGroupAccountsAddJSONBody AdminReqAddApplicationAccountGroup
+type PutAdminApplicationGroupAccountsAddJSONBody AdminReqAddAccountsToGroup
+
+// DeleteAdminApplicationGroupAccountsRemoveJSONBody defines parameters for DeleteAdminApplicationGroupAccountsRemove.
+type DeleteAdminApplicationGroupAccountsRemoveJSONBody AdminReqRemoveAccountFromGroup
 
 // PostAdminApplicationGroupsJSONBody defines parameters for PostAdminApplicationGroups.
 type PostAdminApplicationGroupsJSONBody AdminReqCreateApplicationGroup
@@ -1362,6 +1371,9 @@ type PutAdminApplicationAccountRolesGrantJSONRequestBody PutAdminApplicationAcco
 
 // PutAdminApplicationGroupAccountsAddJSONRequestBody defines body for PutAdminApplicationGroupAccountsAdd for application/json ContentType.
 type PutAdminApplicationGroupAccountsAddJSONRequestBody PutAdminApplicationGroupAccountsAddJSONBody
+
+// DeleteAdminApplicationGroupAccountsRemoveJSONRequestBody defines body for DeleteAdminApplicationGroupAccountsRemove for application/json ContentType.
+type DeleteAdminApplicationGroupAccountsRemoveJSONRequestBody DeleteAdminApplicationGroupAccountsRemoveJSONBody
 
 // PostAdminApplicationGroupsJSONRequestBody defines body for PostAdminApplicationGroups for application/json ContentType.
 type PostAdminApplicationGroupsJSONRequestBody PostAdminApplicationGroupsJSONBody
