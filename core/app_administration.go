@@ -406,7 +406,7 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 	//remove the accounts from the group
 	err = app.storage.RemoveAccountsGroup(group.ID, accounts)
 	if err != nil {
-		return errors.Wrapf("error inserting accounts group - %s", err, groupID)
+		return errors.Wrapf("error removing accounts from a group - %s", err, groupID)
 	}
 
 	return nil

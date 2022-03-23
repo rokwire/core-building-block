@@ -1158,51 +1158,24 @@ func (sa *Adapter) InsertAccountsGroup(group model.AccountGroup, accounts []mode
 
 //RemoveAccountsGroup removes accounts from a group
 func (sa *Adapter) RemoveAccountsGroup(groupID string, accounts []model.Account) error {
-	/*if len(accountIDs) == 0 {
-		return nil
+	//prepare filter
+	accountsIDs := make([]string, len(accounts))
+	for i, cur := range accounts {
+		accountsIDs[i] = cur.ID
+	}
+	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountsIDs}}}
+	//update
+	update := bson.D{
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "groups", Value: bson.M{"group._id": groupID}},
+		}},
 	}
 
-	filter := bson.D{primitive.E{Key: "_id", Value: groupID}}
-	var groupResult []appOrgGroup
-	err := sa.db.applicationsOrganizationsGroups.Find(filter, &groupResult, nil)
+	res, err := sa.db.accounts.UpdateMany(filter, update, nil)
 	if err != nil {
-		return err
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
-
-	if len(groupResult) == 0 {
-		return errors.Newf("no account with this account ID: %v", groupID)
-	}
-
-	group := groupResult[0]
-
-	accounts := group.Accounts
-
-	for i, currentGroup := range groupResult {
-		if currentGroup.ID == groupID {
-			var newAccount []account
-			for _, account := range accounts {
-				if account.ID != accountIDs[0] {
-
-					newAccount = append(newAccount, account)
-				}
-			}
-			group.Accounts = newAccount
-			groupResult[i] = currentGroup
-		}
-	}
-
-	accountFilter := bson.M{"_id": groupID}
-	opts := options.Replace().SetUpsert(true)
-	if context != nil {
-		err = sa.db.applicationsOrganizationsGroups.ReplaceOneWithContext(context, accountFilter, group, opts)
-	} else {
-		err = sa.db.applicationsOrganizationsGroups.ReplaceOne(accountFilter, group, opts)
-	}
-
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSave, "group", &logutils.FieldArgs{"group_id": group.ID}, nil)
-	} */
-
+	sa.logger.Infof("modified %d accounts with removed group", res.ModifiedCount)
 	return nil
 }
 
