@@ -1926,7 +1926,7 @@ func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 }
 
 func (sa *Adapter) RemoveGroupAccounts(context TransactionContext, accountIDs []string, groupID string) error {
-	if len(accountIDs) == 0 {
+	/*if len(accountIDs) == 0 {
 		return nil
 	}
 
@@ -1969,7 +1969,7 @@ func (sa *Adapter) RemoveGroupAccounts(context TransactionContext, accountIDs []
 
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSave, "group", &logutils.FieldArgs{"group_id": group.ID}, nil)
-	}
+	} */
 
 	return nil
 }
