@@ -114,7 +114,7 @@ type Storage interface {
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
 	InsertAccountsGroup(group model.AccountGroup, accounts []model.Account) error
-	RemoveAccountsGroup(group model.AccountGroup, accounts []model.Account) error
+	RemoveAccountsGroup(groupID string, accounts []model.Account) error
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 

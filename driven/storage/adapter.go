@@ -1156,8 +1156,8 @@ func (sa *Adapter) InsertAccountsGroup(group model.AccountGroup, accounts []mode
 	return nil
 }
 
-//RemoveAccountsGroup removes acconts from a group
-func (sa *Adapter) RemoveAccountsGroup(model.AccountGroup, []model.Account) error {
+//RemoveAccountsGroup removes accounts from a group
+func (sa *Adapter) RemoveAccountsGroup(groupID string, accounts []model.Account) error {
 	/*if len(accountIDs) == 0 {
 		return nil
 	}
