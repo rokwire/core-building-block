@@ -1447,9 +1447,10 @@ func (sa *Adapter) InsertAccountsGroup(group model.AccountGroup, accounts []mode
 	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountsIDs}}}
 
 	//update
+	storageGroup := accountGroupToStorage(group)
 	update := bson.D{
 		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "groups", Value: group},
+			primitive.E{Key: "groups", Value: storageGroup},
 		}},
 	}
 
@@ -1458,6 +1459,29 @@ func (sa *Adapter) InsertAccountsGroup(group model.AccountGroup, accounts []mode
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
 	sa.logger.Infof("modified %d accounts with added group", res.ModifiedCount)
+	return nil
+}
+
+//RemoveAccountsGroup removes accounts from a group
+func (sa *Adapter) RemoveAccountsGroup(groupID string, accounts []model.Account) error {
+	//prepare filter
+	accountsIDs := make([]string, len(accounts))
+	for i, cur := range accounts {
+		accountsIDs[i] = cur.ID
+	}
+	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountsIDs}}}
+	//update
+	update := bson.D{
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "groups", Value: bson.M{"group._id": groupID}},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateMany(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
+	}
+	sa.logger.Infof("modified %d accounts with removed group", res.ModifiedCount)
 	return nil
 }
 
