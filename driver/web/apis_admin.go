@@ -566,6 +566,28 @@ func (h AdminApisHandler) addAccountsToGroup(l *logs.Log, r *http.Request, claim
 	return l.HttpResponseSuccess()
 }
 
+//removeAccountsFromGroup removes accounts from a given group
+func (h AdminApisHandler) removeAccountsFromGroup(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.AdminReqRemoveAccountFromGroup
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgGroup, nil, err, http.StatusBadRequest, true)
+	}
+
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	err = h.coreAPIs.Administration.AdmRemoveGroupAccounts(claims.AppID, claims.OrgID, requestData.GroupId, requestData.AccountIds, assignerPermissions, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 //adminCreateApplicationRole creates an application role
 func (h AdminApisHandler) adminCreateApplicationRole(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
@@ -683,28 +705,6 @@ func (h AdminApisHandler) grantAccountRoles(l *logs.Log, r *http.Request, claims
 
 	assignerPermissions := strings.Split(claims.Permissions, ",")
 	err = h.coreAPIs.Administration.AdmGrantAccountRoles(claims.AppID, claims.OrgID, requestData.AccountId, requestData.RoleIds, assignerPermissions, l)
-	if err != nil {
-		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HttpResponseSuccess()
-}
-
-//revokeAccountRoles removes role from a given account
-func (h AdminApisHandler) removeGroupAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.AdminReqRemoveAccountFromGroup
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgGroup, nil, err, http.StatusBadRequest, true)
-	}
-
-	assignerPermissions := strings.Split(claims.Permissions, ",")
-	err = h.coreAPIs.Administration.AdmRemoveGroupAccounts(claims.AppID, claims.OrgID, requestData.GroupId, requestData.AccountIds, assignerPermissions, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}
