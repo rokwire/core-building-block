@@ -1,9 +1,11 @@
 delete:
   tags:
   - Admin
-  summary: Delete account from group
+  summary: Delete accounts from group
   description: |
-    Deletes an existing account from group
+    Deletes an existing accounts from group
+
+    **Auth:** Requires auth token with `all_admin_core` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -11,7 +13,7 @@ delete:
     content:
       application/json:
         schema:
-          $ref: "../../../../schemas/apis/admin/application/groups/remove-account/request/Request.yaml"
+          $ref: "../../../../../schemas/apis/admin/application/group/accounts/remove/request/Request.yaml"
   responses:
     200:
       description: Success

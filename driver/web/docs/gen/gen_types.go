@@ -527,8 +527,8 @@ type ServiceScope struct {
 	Scope       string  `json:"scope"`
 }
 
-// AdminReqAddApplicationAccountGroup defines model for _admin_req_add-application_account_group.
-type AdminReqAddApplicationAccountGroup struct {
+// AdminReqAddAccountsToGroup defines model for _admin_req_add-accounts-to-group.
+type AdminReqAddAccountsToGroup struct {
 	AccountIds []string `json:"account_ids"`
 	GroupId    string   `json:"group_id"`
 }
@@ -1089,7 +1089,7 @@ type GetAdminApplicationAccountsParams struct {
 }
 
 // PutAdminApplicationGroupAccountsAddJSONBody defines parameters for PutAdminApplicationGroupAccountsAdd.
-type PutAdminApplicationGroupAccountsAddJSONBody AdminReqAddApplicationAccountGroup
+type PutAdminApplicationGroupAccountsAddJSONBody AdminReqAddAccountsToGroup
 
 // DeleteAdminApplicationGroupAccountsRemoveJSONBody defines parameters for DeleteAdminApplicationGroupAccountsRemove.
 type DeleteAdminApplicationGroupAccountsRemoveJSONBody AdminReqRemoveAccountFromGroup

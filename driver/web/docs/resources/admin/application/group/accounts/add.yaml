@@ -1,9 +1,9 @@
 put:
   tags:
   - Admin
-  summary: Add account to a group
+  summary: Add accounts to a group
   description: |
-    Add account 
+    Add accounts 
   
     **Auth:** Requires auth token with `all_admin_core` permission
   security:

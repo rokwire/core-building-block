@@ -1995,21 +1995,24 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/group/accounts/remove:
-    delete:
+  /admin/application/group/accounts/add:
+    put:
       tags:
         - Admin
-      summary: Delete account from group
+      summary: Add accounts to a group
       description: |
-        Deletes an existing account from group
+        Add accounts 
+
+        **Auth:** Requires auth token with `all_admin_core` permission
       security:
         - bearerAuth: []
       requestBody:
-        description: account ID for removing
+        description: Roles
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_admin_req_remove-account-from-group'
+              $ref: '#/components/schemas/_admin_req_add-accounts-to-group'
+        required: true
       responses:
         '200':
           description: Success
@@ -2024,24 +2027,23 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/group/accounts/add:
-    put:
+  /admin/application/group/accounts/remove:
+    delete:
       tags:
         - Admin
-      summary: Add account to a group
+      summary: Delete accounts from group
       description: |
-        Add account 
+        Deletes an existing accounts from group
 
         **Auth:** Requires auth token with `all_admin_core` permission
       security:
         - bearerAuth: []
       requestBody:
-        description: Roles
+        description: account ID for removing
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_admin_req_add-application_account_group'
-        required: true
+              $ref: '#/components/schemas/_admin_req_remove-account-from-group'
       responses:
         '200':
           description: Success
@@ -4804,7 +4806,7 @@ components:
           type: array
           items:
             type: string
-    _admin_req_remove-account-from-group:
+    _admin_req_add-accounts-to-group:
       required:
         - group_id
         - account_ids
@@ -4816,7 +4818,7 @@ components:
           type: array
           items:
             type: string
-    _admin_req_add-application_account_group:
+    _admin_req_remove-account-from-group:
       required:
         - group_id
         - account_ids
