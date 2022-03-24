@@ -15,6 +15,7 @@ import (
 const (
 	typeCheckPermission               logutils.MessageActionType = "checking permission"
 	typeCheckScope                    logutils.MessageActionType = "checking scope"
+	typeCheckSystemAuthRequestToken   logutils.MessageActionType = "checking system auth"
 	typeCheckAdminAuthRequestToken    logutils.MessageActionType = "checking admin auth"
 	typeCheckServicesAuthRequestToken logutils.MessageActionType = "checking services auth"
 )
@@ -248,16 +249,15 @@ func (auth *SystemAuth) start() {
 func (auth *SystemAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
 	claims, err := auth.tokenAuth.CheckRequestTokens(req)
 	if err != nil {
-		return http.StatusUnauthorized, nil, errors.WrapErrorAction(typeCheckAdminAuthRequestToken, logutils.TypeToken, nil, err)
+		return http.StatusUnauthorized, nil, errors.WrapErrorAction(typeCheckSystemAuthRequestToken, logutils.TypeToken, nil, err)
 	}
 
 	if !claims.Admin {
 		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
 	}
 
-	// TODO: use system flag in token claims rather than orgID matching
-	if claims.OrgID != auth.coreAPIs.SystemOrgID {
-		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "org id", logutils.StringArgs(claims.OrgID))
+	if !claims.System {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
 	}
 
 	return http.StatusOK, claims, nil
@@ -272,7 +272,7 @@ func newSystemAuth(coreAPIs *core.APIs, authService *authservice.AuthService, lo
 	systemTokenAuth, err := tokenauth.NewTokenAuth(true, authService, systemPermissionAuth, nil)
 
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for adminAuth", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for systemAuth", nil, err)
 	}
 
 	auth := SystemAuth{coreAPIs: coreAPIs, tokenAuth: systemTokenAuth, logger: logger}
