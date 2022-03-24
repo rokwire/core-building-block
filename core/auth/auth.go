@@ -1071,7 +1071,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType.Code, externalIDs, nil, anonymous, true, appOrg.Application.Admin, false, idUUID.String())
+	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType.Code, externalIDs, nil, anonymous, true, appOrg.Application.Admin, false, false, idUUID.String())
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -1683,34 +1683,40 @@ func (a *Auth) constructServiceAccount(accountID string, name string, appID *str
 		Permissions: permissionList, Scopes: scopeList, FirstParty: firstParty}, nil
 }
 
-func (a *Auth) checkServiceAccountCreds(r *http.Request, params map[string]interface{}, l *logs.Log) (*string, []model.ServiceAccount, string, error) {
+func (a *Auth) checkServiceAccountCreds(r *http.Request, params map[string]interface{}, l *logs.Log) ([]model.ServiceAccount, string, error) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return nil, nil, "", errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
+		return nil, "", errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
 	}
 	defer r.Body.Close()
 
 	var requestData model.ServiceAccountTokenRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		return nil, nil, "", errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("service account access token request"), nil, err)
+		return nil, "", errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("service account access token request"), nil, err)
 	}
 
 	serviceAuthType, err := a.getServiceAuthTypeImpl(requestData.AuthType)
 	if err != nil {
 		l.Info("error getting service auth type on get service access token")
-		return nil, nil, "", errors.WrapErrorAction("error getting service auth type on get service access token", "", nil, err)
+		return nil, "", errors.WrapErrorAction("error getting service auth type on get service access token", "", nil, err)
 	}
 
 	if params == nil {
-		params = map[string]interface{}{"account_id": requestData.AccountID, "app_id": requestData.AppID, "org_id": requestData.OrgID}
+		params = map[string]interface{}{
+			"account_id": requestData.AccountID,
+			"app_id":     requestData.AppID,
+			"org_id":     requestData.OrgID,
+		}
 	}
-	message, accounts, err := serviceAuthType.checkCredentials(r, data, requestData.Creds, params)
+	params["first_party"] = strings.HasPrefix(r.URL.Path, "/core/bbs")
+
+	accounts, err := serviceAuthType.checkCredentials(r, data, requestData.Creds, params)
 	if err != nil {
-		return message, nil, "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
+		return nil, "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}
 
-	return nil, accounts, requestData.AuthType, nil
+	return accounts, requestData.AuthType, nil
 }
 
 func (a *Auth) registerAuthType(name string, auth authType) error {
@@ -1879,12 +1885,12 @@ func (a *Auth) getScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 	aud := strings.Join(services, ",")
 	scope := strings.Join(scopeStrings, " ")
 
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, claims.ExternalIDs, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false, claims.Service, claims.SessionID)
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, claims.ExternalIDs, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false, claims.Service, claims.FirstParty, claims.SessionID)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
 func (a *Auth) getStandardClaims(sub string, uid string, name string, email string, phone string, aud string, orgID string, appID string,
-	authType string, externalIDs map[string]string, exp *int64, anonymous bool, authenticated bool, admin bool, service bool, sessionID string) tokenauth.Claims {
+	authType string, externalIDs map[string]string, exp *int64, anonymous bool, authenticated bool, admin bool, service bool, firstParty bool, sessionID string) tokenauth.Claims {
 	return tokenauth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			Audience:  aud,
@@ -1893,7 +1899,8 @@ func (a *Auth) getStandardClaims(sub string, uid string, name string, email stri
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    a.host,
 		}, OrgID: orgID, AppID: appID, AuthType: authType, UID: uid, Name: name, Email: email, Phone: phone,
-		ExternalIDs: externalIDs, Anonymous: anonymous, Authenticated: authenticated, Admin: admin, Service: service, SessionID: sessionID,
+		ExternalIDs: externalIDs, Anonymous: anonymous, Authenticated: authenticated, Admin: admin, Service: service,
+		FirstParty: firstParty, SessionID: sessionID,
 	}
 }
 

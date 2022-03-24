@@ -354,7 +354,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, loginSession.ExternalIDs, nil, anonymous, false, loginSession.AppOrg.Application.Admin, false, loginSession.ID)
+	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, loginSession.ExternalIDs, nil, anonymous, false, loginSession.AppOrg.Application.Admin, false, false, loginSession.ID)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
@@ -944,11 +944,11 @@ func (a *Auth) RemoveMFAType(accountID string, identifier string, mfaType string
 }
 
 //GetServiceAccountParams returns a list of app, org pairs a service account has access to
-func (a *Auth) GetServiceAccountParams(accountID string, r *http.Request, l *logs.Log) (*string, []model.AppOrgPair, error) {
+func (a *Auth) GetServiceAccountParams(accountID string, r *http.Request, l *logs.Log) ([]model.AppOrgPair, error) {
 	params := map[string]interface{}{"account_id": accountID}
-	message, accounts, _, err := a.checkServiceAccountCreds(r, params, l)
+	accounts, _, err := a.checkServiceAccountCreds(r, params, l)
 	if err != nil {
-		return message, nil, errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}
 
 	appOrgPairs := make([]model.AppOrgPair, len(accounts))
@@ -964,14 +964,14 @@ func (a *Auth) GetServiceAccountParams(accountID string, r *http.Request, l *log
 		appOrgPairs[i] = model.AppOrgPair{AppID: appID, OrgID: orgID}
 	}
 
-	return nil, appOrgPairs, nil
+	return appOrgPairs, nil
 }
 
 //GetServiceAccessToken returns an access token for a non-human client
-func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, string, error) {
-	message, accounts, authType, err := a.checkServiceAccountCreds(r, nil, l)
+func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (string, error) {
+	accounts, authType, err := a.checkServiceAccountCreds(r, nil, l)
 	if err != nil {
-		return message, "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}
 
 	permissions := accounts[0].GetPermissionNames()
@@ -985,12 +985,12 @@ func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (*string, str
 		orgID = accounts[0].Organization.ID
 	}
 
-	claims := a.getStandardClaims(accounts[0].AccountID, "", "", "", "", rokwireTokenAud, orgID, appID, authType, nil, nil, false, true, false, true, "")
+	claims := a.getStandardClaims(accounts[0].AccountID, "", "", "", "", rokwireTokenAud, orgID, appID, authType, nil, nil, false, true, false, true, accounts[0].FirstParty, "")
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, ","))
 	if err != nil {
-		return nil, "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
-	return nil, accessToken, nil
+	return accessToken, nil
 }
 
 //GetServiceAccounts gets all service accounts matching a search
@@ -1231,7 +1231,7 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log)
 	}
 
 	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, claims.OrgID, appID, claims.AuthType,
-		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, claims.Service, claims.SessionID)
+		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, claims.Service, claims.FirstParty, claims.SessionID)
 	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }
 

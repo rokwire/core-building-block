@@ -32,54 +32,48 @@ type staticTokenServiceAuthImpl struct {
 	serviceAuthType string
 }
 
-func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, _ []byte, creds interface{}, params map[string]interface{}) (*string, []model.ServiceAccount, error) {
+func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, _ []byte, creds interface{}, params map[string]interface{}) ([]model.ServiceAccount, error) {
 	credsData, err := json.Marshal(creds)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionMarshal, TypeStaticTokenCreds, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, TypeStaticTokenCreds, nil, err)
 	}
 
 	var tokenCreds staticTokenCreds
 	err = json.Unmarshal([]byte(credsData), &tokenCreds)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, TypeStaticTokenCreds, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, TypeStaticTokenCreds, nil, err)
 	}
 
 	validate := validator.New()
 	err = validate.Struct(tokenCreds)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, TypeStaticTokenCreds, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, TypeStaticTokenCreds, nil, err).SetStatus(utils.ErrorStatusInvalid)
 	}
 
 	encodedToken := s.hashAndEncodeToken(tokenCreds.Token)
 
 	accounts, err := s.auth.storage.FindServiceAccounts(params)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 	}
 	if len(accounts) == 0 {
-		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil).SetStatus(utils.ErrorStatusNotFound)
 	}
 
-	accountCreds := accounts[0].Credentials
-	if len(accountCreds) == 0 {
-		message := "service account credentials missing"
-		return &message, nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
-	}
-
-	for _, credential := range accountCreds {
+	for _, credential := range accounts[0].Credentials {
 		if credential.Type == ServiceAuthTypeStaticToken && credential.Secrets != nil {
 			storedToken, ok := credential.Secrets["token"].(string)
 			if !ok {
-				return nil, nil, errors.WrapErrorAction(logutils.ActionParse, TypeStaticTokenCreds, nil, err)
+				s.auth.logger.ErrorWithFields("error asserting stored static token is string", logutils.Fields{"token": credential.Secrets["token"]})
+				continue
 			}
 			if encodedToken == storedToken {
-				return nil, accounts, nil
+				return accounts, nil
 			}
 		}
 	}
 
-	message := "invalid token"
-	return &message, nil, errors.ErrorData(logutils.StatusInvalid, "service account token", nil)
+	return nil, errors.ErrorData(logutils.StatusInvalid, "service account token", nil).SetStatus(utils.ErrorStatusInvalid)
 }
 
 func (s *staticTokenServiceAuthImpl) addCredentials(creds *model.ServiceAccountCredential) (map[string]interface{}, error) {

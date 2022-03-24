@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -64,12 +65,13 @@ func (h TPSApisHandler) getServiceAccountParams(l *logs.Log, r *http.Request, cl
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	message, accountParams, err := h.coreAPIs.Auth.GetServiceAccountParams(accountID, r, l)
+	accountParams, err := h.coreAPIs.Auth.GetServiceAccountParams(accountID, r, l)
 	if err != nil {
-		if message != nil {
-			return l.HttpResponseError(*message, err, http.StatusUnauthorized, true)
+		loggingErr, ok := err.(*errors.Error)
+		if ok && loggingErr.Status() != "" {
+			return l.HttpResponseError("Error getting access token", err, http.StatusUnauthorized, true)
 		}
-		return l.HttpResponseError("Error getting service account params", err, http.StatusInternalServerError, true)
+		return l.HttpResponseError("Error getting access token", err, http.StatusInternalServerError, true)
 	}
 
 	appOrgPairs := appOrgPairListToDef(accountParams)
@@ -83,10 +85,11 @@ func (h TPSApisHandler) getServiceAccountParams(l *logs.Log, r *http.Request, cl
 }
 
 func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	message, accessToken, err := h.coreAPIs.Auth.GetServiceAccessToken(r, l)
+	accessToken, err := h.coreAPIs.Auth.GetServiceAccessToken(r, l)
 	if err != nil {
-		if message != nil {
-			return l.HttpResponseError(*message, err, http.StatusUnauthorized, true)
+		loggingErr, ok := err.(*errors.Error)
+		if ok && loggingErr.Status() != "" {
+			return l.HttpResponseError("Error getting access token", err, http.StatusUnauthorized, true)
 		}
 		return l.HttpResponseError("Error getting access token", err, http.StatusInternalServerError, true)
 	}

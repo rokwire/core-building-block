@@ -2,6 +2,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/utils"
 	"net/http"
 	"strings"
 	"time"
@@ -25,37 +26,38 @@ type signatureServiceAuthImpl struct {
 	serviceAuthType string
 }
 
-func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, body []byte, _ interface{}, params map[string]interface{}) (*string, []model.ServiceAccount, error) {
+func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, body []byte, _ interface{}, params map[string]interface{}) ([]model.ServiceAccount, error) {
 	accounts, err := s.auth.storage.FindServiceAccounts(params)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 	}
 	if len(accounts) == 0 {
-		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil).SetStatus(utils.ErrorStatusNotFound)
 	}
 
 	for _, credential := range accounts[0].Credentials {
 		if credential.Type == ServiceAuthTypeSignature && credential.Params != nil {
 			pubKeyPem, ok := credential.Params["pub_key"].(string)
-			if !ok || pubKeyPem == "" {
+			if !ok {
+				s.auth.logger.ErrorWithFields("error asserting stored public key is string", logutils.Fields{"pub_key": credential.Params["pub_key"]})
 				continue
 			}
 			pubKeyPem = strings.ReplaceAll(pubKeyPem, `\n`, "\n")
 
 			pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(pubKeyPem))
 			if err != nil {
-				return nil, nil, errors.WrapErrorAction(logutils.ActionParse, "service account public key", nil, err)
+				s.auth.logger.ErrorWithFields("error parsing stored public key", logutils.Fields{"pub_key": credential.Params["pub_key"]})
+				continue
 			}
 
 			err = s.auth.SignatureAuth.CheckRequestSignature(r, body, pubKey)
 			if err == nil {
-				return nil, accounts, nil
+				return accounts, nil
 			}
 		}
 	}
 
-	message := "invalid signature"
-	return &message, nil, errors.WrapErrorAction(logutils.ActionValidate, "request signature", nil, err)
+	return nil, errors.WrapErrorAction(logutils.ActionValidate, "request signature", nil, err).SetStatus(utils.ErrorStatusInvalid)
 }
 
 func (s *signatureServiceAuthImpl) addCredentials(creds *model.ServiceAccountCredential) (map[string]interface{}, error) {
