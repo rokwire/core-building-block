@@ -12,6 +12,7 @@ type application struct {
 	MultiTenant      bool `bson:"multi_tenant"`
 	SharedIdentities bool `bson:"shared_identities"`
 	Admin            bool `bson:"admin"`
+	System           bool `bson:"system"`
 
 	Types []applicationType `bson:"types"`
 

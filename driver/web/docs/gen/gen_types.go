@@ -278,10 +278,12 @@ type ApplicationConfig struct {
 
 // ApplicationFields defines model for ApplicationFields.
 type ApplicationFields struct {
+	Admin            *bool  `json:"admin,omitempty"`
 	Id               string `json:"id"`
 	MultiTenant      *bool  `json:"multi_tenant,omitempty"`
 	Name             string `json:"name"`
 	SharedIdentities *bool  `json:"shared_identities,omitempty"`
+	System           *bool  `json:"system,omitempty"`
 }
 
 // ApplicationOrganization defines model for ApplicationOrganization.
@@ -934,17 +936,16 @@ type SystemReqCreateOrganizationType string
 
 // SystemReqCreateApplication defines model for _system_req_create_Application.
 type SystemReqCreateApplication struct {
+	Admin            bool `json:"admin"`
 	ApplicationTypes *[]struct {
 		Identifier string    `json:"identifier"`
 		Name       *string   `json:"name,omitempty"`
 		Versions   *[]string `json:"versions,omitempty"`
 	} `json:"application_types,omitempty"`
-
-	// The maximum allowed duration (in hours) of a user's login session for this application
-	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
-	MultiTenant             bool   `json:"multi_tenant"`
-	Name                    string `json:"name"`
-	SharedIdentities        bool   `json:"shared_identities"`
+	MultiTenant      bool   `json:"multi_tenant"`
+	Name             string `json:"name"`
+	SharedIdentities bool   `json:"shared_identities"`
+	System           bool   `json:"system"`
 }
 
 // SystemReqCreateApplicationConfigRequest defines model for _system_req_create_ApplicationConfig_Request.

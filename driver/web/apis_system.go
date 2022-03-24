@@ -568,13 +568,28 @@ func (h SystemApisHandler) createApplication(l *logs.Log, r *http.Request, claim
 
 	name := requestData.Name
 	multiTenant := requestData.MultiTenant
+	admin := requestData.Admin
+	system := requestData.System
 	sharedIdentities := requestData.SharedIdentities
-	maxLoginSessionDuration := requestData.MaxLoginSessionDuration
+	applicationTypes := requestData.ApplicationTypes
 
-	var appType Def.ApplicationTypeFields
-	applicationType := []string{}
-	applicationType = append(applicationType, appType.Identifier, *appType.Name)
-	_, err = h.coreAPIs.System.SysCreateApplication(name, multiTenant, sharedIdentities, maxLoginSessionDuration, appType.Identifier, *appType.Name, *appType.Versions)
+	appTypes := make([]model.ApplicationType, 0)
+	if applicationTypes != nil {
+		for _, at := range *applicationTypes {
+			versions := make([]model.Version, 0)
+			if at.Versions != nil {
+				for _, v := range *at.Versions {
+					versionNumbers := model.VersionNumbersFromString(v)
+					if versionNumbers != nil {
+						versions = append(versions, model.Version{VersionNumbers: *versionNumbers})
+					}
+				}
+			}
+			appTypes = append(appTypes, model.ApplicationType{Identifier: at.Identifier, Name: *at.Name, Versions: versions})
+		}
+	}
+
+	_, err = h.coreAPIs.System.SysCreateApplication(name, multiTenant, admin, system, sharedIdentities, appTypes)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}

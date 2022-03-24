@@ -3853,6 +3853,10 @@ components:
           type: string
         multi_tenant:
           type: boolean
+        admin:
+          type: boolean
+        system:
+          type: boolean
         shared_identities:
           type: boolean
     ApplicationType:
@@ -5261,6 +5265,8 @@ components:
       required:
         - name
         - multi_tenant
+        - admin
+        - system
         - shared_identities
       type: object
       properties:
@@ -5268,11 +5274,12 @@ components:
           type: string
         multi_tenant:
           type: boolean
+        admin:
+          type: boolean
+        system:
+          type: boolean
         shared_identities:
           type: boolean
-        max_login_session_duration:
-          description: The maximum allowed duration (in hours) of a user's login session for this application
-          type: integer
         application_types:
           type: array
           items:

@@ -124,18 +124,20 @@ func (app *application) sysGetApplication(ID string) (*model.Application, error)
 	return appAdm, nil
 }
 
-func (app *application) sysCreateApplication(name string, multiTenant bool, sharedIdentities bool, maxLoginSessionDuration *int, identifier string, nameInType string, versions []string) (*model.Application, error) {
-	/*now := time.Now()
+func (app *application) sysCreateApplication(name string, multiTenant bool, admin bool, system bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error) {
+	now := time.Now()
+
+	// application
 
 	applicationID, _ := uuid.NewUUID()
-	application := model.Application{ID: applicationID.String(), Name: name, MultiTenant: multiTenant, SharedIdentities: sharedIdentities,
-		DateCreated: now}
+	application := model.Application{ID: applicationID.String(), Name: name, MultiTenant: multiTenant, Admin: admin, System: system, SharedIdentities: sharedIdentities,
+		Types: appTypes, DateCreated: now}
 
 	insertedApplication, err := app.storage.InsertApplication(application)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-	}*/
-	return /*insertedApplication,*/ nil, nil
+	}
+	return insertedApplication, nil
 }
 
 func (app *application) sysGetApplications() ([]model.Application, error) {

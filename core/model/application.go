@@ -157,6 +157,7 @@ type Application struct {
 
 	MultiTenant bool //safer community is multi-tenant
 	Admin       bool //is this an admin app?
+	System      bool //is this a system app?
 
 	//if to share identities between the organizations within the appication or to use e separate identities for every organization
 	//if true - the user uses shared profile between all organizations within the application
