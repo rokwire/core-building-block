@@ -242,6 +242,29 @@ func (_m *Storage) FindAccounts(appID string, orgID string, accountID *string, a
 	return r0, r1
 }
 
+// FindAccountsByAccountID provides a mock function with given fields: appID, orgID, accountIDs
+func (_m *Storage) FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error) {
+	ret := _m.Called(appID, orgID, accountIDs)
+
+	var r0 []model.Account
+	if rf, ok := ret.Get(0).(func(string, string, []string) []model.Account); ok {
+		r0 = rf(appID, orgID, accountIDs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Account)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string, []string) error); ok {
+		r1 = rf(appID, orgID, accountIDs)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindAppConfigByID provides a mock function with given fields: ID
 func (_m *Storage) FindAppConfigByID(ID string) (*model.ApplicationConfig, error) {
 	ret := _m.Called(ID)
@@ -661,6 +684,20 @@ func (_m *Storage) InsertAccountRoles(accountID string, appOrgID string, roles [
 	return r0
 }
 
+// InsertAccountsGroup provides a mock function with given fields: group, accounts
+func (_m *Storage) InsertAccountsGroup(group model.AccountGroup, accounts []model.Account) error {
+	ret := _m.Called(group, accounts)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.AccountGroup, []model.Account) error); ok {
+		r0 = rf(group, accounts)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // InsertAppConfig provides a mock function with given fields: item
 func (_m *Storage) InsertAppConfig(item model.ApplicationConfig) (*model.ApplicationConfig, error) {
 	ret := _m.Called(item)
@@ -895,6 +932,20 @@ func (_m *Storage) PerformTransaction(_a0 func(storage.TransactionContext) error
 // RegisterStorageListener provides a mock function with given fields: storageListener
 func (_m *Storage) RegisterStorageListener(storageListener storage.Listener) {
 	_m.Called(storageListener)
+}
+
+// RemoveAccountsGroup provides a mock function with given fields: groupID, accounts
+func (_m *Storage) RemoveAccountsGroup(groupID string, accounts []model.Account) error {
+	ret := _m.Called(groupID, accounts)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, []model.Account) error); ok {
+		r0 = rf(groupID, accounts)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // SaveDevice provides a mock function with given fields: context, device
