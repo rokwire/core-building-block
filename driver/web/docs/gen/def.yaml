@@ -2172,6 +2172,8 @@ paths:
       summary: Grant permissions to role
       description: |
         Grant permissions to role
+
+        **Auth:** Requires auth token with 'all_admin_core' permission
       security:
         - bearerAuth: []
       requestBody:

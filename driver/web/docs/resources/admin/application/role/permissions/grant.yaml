@@ -4,6 +4,8 @@ put:
   summary: Grant permissions to role
   description: |
     Grant permissions to role
+
+    **Auth:** Requires auth token with 'all_admin_core' permission
   security:
     - bearerAuth: []
   requestBody:
@@ -11,7 +13,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../../../../schemas/apis/admin/application/roles/grant-permissions/request/Request.yaml"
+          $ref: "../../../../../schemas/apis/admin/application/role/permissions/grant/request/Request.yaml"
     required: true
   responses:
     200:
