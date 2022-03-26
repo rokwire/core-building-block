@@ -23,6 +23,8 @@ type APIs struct {
 	Auth auth.APIs //expose to the drivers auth
 
 	app *application
+
+	logger *logs.Logger
 }
 
 //Start starts the core part of the application
@@ -30,7 +32,10 @@ func (c *APIs) Start() {
 	c.app.start()
 	c.Auth.Start()
 
-	c.storeSystemData()
+	err := c.storeSystemData()
+	if err != nil {
+		c.logger.Fatalf("error storing system data: %s", err.Error())
+	}
 }
 
 //AddListener adds application listener
@@ -51,10 +56,8 @@ func (c *APIs) storeSystemData() error {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 		}
 		if systemOrg == nil {
-			configID, _ := uuid.NewUUID()
-			id, _ := uuid.NewUUID()
-			systemOrgConfig := model.OrganizationConfig{ID: configID.String(), DateCreated: time.Now().UTC()}
-			newSystemOrg := model.Organization{ID: id.String(), Name: "System", Type: "small", Config: systemOrgConfig, DateCreated: time.Now().UTC()}
+			systemOrgConfig := model.OrganizationConfig{ID: uuid.NewString(), DateCreated: time.Now().UTC()}
+			newSystemOrg := model.Organization{ID: uuid.NewString(), Name: "System", Type: "small", System: true, Config: systemOrgConfig, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertOrganization(newSystemOrg)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganization, nil, err)
@@ -70,11 +73,9 @@ func (c *APIs) storeSystemData() error {
 		}
 		if len(systemAdminAppOrgs) == 0 {
 			//insert system admin app
-			appTypeID, _ := uuid.NewUUID()
-			appID, _ := uuid.NewUUID()
-			newAndroidAppType := model.ApplicationType{ID: appTypeID.String(), Identifier: "edu.illinois.rokwire.admin.android",
+			newAndroidAppType := model.ApplicationType{ID: uuid.NewString(), Identifier: "edu.illinois.rokwire.admin.android",
 				Name: "System Admin Android", Versions: nil /*[]string{"1.0.0"}*/}
-			newSystemAdminApp := model.Application{ID: appID.String(), Name: "System Admin Application", MultiTenant: false, Admin: true,
+			newSystemAdminApp := model.Application{ID: uuid.NewString(), Name: "System Admin Application", MultiTenant: false, Admin: true,
 				SharedIdentities: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplication(newSystemAdminApp)
 			if err != nil {
@@ -107,6 +108,27 @@ func (c *APIs) storeSystemData() error {
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplicationOrganization, nil, err)
 			}
+
+			systemAdminAppOrgs = append(systemAdminAppOrgs, newSystemAdminAppOrg)
+		}
+
+		//3. insert api key if it doesn't exist
+		for _, appOrg := range systemAdminAppOrgs {
+			apiKeys, err := c.app.storage.FindApplicationAPIKeys(appOrg.Application.ID)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, nil, err)
+			}
+
+			if len(apiKeys) == 0 {
+				//TODO: use env vars for these instead of generating?
+				newAPIKey := model.APIKey{ID: uuid.NewString(), AppID: appOrg.Application.ID, Key: uuid.NewString()}
+				_, err := c.app.storage.InsertAPIKey(newAPIKey)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAPIKey, nil, err)
+				}
+
+				c.logger.Infof("new API key %s generated for app_id %s", newAPIKey.Key, newAPIKey.AppID)
+			}
 		}
 
 		return nil
@@ -116,7 +138,7 @@ func (c *APIs) storeSystemData() error {
 }
 
 //NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
 	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners, auth: auth}
@@ -130,7 +152,7 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 
 	//+ auth
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
-		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application}
+		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application, logger: logger}
 
 	return &coreAPIs
 }

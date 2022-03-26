@@ -178,6 +178,9 @@ type Storage interface {
 	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 	InsertApplicationOrganization(applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
+
+	FindApplicationAPIKeys(appID string) ([]model.APIKey, error)
+	InsertAPIKey(apiKey model.APIKey) (*model.APIKey, error)
 }
 
 //StorageListener listenes for change data storage events

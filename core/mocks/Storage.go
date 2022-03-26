@@ -449,6 +449,29 @@ func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	return r0, r1
 }
 
+// FindApplicationAPIKeys provides a mock function with given fields: appID
+func (_m *Storage) FindApplicationAPIKeys(appID string) ([]model.APIKey, error) {
+	ret := _m.Called(appID)
+
+	var r0 []model.APIKey
+	if rf, ok := ret.Get(0).(func(string) []model.APIKey); ok {
+		r0 = rf(appID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.APIKey)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(appID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindApplicationOrganization provides a mock function with given fields: appID, orgID
 func (_m *Storage) FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
 	ret := _m.Called(appID, orgID)
@@ -741,6 +764,29 @@ func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func() error); ok {
 		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// InsertAPIKey provides a mock function with given fields: apiKey
+func (_m *Storage) InsertAPIKey(apiKey model.APIKey) (*model.APIKey, error) {
+	ret := _m.Called(apiKey)
+
+	var r0 *model.APIKey
+	if rf, ok := ret.Get(0).(func(model.APIKey) *model.APIKey); ok {
+		r0 = rf(apiKey)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.APIKey)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(model.APIKey) error); ok {
+		r1 = rf(apiKey)
 	} else {
 		r1 = ret.Error(1)
 	}
