@@ -2,6 +2,7 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -713,59 +714,49 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 }
 
 func (app *application) admGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
-
+	//check if there is data
 	if len(assignerPermissions) == 0 {
 		return errors.New("no permissions from admin assigner")
 	}
 	if len(permissionNames) == 0 {
-		return errors.New("no permissions names")
+		return errors.New("no permissions for granting")
 	}
 
-	//1. find the application organization
+	//verify that the role is for the current app/org
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
-		return errors.Wrap("there is no applicationo organization with that IDs", err)
+		return errors.Wrap("there is no application organization with that IDs", err)
 	}
-
-	//2. find the application organization role entity
 	role, err := app.storage.FindAppOrgRole(roleID, appOrg.ID)
 	if err != nil {
-		return errors.Wrap("there is no roles with that ID", err)
+		return errors.Wrap("error finding account on permissions granting", err)
 	}
+	log.Println(role)
+	/*
 
-	//3. check role assigners
-	err = role.CheckAssigners(assignerPermissions)
-	if err != nil {
-		return errors.Wrapf("error checking assigners for %s role", err, role.Name)
-	}
 
-	//4. check permission assigners
-	for _, pcheck := range role.Permissions {
-		err = pcheck.CheckAssigners(assignerPermissions)
+		//verify that the role do not have any of the permissions which are supposed to be granted
+
+
+		//find permissions
+
+
+		//check if authorized
+
+
+		//update role if authorized
+
+		   } */
+
+	//TODO
+
+	/*
+		//7.insert permission into a role
+		err = app.storage.InsertRolePermissions(nil, roleID, permissions)
 		if err != nil {
-			return errors.Wrapf("error checking permission assigners", err)
+			return errors.Wrap("error inserting permissions to roles", err)
 		}
-	}
 
-	//5. find the permissions
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
-	if err != nil {
-		return errors.Wrapf("the are no permissions with those permission names", err)
-	}
-
-	//6. check the assigner
-	for _, permission := range permissions {
-		err = permission.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.Wrapf("error checking permission assigners", err)
-		}
-	}
-
-	//7.insert permission into a role
-	err = app.storage.InsertRolePermissions(nil, roleID, permissions)
-	if err != nil {
-		return errors.Wrap("error inserting permissions to roles", err)
-	}
-
+	*/
 	return nil
 }
