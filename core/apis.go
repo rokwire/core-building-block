@@ -50,7 +50,21 @@ func (c *APIs) GetVersion() string {
 
 func (c *APIs) storeSystemData() error {
 	transaction := func(context storage.TransactionContext) error {
-		//1. insert system org if doesn't exist
+		//1. insert email auth type if doesn't exist
+		emailAuthType, err := c.app.storage.FindAuthType(auth.AuthTypeEmail)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
+		}
+		if emailAuthType == nil {
+			emailAuthType = &model.AuthType{ID: uuid.NewString(), Code: auth.AuthTypeEmail, Description: "Authentication type relying on email and password",
+				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false}
+			_, err = c.app.storage.InsertAuthType(*emailAuthType)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, nil, err)
+			}
+		}
+
+		//2. insert system org if doesn't exist
 		systemOrg, err := c.app.storage.FindSystemOrganization()
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
@@ -66,7 +80,7 @@ func (c *APIs) storeSystemData() error {
 			systemOrg = &newSystemOrg
 		}
 
-		//2. insert system app and appOrg if they don't exist
+		//3. insert system app and appOrg if they don't exist
 		systemAdminAppOrgs, err := c.app.storage.FindApplicationsOrganizationsByOrgID(systemOrg.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
@@ -85,12 +99,6 @@ func (c *APIs) storeSystemData() error {
 			systemAdminApp := &newSystemAdminApp
 
 			//insert system admin apporg
-			id, _ := uuid.NewUUID()
-
-			emailAuthType, err := c.app.storage.FindAuthType("email")
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
-			}
 			emailSupport := []struct {
 				AuthTypeID string                 `bson:"auth_type_id"`
 				Params     map[string]interface{} `bson:"params"`
@@ -102,7 +110,7 @@ func (c *APIs) storeSystemData() error {
 				supportedAuthTypes[i] = model.AuthTypesSupport{AppTypeID: appType.ID, SupportedAuthTypes: emailSupport}
 			}
 
-			newSystemAdminAppOrg := model.ApplicationOrganization{ID: id.String(), Application: *systemAdminApp, Organization: *systemOrg,
+			newSystemAdminAppOrg := model.ApplicationOrganization{ID: uuid.NewString(), Application: *systemAdminApp, Organization: *systemOrg,
 				SupportedAuthTypes: supportedAuthTypes, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplicationOrganization(newSystemAdminAppOrg)
 			if err != nil {
@@ -112,7 +120,7 @@ func (c *APIs) storeSystemData() error {
 			systemAdminAppOrgs = append(systemAdminAppOrgs, newSystemAdminAppOrg)
 		}
 
-		//3. insert api key if it doesn't exist
+		//4. insert api key if doesn't exist
 		for _, appOrg := range systemAdminAppOrgs {
 			apiKeys, err := c.app.storage.FindApplicationAPIKeys(appOrg.Application.ID)
 			if err != nil {
@@ -120,7 +128,7 @@ func (c *APIs) storeSystemData() error {
 			}
 
 			if len(apiKeys) == 0 {
-				//TODO: use env vars for these instead of generating?
+				//TODO: use env vars for api keys instead of generating
 				newAPIKey := model.APIKey{ID: uuid.NewString(), AppID: appOrg.Application.ID, Key: uuid.NewString()}
 				_, err := c.app.storage.InsertAPIKey(newAPIKey)
 				if err != nil {

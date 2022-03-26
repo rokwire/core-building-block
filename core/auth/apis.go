@@ -91,7 +91,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	var state string
 
 	//get the auth type implementation for the auth type
-	if authType.IsAnonymous {
+	if authType.IsAnonymous && !admin {
 		anonymous = true
 
 		anonymousID := ""
@@ -102,7 +102,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		sub = anonymousID
 
 	} else if authType.IsExternal {
-		accountAuthType, responseParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+		accountAuthType, responseParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 
@@ -110,7 +110,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 
 		sub = accountAuthType.Account.ID
 	} else {
-		message, accountAuthType, mfaTypes, externalIDs, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, l)
+		message, accountAuthType, mfaTypes, externalIDs, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
