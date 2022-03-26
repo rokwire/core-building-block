@@ -1054,7 +1054,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType.Code, externalIDs, nil, anonymous, true, appOrg.Application.Admin, appOrg.Application.System, idUUID.String())
+	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType.Code, externalIDs, nil, anonymous, true, appOrg.Application.Admin, appOrg.Organization.System, idUUID.String())
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)

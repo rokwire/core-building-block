@@ -2,6 +2,7 @@ required:
   - id
   - name
   - multi_tenant
+  - admin
   - shared_identities
 type: object
 properties:
@@ -13,8 +14,6 @@ properties:
   multi_tenant:
     type: boolean
   admin:
-    type: boolean
-  system:
     type: boolean
   shared_identities:
     type: boolean

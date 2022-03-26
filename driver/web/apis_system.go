@@ -569,7 +569,6 @@ func (h SystemApisHandler) createApplication(l *logs.Log, r *http.Request, claim
 	name := requestData.Name
 	multiTenant := requestData.MultiTenant
 	admin := requestData.Admin
-	system := requestData.System
 	sharedIdentities := requestData.SharedIdentities
 	applicationTypes := requestData.ApplicationTypes
 
@@ -589,7 +588,7 @@ func (h SystemApisHandler) createApplication(l *logs.Log, r *http.Request, claim
 		}
 	}
 
-	_, err = h.coreAPIs.System.SysCreateApplication(name, multiTenant, admin, system, sharedIdentities, appTypes)
+	_, err = h.coreAPIs.System.SysCreateApplication(name, multiTenant, admin, sharedIdentities, appTypes)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}

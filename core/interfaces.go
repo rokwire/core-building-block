@@ -77,7 +77,7 @@ type System interface {
 	SysGetOrganization(ID string) (*model.Organization, error)
 	SysUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 
-	SysCreateApplication(name string, multiTenant bool, admin bool, system bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error)
+	SysCreateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error)
 	SysGetApplication(ID string) (*model.Application, error)
 	SysGetApplications() ([]model.Application, error)
 
@@ -155,6 +155,7 @@ type Storage interface {
 	InsertOrganization(organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 	FindOrganization(id string) (*model.Organization, error)
+	FindSystemOrganization() (*model.Organization, error)
 	FindOrganizations() ([]model.Organization, error)
 
 	InsertApplication(application model.Application) (*model.Application, error)

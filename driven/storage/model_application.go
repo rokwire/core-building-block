@@ -12,7 +12,6 @@ type application struct {
 	MultiTenant      bool `bson:"multi_tenant"`
 	SharedIdentities bool `bson:"shared_identities"`
 	Admin            bool `bson:"admin"`
-	System           bool `bson:"system"`
 
 	Types []applicationType `bson:"types"`
 
@@ -52,6 +51,8 @@ type organization struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 	Type string `bson:"type"`
+
+	System bool `bson:"system"`
 
 	Config model.OrganizationConfig `bson:"config"`
 

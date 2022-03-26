@@ -12,7 +12,7 @@ func applicationFromStorage(item *application) model.Application {
 
 	types := applicationTypesFromStorage(item.Types)
 	return model.Application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant,
-		SharedIdentities: item.SharedIdentities, Admin: item.Admin, System: item.System,
+		SharedIdentities: item.SharedIdentities, Admin: item.Admin,
 		Types: types, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
@@ -210,7 +210,7 @@ func organizationFromStorage(item *organization) model.Organization {
 		return model.Organization{}
 	}
 
-	return model.Organization{ID: item.ID, Name: item.Name, Type: item.Type,
+	return model.Organization{ID: item.ID, Name: item.Name, Type: item.Type, System: item.System,
 		Config: item.Config, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
@@ -231,8 +231,8 @@ func organizationToStorage(item *model.Organization) *organization {
 		return nil
 	}
 
-	return &organization{ID: item.ID, Name: item.Name, Type: item.Type, Config: item.Config,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return &organization{ID: item.ID, Name: item.Name, Type: item.Type, System: item.System,
+		Config: item.Config, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 //ApplicationOrganization
@@ -269,6 +269,6 @@ func applicationToStorage(item *model.Application) *application {
 	applicationTypes := applicationTypesToStorage(item.Types)
 
 	return &application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant,
-		SharedIdentities: item.SharedIdentities, Admin: item.Admin, System: item.System,
+		SharedIdentities: item.SharedIdentities, Admin: item.Admin,
 		Types: applicationTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

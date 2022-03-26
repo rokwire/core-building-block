@@ -12,7 +12,5 @@ properties:
     type: boolean
   admin:
     type: boolean
-  system:
-    type: boolean
   shared_identities:
     type: boolean

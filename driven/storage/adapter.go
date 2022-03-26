@@ -2281,6 +2281,25 @@ func (sa *Adapter) FindOrganization(id string) (*model.Organization, error) {
 	return sa.getCachedOrganization(id)
 }
 
+//FindSystemOrganization finds the system organization (only one)
+func (sa *Adapter) FindSystemOrganization() (*model.Organization, error) {
+	//TODO: utilize organizations cache
+	filter := bson.D{primitive.E{Key: "system", Value: true}}
+
+	var orgs []organization
+	err := sa.db.organizations.Find(filter, &orgs, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"system": true}, err)
+	}
+
+	if len(orgs) == 0 {
+		return nil, nil
+	}
+
+	systemOrg := organizationFromStorage(&orgs[0])
+	return &systemOrg, nil
+}
+
 //FindOrganizations finds all organizations
 func (sa *Adapter) FindOrganizations() ([]model.Organization, error) {
 	return sa.getCachedOrganizations()
@@ -2523,7 +2542,7 @@ func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.A
 	var applicationsOrgResult []applicationOrganization
 	err := sa.db.applicationsOrganizations.Find(applicationsOrgFilter, &applicationsOrgResult, nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": orgID}, err)
 	}
 
 	if len(applicationsOrgResult) == 0 {

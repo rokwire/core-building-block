@@ -283,7 +283,6 @@ type ApplicationFields struct {
 	MultiTenant      *bool  `json:"multi_tenant,omitempty"`
 	Name             string `json:"name"`
 	SharedIdentities *bool  `json:"shared_identities,omitempty"`
-	System           *bool  `json:"system,omitempty"`
 }
 
 // ApplicationOrganization defines model for ApplicationOrganization.
@@ -945,7 +944,6 @@ type SystemReqCreateApplication struct {
 	MultiTenant      bool   `json:"multi_tenant"`
 	Name             string `json:"name"`
 	SharedIdentities bool   `json:"shared_identities"`
-	System           bool   `json:"system"`
 }
 
 // SystemReqCreateApplicationConfigRequest defines model for _system_req_create_ApplicationConfig_Request.

@@ -22,9 +22,6 @@ type APIs struct {
 
 	Auth auth.APIs //expose to the drivers auth
 
-	SystemOrgID      string
-	SystemAdminAppID string
-
 	app *application
 }
 
@@ -48,34 +45,16 @@ func (c *APIs) GetVersion() string {
 
 func (c *APIs) storeSystemData() error {
 	transaction := func(context storage.TransactionContext) error {
-		//1. insert system admin app if doesn't exist
-		systemAdminApp, err := c.app.storage.FindApplication(c.SystemAdminAppID)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-		}
-		if systemAdminApp == nil {
-			id, _ := uuid.NewUUID()
-			newAndroidAppType := model.ApplicationType{ID: id.String(), Identifier: "edu.illinois.rokwire.admin.android",
-				Name: "System Admin Android", Versions: nil /*[]string{"1.0.0"}*/}
-			newSystemAdminApp := model.Application{ID: c.SystemAdminAppID, Name: "System Admin Application", MultiTenant: false, Admin: true,
-				System: true, SharedIdentities: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
-			_, err = c.app.storage.InsertApplication(newSystemAdminApp)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, nil, err)
-			}
-
-			systemAdminApp = &newSystemAdminApp
-		}
-
-		//2. insert system org if doesn't exist
-		systemOrg, err := c.app.storage.FindOrganization(c.SystemOrgID)
+		//1. insert system org if doesn't exist
+		systemOrg, err := c.app.storage.FindSystemOrganization()
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 		}
 		if systemOrg == nil {
+			configID, _ := uuid.NewUUID()
 			id, _ := uuid.NewUUID()
-			systemOrgConfig := model.OrganizationConfig{ID: id.String(), DateCreated: time.Now().UTC()}
-			newSystemOrg := model.Organization{ID: c.SystemOrgID, Name: "System", Type: "small", Config: systemOrgConfig, DateCreated: time.Now().UTC()}
+			systemOrgConfig := model.OrganizationConfig{ID: configID.String(), DateCreated: time.Now().UTC()}
+			newSystemOrg := model.Organization{ID: id.String(), Name: "System", Type: "small", Config: systemOrgConfig, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertOrganization(newSystemOrg)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganization, nil, err)
@@ -84,12 +63,27 @@ func (c *APIs) storeSystemData() error {
 			systemOrg = &newSystemOrg
 		}
 
-		//3. insert system appOrg if doesn't exist
-		systemAdminAppOrg, err := c.app.storage.FindApplicationOrganization(c.SystemAdminAppID, c.SystemOrgID)
+		//2. insert system app and appOrg if they don't exist
+		systemAdminAppOrgs, err := c.app.storage.FindApplicationsOrganizationsByOrgID(systemOrg.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 		}
-		if systemAdminAppOrg == nil {
+		if len(systemAdminAppOrgs) == 0 {
+			//insert system admin app
+			appTypeID, _ := uuid.NewUUID()
+			appID, _ := uuid.NewUUID()
+			newAndroidAppType := model.ApplicationType{ID: appTypeID.String(), Identifier: "edu.illinois.rokwire.admin.android",
+				Name: "System Admin Android", Versions: nil /*[]string{"1.0.0"}*/}
+			newSystemAdminApp := model.Application{ID: appID.String(), Name: "System Admin Application", MultiTenant: false, Admin: true,
+				SharedIdentities: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
+			_, err = c.app.storage.InsertApplication(newSystemAdminApp)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, nil, err)
+			}
+
+			systemAdminApp := &newSystemAdminApp
+
+			//insert system admin apporg
 			id, _ := uuid.NewUUID()
 
 			emailAuthType, err := c.app.storage.FindAuthType("email")
@@ -122,7 +116,7 @@ func (c *APIs) storeSystemData() error {
 }
 
 //NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, systemAdminAppID string, systemOrgID string) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
 	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners, auth: auth}
@@ -136,8 +130,7 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 
 	//+ auth
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
-		BBs: bbsImpl, System: systemImpl, Auth: auth, SystemAdminAppID: systemAdminAppID, SystemOrgID: systemOrgID,
-		app: &application}
+		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application}
 
 	return &coreAPIs
 }
@@ -330,8 +323,8 @@ func (s *systemImpl) SysGetOrganization(ID string) (*model.Organization, error) 
 	return s.app.sysGetOrganization(ID)
 }
 
-func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, admin bool, system bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error) {
-	return s.app.sysCreateApplication(name, multiTenant, admin, system, sharedIdentities, appTypes)
+func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error) {
+	return s.app.sysCreateApplication(name, multiTenant, admin, sharedIdentities, appTypes)
 }
 
 func (s *systemImpl) SysGetApplication(ID string) (*model.Application, error) {
