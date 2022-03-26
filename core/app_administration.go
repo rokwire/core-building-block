@@ -2,7 +2,6 @@ package core
 
 import (
 	"core-building-block/core/model"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -731,32 +730,41 @@ func (app *application) admGrantPermissionsToRole(appID string, orgID string, ro
 	if err != nil {
 		return errors.Wrap("error finding account on permissions granting", err)
 	}
-	log.Println(role)
-	/*
 
+	//verify that the role do not have any of the permissions which are supposed to be granted
+	for _, current := range permissionNames {
+		hasP := role.GetPermissionNamed(current)
+		if hasP != nil {
+			l.Infof("trying to double grant %s for %s", current, roleID)
+			return errors.Newf("role %s already has %s granted", roleID, current)
+		}
+	}
 
-		//verify that the role do not have any of the permissions which are supposed to be granted
+	//find permissions
+	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	if err != nil {
+		return err
+	}
+	if len(permissions) == 0 {
+		return errors.Newf("no permissions found for names: %v", permissionNames)
+	}
 
-
-		//find permissions
-
-
-		//check if authorized
-
-
-		//update role if authorized
-
-		   } */
-
+	//verify that the permissions are for the current app/org
 	//TODO
 
-	/*
-		//7.insert permission into a role
-		err = app.storage.InsertRolePermissions(nil, roleID, permissions)
+	//check if authorized
+	for _, permission := range permissions {
+		err = permission.CheckAssigners(assignerPermissions)
 		if err != nil {
-			return errors.Wrap("error inserting permissions to roles", err)
+			return errors.Wrapf("error checking permission assigners", err)
 		}
+	}
 
-	*/
+	//insert permission into a role
+	err = app.storage.InsertRolePermissions(nil, roleID, permissions)
+	if err != nil {
+		return errors.Wrap("error inserting permissions to roles", err)
+	}
+
 	return nil
 }
