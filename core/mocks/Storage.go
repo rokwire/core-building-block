@@ -449,13 +449,13 @@ func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	return r0, r1
 }
 
-// FindApplicationAPIKeys provides a mock function with given fields: appID
-func (_m *Storage) FindApplicationAPIKeys(appID string) ([]model.APIKey, error) {
-	ret := _m.Called(appID)
+// FindApplicationAPIKeys provides a mock function with given fields: context, appID
+func (_m *Storage) FindApplicationAPIKeys(context storage.TransactionContext, appID string) ([]model.APIKey, error) {
+	ret := _m.Called(context, appID)
 
 	var r0 []model.APIKey
-	if rf, ok := ret.Get(0).(func(string) []model.APIKey); ok {
-		r0 = rf(appID)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) []model.APIKey); ok {
+		r0 = rf(context, appID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.APIKey)
@@ -463,8 +463,8 @@ func (_m *Storage) FindApplicationAPIKeys(appID string) ([]model.APIKey, error) 
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(appID)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
+		r1 = rf(context, appID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -541,13 +541,13 @@ func (_m *Storage) FindApplications() ([]model.Application, error) {
 	return r0, r1
 }
 
-// FindApplicationsOrganizationsByOrgID provides a mock function with given fields: orgID
-func (_m *Storage) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error) {
-	ret := _m.Called(orgID)
+// FindApplicationsOrganizationsByOrgID provides a mock function with given fields: context, orgID
+func (_m *Storage) FindApplicationsOrganizationsByOrgID(context storage.TransactionContext, orgID string) ([]model.ApplicationOrganization, error) {
+	ret := _m.Called(context, orgID)
 
 	var r0 []model.ApplicationOrganization
-	if rf, ok := ret.Get(0).(func(string) []model.ApplicationOrganization); ok {
-		r0 = rf(orgID)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) []model.ApplicationOrganization); ok {
+		r0 = rf(context, orgID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.ApplicationOrganization)
@@ -555,8 +555,8 @@ func (_m *Storage) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.A
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(orgID)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
+		r1 = rf(context, orgID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -725,13 +725,13 @@ func (_m *Storage) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Per
 	return r0, r1
 }
 
-// FindSystemOrganization provides a mock function with given fields:
-func (_m *Storage) FindSystemOrganization() (*model.Organization, error) {
-	ret := _m.Called()
+// FindSystemOrganization provides a mock function with given fields: context
+func (_m *Storage) FindSystemOrganization(context storage.TransactionContext) (*model.Organization, error) {
+	ret := _m.Called(context)
 
 	var r0 *model.Organization
-	if rf, ok := ret.Get(0).(func() *model.Organization); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext) *model.Organization); ok {
+		r0 = rf(context)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Organization)
@@ -739,8 +739,8 @@ func (_m *Storage) FindSystemOrganization() (*model.Organization, error) {
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext) error); ok {
+		r1 = rf(context)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -771,13 +771,13 @@ func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	return r0, r1
 }
 
-// InsertAPIKey provides a mock function with given fields: apiKey
-func (_m *Storage) InsertAPIKey(apiKey model.APIKey) (*model.APIKey, error) {
-	ret := _m.Called(apiKey)
+// InsertAPIKey provides a mock function with given fields: context, apiKey
+func (_m *Storage) InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error) {
+	ret := _m.Called(context, apiKey)
 
 	var r0 *model.APIKey
-	if rf, ok := ret.Get(0).(func(model.APIKey) *model.APIKey); ok {
-		r0 = rf(apiKey)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.APIKey) *model.APIKey); ok {
+		r0 = rf(context, apiKey)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.APIKey)
@@ -785,8 +785,8 @@ func (_m *Storage) InsertAPIKey(apiKey model.APIKey) (*model.APIKey, error) {
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(model.APIKey) error); ok {
-		r1 = rf(apiKey)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, model.APIKey) error); ok {
+		r1 = rf(context, apiKey)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -887,13 +887,13 @@ func (_m *Storage) InsertAppOrgRole(item model.AppOrgRole) error {
 	return r0
 }
 
-// InsertApplication provides a mock function with given fields: application
-func (_m *Storage) InsertApplication(application model.Application) (*model.Application, error) {
-	ret := _m.Called(application)
+// InsertApplication provides a mock function with given fields: context, application
+func (_m *Storage) InsertApplication(context storage.TransactionContext, application model.Application) (*model.Application, error) {
+	ret := _m.Called(context, application)
 
 	var r0 *model.Application
-	if rf, ok := ret.Get(0).(func(model.Application) *model.Application); ok {
-		r0 = rf(application)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.Application) *model.Application); ok {
+		r0 = rf(context, application)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Application)
@@ -901,8 +901,8 @@ func (_m *Storage) InsertApplication(application model.Application) (*model.Appl
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(model.Application) error); ok {
-		r1 = rf(application)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, model.Application) error); ok {
+		r1 = rf(context, application)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -910,13 +910,13 @@ func (_m *Storage) InsertApplication(application model.Application) (*model.Appl
 	return r0, r1
 }
 
-// InsertApplicationOrganization provides a mock function with given fields: applicationOrganization
-func (_m *Storage) InsertApplicationOrganization(applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error) {
-	ret := _m.Called(applicationOrganization)
+// InsertApplicationOrganization provides a mock function with given fields: context, applicationOrganization
+func (_m *Storage) InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error) {
+	ret := _m.Called(context, applicationOrganization)
 
 	var r0 *model.ApplicationOrganization
-	if rf, ok := ret.Get(0).(func(model.ApplicationOrganization) *model.ApplicationOrganization); ok {
-		r0 = rf(applicationOrganization)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.ApplicationOrganization) *model.ApplicationOrganization); ok {
+		r0 = rf(context, applicationOrganization)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.ApplicationOrganization)
@@ -924,8 +924,8 @@ func (_m *Storage) InsertApplicationOrganization(applicationOrganization model.A
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(model.ApplicationOrganization) error); ok {
-		r1 = rf(applicationOrganization)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, model.ApplicationOrganization) error); ok {
+		r1 = rf(context, applicationOrganization)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -933,13 +933,13 @@ func (_m *Storage) InsertApplicationOrganization(applicationOrganization model.A
 	return r0, r1
 }
 
-// InsertAuthType provides a mock function with given fields: authType
-func (_m *Storage) InsertAuthType(authType model.AuthType) (*model.AuthType, error) {
-	ret := _m.Called(authType)
+// InsertAuthType provides a mock function with given fields: context, authType
+func (_m *Storage) InsertAuthType(context storage.TransactionContext, authType model.AuthType) (*model.AuthType, error) {
+	ret := _m.Called(context, authType)
 
 	var r0 *model.AuthType
-	if rf, ok := ret.Get(0).(func(model.AuthType) *model.AuthType); ok {
-		r0 = rf(authType)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.AuthType) *model.AuthType); ok {
+		r0 = rf(context, authType)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.AuthType)
@@ -947,8 +947,8 @@ func (_m *Storage) InsertAuthType(authType model.AuthType) (*model.AuthType, err
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(model.AuthType) error); ok {
-		r1 = rf(authType)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, model.AuthType) error); ok {
+		r1 = rf(context, authType)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -956,13 +956,13 @@ func (_m *Storage) InsertAuthType(authType model.AuthType) (*model.AuthType, err
 	return r0, r1
 }
 
-// InsertOrganization provides a mock function with given fields: organization
-func (_m *Storage) InsertOrganization(organization model.Organization) (*model.Organization, error) {
-	ret := _m.Called(organization)
+// InsertOrganization provides a mock function with given fields: context, organization
+func (_m *Storage) InsertOrganization(context storage.TransactionContext, organization model.Organization) (*model.Organization, error) {
+	ret := _m.Called(context, organization)
 
 	var r0 *model.Organization
-	if rf, ok := ret.Get(0).(func(model.Organization) *model.Organization); ok {
-		r0 = rf(organization)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.Organization) *model.Organization); ok {
+		r0 = rf(context, organization)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Organization)
@@ -970,8 +970,8 @@ func (_m *Storage) InsertOrganization(organization model.Organization) (*model.O
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(model.Organization) error); ok {
-		r1 = rf(organization)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, model.Organization) error); ok {
+		r1 = rf(context, organization)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -152,17 +152,17 @@ type Storage interface {
 	DeleteAppOrgGroup(id string) error
 	CountGroupsByRoleID(roleID string) (*int64, error)
 
-	InsertOrganization(organization model.Organization) (*model.Organization, error)
+	InsertOrganization(context storage.TransactionContext, organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 	FindOrganization(id string) (*model.Organization, error)
-	FindSystemOrganization() (*model.Organization, error)
+	FindSystemOrganization(context storage.TransactionContext) (*model.Organization, error)
 	FindOrganizations() ([]model.Organization, error)
 
-	InsertApplication(application model.Application) (*model.Application, error)
+	InsertApplication(context storage.TransactionContext, application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 
-	InsertAuthType(authType model.AuthType) (*model.AuthType, error)
+	InsertAuthType(context storage.TransactionContext, authType model.AuthType) (*model.AuthType, error)
 	FindAuthTypes() ([]model.AuthType, error)
 	UpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
 
@@ -175,12 +175,12 @@ type Storage interface {
 	UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error
 	DeleteAppConfig(ID string) error
 
-	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
+	FindApplicationsOrganizationsByOrgID(context storage.TransactionContext, orgID string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
-	InsertApplicationOrganization(applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
+	InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
 
-	FindApplicationAPIKeys(appID string) ([]model.APIKey, error)
-	InsertAPIKey(apiKey model.APIKey) (*model.APIKey, error)
+	FindApplicationAPIKeys(context storage.TransactionContext, appID string) ([]model.APIKey, error)
+	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
 }
 
 //StorageListener listenes for change data storage events

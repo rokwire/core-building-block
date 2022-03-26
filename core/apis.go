@@ -24,6 +24,9 @@ type APIs struct {
 
 	app *application
 
+	systemAccountEmail    string
+	systemAccountPassword string
+
 	logger *logs.Logger
 }
 
@@ -58,21 +61,21 @@ func (c *APIs) storeSystemData() error {
 		if emailAuthType == nil {
 			emailAuthType = &model.AuthType{ID: uuid.NewString(), Code: auth.AuthTypeEmail, Description: "Authentication type relying on email and password",
 				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false}
-			_, err = c.app.storage.InsertAuthType(*emailAuthType)
+			_, err = c.app.storage.InsertAuthType(context, *emailAuthType)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, nil, err)
 			}
 		}
 
 		//2. insert system org if doesn't exist
-		systemOrg, err := c.app.storage.FindSystemOrganization()
+		systemOrg, err := c.app.storage.FindSystemOrganization(context)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 		}
 		if systemOrg == nil {
 			systemOrgConfig := model.OrganizationConfig{ID: uuid.NewString(), DateCreated: time.Now().UTC()}
 			newSystemOrg := model.Organization{ID: uuid.NewString(), Name: "System", Type: "small", System: true, Config: systemOrgConfig, DateCreated: time.Now().UTC()}
-			_, err = c.app.storage.InsertOrganization(newSystemOrg)
+			_, err = c.app.storage.InsertOrganization(context, newSystemOrg)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganization, nil, err)
 			}
@@ -81,7 +84,7 @@ func (c *APIs) storeSystemData() error {
 		}
 
 		//3. insert system app and appOrg if they don't exist
-		systemAdminAppOrgs, err := c.app.storage.FindApplicationsOrganizationsByOrgID(systemOrg.ID)
+		systemAdminAppOrgs, err := c.app.storage.FindApplicationsOrganizationsByOrgID(context, systemOrg.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 		}
@@ -91,7 +94,7 @@ func (c *APIs) storeSystemData() error {
 				Name: "System Admin Android", Versions: nil /*[]string{"1.0.0"}*/}
 			newSystemAdminApp := model.Application{ID: uuid.NewString(), Name: "System Admin Application", MultiTenant: false, Admin: true,
 				SharedIdentities: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
-			_, err = c.app.storage.InsertApplication(newSystemAdminApp)
+			_, err = c.app.storage.InsertApplication(context, newSystemAdminApp)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, nil, err)
 			}
@@ -112,7 +115,7 @@ func (c *APIs) storeSystemData() error {
 
 			newSystemAdminAppOrg := model.ApplicationOrganization{ID: uuid.NewString(), Application: *systemAdminApp, Organization: *systemOrg,
 				SupportedAuthTypes: supportedAuthTypes, DateCreated: time.Now().UTC()}
-			_, err = c.app.storage.InsertApplicationOrganization(newSystemAdminAppOrg)
+			_, err = c.app.storage.InsertApplicationOrganization(context, newSystemAdminAppOrg)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplicationOrganization, nil, err)
 			}
@@ -122,7 +125,7 @@ func (c *APIs) storeSystemData() error {
 
 		//4. insert api key if doesn't exist
 		for _, appOrg := range systemAdminAppOrgs {
-			apiKeys, err := c.app.storage.FindApplicationAPIKeys(appOrg.Application.ID)
+			apiKeys, err := c.app.storage.FindApplicationAPIKeys(context, appOrg.Application.ID)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, nil, err)
 			}
@@ -130,7 +133,7 @@ func (c *APIs) storeSystemData() error {
 			if len(apiKeys) == 0 {
 				//TODO: use env vars for api keys instead of generating
 				newAPIKey := model.APIKey{ID: uuid.NewString(), AppID: appOrg.Application.ID, Key: uuid.NewString()}
-				_, err := c.app.storage.InsertAPIKey(newAPIKey)
+				_, err := c.app.storage.InsertAPIKey(context, newAPIKey)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAPIKey, nil, err)
 				}
@@ -139,10 +142,33 @@ func (c *APIs) storeSystemData() error {
 			}
 		}
 
+		//5. insert system account if needed
+		err = c.insertSystemAccountIfNeeded(context, *emailAuthType, model.ApplicationType{Name: "System Admin Android"}, systemAdminAppOrgs[0])
+		if err != nil {
+			return err
+		}
+
 		return nil
 	}
 
 	return c.app.storage.PerformTransaction(transaction)
+}
+
+func (c *APIs) insertSystemAccountIfNeeded(context storage.TransactionContext, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization) error {
+	systemAccounts, err := c.app.storage.FindAccounts(appOrg.Application.ID, appOrg.Organization.ID, nil, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	if len(systemAccounts) == 0 {
+		//TODO: include context in init
+		err = c.Auth.InitializeSystemAccount(authType, appType, appOrg, c.systemAccountEmail, c.systemAccountPassword, nil) //TODO: pass log object
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionInitialize, "system account", nil, err)
+		}
+	}
+
+	return nil
 }
 
 //NewCoreAPIs creates new CoreAPIs

@@ -4,6 +4,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -1094,6 +1095,59 @@ func (a *Auth) DeleteAccount(id string) error {
 	return a.storage.PerformTransaction(transaction)
 }
 
+//InitializeSystemAccount initializes the first system account
+func (a *Auth) InitializeSystemAccount(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, email string, password string, l *logs.Log) error {
+	//auth type
+	authImpl, err := a.getAuthTypeImpl(authType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+	}
+
+	profile := model.Profile{ID: uuid.NewString(), Email: email}
+
+	credentialID, _ := uuid.NewUUID()
+	credID := credentialID.String()
+
+	///apply sign up
+	creds := struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}{email, password}
+	emailCreds, err := json.Marshal(creds)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionMarshal, "initial system account email creds", nil, err)
+	}
+
+	params := struct {
+		ConfirmPassword string `json:"confirm_password"`
+	}{password}
+	emailParams, err := json.Marshal(params)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionMarshal, "initial system account email params", nil, err)
+	}
+
+	var credentialValue map[string]interface{}
+	_, credentialValue, err = authImpl.signUp(authType, appType, appOrg, string(emailCreds), string(emailParams), credentialID.String(), l)
+	if err != nil {
+		return errors.Wrap("error signing up", err)
+	}
+	if credentialValue == nil {
+		return errors.New("error creating credentials for initial system account")
+	}
+
+	//credential
+	now := time.Now()
+	credential := &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
+		AuthType: authType, DateCreated: now, DateUpdated: &now}
+
+	_, err = a.registerUser(authType, email, nil, appOrg, credential, false, nil, profile, nil, nil, nil, l)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+	}
+
+	return nil
+}
+
 //GetServiceRegistrations retrieves all service registrations
 func (a *Auth) GetServiceRegistrations(serviceIDs []string) ([]model.ServiceReg, error) {
 	return a.storage.FindServiceRegs(serviceIDs)
@@ -1149,7 +1203,7 @@ func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
 
 //GetApplicationAPIKeys finds and returns the API keys for the provided app
 func (a *Auth) GetApplicationAPIKeys(appID string) ([]model.APIKey, error) {
-	return a.storage.FindApplicationAPIKeys(appID)
+	return a.storage.FindApplicationAPIKeys(nil, appID)
 }
 
 //GetAPIKey finds and returns an API key
@@ -1161,7 +1215,7 @@ func (a *Auth) GetAPIKey(ID string) (*model.APIKey, error) {
 func (a *Auth) CreateAPIKey(apiKey model.APIKey) (*model.APIKey, error) {
 	id, _ := uuid.NewUUID()
 	apiKey.ID = id.String()
-	return a.storage.InsertAPIKey(apiKey)
+	return a.storage.InsertAPIKey(nil, apiKey)
 }
 
 //UpdateAPIKey updates an existing API key

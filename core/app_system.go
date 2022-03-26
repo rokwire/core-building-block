@@ -74,7 +74,7 @@ func (app *application) sysCreateOrganization(name string, requestType string, o
 	organizationID, _ := uuid.NewUUID()
 	organization := model.Organization{ID: organizationID.String(), Name: name, Type: requestType, Config: orgConfig, DateCreated: now}
 
-	insertedOrg, err := app.storage.InsertOrganization(organization)
+	insertedOrg, err := app.storage.InsertOrganization(nil, organization)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
@@ -133,7 +133,7 @@ func (app *application) sysCreateApplication(name string, multiTenant bool, admi
 	application := model.Application{ID: applicationID.String(), Name: name, MultiTenant: multiTenant, Admin: admin, SharedIdentities: sharedIdentities,
 		Types: appTypes, DateCreated: now}
 
-	insertedApplication, err := app.storage.InsertApplication(application)
+	insertedApplication, err := app.storage.InsertApplication(nil, application)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 	}
@@ -386,7 +386,7 @@ func (app *application) sysCreateAuthTypes(code string, description string, isEx
 		IsExternal: isExternal, IsAnonymous: isAnonymous, UseCredentials: useCredentials,
 		IgnoreMFA: ignoreMFA, Params: params}
 
-	insertedAuthType, err := app.storage.InsertAuthType(authType)
+	insertedAuthType, err := app.storage.InsertAuthType(nil, authType)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 	}

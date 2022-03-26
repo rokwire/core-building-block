@@ -313,6 +313,9 @@ type APIs interface {
 	//		account (*model.Account): account data after the operation
 	UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error)
 
+	//InitializeSystemAccount initializes the first system account
+	InitializeSystemAccount(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, email string, password string, l *logs.Log) error
+
 	//DeleteAccount deletes an account for the given id
 	DeleteAccount(id string) error
 
@@ -433,9 +436,9 @@ type Storage interface {
 
 	//APIKeys
 	LoadAPIKeys() ([]model.APIKey, error)
-	FindApplicationAPIKeys(appID string) ([]model.APIKey, error)
+	FindApplicationAPIKeys(context storage.TransactionContext, appID string) ([]model.APIKey, error)
 	FindAPIKey(ID string) (*model.APIKey, error)
-	InsertAPIKey(apiKey model.APIKey) (*model.APIKey, error)
+	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
 	UpdateAPIKey(apiKey model.APIKey) error
 	DeleteAPIKey(ID string) error
 

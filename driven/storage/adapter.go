@@ -2093,10 +2093,17 @@ func (sa *Adapter) LoadAPIKeys() ([]model.APIKey, error) {
 }
 
 //FindApplicationAPIKeys finds the api key documents from storage for an appID
-func (sa *Adapter) FindApplicationAPIKeys(appID string) ([]model.APIKey, error) {
+func (sa *Adapter) FindApplicationAPIKeys(context TransactionContext, appID string) ([]model.APIKey, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID}}
+
 	var result []model.APIKey
-	err := sa.db.apiKeys.Find(filter, &result, nil)
+	var err error
+	if context != nil {
+		err = sa.db.apiKeys.FindWithContext(context, filter, &result, nil)
+	} else {
+		err = sa.db.apiKeys.Find(filter, &result, nil)
+	}
+
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, &logutils.FieldArgs{"app_id": appID}, err)
 	}
@@ -2115,8 +2122,14 @@ func (sa *Adapter) FindAPIKey(ID string) (*model.APIKey, error) {
 }
 
 //InsertAPIKey inserts an API key
-func (sa *Adapter) InsertAPIKey(apiKey model.APIKey) (*model.APIKey, error) {
-	_, err := sa.db.apiKeys.InsertOne(apiKey)
+func (sa *Adapter) InsertAPIKey(context TransactionContext, apiKey model.APIKey) (*model.APIKey, error) {
+	var err error
+	if context != nil {
+		_, err = sa.db.apiKeys.InsertOneWithContext(context, apiKey)
+	} else {
+		_, err = sa.db.apiKeys.InsertOne(apiKey)
+	}
+
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAPIKey, &logutils.FieldArgs{"_id": apiKey.ID}, err)
 	}
@@ -2282,12 +2295,17 @@ func (sa *Adapter) FindOrganization(id string) (*model.Organization, error) {
 }
 
 //FindSystemOrganization finds the system organization (only one)
-func (sa *Adapter) FindSystemOrganization() (*model.Organization, error) {
+func (sa *Adapter) FindSystemOrganization(context TransactionContext) (*model.Organization, error) {
 	//TODO: utilize organizations cache
 	filter := bson.D{primitive.E{Key: "system", Value: true}}
 
 	var orgs []organization
-	err := sa.db.organizations.Find(filter, &orgs, nil)
+	var err error
+	if context != nil {
+		err = sa.db.organizations.FindWithContext(context, filter, &orgs, nil)
+	} else {
+		err = sa.db.organizations.Find(filter, &orgs, nil)
+	}
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"system": true}, err)
 	}
@@ -2306,9 +2324,16 @@ func (sa *Adapter) FindOrganizations() ([]model.Organization, error) {
 }
 
 //InsertOrganization inserts an organization
-func (sa *Adapter) InsertOrganization(organization model.Organization) (*model.Organization, error) {
+func (sa *Adapter) InsertOrganization(context TransactionContext, organization model.Organization) (*model.Organization, error) {
 	org := organizationToStorage(&organization)
-	_, err := sa.db.organizations.InsertOne(org)
+
+	var err error
+	if context != nil {
+		_, err = sa.db.organizations.InsertOneWithContext(context, org)
+	} else {
+		_, err = sa.db.organizations.InsertOne(org)
+	}
+
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganization, nil, err)
 	}
@@ -2383,9 +2408,16 @@ func (sa *Adapter) loadApplications() ([]model.Application, error) {
 }
 
 //InsertApplication inserts an application
-func (sa *Adapter) InsertApplication(application model.Application) (*model.Application, error) {
+func (sa *Adapter) InsertApplication(context TransactionContext, application model.Application) (*model.Application, error) {
 	app := applicationToStorage(&application)
-	_, err := sa.db.applications.InsertOne(app)
+
+	var err error
+	if context != nil {
+		_, err = sa.db.applications.InsertOneWithContext(context, app)
+	} else {
+		_, err = sa.db.applications.InsertOne(app)
+	}
+
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, nil, err)
 	}
@@ -2537,10 +2569,17 @@ func (sa *Adapter) FindApplicationType(id string) (*model.ApplicationType, error
 }
 
 //FindApplicationsOrganizationsByOrgID finds a set of applications organizations
-func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error) {
+func (sa *Adapter) FindApplicationsOrganizationsByOrgID(context TransactionContext, orgID string) ([]model.ApplicationOrganization, error) {
 	applicationsOrgFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}}
+
 	var applicationsOrgResult []applicationOrganization
-	err := sa.db.applicationsOrganizations.Find(applicationsOrgFilter, &applicationsOrgResult, nil)
+	var err error
+	if context != nil {
+		err = sa.db.applicationsOrganizations.FindWithContext(context, applicationsOrgFilter, &applicationsOrgResult, nil)
+	} else {
+		err = sa.db.applicationsOrganizations.Find(applicationsOrgFilter, &applicationsOrgResult, nil)
+	}
+
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": orgID}, err)
 	}
@@ -2615,9 +2654,16 @@ func (sa *Adapter) FindApplicationsOrganizations() ([]model.ApplicationOrganizat
 }
 
 // InsertApplicationOrganization inserts an application organization
-func (sa *Adapter) InsertApplicationOrganization(applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error) {
+func (sa *Adapter) InsertApplicationOrganization(context TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error) {
 	appOrg := applicationOrganizationToStorage(applicationOrganization)
-	_, err := sa.db.applicationsOrganizations.InsertOne(appOrg)
+
+	var err error
+	if context != nil {
+		_, err = sa.db.applicationsOrganizations.InsertOneWithContext(context, appOrg)
+	} else {
+		_, err = sa.db.applicationsOrganizations.InsertOne(appOrg)
+	}
+
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplicationOrganization, nil, err)
 	}
@@ -2689,8 +2735,14 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 }
 
 //InsertAuthType inserts an auth type
-func (sa *Adapter) InsertAuthType(authType model.AuthType) (*model.AuthType, error) {
-	_, err := sa.db.authTypes.InsertOne(authType)
+func (sa *Adapter) InsertAuthType(context TransactionContext, authType model.AuthType) (*model.AuthType, error) {
+	var err error
+	if context != nil {
+		_, err = sa.db.authTypes.InsertOneWithContext(context, authType)
+	} else {
+		_, err = sa.db.authTypes.InsertOne(authType)
+	}
+
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, nil, err)
 	}
