@@ -143,9 +143,6 @@ func (c *APIs) storeSystemData() error {
 		}
 
 		//5. insert system account if needed
-		if c.systemAccountEmail == "" || c.systemAccountPassword == "" {
-			return errors.ErrorData(logutils.StatusMissing, "initial system account email or password", nil)
-		}
 		err = c.insertSystemAccountIfNeeded(context, *emailAuthType, systemAdminAppOrgs[0])
 		if err != nil {
 			return err
@@ -164,6 +161,9 @@ func (c *APIs) insertSystemAccountIfNeeded(context storage.TransactionContext, a
 	}
 
 	if len(systemAccounts) == 0 {
+		if c.systemAccountEmail == "" || c.systemAccountPassword == "" {
+			return errors.ErrorData(logutils.StatusMissing, "initial system account email or password", nil)
+		}
 		err = c.Auth.InitializeSystemAccount(context, authType, appOrg, c.systemAccountEmail, c.systemAccountPassword, c.logger.NewRequestLog(nil))
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionInitialize, "system account", nil, err)
