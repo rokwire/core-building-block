@@ -143,7 +143,10 @@ func (c *APIs) storeSystemData() error {
 		}
 
 		//5. insert system account if needed
-		err = c.insertSystemAccountIfNeeded(context, *emailAuthType, model.ApplicationType{Name: "System Admin Android"}, systemAdminAppOrgs[0])
+		if c.systemAccountEmail == "" || c.systemAccountPassword == "" {
+			return errors.ErrorData(logutils.StatusMissing, "initial system account email or password", nil)
+		}
+		err = c.insertSystemAccountIfNeeded(context, *emailAuthType, systemAdminAppOrgs[0])
 		if err != nil {
 			return err
 		}
@@ -154,15 +157,14 @@ func (c *APIs) storeSystemData() error {
 	return c.app.storage.PerformTransaction(transaction)
 }
 
-func (c *APIs) insertSystemAccountIfNeeded(context storage.TransactionContext, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization) error {
+func (c *APIs) insertSystemAccountIfNeeded(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization) error {
 	systemAccounts, err := c.app.storage.FindAccounts(appOrg.Application.ID, appOrg.Organization.ID, nil, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
 	if len(systemAccounts) == 0 {
-		//TODO: include context in init
-		err = c.Auth.InitializeSystemAccount(authType, appType, appOrg, c.systemAccountEmail, c.systemAccountPassword, nil) //TODO: pass log object
+		err = c.Auth.InitializeSystemAccount(context, authType, appOrg, c.systemAccountEmail, c.systemAccountPassword, c.logger.NewRequestLog(nil))
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionInitialize, "system account", nil, err)
 		}
@@ -172,7 +174,8 @@ func (c *APIs) insertSystemAccountIfNeeded(context storage.TransactionContext, a
 }
 
 //NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, systemAccountEmail string,
+	systemAccountPassword string, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
 	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners, auth: auth}
@@ -186,7 +189,8 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 
 	//+ auth
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
-		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application, logger: logger}
+		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application, systemAccountEmail: systemAccountEmail,
+		systemAccountPassword: systemAccountPassword, logger: logger}
 
 	return &coreAPIs
 }

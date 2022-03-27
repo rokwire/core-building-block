@@ -96,7 +96,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		anonymous = true
 
 		anonymousID := ""
-		anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, *appType, *appOrg, creds, params, l)
+		anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, creds)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
 		}
@@ -111,7 +111,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 
 		sub = accountAuthType.Account.ID
 	} else {
-		message, accountAuthType, mfaTypes, externalIDs, err = a.applyAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, admin, l)
+		message, accountAuthType, mfaTypes, externalIDs, err = a.applyAuthType(*authType, *appOrg, creds, params, profile, preferences, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
@@ -400,7 +400,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 //		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
 func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, orgID string, redirectURI string, apiKey string, l *logs.Log) (string, map[string]interface{}, error) {
 	//validate if the provided auth type is supported by the provided application and organization
-	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+	authType, appType, _, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
@@ -418,7 +418,7 @@ func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, 
 	}
 
 	//get login URL
-	loginURL, params, err := authImpl.getLoginURL(*authType, *appType, *appOrg, redirectURI, l)
+	loginURL, params, err := authImpl.getLoginURL(*authType, *appType, redirectURI, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "login url", nil, err)
 	}
@@ -670,14 +670,14 @@ func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params st
 //		error: if any
 func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
 	//validate if the provided auth type is supported by the provided application and organization
-	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+	authType, _, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
 	//check for api key
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
-	err = a.validateAPIKey(apiKey, appType.Application.ID)
+	err = a.validateAPIKey(apiKey, appOrg.Application.ID)
 	if err != nil {
 		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
@@ -713,7 +713,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 		return err
 	}
 
-	authTypeCreds, err := authImpl.forgotCredential(credential, identifier, appType.Application.Name, l)
+	authTypeCreds, err := authImpl.forgotCredential(credential, identifier, appOrg.Application.Name, l)
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "forgot password", nil, err)
 	}
@@ -728,12 +728,12 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 //SendVerifyCredential sends the verification code to the identifier
 func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
 	//validate if the provided auth type is supported by the provided application and organization
-	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+	authType, _, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 	//validate api key before making db calls
-	err = a.validateAPIKey(apiKey, appType.Application.ID)
+	err = a.validateAPIKey(apiKey, appOrg.Application.ID)
 	if err != nil {
 		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
@@ -762,7 +762,7 @@ func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier
 		return errors.New("credential has already been verified")
 	}
 
-	err = authImpl.sendVerifyCredential(credential, appType.Application.Name, l)
+	err = authImpl.sendVerifyCredential(credential, appOrg.Application.Name, l)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
 	}
@@ -1045,7 +1045,7 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 			return nil, nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
 		}
 	} else {
-		message, newAccountAuthType, err = a.linkAccountAuthType(*account, *authType, *appType, *appOrg, creds, params, l)
+		message, newAccountAuthType, err = a.linkAccountAuthType(*account, *authType, *appOrg, creds, params, l)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
 		}
@@ -1096,7 +1096,7 @@ func (a *Auth) DeleteAccount(id string) error {
 }
 
 //InitializeSystemAccount initializes the first system account
-func (a *Auth) InitializeSystemAccount(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, email string, password string, l *logs.Log) error {
+func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, email string, password string, l *logs.Log) error {
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(authType)
 	if err != nil {
@@ -1127,7 +1127,7 @@ func (a *Auth) InitializeSystemAccount(authType model.AuthType, appType model.Ap
 	}
 
 	var credentialValue map[string]interface{}
-	_, credentialValue, err = authImpl.signUp(authType, appType, appOrg, string(emailCreds), string(emailParams), credentialID.String(), l)
+	_, credentialValue, err = authImpl.signUp(authType, appOrg, string(emailCreds), string(emailParams), credentialID.String(), l)
 	if err != nil {
 		return errors.Wrap("error signing up", err)
 	}
@@ -1140,7 +1140,7 @@ func (a *Auth) InitializeSystemAccount(authType model.AuthType, appType model.Ap
 	credential := &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
 		AuthType: authType, DateCreated: now, DateUpdated: &now}
 
-	_, err = a.registerUser(authType, email, nil, appOrg, credential, false, nil, profile, nil, nil, nil, l)
+	_, err = a.registerUser(context, authType, email, nil, appOrg, credential, false, nil, profile, nil, nil, nil, l)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}

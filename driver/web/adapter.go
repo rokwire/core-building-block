@@ -168,6 +168,8 @@ func (we Adapter) Start() {
 
 	///system ///
 	//TODO - disable until we implement the system accounts login so that to protect them
+	systemSubrouter := subRouter.PathPrefix("/system").Subrouter()
+	systemSubrouter.HandleFunc("/auth/login", we.wrapFunc(we.systemApisHandler.systemLogin, nil)).Methods("POST")
 	/*
 		systemSubrouter := subRouter.PathPrefix("/system").Subrouter()
 		systemSubrouter.HandleFunc("/auth/login", we.wrapFunc(we.systemApisHandler.systemLogin, nil)).Methods("POST")

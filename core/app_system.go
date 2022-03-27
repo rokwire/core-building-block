@@ -362,7 +362,7 @@ func (app *application) sysGrantAccountPermissions(accountID string, permissionN
 }
 
 func (app *application) sysGrantAccountRoles(accountID string, appOrgID string, roleIDs []string) error {
-	roles, err := app.storage.FindAppOrgRoles(roleIDs, appOrgID)
+	roles, err := app.storage.FindAppOrgRoles(nil, roleIDs, appOrgID)
 	if err != nil {
 		return err
 	}

@@ -93,7 +93,7 @@ func (app *application) checkRoles(appOrg model.ApplicationOrganization, rolesID
 		return nil, nil
 	}
 
-	appOrgRoles, err := app.storage.FindAppOrgRoles(rolesIDs, appOrg.ID)
+	appOrgRoles, err := app.storage.FindAppOrgRoles(nil, rolesIDs, appOrg.ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
 	}

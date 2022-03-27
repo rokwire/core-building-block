@@ -1117,10 +1117,15 @@ func (sa *Adapter) findStorageAccount(context TransactionContext, key string, id
 }
 
 //InsertAccount inserts an account
-func (sa *Adapter) InsertAccount(account model.Account) (*model.Account, error) {
+func (sa *Adapter) InsertAccount(context TransactionContext, account model.Account) (*model.Account, error) {
 	storageAccount := accountToStorage(&account)
 
-	_, err := sa.db.accounts.InsertOne(storageAccount)
+	var err error
+	if context != nil {
+		_, err = sa.db.accounts.InsertOneWithContext(context, storageAccount)
+	} else {
+		_, err = sa.db.accounts.InsertOne(storageAccount)
+	}
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
 	}
@@ -1552,14 +1557,19 @@ func (sa *Adapter) FindCredential(context TransactionContext, ID string) (*model
 }
 
 //InsertCredential inserts a set of credential
-func (sa *Adapter) InsertCredential(creds *model.Credential) error {
+func (sa *Adapter) InsertCredential(context TransactionContext, creds *model.Credential) error {
 	storageCreds := credentialToStorage(creds)
 
 	if storageCreds == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeCredential))
 	}
 
-	_, err := sa.db.credentials.InsertOne(storageCreds)
+	var err error
+	if context != nil {
+		_, err = sa.db.credentials.InsertOneWithContext(context, storageCreds)
+	} else {
+		_, err = sa.db.credentials.InsertOne(storageCreds)
+	}
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 	}
@@ -1881,7 +1891,7 @@ func (sa *Adapter) DeletePermission(id string) error {
 }
 
 //FindAppOrgRoles finds a set of application organization roles
-func (sa *Adapter) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error) {
+func (sa *Adapter) FindAppOrgRoles(context TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error) {
 	var rolesFilter bson.D
 
 	if len(ids) == 0 {
@@ -1891,7 +1901,12 @@ func (sa *Adapter) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOr
 	}
 
 	var rolesResult []appOrgRole
-	err := sa.db.applicationsOrganizationsRoles.Find(rolesFilter, &rolesResult, nil)
+	var err error
+	if context != nil {
+		err = sa.db.applicationsOrganizationsRoles.FindWithContext(context, rolesFilter, &rolesResult, nil)
+	} else {
+		err = sa.db.applicationsOrganizationsRoles.Find(rolesFilter, &rolesResult, nil)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -1980,7 +1995,7 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 
 //FindAppOrgGroups finds a set of application organization groups
 //	ids param is optional
-func (sa *Adapter) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
+func (sa *Adapter) FindAppOrgGroups(context TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
 	var filter bson.D
 
 	if len(ids) == 0 {
@@ -1990,7 +2005,12 @@ func (sa *Adapter) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppO
 	}
 
 	var groupsResult []appOrgGroup
-	err := sa.db.applicationsOrganizationsGroups.Find(filter, &groupsResult, nil)
+	var err error
+	if context != nil {
+		err = sa.db.applicationsOrganizationsGroups.FindWithContext(context, filter, &groupsResult, nil)
+	} else {
+		err = sa.db.applicationsOrganizationsGroups.Find(filter, &groupsResult, nil)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -2182,7 +2202,7 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 }
 
 //UpdateProfile updates a profile
-func (sa *Adapter) UpdateProfile(profile model.Profile) error {
+func (sa *Adapter) UpdateProfile(context TransactionContext, profile model.Profile) error {
 	filter := bson.D{primitive.E{Key: "profile.id", Value: profile.ID}}
 
 	now := time.Now().UTC()
@@ -2202,7 +2222,13 @@ func (sa *Adapter) UpdateProfile(profile model.Profile) error {
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateMany(filter, profileUpdate, nil)
+	var res *mongo.UpdateResult
+	var err error
+	if context != nil {
+		res, err = sa.db.accounts.UpdateManyWithContext(context, filter, profileUpdate, nil)
+	} else {
+		res, err = sa.db.accounts.UpdateMany(filter, profileUpdate, nil)
+	}
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
 	}

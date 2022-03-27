@@ -120,7 +120,7 @@ type Storage interface {
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 
-	UpdateProfile(profile model.Profile) error
+	UpdateProfile(context storage.TransactionContext, profile model.Profile) error
 
 	FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
@@ -139,13 +139,13 @@ type Storage interface {
 	UpdatePermission(item model.Permission) error
 	DeletePermission(id string) error
 
-	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
+	FindAppOrgRoles(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error)
 	InsertAppOrgRole(item model.AppOrgRole) error
 	UpdateAppOrgRole(item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
 
-	FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
+	FindAppOrgGroups(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error)
 	InsertAppOrgGroup(item model.AppOrgGroup) error
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
