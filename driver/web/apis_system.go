@@ -928,6 +928,42 @@ func (h SystemApisHandler) removeMFAType(l *logs.Log, r *http.Request, claims *t
 	return l.HttpResponseSuccess()
 }
 
+func (h SystemApisHandler) systemVerifyMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var mfaData Def.SharedReqMfa
+	err = json.Unmarshal(data, &mfaData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("verify mfa request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	if mfaData.Code == nil || *mfaData.Code == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, "mfa code", nil, nil, http.StatusBadRequest, true)
+	}
+
+	message, recoveryCodes, err := h.coreAPIs.Auth.VerifyMFA(claims.Subject, mfaData.Identifier, string(mfaData.Type), *mfaData.Code)
+	if message != nil {
+		return l.HttpResponseError(*message, nil, http.StatusBadRequest, true)
+	}
+	if err != nil {
+		return l.HttpResponseError("Error verifying MFA", err, http.StatusInternalServerError, true)
+	}
+
+	if recoveryCodes == nil {
+		recoveryCodes = []string{}
+	}
+
+	response, err := json.Marshal(recoveryCodes)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "mfa recovery codes", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(response)
+}
+
 //createAuthTypes creates auth-type
 func (h SystemApisHandler) createAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 
