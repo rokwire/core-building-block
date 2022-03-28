@@ -121,6 +121,8 @@ paths:
     $ref: "./resources/admin/application/roles.yaml"
   /admin/application/roles/{id}:
     $ref: "./resources/admin/application/rolesID.yaml"
+  /admin/application/role/permissions/grant:
+    $ref: "./resources/admin/application/role/permissions/grant.yaml"
   /admin/organization/applications:
     $ref: "./resources/admin/organization/applications.yaml"
  

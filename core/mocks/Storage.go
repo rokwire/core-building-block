@@ -749,6 +749,20 @@ func (_m *Storage) InsertAppOrgRole(item model.AppOrgRole) error {
 	return r0
 }
 
+// InsertAppOrgRolePermissions provides a mock function with given fields: context, roleID, permissionNames
+func (_m *Storage) InsertAppOrgRolePermissions(context storage.TransactionContext, roleID string, permissionNames []model.Permission) error {
+	ret := _m.Called(context, roleID, permissionNames)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, []model.Permission) error); ok {
+		r0 = rf(context, roleID, permissionNames)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // InsertApplication provides a mock function with given fields: application
 func (_m *Storage) InsertApplication(application model.Application) (*model.Application, error) {
 	ret := _m.Called(application)
