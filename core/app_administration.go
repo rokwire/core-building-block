@@ -768,7 +768,7 @@ func (app *application) admGrantPermissionsToRole(appID string, orgID string, ro
 	}
 
 	//insert permission into a role
-	err = app.storage.InsertRolePermissions(nil, roleID, permissions)
+	err = app.storage.InsertAppOrgRolePermissions(nil, roleID, permissions)
 	if err != nil {
 		return errors.Wrap("error inserting permissions to roles", err)
 	}

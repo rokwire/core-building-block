@@ -143,7 +143,7 @@ type Storage interface {
 	InsertAppOrgRole(item model.AppOrgRole) error
 	UpdateAppOrgRole(item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
-	InsertRolePermissions(context storage.TransactionContext, roleID string, permissionNames []model.Permission) error
+	InsertAppOrgRolePermissions(context storage.TransactionContext, roleID string, permissionNames []model.Permission) error
 
 	FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error)
