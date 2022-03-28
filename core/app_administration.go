@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -660,7 +659,34 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 }
 
 func (app *application) admRevokeAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
+	//check if there is data
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from admin assigner")
+	}
 	if len(permissionNames) == 0 {
+		return errors.New("no permissions for revoking")
+	}
+
+	//verify that the account is for the current app/org
+	account, err := app.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return errors.Wrap("error finding account on permissions revoking", err)
+	}
+	if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
+		l.Warnf("someone is trying to revoke permissions from %s for different app/org", accountID)
+		return errors.Newf("not allowed")
+	}
+
+	//verify that the account has the permissions which are supposed to be revoked
+	for _, current := range permissionNames {
+		hasP := account.GetPermissionNamed(current)
+		if hasP == nil {
+			l.Infof("trying to revoke %s for %s but the account does not have it", current, accountID)
+			return errors.Newf("%s cannot be revoked from %s", current, accountID)
+		}
+	}
+
+	/*if len(permissionNames) == 0 {
 		return errors.New("no permissions for granting")
 	}
 
@@ -712,7 +738,7 @@ func (app *application) admRevokeAccountPermissions(appID string, orgID string, 
 	err = app.storage.DeleteAccountPermissions(nil, account.Permissions, permissionNames, accountID)
 	if err != nil {
 		return err
-	}
+	} */
 	return nil
 }
 
