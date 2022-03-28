@@ -69,7 +69,7 @@ func (h SystemApisHandler) systemLogin(l *logs.Log, r *http.Request, claims *tok
 	if err != nil {
 		loggingErr, ok := err.(*errors.Error)
 		if ok && loggingErr.Status() != "" {
-			return l.HttpResponseError("Error logging in", err, http.StatusForbidden, true)
+			return l.HttpResponseError("Error logging in", err, http.StatusUnauthorized, true)
 		}
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
