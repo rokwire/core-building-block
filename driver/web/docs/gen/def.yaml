@@ -1778,6 +1778,8 @@ paths:
       summary: Grant account permissions
       description: |
         Grant account permissions
+
+        **Auth:** Requires auth token with 'all_admin_core' permission
       security:
         - bearerAuth: []
       requestBody:
@@ -1808,6 +1810,8 @@ paths:
       summary: Delete permissions from account
       description: |
         Deletes an existing permissions from account
+
+        **Auth:** Requires auth token with 'all_admin_core' permission
       security:
         - bearerAuth: []
       requestBody:
