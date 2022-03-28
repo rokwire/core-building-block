@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Service accounts [#306](https://github.com/rokwire/core-building-block/issues/306)
-- Expose remove accounts from a group Admin API [#413](https://github.com/rokwire/core-building-block/issues/413) develop
+- Expose grant permissions to role Admin API [#415](https://github.com/rokwire/core-building-block/issues/415)
+- Expose remove accounts from a group Admin API [#413](https://github.com/rokwire/core-building-block/issues/413)
 - Expose add accounts to a group Admin API [#384](https://github.com/rokwire/core-building-block/issues/384)
 - Handle external ID management [#364](https://github.com/rokwire/core-building-block/issues/364)
 

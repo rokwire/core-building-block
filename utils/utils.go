@@ -128,6 +128,16 @@ func FormatTime(v *time.Time) string {
 	return v.Format("2006-01-02T15:04:05.000Z")
 }
 
+//Contains checks if list contains value
+func Contains(list []string, value string) bool {
+	for _, v := range list {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
 //StringOrNil returns a pointer to the input string, but returns nil if input is empty
 func StringOrNil(v string) *string {
 	if v == "" {
