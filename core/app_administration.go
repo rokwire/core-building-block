@@ -672,6 +672,9 @@ func (app *application) admRevokeAccountPermissions(appID string, orgID string, 
 	if err != nil {
 		return errors.Wrap("error finding account on permissions revoking", err)
 	}
+	if account == nil {
+		return errors.Newf("no account")
+	}
 	if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
 		l.Warnf("someone is trying to revoke permissions from %s for different app/org", accountID)
 		return errors.Newf("not allowed")
