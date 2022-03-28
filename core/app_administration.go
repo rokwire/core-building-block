@@ -2,6 +2,7 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/utils"
 	"time"
 
 	"github.com/google/uuid"
@@ -707,6 +708,69 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 	err = app.storage.InsertAccountRoles(accountID, account.AppOrg.ID, accountRoles)
 	if err != nil {
 		return errors.Wrap("error inserting account roles", err)
+	}
+
+	return nil
+}
+
+func (app *application) admGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
+	//check if there is data
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from admin assigner")
+	}
+	if len(permissionNames) == 0 {
+		return errors.New("no permissions for granting")
+	}
+
+	//verify that the role is for the current app/org
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return errors.Wrap("there is no application organization with that IDs", err)
+	}
+	role, err := app.storage.FindAppOrgRole(roleID, appOrg.ID)
+	if err != nil {
+		return errors.Wrap("error finding account on permissions granting", err)
+	}
+
+	//verify that the role do not have any of the permissions which are supposed to be granted
+	for _, current := range permissionNames {
+		hasP := role.GetPermissionNamed(current)
+		if hasP != nil {
+			l.Infof("trying to double grant %s for %s", current, roleID)
+			return errors.Newf("role %s already has %s granted", roleID, current)
+		}
+	}
+
+	//find permissions
+	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	if err != nil {
+		return err
+	}
+	if len(permissions) == 0 {
+		return errors.Newf("no permissions found for names: %v", permissionNames)
+	}
+
+	//verify that the permissions are for the current app/org
+	for _, permission := range permissions {
+		pServiceID := permission.ServiceID
+		contains := utils.Contains(appOrg.ServicesIDs, pServiceID)
+		if !contains {
+			return errors.Newf("not allowed to grant %s for app/org %s", permission.Name, appOrg.ID)
+		}
+	}
+
+	//check if authorized
+	for _, permission := range permissions {
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking permission assigners", err)
+		}
+	}
+
+	//insert permission into a role
+	err = app.storage.InsertAppOrgRolePermissions(nil, roleID, permissions)
+	if err != nil {
+		return errors.Wrap("error inserting permissions to roles", err)
 	}
 
 	return nil

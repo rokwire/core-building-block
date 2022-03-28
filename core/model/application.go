@@ -86,6 +86,16 @@ type AppOrgRole struct {
 	DateUpdated *time.Time
 }
 
+//GetPermissionNamed returns the permission for a name if the role has it
+func (c AppOrgRole) GetPermissionNamed(name string) *Permission {
+	for _, permission := range c.Permissions {
+		if permission.Name == name {
+			return &permission
+		}
+	}
+	return nil
+}
+
 //CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
 func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
 	if len(c.Permissions) == 0 {

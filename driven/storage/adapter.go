@@ -1993,6 +1993,27 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 	return nil
 }
 
+//InsertAppOrgRolePermissions inserts permissions to role
+func (sa *Adapter) InsertAppOrgRolePermissions(context TransactionContext, roleID string, permissions []model.Permission) error {
+
+	filter := bson.D{primitive.E{Key: "_id", Value: roleID}}
+	update := bson.D{
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "permissions", Value: bson.M{"$each": permissions}},
+		}},
+	}
+
+	res, err := sa.db.applicationsOrganizationsRoles.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
 //FindAppOrgGroups finds a set of application organization groups
 //	ids param is optional
 func (sa *Adapter) FindAppOrgGroups(context TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
