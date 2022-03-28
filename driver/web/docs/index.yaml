@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.20.1
+  version: 1.21.1
 servers:
   - url: https://api.rokwire.illinois.edu/core
     description: Production server
@@ -23,6 +23,8 @@ tags:
     description: APIs consumed by the platform building blocks.
   - name: Third-Party Services
     description: APIs consumed by third-party services.
+  - name: UI
+    description: Endpoints for HTML webpages
   - name: System
     description: System APIs.
 paths:
@@ -35,6 +37,8 @@ paths:
     $ref: "./resources/services/auth/refresh.yaml"
   /services/auth/login-url:
     $ref: "./resources/services/auth/login-url.yaml"
+  /services/auth/logout:
+    $ref: "./resources/services/auth/logout.yaml"
   /services/auth/credential/verify:
     $ref: "./resources/services/auth/credential/verify.yaml"
   /services/auth/credential/send-verify:
@@ -109,12 +113,18 @@ paths:
     $ref: "./resources/admin/application/groups.yaml"
   /admin/application/groups/{id}:
     $ref: "./resources/admin/application/groupsID.yaml"
+  /admin/application/group/accounts/add:
+    $ref: "./resources/admin/application/group/accounts/add.yaml"
+  /admin/application/group/accounts/remove:
+    $ref: "./resources/admin/application/group/accounts/remove.yaml"
   /admin/application/permissions:
     $ref: "./resources/admin/application/permissions.yaml"
   /admin/application/roles:
     $ref: "./resources/admin/application/roles.yaml"
   /admin/application/roles/{id}:
     $ref: "./resources/admin/application/rolesID.yaml"
+  /admin/application/role/permissions/grant:
+    $ref: "./resources/admin/application/role/permissions/grant.yaml"
   /admin/organization/applications:
     $ref: "./resources/admin/organization/applications.yaml"
  
@@ -170,12 +180,18 @@ paths:
   /system/auth-types/{id}:
     $ref: "./resources/system/auth-typesID.yaml"
 
+  #ui
+  /ui/credential/reset:
+    $ref: "./resources/ui/credential/reset.yaml"
+  /ui/credential/verify:
+    $ref: "./resources/ui/credential/verify.yaml"
 
   #default
   /version:
     $ref: "./resources/default/version.yaml"
   /.well-known/openid-configuration:
     $ref: "./resources/default/openid-configuration.yaml"
+
 components:
   securitySchemes:
       bearerAuth:            # arbitrary name for the security scheme

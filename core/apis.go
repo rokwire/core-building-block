@@ -131,6 +131,14 @@ func (s *administrationImpl) AdmDeleteAppOrgGroup(ID string, appID string, orgID
 	return s.app.admDeleteAppOrgGroup(ID, appID, orgID, assignerPermissions, l)
 }
 
+func (s *administrationImpl) AdmAddAccountsToGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error {
+	return s.app.admAddAccountsToGroup(appID, orgID, groupID, accountIDs, assignerPermissions, l)
+}
+
+func (s *administrationImpl) AdmRemoveAccountsFromGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error {
+	return s.app.admRemoveAccountsFromGroup(appID, orgID, groupID, accountIDs, assignerPermissions, l)
+}
+
 func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgRole, error) {
 	return s.app.admCreateAppOrgRole(name, description, permissionIDs, appID, orgID, assignerPermissions, l)
 }
@@ -141,6 +149,10 @@ func (s *administrationImpl) AdmGetAppOrgRoles(appID string, orgID string) ([]mo
 
 func (s *administrationImpl) AdmDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error {
 	return s.app.admDeleteAppOrgRole(ID, appID, orgID, assignerPermissions, l)
+}
+
+func (s *administrationImpl) AdmGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
+	return s.app.admGrantPermissionsToRole(appID, orgID, roleID, permissionNames, assignerPermissions, l)
 }
 
 func (s *administrationImpl) AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error) {
