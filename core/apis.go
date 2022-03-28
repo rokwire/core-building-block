@@ -24,6 +24,9 @@ type APIs struct {
 
 	app *application
 
+	systemAppNamespace    string
+	systemAppTypeName     string
+	systemAPIKey          string
 	systemAccountEmail    string
 	systemAccountPassword string
 
@@ -37,7 +40,7 @@ func (c *APIs) Start() {
 
 	err := c.storeSystemData()
 	if err != nil {
-		c.logger.Fatalf("error storing system data: %s", err.Error())
+		c.logger.Fatalf("error initializing system data: %s", err.Error())
 	}
 }
 
@@ -90,9 +93,11 @@ func (c *APIs) storeSystemData() error {
 		}
 		if len(systemAdminAppOrgs) == 0 {
 			//insert system admin app
-			newAndroidAppType := model.ApplicationType{ID: uuid.NewString(), Identifier: "edu.illinois.rokwire.admin.android",
-				Name: "System Admin Android", Versions: nil /*[]string{"1.0.0"}*/}
-			newSystemAdminApp := model.Application{ID: uuid.NewString(), Name: "System Admin Application", MultiTenant: false, Admin: true,
+			if c.systemAppNamespace == "" || c.systemAppTypeName == "" {
+				return errors.ErrorData(logutils.StatusMissing, "initial system app namespace or type name", nil)
+			}
+			newAndroidAppType := model.ApplicationType{ID: uuid.NewString(), Identifier: c.systemAppNamespace, Name: c.systemAppTypeName, Versions: nil}
+			newSystemAdminApp := model.Application{ID: uuid.NewString(), Name: "System Admin application", MultiTenant: false, Admin: true,
 				SharedIdentities: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplication(context, newSystemAdminApp)
 			if err != nil {
@@ -123,27 +128,27 @@ func (c *APIs) storeSystemData() error {
 			systemAdminAppOrgs = append(systemAdminAppOrgs, newSystemAdminAppOrg)
 		}
 
+		systemAppOrg := systemAdminAppOrgs[0]
+
 		//4. insert api key if doesn't exist
-		for _, appOrg := range systemAdminAppOrgs {
-			apiKeys, err := c.app.storage.FindApplicationAPIKeys(context, appOrg.Application.ID)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, nil, err)
+		apiKeys, err := c.app.storage.FindApplicationAPIKeys(context, systemAppOrg.Application.ID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, nil, err)
+		}
+
+		if len(apiKeys) == 0 {
+			if c.systemAPIKey == "" {
+				return errors.ErrorData(logutils.StatusMissing, "initial system api key", nil)
 			}
-
-			if len(apiKeys) == 0 {
-				//TODO: use env vars for api keys instead of generating
-				newAPIKey := model.APIKey{ID: uuid.NewString(), AppID: appOrg.Application.ID, Key: uuid.NewString()}
-				_, err := c.app.storage.InsertAPIKey(context, newAPIKey)
-				if err != nil {
-					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAPIKey, nil, err)
-				}
-
-				c.logger.Infof("new API key %s generated for app_id %s", newAPIKey.Key, newAPIKey.AppID)
+			newAPIKey := model.APIKey{ID: uuid.NewString(), AppID: systemAppOrg.Application.ID, Key: c.systemAPIKey}
+			_, err := c.app.storage.InsertAPIKey(context, newAPIKey)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAPIKey, nil, err)
 			}
 		}
 
 		//5. insert system account if needed
-		err = c.insertSystemAccountIfNeeded(context, *emailAuthType, systemAdminAppOrgs[0])
+		err = c.insertSystemAccountIfNeeded(context, *emailAuthType, systemAppOrg)
 		if err != nil {
 			return err
 		}
@@ -174,8 +179,7 @@ func (c *APIs) insertSystemAccountIfNeeded(context storage.TransactionContext, a
 }
 
 //NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, systemAccountEmail string,
-	systemAccountPassword string, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
 	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners, auth: auth}
@@ -189,8 +193,9 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 
 	//+ auth
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
-		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application, systemAccountEmail: systemAccountEmail,
-		systemAccountPassword: systemAccountPassword, logger: logger}
+		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application, systemAppNamespace: systemInitSettings["app_namespace"],
+		systemAppTypeName: systemInitSettings["app_type_name"], systemAPIKey: systemInitSettings["api_key"],
+		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], logger: logger}
 
 	return &coreAPIs
 }

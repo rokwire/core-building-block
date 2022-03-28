@@ -132,11 +132,17 @@ func main() {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
 
-	systemAccountEmail := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_ACCOUNT_EMAIL", false, false)
-	systemAccountPassword := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_ACCOUNT_PASSWORD", false, true)
+	//system account init
+	systemInitSettings := map[string]string{
+		"app_namespace": envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_APP_NAMESPACE", false, false),
+		"app_type_name": envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_APP_TYPE_NAME", false, false),
+		"api_key":       envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_API_KEY", false, true),
+		"email":         envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_ACCOUNT_EMAIL", false, false),
+		"password":      envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_ACCOUNT_PASSWORD", false, true),
+	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, systemAccountEmail, systemAccountPassword, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, systemInitSettings, logger)
 	coreAPIs.Start()
 
 	//web adapter
