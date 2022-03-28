@@ -2,6 +2,7 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/utils"
 	"time"
 
 	"github.com/google/uuid"
@@ -750,7 +751,13 @@ func (app *application) admGrantPermissionsToRole(appID string, orgID string, ro
 	}
 
 	//verify that the permissions are for the current app/org
-	//TODO
+	for _, permission := range permissions {
+		pServiceID := permission.ServiceID
+		contains := utils.Contains(appOrg.ServicesIDs, pServiceID)
+		if !contains {
+			return errors.Newf("not allowed to grant %s for app/org %s", permission.Name, appOrg.ID)
+		}
+	}
 
 	//check if authorized
 	for _, permission := range permissions {
