@@ -1228,7 +1228,30 @@ func (a *Auth) UpdateAPIKey(apiKey model.APIKey) error {
 
 //DeleteAPIKey deletes an API key
 func (a *Auth) DeleteAPIKey(ID string) error {
-	return a.storage.DeleteAPIKey(ID)
+	apiKey, err := a.getCachedAPIKey(ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, &logutils.FieldArgs{"id": ID}, err)
+	}
+
+	transaction := func(context storage.TransactionContext) error {
+		//1. find all api keys for app id of api key to delete
+		apiKeys, err := a.storage.FindApplicationAPIKeys(context, apiKey.AppID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, nil, err)
+		}
+
+		//2. delete api key if there is another api key for app id
+		if len(apiKeys) > 1 {
+			err = a.storage.DeleteAPIKey(ID)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAPIKey, nil, err)
+			}
+		}
+
+		return nil
+	}
+
+	return a.storage.PerformTransaction(transaction)
 }
 
 //ValidateAPIKey validates the given API key for the given app ID

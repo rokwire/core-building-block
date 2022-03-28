@@ -2030,6 +2030,7 @@ func (a *Auth) setCachedAPIKeys(apiKeys []model.APIKey) {
 
 	a.apiKeys = &syncmap.Map{}
 	for _, apiKey := range apiKeys {
+		a.apiKeys.Store(apiKey.ID, apiKey)
 		a.apiKeys.Store(apiKey.Key, apiKey)
 	}
 }
