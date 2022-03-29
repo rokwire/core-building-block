@@ -114,6 +114,7 @@ type Storage interface {
 
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
+	DeleteAccountPermissions(cotext storage.TransactionContext, permissionObj []model.Permission, permissons []string, accountID string) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
 	InsertAccountsGroup(group model.AccountGroup, accounts []model.Account) error
 	RemoveAccountsGroup(groupID string, accounts []model.Account) error
@@ -138,7 +139,6 @@ type Storage interface {
 	InsertPermission(item model.Permission) error
 	UpdatePermission(item model.Permission) error
 	DeletePermission(id string) error
-	DeleteAccountPermissions(cotext storage.TransactionContext, permissionObj []model.Permission, permissons []string, accountID string) error
 
 	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error)

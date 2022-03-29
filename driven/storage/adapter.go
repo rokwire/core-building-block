@@ -1108,6 +1108,55 @@ func (sa *Adapter) InsertAccountPermissions(accountID string, permissions []mode
 	return nil
 }
 
+//DeleteAccountPermissions deletes permission from an account
+func (sa *Adapter) DeleteAccountPermissions(context TransactionContext, permissionObj []model.Permission, permissionNames []string, accountID string) error {
+	if len(permissionNames) == 0 {
+		return nil
+	}
+
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	var accountResult []account
+	err := sa.db.accounts.Find(filter, &accountResult, nil)
+	if err != nil {
+		return err
+	}
+
+	if len(accountResult) == 0 {
+		return errors.Newf("no account with those permission name: %v", permissionNames)
+	}
+
+	account := accountResult[0]
+
+	permission := account.Permissions
+
+	for i, currentPermission := range permission {
+		if currentPermission.Name == permissionNames[0] {
+			var newPermission []model.Permission
+			for _, permissions := range permission {
+				if permissions.Name != permissionNames[0] {
+					newPermission = append(newPermission, permissions)
+				}
+			}
+			account.Permissions = newPermission
+			permission[i] = currentPermission
+		}
+	}
+
+	accountFilter := bson.M{"_id": accountID}
+	opts := options.Replace().SetUpsert(true)
+	if context != nil {
+		err = sa.db.accounts.ReplaceOneWithContext(context, accountFilter, account, opts)
+	} else {
+		err = sa.db.accounts.ReplaceOne(accountFilter, account, opts)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSave, "account", &logutils.FieldArgs{"account_id": account.ID}, nil)
+	}
+
+	return nil
+}
+
 //InsertAccountRoles inserts account roles
 func (sa *Adapter) InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error {
 	stgRoles := accountRolesToStorage(roles)
@@ -1772,55 +1821,6 @@ func (sa *Adapter) DeletePermission(id string) error {
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
 	return errors.New(logutils.Unimplemented)
-}
-
-//DeleteAccountPermissions deletes permission from an account
-func (sa *Adapter) DeleteAccountPermissions(context TransactionContext, permissionObj []model.Permission, permissionNames []string, accountID string) error {
-	if len(permissionNames) == 0 {
-		return nil
-	}
-
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
-	var accountResult []account
-	err := sa.db.accounts.Find(filter, &accountResult, nil)
-	if err != nil {
-		return err
-	}
-
-	if len(accountResult) == 0 {
-		return errors.Newf("no account with those permission name: %v", permissionNames)
-	}
-
-	account := accountResult[0]
-
-	permission := account.Permissions
-
-	for i, currentPermission := range permission {
-		if currentPermission.Name == permissionNames[0] {
-			var newPermission []model.Permission
-			for _, permissions := range permission {
-				if permissions.Name != permissionNames[0] {
-					newPermission = append(newPermission, permissions)
-				}
-			}
-			account.Permissions = newPermission
-			permission[i] = currentPermission
-		}
-	}
-
-	accountFilter := bson.M{"_id": accountID}
-	opts := options.Replace().SetUpsert(true)
-	if context != nil {
-		err = sa.db.accounts.ReplaceOneWithContext(context, accountFilter, account, opts)
-	} else {
-		err = sa.db.accounts.ReplaceOne(accountFilter, account, opts)
-	}
-
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSave, "account", &logutils.FieldArgs{"account_id": account.ID}, nil)
-	}
-
-	return nil
 }
 
 //FindAppOrgRoles finds a set of application organization roles
