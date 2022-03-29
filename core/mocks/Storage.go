@@ -98,13 +98,13 @@ func (_m *Storage) CreateGlobalConfig(context storage.TransactionContext, global
 	return r0
 }
 
-// DeleteAccountPermissions provides a mock function with given fields: cotext, permissionObj, permissons, accountID
-func (_m *Storage) DeleteAccountPermissions(cotext storage.TransactionContext, permissionObj []model.Permission, permissons []string, accountID string) error {
-	ret := _m.Called(cotext, permissionObj, permissons, accountID)
+// DeleteAccountPermissions provides a mock function with given fields: context, accountID, permissions
+func (_m *Storage) DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error {
+	ret := _m.Called(context, accountID, permissions)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, []model.Permission, []string, string) error); ok {
-		r0 = rf(cotext, permissionObj, permissons, accountID)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, []model.Permission) error); ok {
+		r0 = rf(context, accountID, permissions)
 	} else {
 		r0 = ret.Error(0)
 	}
