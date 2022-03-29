@@ -1095,6 +1095,9 @@ func (sa *Adapter) InsertAccountPermissions(accountID string, permissions []mode
 		primitive.E{Key: "$push", Value: bson.D{
 			primitive.E{Key: "permissions", Value: bson.M{"$each": permissions}},
 		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
 	}
 
 	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
