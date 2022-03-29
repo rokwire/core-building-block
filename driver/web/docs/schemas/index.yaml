@@ -211,14 +211,17 @@ _admin_req_remove-account-from-group:
 _admin_req_grant-roles-to-account:
   $ref: "./apis/admin/application/account/roles/grant/request/Request.yaml"
 
-### permissions API
+### grant permissions to account API
 _admin_req_grant-permissions:
   $ref: "./apis/admin/application/account/permissions/grant/request/Request.yaml"
+
+### revoke permissions from account API
+_admin_req_revoke-permissions:
+  $ref: "./apis/admin/application/account/permissions/revoke/request/Request.yaml"
 
 ### grant permissions to role API
 _admin_req_grant-permissions-to-role:
   $ref: "./apis/admin/application/role/permissions/grant/request/Request.yaml"
-  
 ## end ADMIN section
 
 ## SYSTEM section

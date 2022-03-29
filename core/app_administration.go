@@ -2,6 +2,7 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"time"
 
@@ -655,6 +656,78 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (app *application) admRevokeAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
+	//check if there is data
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from admin assigner")
+	}
+	if len(permissionNames) == 0 {
+		return errors.New("no permissions for revoking")
+	}
+
+	//verify that the account is for the current app/org
+	account, err := app.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return errors.Wrap("error finding account on permissions revoking", err)
+	}
+	if account == nil {
+		return errors.Newf("no account")
+	}
+	if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
+		l.Warnf("someone is trying to revoke permissions from %s for different app/org", accountID)
+		return errors.Newf("not allowed")
+	}
+
+	//verify that the account has the permissions which are supposed to be revoked
+	for _, current := range permissionNames {
+		hasP := account.GetPermissionNamed(current)
+		if hasP == nil {
+			l.Infof("trying to revoke %s for %s but the account does not have it", current, accountID)
+			return errors.Newf("%s cannot be revoked from %s", current, accountID)
+		}
+	}
+
+	//find permissions
+	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	if err != nil {
+		return err
+	}
+	if len(permissions) == 0 {
+		return errors.Newf("no permissions found for names: %v", permissionNames)
+	}
+
+	//check if authorized
+	for _, permission := range permissions {
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking permission assigners", err)
+		}
+	}
+
+	//delete permissions from an account AND delete all sessions for the account
+	transaction := func(context storage.TransactionContext) error {
+		//delete permissions from an account
+		err = app.storage.DeleteAccountPermissions(context, accountID, permissions)
+		if err != nil {
+			return errors.Wrap("error deleting account permissions", err)
+		}
+
+		//delete all sessions for the account
+		err = app.storage.DeleteLoginSessionsByIdentifier(context, accountID)
+		if err != nil {
+			return errors.Wrap("error deleting sessions by identifier on revoking permissions", err)
+		}
+
+		return nil
+	}
+	err = app.storage.PerformTransaction(transaction)
+	if err != nil {
+		return errors.Wrapf("error revoking permissions %s from an account %s", err, accountID, permissionNames)
+	}
+
 	return nil
 }
 
