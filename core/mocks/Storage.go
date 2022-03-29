@@ -196,6 +196,20 @@ func (_m *Storage) DeleteLoginSessionByID(context storage.TransactionContext, id
 	return r0
 }
 
+// DeleteLoginSessionsByIdentifier provides a mock function with given fields: context, identifier
+func (_m *Storage) DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error {
+	ret := _m.Called(context, identifier)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
+		r0 = rf(context, identifier)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DeletePermission provides a mock function with given fields: id
 func (_m *Storage) DeletePermission(id string) error {
 	ret := _m.Called(id)
