@@ -1108,52 +1108,39 @@ func (sa *Adapter) InsertAccountPermissions(accountID string, permissions []mode
 	return nil
 }
 
-//DeleteAccountPermissions deletes permission from an account
-func (sa *Adapter) DeleteAccountPermissions(context TransactionContext, permissionObj []model.Permission, permissionNames []string, accountID string) error {
-	if len(permissionNames) == 0 {
-		return nil
-	}
-
+//DeleteAccountPermissions deletes permissions from an account
+func (sa *Adapter) DeleteAccountPermissions(context TransactionContext, accountID string, permissions []model.Permission) error {
+	//filter
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
-	var accountResult []account
-	err := sa.db.accounts.Find(filter, &accountResult, nil)
-	if err != nil {
-		return err
+
+	//update
+	permissionsIDs := make([]string, len(permissions))
+	for i, permission := range permissions {
+		permissionsIDs[i] = permission.ID
+	}
+	update := bson.D{
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "permissions", Value: bson.M{"_id": bson.M{"$in": permissionsIDs}}},
+		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
 	}
 
-	if len(accountResult) == 0 {
-		return errors.Newf("no account with those permission name: %v", permissionNames)
-	}
-
-	account := accountResult[0]
-
-	permission := account.Permissions
-
-	for i, currentPermission := range permission {
-		if currentPermission.Name == permissionNames[0] {
-			var newPermission []model.Permission
-			for _, permissions := range permission {
-				if permissions.Name != permissionNames[0] {
-					newPermission = append(newPermission, permissions)
-				}
-			}
-			account.Permissions = newPermission
-			permission[i] = currentPermission
-		}
-	}
-
-	accountFilter := bson.M{"_id": accountID}
-	opts := options.Replace().SetUpsert(true)
+	var res *mongo.UpdateResult
+	var err error
 	if context != nil {
-		err = sa.db.accounts.ReplaceOneWithContext(context, accountFilter, account, opts)
+		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	} else {
-		err = sa.db.accounts.ReplaceOne(accountFilter, account, opts)
+		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
 	}
 
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSave, "account", &logutils.FieldArgs{"account_id": account.ID}, nil)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
-
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
 	return nil
 }
 

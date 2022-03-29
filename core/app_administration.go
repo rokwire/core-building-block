@@ -706,59 +706,12 @@ func (app *application) admRevokeAccountPermissions(appID string, orgID string, 
 		}
 	}
 
-	/*if len(permissionNames) == 0 {
-		return errors.New("no permissions for granting")
-	}
-
-	account, err := app.storage.FindAccountByID(nil, accountID)
-	if account == nil {
-		return err
-	}
-	if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
-		l.Warnf("someone is trying to grant permissions to %s for different app/org", accountID)
-		return errors.Newf("not allowed")
-	}
-
-	//find permissions
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	//delete permissions from  account
+	err = app.storage.DeleteAccountPermissions(nil, accountID, permissions)
 	if err != nil {
 		return err
 	}
-	if len(permissions) == 0 {
-		return errors.Newf("no permissions found for names: %v", permissionNames)
-	}
 
-	//check if authorized
-	var authorizedPermissions []model.Permission
-	for _, permission := range permissions {
-		authorizedAssigners := permission.Assigners
-
-		//grant all or nothing
-		if len(permission.Assigners) == 0 {
-			return errors.Newf("not defined assigners for %s permission", permission.Name)
-		}
-
-		for _, authorizedAssigner := range authorizedAssigners {
-			if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
-				authorizedPermissions = append(authorizedPermissions, permission)
-			}
-		}
-		for _, permission := range permissions {
-			err = permission.CheckAssigners(assignerPermissions)
-			if err != nil {
-				return errors.Wrapf("error checking permission assigners", err)
-			}
-		}
-	}
-	if authorizedPermissions == nil {
-		return errors.Newf("Assigner is not authorized to assign permissions for names: %v", permissionNames)
-	}
-
-	//delete permissons from  account
-	err = app.storage.DeleteAccountPermissions(nil, account.Permissions, permissionNames, accountID)
-	if err != nil {
-		return err
-	} */
 	return nil
 }
 
