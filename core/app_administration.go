@@ -2,6 +2,7 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"time"
 
@@ -706,10 +707,25 @@ func (app *application) admRevokeAccountPermissions(appID string, orgID string, 
 		}
 	}
 
-	//delete permissions from  account
-	err = app.storage.DeleteAccountPermissions(nil, accountID, permissions)
+	//delete permissions from an account AND delete all sessions for the account
+	transaction := func(context storage.TransactionContext) error {
+		//delete permissions from an account
+		err = app.storage.DeleteAccountPermissions(context, accountID, permissions)
+		if err != nil {
+			return errors.Wrap("error deleting account permissions", err)
+		}
+
+		//delete all sessions for the account
+		err = app.storage.DeleteLoginSessionsByIdentifier(context, accountID)
+		if err != nil {
+			return errors.Wrap("error deleting sessions by identifier on revoking permissions", err)
+		}
+
+		return nil
+	}
+	err = app.storage.PerformTransaction(transaction)
 	if err != nil {
-		return err
+		return errors.Wrapf("error revoking permissions %s from an account %s", err, accountID, permissionNames)
 	}
 
 	return nil
