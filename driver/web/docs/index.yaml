@@ -103,6 +103,8 @@ paths:
     $ref: "./resources/admin/application/account/login-sessions.yaml"
   /admin/application/account/permissions/grant:
     $ref: "./resources/admin/application/account/permissions/grant.yaml"
+  /admin/application/account/permissions/revoke:
+    $ref: "./resources/admin/application/account/permissions/revoke.yaml"
   /admin/application/account/roles/grant:
     $ref: "./resources/admin/application/account/roles/grant.yaml"
   /admin/application/login-sessions:

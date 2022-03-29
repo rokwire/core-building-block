@@ -98,6 +98,20 @@ func (_m *Storage) CreateGlobalConfig(context storage.TransactionContext, global
 	return r0
 }
 
+// DeleteAccountPermissions provides a mock function with given fields: context, accountID, permissions
+func (_m *Storage) DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error {
+	ret := _m.Called(context, accountID, permissions)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, []model.Permission) error); ok {
+		r0 = rf(context, accountID, permissions)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DeleteAppConfig provides a mock function with given fields: ID
 func (_m *Storage) DeleteAppConfig(ID string) error {
 	ret := _m.Called(ID)
@@ -175,6 +189,20 @@ func (_m *Storage) DeleteLoginSessionByID(context storage.TransactionContext, id
 	var r0 error
 	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
 		r0 = rf(context, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteLoginSessionsByIdentifier provides a mock function with given fields: context, identifier
+func (_m *Storage) DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error {
+	ret := _m.Called(context, identifier)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
+		r0 = rf(context, identifier)
 	} else {
 		r0 = ret.Error(0)
 	}

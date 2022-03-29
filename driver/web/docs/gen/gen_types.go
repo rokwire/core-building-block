@@ -624,6 +624,12 @@ type AdminReqRemoveAccountFromGroup struct {
 	GroupId    string   `json:"group_id"`
 }
 
+// AdminReqRevokePermissions defines model for _admin_req_revoke-permissions.
+type AdminReqRevokePermissions struct {
+	AccountId   string   `json:"account_id"`
+	Permissions []string `json:"permissions"`
+}
+
 // AdminResAppToken defines model for _admin_res_app-token.
 type AdminResAppToken struct {
 	Token string `json:"token"`
@@ -1183,6 +1189,9 @@ type PostAdminAccountMfaParams struct {
 // PutAdminApplicationAccountPermissionsGrantJSONBody defines parameters for PutAdminApplicationAccountPermissionsGrant.
 type PutAdminApplicationAccountPermissionsGrantJSONBody AdminReqGrantPermissions
 
+// DeleteAdminApplicationAccountPermissionsRevokeJSONBody defines parameters for DeleteAdminApplicationAccountPermissionsRevoke.
+type DeleteAdminApplicationAccountPermissionsRevokeJSONBody AdminReqRevokePermissions
+
 // PutAdminApplicationAccountRolesGrantJSONBody defines parameters for PutAdminApplicationAccountRolesGrant.
 type PutAdminApplicationAccountRolesGrantJSONBody AdminReqGrantRolesToAccount
 
@@ -1600,6 +1609,9 @@ type GetUiCredentialVerifyParams struct {
 
 // PutAdminApplicationAccountPermissionsGrantJSONRequestBody defines body for PutAdminApplicationAccountPermissionsGrant for application/json ContentType.
 type PutAdminApplicationAccountPermissionsGrantJSONRequestBody PutAdminApplicationAccountPermissionsGrantJSONBody
+
+// DeleteAdminApplicationAccountPermissionsRevokeJSONRequestBody defines body for DeleteAdminApplicationAccountPermissionsRevoke for application/json ContentType.
+type DeleteAdminApplicationAccountPermissionsRevokeJSONRequestBody DeleteAdminApplicationAccountPermissionsRevokeJSONBody
 
 // PutAdminApplicationAccountRolesGrantJSONRequestBody defines body for PutAdminApplicationAccountRolesGrant for application/json ContentType.
 type PutAdminApplicationAccountRolesGrantJSONRequestBody PutAdminApplicationAccountRolesGrantJSONBody
