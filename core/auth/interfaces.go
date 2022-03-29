@@ -18,6 +18,9 @@ type authType interface {
 	//	credentialValue (map): Credential value
 	signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
 
+	//signUpAdmin signs up a new admin user
+	// Returns:
+	//	params (map[string]interface{}): information necessary for new user to sign in
 	signUpAdmin(identifier string) (map[string]interface{}, error)
 
 	//verifies credential (checks the verification code generated on email signup for email auth type)
