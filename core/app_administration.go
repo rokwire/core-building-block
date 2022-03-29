@@ -689,6 +689,23 @@ func (app *application) admRevokeAccountPermissions(appID string, orgID string, 
 		}
 	}
 
+	//find permissions
+	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	if err != nil {
+		return err
+	}
+	if len(permissions) == 0 {
+		return errors.Newf("no permissions found for names: %v", permissionNames)
+	}
+
+	//check if authorized
+	for _, permission := range permissions {
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking permission assigners", err)
+		}
+	}
+
 	/*if len(permissionNames) == 0 {
 		return errors.New("no permissions for granting")
 	}
