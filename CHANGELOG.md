@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Expose revoke permissions from account Admin API [#411] (https://github.com/rokwire/core-building-block/issues/411)
+- Expose revoke permissions from account Admin API [#411](https://github.com/rokwire/core-building-block/issues/411)
 - Expose grant permissions to role Admin API [#415](https://github.com/rokwire/core-building-block/issues/415)
 - Expose remove accounts from a group Admin API [#413](https://github.com/rokwire/core-building-block/issues/413)
 - Expose add accounts to a group Admin API [#384](https://github.com/rokwire/core-building-block/issues/384)
