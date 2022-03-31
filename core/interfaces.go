@@ -120,7 +120,6 @@ type Storage interface {
 	DeleteAccountRoles(context storage.TransactionContext, accountID string, roleIDs []string) error
 	InsertAccountsGroup(group model.AccountGroup, accounts []model.Account) error
 	RemoveAccountsGroup(groupID string, accounts []model.Account) error
-
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 
