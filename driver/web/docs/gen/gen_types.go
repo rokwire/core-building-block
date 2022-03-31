@@ -565,6 +565,12 @@ type AdminReqRevokePermissions struct {
 	Permissions []string `json:"permissions"`
 }
 
+// AdminReqRevokeRolesFromAccount defines model for _admin_req_revoke-roles-from-account.
+type AdminReqRevokeRolesFromAccount struct {
+	AccountId string   `json:"account_id"`
+	RoleIds   []string `json:"role_ids"`
+}
+
 // ServicesReqAccountAuthTypeLink defines model for _services_req_account_auth-type-link.
 type ServicesReqAccountAuthTypeLink struct {
 	AppTypeIdentifier string                                 `json:"app_type_identifier"`
@@ -1043,6 +1049,9 @@ type DeleteAdminApplicationAccountPermissionsRevokeJSONBody AdminReqRevokePermis
 // PutAdminApplicationAccountRolesGrantJSONBody defines parameters for PutAdminApplicationAccountRolesGrant.
 type PutAdminApplicationAccountRolesGrantJSONBody AdminReqGrantRolesToAccount
 
+// DeleteAdminApplicationAccountRolesRevokeJSONBody defines parameters for DeleteAdminApplicationAccountRolesRevoke.
+type DeleteAdminApplicationAccountRolesRevokeJSONBody AdminReqRevokeRolesFromAccount
+
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {
 
@@ -1388,6 +1397,9 @@ type DeleteAdminApplicationAccountPermissionsRevokeJSONRequestBody DeleteAdminAp
 
 // PutAdminApplicationAccountRolesGrantJSONRequestBody defines body for PutAdminApplicationAccountRolesGrant for application/json ContentType.
 type PutAdminApplicationAccountRolesGrantJSONRequestBody PutAdminApplicationAccountRolesGrantJSONBody
+
+// DeleteAdminApplicationAccountRolesRevokeJSONRequestBody defines body for DeleteAdminApplicationAccountRolesRevoke for application/json ContentType.
+type DeleteAdminApplicationAccountRolesRevokeJSONRequestBody DeleteAdminApplicationAccountRolesRevokeJSONBody
 
 // PutAdminApplicationGroupAccountsAddJSONRequestBody defines body for PutAdminApplicationGroupAccountsAdd for application/json ContentType.
 type PutAdminApplicationGroupAccountsAddJSONRequestBody PutAdminApplicationGroupAccountsAddJSONBody

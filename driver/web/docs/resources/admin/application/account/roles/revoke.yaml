@@ -1,9 +1,9 @@
-put:
+delete:
   tags:
   - Admin
-  summary: Grant account roles
+  summary: Delete roles from account
   description: |
-    Grant account roles
+    Deletes an existing roles from account
 
     **Auth:** Requires auth token with 'all_admin_core' permission
   security:
@@ -13,8 +13,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../../../../schemas/apis/admin/application/account/roles/grant/request/Request.yaml"
-    required: true
+          $ref: "../../../../../schemas/apis/admin/application/account/roles/revoke/request/Request.yaml"
   responses:
     200:
       description: Success
@@ -28,4 +27,4 @@ put:
     401:
       description: Unauthorized
     500:
-      description: Internal error
+      description: Internal error 

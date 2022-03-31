@@ -1824,6 +1824,8 @@ paths:
       summary: Grant account roles
       description: |
         Grant account roles
+
+        **Auth:** Requires auth token with 'all_admin_core' permission
       security:
         - bearerAuth: []
       requestBody:
@@ -1833,6 +1835,37 @@ paths:
             schema:
               $ref: '#/components/schemas/_admin_req_grant-roles-to-account'
         required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/application/account/roles/revoke:
+    delete:
+      tags:
+        - Admin
+      summary: Delete roles from account
+      description: |
+        Deletes an existing roles from account
+
+        **Auth:** Requires auth token with 'all_admin_core' permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Roles
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_admin_req_revoke-roles-from-account'
       responses:
         '200':
           description: Success
@@ -5163,6 +5196,18 @@ components:
           items:
             type: string
     _admin_req_grant-roles-to-account:
+      required:
+        - account_id
+        - role_ids
+      type: object
+      properties:
+        account_id:
+          type: string
+        role_ids:
+          type: array
+          items:
+            type: string
+    _admin_req_revoke-roles-from-account:
       required:
         - account_id
         - role_ids
