@@ -817,7 +817,43 @@ func (app *application) admRevokeAccountRoles(appID string, orgID string, accoun
 		}
 	}
 
-	//TODO
+	//find roles
+	roles, err := app.storage.FindAppOrgRoles(roleIDs, account.AppOrg.ID)
+	if err != nil {
+		return errors.Wrap("error finding roles on revoking roles", err)
+	}
+	if len(roles) == 0 {
+		return errors.Newf("no roles found for ids: %v", roleIDs)
+	}
+
+	//check if authorized
+	for _, role := range roles {
+		err = role.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking permission assigners when revoking roles from an account", err)
+		}
+	}
+
+	//delete roles from an account AND delete all sessions for the account
+	transaction := func(context storage.TransactionContext) error {
+		//delete roles from an account
+		err = app.storage.DeleteAccountRoles(context, accountID, roleIDs)
+		if err != nil {
+			return errors.Wrap("error deleting account roles", err)
+		}
+
+		//delete all sessions for the account
+		err = app.storage.DeleteLoginSessionsByIdentifier(context, accountID)
+		if err != nil {
+			return errors.Wrap("error deleting sessions by identifier on revoking roles", err)
+		}
+
+		return nil
+	}
+	err = app.storage.PerformTransaction(transaction)
+	if err != nil {
+		return errors.Wrapf("error revoking roles %s from an account %s", err, accountID, roleIDs)
+	}
 
 	return nil
 }
