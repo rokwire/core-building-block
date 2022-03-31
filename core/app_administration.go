@@ -792,57 +792,33 @@ func (app *application) admRevokeAccountRoles(appID string, orgID string, accoun
 		return errors.New("no permissions from admin assigner")
 	}
 	if len(roleIDs) == 0 {
-		return errors.New("no roles for granting")
+		return errors.New("no roles for revoking")
 	}
 
 	//verify that the account is for the current app/org
 	account, err := app.storage.FindAccountByID(nil, accountID)
 	if err != nil {
-		return errors.Wrap("error finding account on permissions granting", err)
+		return errors.Wrap("error finding account on roles revoking", err)
+	}
+	if account == nil {
+		return errors.Newf("no account")
 	}
 	if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
-		l.Warnf("someone is trying to grant roles to %s for different app/org", accountID)
+		l.Warnf("someone is trying to revoke roles from %s for different app/org", accountID)
 		return errors.Newf("not allowed")
 	}
 
-	//find permissions
-	permissions, err := app.storage.FindPermissionsByName(account.GetPermissionNames())
-	if err != nil {
-		return err
-	}
-	if len(permissions) == 0 {
-		return errors.Newf("no permissions found for names: %v", permissions)
-	}
-
-	for _, permission := range permissions {
-		err = permission.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.Wrapf("error checking permission assigners", err)
+	//verify that the account has the roles which are supposed to be revoked
+	for _, roleID := range roleIDs {
+		hasR := account.GetRole(roleID)
+		if hasR == nil {
+			l.Infof("trying to revoke role %s for %s but the account does not have it", roleID, accountID)
+			return errors.Newf("%s cannot be revoked from %s", roleID, accountID)
 		}
 	}
 
-	//find roles
-	roles, err := app.storage.FindAppOrgRoles(roleIDs, account.AppOrg.ID)
-	if err != nil {
-		return errors.Wrap("error finding app org roles", err)
-	}
-	if len(roles) != len(roleIDs) {
-		return errors.New("not valid roles")
-	}
+	//TODO
 
-	//check if authorized
-	for _, cRole := range roles {
-		err = cRole.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.Wrapf("error checking assigners for %s role", err, cRole.Name)
-		}
-	}
-
-	//delete permissons from  account
-	err = app.storage.DeleteAccountRoles(nil, accountID, roleIDs)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
