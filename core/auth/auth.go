@@ -300,7 +300,7 @@ func (a *Auth) applySignUpExternal(authType model.AuthType, appOrg model.Applica
 	}
 
 	//5. register the account
-	accountAuthType, err = a.registerUser(nil, authType, identifier, accountAuthTypeParams, appOrg, nil, useSharedProfile, externalUser.ExternalIDs, profile, preferences, roles, groups, l)
+	accountAuthType, err = a.registerUser(nil, authType, identifier, accountAuthTypeParams, appOrg, nil, useSharedProfile, externalUser.ExternalIDs, profile, preferences, nil, roles, groups, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
@@ -666,7 +666,7 @@ func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType m
 		preferences = preparedPreferences
 	}
 
-	accountAuthType, err := a.registerUser(nil, authType, userIdentifier, nil, appOrg, credential, useSharedProfile, nil, profile, preferences, nil, nil, l)
+	accountAuthType, err := a.registerUser(nil, authType, userIdentifier, nil, appOrg, credential, useSharedProfile, nil, profile, preferences, nil, nil, nil, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
@@ -886,8 +886,10 @@ func (a *Auth) findAccountAuthTypeByID(account *model.Account, accountAuthTypeID
 	}
 
 	authType, err := a.storage.FindAuthType(accountAuthType.AuthType.ID)
-	if err != nil {
-		return nil, errors.New("Failed to find authType by ID in accountAuthType")
+	if err != nil || authType == nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(accountAuthType.AuthType.ID), err)
+	}
+	if authType == nil {
 
 	}
 	accountAuthType.AuthType = *authType
@@ -1240,12 +1242,15 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 //		useSharedProfile (bool): It says if the system to look if the user has account in another application in the system and to use its profile instead of creating a new profile
 //		preferences (map[string]interface{}): Preferences of the user
 //		profile (Profile): Information for the user
+//		permissionIDs ([]string): set of permissions to assign to the user
+//		roleIDs ([]string): set of roles to assign to the user
+//		groupIDs ([]string): set of groups to assign to the user
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		Registered account (AccountAuthType): Registered Account object
 func (a *Auth) registerUser(context storage.TransactionContext, authType model.AuthType, userIdentifier string, accountAuthTypeParams map[string]interface{},
 	appOrg model.ApplicationOrganization, credential *model.Credential, useSharedProfile bool, externalIDs map[string]string,
-	profile model.Profile, preferences map[string]interface{}, roleIDs []string, groupIDs []string, l *logs.Log) (*model.AccountAuthType, error) {
+	profile model.Profile, preferences map[string]interface{}, permissionIDs []string, roleIDs []string, groupIDs []string, l *logs.Log) (*model.AccountAuthType, error) {
 
 	//TODO - analyse what should go in one transaction
 
@@ -1267,17 +1272,30 @@ func (a *Auth) registerUser(context storage.TransactionContext, authType model.A
 	accountID, _ := uuid.NewUUID()
 	authTypes := []model.AccountAuthType{*accountAuthType}
 
-	roles, err := a.storage.FindAppOrgRoles(context, roleIDs, appOrg.ID)
-	if err != nil {
-		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgRole, nil), err)
+	var permissions []model.Permission
+	var roles []model.AppOrgRole
+	var groups []model.AppOrgGroup
+	if len(permissionIDs) > 0 {
+		permissions, err = a.storage.FindPermissions(context, permissionIDs)
+		if err != nil {
+			l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypePermission, nil), err)
+		}
 	}
-	groups, err := a.storage.FindAppOrgGroups(context, groupIDs, appOrg.ID)
-	if err != nil {
-		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgGroup, nil), err)
+	if len(roleIDs) > 0 {
+		roles, err = a.storage.FindAppOrgRoles(context, roleIDs, appOrg.ID)
+		if err != nil {
+			l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgRole, nil), err)
+		}
+	}
+	if len(groupIDs) > 0 {
+		groups, err = a.storage.FindAppOrgGroups(context, groupIDs, appOrg.ID)
+		if err != nil {
+			l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgGroup, nil), err)
+		}
 	}
 
 	account := model.Account{ID: accountID.String(), AppOrg: appOrg,
-		Permissions: nil, Roles: model.AccountRolesFromAppOrgRoles(roles, true, false), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, false),
+		Permissions: permissions, Roles: model.AccountRolesFromAppOrgRoles(roles, true, false), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, false),
 		AuthTypes: authTypes, ExternalIDs: externalIDs, Preferences: preferences, Profile: profile, DateCreated: time.Now()} // Anonymous: accountAuthType.AuthType.IsAnonymous
 
 	//insert account object - it includes the account auth type
@@ -1679,7 +1697,7 @@ func (a *Auth) registerMfaType(name string, mfa mfaType) error {
 func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier string, orgID string) (*model.AuthType, *model.ApplicationType, *model.ApplicationOrganization, error) {
 	//get the auth type
 	authType, err := a.storage.FindAuthType(authenticationType)
-	if err != nil {
+	if err != nil || authType == nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, logutils.StringArgs(authenticationType), err)
 	}
 
@@ -2047,6 +2065,37 @@ func (a *Auth) getCachedAPIKey(key string) (*model.APIKey, error) {
 		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil)
 	}
 	return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeAPIKey, nil)
+}
+
+func (a *Auth) getCachedAPIKeys() ([]model.APIKey, error) {
+	a.apiKeysLock.RLock()
+	defer a.apiKeysLock.RUnlock()
+
+	var err error
+	apiKeyList := make([]model.APIKey, 0)
+	idsFound := make([]string, 0)
+	a.apiKeys.Range(func(key, item interface{}) bool {
+		errArgs := &logutils.FieldArgs{"key": key}
+		if item == nil {
+			err = errors.ErrorData(logutils.StatusInvalid, model.TypeAPIKey, errArgs)
+			return false
+		}
+
+		apiKey, ok := item.(model.APIKey)
+		if !ok {
+			err = errors.ErrorAction(logutils.ActionCast, model.TypeAPIKey, errArgs)
+			return false
+		}
+
+		if !utils.Contains(idsFound, apiKey.ID) {
+			apiKeyList = append(apiKeyList, apiKey)
+			idsFound = append(idsFound, apiKey.ID)
+		}
+
+		return true
+	})
+
+	return apiKeyList, err
 }
 
 func (a *Auth) setupDeleteSessionsTimer() {

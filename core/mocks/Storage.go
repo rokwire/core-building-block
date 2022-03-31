@@ -491,29 +491,6 @@ func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	return r0, r1
 }
 
-// FindApplicationAPIKeys provides a mock function with given fields: context, appID
-func (_m *Storage) FindApplicationAPIKeys(context storage.TransactionContext, appID string) ([]model.APIKey, error) {
-	ret := _m.Called(context, appID)
-
-	var r0 []model.APIKey
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) []model.APIKey); ok {
-		r0 = rf(context, appID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.APIKey)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
-		r1 = rf(context, appID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // FindApplicationOrganization provides a mock function with given fields: appID, orgID
 func (_m *Storage) FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
 	ret := _m.Called(appID, orgID)
@@ -583,13 +560,13 @@ func (_m *Storage) FindApplications() ([]model.Application, error) {
 	return r0, r1
 }
 
-// FindApplicationsOrganizationsByOrgID provides a mock function with given fields: context, orgID
-func (_m *Storage) FindApplicationsOrganizationsByOrgID(context storage.TransactionContext, orgID string) ([]model.ApplicationOrganization, error) {
-	ret := _m.Called(context, orgID)
+// FindApplicationsOrganizationsByOrgID provides a mock function with given fields: orgID
+func (_m *Storage) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error) {
+	ret := _m.Called(orgID)
 
 	var r0 []model.ApplicationOrganization
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) []model.ApplicationOrganization); ok {
-		r0 = rf(context, orgID)
+	if rf, ok := ret.Get(0).(func(string) []model.ApplicationOrganization); ok {
+		r0 = rf(orgID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.ApplicationOrganization)
@@ -597,8 +574,8 @@ func (_m *Storage) FindApplicationsOrganizationsByOrgID(context storage.Transact
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
-		r1 = rf(context, orgID)
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(orgID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -767,13 +744,13 @@ func (_m *Storage) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Per
 	return r0, r1
 }
 
-// FindSystemOrganization provides a mock function with given fields: context
-func (_m *Storage) FindSystemOrganization(context storage.TransactionContext) (*model.Organization, error) {
-	ret := _m.Called(context)
+// FindSystemOrganization provides a mock function with given fields:
+func (_m *Storage) FindSystemOrganization() (*model.Organization, error) {
+	ret := _m.Called()
 
 	var r0 *model.Organization
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext) *model.Organization); ok {
-		r0 = rf(context)
+	if rf, ok := ret.Get(0).(func() *model.Organization); ok {
+		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Organization)
@@ -781,8 +758,8 @@ func (_m *Storage) FindSystemOrganization(context storage.TransactionContext) (*
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext) error); ok {
-		r1 = rf(context)
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1035,13 +1012,13 @@ func (_m *Storage) InsertOrganization(context storage.TransactionContext, organi
 	return r0, r1
 }
 
-// InsertPermission provides a mock function with given fields: item
-func (_m *Storage) InsertPermission(item model.Permission) error {
-	ret := _m.Called(item)
+// InsertPermission provides a mock function with given fields: context, item
+func (_m *Storage) InsertPermission(context storage.TransactionContext, item model.Permission) error {
+	ret := _m.Called(context, item)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(model.Permission) error); ok {
-		r0 = rf(item)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.Permission) error); ok {
+		r0 = rf(context, item)
 	} else {
 		r0 = ret.Error(0)
 	}

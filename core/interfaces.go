@@ -141,7 +141,7 @@ type Storage interface {
 
 	FindPermissionsByName(names []string) ([]model.Permission, error)
 	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)
-	InsertPermission(item model.Permission) error
+	InsertPermission(context storage.TransactionContext, item model.Permission) error
 	UpdatePermission(item model.Permission) error
 	DeletePermission(id string) error
 
@@ -162,7 +162,7 @@ type Storage interface {
 	InsertOrganization(context storage.TransactionContext, organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 	FindOrganization(id string) (*model.Organization, error)
-	FindSystemOrganization(context storage.TransactionContext) (*model.Organization, error)
+	FindSystemOrganization() (*model.Organization, error)
 	FindOrganizations() ([]model.Organization, error)
 
 	InsertApplication(context storage.TransactionContext, application model.Application) (*model.Application, error)
@@ -182,11 +182,10 @@ type Storage interface {
 	UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error
 	DeleteAppConfig(ID string) error
 
-	FindApplicationsOrganizationsByOrgID(context storage.TransactionContext, orgID string) ([]model.ApplicationOrganization, error)
+	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 	InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
 
-	FindApplicationAPIKeys(context storage.TransactionContext, appID string) ([]model.APIKey, error)
 	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
 }
 

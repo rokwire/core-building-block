@@ -154,7 +154,7 @@ func (app *application) sysCreatePermission(name string, serviceID string, assig
 	now := time.Now()
 	permission := model.Permission{ID: id.String(), Name: name, DateCreated: now, ServiceID: serviceID, Assigners: *assigners}
 
-	err := app.storage.InsertPermission(permission)
+	err := app.storage.InsertPermission(nil, permission)
 
 	if err != nil {
 		return nil, err

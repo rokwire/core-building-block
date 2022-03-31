@@ -137,20 +137,20 @@ func (m *database) start() error {
 		return err
 	}
 
-	applicationsOrganziations := &collectionWrapper{database: m, coll: db.Collection("applications_organizations")}
-	err = m.applyApplicationsOrganizationsChecks(applicationsOrganziations)
+	applicationsOrganizations := &collectionWrapper{database: m, coll: db.Collection("applications_organizations")}
+	err = m.applyApplicationsOrganizationsChecks(applicationsOrganizations)
 	if err != nil {
 		return err
 	}
 
-	applicationsOrganizationsGroups := &collectionWrapper{database: m, coll: db.Collection("applications_organziations_groups")}
+	applicationsOrganizationsGroups := &collectionWrapper{database: m, coll: db.Collection("applications_organizations_groups")}
 	err = m.applyApplicationsOrganizationsGroupsChecks(applicationsOrganizationsGroups)
 	if err != nil {
 		return err
 	}
 
 	applicationsOrganizationsRoles := &collectionWrapper{database: m, coll: db.Collection("applications_organizations_roles")}
-	err = m.applyApplicationsOrganziationsRolesChecks(applicationsOrganizationsRoles)
+	err = m.applyApplicationsOrganizationsRolesChecks(applicationsOrganizationsRoles)
 	if err != nil {
 		return err
 	}
@@ -183,7 +183,7 @@ func (m *database) start() error {
 	m.serviceAuthorizations = serviceAuthorizations
 	m.organizations = organizations
 	m.applications = applications
-	m.applicationsOrganizations = applicationsOrganziations
+	m.applicationsOrganizations = applicationsOrganizations
 	m.applicationConfigs = applicationConfigs
 	m.applicationsOrganizationsGroups = applicationsOrganizationsGroups
 	m.applicationsOrganizationsRoles = applicationsOrganizationsRoles
@@ -393,7 +393,7 @@ func (m *database) applyApplicationsOrganizationsChecks(applicationsOrganization
 }
 
 func (m *database) applyApplicationsOrganizationsGroupsChecks(applicationsOrganizationGroups *collectionWrapper) error {
-	m.logger.Info("apply applications organziations groups checks.....")
+	m.logger.Info("apply applications organizations groups checks.....")
 
 	//add compound unique index - name + app_org_id
 	err := applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
@@ -429,23 +429,23 @@ func (m *database) applyApplicationsOrganizationsGroupsChecks(applicationsOrgani
 	return nil
 }
 
-func (m *database) applyApplicationsOrganziationsRolesChecks(applicationsOrganziationsRoles *collectionWrapper) error {
+func (m *database) applyApplicationsOrganizationsRolesChecks(applicationsOrganizationsRoles *collectionWrapper) error {
 	m.logger.Info("apply applications organizations roles checks.....")
 
 	//add compound unique index - name + app_org_id
-	err := applicationsOrganziationsRoles.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
+	err := applicationsOrganizationsRoles.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
 
 	//add application organization index
-	err = applicationsOrganziationsRoles.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
+	err = applicationsOrganizationsRoles.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add permissions index
-	err = applicationsOrganziationsRoles.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
+	err = applicationsOrganizationsRoles.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}

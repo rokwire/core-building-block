@@ -326,8 +326,11 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 
 		//check if need to update the account data
 		authType, err := a.storage.FindAuthType(loginSession.AuthType.ID)
-		if err != nil {
+		if err != nil || authType == nil {
 			l.Infof("error getting auth type - %s", refreshToken)
+			if err == nil {
+				err = errors.ErrorData(logutils.StatusMissing, model.TypeAuthType, &logutils.FieldArgs{"id": loginSession.AuthType.ID})
+			}
 			return nil, errors.WrapErrorAction("error getting auth type", "", nil, err)
 		}
 		externalIDChanges, err = a.updateDataIfNeeded(*loginSession.AccountAuthType, *externalUser, *authType, loginSession.AppOrg, l)
@@ -335,7 +338,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 			return nil, errors.WrapErrorAction("update account if needed on refresh", "", nil, err)
 		}
 
-		loginSession.Params = refreshedData //assing the refreshed data
+		loginSession.Params = refreshedData //assign the refreshed data
 	}
 
 	for k, v := range externalIDChanges {
@@ -1096,7 +1099,8 @@ func (a *Auth) DeleteAccount(id string) error {
 }
 
 //InitializeSystemAccount initializes the first system account
-func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, email string, password string, l *logs.Log) error {
+func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization,
+	allSystemPermissionID string, email string, password string, l *logs.Log) error {
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(authType)
 	if err != nil {
@@ -1140,7 +1144,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	credential := &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
 		AuthType: authType, DateCreated: now, DateUpdated: &now}
 
-	_, err = a.registerUser(context, authType, email, nil, appOrg, credential, false, nil, profile, nil, nil, nil, l)
+	_, err = a.registerUser(context, authType, email, nil, appOrg, credential, false, nil, profile, nil, []string{allSystemPermissionID}, nil, nil, l)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
@@ -1203,12 +1207,24 @@ func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
 
 //GetApplicationAPIKeys finds and returns the API keys for the provided app
 func (a *Auth) GetApplicationAPIKeys(appID string) ([]model.APIKey, error) {
-	return a.storage.FindApplicationAPIKeys(nil, appID)
+	cachedAPIKeys, err := a.getCachedAPIKeys()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAPIKey, nil, err)
+	}
+
+	applicationAPIKeys := make([]model.APIKey, 0)
+	for _, apiKey := range cachedAPIKeys {
+		if apiKey.AppID == appID {
+			applicationAPIKeys = append(applicationAPIKeys, apiKey)
+		}
+	}
+
+	return applicationAPIKeys, nil
 }
 
 //GetAPIKey finds and returns an API key
 func (a *Auth) GetAPIKey(ID string) (*model.APIKey, error) {
-	return a.storage.FindAPIKey(ID)
+	return a.getCachedAPIKey(ID)
 }
 
 //CreateAPIKey creates a new API key
@@ -1228,30 +1244,27 @@ func (a *Auth) UpdateAPIKey(apiKey model.APIKey) error {
 
 //DeleteAPIKey deletes an API key
 func (a *Auth) DeleteAPIKey(ID string) error {
+	//1. find api key to delete
 	apiKey, err := a.getCachedAPIKey(ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, &logutils.FieldArgs{"id": ID}, err)
 	}
 
-	transaction := func(context storage.TransactionContext) error {
-		//1. find all api keys for app id of api key to delete
-		apiKeys, err := a.storage.FindApplicationAPIKeys(context, apiKey.AppID)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, nil, err)
-		}
-
-		//2. delete api key if there is another api key for app id
-		if len(apiKeys) > 1 {
-			err = a.storage.DeleteAPIKey(ID)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAPIKey, nil, err)
-			}
-		}
-
-		return nil
+	//2. find all api keys with same app id
+	apiKeys, err := a.GetApplicationAPIKeys(apiKey.AppID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, nil, err)
 	}
 
-	return a.storage.PerformTransaction(transaction)
+	//3. delete api key if there is another api key for app id
+	if len(apiKeys) > 1 {
+		err = a.storage.DeleteAPIKey(ID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAPIKey, nil, err)
+		}
+	}
+
+	return nil
 }
 
 //ValidateAPIKey validates the given API key for the given app ID

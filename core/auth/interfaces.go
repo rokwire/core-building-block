@@ -314,7 +314,7 @@ type APIs interface {
 	UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error)
 
 	//InitializeSystemAccount initializes the first system account
-	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, email string, password string, l *logs.Log) error
+	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermissionID string, email string, password string, l *logs.Log) error
 
 	//DeleteAccount deletes an account for the given id
 	DeleteAccount(id string) error
@@ -436,8 +436,6 @@ type Storage interface {
 
 	//APIKeys
 	LoadAPIKeys() ([]model.APIKey, error)
-	FindApplicationAPIKeys(context storage.TransactionContext, appID string) ([]model.APIKey, error)
-	FindAPIKey(ID string) (*model.APIKey, error)
 	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
 	UpdateAPIKey(apiKey model.APIKey) error
 	DeleteAPIKey(ID string) error
@@ -453,6 +451,9 @@ type Storage interface {
 	FindDevice(context storage.TransactionContext, deviceID string, accountID string) (*model.Device, error)
 	InsertDevice(context storage.TransactionContext, device model.Device) (*model.Device, error)
 	DeleteDevice(context storage.TransactionContext, id string) error
+
+	//Permissions
+	FindPermissions(context storage.TransactionContext, ids []string) ([]model.Permission, error)
 
 	//ApplicationRoles
 	FindAppOrgRoles(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)

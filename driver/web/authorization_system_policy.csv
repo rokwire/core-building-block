@@ -1,4 +1,5 @@
 #TODO - to be done
+p, all_system_core, /* , (GET)|(POST)|(DELETE)|(PUT)
 
 p, all_global-config, /core/system/global-config, (GET)|(POST)|(DELETE)|(PUT)
 p, get_global-config, /core/system/global-config, (GET)

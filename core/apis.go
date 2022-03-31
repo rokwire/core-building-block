@@ -24,11 +24,11 @@ type APIs struct {
 
 	app *application
 
-	systemAppNamespace    string
-	systemAppTypeName     string
-	systemAPIKey          string
-	systemAccountEmail    string
-	systemAccountPassword string
+	systemAppTypeIdentifier string
+	systemAppTypeName       string
+	systemAPIKey            string
+	systemAccountEmail      string
+	systemAccountPassword   string
 
 	logger *logs.Logger
 }
@@ -56,7 +56,9 @@ func (c *APIs) GetVersion() string {
 
 func (c *APIs) storeSystemData() error {
 	transaction := func(context storage.TransactionContext) error {
-		//1. insert email auth type if doesn't exist
+		createAccount := false
+
+		//1. insert email auth type if does not exist
 		emailAuthType, err := c.app.storage.FindAuthType(auth.AuthTypeEmail)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
@@ -70,8 +72,8 @@ func (c *APIs) storeSystemData() error {
 			}
 		}
 
-		//2. insert system org if doesn't exist
-		systemOrg, err := c.app.storage.FindSystemOrganization(context)
+		//2. insert system org if does not exist
+		systemOrg, err := c.app.storage.FindSystemOrganization()
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 		}
@@ -84,19 +86,20 @@ func (c *APIs) storeSystemData() error {
 			}
 
 			systemOrg = &newSystemOrg
+			createAccount = true
 		}
 
-		//3. insert system app and appOrg if they don't exist
-		systemAdminAppOrgs, err := c.app.storage.FindApplicationsOrganizationsByOrgID(context, systemOrg.ID)
+		//3. insert system app and appOrg if they do not exist
+		systemAdminAppOrgs, err := c.app.storage.FindApplicationsOrganizationsByOrgID(systemOrg.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 		}
 		if len(systemAdminAppOrgs) == 0 {
 			//insert system admin app
-			if c.systemAppNamespace == "" || c.systemAppTypeName == "" {
-				return errors.ErrorData(logutils.StatusMissing, "initial system app namespace or type name", nil)
+			if c.systemAppTypeIdentifier == "" || c.systemAppTypeName == "" {
+				return errors.ErrorData(logutils.StatusMissing, "initial system app type identifier or name", nil)
 			}
-			newAndroidAppType := model.ApplicationType{ID: uuid.NewString(), Identifier: c.systemAppNamespace, Name: c.systemAppTypeName, Versions: nil}
+			newAndroidAppType := model.ApplicationType{ID: uuid.NewString(), Identifier: c.systemAppTypeIdentifier, Name: c.systemAppTypeName, Versions: nil}
 			newSystemAdminApp := model.Application{ID: uuid.NewString(), Name: "System Admin application", MultiTenant: false, Admin: true,
 				SharedIdentities: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplication(context, newSystemAdminApp)
@@ -126,12 +129,13 @@ func (c *APIs) storeSystemData() error {
 			}
 
 			systemAdminAppOrgs = append(systemAdminAppOrgs, newSystemAdminAppOrg)
+			createAccount = true
 		}
 
 		systemAppOrg := systemAdminAppOrgs[0]
 
-		//4. insert api key if doesn't exist
-		apiKeys, err := c.app.storage.FindApplicationAPIKeys(context, systemAppOrg.Application.ID)
+		//4. insert api key if does not exist
+		apiKeys, err := c.Auth.GetApplicationAPIKeys(systemAppOrg.Application.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, nil, err)
 		}
@@ -147,35 +151,38 @@ func (c *APIs) storeSystemData() error {
 			}
 		}
 
-		//5. insert system account if needed
-		err = c.insertSystemAccountIfNeeded(context, *emailAuthType, systemAppOrg)
+		//5. insert all_system_core permission if does not exist
+		allSystemPermissions, err := c.app.storage.FindPermissionsByName([]string{"all_system_core"})
 		if err != nil {
-			return err
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, &logutils.FieldArgs{"name": "all_system_core"}, err)
+		}
+
+		if len(allSystemPermissions) == 0 {
+			allSystemCore := model.Permission{ID: uuid.NewString(), Name: "all_system_core", ServiceID: "core",
+				Assigners: []string{"all_system_core"}, DateCreated: time.Now().UTC()}
+			err = c.app.storage.InsertPermission(context, allSystemCore)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, nil, err)
+			}
+
+			allSystemPermissions = append(allSystemPermissions, allSystemCore)
+		}
+
+		//6. insert system account if needed
+		if createAccount {
+			if c.systemAccountEmail == "" || c.systemAccountPassword == "" {
+				return errors.ErrorData(logutils.StatusMissing, "initial system account email or password", nil)
+			}
+			err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, allSystemPermissions[0].ID, c.systemAccountEmail, c.systemAccountPassword, c.logger.NewRequestLog(nil))
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionInitialize, "system account", nil, err)
+			}
 		}
 
 		return nil
 	}
 
 	return c.app.storage.PerformTransaction(transaction)
-}
-
-func (c *APIs) insertSystemAccountIfNeeded(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization) error {
-	systemAccounts, err := c.app.storage.FindAccounts(appOrg.Application.ID, appOrg.Organization.ID, nil, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-
-	if len(systemAccounts) == 0 {
-		if c.systemAccountEmail == "" || c.systemAccountPassword == "" {
-			return errors.ErrorData(logutils.StatusMissing, "initial system account email or password", nil)
-		}
-		err = c.Auth.InitializeSystemAccount(context, authType, appOrg, c.systemAccountEmail, c.systemAccountPassword, c.logger.NewRequestLog(nil))
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionInitialize, "system account", nil, err)
-		}
-	}
-
-	return nil
 }
 
 //NewCoreAPIs creates new CoreAPIs
@@ -193,7 +200,7 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 
 	//+ auth
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
-		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application, systemAppNamespace: systemInitSettings["app_namespace"],
+		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
 		systemAppTypeName: systemInitSettings["app_type_name"], systemAPIKey: systemInitSettings["api_key"],
 		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], logger: logger}
 
