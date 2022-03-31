@@ -16,6 +16,8 @@ RUN apk --no-cache add tzdata
 COPY --from=builder /core-app/bin/core-building-block /
 
 COPY --from=builder /core-app/driver/web/ui/reset-credential.html /driver/web/ui/reset-credential.html
+COPY --from=builder /core-app/driver/web/ui/error.html /driver/web/ui/error.html
+COPY --from=builder /core-app/driver/web/ui/success.html /driver/web/ui/success.html
 COPY --from=builder /core-app/driver/web/docs/gen/def.yaml /driver/web/docs/gen/def.yaml
 
 COPY --from=builder /core-app/driver/web/authorization_model.conf /driver/web/authorization_model.conf
