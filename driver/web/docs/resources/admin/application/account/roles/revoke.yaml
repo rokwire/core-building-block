@@ -4,6 +4,8 @@ delete:
   summary: Delete roles from account
   description: |
     Deletes an existing roles from account
+
+    **Auth:** Requires auth token with 'all_admin_core' permission
   security:
     - bearerAuth: []
   requestBody:

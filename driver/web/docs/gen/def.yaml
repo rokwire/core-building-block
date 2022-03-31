@@ -1841,6 +1841,8 @@ paths:
       summary: Grant account roles
       description: |
         Grant account roles
+
+        **Auth:** Requires auth token with 'all_admin_core' permission
       security:
         - bearerAuth: []
       requestBody:
@@ -1871,6 +1873,8 @@ paths:
       summary: Delete roles from account
       description: |
         Deletes an existing roles from account
+
+        **Auth:** Requires auth token with 'all_admin_core' permission
       security:
         - bearerAuth: []
       requestBody:
@@ -1878,7 +1882,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_admin_req_revoke-roles-to-account'
+              $ref: '#/components/schemas/_admin_req_revoke-roles-from-account'
       responses:
         '200':
           description: Success
@@ -4936,7 +4940,7 @@ components:
           type: array
           items:
             type: string
-    _admin_req_revoke-roles-to-account:
+    _admin_req_revoke-roles-from-account:
       required:
         - account_id
         - role_ids

@@ -582,8 +582,8 @@ type AdminReqRevokePermissions struct {
 	Permissions []string `json:"permissions"`
 }
 
-// AdminReqRevokeRolesToAccount defines model for _admin_req_revoke-roles-to-account.
-type AdminReqRevokeRolesToAccount struct {
+// AdminReqRevokeRolesFromAccount defines model for _admin_req_revoke-roles-from-account.
+type AdminReqRevokeRolesFromAccount struct {
 	AccountId string   `json:"account_id"`
 	RoleIds   []string `json:"role_ids"`
 }
@@ -1100,7 +1100,7 @@ type DeleteAdminApplicationAccountPermissionsRevokeJSONBody AdminReqRevokePermis
 type PutAdminApplicationAccountRolesGrantJSONBody AdminReqGrantRolesToAccount
 
 // DeleteAdminApplicationAccountRolesRevokeJSONBody defines parameters for DeleteAdminApplicationAccountRolesRevoke.
-type DeleteAdminApplicationAccountRolesRevokeJSONBody AdminReqRevokeRolesToAccount
+type DeleteAdminApplicationAccountRolesRevokeJSONBody AdminReqRevokeRolesFromAccount
 
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {
