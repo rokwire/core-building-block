@@ -1242,10 +1242,16 @@ func (sa *Adapter) UpdateAccountRoles(accountID string, roles []model.AccountRol
 
 //DeleteAccountRoles deletes account roles
 func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID string, roleIDs []string) error {
+	//filter
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+
+	//update
 	update := bson.D{
 		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "roles", Value: bson.M{"$each": roleIDs}},
+			primitive.E{Key: "roles", Value: bson.M{"role._id": bson.M{"$in": roleIDs}}},
+		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -1263,7 +1269,6 @@ func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID stri
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
-
 	return nil
 }
 
