@@ -1,5 +1,4 @@
 post:
-  deprecated: true
   tags:
   - System
   summary: Get SSO login url

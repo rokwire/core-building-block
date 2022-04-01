@@ -2380,7 +2380,6 @@ paths:
           description: Internal error
   /system/auth/login:
     post:
-      deprecated: true
       tags:
         - System
       summary: Login
@@ -2537,7 +2536,6 @@ paths:
           description: Internal error
   /system/auth/mfa:
     post:
-      deprecated: true
       tags:
         - System
       summary: MFA
@@ -2575,7 +2573,6 @@ paths:
           description: Internal error
   /system/auth/refresh:
     post:
-      deprecated: true
       tags:
         - System
       summary: Refresh
@@ -2604,7 +2601,6 @@ paths:
           description: Internal error
   /system/auth/login-url:
     post:
-      deprecated: true
       tags:
         - System
       summary: Get SSO login url
@@ -2631,7 +2627,6 @@ paths:
           description: Internal error
   /system/auth/verify-mfa:
     post:
-      deprecated: true
       tags:
         - System
       summary: MFA
@@ -2662,7 +2657,6 @@ paths:
           description: Internal error
   /system/global-config:
     get:
-      deprecated: true
       tags:
         - System
       summary: Get global config
@@ -2686,7 +2680,6 @@ paths:
         '500':
           description: Internal error
     post:
-      deprecated: true
       tags:
         - System
       summary: Create global config
@@ -2717,7 +2710,6 @@ paths:
         '500':
           description: Internal error
     put:
-      deprecated: true
       tags:
         - System
       summary: Update global config
@@ -2749,7 +2741,6 @@ paths:
           description: Internal error
   '/system/organizations/{id}':
     put:
-      deprecated: true
       tags:
         - System
       summary: Update organization
@@ -2790,7 +2781,6 @@ paths:
         '500':
           description: Internal error
     get:
-      deprecated: true
       tags:
         - System
       summary: Get organization
@@ -2826,7 +2816,6 @@ paths:
           description: Internal error
   /system/organizations:
     get:
-      deprecated: true
       tags:
         - System
       summary: Get organizations
@@ -2852,7 +2841,6 @@ paths:
         '500':
           description: Internal error
     post:
-      deprecated: true
       tags:
         - System
       summary: Create organization
@@ -2885,7 +2873,6 @@ paths:
           description: Internal error
   /system/service-regs:
     get:
-      deprecated: true
       tags:
         - System
       summary: Get service registrations
@@ -2920,7 +2907,6 @@ paths:
         '500':
           description: Internal error
     post:
-      deprecated: true
       tags:
         - System
       summary: Register service
@@ -2954,7 +2940,6 @@ paths:
         '500':
           description: Internal error
     put:
-      deprecated: true
       tags:
         - System
       summary: Update service registration
@@ -2988,7 +2973,6 @@ paths:
         '500':
           description: Internal error
     delete:
-      deprecated: true
       tags:
         - System
       summary: Deregister service
@@ -3023,7 +3007,6 @@ paths:
           description: Internal error
   '/system/applications/{id}':
     get:
-      deprecated: true
       tags:
         - System
       summary: Get application
@@ -3059,7 +3042,6 @@ paths:
           description: Internal error
   /system/applications:
     get:
-      deprecated: true
       tags:
         - System
       summary: Get applications
@@ -3085,7 +3067,6 @@ paths:
         '500':
           description: Internal error
     post:
-      deprecated: true
       tags:
         - System
       summary: Create application
@@ -3118,7 +3099,6 @@ paths:
           description: Internal error
   /system/permissions:
     post:
-      deprecated: true
       tags:
         - System
       summary: Create permission
@@ -3150,7 +3130,6 @@ paths:
         '500':
           description: Internal error
     put:
-      deprecated: true
       tags:
         - System
       summary: Updates permission
@@ -3183,7 +3162,6 @@ paths:
           description: Internal error
   /system/application-roles:
     post:
-      deprecated: true
       tags:
         - System
       summary: Create application role
@@ -3216,7 +3194,6 @@ paths:
           description: Internal error
   /system/application-api-keys:
     get:
-      deprecated: true
       tags:
         - System
       summary: Get application API keys
@@ -3252,7 +3229,6 @@ paths:
           description: Internal error
   /system/application/configs:
     get:
-      deprecated: true
       tags:
         - System
       summary: Reads app configs
@@ -3300,7 +3276,6 @@ paths:
         '500':
           description: Internal error
     post:
-      deprecated: true
       tags:
         - System
       summary: Creates app configs
@@ -3336,7 +3311,6 @@ paths:
           description: Internal error
   '/system/application/configs/{id}':
     get:
-      deprecated: true
       tags:
         - System
       summary: Reads app configs by given id
@@ -3367,7 +3341,6 @@ paths:
         '500':
           description: Internal error
     put:
-      deprecated: true
       tags:
         - System
       summary: Updates app configs
@@ -3411,7 +3384,6 @@ paths:
         '500':
           description: Internal error
     delete:
-      deprecated: true
       tags:
         - System
       summary: Deletes app configs
@@ -3438,7 +3410,6 @@ paths:
           description: Internal error
   /system/account/permissions:
     put:
-      deprecated: true
       tags:
         - System
       summary: Grant account permissions
@@ -3471,7 +3442,6 @@ paths:
           description: Internal error
   /system/account/roles:
     put:
-      deprecated: true
       tags:
         - System
       summary: Grant account roles
@@ -3504,7 +3474,6 @@ paths:
           description: Internal error
   /system/account/mfa:
     get:
-      deprecated: true
       tags:
         - System
       summary: Get account MFA types
@@ -3530,7 +3499,6 @@ paths:
         '500':
           description: Internal error
     post:
-      deprecated: true
       tags:
         - System
       summary: Enroll in MFA type
@@ -3563,7 +3531,6 @@ paths:
         '500':
           description: Internal error
     delete:
-      deprecated: true
       tags:
         - System
       summary: Remove MFA type
@@ -3593,7 +3560,6 @@ paths:
           description: Internal error
   /system/api-keys:
     get:
-      deprecated: true
       tags:
         - System
       summary: Get API key
@@ -3626,7 +3592,6 @@ paths:
         '500':
           description: Internal error
     post:
-      deprecated: true
       tags:
         - System
       summary: Create API key
@@ -3663,7 +3628,6 @@ paths:
         '500':
           description: Internal error
     put:
-      deprecated: true
       tags:
         - System
       summary: Update API key
@@ -3697,7 +3661,6 @@ paths:
         '500':
           description: Internal error
     delete:
-      deprecated: true
       tags:
         - System
       summary: Delete API key
@@ -3732,7 +3695,6 @@ paths:
           description: Internal error
   /system/auth-types:
     post:
-      deprecated: true
       tags:
         - System
       summary: Create auth-type
@@ -3762,7 +3724,6 @@ paths:
         '500':
           description: Internal error
     get:
-      deprecated: true
       tags:
         - System
       summary: Get auth-types
@@ -3787,7 +3748,6 @@ paths:
           description: Internal error
   '/system/auth-types/{id}':
     put:
-      deprecated: true
       tags:
         - System
       summary: Update auth type

@@ -1100,11 +1100,11 @@ func (a *Auth) DeleteAccount(id string) error {
 
 //InitializeSystemAccount initializes the first system account
 func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization,
-	allSystemPermissionID string, email string, password string, l *logs.Log) error {
+	allSystemPermissionID string, email string, password string, l *logs.Log) (string, error) {
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(authType)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
 	profile := model.Profile{ID: uuid.NewString(), Email: email}
@@ -1119,7 +1119,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	}{email, password}
 	emailCreds, err := json.Marshal(creds)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionMarshal, "initial system account email creds", nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionMarshal, "initial system account email creds", nil, err)
 	}
 
 	params := struct {
@@ -1127,16 +1127,16 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	}{password}
 	emailParams, err := json.Marshal(params)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionMarshal, "initial system account email params", nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionMarshal, "initial system account email params", nil, err)
 	}
 
 	var credentialValue map[string]interface{}
 	_, credentialValue, err = authImpl.signUp(authType, appOrg, string(emailCreds), string(emailParams), credentialID.String(), l)
 	if err != nil {
-		return errors.Wrap("error signing up", err)
+		return "", errors.Wrap("error signing up", err)
 	}
 	if credentialValue == nil {
-		return errors.New("error creating credentials for initial system account")
+		return "", errors.New("error creating credentials for initial system account")
 	}
 
 	//credential
@@ -1144,12 +1144,12 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	credential := &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
 		AuthType: authType, DateCreated: now, DateUpdated: &now}
 
-	_, err = a.registerUser(context, authType, email, nil, appOrg, credential, false, nil, profile, nil, []string{allSystemPermissionID}, nil, nil, l)
+	accountAuthType, err := a.registerUser(context, authType, email, nil, appOrg, credential, false, nil, profile, nil, []string{allSystemPermissionID}, nil, nil, l)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
 
-	return nil
+	return accountAuthType.Account.ID, nil
 }
 
 //GetServiceRegistrations retrieves all service registrations

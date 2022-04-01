@@ -1,5 +1,4 @@
 put:
-  deprecated: true
   tags:
   - System
   summary: Update organization
@@ -40,7 +39,6 @@ put:
     500:
       description: Internal error
 get:
-  deprecated: true
   tags:
   - System
   summary: Get organization

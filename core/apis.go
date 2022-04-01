@@ -4,6 +4,7 @@ import (
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -55,6 +56,8 @@ func (c *APIs) GetVersion() string {
 }
 
 func (c *APIs) storeSystemData() error {
+	documentIDs := make(map[string]string)
+
 	transaction := func(context storage.TransactionContext) error {
 		createAccount := false
 
@@ -64,7 +67,8 @@ func (c *APIs) storeSystemData() error {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 		}
 		if emailAuthType == nil {
-			emailAuthType = &model.AuthType{ID: uuid.NewString(), Code: auth.AuthTypeEmail, Description: "Authentication type relying on email and password",
+			documentIDs["auth_type"] = uuid.NewString()
+			emailAuthType = &model.AuthType{ID: documentIDs["auth_type"], Code: auth.AuthTypeEmail, Description: "Authentication type relying on email and password",
 				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false}
 			_, err = c.app.storage.InsertAuthType(context, *emailAuthType)
 			if err != nil {
@@ -78,8 +82,9 @@ func (c *APIs) storeSystemData() error {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 		}
 		if systemOrg == nil {
+			documentIDs["organization"] = uuid.NewString()
 			systemOrgConfig := model.OrganizationConfig{ID: uuid.NewString(), DateCreated: time.Now().UTC()}
-			newSystemOrg := model.Organization{ID: uuid.NewString(), Name: "System", Type: "small", System: true, Config: systemOrgConfig, DateCreated: time.Now().UTC()}
+			newSystemOrg := model.Organization{ID: documentIDs["organization"], Name: "System", Type: "small", System: true, Config: systemOrgConfig, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertOrganization(context, newSystemOrg)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganization, nil, err)
@@ -99,8 +104,9 @@ func (c *APIs) storeSystemData() error {
 			if c.systemAppTypeIdentifier == "" || c.systemAppTypeName == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system app type identifier or name", nil)
 			}
+			documentIDs["application"] = uuid.NewString()
 			newAndroidAppType := model.ApplicationType{ID: uuid.NewString(), Identifier: c.systemAppTypeIdentifier, Name: c.systemAppTypeName, Versions: nil}
-			newSystemAdminApp := model.Application{ID: uuid.NewString(), Name: "System Admin application", MultiTenant: false, Admin: true,
+			newSystemAdminApp := model.Application{ID: documentIDs["application"], Name: "System Admin application", MultiTenant: false, Admin: true,
 				SharedIdentities: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplication(context, newSystemAdminApp)
 			if err != nil {
@@ -121,7 +127,8 @@ func (c *APIs) storeSystemData() error {
 				supportedAuthTypes[i] = model.AuthTypesSupport{AppTypeID: appType.ID, SupportedAuthTypes: emailSupport}
 			}
 
-			newSystemAdminAppOrg := model.ApplicationOrganization{ID: uuid.NewString(), Application: *systemAdminApp, Organization: *systemOrg,
+			documentIDs["application_organization"] = uuid.NewString()
+			newSystemAdminAppOrg := model.ApplicationOrganization{ID: documentIDs["app_org"], Application: *systemAdminApp, Organization: *systemOrg,
 				SupportedAuthTypes: supportedAuthTypes, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplicationOrganization(context, newSystemAdminAppOrg)
 			if err != nil {
@@ -144,7 +151,8 @@ func (c *APIs) storeSystemData() error {
 			if c.systemAPIKey == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system api key", nil)
 			}
-			newAPIKey := model.APIKey{ID: uuid.NewString(), AppID: systemAppOrg.Application.ID, Key: c.systemAPIKey}
+			documentIDs["api_key"] = uuid.NewString()
+			newAPIKey := model.APIKey{ID: documentIDs["api_key"], AppID: systemAppOrg.Application.ID, Key: c.systemAPIKey}
 			_, err := c.app.storage.InsertAPIKey(context, newAPIKey)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAPIKey, nil, err)
@@ -158,7 +166,8 @@ func (c *APIs) storeSystemData() error {
 		}
 
 		if len(allSystemPermissions) == 0 {
-			allSystemCore := model.Permission{ID: uuid.NewString(), Name: "all_system_core", ServiceID: "core",
+			documentIDs["permission"] = uuid.NewString()
+			allSystemCore := model.Permission{ID: documentIDs["permission"], Name: "all_system_core", ServiceID: "core",
 				Assigners: []string{"all_system_core"}, DateCreated: time.Now().UTC()}
 			err = c.app.storage.InsertPermission(context, allSystemCore)
 			if err != nil {
@@ -173,7 +182,7 @@ func (c *APIs) storeSystemData() error {
 			if c.systemAccountEmail == "" || c.systemAccountPassword == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system account email or password", nil)
 			}
-			err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, allSystemPermissions[0].ID, c.systemAccountEmail, c.systemAccountPassword, c.logger.NewRequestLog(nil))
+			documentIDs["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, allSystemPermissions[0].ID, c.systemAccountEmail, c.systemAccountPassword, c.logger.NewRequestLog(nil))
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInitialize, "system account", nil, err)
 			}
@@ -182,7 +191,19 @@ func (c *APIs) storeSystemData() error {
 		return nil
 	}
 
-	return c.app.storage.PerformTransaction(transaction)
+	err := c.app.storage.PerformTransaction(transaction)
+	if err == nil {
+		for doc, id := range documentIDs {
+			fields := logutils.Fields{"id": id}
+			if doc == "auth_type" {
+				fields["code"] = auth.AuthTypeEmail
+			} else if doc == "permission" {
+				fields["name"] = "all_system_core"
+			}
+			c.logger.InfoWithFields(fmt.Sprintf("new system %s created", doc), fields)
+		}
+	}
+	return err
 }
 
 //NewCoreAPIs creates new CoreAPIs
