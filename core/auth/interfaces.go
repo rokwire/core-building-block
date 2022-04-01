@@ -291,7 +291,7 @@ type APIs interface {
 
 	//RegisterServiceAccount registers a service account
 	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string, orgID *string,
-		permissions *[]string, scopes *[]string, firstParty *bool, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error)
+		permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccount deregisters a service account
 	DeregisterServiceAccount(accountID string) error
@@ -300,7 +300,7 @@ type APIs interface {
 	GetServiceAccountInstance(accountID string, appID *string, orgID *string) (*model.ServiceAccount, error)
 
 	//UpdateServiceAccountInstance updates a service account instance
-	UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string, scopes []string) (*model.ServiceAccount, error)
+	UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccountInstance deregisters a service account instance
 	DeregisterServiceAccountInstance(id string, appID *string, orgID *string) error

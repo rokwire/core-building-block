@@ -975,7 +975,6 @@ func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (string, erro
 	}
 
 	permissions := accounts[0].GetPermissionNames()
-	scopes := accounts[0].GetScopeNames()
 	var appID string
 	if accounts[0].Application != nil {
 		appID = accounts[0].Application.ID
@@ -986,7 +985,7 @@ func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (string, erro
 	}
 
 	claims := a.getStandardClaims(accounts[0].AccountID, "", "", "", "", rokwireTokenAud, orgID, appID, authType, nil, nil, false, true, false, true, accounts[0].FirstParty, "")
-	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, ","))
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), "")
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
@@ -1005,12 +1004,11 @@ func (a *Auth) GetServiceAccounts(params map[string]interface{}) ([]model.Servic
 
 //RegisterServiceAccount registers a service account
 func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string,
-	orgID *string, permissions *[]string, scopes *[]string, firstParty *bool, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
+	orgID *string, permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
 	var newAccount *model.ServiceAccount
 	var err error
 	var newName string
 	var permissionList []string
-	var scopeList []string
 	var displayParamsList []map[string]interface{}
 
 	if accountID != nil {
@@ -1028,12 +1026,8 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 		if permissions != nil {
 			permissionList = *permissions
 		}
-		scopeList = fromAccount.GetScopeNames()
-		if scopes != nil {
-			scopeList = *scopes
-		}
 
-		newAccount, err = a.constructServiceAccount(fromAccount.AccountID, newName, appID, orgID, permissionList, scopeList, fromAccount.FirstParty)
+		newAccount, err = a.constructServiceAccount(fromAccount.AccountID, newName, appID, orgID, permissionList, fromAccount.FirstParty)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 		}
@@ -1050,11 +1044,8 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 		if permissions != nil {
 			permissionList = *permissions
 		}
-		if scopes != nil {
-			scopeList = *scopes
-		}
 
-		newAccount, err = a.constructServiceAccount(id.String(), newName, appID, orgID, permissionList, scopeList, *firstParty)
+		newAccount, err = a.constructServiceAccount(id.String(), newName, appID, orgID, permissionList, *firstParty)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 		}
@@ -1114,8 +1105,8 @@ func (a *Auth) GetServiceAccountInstance(accountID string, appID *string, orgID 
 }
 
 //UpdateServiceAccountInstance updates a service account instance
-func (a *Auth) UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string, scopes []string) (*model.ServiceAccount, error) {
-	updatedAccount, err := a.constructServiceAccount(id, name, appID, orgID, permissions, scopes, false)
+func (a *Auth) UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string) (*model.ServiceAccount, error) {
+	updatedAccount, err := a.constructServiceAccount(id, name, appID, orgID, permissions, false)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 	}

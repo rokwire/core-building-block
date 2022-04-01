@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/authorization"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -1199,24 +1198,10 @@ func (sa *Adapter) FindServiceAccount(context TransactionContext, accountID stri
 
 //FindServiceAccounts gets all service accounts matching a search
 func (sa *Adapter) FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error) {
-	//TODO: for scopes, possibly store strings not objects
 	filter := bson.D{}
 	for k, v := range params {
 		if k == "permissions" {
 			filter = append(filter, primitive.E{Key: k + ".name", Value: bson.M{"$in": v}})
-		} else if k == "scopes" {
-			scopeParams, ok := v.([]string)
-			if !ok {
-				return nil, errors.ErrorAction(logutils.ActionParse, model.TypeScope, &logutils.FieldArgs{k: v})
-			}
-			scopes := make([]authorization.Scope, len(scopeParams))
-			for i, scope := range scopeParams {
-				scopeObj, _ := authorization.ScopeFromString(scope)
-				if scopeObj != nil {
-					scopes[i] = *scopeObj
-				}
-			}
-			filter = append(filter, primitive.E{Key: k, Value: bson.M{"$in": scopes}})
 		} else {
 			filter = append(filter, primitive.E{Key: k, Value: v})
 		}
@@ -1263,7 +1248,6 @@ func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) (*model.S
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "name", Value: storageAccount.Name},
 			primitive.E{Key: "permissions", Value: storageAccount.Permissions},
-			primitive.E{Key: "scopes", Value: storageAccount.Scopes},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}

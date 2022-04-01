@@ -542,7 +542,6 @@ type ServiceAccount struct {
 	Name        string                      `json:"name"`
 	OrgId       *string                     `json:"org_id"`
 	Permissions []string                    `json:"permissions"`
-	Scopes      []string                    `json:"scopes"`
 }
 
 // ServiceAccountCredential defines model for ServiceAccountCredential.
@@ -1095,7 +1094,6 @@ type SystemReqCreateServiceAccount struct {
 	Name        *string                     `json:"name,omitempty"`
 	OrgId       *string                     `json:"org_id"`
 	Permissions *[]string                   `json:"permissions,omitempty"`
-	Scopes      *[]string                   `json:"scopes,omitempty"`
 }
 
 // SystemReqGetApplication defines model for _system_req_get_Application.
@@ -1146,7 +1144,6 @@ type SystemReqUpdateAuthType_Params struct {
 type SystemReqUpdateServiceAccount struct {
 	Name        string   `json:"name"`
 	Permissions []string `json:"permissions"`
-	Scopes      []string `json:"scopes"`
 }
 
 // SystemResGetApplications defines model for _system_res_get_Applications.
@@ -1493,9 +1490,6 @@ type GetSystemServiceAccountsParams struct {
 
 	// A comma-separated list of service account permissions to search for
 	Permissions *string `json:"permissions,omitempty"`
-
-	// A comma-separated list of service account scopes to search for
-	Scopes *string `json:"scopes,omitempty"`
 }
 
 // PostSystemServiceAccountsJSONBody defines parameters for PostSystemServiceAccounts.

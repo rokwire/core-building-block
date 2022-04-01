@@ -311,7 +311,6 @@ type ServiceAccount struct {
 	Organization *Organization
 
 	Permissions []Permission
-	Scopes      []authorization.Scope
 	FirstParty  bool
 
 	Credentials []ServiceAccountCredential
@@ -327,15 +326,6 @@ func (s ServiceAccount) GetPermissionNames() []string {
 		permissions[i] = permission.Name
 	}
 	return permissions
-}
-
-//GetScopeNames returns all names of scopes granted to this account
-func (s ServiceAccount) GetScopeNames() []string {
-	scopes := make([]string, len(s.Scopes))
-	for i, scope := range s.Scopes {
-		scopes[i] = scope.String()
-	}
-	return scopes
 }
 
 //AppOrgPair represents an appID, orgID pair entity

@@ -3033,8 +3033,7 @@ paths:
                 value: |
                   {
                     "name": "updated_name",
-                    "permissions": ["permission1", "new_permission1"],
-                    "scopes": ["scope1", "scope2", "new_scope1"]
+                    "permissions": ["permission1", "new_permission1"]
                   }
         required: true
       responses:
@@ -3148,14 +3147,6 @@ paths:
           explode: false
           schema:
             type: string
-        - name: scopes
-          in: query
-          description: A comma-separated list of service account scopes to search for
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: string
       responses:
         '200':
           description: Success
@@ -3215,7 +3206,6 @@ paths:
                     "app_id": "9766",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "permissions": ["permission1", "permission2"],
-                    "scopes": ["scope1", "scope2"],
                     "first_party": true,
                     "creds": [
                       {
@@ -3239,7 +3229,6 @@ paths:
                     "app_id": "9766",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "permissions": ["permission1", "permission2"],
-                    "scopes": ["scope1", "scope2"],
                     "first_party": true
                   }
               copy_from:
@@ -3251,7 +3240,6 @@ paths:
                     "app_id": "9766",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "permissions": ["permission1", "permission2"],
-                    "scopes": ["scope1", "scope2"],
                   }
         required: true
       responses:
@@ -4597,7 +4585,6 @@ components:
         - app_id
         - org_id
         - permissions
-        - scopes
         - first_party
       type: object
       properties:
@@ -4612,10 +4599,6 @@ components:
           type: string
           nullable: true
         permissions:
-          type: array
-          items:
-            type: string
-        scopes:
           type: array
           items:
             type: string
@@ -6104,10 +6087,6 @@ components:
           type: array
           items:
             type: string
-        scopes:
-          type: array
-          items:
-            type: string
         first_party:
           type: boolean
         creds:
@@ -6118,16 +6097,11 @@ components:
       required:
         - name
         - permissions
-        - scopes
       type: object
       properties:
         name:
           type: string
         permissions:
-          type: array
-          items:
-            type: string
-        scopes:
           type: array
           items:
             type: string
