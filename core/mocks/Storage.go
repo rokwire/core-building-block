@@ -112,6 +112,20 @@ func (_m *Storage) DeleteAccountPermissions(context storage.TransactionContext, 
 	return r0
 }
 
+// DeleteAccountRoles provides a mock function with given fields: context, accountID, roleIDs
+func (_m *Storage) DeleteAccountRoles(context storage.TransactionContext, accountID string, roleIDs []string) error {
+	ret := _m.Called(context, accountID, roleIDs)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, []string) error); ok {
+		r0 = rf(context, accountID, roleIDs)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DeleteAppConfig provides a mock function with given fields: ID
 func (_m *Storage) DeleteAppConfig(ID string) error {
 	ret := _m.Called(ID)

@@ -223,9 +223,13 @@ _admin_req_add-accounts-to-group:
 _admin_req_remove-account-from-group:
   $ref: "./apis/admin/application/group/accounts/remove/request/Request.yaml"
   
-### account roles API
+### grant account roles API
 _admin_req_grant-roles-to-account:
   $ref: "./apis/admin/application/account/roles/grant/request/Request.yaml"
+
+### revoke account roles API
+_admin_req_revoke-roles-from-account:
+  $ref: "./apis/admin/application/account/roles/revoke/request/Request.yaml"
 
 ### grant permissions to account API
 _admin_req_grant-permissions:
