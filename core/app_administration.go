@@ -237,7 +237,7 @@ func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
 	//find application organization groups
-	getAppOrgGroups, err := app.storage.FindAppOrgGroups(nil, nil, getAppOrg.ID)
+	getAppOrgGroups, err := app.storage.FindAppOrgGroups(getAppOrg.ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err)
 	}
@@ -454,7 +454,7 @@ func (app *application) AdmGetAppOrgRoles(appID string, orgID string) ([]model.A
 	}
 
 	//find application organization roles
-	getAppOrgRoles, err := app.storage.FindAppOrgRoles(nil, nil, getAppOrg.ID)
+	getAppOrgRoles, err := app.storage.FindAppOrgRoles(getAppOrg.ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err)
 	}
@@ -751,7 +751,7 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 	}
 
 	//find roles
-	roles, err := app.storage.FindAppOrgRoles(nil, roleIDs, account.AppOrg.ID)
+	roles, err := app.storage.FindAppOrgRolesByIDs(nil, roleIDs, account.AppOrg.ID)
 	if err != nil {
 		return errors.Wrap("error finding app org roles", err)
 	}
@@ -818,7 +818,7 @@ func (app *application) admRevokeAccountRoles(appID string, orgID string, accoun
 	}
 
 	//find roles
-	roles, err := app.storage.FindAppOrgRoles(nil, roleIDs, account.AppOrg.ID)
+	roles, err := app.storage.FindAppOrgRolesByIDs(nil, roleIDs, account.AppOrg.ID)
 	if err != nil {
 		return errors.Wrap("error finding roles on revoking roles", err)
 	}

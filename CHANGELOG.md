@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.22.0] - 2022-04-02
 ### Added
 - Implement system accounts [#278](https://github.com/rokwire/core-building-block/issues/278)
 - Expose revoke roles from account Admin API [#412](https://github.com/rokwire/core-building-block/issues/412)
@@ -264,8 +266,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.21.1...HEAD
-[1.21.0]: https://github.com/rokwire/core-building-block/compare/v1.21.0...v1.21.1
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.22.0...HEAD
+[1.22.0]: https://github.com/rokwire/core-building-block/compare/v1.21.1...v1.22.0
+[1.21.1]: https://github.com/rokwire/core-building-block/compare/v1.21.0...v1.21.1
 [1.21.0]: https://github.com/rokwire/core-building-block/compare/v1.20.1...v1.21.0
 [1.20.1]: https://github.com/rokwire/core-building-block/compare/v1.20.0...v1.20.1
 [1.20.0]: https://github.com/rokwire/core-building-block/compare/v1.19.0...v1.20.0

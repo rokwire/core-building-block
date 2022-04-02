@@ -456,12 +456,12 @@ type Storage interface {
 	FindPermissions(context storage.TransactionContext, ids []string) ([]model.Permission, error)
 
 	//ApplicationRoles
-	FindAppOrgRoles(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
+	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	//AccountRoles
 	UpdateAccountRoles(accountID string, roles []model.AccountRole) error
 
 	//ApplicationGroups
-	FindAppOrgGroups(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
+	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	//AccountGroups
 	UpdateAccountGroups(accountID string, groups []model.AccountGroup) error
 }
