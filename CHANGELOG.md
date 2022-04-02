@@ -6,10 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Implement system accounts [#278](https://github.com/rokwire/core-building-block/issues/278)
 
 ## [1.22.0] - 2022-04-02
 ### Added
-- Implement system accounts [#278](https://github.com/rokwire/core-building-block/issues/278)
 - Expose revoke roles from account Admin API [#412](https://github.com/rokwire/core-building-block/issues/412)
 - Expose revoke permissions from account Admin API [#411](https://github.com/rokwire/core-building-block/issues/411)
 - Expose grant permissions to role Admin API [#415](https://github.com/rokwire/core-building-block/issues/415)
