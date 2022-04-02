@@ -510,12 +510,12 @@ type Storage interface {
 	DeleteDevice(context storage.TransactionContext, id string) error
 
 	//ApplicationRoles
-	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
+	FindAppOrgRolesByIDs(ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	//AccountRoles
 	UpdateAccountRoles(accountID string, roles []model.AccountRole) error
 
 	//ApplicationGroups
-	FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
+	FindAppOrgGroupsByIDs(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	//AccountGroups
 	UpdateAccountGroups(accountID string, groups []model.AccountGroup) error
 }
