@@ -938,6 +938,25 @@ func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, a
 	return accounts, nil
 }
 
+//FindAccountsByAccountID finds accounts
+func (sa *Adapter) FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error) {
+
+	//find app org id
+	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error getting cached application organization", "", nil, err)
+	}
+
+	accountFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}}}
+	var accountResult []account
+	err = sa.db.accounts.Find(accountFilter, &accountResult, nil)
+	if err != nil {
+		return nil, err
+	}
+	accounts := accountsFromStorage(accountResult, *appOrg)
+	return accounts, nil
+}
+
 //FindAccountByID finds an account by id
 func (sa *Adapter) FindAccountByID(context TransactionContext, id string) (*model.Account, error) {
 	return sa.findAccount(context, "_id", id)
@@ -1076,6 +1095,9 @@ func (sa *Adapter) InsertAccountPermissions(accountID string, permissions []mode
 		primitive.E{Key: "$push", Value: bson.D{
 			primitive.E{Key: "permissions", Value: bson.M{"$each": permissions}},
 		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
 	}
 
 	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
@@ -1086,6 +1108,42 @@ func (sa *Adapter) InsertAccountPermissions(accountID string, permissions []mode
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
+	return nil
+}
+
+//DeleteAccountPermissions deletes permissions from an account
+func (sa *Adapter) DeleteAccountPermissions(context TransactionContext, accountID string, permissions []model.Permission) error {
+	//filter
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+
+	//update
+	permissionsIDs := make([]string, len(permissions))
+	for i, permission := range permissions {
+		permissionsIDs[i] = permission.ID
+	}
+	update := bson.D{
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "permissions", Value: bson.M{"_id": bson.M{"$in": permissionsIDs}}},
+		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
+	}
+
+	var res *mongo.UpdateResult
+	var err error
+	if context != nil {
+		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	} else {
+		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
 	return nil
 }
 
@@ -1112,6 +1170,54 @@ func (sa *Adapter) InsertAccountRoles(accountID string, appOrgID string, roles [
 	return nil
 }
 
+//InsertAccountsGroup inserts accounts into a group
+func (sa *Adapter) InsertAccountsGroup(group model.AccountGroup, accounts []model.Account) error {
+	//prepare filter
+	accountsIDs := make([]string, len(accounts))
+	for i, cur := range accounts {
+		accountsIDs[i] = cur.ID
+	}
+	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountsIDs}}}
+
+	//update
+	storageGroup := accountGroupToStorage(group)
+	update := bson.D{
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "groups", Value: storageGroup},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateMany(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
+	}
+	sa.logger.Infof("modified %d accounts with added group", res.ModifiedCount)
+	return nil
+}
+
+//RemoveAccountsGroup removes accounts from a group
+func (sa *Adapter) RemoveAccountsGroup(groupID string, accounts []model.Account) error {
+	//prepare filter
+	accountsIDs := make([]string, len(accounts))
+	for i, cur := range accounts {
+		accountsIDs[i] = cur.ID
+	}
+	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountsIDs}}}
+	//update
+	update := bson.D{
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "groups", Value: bson.M{"group._id": groupID}},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateMany(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
+	}
+	sa.logger.Infof("modified %d accounts with removed group", res.ModifiedCount)
+	return nil
+}
+
 //UpdateAccountRoles updates the account roles
 func (sa *Adapter) UpdateAccountRoles(accountID string, roles []model.AccountRole) error {
 	stgRoles := accountRolesToStorage(roles)
@@ -1135,22 +1241,34 @@ func (sa *Adapter) UpdateAccountRoles(accountID string, roles []model.AccountRol
 }
 
 //DeleteAccountRoles deletes account roles
-func (sa *Adapter) DeleteAccountRoles(accountID string, roleIDs []string) error {
+func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID string, roleIDs []string) error {
+	//filter
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+
+	//update
 	update := bson.D{
 		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "roles", Value: bson.M{"$each": roleIDs}},
+			primitive.E{Key: "roles", Value: bson.M{"role._id": bson.M{"$in": roleIDs}}},
+		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	var res *mongo.UpdateResult
+	var err error
+	if context != nil {
+		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	} else {
+		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
+	}
+
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
-
 	return nil
 }
 
@@ -1287,6 +1405,47 @@ func (sa *Adapter) DeleteAccountAuthType(context TransactionContext, item model.
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+//UpdateAccountExternalIDs updates account external IDs
+func (sa *Adapter) UpdateAccountExternalIDs(accountID string, externalIDs map[string]string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	now := time.Now().UTC()
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "external_ids", Value: externalIDs},
+			primitive.E{Key: "date_updated", Value: &now},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, "account external IDs", &logutils.FieldArgs{"_id": accountID}, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, "account external IDs", &logutils.FieldArgs{"_id": accountID, "unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+//UpdateLoginSessionExternalIDs updates login session external IDs
+func (sa *Adapter) UpdateLoginSessionExternalIDs(accountID string, externalIDs map[string]string) error {
+	filter := bson.D{primitive.E{Key: "identifier", Value: accountID}}
+	now := time.Now().UTC()
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "external_ids", Value: externalIDs},
+			primitive.E{Key: "date_updated", Value: &now},
+		}},
+	}
+
+	_, err := sa.db.loginsSessions.UpdateMany(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, "login session external IDs", &logutils.FieldArgs{"identifier": accountID}, err)
 	}
 
 	return nil
@@ -1666,16 +1825,33 @@ func (sa *Adapter) DeletePermission(id string) error {
 	return errors.New(logutils.Unimplemented)
 }
 
-//FindAppOrgRoles finds a set of application organization roles
-func (sa *Adapter) FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error) {
-	var rolesFilter bson.D
-
-	if len(ids) == 0 {
-		rolesFilter = bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
-	} else {
-		rolesFilter = bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+//FindAppOrgRoles finds all application organization roles fora given AppOrg ID
+func (sa *Adapter) FindAppOrgRoles(appOrgID string) ([]model.AppOrgRole, error) {
+	rolesFilter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
+	var rolesResult []appOrgRole
+	err := sa.db.applicationsOrganizationsRoles.Find(rolesFilter, &rolesResult, nil)
+	if err != nil {
+		return nil, err
 	}
 
+	//get the application organization from the cached ones
+	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+	}
+
+	result := appOrgRolesFromStorage(rolesResult, *appOrg)
+
+	return result, nil
+}
+
+//FindAppOrgRolesByIDs finds a set of application organization roles for the provided IDs
+func (sa *Adapter) FindAppOrgRolesByIDs(ids []string, appOrgID string) ([]model.AppOrgRole, error) {
+	if len(ids) == 0 {
+		return []model.AppOrgRole{}, nil
+	}
+
+	rolesFilter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var rolesResult []appOrgRole
 	err := sa.db.applicationsOrganizationsRoles.Find(rolesFilter, &rolesResult, nil)
 	if err != nil {
@@ -1753,17 +1929,53 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 	return nil
 }
 
-//FindAppOrgGroups finds a set of application organization groups
-//	ids param is optional
-func (sa *Adapter) FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
-	var filter bson.D
+//InsertAppOrgRolePermissions inserts permissions to role
+func (sa *Adapter) InsertAppOrgRolePermissions(context TransactionContext, roleID string, permissions []model.Permission) error {
 
-	if len(ids) == 0 {
-		filter = bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
-	} else {
-		filter = bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	filter := bson.D{primitive.E{Key: "_id", Value: roleID}}
+	update := bson.D{
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "permissions", Value: bson.M{"$each": permissions}},
+		}},
 	}
 
+	res, err := sa.db.applicationsOrganizationsRoles.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+//FindAppOrgGroups finds all application organization groups for the provided AppOrg ID
+func (sa *Adapter) FindAppOrgGroups(appOrgID string) ([]model.AppOrgGroup, error) {
+	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
+	var groupsResult []appOrgGroup
+	err := sa.db.applicationsOrganizationsGroups.Find(filter, &groupsResult, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+	}
+
+	result := appOrgGroupsFromStorage(groupsResult, *appOrg)
+
+	return result, nil
+}
+
+//FindAppOrgGroupsByIDs finds a set of application organization groups for the provided IDs
+func (sa *Adapter) FindAppOrgGroupsByIDs(ids []string, appOrgID string) ([]model.AppOrgGroup, error) {
+	if len(ids) == 0 {
+		return []model.AppOrgGroup{}, nil
+	}
+
+	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var groupsResult []appOrgGroup
 	err := sa.db.applicationsOrganizationsGroups.Find(filter, &groupsResult, nil)
 	if err != nil {

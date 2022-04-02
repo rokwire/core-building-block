@@ -1,9 +1,9 @@
-put:
+delete:
   tags:
   - Admin
-  summary: Grant account permissions
+  summary: Delete permissions from account
   description: |
-    Grant account permissions
+    Deletes an existing permissions from account
 
     **Auth:** Requires auth token with 'all_admin_core' permission
   security:
@@ -13,8 +13,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../../../../schemas/apis/admin/application/account/permissions/grant/request/Request.yaml"
-    required: true
+          $ref: "../../../../../schemas/apis/admin/application/account/permissions/revoke/request/Request.yaml"
   responses:
     200:
       description: Success

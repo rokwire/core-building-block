@@ -132,9 +132,13 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/groups", we.wrapFunc(we.adminApisHandler.adminCreateApplicationGroup, we.auth.admin.permissions)).Methods("POST")
 	adminSubrouter.HandleFunc("/application/groups/{id}", we.wrapFunc(we.adminApisHandler.adminDeleteApplicationGroup, we.auth.admin.permissions)).Methods("DELETE")
 
+	adminSubrouter.HandleFunc("/application/group/accounts/add", we.wrapFunc(we.adminApisHandler.addAccountsToGroup, we.auth.admin.permissions)).Methods("PUT")
+	adminSubrouter.HandleFunc("/application/group/accounts/remove", we.wrapFunc(we.adminApisHandler.removeAccountsFromGroup, we.auth.admin.permissions)).Methods("DELETE")
+
 	adminSubrouter.HandleFunc("/application/roles", we.wrapFunc(we.adminApisHandler.adminGetApplicationOrgRoles, we.auth.admin.permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/roles", we.wrapFunc(we.adminApisHandler.adminCreateApplicationRole, we.auth.admin.permissions)).Methods("POST")
 	adminSubrouter.HandleFunc("/application/roles/{id}", we.wrapFunc(we.adminApisHandler.adminDeleteApplicationRole, we.auth.admin.permissions)).Methods("DELETE")
+	adminSubrouter.HandleFunc("/application/role/permissions/grant", we.wrapFunc(we.adminApisHandler.adminGrantPermissionsToRole, we.auth.admin.permissions)).Methods("PUT")
 
 	adminSubrouter.HandleFunc("/application/permissions", we.wrapFunc(we.adminApisHandler.getApplicationPermissions, we.auth.admin.permissions)).Methods("GET")
 
@@ -143,7 +147,9 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/account/{account_id}/login-sessions/{session_id}", we.wrapFunc(we.adminApisHandler.deleteApplicationLoginSession, we.auth.admin.permissions)).Methods("DELETE")
 	adminSubrouter.HandleFunc("/application/account/{id}/devices", we.wrapFunc(we.adminApisHandler.getApplicationAccountDevices, we.auth.admin.permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/account/permissions/grant", we.wrapFunc(we.adminApisHandler.grantAccountPermissions, we.auth.admin.permissions)).Methods("PUT")
-	adminSubrouter.HandleFunc("/application/account/roles/grant", we.wrapFunc(we.adminApisHandler.grantAccountRoles, we.auth.admin.user)).Methods("PUT")
+	adminSubrouter.HandleFunc("/application/account/permissions/revoke", we.wrapFunc(we.adminApisHandler.revokeAccountPermissions, we.auth.admin.permissions)).Methods("DELETE")
+	adminSubrouter.HandleFunc("/application/account/roles/grant", we.wrapFunc(we.adminApisHandler.grantAccountRoles, we.auth.admin.permissions)).Methods("PUT")
+	adminSubrouter.HandleFunc("/application/account/roles/revoke", we.wrapFunc(we.adminApisHandler.revokeAccountRoles, we.auth.admin.permissions)).Methods("DELETE")
 	///
 
 	///enc ///
