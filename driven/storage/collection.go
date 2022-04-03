@@ -265,7 +265,7 @@ func (collWrapper *collectionWrapper) watch(pipeline interface{}, resumeToken bs
 	}
 
 	opts := options.ChangeStream()
-	opts.SetFullDocument(options.UpdateLookup)
+	opts.SetFullDocument(options.UpdateLookup) // remove to only use deltas to update caches
 	if resumeToken != nil {
 		opts.SetResumeAfter(resumeToken)
 	}

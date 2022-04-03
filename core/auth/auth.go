@@ -2008,6 +2008,22 @@ func (a *Auth) getCachedIdentityProviderConfig(id string, appTypeID string) (*mo
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, errArgs)
 }
 
+func (a *Auth) updateCachedIdentityProviders(docID string, operation string, idPr model.IdentityProvider) {
+	a.identityProvidersLock.RLock()
+	defer a.identityProvidersLock.RUnlock()
+
+	switch operation {
+	case "insert":
+		a.cachedIdentityProviders.Store(docID, idPr)
+	case "replace":
+		a.cachedIdentityProviders.Store(docID, idPr)
+	case "update":
+		a.cachedIdentityProviders.Store(docID, idPr)
+	case "delete":
+		a.cachedIdentityProviders.Delete(docID)
+	}
+}
+
 func (a *Auth) cacheAPIKeys() error {
 	apiKeys, err := a.storage.LoadAPIKeys()
 	if err != nil {
@@ -2024,6 +2040,7 @@ func (a *Auth) setCachedAPIKeys(apiKeys []model.APIKey) {
 	a.apiKeys = &syncmap.Map{}
 	for _, apiKey := range apiKeys {
 		a.apiKeys.Store(apiKey.Key, apiKey)
+		a.apiKeys.Store(apiKey.ID, apiKey)
 	}
 }
 
@@ -2039,6 +2056,31 @@ func (a *Auth) getCachedAPIKey(key string) (*model.APIKey, error) {
 		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil)
 	}
 	return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeAPIKey, nil)
+}
+
+func (a *Auth) updateCachedAPIKeys(docID string, operation string, apiKey model.APIKey) {
+	a.apiKeysLock.RLock()
+	defer a.apiKeysLock.RUnlock()
+
+	//TODO: may need to remove api keys cached by key on replace and update
+	switch operation {
+	case "insert":
+		a.apiKeys.Store(apiKey.Key, apiKey)
+		a.apiKeys.Store(docID, apiKey)
+	case "replace":
+		a.apiKeys.Store(apiKey.Key, apiKey)
+		a.apiKeys.Store(docID, apiKey)
+	case "update":
+		a.apiKeys.Store(apiKey.Key, apiKey)
+		a.apiKeys.Store(docID, apiKey)
+	case "delete":
+		item, loaded := a.apiKeys.LoadAndDelete(docID)
+		if loaded {
+			if cachedKey, ok := item.(model.APIKey); ok {
+				a.apiKeys.Delete(cachedKey.Key)
+			}
+		}
+	}
 }
 
 func (a *Auth) setupDeleteSessionsTimer() {
@@ -2207,16 +2249,16 @@ type StorageListener struct {
 }
 
 //OnIdentityProvidersUpdated notifies that identity providers have been updated
-func (al *StorageListener) OnIdentityProvidersUpdated() {
-	al.auth.cacheIdentityProviders()
+func (al *StorageListener) OnIdentityProvidersUpdated(docID string, operation string, idPr model.IdentityProvider) {
+	al.auth.updateCachedIdentityProviders(docID, operation, idPr)
 }
 
 //OnAPIKeysUpdated notifies api keys have been updated
-func (al *StorageListener) OnAPIKeysUpdated() {
-	al.auth.cacheAPIKeys()
+func (al *StorageListener) OnAPIKeysUpdated(docID string, operation string, apiKey model.APIKey) {
+	al.auth.updateCachedAPIKeys(docID, operation, apiKey)
 }
 
 //OnServiceRegsUpdated notifies that a service registration has been updated
-func (al *StorageListener) OnServiceRegsUpdated() {
+func (al *StorageListener) OnServiceRegsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
 	al.auth.AuthService.LoadServices()
 }

@@ -130,3 +130,10 @@ func Contains(list []string, value string) bool {
 	}
 	return false
 }
+
+//RecoverWithError attempts to recover from a panic while logging the error
+func RecoverWithError(errStr string, logger *logs.Logger) {
+	if p := recover(); p != nil {
+		logger.Errorf("%s: %v", errStr, p)
+	}
+}

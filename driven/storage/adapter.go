@@ -2948,67 +2948,75 @@ type storageListener struct {
 	DefaultListenerImpl
 }
 
-func (sl *storageListener) OnAuthTypesUpdated() {
-	sl.adapter.cacheAuthTypes()
+func (sl *storageListener) OnAuthTypesUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+	sl.adapter.updateCachedAuthTypes(docID, operation, fullDoc)
 }
 
-func (sl *storageListener) OnOrganizationsUpdated() {
-	sl.adapter.cacheOrganizations()
+func (sl *storageListener) OnOrganizationsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+	sl.adapter.updateCachedOrganizations(docID, operation, fullDoc)
 }
 
-func (sl *storageListener) OnApplicationsUpdated() {
-	sl.adapter.cacheApplications()
-	sl.adapter.cacheOrganizations()
+func (sl *storageListener) OnApplicationsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+	sl.adapter.updateCachedApplications(docID, operation, fullDoc)
+	sl.adapter.updateCachedOrganizations(docID, operation, fullDoc)
 }
 
-func (sl *storageListener) OnApplicationsOrganizationsUpdated() {
-	sl.adapter.cacheApplications()
-	sl.adapter.cacheOrganizations()
-	sl.adapter.cacheApplicationsOrganizations()
+func (sl *storageListener) OnApplicationsOrganizationsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+	sl.adapter.updateCachedApplications(docID, operation, fullDoc)
+	sl.adapter.updateCachedOrganizations(docID, operation, fullDoc)
+	sl.adapter.updateCachedApplicationsOrganizations(docID, operation, fullDoc)
 }
 
-func (sl *storageListener) OnApplicationConfigsUpdated() {
-	sl.adapter.cacheApplicationConfigs()
+func (sl *storageListener) OnApplicationConfigsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+	sl.adapter.updateCachedApplicationConfigs(docID, operation, fullDoc)
 }
 
 //Listener represents storage listener
 type Listener interface {
-	OnAPIKeysUpdated()
-	OnAuthTypesUpdated()
-	OnIdentityProvidersUpdated()
-	OnServiceRegsUpdated()
-	OnOrganizationsUpdated()
-	OnApplicationsUpdated()
-	OnApplicationsOrganizationsUpdated()
-	OnApplicationConfigsUpdated()
+	OnAPIKeysUpdated(docID string, operation string, apiKey model.APIKey)
+	OnAuthTypesUpdated(docID string, operation string, fullDoc map[string]interface{})
+	OnIdentityProvidersUpdated(docID string, operation string, idPr model.IdentityProvider)
+	OnServiceRegsUpdated(docID string, operation string, fullDoc map[string]interface{})
+	OnOrganizationsUpdated(docID string, operation string, fullDoc map[string]interface{})
+	OnApplicationsUpdated(docID string, operation string, fullDoc map[string]interface{})
+	OnApplicationsOrganizationsUpdated(docID string, operation string, fullDoc map[string]interface{})
+	OnApplicationConfigsUpdated(docID string, operation string, fullDoc map[string]interface{})
 }
 
 //DefaultListenerImpl default listener implementation
 type DefaultListenerImpl struct{}
 
 //OnAPIKeysUpdated notifies api keys have been updated
-func (d *DefaultListenerImpl) OnAPIKeysUpdated() {}
+func (d *DefaultListenerImpl) OnAPIKeysUpdated(docID string, operation string, apiKey model.APIKey) {
+}
 
 //OnAuthTypesUpdated notifies auth types have been updated
-func (d *DefaultListenerImpl) OnAuthTypesUpdated() {}
+func (d *DefaultListenerImpl) OnAuthTypesUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+}
 
 //OnIdentityProvidersUpdated notifies identity providers have been updated
-func (d *DefaultListenerImpl) OnIdentityProvidersUpdated() {}
+func (d *DefaultListenerImpl) OnIdentityProvidersUpdated(docID string, operation string, idPr model.IdentityProvider) {
+}
 
 //OnServiceRegsUpdated notifies services regs have been updated
-func (d *DefaultListenerImpl) OnServiceRegsUpdated() {}
+func (d *DefaultListenerImpl) OnServiceRegsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+}
 
 //OnOrganizationsUpdated notifies organizations have been updated
-func (d *DefaultListenerImpl) OnOrganizationsUpdated() {}
+func (d *DefaultListenerImpl) OnOrganizationsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+}
 
 //OnApplicationsUpdated notifies applications have been updated
-func (d *DefaultListenerImpl) OnApplicationsUpdated() {}
+func (d *DefaultListenerImpl) OnApplicationsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+}
 
 //OnApplicationsOrganizationsUpdated notifies applications organizations have been updated
-func (d *DefaultListenerImpl) OnApplicationsOrganizationsUpdated() {}
+func (d *DefaultListenerImpl) OnApplicationsOrganizationsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+}
 
 //OnApplicationConfigsUpdated notifies application configs have been updated
-func (d *DefaultListenerImpl) OnApplicationConfigsUpdated() {}
+func (d *DefaultListenerImpl) OnApplicationConfigsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+}
 
 //TransactionContext wraps mongo.SessionContext for use by external packages
 type TransactionContext interface {

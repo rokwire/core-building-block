@@ -2,6 +2,8 @@ package storage
 
 import (
 	"context"
+	"core-building-block/core/model"
+	"core-building-block/utils"
 	"time"
 
 	"github.com/rokwire/logging-library-go/logs"
@@ -484,65 +486,105 @@ func (m *database) applyApplicationConfigsChecks(applicationConfigs *collectionW
 }
 
 func (m *database) onDataChanged(changeDoc map[string]interface{}) {
+	defer utils.RecoverWithError("error processing change stream event", m.logger)
+
 	if changeDoc == nil {
 		return
 	}
-	m.logger.Debugf("onDataChanged: %+v\n", changeDoc)
 	ns := changeDoc["ns"]
 	if ns == nil {
 		return
 	}
+	docKey := changeDoc["documentKey"]
+	if docKey == nil {
+		return
+	}
+	operation := changeDoc["operationType"].(string)
+	fullDoc, _ := changeDoc["fullDocument"].(map[string]interface{})
+	updateDesc, _ := changeDoc["updateDescription"].(map[string]interface{})
+
 	nsMap := ns.(map[string]interface{})
 	coll := nsMap["coll"]
+
+	docKeyMap := docKey.(map[string]interface{})
+	docID := docKeyMap["_id"].(string)
+
+	if operation == "update" {
+		fullDoc = updateDesc
+	}
+
+	m.logger.Debugf("onDataChanged: %+v\n", changeDoc)
 
 	switch coll {
 	case "api_keys":
 		m.logger.Info("api_keys collection changed")
 
+		var apiKey model.APIKey
+		if fullDoc != nil {
+			data, err := bson.Marshal(fullDoc)
+			if err != nil {
+				m.logger.Errorf("error marshalling api key bson: %v", err)
+			}
+			err = bson.Unmarshal(data, &apiKey)
+			if err != nil {
+				m.logger.Errorf("error unmarshalling api key bson: %v", err)
+			}
+		}
 		for _, listener := range m.listeners {
-			go listener.OnAPIKeysUpdated()
+			go listener.OnAPIKeysUpdated(docID, operation, apiKey)
 		}
 	case "auth_types":
 		m.logger.Info("auth_types collection changed")
 
 		for _, listener := range m.listeners {
-			go listener.OnAuthTypesUpdated()
+			go listener.OnAuthTypesUpdated(docID, operation, fullDoc)
 		}
 	case "identity_providers":
 		m.logger.Info("identity_providers collection changed")
 
+		var idPr model.IdentityProvider
+		if fullDoc != nil {
+			data, err := bson.Marshal(fullDoc)
+			if err != nil {
+				m.logger.Errorf("error marshalling identity provider bson: %v", err)
+			}
+			err = bson.Unmarshal(data, &idPr)
+			if err != nil {
+				m.logger.Errorf("error unmarshalling identity provider bson: %v", err)
+			}
+		}
 		for _, listener := range m.listeners {
-			go listener.OnIdentityProvidersUpdated()
+			go listener.OnIdentityProvidersUpdated(docID, operation, idPr)
 		}
 	case "service_regs":
 		m.logger.Info("service_regs collection changed")
 
 		for _, listener := range m.listeners {
-			go listener.OnServiceRegsUpdated()
+			go listener.OnServiceRegsUpdated(docID, operation, fullDoc)
 		}
 	case "organizations":
 		m.logger.Info("organizations collection changed")
 
 		for _, listener := range m.listeners {
-			go listener.OnOrganizationsUpdated()
+			go listener.OnOrganizationsUpdated(docID, operation, fullDoc)
 		}
 	case "applications":
 		m.logger.Info("applications collection changed")
 
 		for _, listener := range m.listeners {
-			go listener.OnApplicationsUpdated()
+			go listener.OnApplicationsUpdated(docID, operation, fullDoc)
 		}
 	case "applications_organizations":
 		m.logger.Info("applications organizations collection changed")
 
 		for _, listener := range m.listeners {
-			go listener.OnApplicationsOrganizationsUpdated()
+			go listener.OnApplicationsOrganizationsUpdated(docID, operation, fullDoc)
 		}
 	case "application_configs":
 		m.logger.Info("application configs collection changed")
 
 		for _, listener := range m.listeners {
-			go listener.OnApplicationConfigsUpdated()
+			go listener.OnApplicationConfigsUpdated(docID, operation, fullDoc)
 		}
 	}
 }
