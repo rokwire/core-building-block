@@ -517,7 +517,7 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 	return nil
 }
 
-func (app *application) admRemovePermissionsFromRole(roleID string, permissionNames []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error {
+func (app *application) admRemovePermissionsFromRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
 
 	if len(assignerPermissions) == 0 {
 		return errors.New("no permissions from admin assigner")

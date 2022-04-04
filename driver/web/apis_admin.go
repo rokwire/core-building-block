@@ -639,7 +639,7 @@ func (h AdminApisHandler) adminRevokePermissionsFromRole(l *logs.Log, r *http.Re
 	}
 
 	assignerPermissions := strings.Split(claims.Permissions, ",")
-	err = h.coreAPIs.Administration.AdmRemovePermissionsFromRole(requestData.RoleId, requestData.Permissions, claims.AppID, claims.OrgID, assignerPermissions, l)
+	err = h.coreAPIs.Administration.AdmRemovePermissionsFromRole(claims.AppID, claims.OrgID, requestData.RoleId, requestData.Permissions, assignerPermissions, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}
