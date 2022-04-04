@@ -128,7 +128,7 @@ func (c *APIs) storeSystemData() error {
 			}
 
 			documentIDs["application_organization"] = uuid.NewString()
-			newSystemAdminAppOrg := model.ApplicationOrganization{ID: documentIDs["app_org"], Application: *systemAdminApp, Organization: *systemOrg,
+			newSystemAdminAppOrg := model.ApplicationOrganization{ID: documentIDs["application_organization"], Application: *systemAdminApp, Organization: *systemOrg,
 				SupportedAuthTypes: supportedAuthTypes, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplicationOrganization(context, newSystemAdminAppOrg)
 			if err != nil {
