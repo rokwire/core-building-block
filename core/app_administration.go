@@ -552,21 +552,7 @@ func (app *application) admRemovePermissionsFromRole(roleID string, permissionNa
 		}
 	}
 
-	//5. find the permissions
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
-	if err != nil {
-		return errors.Wrapf("the are no permissions with those permission names", err)
-	}
-
-	//6. check the assigner
-	for _, permission := range permissions {
-		err = permission.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.Wrapf("error checking permission assigners", err)
-		}
-	}
-
-	//7.insert permission into a role
+	//5.Revoke permission from a role
 	err = app.storage.RevokePermissionsFromRole(nil, roleID, permissionNames)
 	if err != nil {
 		return errors.Wrap("error inserting permissions to roles", err)
