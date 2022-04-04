@@ -2259,6 +2259,6 @@ func (al *StorageListener) OnAPIKeysUpdated(docID string, operation string, apiK
 }
 
 //OnServiceRegsUpdated notifies that a service registration has been updated
-func (al *StorageListener) OnServiceRegsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+func (al *StorageListener) OnServiceRegsUpdated(docID string, operation string, serviceReg model.ServiceReg) {
 	al.auth.AuthService.LoadServices()
 }

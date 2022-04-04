@@ -191,6 +191,22 @@ func (sa *Adapter) getCachedOrganizations() ([]model.Organization, error) {
 	return organizationList, err
 }
 
+func (sa *Adapter) updateCachedOrganizations(docID string, operation string, org model.Organization) {
+	sa.organizationsLock.RLock()
+	defer sa.organizationsLock.RUnlock()
+
+	switch operation {
+	case "insert":
+		sa.cachedOrganizations.Store(docID, org)
+	case "replace":
+		sa.cachedOrganizations.Store(docID, org)
+	case "update":
+		sa.cachedOrganizations.Store(docID, org)
+	case "delete":
+		sa.cachedOrganizations.Delete(docID)
+	}
+}
+
 //cacheApplications caches the applications
 func (sa *Adapter) cacheApplications() error {
 	sa.logger.Info("cacheApplications..")
@@ -237,6 +253,22 @@ func (sa *Adapter) getCachedApplication(appID string) (*model.Application, error
 		return &application, nil
 	}
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplication, errArgs)
+}
+
+func (sa *Adapter) updateCachedApplications(docID string, operation string, app model.Application) {
+	sa.applicationsLock.RLock()
+	defer sa.applicationsLock.RUnlock()
+
+	switch operation {
+	case "insert":
+		sa.cachedApplications.Store(docID, app)
+	case "replace":
+		sa.cachedApplications.Store(docID, app)
+	case "update":
+		sa.cachedApplications.Store(docID, app)
+	case "delete":
+		sa.cachedApplications.Delete(docID)
+	}
 }
 
 func (sa *Adapter) getCachedApplicationType(id string) (*model.Application, *model.ApplicationType, error) {
@@ -319,6 +351,31 @@ func (sa *Adapter) getCachedAuthType(key string) (*model.AuthType, error) {
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthType, errArgs)
 }
 
+func (sa *Adapter) updateCachedAuthTypes(docID string, operation string, authType model.AuthType) {
+	sa.authTypesLock.RLock()
+	defer sa.authTypesLock.RUnlock()
+
+	//TODO: may need to remove auth types cached by code on replace and update
+	switch operation {
+	case "insert":
+		sa.cachedAuthTypes.Store(docID, authType)
+		sa.cachedAuthTypes.Store(authType.Code, authType)
+	case "replace":
+		sa.cachedAuthTypes.Store(docID, authType)
+		sa.cachedAuthTypes.Store(authType.Code, authType)
+	case "update":
+		sa.cachedAuthTypes.Store(docID, authType)
+		sa.cachedAuthTypes.Store(authType.Code, authType)
+	case "delete":
+		item, loaded := sa.cachedAuthTypes.LoadAndDelete(docID)
+		if loaded {
+			if cachedAuthType, ok := item.(model.AuthType); ok {
+				sa.cachedAuthTypes.Delete(cachedAuthType.Code)
+			}
+		}
+	}
+}
+
 //cacheApplicationsOrganizations caches the applications organizations
 func (sa *Adapter) cacheApplicationsOrganizations() error {
 	sa.logger.Info("cacheApplicationsOrganizations..")
@@ -375,6 +432,33 @@ func (sa *Adapter) getCachedApplicationOrganizationByKey(key string) (*model.App
 		return &appOrg, nil
 	}
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, errArgs)
+}
+
+func (sa *Adapter) updateCachedApplicationsOrganizations(docID string, operation string, appOrg model.ApplicationOrganization) {
+	sa.applicationsOrganizationsLock.RLock()
+	defer sa.applicationsOrganizationsLock.RUnlock()
+
+	appOrgKey := fmt.Sprintf("%s_%s", appOrg.Application.ID, appOrg.Organization.ID)
+
+	//TODO: may need to remove app orgs cached by appID_orgID on replace and update
+	switch operation {
+	case "insert":
+		sa.cachedApplicationsOrganizations.Store(docID, appOrg)
+		sa.cachedApplicationsOrganizations.Store(appOrgKey, appOrg)
+	case "replace":
+		sa.cachedApplicationsOrganizations.Store(docID, appOrg)
+		sa.cachedApplicationsOrganizations.Store(appOrgKey, appOrg)
+	case "update":
+		sa.cachedApplicationsOrganizations.Store(docID, appOrg)
+		sa.cachedApplicationsOrganizations.Store(appOrgKey, appOrg)
+	case "delete":
+		item, loaded := sa.cachedApplicationsOrganizations.LoadAndDelete(docID)
+		if loaded {
+			if cachedAppOrg, ok := item.(model.ApplicationOrganization); ok {
+				sa.cachedApplicationsOrganizations.Delete(fmt.Sprintf("%s_%s", cachedAppOrg.Application.ID, cachedAppOrg.Organization.ID))
+			}
+		}
+	}
 }
 
 func (sa *Adapter) cacheApplicationConfigs() error {
@@ -494,6 +578,44 @@ func (sa *Adapter) getCachedApplicationConfigByID(id string) (*model.Application
 	}
 
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationConfig, errArgs)
+}
+
+func (sa *Adapter) updateCachedApplicationConfigs(docID string, operation string, appConfig model.ApplicationConfig) {
+	sa.applicationConfigsLock.RLock()
+	defer sa.applicationConfigsLock.RUnlock()
+
+	appTypeID := appConfig.ApplicationType.ID
+	key := appTypeID
+	if appConfig.AppOrg != nil {
+		appOrgID := appConfig.AppOrg.ID
+		key = fmt.Sprintf("%s_%s", appTypeID, appOrgID)
+	}
+
+	//TODO: may need to remove app configs cached by appTypeID or appTypeID_appOrgID on replace and update
+	switch operation {
+	case "insert":
+		sa.cachedApplicationConfigs.Store(docID, appConfig)
+		sa.cachedApplicationConfigs.Store(key, appConfig)
+	case "replace":
+		sa.cachedApplicationConfigs.Store(docID, appConfig)
+		sa.cachedApplicationConfigs.Store(key, appConfig)
+	case "update":
+		sa.cachedApplicationConfigs.Store(docID, appConfig)
+		sa.cachedApplicationConfigs.Store(key, appConfig)
+	case "delete":
+		item, loaded := sa.cachedApplicationConfigs.LoadAndDelete(docID)
+		if loaded {
+			if cachedAppConfig, ok := item.(model.ApplicationConfig); ok {
+				appTypeID := cachedAppConfig.ApplicationType.ID
+				key := appTypeID
+				if cachedAppConfig.AppOrg != nil {
+					appOrgID := cachedAppConfig.AppOrg.ID
+					key = fmt.Sprintf("%s_%s", appTypeID, appOrgID)
+				}
+				sa.cachedApplicationConfigs.Delete(key)
+			}
+		}
+	}
 }
 
 //LoadAuthTypes loads all auth types
@@ -2794,39 +2916,79 @@ type storageListener struct {
 	DefaultListenerImpl
 }
 
-func (sl *storageListener) OnAuthTypesUpdated(docID string, operation string, fullDoc map[string]interface{}) {
-	sl.adapter.updateCachedAuthTypes(docID, operation, fullDoc)
+func (sl *storageListener) OnAuthTypesUpdated(docID string, operation string, authType model.AuthType) {
+	sl.adapter.updateCachedAuthTypes(docID, operation, authType)
 }
 
-func (sl *storageListener) OnOrganizationsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
-	sl.adapter.updateCachedOrganizations(docID, operation, fullDoc)
+func (sl *storageListener) OnOrganizationsUpdated(docID string, operation string, org organization) {
+	sl.adapter.updateCachedOrganizations(docID, operation, organizationFromStorage(&org))
 }
 
-func (sl *storageListener) OnApplicationsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
-	sl.adapter.updateCachedApplications(docID, operation, fullDoc)
-	sl.adapter.updateCachedOrganizations(docID, operation, fullDoc)
+func (sl *storageListener) OnApplicationsUpdated(docID string, operation string, app application) {
+	sl.adapter.updateCachedApplications(docID, operation, applicationFromStorage(&app))
 }
 
-func (sl *storageListener) OnApplicationsOrganizationsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
-	sl.adapter.updateCachedApplications(docID, operation, fullDoc)
-	sl.adapter.updateCachedOrganizations(docID, operation, fullDoc)
-	sl.adapter.updateCachedApplicationsOrganizations(docID, operation, fullDoc)
+func (sl *storageListener) OnApplicationsOrganizationsUpdated(docID string, operation string, appOrg applicationOrganization) {
+	app, err := sl.adapter.getCachedApplication(appOrg.AppID)
+	if err != nil {
+		sl.adapter.logger.Errorf("error loading application from cache: %v", err)
+		return
+	}
+	if app == nil {
+		sl.adapter.logger.Errorf("application %s missing from cache", appOrg.AppID)
+		return
+	}
+
+	org, err := sl.adapter.getCachedOrganization(appOrg.OrgID)
+	if err != nil {
+		sl.adapter.logger.Errorf("error loading organization from cache: %v", err)
+		return
+	}
+	if org == nil {
+		sl.adapter.logger.Errorf("organization %s missing from cache", appOrg.OrgID)
+		return
+	}
+
+	sl.adapter.updateCachedApplicationsOrganizations(docID, operation, applicationOrganizationFromStorage(appOrg, *app, *org))
 }
 
-func (sl *storageListener) OnApplicationConfigsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
-	sl.adapter.updateCachedApplicationConfigs(docID, operation, fullDoc)
+func (sl *storageListener) OnApplicationConfigsUpdated(docID string, operation string, appConfig applicationConfig) {
+	var appOrg *model.ApplicationOrganization
+	var err error
+	if appConfig.AppOrgID != nil {
+		appOrg, err = sl.adapter.getCachedApplicationOrganizationByKey(*appConfig.AppOrgID)
+		if err != nil {
+			sl.adapter.logger.Errorf("error loading application organization from cache: %v", err)
+			return
+		}
+		if appOrg == nil {
+			sl.adapter.logger.Errorf("application organization %s missing from cache", *appConfig.AppOrgID)
+			return
+		}
+	}
+	_, appType, err := sl.adapter.getCachedApplicationType(appConfig.AppTypeID)
+	if err != nil {
+		sl.adapter.logger.Errorf("error loading application type from cache: %v", err)
+		return
+	}
+	if appType == nil {
+		sl.adapter.logger.Errorf("application type %s missing from cache", appConfig.AppTypeID)
+		return
+	}
+
+	sl.adapter.updateCachedApplicationConfigs(docID, operation, appConfigFromStorage(&appConfig, appOrg, *appType))
 }
 
 //Listener represents storage listener
 type Listener interface {
 	OnAPIKeysUpdated(docID string, operation string, apiKey model.APIKey)
-	OnAuthTypesUpdated(docID string, operation string, fullDoc map[string]interface{})
+	OnAuthTypesUpdated(docID string, operation string, authType model.AuthType)
 	OnIdentityProvidersUpdated(docID string, operation string, idPr model.IdentityProvider)
-	OnServiceRegsUpdated(docID string, operation string, fullDoc map[string]interface{})
-	OnOrganizationsUpdated(docID string, operation string, fullDoc map[string]interface{})
-	OnApplicationsUpdated(docID string, operation string, fullDoc map[string]interface{})
-	OnApplicationsOrganizationsUpdated(docID string, operation string, fullDoc map[string]interface{})
-	OnApplicationConfigsUpdated(docID string, operation string, fullDoc map[string]interface{})
+	OnServiceRegsUpdated(docID string, operation string, serviceReg model.ServiceReg)
+	OnOrganizationsUpdated(docID string, operation string, org organization)
+	OnApplicationsUpdated(docID string, operation string, app application)
+	OnApplicationsOrganizationsUpdated(docID string, operation string, appOrg applicationOrganization)
+	OnApplicationConfigsUpdated(docID string, operation string, appConfig applicationConfig)
 }
 
 //DefaultListenerImpl default listener implementation
@@ -2837,7 +2999,7 @@ func (d *DefaultListenerImpl) OnAPIKeysUpdated(docID string, operation string, a
 }
 
 //OnAuthTypesUpdated notifies auth types have been updated
-func (d *DefaultListenerImpl) OnAuthTypesUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+func (d *DefaultListenerImpl) OnAuthTypesUpdated(docID string, operation string, authType model.AuthType) {
 }
 
 //OnIdentityProvidersUpdated notifies identity providers have been updated
@@ -2845,23 +3007,23 @@ func (d *DefaultListenerImpl) OnIdentityProvidersUpdated(docID string, operation
 }
 
 //OnServiceRegsUpdated notifies services regs have been updated
-func (d *DefaultListenerImpl) OnServiceRegsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+func (d *DefaultListenerImpl) OnServiceRegsUpdated(docID string, operation string, serviceReg model.ServiceReg) {
 }
 
 //OnOrganizationsUpdated notifies organizations have been updated
-func (d *DefaultListenerImpl) OnOrganizationsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+func (d *DefaultListenerImpl) OnOrganizationsUpdated(docID string, operation string, org organization) {
 }
 
 //OnApplicationsUpdated notifies applications have been updated
-func (d *DefaultListenerImpl) OnApplicationsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+func (d *DefaultListenerImpl) OnApplicationsUpdated(docID string, operation string, app application) {
 }
 
 //OnApplicationsOrganizationsUpdated notifies applications organizations have been updated
-func (d *DefaultListenerImpl) OnApplicationsOrganizationsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+func (d *DefaultListenerImpl) OnApplicationsOrganizationsUpdated(docID string, operation string, appOrg applicationOrganization) {
 }
 
 //OnApplicationConfigsUpdated notifies application configs have been updated
-func (d *DefaultListenerImpl) OnApplicationConfigsUpdated(docID string, operation string, fullDoc map[string]interface{}) {
+func (d *DefaultListenerImpl) OnApplicationConfigsUpdated(docID string, operation string, appConfig applicationConfig) {
 }
 
 //TransactionContext wraps mongo.SessionContext for use by external packages

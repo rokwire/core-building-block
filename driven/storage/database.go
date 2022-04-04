@@ -6,7 +6,9 @@ import (
 	"core-building-block/utils"
 	"time"
 
+	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/logutils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -499,9 +501,14 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 	if docKey == nil {
 		return
 	}
-	operation := changeDoc["operationType"].(string)
 	fullDoc, _ := changeDoc["fullDocument"].(map[string]interface{})
-	updateDesc, _ := changeDoc["updateDescription"].(map[string]interface{})
+	if fullDoc == nil {
+		return
+	}
+
+	operation := changeDoc["operationType"].(string)
+
+	// updateDesc, _ := changeDoc["updateDescription"].(map[string]interface{})
 
 	nsMap := ns.(map[string]interface{})
 	coll := nsMap["coll"]
@@ -509,9 +516,9 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 	docKeyMap := docKey.(map[string]interface{})
 	docID := docKeyMap["_id"].(string)
 
-	if operation == "update" {
-		fullDoc = updateDesc
-	}
+	// if operation == "update" {
+	// 	fullDoc = updateDesc
+	// }
 
 	m.logger.Debugf("onDataChanged: %+v\n", changeDoc)
 
@@ -520,71 +527,111 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 		m.logger.Info("api_keys collection changed")
 
 		var apiKey model.APIKey
-		if fullDoc != nil {
-			data, err := bson.Marshal(fullDoc)
-			if err != nil {
-				m.logger.Errorf("error marshalling api key bson: %v", err)
-			}
-			err = bson.Unmarshal(data, &apiKey)
-			if err != nil {
-				m.logger.Errorf("error unmarshalling api key bson: %v", err)
-			}
+		if err := m.parseChangeStreamEventDoc(fullDoc, &apiKey); err != nil {
+			m.logger.Errorf("error parsing api_keys collection change: %v", err)
+			return
 		}
+
 		for _, listener := range m.listeners {
 			go listener.OnAPIKeysUpdated(docID, operation, apiKey)
 		}
 	case "auth_types":
 		m.logger.Info("auth_types collection changed")
 
+		var authType model.AuthType
+		if err := m.parseChangeStreamEventDoc(fullDoc, &authType); err != nil {
+			m.logger.Errorf("error parsing auth_types collection change: %v", err)
+			return
+		}
+
 		for _, listener := range m.listeners {
-			go listener.OnAuthTypesUpdated(docID, operation, fullDoc)
+			go listener.OnAuthTypesUpdated(docID, operation, authType)
 		}
 	case "identity_providers":
 		m.logger.Info("identity_providers collection changed")
 
 		var idPr model.IdentityProvider
-		if fullDoc != nil {
-			data, err := bson.Marshal(fullDoc)
-			if err != nil {
-				m.logger.Errorf("error marshalling identity provider bson: %v", err)
-			}
-			err = bson.Unmarshal(data, &idPr)
-			if err != nil {
-				m.logger.Errorf("error unmarshalling identity provider bson: %v", err)
-			}
+		if err := m.parseChangeStreamEventDoc(fullDoc, &idPr); err != nil {
+			m.logger.Errorf("error parsing identity_providers collection change: %v", err)
+			return
 		}
+
 		for _, listener := range m.listeners {
 			go listener.OnIdentityProvidersUpdated(docID, operation, idPr)
 		}
 	case "service_regs":
 		m.logger.Info("service_regs collection changed")
 
+		var serviceReg model.ServiceReg
+		if err := m.parseChangeStreamEventDoc(fullDoc, &serviceReg); err != nil {
+			m.logger.Errorf("error parsing service_regs collection change: %v", err)
+			return
+		}
+
 		for _, listener := range m.listeners {
-			go listener.OnServiceRegsUpdated(docID, operation, fullDoc)
+			go listener.OnServiceRegsUpdated(docID, operation, serviceReg)
 		}
 	case "organizations":
 		m.logger.Info("organizations collection changed")
 
+		var org organization
+		if err := m.parseChangeStreamEventDoc(fullDoc, &org); err != nil {
+			m.logger.Errorf("error parsing organizations collection change: %v", err)
+			return
+		}
+
 		for _, listener := range m.listeners {
-			go listener.OnOrganizationsUpdated(docID, operation, fullDoc)
+			go listener.OnOrganizationsUpdated(docID, operation, org)
 		}
 	case "applications":
 		m.logger.Info("applications collection changed")
 
+		var app application
+		if err := m.parseChangeStreamEventDoc(fullDoc, &app); err != nil {
+			m.logger.Errorf("error parsing applications collection change: %v", err)
+			return
+		}
+
 		for _, listener := range m.listeners {
-			go listener.OnApplicationsUpdated(docID, operation, fullDoc)
+			go listener.OnApplicationsUpdated(docID, operation, app)
 		}
 	case "applications_organizations":
 		m.logger.Info("applications organizations collection changed")
 
+		var appOrg applicationOrganization
+		if err := m.parseChangeStreamEventDoc(fullDoc, &appOrg); err != nil {
+			m.logger.Errorf("error parsing applications_organizations change: %v", err)
+			return
+		}
+
 		for _, listener := range m.listeners {
-			go listener.OnApplicationsOrganizationsUpdated(docID, operation, fullDoc)
+			go listener.OnApplicationsOrganizationsUpdated(docID, operation, appOrg)
 		}
 	case "application_configs":
 		m.logger.Info("application configs collection changed")
 
+		var appConfig applicationConfig
+		if err := m.parseChangeStreamEventDoc(fullDoc, &appConfig); err != nil {
+			m.logger.Errorf("error parsing application_configs change: %v", err)
+			return
+		}
+
 		for _, listener := range m.listeners {
-			go listener.OnApplicationConfigsUpdated(docID, operation, fullDoc)
+			go listener.OnApplicationConfigsUpdated(docID, operation, appConfig)
 		}
 	}
+}
+
+func (m *database) parseChangeStreamEventDoc(doc map[string]interface{}, result interface{}) error {
+	data, err := bson.Marshal(doc)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionMarshal, "change stream event bson", nil, err)
+
+	}
+	err = bson.Unmarshal(data, result)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUnmarshal, "change stream event bson", nil, err)
+	}
+
+	return nil
 }
