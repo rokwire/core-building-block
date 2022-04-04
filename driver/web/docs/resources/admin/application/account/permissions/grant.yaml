@@ -4,6 +4,8 @@ put:
   summary: Grant account permissions
   description: |
     Grant account permissions
+
+    **Auth:** Requires auth token with 'all_admin_core' permission
   security:
     - bearerAuth: []
   requestBody:

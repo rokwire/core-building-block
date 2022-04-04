@@ -361,9 +361,20 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 			systemSpecific[field] = fieldValue
 		}
 	}
+	//external ids
+	externalIDs := make(map[string]string)
+	for k, v := range identityProviderSetting.ExternalIDFields {
+		key := fmt.Sprintf("%s.%s", authType.Code, k)
+		externalID, ok := userClaims[v].(string)
+		if !ok {
+			a.auth.logger.ErrorWithFields("failed to parse external id", logutils.Fields{key: userClaims[v]})
+			continue
+		}
+		externalIDs[key] = externalID
+	}
 
-	externalUser := model.ExternalSystemUser{Identifier: identifier, FirstName: firstName, MiddleName: middleName, LastName: lastName,
-		Email: email, Roles: roles, Groups: groups, SystemSpecific: systemSpecific}
+	externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs, FirstName: firstName,
+		MiddleName: middleName, LastName: lastName, Email: email, Roles: roles, Groups: groups, SystemSpecific: systemSpecific}
 
 	oidcParams := map[string]interface{}{}
 	oidcParams["id_token"] = token.IDToken
