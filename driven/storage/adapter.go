@@ -1929,49 +1929,37 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 	return nil
 }
 
-func (sa *Adapter) RevokePermissionsFromRole(context TransactionContext, roleID string, permissionNames []string) error {
-	if len(permissionNames) == 0 {
-		return nil
-	}
-
+func (sa *Adapter) DeletePermissionsFromRole(context TransactionContext, roleID string, permissions []model.Permission) error {
+	//filter
 	filter := bson.D{primitive.E{Key: "_id", Value: roleID}}
-	var roleResult []appOrgRole
-	err := sa.db.applicationsOrganizationsRoles.Find(filter, &roleResult, nil)
-	if err != nil {
-		return err
+
+	//update
+	permissionsIDs := make([]string, len(permissions))
+	for i, permission := range permissions {
+		permissionsIDs[i] = permission.ID
+	}
+	update := bson.D{
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "permissions", Value: bson.M{"_id": bson.M{"$in": permissionsIDs}}},
+		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
 	}
 
-	if len(roleResult) == 0 {
-		return errors.Newf("no role with this role ID: %v", roleID)
-	}
-
-	role := roleResult[0]
-
-	permissions := role.Permissions
-
-	for i, currentRole := range roleResult {
-		if currentRole.ID == roleID {
-			var newPermission []model.Permission
-			for _, permission := range permissions {
-				if permission.ID != permissionNames[0] {
-					newPermission = append(newPermission, permission)
-				}
-			}
-			role.Permissions = newPermission
-			roleResult[i] = currentRole
-		}
-	}
-
-	roleFilter := bson.M{"_id": roleID}
-	opts := options.Replace().SetUpsert(true)
+	var res *mongo.UpdateResult
+	var err error
 	if context != nil {
-		err = sa.db.applicationsOrganizationsRoles.ReplaceOneWithContext(context, roleFilter, role, opts)
+		res, err = sa.db.applicationsOrganizationsRoles.UpdateOneWithContext(context, filter, update, nil)
 	} else {
-		err = sa.db.applicationsOrganizationsRoles.ReplaceOne(roleFilter, role, opts)
+		res, err = sa.db.applicationsOrganizationsRoles.UpdateOne(filter, update, nil)
 	}
 
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSave, "role", &logutils.FieldArgs{"role_id": role.ID}, nil)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return nil
