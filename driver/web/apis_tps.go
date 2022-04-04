@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/rokwire/core-auth-library-go/sigauth"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
@@ -65,7 +66,12 @@ func (h TPSApisHandler) getServiceAccountParams(l *logs.Log, r *http.Request, cl
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	accountParams, err := h.coreAPIs.Auth.GetServiceAccountParams(accountID, r, l)
+	req, err := sigauth.ParseHTTPRequest(r)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionParse, "service account params http request", nil, err, http.StatusInternalServerError, false)
+	}
+
+	accountParams, err := h.coreAPIs.Auth.GetServiceAccountParams(accountID, req, l)
 	if err != nil {
 		loggingErr, ok := err.(*errors.Error)
 		if ok && loggingErr.Status() != "" {
@@ -85,7 +91,12 @@ func (h TPSApisHandler) getServiceAccountParams(l *logs.Log, r *http.Request, cl
 }
 
 func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	accessToken, err := h.coreAPIs.Auth.GetServiceAccessToken(r, l)
+	req, err := sigauth.ParseHTTPRequest(r)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionParse, "service account params http request", nil, err, http.StatusInternalServerError, false)
+	}
+
+	accessToken, err := h.coreAPIs.Auth.GetServiceAccessToken(req, l)
 	if err != nil {
 		loggingErr, ok := err.(*errors.Error)
 		if ok && loggingErr.Status() != "" {

@@ -8,8 +8,6 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -1674,15 +1672,9 @@ func (a *Auth) constructServiceAccount(accountID string, name string, appID *str
 		Permissions: permissionList, FirstParty: firstParty}, nil
 }
 
-func (a *Auth) checkServiceAccountCreds(r *http.Request, params map[string]interface{}, l *logs.Log) ([]model.ServiceAccount, string, error) {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return nil, "", errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
-	}
-	defer r.Body.Close()
-
+func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, params map[string]interface{}, l *logs.Log) ([]model.ServiceAccount, string, error) {
 	var requestData model.ServiceAccountTokenRequest
-	err = json.Unmarshal(data, &requestData)
+	err := json.Unmarshal(r.Body, &requestData)
 	if err != nil {
 		return nil, "", errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("service account access token request"), nil, err)
 	}
@@ -1700,9 +1692,9 @@ func (a *Auth) checkServiceAccountCreds(r *http.Request, params map[string]inter
 			"org_id":     requestData.OrgID,
 		}
 	}
-	params["first_party"] = strings.HasPrefix(r.URL.Path, "/core/bbs")
+	params["first_party"] = strings.HasPrefix(r.Path, "/core/bbs")
 
-	accounts, err := serviceAuthType.checkCredentials(r, data, requestData.Creds, params)
+	accounts, err := serviceAuthType.checkCredentials(r, requestData.Creds, params)
 	if err != nil {
 		return nil, "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}

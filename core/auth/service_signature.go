@@ -3,12 +3,12 @@ package auth
 import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
+	"github.com/rokwire/core-auth-library-go/sigauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -26,7 +26,7 @@ type signatureServiceAuthImpl struct {
 	serviceAuthType string
 }
 
-func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, body []byte, _ interface{}, params map[string]interface{}) ([]model.ServiceAccount, error) {
+func (s *signatureServiceAuthImpl) checkCredentials(r *sigauth.Request, _ interface{}, params map[string]interface{}) ([]model.ServiceAccount, error) {
 	accounts, err := s.auth.storage.FindServiceAccounts(params)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
@@ -50,7 +50,7 @@ func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, body []byte
 				continue
 			}
 
-			err = s.auth.SignatureAuth.CheckRequestSignature(r, body, pubKey)
+			err = s.auth.SignatureAuth.CheckRequestSignature(r, pubKey)
 			if err == nil {
 				return accounts, nil
 			}

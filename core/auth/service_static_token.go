@@ -5,10 +5,10 @@ import (
 	"core-building-block/utils"
 	"encoding/base64"
 	"encoding/json"
-	"net/http"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rokwire/core-auth-library-go/sigauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 	"gopkg.in/go-playground/validator.v9"
@@ -32,7 +32,7 @@ type staticTokenServiceAuthImpl struct {
 	serviceAuthType string
 }
 
-func (s *staticTokenServiceAuthImpl) checkCredentials(r *http.Request, _ []byte, creds interface{}, params map[string]interface{}) ([]model.ServiceAccount, error) {
+func (s *staticTokenServiceAuthImpl) checkCredentials(_ *sigauth.Request, creds interface{}, params map[string]interface{}) ([]model.ServiceAccount, error) {
 	credsData, err := json.Marshal(creds)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionMarshal, TypeStaticTokenCreds, nil, err)

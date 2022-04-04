@@ -5,12 +5,12 @@ import (
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/rokwire/core-auth-library-go/authorization"
+	"github.com/rokwire/core-auth-library-go/sigauth"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -944,7 +944,7 @@ func (a *Auth) RemoveMFAType(accountID string, identifier string, mfaType string
 }
 
 //GetServiceAccountParams returns a list of app, org pairs a service account has access to
-func (a *Auth) GetServiceAccountParams(accountID string, r *http.Request, l *logs.Log) ([]model.AppOrgPair, error) {
+func (a *Auth) GetServiceAccountParams(accountID string, r *sigauth.Request, l *logs.Log) ([]model.AppOrgPair, error) {
 	params := map[string]interface{}{"account_id": accountID}
 	accounts, _, err := a.checkServiceAccountCreds(r, params, l)
 	if err != nil {
@@ -968,7 +968,7 @@ func (a *Auth) GetServiceAccountParams(accountID string, r *http.Request, l *log
 }
 
 //GetServiceAccessToken returns an access token for a non-human client
-func (a *Auth) GetServiceAccessToken(r *http.Request, l *logs.Log) (string, error) {
+func (a *Auth) GetServiceAccessToken(r *sigauth.Request, l *logs.Log) (string, error) {
 	accounts, authType, err := a.checkServiceAccountCreds(r, nil, l)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
