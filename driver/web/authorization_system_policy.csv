@@ -25,6 +25,8 @@ p, update_api-keys, /core/system/api-keys, (POST)|(DELETE)|(PUT)
 
 p, all_service-regs, /core/system/service-regs, (GET)|(POST)|(DELETE)|(PUT)
 
+p, all_service-accounts, /core/system/service-accounts, (GET)|(POST)|(DELETE)|(PUT)
+
 p, all_permissions, /core/system/permissions, (GET)|(POST)|(DELETE)|(PUT)
 
 p, all_application-roles, /core/system/application-roles, (GET)|(POST)|(DELETE)|(PUT)
