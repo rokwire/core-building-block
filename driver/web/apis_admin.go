@@ -493,7 +493,7 @@ func (h AdminApisHandler) getAppToken(l *logs.Log, r *http.Request, claims *toke
 		return l.HttpResponseErrorAction(logutils.ActionGet, "app token", nil, err, http.StatusInternalServerError, true)
 	}
 
-	response := Def.AdminReqAppToken{Token: token}
+	response := Def.AdminResAppToken{Token: token}
 	responseJSON, err := json.Marshal(response)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "app token", nil, err, http.StatusInternalServerError, false)

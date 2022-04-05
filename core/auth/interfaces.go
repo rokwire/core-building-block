@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/rokwire/core-auth-library-go/authorization"
+	"github.com/rokwire/core-auth-library-go/sigauth"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
 )
@@ -68,6 +69,12 @@ type anonymousAuthType interface {
 	//checkCredentials checks the credentials for the provided app and organization
 	//	Returns anonymous profile identifier
 	checkCredentials(creds string) (string, map[string]interface{}, error)
+}
+
+//serviceAuthType is the interface for authentication for non-human clients
+type serviceAuthType interface {
+	checkCredentials(r *sigauth.Request, creds interface{}, params map[string]interface{}) ([]model.ServiceAccount, error)
+	addCredentials(creds *model.ServiceAccountCredential) (map[string]interface{}, error)
 }
 
 //mfaType is the interface for multi-factor authentication
@@ -273,6 +280,37 @@ type APIs interface {
 	//		mfaType (string): Type of MFA to remove
 	RemoveMFAType(accountID string, identifier string, mfaType string) error
 
+	//GetServiceAccountParams returns a list of app, org pairs a service account has access to
+	GetServiceAccountParams(accountID string, r *sigauth.Request, l *logs.Log) ([]model.AppOrgPair, error)
+
+	//GetServiceAccessToken returns an access token for a non-human client
+	GetServiceAccessToken(r *sigauth.Request, l *logs.Log) (string, error)
+
+	//GetServiceAccounts gets all service accounts matching a search
+	GetServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
+
+	//RegisterServiceAccount registers a service account
+	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string, orgID *string,
+		permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error)
+
+	//DeregisterServiceAccount deregisters a service account
+	DeregisterServiceAccount(accountID string) error
+
+	//GetServiceAccountInstance gets a service account instance
+	GetServiceAccountInstance(accountID string, appID *string, orgID *string) (*model.ServiceAccount, error)
+
+	//UpdateServiceAccountInstance updates a service account instance
+	UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string) (*model.ServiceAccount, error)
+
+	//DeregisterServiceAccountInstance deregisters a service account instance
+	DeregisterServiceAccountInstance(id string, appID *string, orgID *string) error
+
+	//AddServiceAccountCredential adds a credential to a service account
+	AddServiceAccountCredential(accountID string, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccountCredential, error)
+
+	//RemoveServiceAccountCredential removes a credential from a service account
+	RemoveServiceAccountCredential(accountID string, credID string) error
+
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
 	//	return a scoped access token which reflects this change.
@@ -392,14 +430,30 @@ type Storage interface {
 	UpdateProfile(context storage.TransactionContext, profile model.Profile) error
 	FindProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)
 
+	//ServiceAccounts
+	FindServiceAccount(context storage.TransactionContext, accountID string, appID *string, orgID *string) (*model.ServiceAccount, error)
+	FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
+	InsertServiceAccount(account *model.ServiceAccount) error
+	UpdateServiceAccount(account *model.ServiceAccount) (*model.ServiceAccount, error)
+	DeleteServiceAccount(accountID string, appID *string, orgID *string) error
+	DeleteServiceAccounts(accountID string) error
+
+	//ServiceAccountCredentials
+	InsertServiceAccountCredential(accountID string, creds *model.ServiceAccountCredential) error
+	DeleteServiceAccountCredential(accountID string, credID string) error
+
 	//AccountAuthTypes
 	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccountAuthType(item model.AccountAuthType) error
 	UpdateAccountAuthType(item model.AccountAuthType) error
 	DeleteAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
 
+	//ExternalIDs
 	UpdateAccountExternalIDs(accountID string, externalIDs map[string]string) error
 	UpdateLoginSessionExternalIDs(accountID string, externalIDs map[string]string) error
+
+	//Applications
+	FindApplication(ID string) (*model.Application, error)
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)
@@ -446,6 +500,9 @@ type Storage interface {
 	//ApplicationsOrganizations
 	FindApplicationsOrganizations() ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
+
+	//Permissions
+	FindPermissionsByName(names []string) ([]model.Permission, error)
 
 	//Device
 	FindDevice(context storage.TransactionContext, deviceID string, accountID string) (*model.Device, error)

@@ -161,12 +161,18 @@ func (we Adapter) Start() {
 	bbsSubrouter := subRouter.PathPrefix("/bbs").Subrouter()
 	bbsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.bbsApisHandler.getServiceRegistrations, nil)).Methods("GET") //Public
 	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.getTest, nil)).Methods("GET")                         //Public
+
+	bbsSubrouter.HandleFunc("/service-account/{id}", we.wrapFunc(we.bbsApisHandler.getServiceAccountParams, nil)).Methods("POST") //Public
+	bbsSubrouter.HandleFunc("/access-token", we.wrapFunc(we.bbsApisHandler.getServiceAccessToken, nil)).Methods("POST")           //Public
 	///
 
 	///third-party services ///
 	tpsSubrouter := subRouter.PathPrefix("/tps").Subrouter()
 	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations, nil)).Methods("GET") //Public
 	tpsSubrouter.HandleFunc("/auth-keys", we.wrapFunc(we.tpsApisHandler.getAuthKeys, nil)).Methods("GET")                //Public
+
+	tpsSubrouter.HandleFunc("/service-account/{id}", we.wrapFunc(we.tpsApisHandler.getServiceAccountParams, nil)).Methods("POST") //Public
+	tpsSubrouter.HandleFunc("/access-token", we.wrapFunc(we.tpsApisHandler.getServiceAccessToken, nil)).Methods("POST")           //Public
 	///
 
 	///system ///
@@ -211,6 +217,15 @@ func (we Adapter) Start() {
 	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.registerService, we.auth.system.permissions)).Methods("POST")
 	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.updateServiceRegistration, we.auth.system.permissions)).Methods("PUT")
 	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.deregisterService, we.auth.system.permissions)).Methods("DELETE")
+
+	systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.getServiceAccounts, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.registerServiceAccount, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.deregisterServiceAccount, we.auth.system.permissions)).Methods("DELETE")
+	systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.getServiceAccountInstance, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.updateServiceAccountInstance, we.auth.system.permissions)).Methods("PUT")
+	systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.deregisterServiceAccountInstance, we.auth.system.permissions)).Methods("DELETE")
+	systemSubrouter.HandleFunc("/service-accounts/{id}/creds", we.wrapFunc(we.systemApisHandler.addServiceAccountCredential, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/service-accounts/{id}/creds", we.wrapFunc(we.systemApisHandler.removeServiceAccountCredential, we.auth.system.permissions)).Methods("DELETE")
 
 	systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.getAPIKey, we.auth.system.permissions)).Methods("GET")
 	systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.createAPIKey, we.auth.system.permissions)).Methods("POST")
