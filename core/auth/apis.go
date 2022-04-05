@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rokwire/core-auth-library-go/authorization"
+	"github.com/rokwire/core-auth-library-go/sigauth"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -353,7 +354,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, loginSession.ExternalIDs, nil, anonymous, false, loginSession.AppOrg.Application.Admin, loginSession.ID)
+	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, loginSession.ExternalIDs, nil, anonymous, false, loginSession.AppOrg.Application.Admin, false, true, loginSession.ID)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
@@ -942,6 +943,228 @@ func (a *Auth) RemoveMFAType(accountID string, identifier string, mfaType string
 	return nil
 }
 
+//GetServiceAccountParams returns a list of app, org pairs a service account has access to
+func (a *Auth) GetServiceAccountParams(accountID string, r *sigauth.Request, l *logs.Log) ([]model.AppOrgPair, error) {
+	params := map[string]interface{}{"account_id": accountID}
+	accounts, _, err := a.checkServiceAccountCreds(r, params, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
+	}
+
+	appOrgPairs := make([]model.AppOrgPair, len(accounts))
+	for i, account := range accounts {
+		var appID *string
+		if account.Application != nil {
+			appID = &account.Application.ID
+		}
+		var orgID *string
+		if account.Organization != nil {
+			orgID = &account.Organization.ID
+		}
+		appOrgPairs[i] = model.AppOrgPair{AppID: appID, OrgID: orgID}
+	}
+
+	return appOrgPairs, nil
+}
+
+//GetServiceAccessToken returns an access token for a non-human client
+func (a *Auth) GetServiceAccessToken(r *sigauth.Request, l *logs.Log) (string, error) {
+	accounts, authType, err := a.checkServiceAccountCreds(r, nil, l)
+	if err != nil {
+		return "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
+	}
+
+	permissions := accounts[0].GetPermissionNames()
+	var appID string
+	if accounts[0].Application != nil {
+		appID = accounts[0].Application.ID
+	}
+	var orgID string
+	if accounts[0].Organization != nil {
+		orgID = accounts[0].Organization.ID
+	}
+
+	claims := a.getStandardClaims(accounts[0].AccountID, "", "", "", "", rokwireTokenAud, orgID, appID, authType, nil, nil, false, true, false, true, accounts[0].FirstParty, "")
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), "")
+	if err != nil {
+		return "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+	}
+	return accessToken, nil
+}
+
+//GetServiceAccounts gets all service accounts matching a search
+func (a *Auth) GetServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error) {
+	serviceAccounts, err := a.storage.FindServiceAccounts(params)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+	}
+
+	return serviceAccounts, nil
+}
+
+//RegisterServiceAccount registers a service account
+func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string,
+	orgID *string, permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
+	var newAccount *model.ServiceAccount
+	var err error
+	var newName string
+	var permissionList []string
+	var displayParamsList []map[string]interface{}
+
+	if accountID != nil {
+		var fromAccount *model.ServiceAccount
+		fromAccount, err = a.storage.FindServiceAccount(nil, *accountID, fromAppID, fromOrgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+		}
+
+		newName = fromAccount.Name
+		if name != nil {
+			newName = *name
+		}
+		permissionList = fromAccount.GetPermissionNames()
+		if permissions != nil {
+			permissionList = *permissions
+		}
+
+		newAccount, err = a.constructServiceAccount(fromAccount.AccountID, newName, appID, orgID, permissionList, fromAccount.FirstParty)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
+		}
+		newAccount.Credentials = fromAccount.Credentials
+	} else {
+		if firstParty == nil {
+			return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeArg, logutils.StringArgs("first party"))
+		}
+
+		id, _ := uuid.NewUUID()
+		if name != nil {
+			newName = *name
+		}
+		if permissions != nil {
+			permissionList = *permissions
+		}
+
+		newAccount, err = a.constructServiceAccount(id.String(), newName, appID, orgID, permissionList, *firstParty)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
+		}
+
+		newAccount.Credentials = make([]model.ServiceAccountCredential, 0)
+		displayParamsList = make([]map[string]interface{}, 0)
+		for _, cred := range creds {
+			serviceAuthType, err := a.getServiceAuthTypeImpl(cred.Type)
+			if err != nil {
+				l.Infof("error getting service auth type on register service account: %s", err.Error())
+				continue
+			}
+
+			displayParams, err := serviceAuthType.addCredentials(&cred)
+			if err != nil {
+				l.Warnf("error adding %s credential on register service account: %s", cred.Type, err.Error())
+				continue
+			}
+
+			newAccount.Credentials = append(newAccount.Credentials, cred)
+			displayParamsList = append(displayParamsList, displayParams)
+		}
+	}
+
+	newAccount.DateCreated = time.Now().UTC()
+	err = a.storage.InsertServiceAccount(newAccount)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceAccount, nil, err)
+	}
+
+	for i, params := range displayParamsList {
+		newAccount.Credentials[i].Params = params
+	}
+
+	return newAccount, nil
+}
+
+//DeregisterServiceAccount deregisters a service account
+func (a *Auth) DeregisterServiceAccount(accountID string) error {
+	// delete all service account instances matching accountID
+	err := a.storage.DeleteServiceAccounts(accountID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, nil, err)
+	}
+
+	return nil
+}
+
+//GetServiceAccountInstance gets a service account instance
+func (a *Auth) GetServiceAccountInstance(accountID string, appID *string, orgID *string) (*model.ServiceAccount, error) {
+	serviceAccount, err := a.storage.FindServiceAccount(nil, accountID, appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+	}
+
+	return serviceAccount, nil
+}
+
+//UpdateServiceAccountInstance updates a service account instance
+func (a *Auth) UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string) (*model.ServiceAccount, error) {
+	updatedAccount, err := a.constructServiceAccount(id, name, appID, orgID, permissions, false)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
+	}
+
+	updatedAccount, err = a.storage.UpdateServiceAccount(updatedAccount)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
+	}
+
+	return updatedAccount, nil
+}
+
+//DeregisterServiceAccountInstance deregisters a service account instance
+func (a *Auth) DeregisterServiceAccountInstance(id string, appID *string, orgID *string) error {
+	err := a.storage.DeleteServiceAccount(id, appID, orgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, nil, err)
+	}
+
+	return nil
+}
+
+//AddServiceAccountCredential adds a credential to a service account
+func (a *Auth) AddServiceAccountCredential(accountID string, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccountCredential, error) {
+	if creds == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
+	}
+
+	serviceAuthType, err := a.getServiceAuthTypeImpl(creds.Type)
+	if err != nil {
+		l.Info("error getting service auth type on add service credential")
+		return nil, errors.WrapErrorAction("error getting service auth type on add service credential", "", nil, err)
+	}
+
+	displayParams, err := serviceAuthType.addCredentials(creds)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, "service account creds", nil, err)
+	}
+
+	err = a.storage.InsertServiceAccountCredential(accountID, creds)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceAccountCredential, nil, err)
+	}
+
+	creds.Params = displayParams
+	return creds, nil
+}
+
+//RemoveServiceAccountCredential removes a credential from a service account
+func (a *Auth) RemoveServiceAccountCredential(accountID string, credID string) error {
+	err := a.storage.DeleteServiceAccountCredential(accountID, credID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccountCredential, nil, err)
+	}
+
+	return nil
+}
+
 //AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 //	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
 //	return a scoped access token which reflects this change.
@@ -999,7 +1222,7 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log)
 	}
 
 	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, claims.OrgID, appID, claims.AuthType,
-		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, claims.SessionID)
+		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, claims.Service, claims.FirstParty, claims.SessionID)
 	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }
 

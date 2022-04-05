@@ -30,6 +30,7 @@ type database struct {
 	loginsSessions                  *collectionWrapper
 	globalConfig                    *collectionWrapper
 	serviceRegs                     *collectionWrapper
+	serviceAccounts                 *collectionWrapper
 	serviceAuthorizations           *collectionWrapper
 	organizations                   *collectionWrapper
 	applications                    *collectionWrapper
@@ -97,6 +98,12 @@ func (m *database) start() error {
 
 	serviceRegs := &collectionWrapper{database: m, coll: db.Collection("service_regs")}
 	err = m.applyServiceRegsChecks(serviceRegs)
+	if err != nil {
+		return err
+	}
+
+	serviceAccounts := &collectionWrapper{database: m, coll: db.Collection("service_accounts")}
+	err = m.applyServiceAccountsChecks(serviceAccounts)
 	if err != nil {
 		return err
 	}
@@ -180,6 +187,7 @@ func (m *database) start() error {
 	m.globalConfig = globalConfig
 	m.apiKeys = apiKeys
 	m.serviceRegs = serviceRegs
+	m.serviceAccounts = serviceAccounts
 	m.serviceAuthorizations = serviceAuthorizations
 	m.organizations = organizations
 	m.applications = applications
@@ -315,6 +323,18 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 	}
 
 	m.logger.Info("service regs checks passed")
+	return nil
+}
+
+func (m *database) applyServiceAccountsChecks(serviceAccounts *collectionWrapper) error {
+	m.logger.Info("apply service accounts checks.....")
+
+	err := serviceAccounts.AddIndex(bson.D{primitive.E{Key: "account_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("service accounts checks passed")
 	return nil
 }
 
