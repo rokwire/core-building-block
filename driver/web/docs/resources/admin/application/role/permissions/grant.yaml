@@ -1,9 +1,9 @@
 put:
   tags:
   - Admin
-  summary: Grant account permissions
+  summary: Grant permissions to role
   description: |
-    Grant account permissions
+    Grant permissions to role
 
     **Auth:** Requires auth token with 'all_admin_core' permission
   security:
@@ -13,7 +13,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../../../../schemas/apis/admin/application/account/permissions/grant/request/Request.yaml"
+          $ref: "../../../../../schemas/apis/admin/application/role/permissions/grant/request/Request.yaml"
     required: true
   responses:
     200:

@@ -1,19 +1,19 @@
 put:
   tags:
   - Admin
-  summary: Grant account permissions
+  summary: Add accounts to a group
   description: |
-    Grant account permissions
-
-    **Auth:** Requires auth token with 'all_admin_core' permission
+    Add accounts 
+  
+    **Auth:** Requires auth token with `all_admin_core` permission
   security:
     - bearerAuth: []
   requestBody:
-    description: Permissions
+    description: Roles
     content:
       application/json:
         schema:
-          $ref: "../../../../../schemas/apis/admin/application/account/permissions/grant/request/Request.yaml"
+          $ref: "../../../../../schemas/apis/admin/application/group/accounts/add/request/Request.yaml"
     required: true
   responses:
     200:
@@ -28,4 +28,4 @@ put:
     401:
       description: Unauthorized
     500:
-      description: Internal error
+      description: Internal error    
