@@ -1,6 +1,11 @@
 package storage
 
-import "core-building-block/core/model"
+import (
+	"core-building-block/core/model"
+
+	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logutils"
+)
 
 //LoginSession
 func loginSessionFromStorage(item loginSession, authType model.AuthType, account *model.Account,
@@ -98,4 +103,53 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 		DeviceID: deviceID, IPAddress: ipAddress, AccessToken: accessToken, RefreshTokens: refreshTokens,
 		Params: params, State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
 		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
+}
+
+//ServiceAccount
+func serviceAccountFromStorage(item serviceAccount, sa *Adapter) (*model.ServiceAccount, error) {
+	var err error
+	var application *model.Application
+	if item.AppID != nil {
+		application, err = sa.getCachedApplication(*item.AppID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, &logutils.FieldArgs{"app_id": *item.AppID}, err)
+		}
+	}
+	var organization *model.Organization
+	if item.OrgID != nil {
+		organization, err = sa.getCachedOrganization(*item.OrgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"org_id": *item.OrgID}, err)
+		}
+	}
+
+	return &model.ServiceAccount{AccountID: item.AccountID, Name: item.Name, Application: application, Organization: organization, Permissions: item.Permissions,
+		FirstParty: item.FirstParty, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}, nil
+}
+
+func serviceAccountListFromStorage(items []serviceAccount, sa *Adapter) []model.ServiceAccount {
+	accountList := make([]model.ServiceAccount, len(items))
+
+	for i, account := range items {
+		modelAccount, err := serviceAccountFromStorage(account, sa)
+		if err != nil {
+			sa.logger.Warn(err.Error())
+		}
+		accountList[i] = *modelAccount
+	}
+	return accountList
+}
+
+func serviceAccountToStorage(item model.ServiceAccount) *serviceAccount {
+	var appID *string
+	if item.Application != nil {
+		appID = &item.Application.ID
+	}
+	var orgID *string
+	if item.Organization != nil {
+		orgID = &item.Organization.ID
+	}
+
+	return &serviceAccount{AccountID: item.AccountID, Name: item.Name, AppID: appID, OrgID: orgID, Permissions: item.Permissions,
+		FirstParty: item.FirstParty, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

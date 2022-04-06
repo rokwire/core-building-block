@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"core-building-block/core/model"
+	"core-building-block/utils"
 	"fmt"
 	"strconv"
 	"sync"
@@ -24,6 +25,9 @@ type Adapter struct {
 	db *database
 
 	logger *logs.Logger
+
+	cachedServiceRegs *syncmap.Map
+	serviceRegsLock   *sync.RWMutex
 
 	cachedOrganizations *syncmap.Map
 	organizationsLock   *sync.RWMutex
@@ -52,6 +56,12 @@ func (sa *Adapter) Start() error {
 	//register storage listener
 	sl := storageListener{adapter: sa}
 	sa.RegisterStorageListener(&sl)
+
+	//cache the service regs
+	err = sa.cacheServiceRegs()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionCache, model.TypeServiceReg, nil, err)
+	}
 
 	//cache the organizations
 	err = sa.cacheOrganizations()
@@ -116,6 +126,100 @@ func (sa *Adapter) PerformTransaction(transaction func(context TransactionContex
 	})
 
 	return err
+}
+
+//cacheServiceRegs caches the service regs from the DB
+func (sa *Adapter) cacheServiceRegs() error {
+	sa.logger.Info("cacheServiceRegs..")
+
+	serviceRegs, err := sa.loadServiceRegs()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, nil, err)
+	}
+
+	sa.setCachedServiceRegs(&serviceRegs)
+
+	return nil
+}
+
+func (sa *Adapter) setCachedServiceRegs(serviceRegs *[]model.ServiceReg) {
+	sa.serviceRegsLock.Lock()
+	defer sa.serviceRegsLock.Unlock()
+
+	sa.cachedServiceRegs = &syncmap.Map{}
+	validate := validator.New()
+
+	for _, serviceReg := range *serviceRegs {
+		err := validate.Struct(serviceReg)
+		if err == nil {
+			sa.cachedServiceRegs.Store(serviceReg.Registration.ServiceID, serviceReg)
+		} else {
+			sa.logger.Errorf("failed to validate and cache service registration with registration.service_id %s: %s", serviceReg.Registration.ServiceID, err.Error())
+		}
+	}
+}
+
+func (sa *Adapter) getCachedServiceReg(serviceID string) (*model.ServiceReg, error) {
+	sa.serviceRegsLock.RLock()
+	defer sa.serviceRegsLock.RUnlock()
+
+	errArgs := &logutils.FieldArgs{"registration.service_id": serviceID}
+
+	item, _ := sa.cachedServiceRegs.Load(serviceID)
+	if item != nil {
+		serviceReg, ok := item.(model.ServiceReg)
+		if !ok {
+			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeServiceReg, errArgs)
+		}
+		return &serviceReg, nil
+	}
+	return nil, nil
+}
+
+func (sa *Adapter) getCachedServiceRegs(serviceIDs []string) ([]model.ServiceReg, error) {
+	sa.serviceRegsLock.RLock()
+	defer sa.serviceRegsLock.RUnlock()
+
+	var serviceRegList []model.ServiceReg
+	var err error
+	if !utils.Contains(serviceIDs, "all") {
+		serviceRegList = make([]model.ServiceReg, len(serviceIDs))
+		for i, serviceID := range serviceIDs {
+			item, _ := sa.cachedServiceRegs.Load(serviceID)
+			serviceReg, err := sa.processCachedServiceReg(serviceID, item)
+			if err != nil {
+				return nil, err
+			}
+			serviceRegList[i] = *serviceReg
+		}
+	} else {
+		serviceRegList = make([]model.ServiceReg, 0)
+		sa.cachedServiceRegs.Range(func(key, item interface{}) bool {
+			serviceReg, err := sa.processCachedServiceReg(key, item)
+			if err != nil {
+				return false
+			}
+			serviceRegList = append(serviceRegList, *serviceReg)
+
+			return true
+		})
+	}
+
+	return serviceRegList, err
+}
+
+func (sa *Adapter) processCachedServiceReg(key, item interface{}) (*model.ServiceReg, error) {
+	errArgs := &logutils.FieldArgs{"registration.service_id": key}
+	if item == nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeServiceReg, errArgs)
+	}
+
+	serviceReg, ok := item.(model.ServiceReg)
+	if !ok {
+		return nil, errors.ErrorAction(logutils.ActionCast, model.TypeServiceReg, errArgs)
+	}
+
+	return &serviceReg, nil
 }
 
 //cacheOrganizations caches the organizations from the DB
@@ -900,7 +1004,7 @@ func (sa *Adapter) FindAccount(appOrgID string, authTypeID string, accountAuthTy
 	//application organization - from cache
 	appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 	}
 
 	modelAccount := accountFromStorage(account, *appOrg)
@@ -980,7 +1084,7 @@ func (sa *Adapter) findAccount(context TransactionContext, key string, id string
 	//application organization - from cache
 	appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 	}
 
 	modelAccount := accountFromStorage(*account, *appOrg)
@@ -1068,6 +1172,192 @@ func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
 	return nil
 }
 
+//FindServiceAccount finds a service account by accountID, appID, and orgID
+func (sa *Adapter) FindServiceAccount(context TransactionContext, accountID string, appID *string, orgID *string) (*model.ServiceAccount, error) {
+	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
+
+	var account serviceAccount
+	var err error
+	if context != nil {
+		err = sa.db.serviceAccounts.FindOneWithContext(context, filter, &account, nil)
+	} else {
+		err = sa.db.serviceAccounts.FindOne(filter, &account, nil)
+	}
+
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID), "org_id": utils.GetPrintableString(orgID)}, err)
+	}
+
+	modelAccount, err := serviceAccountFromStorage(account, sa)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCast, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID), "org_id": utils.GetPrintableString(orgID)}, err)
+	}
+
+	return modelAccount, nil
+}
+
+//FindServiceAccounts gets all service accounts matching a search
+func (sa *Adapter) FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error) {
+	filter := bson.D{}
+	for k, v := range params {
+		if k == "permissions" {
+			filter = append(filter, primitive.E{Key: k + ".name", Value: bson.M{"$in": v}})
+		} else {
+			filter = append(filter, primitive.E{Key: k, Value: v})
+		}
+	}
+
+	var accounts []serviceAccount
+	err := sa.db.serviceAccounts.Find(filter, &accounts, nil)
+	if err != nil {
+		logParams := logutils.FieldArgs(params)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &logParams, err)
+	}
+
+	modelAccounts := serviceAccountListFromStorage(accounts, sa)
+
+	return modelAccounts, nil
+}
+
+//InsertServiceAccount inserts a service account
+func (sa *Adapter) InsertServiceAccount(account *model.ServiceAccount) error {
+	if account == nil {
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeServiceAccount, nil)
+	}
+
+	storageAccount := serviceAccountToStorage(*account)
+
+	_, err := sa.db.serviceAccounts.InsertOne(storageAccount)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceAccount, nil, err)
+	}
+
+	return nil
+}
+
+//UpdateServiceAccount updates a service account
+func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) (*model.ServiceAccount, error) {
+	if account == nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeServiceAccount, nil)
+	}
+
+	storageAccount := serviceAccountToStorage(*account)
+
+	filter := bson.D{primitive.E{Key: "account_id", Value: storageAccount.AccountID}, primitive.E{Key: "app_id", Value: storageAccount.AppID}, primitive.E{Key: "org_id", Value: storageAccount.OrgID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "name", Value: storageAccount.Name},
+			primitive.E{Key: "permissions", Value: storageAccount.Permissions},
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
+	}
+	opts := options.FindOneAndUpdateOptions{}
+	opts.SetReturnDocument(options.After)
+	opts.SetProjection(bson.D{bson.E{Key: "secrets", Value: 0}})
+
+	var updated serviceAccount
+	err := sa.db.serviceAccounts.FindOneAndUpdate(filter, update, &updated, &opts)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": utils.GetPrintableString(storageAccount.AppID), "org_id": utils.GetPrintableString(storageAccount.OrgID)}, err)
+	}
+
+	modelAccount, err := serviceAccountFromStorage(updated, sa)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCast, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": utils.GetPrintableString(storageAccount.AppID), "org_id": utils.GetPrintableString(storageAccount.OrgID)}, err)
+	}
+
+	return modelAccount, nil
+}
+
+//DeleteServiceAccount deletes a service account
+func (sa *Adapter) DeleteServiceAccount(accountID string, appID *string, orgID *string) error {
+	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
+
+	res, err := sa.db.serviceAccounts.DeleteOne(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID), "org_id": utils.GetPrintableString(orgID)}, err)
+	}
+	if res.DeletedCount == 0 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID), "org_id": utils.GetPrintableString(orgID)})
+	}
+	if res.DeletedCount > 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, logutils.StringArgs("unexpected deleted count"))
+	}
+
+	return nil
+}
+
+//DeleteServiceAccounts deletes service accounts by accountID
+func (sa *Adapter) DeleteServiceAccounts(accountID string) error {
+	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
+
+	res, err := sa.db.serviceAccounts.DeleteMany(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID}, err)
+	}
+	if res.DeletedCount == 0 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID})
+	}
+
+	return nil
+}
+
+//InsertServiceAccountCredential inserts a service account credential
+func (sa *Adapter) InsertServiceAccountCredential(accountID string, creds *model.ServiceAccountCredential) error {
+	if creds == nil {
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("credentials"))
+	}
+
+	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "credentials", Value: creds},
+		}},
+	}
+
+	res, err := sa.db.serviceAccounts.UpdateMany(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceAccountCredential, &logutils.FieldArgs{"account_id": accountID}, err)
+	}
+	if res.MatchedCount == 0 {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID})
+	}
+	if res.ModifiedCount == 0 {
+		return errors.ErrorAction(logutils.ActionInsert, model.TypeServiceAccountCredential, logutils.StringArgs("unexpected modified count"))
+	}
+
+	return nil
+}
+
+//DeleteServiceAccountCredential deletes a service account credential
+func (sa *Adapter) DeleteServiceAccountCredential(accountID string, credID string) error {
+	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "credentials", Value: bson.M{"id": credID}},
+		}},
+	}
+
+	res, err := sa.db.serviceAccounts.UpdateMany(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccountCredential, &logutils.FieldArgs{"account_id": accountID, "cred_id": credID}, err)
+	}
+	if res.MatchedCount == 0 {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "cred_id": credID})
+	}
+	if res.ModifiedCount == 0 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccountCredential, logutils.StringArgs("unexpected modified count"))
+	}
+
+	return nil
+}
+
 //UpdateAccountPreferences updates account preferences
 func (sa *Adapter) UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
@@ -1079,7 +1369,7 @@ func (sa *Adapter) UpdateAccountPreferences(accountID string, preferences map[st
 
 	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountPreferences, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, nil, err)
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
@@ -1791,7 +2081,7 @@ func (sa *Adapter) UpdatePermission(item model.Permission) error {
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
 	//TODO
-	//Update the permission in all collection where there is a copy of it - accounts, application_roles, application_groups
+	//Update the permission in all collection where there is a copy of it - accounts, application_roles, application_groups, service_accounts
 
 	// Update serviceIDs
 	filter := bson.D{primitive.E{Key: "name", Value: item.Name}}
@@ -1861,7 +2151,7 @@ func (sa *Adapter) FindAppOrgRolesByIDs(ids []string, appOrgID string) ([]model.
 	//get the application organization from the cached ones
 	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
 	if err != nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
 	}
 
 	result := appOrgRolesFromStorage(rolesResult, *appOrg)
@@ -2020,7 +2310,7 @@ func (sa *Adapter) FindAppOrgGroupsByIDs(ids []string, appOrgID string) ([]model
 
 	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
 	if err != nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
 	}
 
 	result := appOrgGroupsFromStorage(groupsResult, *appOrg)
@@ -2327,6 +2617,7 @@ func (sa *Adapter) FindOrganization(id string) (*model.Organization, error) {
 
 		organization := organizationFromStorage(&org, applications)
 		return &organization, nil */
+
 	return nil, nil
 }
 
@@ -2428,36 +2719,34 @@ func (sa *Adapter) InsertApplication(application model.Application) (*model.Appl
 
 //FindApplication finds application
 func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
+	// find the application
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	var result []model.Application
-	err := sa.db.applications.Find(filter, &result, nil)
+	var result application
+	err := sa.db.applications.FindOne(filter, &result, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-	}
-	if len(result) == 0 {
-		//no record
-		return nil, nil
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, &logutils.FieldArgs{"_id": ID}, err)
 	}
 
-	appRes := result[0]
+	appRes := applicationFromStorage(&result)
 	return &appRes, nil
 }
 
 //FindApplications finds applications
 func (sa *Adapter) FindApplications() ([]model.Application, error) {
+	// find the applications
 	filter := bson.D{}
-	var result []model.Application
+	var result []application
 	err := sa.db.applications.Find(filter, &result, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 	}
-
 	if len(result) == 0 {
 		//no data
 		return make([]model.Application, 0), nil
 	}
 
-	return result, nil
+	appsRes := applicationsFromStorage(result)
+	return appsRes, nil
 }
 
 //LoadAppConfigs loads all application configs
@@ -2765,23 +3054,13 @@ func (sa *Adapter) UpdateAuthTypes(ID string, code string, description string, i
 
 // ============================== ServiceRegs ==============================
 
-//FindServiceRegs fetches the requested service registration records
-func (sa *Adapter) FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error) {
-	var filter bson.M
-	for _, serviceID := range serviceIDs {
-		if serviceID == "all" {
-			filter = bson.M{}
-			break
-		}
-	}
-	if filter == nil {
-		filter = bson.M{"registration.service_id": bson.M{"$in": serviceIDs}}
-	}
-
+//loadServiceRegs fetches all service registration records
+func (sa *Adapter) loadServiceRegs() ([]model.ServiceReg, error) {
+	filter := bson.M{}
 	var result []model.ServiceReg
 	err := sa.db.serviceRegs.Find(filter, &result, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"service_id": serviceIDs}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"service_id": "all"}, err)
 	}
 
 	if result == nil {
@@ -2791,16 +3070,14 @@ func (sa *Adapter) FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, err
 	return result, nil
 }
 
+//FindServiceRegs fetches the requested service registration records
+func (sa *Adapter) FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error) {
+	return sa.getCachedServiceRegs(serviceIDs)
+}
+
 //FindServiceReg finds the service registration in storage
 func (sa *Adapter) FindServiceReg(serviceID string) (*model.ServiceReg, error) {
-	filter := bson.M{"registration.service_id": serviceID}
-	var reg *model.ServiceReg
-	err := sa.db.serviceRegs.FindOne(filter, &reg, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"service_id": serviceID}, err)
-	}
-
-	return reg, nil
+	return sa.getCachedServiceReg(serviceID)
 }
 
 //InsertServiceReg inserts the service registration to storage
@@ -2957,6 +3234,9 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	}
 	timeout := time.Millisecond * time.Duration(timeoutInt)
 
+	cachedServiceRegs := &syncmap.Map{}
+	serviceRegsLock := &sync.RWMutex{}
+
 	cachedOrganizations := &syncmap.Map{}
 	organizationsLock := &sync.RWMutex{}
 
@@ -2973,7 +3253,8 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	applicationConfigsLock := &sync.RWMutex{}
 
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout, logger: logger}
-	return &Adapter{db: db, logger: logger, cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock,
+	return &Adapter{db: db, logger: logger, cachedServiceRegs: cachedServiceRegs, serviceRegsLock: serviceRegsLock,
+		cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock,
 		cachedApplications: cachedApplications, applicationsLock: applicationsLock,
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
 		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock, cachedApplicationConfigs: cachedApplicationConfigs, applicationConfigsLock: applicationConfigsLock}
@@ -2986,6 +3267,10 @@ type storageListener struct {
 
 func (sl *storageListener) OnAuthTypesUpdated() {
 	sl.adapter.cacheAuthTypes()
+}
+
+func (sl *storageListener) OnServiceRegsUpdated() {
+	sl.adapter.cacheServiceRegs()
 }
 
 func (sl *storageListener) OnOrganizationsUpdated() {

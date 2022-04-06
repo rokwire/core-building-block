@@ -49,6 +49,12 @@ Credential:
   $ref: "./auth/Credential.yaml"
 CredentialFields:
   $ref: "./auth/CredentialFields.yaml"
+ServiceAccount:
+  $ref: "./auth/ServiceAccount.yaml"
+AppOrgPair:
+  $ref: "./auth/AppOrgPair.yaml"
+ServiceAccountCredential:
+  $ref: "./auth/ServiceAccountCredential.yaml"
 ServiceReg:
   $ref: "./auth/ServiceReg.yaml"
 AuthServiceReg:
@@ -178,6 +184,16 @@ _services_req_authorize-service:
 _services_res_authorize-service:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
 
+### service-accounts API
+_services_req_service-accounts_ParamsRequest:
+  $ref: "./apis/services/service-accounts/ParamsRequest.yaml"
+_services_req_service-accounts_TokenRequest:
+  $ref: "./apis/services/service-accounts/TokenRequest.yaml"
+_services_req_service-accounts_CredsStaticToken:
+  $ref: "./apis/services/service-accounts/CredsStaticToken.yaml"
+_services_req_service-accounts_CredsNone:
+  $ref: "./apis/services/service-accounts/CredsNone.yaml"
+
 ### app-configs API
 _services_req_application_configs:
   $ref: "./apis/services/application/configs/request/Request.yaml"
@@ -187,8 +203,8 @@ _services_req_application_org-configs:
 
 ## ADMIN section
 
-### admin app-roken API
-_admin_req_app-token:
+### admin app-token API
+_admin_res_app-token:
   $ref: "./apis/admin/app-token/response/Response.yaml"
 
 ### admin application_roles API
@@ -284,4 +300,11 @@ _system_req_account-roles:
 ### application config API
 _system_req_create_ApplicationConfig_Request:
   $ref: "./apis/system/application-config/request/Request.yaml"
+
+### service accounts API
+_system_req_create_service-account:
+  $ref: "./apis/system/create-service-account/request/Request.yaml"
+_system_req_update_service-account:
+  $ref: "./apis/system/update-service-account/request/Request.yaml"
+
 ## end SYSTEM section

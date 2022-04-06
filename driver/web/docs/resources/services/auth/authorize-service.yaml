@@ -37,6 +37,7 @@ post:
                 {
                   "service_reg": {
                     "service_id": "string",
+                    "service_account_id": "string",
                     "host": "string",
                     "pub_key": {
                       "key_pem": "string",

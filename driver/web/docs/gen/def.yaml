@@ -923,7 +923,7 @@
                   },
                   "unauthorized": {
                     "summary": "Service unauthorized",
-                    "value": "{\n  \"service_reg\": {\n    \"service_id\": \"string\",\n    \"host\": \"string\",\n    \"pub_key\": {\n      \"key_pem\": \"string\",\n      \"alg\": \"string\"\n    },\n    \"name\": \"string\",\n    \"description\": \"string\",\n    \"info_url\": \"string\",\n    \"logo_url\": \"string\",\n    \"scopes\": [\n      {\n        \"scope\": \"string\",\n        \"required\": true,\n        \"explanation\": \"string\"\n      }\n    ],\n    \"first_party\": true\n  }\n}\n"
+                    "value": "{\n  \"service_reg\": {\n    \"service_id\": \"string\",\n    \"service_account_id\": \"string\",\n    \"host\": \"string\",\n    \"pub_key\": {\n      \"key_pem\": \"string\",\n      \"alg\": \"string\"\n    },\n    \"name\": \"string\",\n    \"description\": \"string\",\n    \"info_url\": \"string\",\n    \"logo_url\": \"string\",\n    \"scopes\": [\n      {\n        \"scope\": \"string\",\n        \"required\": true,\n        \"explanation\": \"string\"\n      }\n    ],\n    \"first_party\": true\n  }\n}\n"
                   }
                 }
               }
@@ -1751,7 +1751,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_admin_req_app-token"
+                  "$ref": "#/components/schemas/_admin_res_app-token"
                 }
               }
             }
@@ -2987,6 +2987,124 @@
         }
       }
     },
+    "/bbs/service-account/{id}": {
+      "post": {
+        "tags": [
+          "BBs"
+        ],
+        "summary": "Get service account params",
+        "description": "Returns service account parameters\n",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the service account",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Service account credentials\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_services_req_service-accounts_ParamsRequest"
+              },
+              "examples": {
+                "static_token": {
+                  "summary": "Static token",
+                  "value": "{\n  \"auth_type\": \"static_token\",\n  \"creds\": {\n    \"token\": \"account_token\"\n  }\n}\n"
+                },
+                "signature": {
+                  "summary": "Signature",
+                  "value": "{\n  \"auth_type\": \"signature\"\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppOrgPair"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/bbs/access-token": {
+      "post": {
+        "tags": [
+          "BBs"
+        ],
+        "summary": "Get service account access token",
+        "description": "Returns a new service account access token\n",
+        "requestBody": {
+          "description": "Service account credentials\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_services_req_service-accounts_TokenRequest"
+              },
+              "examples": {
+                "static_token": {
+                  "summary": "Static token",
+                  "value": "{\n  \"account_id\": \"service_account_id\",\n  \"app_id\": \"9766\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"auth_type\": \"static_token\",\n  \"creds\": {\n    \"token\": \"account_token\"\n  }\n}\n"
+                },
+                "signature": {
+                  "summary": "Signature",
+                  "value": "{\n  \"account_id\": \"service_account_id\",\n  \"app_id\": \"9766\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"auth_type\": \"signature\",\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_shared_res_RokwireToken"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/tps/service-regs": {
       "get": {
         "tags": [
@@ -3047,6 +3165,124 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/JWKS"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/tps/service-account/{id}": {
+      "post": {
+        "tags": [
+          "Third-Party Services"
+        ],
+        "summary": "Get service account params",
+        "description": "Returns service account parameters\n",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the service account",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Service account credentials\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_services_req_service-accounts_ParamsRequest"
+              },
+              "examples": {
+                "static_token": {
+                  "summary": "Static token",
+                  "value": "{\n  \"auth_type\": \"static_token\",\n  \"creds\": {\n    \"token\": \"account_token\"\n  }\n}\n"
+                },
+                "signature": {
+                  "summary": "Signature",
+                  "value": "{\n  \"auth_type\": \"signature\"\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppOrgPair"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/tps/access-token": {
+      "post": {
+        "tags": [
+          "Third-Party Services"
+        ],
+        "summary": "Get service account access token",
+        "description": "Returns a new service account access token\n",
+        "requestBody": {
+          "description": "Service account credentials\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_services_req_service-accounts_TokenRequest"
+              },
+              "examples": {
+                "static_token": {
+                  "summary": "Static token",
+                  "value": "{\n  \"account_id\": \"service_account_id\",\n  \"app_id\": \"9766\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"auth_type\": \"static_token\",\n  \"creds\": {\n    \"token\": \"account_token\"\n  }\n}\n"
+                },
+                "signature": {
+                  "summary": "Signature",
+                  "value": "{\n  \"account_id\": \"service_account_id\",\n  \"app_id\": \"9766\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"auth_type\": \"signature\",\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_shared_res_RokwireToken"
                 }
               }
             }
@@ -3564,6 +3800,565 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/system/service-accounts/{id}": {
+      "get": {
+        "deprecated": true,
+        "tags": [
+          "System"
+        ],
+        "summary": "Get service account instance",
+        "description": "Get service account instance by account ID, app ID, and org ID\n\n**Auth:** Requires auth token with permission to read service accounts\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the service account",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "app_id",
+            "in": "query",
+            "description": "Application ID of the service account instance",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "query",
+            "description": "Organization ID of the service account instance",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceAccount"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      },
+      "put": {
+        "deprecated": true,
+        "tags": [
+          "System"
+        ],
+        "summary": "Update service account instance",
+        "description": "Updates a service account instance\n\n**Auth:** Requires auth token with permission to update service accounts\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the service account instance",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "app_id",
+            "in": "query",
+            "description": "Application ID of the service account instance",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "query",
+            "description": "Organization ID of the service account instance",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Service account\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_system_req_update_service-account"
+              },
+              "examples": {
+                "update_account": {
+                  "summary": "Update service account",
+                  "value": "{\n  \"name\": \"updated_name\",\n  \"permissions\": [\"permission1\", \"new_permission1\"]\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceAccount"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      },
+      "delete": {
+        "deprecated": true,
+        "tags": [
+          "System"
+        ],
+        "summary": "Deregister service account instance",
+        "description": "Removes a service account instance\n\n**Auth:** Requires auth token with permission to delete service accounts\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the service account instance to delete",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "app_id",
+            "in": "query",
+            "description": "Application ID of the service account instance",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "query",
+            "description": "Organization ID of the service account instance",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/system/service-accounts": {
+      "get": {
+        "deprecated": true,
+        "tags": [
+          "System"
+        ],
+        "summary": "Get service accounts",
+        "description": "Get list of all service accounts matching a search\n\n**Auth:** Requires auth token with permission to read service accounts\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "query",
+            "description": "Service account ID to search for",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Service account name to search for",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "app_id",
+            "in": "query",
+            "description": "Service account app ID to search for",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "query",
+            "description": "Service account org ID to search for",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "permissions",
+            "in": "query",
+            "description": "A comma-separated list of service account permissions to search for",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceAccount"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      },
+      "post": {
+        "deprecated": true,
+        "tags": [
+          "System"
+        ],
+        "summary": "Register service account",
+        "description": "Creates a new service account\n\n**Auth:** Requires auth token with permission to create service accounts\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "app_id",
+            "in": "query",
+            "description": "Service account app ID to copy from",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "query",
+            "description": "Service account org ID to copy from",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Service account\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_system_req_create_service-account"
+              },
+              "examples": {
+                "initial_creds": {
+                  "summary": "Register new account with initial credentials",
+                  "value": "{\n  \"name\": \"test_account\",\n  \"app_id\": \"9766\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"permissions\": [\"permission1\", \"permission2\"],\n  \"first_party\": true,\n  \"creds\": [\n    {\n      \"name\": \"initial_token\",\n      \"type\": \"static_token\"\n    },\n    {\n      \"name\": \"initial_signature\",\n      \"type\": \"signature\",\n      \"params\": {\n        \"pub_key\": \"public_key_pem\"\n      }\n    }\n  ]\n}\n"
+                },
+                "no_initial_creds": {
+                  "summary": "Register new account without initial credentials",
+                  "value": "{\n  \"name\": \"test_account\",\n  \"app_id\": \"9766\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"permissions\": [\"permission1\", \"permission2\"],\n  \"first_party\": true\n}\n"
+                },
+                "copy_from": {
+                  "summary": "Register new account instance by copying from existing account instance",
+                  "value": "{\n  \"account_id\": \"12345678-e2cd-11eb-af68-60f81db5ecc0\",\n  \"name\": \"test_account\",\n  \"app_id\": \"9766\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"permissions\": [\"permission1\", \"permission2\"],\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceAccount"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      },
+      "delete": {
+        "deprecated": true,
+        "tags": [
+          "System"
+        ],
+        "summary": "Delete service accounts",
+        "description": "Delete service accounts matching an account ID\n\n**Auth:** Requires auth token with permission to delete service accounts\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "query",
+            "description": "Service account ID to delete",
+            "required": true,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/system/service-accounts/{id}/creds": {
+      "post": {
+        "deprecated": true,
+        "tags": [
+          "System"
+        ],
+        "summary": "Add service account credential",
+        "description": "Adds a new credential to an existing service account\n\n**Auth:** Requires auth token with permission to add service account credentials\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the service account to add new credential",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Service account credentials\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceAccountCredential"
+              },
+              "examples": {
+                "static_token": {
+                  "summary": "Add static token credential",
+                  "value": "{\n  \"name\": \"token_cred\",\n  \"type\": \"static_token\"\n}\n"
+                },
+                "signature": {
+                  "summary": "Add signature credential",
+                  "value": "{\n  \"name\": \"signature_cred\",\n  \"type\": \"signature\",\n  \"params\": {\n    \"pub_key\": \"public_key_pem\"\n  }\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceAccountCredential"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      },
+      "delete": {
+        "deprecated": true,
+        "tags": [
+          "System"
+        ],
+        "summary": "Remove service account credential",
+        "description": "Removes a credential from an existing service account\n\n**Auth:** Requires auth token with permission to delete service account credentials\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the service account to remove credential",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cred_id",
+            "in": "query",
+            "description": "id of the credential to be removed",
+            "required": true,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
           },
           "400": {
             "description": "Bad request"
@@ -5326,6 +6121,96 @@
           }
         }
       },
+      "ServiceAccount": {
+        "required": [
+          "account_id",
+          "name",
+          "app_id",
+          "org_id",
+          "permissions",
+          "first_party"
+        ],
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "app_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "org_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "first_party": {
+            "type": "boolean"
+          },
+          "creds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceAccountCredential"
+            }
+          }
+        }
+      },
+      "AppOrgPair": {
+        "required": [
+          "app_id",
+          "org_id"
+        ],
+        "type": "object",
+        "properties": {
+          "app_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "org_id": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ServiceAccountCredential": {
+        "required": [
+          "name",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "readOnly": true,
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "static_token",
+              "signature"
+            ]
+          },
+          "params": {
+            "type": "object",
+            "nullable": true
+          },
+          "date_created": {
+            "readOnly": true,
+            "type": "string"
+          }
+        }
+      },
       "ServiceReg": {
         "required": [
           "service_id",
@@ -5338,6 +6223,9 @@
         "description": "Full service registration record",
         "properties": {
           "service_id": {
+            "type": "string"
+          },
+          "service_account_id": {
             "type": "string"
           },
           "host": {
@@ -5379,6 +6267,9 @@
         "description": "Service registration record used for auth",
         "properties": {
           "service_id": {
+            "type": "string"
+          },
+          "service_account_id": {
             "type": "string"
           },
           "host": {
@@ -6648,6 +7539,73 @@
           }
         }
       },
+      "_services_req_service-accounts_ParamsRequest": {
+        "required": [
+          "auth_type"
+        ],
+        "type": "object",
+        "properties": {
+          "auth_type": {
+            "type": "string",
+            "enum": [
+              "static_token",
+              "signature"
+            ]
+          },
+          "creds": {
+            "$ref": "#/components/schemas/_services_req_service-accounts_CredsStaticToken"
+          }
+        }
+      },
+      "_services_req_service-accounts_TokenRequest": {
+        "required": [
+          "account_id",
+          "app_id",
+          "org_id",
+          "auth_type"
+        ],
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "app_id": {
+            "nullable": true,
+            "type": "string"
+          },
+          "org_id": {
+            "nullable": true,
+            "type": "string"
+          },
+          "auth_type": {
+            "type": "string",
+            "enum": [
+              "static_token",
+              "signature"
+            ]
+          },
+          "creds": {
+            "$ref": "#/components/schemas/_services_req_service-accounts_CredsStaticToken"
+          }
+        }
+      },
+      "_services_req_service-accounts_CredsStaticToken": {
+        "required": [
+          "token"
+        ],
+        "type": "object",
+        "description": "Service account token for auth_type=\"static_token\"",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "_services_req_service-accounts_CredsNone": {
+        "type": "object",
+        "description": "Service account creds for unlisted auth_types (None)",
+        "nullable": true
+      },
       "_services_req_application_configs": {
         "required": [
           "app_type_identifier",
@@ -6684,7 +7642,7 @@
           }
         }
       },
-      "_admin_req_app-token": {
+      "_admin_res_app-token": {
         "required": [
           "token"
         ],
@@ -7379,6 +8337,62 @@
           },
           "data": {
             "type": "object"
+          }
+        }
+      },
+      "_system_req_create_service-account": {
+        "required": [
+          "app_id",
+          "org_id"
+        ],
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "app_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "org_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "first_party": {
+            "type": "boolean"
+          },
+          "creds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceAccountCredential"
+            }
+          }
+        }
+      },
+      "_system_req_update_service-account": {
+        "required": [
+          "name",
+          "permissions"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       }

@@ -141,12 +141,20 @@ paths:
     $ref: "./resources/bbs/test.yaml"
   /bbs/service-regs:
     $ref: "./resources/bbs/service-regs.yaml"
+  /bbs/service-account/{id}:
+    $ref: "./resources/bbs/service-account.yaml"
+  /bbs/access-token:
+    $ref: "./resources/bbs/access-token.yaml"
 
   #third-party services
   /tps/service-regs:
     $ref: "./resources/tps/service-regs.yaml"
   /tps/auth-keys:
     $ref: "./resources/tps/auth-keys.yaml"
+  /tps/service-account/{id}:
+    $ref: "./resources/tps/service-account.yaml"
+  /tps/access-token:
+    $ref: "./resources/tps/access-token.yaml"
 
   #system
   /system/global-config:
@@ -157,6 +165,12 @@ paths:
     $ref: "./resources/system/organizations.yaml"
   /system/service-regs:
     $ref: "./resources/system/service-regs.yaml"
+  /system/service-accounts/{id}:
+    $ref: "./resources/system/service-accountsId.yaml"
+  /system/service-accounts:
+    $ref: "./resources/system/service-accounts.yaml"
+  /system/service-accounts/{id}/creds:
+    $ref: "./resources/system/service-accountsId-creds.yaml"
   /system/applications/{id}:
     $ref: "./resources/system/applicationsId.yaml"
   /system/applications:
