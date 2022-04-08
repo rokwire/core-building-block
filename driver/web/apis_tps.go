@@ -16,19 +16,12 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//BBsApisHandler handles the APIs implementation used by the platform building blocks
-type BBsApisHandler struct {
+//TPSApisHandler handles the APIs implementation used by third-party services
+type TPSApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-//getTest TODO get test
-func (h BBsApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	res := h.coreAPIs.BBs.BBsGetTest()
-
-	return l.HttpResponseSuccessMessage(res)
-}
-
-func (h BBsApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	serviceIDsParam := r.URL.Query().Get("ids")
 	if serviceIDsParam == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("ids"), nil, http.StatusBadRequest, false)
@@ -50,7 +43,23 @@ func (h BBsApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, cl
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h BBsApisHandler) getServiceAccountParams(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h TPSApisHandler) getAuthKeys(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	keys, err := h.coreAPIs.Auth.GetAuthKeySet()
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeJSONWebKeySet, logutils.StringArgs("auth"), err, http.StatusInternalServerError, true)
+	}
+
+	keysResp := jsonWebKeySetDef(keys)
+
+	data, err := json.Marshal(keysResp)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeJSONWebKeySet, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h TPSApisHandler) getServiceAccountParams(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	accountID := params["id"]
 	if len(accountID) <= 0 {
@@ -81,7 +90,7 @@ func (h BBsApisHandler) getServiceAccountParams(l *logs.Log, r *http.Request, cl
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-func (h BBsApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	req, err := sigauth.ParseHTTPRequest(r)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionParse, "service account params http request", nil, err, http.StatusInternalServerError, false)
@@ -107,7 +116,7 @@ func (h BBsApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, clai
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-//NewBBsApisHandler creates new bbs Handler instance
-func NewBBsApisHandler(coreAPIs *core.APIs) BBsApisHandler {
-	return BBsApisHandler{coreAPIs: coreAPIs}
+//NewTPSApisHandler creates new tps Handler instance
+func NewTPSApisHandler(coreAPIs *core.APIs) TPSApisHandler {
+	return TPSApisHandler{coreAPIs: coreAPIs}
 }

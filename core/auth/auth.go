@@ -17,6 +17,7 @@ import (
 	"github.com/rokwire/core-auth-library-go/authorization"
 	"github.com/rokwire/core-auth-library-go/authservice"
 	"github.com/rokwire/core-auth-library-go/authutils"
+	"github.com/rokwire/core-auth-library-go/sigauth"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/go-playground/validator.v9"
@@ -38,6 +39,7 @@ const (
 	typeAuthType          logutils.MessageDataType = "auth type"
 	typeExternalAuthType  logutils.MessageDataType = "external auth type"
 	typeAnonymousAuthType logutils.MessageDataType = "anonymous auth type"
+	typeServiceAuthType   logutils.MessageDataType = "service auth type"
 	typeMfaType           logutils.MessageDataType = "mfa type"
 	typeAuth              logutils.MessageDataType = "auth"
 	typeAuthRefreshParams logutils.MessageDataType = "auth refresh params"
@@ -65,11 +67,13 @@ type Auth struct {
 	authTypes          map[string]authType
 	externalAuthTypes  map[string]externalAuthType
 	anonymousAuthTypes map[string]anonymousAuthType
+	serviceAuthTypes   map[string]serviceAuthType
 	mfaTypes           map[string]mfaType
 
 	authPrivKey *rsa.PrivateKey
 
-	AuthService *authservice.AuthService
+	AuthService   *authservice.AuthService
+	SignatureAuth *sigauth.SignatureAuth
 
 	serviceID   string
 	host        string //Service host
@@ -110,6 +114,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	authTypes := map[string]authType{}
 	externalAuthTypes := map[string]externalAuthType{}
 	anonymousAuthTypes := map[string]anonymousAuthType{}
+	serviceAuthTypes := map[string]serviceAuthType{}
 	mfaTypes := map[string]mfaType{}
 
 	cachedIdentityProviders := &syncmap.Map{}
@@ -121,7 +126,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	timerDone := make(chan bool)
 
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
-		mfaTypes: mfaTypes, authPrivKey: authPrivKey, AuthService: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
+		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, AuthService: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
 		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
@@ -130,14 +135,21 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 		return nil, errors.WrapErrorAction(logutils.ActionSave, "reg", nil, err)
 	}
 
-	serviceLoader := NewLocalServiceRegLoader(storage)
+	dataLoader := NewLocalDataLoader(storage)
 
-	authService, err := authservice.NewAuthService(serviceID, host, serviceLoader)
+	authService, err := authservice.NewAuthService(serviceID, host, dataLoader)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "auth service", nil, err)
 	}
 
 	auth.AuthService = authService
+
+	signatureAuth, err := sigauth.NewSignatureAuth(authPrivKey, authService, true)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "signature auth", nil, err)
+	}
+
+	auth.SignatureAuth = signatureAuth
 
 	//Initialize auth types
 	initUsernameAuth(auth)
@@ -150,6 +162,9 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	initOidcAuth(auth)
 	initSamlAuth(auth)
+
+	initStaticTokenServiceAuth(auth)
+	initSignatureServiceAuth(auth)
 
 	initTotpMfa(auth)
 	initEmailMfa(auth)
@@ -1055,7 +1070,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType.Code, externalIDs, nil, anonymous, true, appOrg.Application.Admin, idUUID.String())
+	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType.Code, externalIDs, nil, anonymous, true, appOrg.Application.Admin, false, true, idUUID.String())
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -1633,6 +1648,61 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 	return nil
 }
 
+func (a *Auth) constructServiceAccount(accountID string, name string, appID *string, orgID *string, permissions []string, firstParty bool) (*model.ServiceAccount, error) {
+	permissionList, err := a.storage.FindPermissionsByName(permissions)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+	}
+
+	var application *model.Application
+	if appID != nil {
+		application, err = a.storage.FindApplication(*appID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		}
+	}
+	var organization *model.Organization
+	if orgID != nil {
+		organization, err = a.storage.FindOrganization(*orgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
+		}
+	}
+
+	return &model.ServiceAccount{AccountID: accountID, Name: name, Application: application, Organization: organization,
+		Permissions: permissionList, FirstParty: firstParty}, nil
+}
+
+func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, params map[string]interface{}, l *logs.Log) ([]model.ServiceAccount, string, error) {
+	var requestData model.ServiceAccountTokenRequest
+	err := json.Unmarshal(r.Body, &requestData)
+	if err != nil {
+		return nil, "", errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("service account access token request"), nil, err)
+	}
+
+	serviceAuthType, err := a.getServiceAuthTypeImpl(requestData.AuthType)
+	if err != nil {
+		l.Info("error getting service auth type on get service access token")
+		return nil, "", errors.WrapErrorAction("error getting service auth type on get service access token", "", nil, err)
+	}
+
+	if params == nil {
+		params = map[string]interface{}{
+			"account_id": requestData.AccountID,
+			"app_id":     requestData.AppID,
+			"org_id":     requestData.OrgID,
+		}
+	}
+	params["first_party"] = strings.HasPrefix(r.Path, "/core/bbs")
+
+	accounts, err := serviceAuthType.checkCredentials(r, requestData.Creds, params)
+	if err != nil {
+		return nil, "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
+	}
+
+	return accounts, requestData.AuthType, nil
+}
+
 func (a *Auth) registerAuthType(name string, auth authType) error {
 	if _, ok := a.authTypes[name]; ok {
 		return errors.Newf("the requested auth type name has already been registered: %s", name)
@@ -1659,6 +1729,16 @@ func (a *Auth) registerAnonymousAuthType(name string, auth anonymousAuthType) er
 	}
 
 	a.anonymousAuthTypes[name] = auth
+
+	return nil
+}
+
+func (a *Auth) registerServiceAuthType(name string, auth serviceAuthType) error {
+	if _, ok := a.serviceAuthTypes[name]; ok {
+		return errors.Newf("the requested service auth type name has already been registered: %s", name)
+	}
+
+	a.serviceAuthTypes[name] = auth
 
 	return nil
 }
@@ -1736,6 +1816,14 @@ func (a *Auth) getAnonymousAuthTypeImpl(authType model.AuthType) (anonymousAuthT
 	return nil, errors.ErrorData(logutils.StatusInvalid, typeAnonymousAuthType, logutils.StringArgs(authType.Code))
 }
 
+func (a *Auth) getServiceAuthTypeImpl(serviceAuthType string) (serviceAuthType, error) {
+	if auth, ok := a.serviceAuthTypes[serviceAuthType]; ok {
+		return auth, nil
+	}
+
+	return nil, errors.ErrorData(logutils.StatusInvalid, typeServiceAuthType, logutils.StringArgs(serviceAuthType))
+}
+
 func (a *Auth) getMfaTypeImpl(mfaType string) (mfaType, error) {
 	if mfa, ok := a.mfaTypes[mfaType]; ok {
 		return mfa, nil
@@ -1781,12 +1869,12 @@ func (a *Auth) getScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 	aud := strings.Join(services, ",")
 	scope := strings.Join(scopeStrings, " ")
 
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, claims.ExternalIDs, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false, claims.SessionID)
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, claims.ExternalIDs, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false, claims.Service, false, claims.SessionID)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
 func (a *Auth) getStandardClaims(sub string, uid string, name string, email string, phone string, aud string, orgID string, appID string,
-	authType string, externalIDs map[string]string, exp *int64, anonymous bool, authenticated bool, admin bool, sessionID string) tokenauth.Claims {
+	authType string, externalIDs map[string]string, exp *int64, anonymous bool, authenticated bool, admin bool, service bool, firstParty bool, sessionID string) tokenauth.Claims {
 	return tokenauth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			Audience:  aud,
@@ -1795,7 +1883,8 @@ func (a *Auth) getStandardClaims(sub string, uid string, name string, email stri
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    a.host,
 		}, OrgID: orgID, AppID: appID, AuthType: authType, UID: uid, Name: name, Email: email, Phone: phone,
-		ExternalIDs: externalIDs, Anonymous: anonymous, Authenticated: authenticated, Admin: admin, SessionID: sessionID,
+		ExternalIDs: externalIDs, Anonymous: anonymous, Authenticated: authenticated, Admin: admin, Service: service,
+		FirstParty: firstParty, SessionID: sessionID,
 	}
 }
 
@@ -2162,14 +2251,25 @@ func (a *Auth) deleteExpiredSessions() {
 	}
 }
 
-//LocalServiceRegLoaderImpl provides a local implementation for AuthDataLoader
-type LocalServiceRegLoaderImpl struct {
+//LocalDataLoaderImpl provides a local implementation for AuthDataLoader
+type LocalDataLoaderImpl struct {
 	storage Storage
 	*authservice.ServiceRegSubscriptions
 }
 
+//GetAccessToken implements AuthDataLoader interface
+func (l *LocalDataLoaderImpl) GetAccessToken() error {
+	return nil
+}
+
+//GetDeletedAccounts implements AuthDataLoader interface
+func (l *LocalDataLoaderImpl) GetDeletedAccounts() ([]string, error) {
+	//TODO: get deleted accounts from storage here
+	return nil, nil
+}
+
 //LoadServices implements ServiceRegLoader interface
-func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, error) {
+func (l *LocalDataLoaderImpl) LoadServices() ([]authservice.ServiceReg, error) {
 	regs, err := l.storage.FindServiceRegs(l.GetSubscribedServices())
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, nil, err)
@@ -2185,20 +2285,10 @@ func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, er
 	return authRegs, nil
 }
 
-//GetAccessToken implements AuthDataLoader interface
-func (l *LocalServiceRegLoaderImpl) GetAccessToken() error {
-	return errors.New("not implemented")
-}
-
-//GetDeletedAccounts implements AuthDataLoader interface
-func (l *LocalServiceRegLoaderImpl) GetDeletedAccounts() ([]string, error) {
-	return nil, errors.New("not implemented")
-}
-
-//NewLocalServiceRegLoader creates and configures a new LocalServiceRegLoaderImpl instance
-func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
+//NewLocalDataLoader creates and configures a new LocalDataLoaderImpl instance
+func NewLocalDataLoader(storage Storage) *LocalDataLoaderImpl {
 	subscriptions := authservice.NewServiceRegSubscriptions([]string{"all"})
-	return &LocalServiceRegLoaderImpl{storage: storage, ServiceRegSubscriptions: subscriptions}
+	return &LocalDataLoaderImpl{storage: storage, ServiceRegSubscriptions: subscriptions}
 }
 
 //StorageListener represents storage listener implementation for the auth package
