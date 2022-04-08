@@ -1330,7 +1330,8 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 		return "", errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	profile := model.Profile{ID: uuid.NewString(), Email: email}
+	now := time.Now()
+	profile := model.Profile{ID: uuid.NewString(), Email: email, DateCreated: now}
 
 	credentialID, _ := uuid.NewUUID()
 	credID := credentialID.String()
@@ -1363,7 +1364,6 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	}
 
 	//credential
-	now := time.Now()
 	credential := &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
 		AuthType: authType, DateCreated: now, DateUpdated: &now}
 
