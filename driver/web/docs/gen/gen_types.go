@@ -66,9 +66,9 @@ const (
 
 	ServicesReqAccountAuthTypeLinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeLinkAuthType = "illinois_oidc"
 
-	ServicesReqAccountAuthTypeLinkAuthTypeTwilioPhone ServicesReqAccountAuthTypeLinkAuthType = "twilio_phone"
+	ServicesReqAccountAuthTypeLinkAuthTypePhonePassword ServicesReqAccountAuthTypeLinkAuthType = "phone_password"
 
-	ServicesReqAccountAuthTypeLinkAuthTypeTwilioPhonePassword ServicesReqAccountAuthTypeLinkAuthType = "twilio_phone_password"
+	ServicesReqAccountAuthTypeLinkAuthTypeTwilioPhone ServicesReqAccountAuthTypeLinkAuthType = "twilio_phone"
 
 	ServicesReqAccountAuthTypeLinkAuthTypeUsername ServicesReqAccountAuthTypeLinkAuthType = "username"
 )
@@ -93,7 +93,7 @@ const (
 const (
 	ServicesReqCredentialSendVerifyAuthTypeEmail ServicesReqCredentialSendVerifyAuthType = "email"
 
-	ServicesReqCredentialSendVerifyAuthTypeTwilioPhonePassword ServicesReqCredentialSendVerifyAuthType = "twilio_phone_password"
+	ServicesReqCredentialSendVerifyAuthTypePhonePassword ServicesReqCredentialSendVerifyAuthType = "phone_password"
 )
 
 // Defines values for ServicesReqServiceAccountsParamsRequestAuthType.
@@ -123,9 +123,9 @@ const (
 
 	SharedReqAccountCheckAuthTypeIllinoisOidc SharedReqAccountCheckAuthType = "illinois_oidc"
 
-	SharedReqAccountCheckAuthTypeTwilioPhone SharedReqAccountCheckAuthType = "twilio_phone"
+	SharedReqAccountCheckAuthTypePhonePassword SharedReqAccountCheckAuthType = "phone_password"
 
-	SharedReqAccountCheckAuthTypeTwilioPhonePassword SharedReqAccountCheckAuthType = "twilio_phone_password"
+	SharedReqAccountCheckAuthTypeTwilioPhone SharedReqAccountCheckAuthType = "twilio_phone"
 
 	SharedReqAccountCheckAuthTypeUsername SharedReqAccountCheckAuthType = "username"
 )
@@ -138,9 +138,9 @@ const (
 
 	SharedReqLoginAuthTypeIllinoisOidc SharedReqLoginAuthType = "illinois_oidc"
 
-	SharedReqLoginAuthTypeTwilioPhone SharedReqLoginAuthType = "twilio_phone"
+	SharedReqLoginAuthTypePhonePassword SharedReqLoginAuthType = "phone_password"
 
-	SharedReqLoginAuthTypeTwilioPhonePassword SharedReqLoginAuthType = "twilio_phone_password"
+	SharedReqLoginAuthTypeTwilioPhone SharedReqLoginAuthType = "twilio_phone"
 )
 
 // Defines values for SharedReqLoginUrlAuthType.
@@ -810,7 +810,7 @@ type SharedReqCredsTwilioPhone struct {
 	Phone string  `json:"phone"`
 }
 
-// Auth login creds for auth_type="twilio_phone_password"
+// Auth login creds for auth_type="phone_password"
 type SharedReqCredsTwilioPhonePassword struct {
 	Password string `json:"password"`
 	Phone    string `json:"phone"`

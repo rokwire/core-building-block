@@ -71,11 +71,11 @@
               "examples": {
                 "phonePassword-sign_in": {
                   "summary": "Phone_password - sign in",
-                  "value": "{\n  \"auth_type\": \"twilio_phone_password\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"phone_password\": \"+123456789\", \n    \"password\": \"test1235\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
+                  "value": "{\n  \"auth_type\": \"phone_password\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"phone_password\": \"+123456789\", \n    \"password\": \"test1235\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
                 },
                 "phonePassword-sign_up": {
                   "summary": "Phone_password - sign up",
-                  "value": "{\n  \"auth_type\": \"twilio_phone_password\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"phone_password\": \"+123456789\", \n    \"password\": \"test1235\"\n  },\n  \"params\":{\n      \"sign_up\":true,\n      \"confirm_password\": \"test1235\"\n  },\n  \"preferences\":{\n      \"key1\":\"value1\",\n      \"key2\":\"value2\"\n  },\n  \"profile\":{\n    \"address\": \"address\",\n    \"birth_year\": 1990,\n    \"country\": \"county\",\n    \"email\": \"email\",\n    \"first_name\": \"first name\",\n    \"last_name\": \"last name\",\n    \"phone\": \"+000000000000\",\n    \"photo_url\": \"photo url\",\n    \"state\": \"state\",\n    \"zip_code\": \"zip code\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
+                  "value": "{\n  \"auth_type\": \"phone_password\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"phone_password\": \"+123456789\", \n    \"password\": \"test1235\"\n  },\n  \"params\":{\n      \"sign_up\":true,\n      \"confirm_password\": \"test1235\"\n  },\n  \"preferences\":{\n      \"key1\":\"value1\",\n      \"key2\":\"value2\"\n  },\n  \"profile\":{\n    \"address\": \"address\",\n    \"birth_year\": 1990,\n    \"country\": \"county\",\n    \"email\": \"email\",\n    \"first_name\": \"first name\",\n    \"last_name\": \"last name\",\n    \"phone\": \"+000000000000\",\n    \"photo_url\": \"photo url\",\n    \"state\": \"state\",\n    \"zip_code\": \"zip code\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
                 },
                 "email-sign_in": {
                   "summary": "Email - sign in",
@@ -776,7 +776,7 @@
               "examples": {
                 "phon_password-sign_up": {
                   "summary": "Phone_password",
-                  "value": "{\n  \"auth_type\": \"twilio_phone_password\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"phone\": \"test@example.com\", \n    \"password\": \"test12345\"\n  },\n  \"params\":{\n      \"confirm_password\": \"test12345\"\n  }\n}\n"
+                  "value": "{\n  \"auth_type\": \"phone_password\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"phone\": \"test@example.com\", \n    \"password\": \"test12345\"\n  },\n  \"params\":{\n      \"confirm_password\": \"test12345\"\n  }\n}\n"
                 },
                 "email-sign_up": {
                   "summary": "Email",
@@ -861,7 +861,7 @@
               "examples": {
                 "phone_password": {
                   "summary": "Phone_password",
-                  "value": "{\n  \"auth_type\": \"twilio_phone_password\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"identifier\": \"+123456789\"\n}\n"
+                  "value": "{\n  \"auth_type\": \"phone_password\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"identifier\": \"+123456789\"\n}\n"
                 },
                 "email": {
                   "summary": "Email",
@@ -1504,11 +1504,11 @@
               "examples": {
                 "phonePassword-sign_in": {
                   "summary": "Phone_password - sign in",
-                  "value": "{\n  \"auth_type\": \"twilio_phone_password\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"phone_password\": \"+123456789\", \n    \"password\": \"test1235\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
+                  "value": "{\n  \"auth_type\": \"phone_password\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"phone_password\": \"+123456789\", \n    \"password\": \"test1235\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
                 },
                 "phonePassword-sign_up": {
                   "summary": "Phone_password - sign up",
-                  "value": "{\n  \"auth_type\": \"twilio_phone_password\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"phone_password\": \"+123456789\", \n    \"password\": \"test1235\"\n  },\n  \"params\":{\n      \"sign_up\":true,\n      \"confirm_password\": \"test1235\"\n  },\n  \"preferences\":{\n      \"key1\":\"value1\",\n      \"key2\":\"value2\"\n  },\n  \"profile\":{\n    \"address\": \"address\",\n    \"birth_year\": 1990,\n    \"country\": \"county\",\n    \"email\": \"email\",\n    \"first_name\": \"first name\",\n    \"last_name\": \"last name\",\n    \"phone\": \"+000000000000\",\n    \"photo_url\": \"photo url\",\n    \"state\": \"state\",\n    \"zip_code\": \"zip code\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
+                  "value": "{\n  \"auth_type\": \"phone_password\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"phone_password\": \"+123456789\", \n    \"password\": \"test1235\"\n  },\n  \"params\":{\n      \"sign_up\":true,\n      \"confirm_password\": \"test1235\"\n  },\n  \"preferences\":{\n      \"key1\":\"value1\",\n      \"key2\":\"value2\"\n  },\n  \"profile\":{\n    \"address\": \"address\",\n    \"birth_year\": 1990,\n    \"country\": \"county\",\n    \"email\": \"email\",\n    \"first_name\": \"first name\",\n    \"last_name\": \"last name\",\n    \"phone\": \"+000000000000\",\n    \"photo_url\": \"photo url\",\n    \"state\": \"state\",\n    \"zip_code\": \"zip code\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
                 },
                 "email-sign_in": {
                   "summary": "Email - sign in",
@@ -6601,7 +6601,7 @@
             "enum": [
               "email",
               "twilio_phone",
-              "twilio_phone_password",
+              "phone_password",
               "illinois_oidc",
               "anonymous"
             ]
@@ -6642,7 +6642,7 @@
               },
               {
                 "type": "object",
-                "description": "Auth login params for auth_type=\"twilio_phone_password\"",
+                "description": "Auth login params for auth_type=\"phone_password\"",
                 "properties": {
                   "confirm_password": {
                     "type": "string",
@@ -6823,7 +6823,7 @@
               "username",
               "email",
               "twilio_phone",
-              "twilio_phone_password",
+              "phone_password",
               "illinois_oidc",
               "anonymous"
             ]
@@ -6879,7 +6879,7 @@
           "password"
         ],
         "type": "object",
-        "description": "Auth login creds for auth_type=\"twilio_phone_password\"",
+        "description": "Auth login creds for auth_type=\"phone_password\"",
         "properties": {
           "phone": {
             "type": "string"
@@ -7329,7 +7329,7 @@
             "enum": [
               "email",
               "twilio_phone",
-              "twilio_phone_password",
+              "phone_password",
               "illinois_oidc",
               "username"
             ]
@@ -7460,7 +7460,7 @@
             "type": "string",
             "enum": [
               "email",
-              "twilio_phone_password"
+              "phone_password"
             ]
           }
         }

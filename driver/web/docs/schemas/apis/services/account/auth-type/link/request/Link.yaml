@@ -9,7 +9,7 @@ properties:
     enum:
       - email
       - twilio_phone
-      - twilio_phone_password
+      - phone_password
       - illinois_oidc
       - username
   app_type_identifier:

@@ -16,7 +16,7 @@ post:
             summary: Phone_password - sign in
             value: |
               {
-                "auth_type": "twilio_phone_password",
+                "auth_type": "phone_password",
                 "app_type_identifier": "edu.illinois.rokwire.safercommunity",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                 "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
@@ -34,7 +34,7 @@ post:
             summary: Phone_password - sign up
             value: |
               {
-                "auth_type": "twilio_phone_password",
+                "auth_type": "phone_password",
                 "app_type_identifier": "edu.illinois.rokwire.safercommunity",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                 "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
