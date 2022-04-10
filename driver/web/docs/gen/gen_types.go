@@ -804,16 +804,16 @@ type SharedReqCredsEmail struct {
 //   - full redirect URI received from OIDC provider
 type SharedReqCredsOIDC string
 
+// Auth login creds for auth_type="phone_password"
+type SharedReqCredsPhonePassword struct {
+	Password string `json:"password"`
+	Phone    string `json:"phone"`
+}
+
 // Auth login creds for auth_type="twilio_phone"
 type SharedReqCredsTwilioPhone struct {
 	Code  *string `json:"code,omitempty"`
 	Phone string  `json:"phone"`
-}
-
-// Auth login creds for auth_type="phone_password"
-type SharedReqCredsTwilioPhonePassword struct {
-	Password string `json:"password"`
-	Phone    string `json:"phone"`
 }
 
 // SharedReqLogin defines model for _shared_req_Login.

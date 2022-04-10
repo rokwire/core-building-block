@@ -114,8 +114,8 @@ _shared_req_CredsEmail:
   $ref: "./apis/shared/requests/CredsEmail.yaml"
 _shared_req_CredsTwilioPhone:
   $ref: "./apis/shared/requests/CredsTwilioPhone.yaml"
-_shared_req_CredsTwilioPhonePassword:
-  $ref: "./apis/shared/requests/CredsTwilioPhonePassword.yaml"
+_shared_req_CredsPhonePassword:
+  $ref: "./apis/shared/requests/CredsPhonePassword.yaml"
 _shared_req_CredsOIDC:
   $ref: "./apis/shared/requests/CredsOIDC.yaml"
 _shared_req_CredsAPIKey:

@@ -6624,7 +6624,7 @@
                 "$ref": "#/components/schemas/_shared_req_CredsTwilioPhone"
               },
               {
-                "$ref": "#/components/schemas/_shared_req_CredsTwilioPhonePassword"
+                "$ref": "#/components/schemas/_shared_req_CredsPhonePassword"
               },
               {
                 "$ref": "#/components/schemas/_shared_req_CredsOIDC"
@@ -6873,7 +6873,7 @@
           }
         }
       },
-      "_shared_req_CredsTwilioPhonePassword": {
+      "_shared_req_CredsPhonePassword": {
         "required": [
           "phone",
           "password"
@@ -7346,7 +7346,7 @@
                 "$ref": "#/components/schemas/_shared_req_CredsTwilioPhone"
               },
               {
-                "$ref": "#/components/schemas/_shared_req_CredsTwilioPhonePassword"
+                "$ref": "#/components/schemas/_shared_req_CredsPhonePassword"
               },
               {
                 "$ref": "#/components/schemas/_shared_req_CredsOIDC"

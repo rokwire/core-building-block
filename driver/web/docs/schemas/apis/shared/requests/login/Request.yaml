@@ -24,7 +24,7 @@ properties:
     anyOf:
       - $ref: "../CredsEmail.yaml"
       - $ref: "../CredsTwilioPhone.yaml"
-      - $ref: "../CredsTwilioPhonePassword.yaml"
+      - $ref: "../CredsPhonePassword.yaml"
       - $ref: "../CredsOIDC.yaml"
       - $ref: "../CredsAPIKey.yaml"
   params:
