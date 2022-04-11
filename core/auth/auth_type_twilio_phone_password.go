@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"core-building-block/core/model"
 	"core-building-block/utils"
 	"crypto/subtle"
@@ -22,6 +23,8 @@ const (
 	typePPTime              logutils.MessageDataType = "time.Time"
 	typePhonePasswordCreds  logutils.MessageDataType = "phonePassword creds"
 	typePhonePasswordParams logutils.MessageDataType = "PhonePassword params"
+	verificationsPPPathPart                          = "Verifications"
+	verificationPPCheckPart                          = "VerificationCheck"
 )
 
 //phonePasswordCreds represents the creds struct for phonePassword auth
@@ -36,8 +39,11 @@ type phonePasswordCreds struct {
 
 // PhonePasswordAuthImpl implementation of authType
 type PhonePasswordAuthImpl struct {
-	auth     *Auth
-	authType string
+	auth             *Auth
+	authType         string
+	twilioAccountSID string
+	twilioToken      string
+	twilioServiceSID string
 }
 
 func (a *PhonePasswordAuthImpl) signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
@@ -103,7 +109,7 @@ func (a *PhonePasswordAuthImpl) signUp(authType model.AuthType, appType model.Ap
 
 	if verifyPhonePassword {
 		//send verification code
-		if _, err = a.sendVerificationCode(phone, appType.Application.Name, code, newCredentialID); err != nil {
+		if err = a.sendVerificationCode(phone, appType.Application.Name, code, newCredentialID); err != nil {
 			return "", nil, errors.WrapErrorAction(logutils.ActionSend, "verification", nil, err)
 		}
 	}
@@ -196,20 +202,52 @@ func (a *PhonePasswordAuthImpl) getVerifyExpiry(authType model.AuthType) int {
 	return verifyExpiry
 }
 
-func (a *PhonePasswordAuthImpl) sendVerificationCode(phonePassword string, appName string, verificationCode string, credentialID string) (string, error) {
+func (a *PhonePasswordAuthImpl) sendVerificationCode(phonePassword string, appName string, verificationCode string, credentialID string) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	//urlStr := "https://verify.twilio.com/v2/Services"
 	params := url.Values{}
 	params.Add("id", credentialID)
 	params.Add("code", verificationCode)
 	params.Add("To", phonePassword)
 	params.Add("Channel", "sms")
 	verificationLink := a.auth.host + fmt.Sprintf("/ui/credential/verify?%s", params.Encode())
+	message := "Please click the link below to verify your phone number:<br><a href=" + verificationLink + ">" + verificationLink + "</a><br><br>If you did not request this verification link, please ignore this message."
+	params.Set("Body", message)
+	//msgDataReader := *strings.NewReader(params.Encode())
 	subject := "Verify your phone number"
 	if appName != "" {
 		subject += " for " + appName
 	}
+	body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationPPCheckPart, params, a.twilioAccountSID, a.twilioToken)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
+	}
 
-	body := "Please click the link below to verify your phone number:<br><a href=" + verificationLink + ">" + verificationLink + "</a><br><br>If you did not request this verification link, please ignore this message."
-	return body, nil
+	err = json.Unmarshal(body, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUnmarshal, typeVerificationResponse, nil, err)
+	}
+
+	/*	client := &http.Client{}
+		req, _ := http.NewRequest("POST", urlStr, &msgDataReader)
+		req.SetBasicAuth(a.twilioAccountSID, a.twilioToken)
+		req.Header.Add("Accept", "application/json")
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+		resp, _ := client.Do(req)
+		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+			var data map[string]interface{}
+			decoder := json.NewDecoder(resp.Body)
+			err := decoder.Decode(&data)
+			if err == nil {
+				fmt.Println(data["sid"])
+			}
+		} else {
+			fmt.Println(resp.Status)
+		}*/
+
+	return nil
 }
 func (a *PhonePasswordAuthImpl) sendPasswordResetEmail(credentialID string, resetCode string, phonePassword string, appName string) (string, error) {
 	params := url.Values{}
@@ -281,7 +319,7 @@ func (a *PhonePasswordAuthImpl) sendVerifyCredential(credential *model.Credentia
 	}
 
 	//send verification
-	if _, err = a.sendVerificationCode(phonePasswordCreds.Phone, appName, code, credential.ID); err != nil {
+	if err = a.sendVerificationCode(phonePasswordCreds.Phone, appName, code, credential.ID); err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, "verification phone number", nil, err)
 	}
 
@@ -313,7 +351,7 @@ func (a *PhonePasswordAuthImpl) restartCredentialVerification(credential *model.
 
 	}
 	//send new verification code for future
-	if _, err = a.sendVerificationCode(storedCreds.Phone, appName, newCode, credential.ID); err != nil {
+	if err = a.sendVerificationCode(storedCreds.Phone, appName, newCode, credential.ID); err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, "verification link", nil, err)
 	}
 	//update new verification data in credential value
