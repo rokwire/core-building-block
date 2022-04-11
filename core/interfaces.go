@@ -111,7 +111,6 @@ type Storage interface {
 	PerformTransaction(func(context storage.TransactionContext) error) error
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
-	FindAccountsByRoleID(context storage.TransactionContext, appID string, orgID string, roleID string) ([]model.Account, error)
 	FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error)
 
@@ -130,8 +129,8 @@ type Storage interface {
 	FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
 	DeleteLoginSessionByID(context storage.TransactionContext, id string) error
+	DeleteLoginSessionsByRoleID(transaction storage.TransactionContext, appID string, orgID string, roleID string) error
 	DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error
-	DeleteLoginSessionsByIdentifiers(transaction storage.TransactionContext, identifiers []string) error
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error

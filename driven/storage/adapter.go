@@ -888,12 +888,29 @@ func (sa *Adapter) DeleteLoginSessionsByIdentifier(context TransactionContext, i
 	return sa.deleteLoginSessions(context, "identifier", identifier, false)
 }
 
-//DeleteLoginSessionsByIdentifiers deletes all login sessions with the identifier
-func (sa *Adapter) DeleteLoginSessionsByIdentifiers(transaction TransactionContext, identifiers []string) error {
-	filter := bson.D{primitive.E{Key: "identifier", Value: bson.M{"$in": identifiers}}}
+//DeleteLoginSessionsByRoleID deletes all login sessions
+func (sa *Adapter) DeleteLoginSessionsByRoleID(transaction TransactionContext, appID string, orgID string, roleID string) error {
+	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
+	if err != nil {
+		return errors.WrapErrorAction("error getting cached application organization", "", nil, err)
+	}
 
+	accountFilter := bson.D{primitive.E{Key: "roles.role._id", Value: roleID}}
+	var accountResult []account
+	err = sa.db.accounts.Find(accountFilter, &accountResult, nil)
+	if err != nil {
+		return err
+	}
+
+	accounts := accountsFromStorage(accountResult, *appOrg)
+	var accountID []string
+	for _, accountIDs := range accounts {
+		accountID = append(accountID, accountIDs.ID)
+	}
+
+	filter := bson.D{primitive.E{Key: "identifier", Value: bson.M{"$in": accountID}}}
 	var res *mongo.DeleteResult
-	var err error
+	//var err error
 	timeout := time.Millisecond * time.Duration(5000) //5 seconds
 	if transaction != nil {
 		res, err = sa.db.loginsSessions.DeleteManyWithParams(transaction, filter, nil, &timeout)
@@ -903,9 +920,8 @@ func (sa *Adapter) DeleteLoginSessionsByIdentifiers(transaction TransactionConte
 
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession,
-			&logutils.FieldArgs{"identifier": identifiers}, err)
+			&logutils.FieldArgs{"identifier": accountID}, err)
 	}
-
 	sa.logger.Infof("%d were deleted", res.DeletedCount)
 	return nil
 }
@@ -1086,31 +1102,6 @@ func (sa *Adapter) FindAccountsByAccountID(appID string, orgID string, accountID
 //FindAccountByID finds an account by id
 func (sa *Adapter) FindAccountByID(context TransactionContext, id string) (*model.Account, error) {
 	return sa.findAccount(context, "_id", id)
-}
-
-//FindAccountsByRoleID finds accounts
-func (sa *Adapter) FindAccountsByRoleID(context TransactionContext, appID string, orgID string, roleID string) ([]model.Account, error) {
-
-	//find app org id
-	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
-	if err != nil {
-		return nil, errors.WrapErrorAction("error getting cached application organization", "", nil, err)
-	}
-
-	accountFilter := bson.D{primitive.E{Key: "roles.role._id", Value: roleID}}
-	var accountResult []account
-	err = sa.db.accounts.Find(accountFilter, &accountResult, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(accountResult) == 0 {
-		//no data
-		return make([]model.Account, 0), nil
-	}
-
-	accounts := accountsFromStorage(accountResult, *appOrg)
-	return accounts, nil
 }
 
 //FindAccountByAuthTypeID finds an account by auth type id

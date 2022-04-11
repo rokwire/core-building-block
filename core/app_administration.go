@@ -526,16 +526,6 @@ func (app *application) admRemovePermissionsFromRole(appID string, orgID string,
 		return errors.New("no permissions names")
 	}
 
-	accounts, err := app.storage.FindAccountsByRoleID(nil, appID, orgID, roleID)
-	if err != nil {
-		return errors.Wrap("there is no accounts with that roleID", err)
-	}
-
-	var accountID []string
-	for _, accountIDs := range accounts {
-		accountID = append(accountID, accountIDs.ID)
-	}
-
 	//find the application organization
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -582,7 +572,7 @@ func (app *application) admRemovePermissionsFromRole(appID string, orgID string,
 		}
 
 		//delete all sessions
-		err = app.storage.DeleteLoginSessionsByIdentifiers(context, accountID)
+		err = app.storage.DeleteLoginSessionsByRoleID(context, appID, orgID, roleID)
 		if err != nil {
 			return errors.Wrap("error deleting sessions by identifier on revoking permissions", err)
 		}
