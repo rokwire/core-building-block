@@ -116,6 +116,10 @@ func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, clai
 	return l.HttpResponseSuccessJSON(respData)
 }
 
+func (h TPSApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	return l.HttpResponseError("unimplemented", errors.New(logutils.Unimplemented), http.StatusInternalServerError, false)
+}
+
 //NewTPSApisHandler creates new tps Handler instance
 func NewTPSApisHandler(coreAPIs *core.APIs) TPSApisHandler {
 	return TPSApisHandler{coreAPIs: coreAPIs}

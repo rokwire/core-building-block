@@ -107,6 +107,10 @@ func (h BBsApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, clai
 	return l.HttpResponseSuccessJSON(respData)
 }
 
+func (h BBsApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	return l.HttpResponseError("unimplemented", errors.New(logutils.Unimplemented), http.StatusInternalServerError, false)
+}
+
 //NewBBsApisHandler creates new bbs Handler instance
 func NewBBsApisHandler(coreAPIs *core.APIs) BBsApisHandler {
 	return BBsApisHandler{coreAPIs: coreAPIs}
