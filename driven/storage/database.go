@@ -302,6 +302,12 @@ func (m *database) applyAPIKeysChecks(apiKeys *collectionWrapper) error {
 		return err
 	}
 
+	// Add key index
+	err = apiKeys.AddIndex(bson.D{primitive.E{Key: "key", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("api keys check passed")
 	return nil
 }
