@@ -504,6 +504,15 @@ func (a *Auth) applyAuthType(authType model.AuthType, appType model.ApplicationT
 	if err != nil {
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
 	}
+
+	if userIdentifier != "" {
+		if authType.Code == "phone" && regProfile.Phone == "" {
+			regProfile.Phone = userIdentifier
+		} else if authType.Code == "email" && regProfile.Email == "" {
+			regProfile.Email = userIdentifier
+		}
+	}
+
 	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, userIdentifier)
 	if err != nil {
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
