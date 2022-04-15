@@ -252,6 +252,34 @@ func (_m *Storage) DeletePermission(id string) error {
 	return r0
 }
 
+// DeletePermissionsFromAccountRoles provides a mock function with given fields: context, roleID, permissions
+func (_m *Storage) DeletePermissionsFromAccountRoles(context storage.TransactionContext, roleID string, permissions []model.Permission) error {
+	ret := _m.Called(context, roleID, permissions)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, []model.Permission) error); ok {
+		r0 = rf(context, roleID, permissions)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeletePermissionsFromGroupRoles provides a mock function with given fields: context, roleID, permissions
+func (_m *Storage) DeletePermissionsFromGroupRoles(context storage.TransactionContext, roleID string, permissions []model.Permission) error {
+	ret := _m.Called(context, roleID, permissions)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, []model.Permission) error); ok {
+		r0 = rf(context, roleID, permissions)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DeletePermissionsFromRole provides a mock function with given fields: context, roleID, permissions
 func (_m *Storage) DeletePermissionsFromRole(context storage.TransactionContext, roleID string, permissions []model.Permission) error {
 	ret := _m.Called(context, roleID, permissions)
