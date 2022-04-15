@@ -152,6 +152,8 @@ type Storage interface {
 	UpdateAppOrgRole(item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
 	DeletePermissionsFromRole(context storage.TransactionContext, roleID string, permissions []model.Permission) error
+	DeletePermissionsFromGroupRoles(context storage.TransactionContext, roleID string, permissions []model.Permission) error
+	DeletePermissionsFromAccountRoles(context storage.TransactionContext, roleID string, permissions []model.Permission) error
 	InsertAppOrgRolePermissions(context storage.TransactionContext, roleID string, permissionNames []model.Permission) error
 
 	FindAppOrgGroups(appOrgID string) ([]model.AppOrgGroup, error)

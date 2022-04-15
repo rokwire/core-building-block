@@ -890,39 +890,28 @@ func (sa *Adapter) DeleteLoginSessionsByIdentifier(context TransactionContext, i
 
 //DeleteLoginSessionsByRoleID deletes all login sessions
 func (sa *Adapter) DeleteLoginSessionsByRoleID(transaction TransactionContext, appID string, orgID string, roleID string) error {
-	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
-	if err != nil {
-		return errors.WrapErrorAction("error getting cached application organization", "", nil, err)
-	}
 
-	accountFilter := bson.D{primitive.E{Key: "roles.role._id", Value: roleID}}
-	var accountResult []account
-	err = sa.db.accounts.Find(accountFilter, &accountResult, nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	pipeline := []bson.M{
+		{"$lookup": bson.M{
+			"from":         "logins_session",
+			"localField":   "identifier",
+			"foreignField": "_id",
+			"as":           "logins_sessions",
+		}}}
+
+	type accountLoginSession struct {
+		ID         string        `bson:"_id"`
+		Identifier string        `bson:"identifier"`
+		Roles      []accountRole `bson:"roles"`
+	}
+	var result []*accountLoginSession
+	err := sa.db.accounts.AggregateWithContext(ctx, pipeline, &result, nil)
 	if err != nil {
 		return err
 	}
 
-	accounts := accountsFromStorage(accountResult, *appOrg)
-	var accountID []string
-	for _, accountIDs := range accounts {
-		accountID = append(accountID, accountIDs.ID)
-	}
-
-	filter := bson.D{primitive.E{Key: "identifier", Value: bson.M{"$in": accountID}}}
-	var res *mongo.DeleteResult
-	//var err error
-	timeout := time.Millisecond * time.Duration(5000) //5 seconds
-	if transaction != nil {
-		res, err = sa.db.loginsSessions.DeleteManyWithParams(transaction, filter, nil, &timeout)
-	} else {
-		res, err = sa.db.loginsSessions.DeleteManyWithParams(context.Background(), filter, nil, &timeout)
-	}
-
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession,
-			&logutils.FieldArgs{"identifier": accountID}, err)
-	}
-	sa.logger.Infof("%d were deleted", res.DeletedCount)
 	return nil
 }
 
@@ -2288,6 +2277,66 @@ func (sa *Adapter) DeletePermissionsFromRole(context TransactionContext, roleID 
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+func (sa *Adapter) DeletePermissionsFromGroupRoles(context TransactionContext, roleID string, permissions []model.Permission) error {
+
+	filter := bson.D{primitive.E{Key: "roles._id", Value: roleID}}
+	permissionsIDs := make([]string, len(permissions))
+	for i, permission := range permissions {
+		permissionsIDs[i] = permission.ID
+	}
+	update := bson.D{
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "permissions", Value: bson.M{"roles.permissions._id": bson.M{"$in": permissionsIDs}}},
+		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
+	}
+
+	var err error
+	if context != nil {
+		_, err = sa.db.applicationsOrganizationsGroups.UpdateOneWithContext(context, filter, update, nil)
+	} else {
+		_, err = sa.db.applicationsOrganizationsGroups.UpdateOne(filter, update, nil)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+	}
+
+	return nil
+}
+
+func (sa *Adapter) DeletePermissionsFromAccountRoles(context TransactionContext, roleID string, permissions []model.Permission) error {
+
+	filter := bson.D{primitive.E{Key: "roles._id", Value: roleID}}
+	permissionsIDs := make([]string, len(permissions))
+	for i, permission := range permissions {
+		permissionsIDs[i] = permission.ID
+	}
+	update := bson.D{
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "roles.role", Value: bson.M{"role.permissions._id": bson.M{"$in": permissionsIDs}}},
+		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
+	}
+
+	var err error
+	if context != nil {
+		_, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	} else {
+		_, err = sa.db.accounts.UpdateOne(filter, update, nil)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
 	return nil
