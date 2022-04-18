@@ -48,7 +48,7 @@ paths:
                 value: |
                   {
                     "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
@@ -66,7 +66,7 @@ paths:
                 value: |
                   {
                     "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
@@ -653,7 +653,7 @@ paths:
                 value: |
                   {
                     "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
@@ -748,7 +748,7 @@ paths:
                 value: |
                   {
                     "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "app_type_identifier": "edu.illinois.rokwire",
                     "identifier": "test@example.com"
                   }
               phone:
@@ -1236,55 +1236,17 @@ paths:
             schema:
               $ref: '#/components/schemas/_shared_req_Login'
             examples:
-              email-sign_in:
-                summary: Email - sign in
+              email:
+                summary: Email
                 value: |
                   {
                     "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
                       "email": "test@example.com", 
                       "password": "test12345"
-                    },
-                    "device": {
-                      "type": "mobile",
-                      "device_id": "5555",
-                      "os": "Android"
-                    }
-                  }
-              email-sign_up:
-                summary: Email - sign up
-                value: |
-                  {
-                    "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "creds": {
-                      "email": "test@example.com", 
-                      "password": "test12345"
-                    },
-                    "params":{
-                        "sign_up":true,
-                        "confirm_password": "test12345"
-                    },
-                    "preferences":{
-                        "key1":"value1",
-                        "key2":"value2"
-                    },
-                    "profile":{
-                      "address": "address",
-                      "birth_year": 1990,
-                      "country": "county",
-                      "email": "email",
-                      "first_name": "first name",
-                      "last_name": "last name",
-                      "phone": "+000000000000",
-                      "photo_url": "photo url",
-                      "state": "state",
-                      "zip_code": "zip code"
                     },
                     "device": {
                       "type": "mobile",
@@ -1293,7 +1255,7 @@ paths:
                     }
                   }
               phone:
-                summary: Phone - sign in OR sign up
+                summary: Phone
                 value: |
                   {
                     "auth_type": "twilio_phone",
@@ -1327,7 +1289,7 @@ paths:
                     }
                   }
               illinois_oidc:
-                summary: Illinois OIDC login
+                summary: Illinois OIDC
                 value: |
                   {
                     "auth_type": "illinois_oidc",
@@ -1672,12 +1634,12 @@ paths:
       responses:
         '200':
           description: Success
-          content: null
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/_shared_res_Account'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/_shared_res_Account'
         '400':
           description: Bad request
         '401':
@@ -1705,12 +1667,12 @@ paths:
       responses:
         '200':
           description: Success
-          content: null
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/DeviceFields'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeviceFields'
         '400':
           description: Bad request
         '401':
@@ -2604,8 +2566,8 @@ paths:
             schema:
               $ref: '#/components/schemas/_shared_req_Login'
             examples:
-              email-sign_in:
-                summary: Email - sign in
+              email:
+                summary: Email
                 value: |
                   {
                     "auth_type": "email",
@@ -2615,44 +2577,6 @@ paths:
                     "creds": {
                       "email": "test@example.com", 
                       "password": "test12345"
-                    },
-                    "device": {
-                      "type": "mobile",
-                      "device_id": "5555",
-                      "os": "Android"
-                    }
-                  }
-              email-sign_up:
-                summary: Email - sign up
-                value: |
-                  {
-                    "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire.admin",
-                    "org_id": "5d7ed0a6-48f2-4473-ae4e-120f2b541a22",
-                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "creds": {
-                      "email": "test@example.com", 
-                      "password": "test12345"
-                    },
-                    "params":{
-                        "sign_up":true,
-                        "confirm_password": "test12345"
-                    },
-                    "preferences":{
-                        "key1":"value1",
-                        "key2":"value2"
-                    },
-                    "profile":{
-                      "address": "address",
-                      "birth_year": 1990,
-                      "country": "county",
-                      "email": "email",
-                      "first_name": "first name",
-                      "last_name": "last name",
-                      "phone": "+000000000000",
-                      "photo_url": "photo url",
-                      "state": "state",
-                      "zip_code": "zip code"
                     },
                     "device": {
                       "type": "mobile",
@@ -2661,7 +2585,7 @@ paths:
                     }
                   }
               phone:
-                summary: Phone - sign in OR sign up
+                summary: Phone
                 value: |
                   {
                     "auth_type": "twilio_phone",

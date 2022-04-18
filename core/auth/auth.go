@@ -608,7 +608,7 @@ func (a *Auth) checkCredentials(authImpl authType, authType model.AuthType, acco
 		}
 	}
 
-	return "", nil
+	return message, nil
 }
 
 func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization, userIdentifier string,
@@ -1427,6 +1427,10 @@ func (a *Auth) applyLinkVerify(authImpl authType, authType model.AuthType, accou
 
 	if !accountAuthType.Linked {
 		return "", nil, errors.New("cannot verify non-linked auth type")
+	}
+
+	if !accountAuthType.Unverified {
+		return "", nil, errors.New("auth type already verified")
 	}
 
 	var message string
