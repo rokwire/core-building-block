@@ -888,6 +888,28 @@ func (sa *Adapter) DeleteLoginSessionsByIdentifier(context TransactionContext, i
 	return sa.deleteLoginSessions(context, "identifier", identifier, false)
 }
 
+//DeleteLoginSessionsByIdentifiers deletes all login sessions with the identifier
+func (sa *Adapter) DeleteLoginSessionsByIdentifiers(transaction TransactionContext, identifiers []string) error {
+	filter := bson.D{primitive.E{Key: "identifier", Value: bson.M{"$in": identifiers}}}
+
+	var res *mongo.DeleteResult
+	var err error
+	timeout := time.Millisecond * time.Duration(5000) //5 seconds
+	if transaction != nil {
+		res, err = sa.db.loginsSessions.DeleteManyWithParams(transaction, filter, nil, &timeout)
+	} else {
+		res, err = sa.db.loginsSessions.DeleteManyWithParams(context.Background(), filter, nil, &timeout)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession,
+			&logutils.FieldArgs{"identifier": identifiers}, err)
+	}
+
+	sa.logger.Infof("%d were deleted", res.DeletedCount)
+	return nil
+}
+
 //DeleteLoginSessionByID deletes a login session by id
 func (sa *Adapter) DeleteLoginSessionByID(context TransactionContext, id string) error {
 	return sa.deleteLoginSessions(context, "_id", id, true)

@@ -129,6 +129,7 @@ type Storage interface {
 		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
 	DeleteLoginSessionByID(context storage.TransactionContext, id string) error
 	DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error
+	DeleteLoginSessionsByIdentifiers(transaction storage.TransactionContext, identifiers []string) error
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error
