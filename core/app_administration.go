@@ -390,11 +390,27 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 	if group == nil {
 		return errors.New("bad group id params")
 	}
+	var permissionNames []string
+	for _, permissions := range group.Permissions {
+		if permissions.Name != "" {
+			permissionNames = append(permissionNames, permissions.Name)
+		}
+	}
 
-	//check assigners
-	err = group.CheckAssigners(assignerPermissions)
+	//find permissions by name
+	permissions, err := app.storage.FindPermissionsByName(permissionNames)
 	if err != nil {
-		return errors.Wrap("not allowed", err)
+		return err
+	}
+	if len(permissions) == 0 {
+		return errors.Newf("no permissions found for names: %v", permissionNames)
+	}
+	//check if authorized
+	for _, permission := range permissions {
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking permission assigners", err)
+		}
 	}
 
 	//ensure that the accounts have the group
@@ -403,12 +419,6 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 		if gr == nil {
 			return errors.Newf("account %s is not a member of the group", account.ID)
 		}
-	}
-
-	//remove the accounts from the group
-	err = app.storage.RemoveAccountsGroup(group.ID, accounts)
-	if err != nil {
-		return errors.Wrapf("error removing accounts from a group - %s", err, groupID)
 	}
 
 	return nil
