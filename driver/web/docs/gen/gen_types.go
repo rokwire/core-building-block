@@ -202,19 +202,6 @@ const (
 	SystemReqUpdateOrganizationTypeSmall SystemReqUpdateOrganizationType = "small"
 )
 
-// Defines values for SystemResGetOrganizationsType.
-const (
-	SystemResGetOrganizationsTypeHuge SystemResGetOrganizationsType = "huge"
-
-	SystemResGetOrganizationsTypeLarge SystemResGetOrganizationsType = "large"
-
-	SystemResGetOrganizationsTypeMedium SystemResGetOrganizationsType = "medium"
-
-	SystemResGetOrganizationsTypeMicro SystemResGetOrganizationsType = "micro"
-
-	SystemResGetOrganizationsTypeSmall SystemResGetOrganizationsType = "small"
-)
-
 // API key record
 type APIKey struct {
 	AppId string  `json:"app_id"`
@@ -318,6 +305,7 @@ type ApplicationConfig struct {
 
 // ApplicationFields defines model for ApplicationFields.
 type ApplicationFields struct {
+	Admin            *bool  `json:"admin,omitempty"`
 	Id               string `json:"id"`
 	MultiTenant      *bool  `json:"multi_tenant,omitempty"`
 	Name             string `json:"name"`
@@ -464,13 +452,8 @@ type OIDCDiscovery struct {
 
 // Organization defines model for Organization.
 type Organization struct {
-	Config *OrganizationConfig `json:"config,omitempty"`
-	Fields *OrganizationFields `json:"fields,omitempty"`
-}
-
-// OrganizationConfig defines model for OrganizationConfig.
-type OrganizationConfig struct {
-	Fields *OrganizationConfigFields `json:"fields,omitempty"`
+	Config *OrganizationConfigFields `json:"config,omitempty"`
+	Fields *OrganizationFields       `json:"fields,omitempty"`
 }
 
 // OrganizationConfigFields defines model for OrganizationConfigFields.
@@ -1052,17 +1035,15 @@ type SystemReqCreateOrganizationType string
 
 // SystemReqCreateApplication defines model for _system_req_create_Application.
 type SystemReqCreateApplication struct {
+	Admin            bool `json:"admin"`
 	ApplicationTypes *[]struct {
 		Identifier string    `json:"identifier"`
 		Name       *string   `json:"name,omitempty"`
 		Versions   *[]string `json:"versions,omitempty"`
 	} `json:"application_types,omitempty"`
-
-	// The maximum allowed duration (in hours) of a user's login session for this application
-	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
-	MultiTenant             bool   `json:"multi_tenant"`
-	Name                    string `json:"name"`
-	SharedIdentities        bool   `json:"shared_identities"`
+	MultiTenant      bool   `json:"multi_tenant"`
+	Name             string `json:"name"`
+	SharedIdentities bool   `json:"shared_identities"`
 }
 
 // SystemReqCreateApplicationConfigRequest defines model for _system_req_create_ApplicationConfig_Request.
@@ -1100,14 +1081,6 @@ type SystemReqCreateServiceAccount struct {
 	Name        *string                     `json:"name,omitempty"`
 	OrgId       *string                     `json:"org_id"`
 	Permissions *[]string                   `json:"permissions,omitempty"`
-}
-
-// SystemReqGetApplication defines model for _system_req_get_Application.
-type SystemReqGetApplication string
-
-// SystemReqGetOrganization defines model for _system_req_get_Organization.
-type SystemReqGetOrganization struct {
-	Id string `json:"id"`
 }
 
 // SystemReqPermissions defines model for _system_req_permissions.
@@ -1151,29 +1124,6 @@ type SystemReqUpdateServiceAccount struct {
 	Name        string   `json:"name"`
 	Permissions []string `json:"permissions"`
 }
-
-// SystemResGetApplications defines model for _system_res_get_Applications.
-type SystemResGetApplications struct {
-	ApplicationTypes *ApplicationTypeFields `json:"application_types,omitempty"`
-	Id               string                 `json:"id"`
-
-	// The maximum allowed duration (in hours) of a user's login session for this application
-	MaxLoginSessionDuration *int   `json:"max_login_session_duration,omitempty"`
-	MultiTenant             bool   `json:"multi_tenant"`
-	Name                    string `json:"name"`
-	SharedIdentities        bool   `json:"shared_identities"`
-}
-
-// SystemResGetOrganizations defines model for _system_res_get_Organizations.
-type SystemResGetOrganizations struct {
-	Config *[]OrganizationConfigFields   `json:"config,omitempty"`
-	Id     string                        `json:"id"`
-	Name   string                        `json:"name"`
-	Type   SystemResGetOrganizationsType `json:"type"`
-}
-
-// SystemResGetOrganizationsType defines model for SystemResGetOrganizations.Type.
-type SystemResGetOrganizationsType string
 
 // DeleteAdminAccountMfaParams defines parameters for DeleteAdminAccountMfa.
 type DeleteAdminAccountMfaParams struct {
@@ -1456,6 +1406,28 @@ type PostSystemAuthTypesJSONBody SystemReqCreateAuthType
 
 // PutSystemAuthTypesIdJSONBody defines parameters for PutSystemAuthTypesId.
 type PutSystemAuthTypesIdJSONBody SystemReqUpdateAuthType
+
+// PostSystemAuthLoginJSONBody defines parameters for PostSystemAuthLogin.
+type PostSystemAuthLoginJSONBody SharedReqLogin
+
+// PostSystemAuthLoginUrlJSONBody defines parameters for PostSystemAuthLoginUrl.
+type PostSystemAuthLoginUrlJSONBody SharedReqLoginUrl
+
+// PostSystemAuthMfaJSONBody defines parameters for PostSystemAuthMfa.
+type PostSystemAuthMfaJSONBody SharedReqLoginMfa
+
+// PostSystemAuthMfaParams defines parameters for PostSystemAuthMfa.
+type PostSystemAuthMfaParams struct {
+
+	// Login state
+	State *string `json:"state,omitempty"`
+}
+
+// PostSystemAuthRefreshJSONBody defines parameters for PostSystemAuthRefresh.
+type PostSystemAuthRefreshJSONBody SharedReqRefresh
+
+// PostSystemAuthVerifyMfaJSONBody defines parameters for PostSystemAuthVerifyMfa.
+type PostSystemAuthVerifyMfaJSONBody SharedReqMfa
 
 // PostSystemGlobalConfigJSONBody defines parameters for PostSystemGlobalConfig.
 type PostSystemGlobalConfigJSONBody GlobalConfig
@@ -1753,6 +1725,21 @@ type PostSystemAuthTypesJSONRequestBody PostSystemAuthTypesJSONBody
 
 // PutSystemAuthTypesIdJSONRequestBody defines body for PutSystemAuthTypesId for application/json ContentType.
 type PutSystemAuthTypesIdJSONRequestBody PutSystemAuthTypesIdJSONBody
+
+// PostSystemAuthLoginJSONRequestBody defines body for PostSystemAuthLogin for application/json ContentType.
+type PostSystemAuthLoginJSONRequestBody PostSystemAuthLoginJSONBody
+
+// PostSystemAuthLoginUrlJSONRequestBody defines body for PostSystemAuthLoginUrl for application/json ContentType.
+type PostSystemAuthLoginUrlJSONRequestBody PostSystemAuthLoginUrlJSONBody
+
+// PostSystemAuthMfaJSONRequestBody defines body for PostSystemAuthMfa for application/json ContentType.
+type PostSystemAuthMfaJSONRequestBody PostSystemAuthMfaJSONBody
+
+// PostSystemAuthRefreshJSONRequestBody defines body for PostSystemAuthRefresh for application/json ContentType.
+type PostSystemAuthRefreshJSONRequestBody PostSystemAuthRefreshJSONBody
+
+// PostSystemAuthVerifyMfaJSONRequestBody defines body for PostSystemAuthVerifyMfa for application/json ContentType.
+type PostSystemAuthVerifyMfaJSONRequestBody PostSystemAuthVerifyMfaJSONBody
 
 // PostSystemGlobalConfigJSONRequestBody defines body for PostSystemGlobalConfig for application/json ContentType.
 type PostSystemGlobalConfigJSONRequestBody PostSystemGlobalConfigJSONBody

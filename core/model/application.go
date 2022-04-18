@@ -197,6 +197,8 @@ type Organization struct {
 	Name string
 	Type string //micro small medium large - based on the users count
 
+	System bool //is this a system org?
+
 	Config OrganizationConfig
 
 	Applications []ApplicationOrganization

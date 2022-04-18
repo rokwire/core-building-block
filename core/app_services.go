@@ -49,7 +49,7 @@ func (app *application) serUpdateProfile(accountID string, profile model.Profile
 	profile.ID = account.Profile.ID
 
 	//3. update profile
-	err = app.storage.UpdateProfile(profile)
+	err = app.storage.UpdateProfile(nil, profile)
 	if err != nil {
 		return errors.Wrapf("error updating a profile", err)
 	}

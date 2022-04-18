@@ -1,5 +1,4 @@
 get:
-  deprecated: true
   tags:
   - System
   summary: Get application API keys

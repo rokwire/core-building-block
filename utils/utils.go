@@ -30,6 +30,8 @@ const (
 	ErrorStatusVerificationExpired string = "verification-expired"
 	//ErrorStatusSharedCredentialUnverified ...
 	ErrorStatusSharedCredentialUnverified string = "shared-credential-unverified"
+	//ErrorStatusNotAllowed ...
+	ErrorStatusNotAllowed string = "not-allowed"
 )
 
 // SetRandomSeed sets the seed for random number generation

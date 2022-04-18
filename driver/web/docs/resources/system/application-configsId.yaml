@@ -1,5 +1,4 @@
 get:
-  deprecated: true
   tags:
   - System
   summary: Reads app configs by given id
@@ -30,7 +29,6 @@ get:
     500:
       description: Internal error
 put:
-  deprecated: true
   tags:
   - System
   summary: Updates app configs
@@ -73,7 +71,6 @@ put:
     500:
       description: Internal error
 delete:
-  deprecated: true
   tags:
   - System
   summary: Deletes app configs
