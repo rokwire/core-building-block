@@ -52,6 +52,8 @@ type organization struct {
 	Name string `bson:"name"`
 	Type string `bson:"type"`
 
+	System bool `bson:"system"`
+
 	Config model.OrganizationConfig `bson:"config"`
 
 	DateCreated time.Time  `bson:"date_created"`

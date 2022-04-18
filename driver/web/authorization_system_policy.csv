@@ -1,4 +1,5 @@
 #TODO - to be done
+p, all_system_core, /core/system/*, (GET)|(POST)|(DELETE)|(PUT)
 
 p, all_global-config, /core/system/global-config, (GET)|(POST)|(DELETE)|(PUT)
 p, get_global-config, /core/system/global-config, (GET)
@@ -23,6 +24,8 @@ p, get_api-keys, /core/admin/application-api-keys, (GET)
 p, update_api-keys, /core/system/api-keys, (POST)|(DELETE)|(PUT)
 
 p, all_service-regs, /core/system/service-regs, (GET)|(POST)|(DELETE)|(PUT)
+
+p, all_service-accounts, /core/system/service-accounts, (GET)|(POST)|(DELETE)|(PUT)
 
 p, all_permissions, /core/system/permissions, (GET)|(POST)|(DELETE)|(PUT)
 

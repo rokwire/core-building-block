@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Implement system accounts [#278](https://github.com/rokwire/core-building-block/issues/278)
 - Service accounts [#306](https://github.com/rokwire/core-building-block/issues/306)
 
 ## [1.22.0] - 2022-04-02

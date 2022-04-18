@@ -1,12 +1,10 @@
 package auth
 
 import (
-	"core-building-block/core/model"
 	"encoding/json"
 
 	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
@@ -27,7 +25,7 @@ type anonymousCreds struct {
 	AnonymousID string `json:"anonymous_id"`
 }
 
-func (a *anonymousAuthImpl) checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *anonymousAuthImpl) checkCredentials(creds string) (string, map[string]interface{}, error) {
 	var keyCreds anonymousCreds
 	err := json.Unmarshal([]byte(creds), &keyCreds)
 	if err != nil {
