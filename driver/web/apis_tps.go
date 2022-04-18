@@ -4,6 +4,7 @@ import (
 	"core-building-block/core"
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -117,7 +118,37 @@ func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, clai
 }
 
 func (h TPSApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	return l.HttpResponseError("unimplemented", errors.New(logutils.Unimplemented), http.StatusInternalServerError, false)
+	req, err := sigauth.ParseHTTPRequest(r)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionParse, "service access tokens http request", nil, err, http.StatusInternalServerError, false)
+	}
+
+	accessTokens, err := h.coreAPIs.Auth.GetAllServiceAccessTokens(req, l)
+	if err != nil {
+		loggingErr, ok := err.(*errors.Error)
+		if ok && loggingErr.Status() != "" {
+			return l.HttpResponseError("Error getting access tokens", err, http.StatusUnauthorized, true)
+		}
+		return l.HttpResponseError("Error getting access tokens", err, http.StatusInternalServerError, true)
+	}
+
+	rokwireTokens := make([]Def.ServicesResServiceAccountsAccessTokens, len(accessTokens))
+	i := 0
+	for k, v := range accessTokens {
+		tokenType := Def.SharedResRokwireTokenTokenTypeBearer
+		rokwireToken := Def.SharedResRokwireToken{AccessToken: &v, TokenType: &tokenType}
+
+		splitKey := strings.Split(k, "_")
+		rokwireTokens[i] = Def.ServicesResServiceAccountsAccessTokens{AppId: utils.StringOrNil(splitKey[0]), OrgId: utils.StringOrNil(splitKey[1]), Token: rokwireToken}
+		i++
+	}
+
+	respData, err := json.Marshal(rokwireTokens)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service access tokens response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
 }
 
 //NewTPSApisHandler creates new tps Handler instance

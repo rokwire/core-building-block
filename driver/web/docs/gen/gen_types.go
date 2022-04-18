@@ -790,9 +790,9 @@ type ServicesResAuthorizeServiceTokenType string
 
 // ServicesResServiceAccountsAccessTokens defines model for _services_res_service-accounts_access-tokens.
 type ServicesResServiceAccountsAccessTokens struct {
-	AppId *string                `json:"app_id"`
-	OrgId *string                `json:"org_id"`
-	Token *SharedResRokwireToken `json:"token,omitempty"`
+	AppId *string               `json:"app_id"`
+	OrgId *string               `json:"org_id"`
+	Token SharedResRokwireToken `json:"token"`
 }
 
 // Service account token for auth_type="static_token"

@@ -1672,7 +1672,7 @@ func (a *Auth) constructServiceAccount(accountID string, name string, appID *str
 		Permissions: permissionList, FirstParty: firstParty}, nil
 }
 
-func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, params map[string]interface{}, l *logs.Log) ([]model.ServiceAccount, string, error) {
+func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, params map[string]interface{}, single bool, l *logs.Log) ([]model.ServiceAccount, string, error) {
 	var requestData model.ServiceAccountTokenRequest
 	err := json.Unmarshal(r.Body, &requestData)
 	if err != nil {
@@ -1686,10 +1686,10 @@ func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, params map[string]in
 	}
 
 	if params == nil {
-		params = map[string]interface{}{
-			"account_id": requestData.AccountID,
-			"app_id":     requestData.AppID,
-			"org_id":     requestData.OrgID,
+		params = map[string]interface{}{"account_id": requestData.AccountID}
+		if single {
+			params["app_id"] = requestData.AppID
+			params["org_id"] = requestData.OrgID
 		}
 	}
 	params["first_party"] = strings.HasPrefix(r.Path, "/core/bbs")

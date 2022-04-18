@@ -1,6 +1,7 @@
 required:
-  - account_id
-  - auth_type
+  - app_id
+  - org_id
+  - token
 type: object
 properties:
   app_id:

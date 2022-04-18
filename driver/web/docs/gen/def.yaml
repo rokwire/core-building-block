@@ -5716,8 +5716,9 @@ components:
           $ref: '#/components/schemas/_services_service-accounts_CredsStaticToken'
     _services_res_service-accounts_access-tokens:
       required:
-        - account_id
-        - auth_type
+        - app_id
+        - org_id
+        - token
       type: object
       properties:
         app_id:

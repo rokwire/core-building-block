@@ -286,6 +286,9 @@ type APIs interface {
 	//GetServiceAccessToken returns an access token for a non-human client
 	GetServiceAccessToken(r *sigauth.Request, l *logs.Log) (string, error)
 
+	//GetAllServiceAccessTokens returns an access token for each app, org pair a service account has access to
+	GetAllServiceAccessTokens(r *sigauth.Request, l *logs.Log) (map[string]string, error)
+
 	//GetServiceAccounts gets all service accounts matching a search
 	GetServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
 
