@@ -508,7 +508,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 	}
 
 	if userIdentifier != "" {
-		if authType.Code == "phone" && regProfile.Phone == "" {
+		if authType.Code == "twilio_phone" && regProfile.Phone == "" {
 			regProfile.Phone = userIdentifier
 		} else if authType.Code == "email" && regProfile.Email == "" {
 			regProfile.Email = userIdentifier
