@@ -1,5 +1,4 @@
  get:
-  deprecated: true
   tags:
   - System
   summary: Get organizations
@@ -17,7 +16,7 @@
             schema:
               type: array
               items:
-                $ref: "../../schemas/apis/system/get-organizations/response/Response.yaml"
+                $ref: "../../schemas/application/Organization.yaml"
       400:
         description: Bad request
       401:
@@ -25,7 +24,6 @@
       500:
         description: Internal error
  post:
-  deprecated: true
   tags:
   - System
   summary: Create organization

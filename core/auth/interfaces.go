@@ -17,7 +17,7 @@ type authType interface {
 	// Returns:
 	//	message (string): Success message if verification is required. If verification is not required, return ""
 	//	credentialValue (map): Credential value
-	signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
+	signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//verifies credential (checks the verification code generated on email signup for email auth type)
 	// Returns:
@@ -57,7 +57,7 @@ type authType interface {
 //these are the different identity providers - illinois_oidc etc
 type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
-	getLoginURL(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
+	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 	//externalLogin logins in the external system and provides the authenticated user
 	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 	//refresh refreshes tokens
@@ -68,7 +68,7 @@ type externalAuthType interface {
 type anonymousAuthType interface {
 	//checkCredentials checks the credentials for the provided app and organization
 	//	Returns anonymous profile identifier
-	checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, map[string]interface{}, error)
+	checkCredentials(creds string) (string, map[string]interface{}, error)
 }
 
 //serviceAuthType is the interface for authentication for non-human clients
@@ -354,6 +354,9 @@ type APIs interface {
 	//		account (*model.Account): account data after the operation
 	UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error)
 
+	//InitializeSystemAccount initializes the first system account
+	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermissionID string, email string, password string, l *logs.Log) (string, error)
+
 	//DeleteAccount deletes an account for the given id
 	DeleteAccount(id string) error
 
@@ -401,7 +404,6 @@ type Storage interface {
 	PerformTransaction(func(context storage.TransactionContext) error) error
 
 	//AuthTypes
-	LoadAuthTypes() ([]model.AuthType, error)
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
 	//LoginsSessions
@@ -423,12 +425,12 @@ type Storage interface {
 	//Accounts
 	FindAccount(appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
-	InsertAccount(account model.Account) (*model.Account, error)
+	InsertAccount(context storage.TransactionContext, account model.Account) (*model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 	DeleteAccount(context storage.TransactionContext, id string) error
 
 	//Profiles
-	UpdateProfile(profile model.Profile) error
+	UpdateProfile(context storage.TransactionContext, profile model.Profile) error
 	FindProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)
 
 	//ServiceAccounts
@@ -460,7 +462,7 @@ type Storage interface {
 	FindOrganization(id string) (*model.Organization, error)
 
 	//Credentials
-	InsertCredential(creds *model.Credential) error
+	InsertCredential(context storage.TransactionContext, creds *model.Credential) error
 	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
 	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
 	UpdateCredentialValue(ID string, value map[string]interface{}) error
@@ -491,9 +493,7 @@ type Storage interface {
 
 	//APIKeys
 	LoadAPIKeys() ([]model.APIKey, error)
-	FindApplicationAPIKeys(appID string) ([]model.APIKey, error)
-	FindAPIKey(ID string) (*model.APIKey, error)
-	InsertAPIKey(apiKey model.APIKey) (*model.APIKey, error)
+	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
 	UpdateAPIKey(apiKey model.APIKey) error
 	DeleteAPIKey(ID string) error
 
@@ -501,7 +501,7 @@ type Storage interface {
 	FindApplicationType(id string) (*model.ApplicationType, error)
 
 	//ApplicationsOrganizations
-	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
+	FindApplicationsOrganizations() ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 
 	//Permissions
@@ -512,13 +512,16 @@ type Storage interface {
 	InsertDevice(context storage.TransactionContext, device model.Device) (*model.Device, error)
 	DeleteDevice(context storage.TransactionContext, id string) error
 
+	//Permissions
+	FindPermissions(context storage.TransactionContext, ids []string) ([]model.Permission, error)
+
 	//ApplicationRoles
-	FindAppOrgRolesByIDs(ids []string, appOrgID string) ([]model.AppOrgRole, error)
+	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	//AccountRoles
 	UpdateAccountRoles(accountID string, roles []model.AccountRole) error
 
 	//ApplicationGroups
-	FindAppOrgGroupsByIDs(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
+	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	//AccountGroups
 	UpdateAccountGroups(accountID string, groups []model.AccountGroup) error
 }

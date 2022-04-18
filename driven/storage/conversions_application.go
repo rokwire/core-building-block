@@ -210,7 +210,7 @@ func organizationFromStorage(item *organization) model.Organization {
 		return model.Organization{}
 	}
 
-	return model.Organization{ID: item.ID, Name: item.Name, Type: item.Type,
+	return model.Organization{ID: item.ID, Name: item.Name, Type: item.Type, System: item.System,
 		Config: item.Config, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
@@ -231,11 +231,17 @@ func organizationToStorage(item *model.Organization) *organization {
 		return nil
 	}
 
-	return &organization{ID: item.ID, Name: item.Name, Type: item.Type, Config: item.Config,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return &organization{ID: item.ID, Name: item.Name, Type: item.Type, System: item.System,
+		Config: item.Config, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 //ApplicationOrganization
+func applicationOrganizationToStorage(item model.ApplicationOrganization) applicationOrganization {
+	return applicationOrganization{ID: item.ID, AppID: item.Application.ID, OrgID: item.Organization.ID,
+		ServicesIDs: item.ServicesIDs, IdentityProvidersSettings: item.IdentityProvidersSettings,
+		SupportedAuthTypes: item.SupportedAuthTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
 func applicationOrganizationFromStorage(item applicationOrganization, application model.Application, organization model.Organization) model.ApplicationOrganization {
 	return model.ApplicationOrganization{ID: item.ID, Application: application, Organization: organization,
 		ServicesIDs: item.ServicesIDs, IdentityProvidersSettings: item.IdentityProvidersSettings,
