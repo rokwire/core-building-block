@@ -2282,66 +2282,6 @@ func (sa *Adapter) DeletePermissionsFromRole(context TransactionContext, roleID 
 	return nil
 }
 
-func (sa *Adapter) DeletePermissionsFromGroupRoles(context TransactionContext, roleID string, permissions []model.Permission) error {
-
-	filter := bson.D{primitive.E{Key: "roles._id", Value: roleID}}
-	permissionsIDs := make([]string, len(permissions))
-	for i, permission := range permissions {
-		permissionsIDs[i] = permission.ID
-	}
-	update := bson.D{
-		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "permissions", Value: bson.M{"roles.permissions._id": bson.M{"$in": permissionsIDs}}},
-		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
-		}},
-	}
-
-	var err error
-	if context != nil {
-		_, err = sa.db.applicationsOrganizationsGroups.UpdateOneWithContext(context, filter, update, nil)
-	} else {
-		_, err = sa.db.applicationsOrganizationsGroups.UpdateOne(filter, update, nil)
-	}
-
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-	}
-
-	return nil
-}
-
-func (sa *Adapter) DeletePermissionsFromAccountRoles(context TransactionContext, roleID string, permissions []model.Permission) error {
-
-	filter := bson.D{primitive.E{Key: "roles._id", Value: roleID}}
-	permissionsIDs := make([]string, len(permissions))
-	for i, permission := range permissions {
-		permissionsIDs[i] = permission.ID
-	}
-	update := bson.D{
-		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "roles.role", Value: bson.M{"role.permissions._id": bson.M{"$in": permissionsIDs}}},
-		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
-		}},
-	}
-
-	var err error
-	if context != nil {
-		_, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
-	} else {
-		_, err = sa.db.accounts.UpdateOne(filter, update, nil)
-	}
-
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-
-	return nil
-}
-
 //InsertAppOrgRolePermissions inserts permissions to role
 func (sa *Adapter) InsertAppOrgRolePermissions(context TransactionContext, roleID string, permissions []model.Permission) error {
 

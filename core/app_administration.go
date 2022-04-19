@@ -565,15 +565,6 @@ func (app *application) admRemovePermissionsFromRole(appID string, orgID string,
 	}
 
 	transaction := func(context storage.TransactionContext) error {
-		err = app.storage.DeletePermissionsFromAccountRoles(context, role.ID, permissions)
-		if err != nil {
-			return errors.Wrap("error deleting account permissions", err)
-		}
-
-		err = app.storage.DeletePermissionsFromGroupRoles(context, role.ID, permissions)
-		if err != nil {
-			return errors.Wrap("error deleting group role permissions", err)
-		}
 		//delete permissions from a role
 		err = app.storage.DeletePermissionsFromRole(context, role.ID, permissions)
 		if err != nil {
