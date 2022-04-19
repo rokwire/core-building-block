@@ -991,6 +991,7 @@ func (sa *Adapter) DeleteLoginSessionsByIdentifier(context TransactionContext, i
 	return sa.deleteLoginSessions(context, "identifier", identifier, false)
 }
 
+//TODO - change this
 //DeleteLoginSessionsByRoleID deletes all login sessions
 func (sa *Adapter) DeleteLoginSessionsByRoleID(transaction TransactionContext, appID string, orgID string, roleID string) error {
 

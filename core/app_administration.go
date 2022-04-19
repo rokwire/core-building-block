@@ -905,18 +905,20 @@ func (app *application) admRemovePermissionsFromRole(appID string, orgID string,
 		}
 	}
 
+	//TODO - bigger timeout
 	transaction := func(context storage.TransactionContext) error {
-		//delete permissions from a role
+		//1. delete permissions from a role
 		err = app.storage.DeletePermissionsFromRole(context, role.ID, permissions)
 		if err != nil {
-			return errors.Wrap("error deleting account permissions", err)
+			return errors.Wrap("error deleting permissions from role", err)
 		}
 
-		//delete all sessions
-		err = app.storage.DeleteLoginSessionsByRoleID(context, appID, orgID, roleID)
-		if err != nil {
-			return errors.Wrap("error deleting sessions by identifier on revoking permissions", err)
-		}
+		/*
+			//delete all sessions
+			err = app.storage.DeleteLoginSessionsByRoleID(context, appID, orgID, roleID)
+			if err != nil {
+				return errors.Wrap("error deleting sessions by identifier on revoking permissions", err)
+			} */
 
 		return nil
 	}
