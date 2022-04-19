@@ -2409,41 +2409,53 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 
 //DeletePermissionsFromRole deletes permissions from role
 //	This will be slow operation as we keep a copy of the entity in the accounts collection without index.
-//	Maybe we need to up the transaction timeout for this operation because of this.
+//	We need to up the transaction timeout for this operation because of this.
 func (sa *Adapter) DeletePermissionsFromRole(context TransactionContext, roleID string, permissions []model.Permission) error {
 	if context == nil {
 		return errors.Newf("DeletePermissionsFromRole must be called within a transaction")
 	}
 
-	//filter
-	filter := bson.D{primitive.E{Key: "_id", Value: roleID}}
+	//we keep the entity in the:
+	//	1. applicationsOrganizationsRoles collection
+	//We also keep its copies in
+	//	2. accounts collection
+	//  3. applicationsOrganizationsGroups collection
 
-	//update
+	//prepare the permissions
 	permissionsIDs := make([]string, len(permissions))
 	for i, permission := range permissions {
 		permissionsIDs[i] = permission.ID
 	}
+	now := time.Now().UTC()
+
+	//1. update in applicationsOrganizationsRoles collection
+	//filter
+	filter := bson.D{primitive.E{Key: "_id", Value: roleID}}
+	//update
 	update := bson.D{
 		primitive.E{Key: "$pull", Value: bson.D{
 			primitive.E{Key: "permissions", Value: bson.M{"_id": bson.M{"$in": permissionsIDs}}},
 		}},
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+			primitive.E{Key: "date_updated", Value: now},
 		}},
 	}
-
-	var res *mongo.UpdateResult
-	var err error
-	res, err = sa.db.applicationsOrganizationsRoles.UpdateOneWithContext(context, filter, update, nil)
-
+	res, err := sa.db.applicationsOrganizationsRoles.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
+	///1 - done
 
-	//TODO update copies
+	//2. update in accounts collection
+	//TODO
+	///2 - done
+
+	//3. update in applicationsOrganizationsGroups collection
+	//TODO
+	///3 - done
 
 	return nil
 }
