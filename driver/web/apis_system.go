@@ -790,8 +790,8 @@ func (h SystemApisHandler) createApplication(l *logs.Log, r *http.Request, claim
 	}
 	name := application.Name
 	multiTenant := application.MultiTenant
+	admin := application.Admin
 	sharedIdentities := application.SharedIdentities
-	maxLoginSessionDuration := application.MaxLoginSessionDuration
 	applicationTypes := application.ApplicationTypes
 
 	appTypes := make([]model.ApplicationType, 0)
