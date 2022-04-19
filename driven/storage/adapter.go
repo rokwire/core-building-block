@@ -2407,7 +2407,14 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 	return nil
 }
 
+//DeletePermissionsFromRole deletes permissions from role
+//	This will be slow operation as we keep a copy of the entity in the accounts collection without index.
+//	Maybe we need to up the transaction timeout for this operation because of this.
 func (sa *Adapter) DeletePermissionsFromRole(context TransactionContext, roleID string, permissions []model.Permission) error {
+	if context == nil {
+		return errors.Newf("DeletePermissionsFromRole must be called within a transaction")
+	}
+
 	//filter
 	filter := bson.D{primitive.E{Key: "_id", Value: roleID}}
 
@@ -2427,11 +2434,7 @@ func (sa *Adapter) DeletePermissionsFromRole(context TransactionContext, roleID 
 
 	var res *mongo.UpdateResult
 	var err error
-	if context != nil {
-		res, err = sa.db.applicationsOrganizationsRoles.UpdateOneWithContext(context, filter, update, nil)
-	} else {
-		res, err = sa.db.applicationsOrganizationsRoles.UpdateOne(filter, update, nil)
-	}
+	res, err = sa.db.applicationsOrganizationsRoles.UpdateOneWithContext(context, filter, update, nil)
 
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
@@ -2439,6 +2442,8 @@ func (sa *Adapter) DeletePermissionsFromRole(context TransactionContext, roleID 
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
+
+	//TODO update copies
 
 	return nil
 }
