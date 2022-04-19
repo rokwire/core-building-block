@@ -48,7 +48,7 @@ paths:
                 value: |
                   {
                     "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
@@ -66,7 +66,7 @@ paths:
                 value: |
                   {
                     "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
@@ -653,7 +653,7 @@ paths:
                 value: |
                   {
                     "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
@@ -748,7 +748,7 @@ paths:
                 value: |
                   {
                     "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "app_type_identifier": "edu.illinois.rokwire",
                     "identifier": "test@example.com"
                   }
               phone:
@@ -1236,55 +1236,17 @@ paths:
             schema:
               $ref: '#/components/schemas/_shared_req_Login'
             examples:
-              email-sign_in:
-                summary: Email - sign in
+              email:
+                summary: Email
                 value: |
                   {
                     "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                    "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": {
                       "email": "test@example.com", 
                       "password": "test12345"
-                    },
-                    "device": {
-                      "type": "mobile",
-                      "device_id": "5555",
-                      "os": "Android"
-                    }
-                  }
-              email-sign_up:
-                summary: Email - sign up
-                value: |
-                  {
-                    "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire.safercommunity",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "creds": {
-                      "email": "test@example.com", 
-                      "password": "test12345"
-                    },
-                    "params":{
-                        "sign_up":true,
-                        "confirm_password": "test12345"
-                    },
-                    "preferences":{
-                        "key1":"value1",
-                        "key2":"value2"
-                    },
-                    "profile":{
-                      "address": "address",
-                      "birth_year": 1990,
-                      "country": "county",
-                      "email": "email",
-                      "first_name": "first name",
-                      "last_name": "last name",
-                      "phone": "+000000000000",
-                      "photo_url": "photo url",
-                      "state": "state",
-                      "zip_code": "zip code"
                     },
                     "device": {
                       "type": "mobile",
@@ -1293,7 +1255,7 @@ paths:
                     }
                   }
               phone:
-                summary: Phone - sign in OR sign up
+                summary: Phone
                 value: |
                   {
                     "auth_type": "twilio_phone",
@@ -1327,7 +1289,7 @@ paths:
                     }
                   }
               illinois_oidc:
-                summary: Illinois OIDC login
+                summary: Illinois OIDC
                 value: |
                   {
                     "auth_type": "illinois_oidc",
@@ -1354,23 +1316,6 @@ paths:
                       "photo_url": "photo url",
                       "state": "state",
                       "zip_code": "zip code"
-                    },
-                    "device": {
-                      "type": "mobile",
-                      "device_id": "5555",
-                      "os": "Android"
-                    }
-                  }
-              anonymous:
-                summary: Anonymous login
-                value: |
-                  {
-                    "auth_type": "anonymous",
-                    "app_type_identifier": "edu.illinois.rokwire",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "creds": {
-                      "anonymous_id": "dbb5ea5d-6c6c-44b8-9952-7ebf0e844beb"
                     },
                     "device": {
                       "type": "mobile",
@@ -1689,12 +1634,12 @@ paths:
       responses:
         '200':
           description: Success
-          content: null
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/_shared_res_Account'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/_shared_res_Account'
         '400':
           description: Bad request
         '401':
@@ -1722,12 +1667,12 @@ paths:
       responses:
         '200':
           description: Success
-          content: null
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/DeviceFields'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeviceFields'
         '400':
           description: Bad request
         '401':
@@ -2606,9 +2551,247 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /system/auth/login:
+    post:
+      tags:
+        - System
+      summary: Login
+      description: |
+        Login using credentials to retrieve access token, refresh token, and user data
+      requestBody:
+        description: |
+          User credential details and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_shared_req_Login'
+            examples:
+              email:
+                summary: Email
+                value: |
+                  {
+                    "auth_type": "email",
+                    "app_type_identifier": "edu.illinois.rokwire.admin",
+                    "org_id": "5d7ed0a6-48f2-4473-ae4e-120f2b541a22",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": {
+                      "email": "test@example.com", 
+                      "password": "test12345"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
+                    }
+                  }
+              phone:
+                summary: Phone
+                value: |
+                  {
+                    "auth_type": "twilio_phone",
+                    "app_type_identifier": "edu.illinois.rokwire.admin",
+                    "org_id": "5d7ed0a6-48f2-4473-ae4e-120f2b541a22",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": {
+                      "phone": "+12223334444", 
+                      "code": "123456"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
+                    }
+                  }
+              illinois_oidc:
+                summary: Illinois OIDC login
+                value: |
+                  {
+                    "auth_type": "illinois_oidc",
+                    "app_type_identifier": "edu.illinois.rokwire.admin",
+                    "org_id": "5d7ed0a6-48f2-4473-ae4e-120f2b541a22",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
+                    "params": {
+                      "redirect_uri": "https://redirect.example.com",
+                      "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
+                    }
+                  }
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/_shared_res_Login_Mfa'
+                  - $ref: '#/components/schemas/_shared_res_Login'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/auth/mfa:
+    post:
+      tags:
+        - System
+      summary: MFA
+      description: |
+        Verify multi-factor authentication credentials to complete login
+      parameters:
+        - name: state
+          in: query
+          description: Login state
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: |
+          MFA credentials and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_shared_req_Login_Mfa'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_shared_res_Login'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/auth/refresh:
+    post:
+      tags:
+        - System
+      summary: Refresh
+      description: |
+        Refresh access token using a refresh token
+      requestBody:
+        description: |
+          Refresh token
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_shared_req_Refresh'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_shared_res_Refresh'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/auth/login-url:
+    post:
+      tags:
+        - System
+      summary: Get SSO login url
+      description: |
+        Retrieve a pre-formatted SSO login URL
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_shared_req_LoginUrl'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_shared_res_LoginUrl'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/auth/verify-mfa:
+    post:
+      tags:
+        - System
+      summary: MFA
+      description: |
+        Verify multi-factor authentication credentials to complete MFA registration
+      requestBody:
+        description: |
+          MFA credentials and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_shared_req_Mfa'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /system/global-config:
     get:
-      deprecated: true
       tags:
         - System
       summary: Get global config
@@ -2632,7 +2815,6 @@ paths:
         '500':
           description: Internal error
     post:
-      deprecated: true
       tags:
         - System
       summary: Create global config
@@ -2663,7 +2845,6 @@ paths:
         '500':
           description: Internal error
     put:
-      deprecated: true
       tags:
         - System
       summary: Update global config
@@ -2695,7 +2876,6 @@ paths:
           description: Internal error
   '/system/organizations/{id}':
     put:
-      deprecated: true
       tags:
         - System
       summary: Update organization
@@ -2736,7 +2916,6 @@ paths:
         '500':
           description: Internal error
     get:
-      deprecated: true
       tags:
         - System
       summary: Get organization
@@ -2761,7 +2940,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_system_req_get_Organization'
+                $ref: '#/components/schemas/Organization'
         '400':
           description: Bad request
         '401':
@@ -2772,7 +2951,6 @@ paths:
           description: Internal error
   /system/organizations:
     get:
-      deprecated: true
       tags:
         - System
       summary: Get organizations
@@ -2790,7 +2968,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_system_res_get_Organizations'
+                  $ref: '#/components/schemas/Organization'
         '400':
           description: Bad request
         '401':
@@ -2798,7 +2976,6 @@ paths:
         '500':
           description: Internal error
     post:
-      deprecated: true
       tags:
         - System
       summary: Create organization
@@ -2831,7 +3008,6 @@ paths:
           description: Internal error
   /system/service-regs:
     get:
-      deprecated: true
       tags:
         - System
       summary: Get service registrations
@@ -2866,7 +3042,6 @@ paths:
         '500':
           description: Internal error
     post:
-      deprecated: true
       tags:
         - System
       summary: Register service
@@ -2900,7 +3075,6 @@ paths:
         '500':
           description: Internal error
     put:
-      deprecated: true
       tags:
         - System
       summary: Update service registration
@@ -2934,7 +3108,6 @@ paths:
         '500':
           description: Internal error
     delete:
-      deprecated: true
       tags:
         - System
       summary: Deregister service
@@ -2969,7 +3142,6 @@ paths:
           description: Internal error
   '/system/service-accounts/{id}':
     get:
-      deprecated: true
       tags:
         - System
       summary: Get service account instance
@@ -3018,7 +3190,6 @@ paths:
         '500':
           description: Internal error
     put:
-      deprecated: true
       tags:
         - System
       summary: Update service account instance
@@ -3083,7 +3254,6 @@ paths:
         '500':
           description: Internal error
     delete:
-      deprecated: true
       tags:
         - System
       summary: Deregister service account instance
@@ -3129,7 +3299,6 @@ paths:
           description: Internal error
   /system/service-accounts:
     get:
-      deprecated: true
       tags:
         - System
       summary: Get service accounts
@@ -3196,7 +3365,6 @@ paths:
         '500':
           description: Internal error
     post:
-      deprecated: true
       tags:
         - System
       summary: Register service account
@@ -3289,7 +3457,6 @@ paths:
         '500':
           description: Internal error
     delete:
-      deprecated: true
       tags:
         - System
       summary: Delete service accounts
@@ -3319,7 +3486,6 @@ paths:
           description: Internal error
   '/system/service-accounts/{id}/creds':
     post:
-      deprecated: true
       tags:
         - System
       summary: Add service account credential
@@ -3378,7 +3544,6 @@ paths:
         '500':
           description: Internal error
     delete:
-      deprecated: true
       tags:
         - System
       summary: Remove service account credential
@@ -3416,7 +3581,6 @@ paths:
           description: Internal error
   '/system/applications/{id}':
     get:
-      deprecated: true
       tags:
         - System
       summary: Get application
@@ -3441,7 +3605,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_system_req_get_Application'
+                $ref: '#/components/schemas/Application'
         '400':
           description: Bad request
         '401':
@@ -3452,7 +3616,6 @@ paths:
           description: Internal error
   /system/applications:
     get:
-      deprecated: true
       tags:
         - System
       summary: Get applications
@@ -3470,7 +3633,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_system_res_get_Applications'
+                  $ref: '#/components/schemas/Application'
         '400':
           description: Bad request
         '401':
@@ -3478,7 +3641,6 @@ paths:
         '500':
           description: Internal error
     post:
-      deprecated: true
       tags:
         - System
       summary: Create application
@@ -3511,7 +3673,6 @@ paths:
           description: Internal error
   /system/permissions:
     post:
-      deprecated: true
       tags:
         - System
       summary: Create permission
@@ -3543,7 +3704,6 @@ paths:
         '500':
           description: Internal error
     put:
-      deprecated: true
       tags:
         - System
       summary: Updates permission
@@ -3576,7 +3736,6 @@ paths:
           description: Internal error
   /system/application-roles:
     post:
-      deprecated: true
       tags:
         - System
       summary: Create application role
@@ -3609,7 +3768,6 @@ paths:
           description: Internal error
   /system/application-api-keys:
     get:
-      deprecated: true
       tags:
         - System
       summary: Get application API keys
@@ -3645,7 +3803,6 @@ paths:
           description: Internal error
   /system/application/configs:
     get:
-      deprecated: true
       tags:
         - System
       summary: Reads app configs
@@ -3693,7 +3850,6 @@ paths:
         '500':
           description: Internal error
     post:
-      deprecated: true
       tags:
         - System
       summary: Creates app configs
@@ -3729,7 +3885,6 @@ paths:
           description: Internal error
   '/system/application/configs/{id}':
     get:
-      deprecated: true
       tags:
         - System
       summary: Reads app configs by given id
@@ -3760,7 +3915,6 @@ paths:
         '500':
           description: Internal error
     put:
-      deprecated: true
       tags:
         - System
       summary: Updates app configs
@@ -3804,7 +3958,6 @@ paths:
         '500':
           description: Internal error
     delete:
-      deprecated: true
       tags:
         - System
       summary: Deletes app configs
@@ -3831,7 +3984,6 @@ paths:
           description: Internal error
   /system/account/permissions:
     put:
-      deprecated: true
       tags:
         - System
       summary: Grant account permissions
@@ -3864,7 +4016,6 @@ paths:
           description: Internal error
   /system/account/roles:
     put:
-      deprecated: true
       tags:
         - System
       summary: Grant account roles
@@ -3897,7 +4048,6 @@ paths:
           description: Internal error
   /system/account/mfa:
     get:
-      deprecated: true
       tags:
         - System
       summary: Get account MFA types
@@ -3923,7 +4073,6 @@ paths:
         '500':
           description: Internal error
     post:
-      deprecated: true
       tags:
         - System
       summary: Enroll in MFA type
@@ -3956,7 +4105,6 @@ paths:
         '500':
           description: Internal error
     delete:
-      deprecated: true
       tags:
         - System
       summary: Remove MFA type
@@ -3986,7 +4134,6 @@ paths:
           description: Internal error
   /system/api-keys:
     get:
-      deprecated: true
       tags:
         - System
       summary: Get API key
@@ -4019,7 +4166,6 @@ paths:
         '500':
           description: Internal error
     post:
-      deprecated: true
       tags:
         - System
       summary: Create API key
@@ -4056,7 +4202,6 @@ paths:
         '500':
           description: Internal error
     put:
-      deprecated: true
       tags:
         - System
       summary: Update API key
@@ -4090,7 +4235,6 @@ paths:
         '500':
           description: Internal error
     delete:
-      deprecated: true
       tags:
         - System
       summary: Delete API key
@@ -4125,7 +4269,6 @@ paths:
           description: Internal error
   /system/auth-types:
     post:
-      deprecated: true
       tags:
         - System
       summary: Create auth-type
@@ -4155,7 +4298,6 @@ paths:
         '500':
           description: Internal error
     get:
-      deprecated: true
       tags:
         - System
       summary: Get auth-types
@@ -4180,7 +4322,6 @@ paths:
           description: Internal error
   '/system/auth-types/{id}':
     put:
-      deprecated: true
       tags:
         - System
       summary: Update auth type
@@ -4344,6 +4485,8 @@ components:
           type: string
         multi_tenant:
           type: boolean
+        admin:
+          type: boolean
         shared_identities:
           type: boolean
     ApplicationType:
@@ -4457,7 +4600,7 @@ components:
         fields:
           $ref: '#/components/schemas/OrganizationFields'
         config:
-          $ref: '#/components/schemas/OrganizationConfig'
+          $ref: '#/components/schemas/OrganizationConfigFields'
     OrganizationFields:
       required:
         - id
@@ -5898,13 +6041,12 @@ components:
             - large
             - huge
         config:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrganizationConfigFields'
+          $ref: '#/components/schemas/OrganizationConfigFields'
     _system_req_create_Application:
       required:
         - name
         - multi_tenant
+        - admin
         - shared_identities
       type: object
       properties:
@@ -5912,11 +6054,10 @@ components:
           type: string
         multi_tenant:
           type: boolean
+        admin:
+          type: boolean
         shared_identities:
           type: boolean
-        max_login_session_duration:
-          description: The maximum allowed duration (in hours) of a user's login session for this application
-          type: integer
         application_types:
           type: array
           items:
