@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Expose revoke permissions from role Admin API [#416](https://github.com/rokwire/core-building-block/issues/416)
+- Email/phone registration should populate email/phone in profile [#431](https://github.com/rokwire/core-building-block/issues/431)
+- Implement system accounts [#278](https://github.com/rokwire/core-building-block/issues/278)
 - Service accounts [#306](https://github.com/rokwire/core-building-block/issues/306)
 
 ## [1.22.0] - 2022-04-02

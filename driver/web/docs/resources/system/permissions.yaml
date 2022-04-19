@@ -1,5 +1,4 @@
 post:
-  deprecated: true
   tags:
   - System
   summary: Create permission
@@ -31,7 +30,6 @@ post:
     500:
       description: Internal error
 put:
-  deprecated: true
   tags:
   - System
   summary: Updates permission

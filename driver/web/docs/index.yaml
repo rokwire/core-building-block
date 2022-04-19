@@ -157,6 +157,16 @@ paths:
     $ref: "./resources/tps/access-token.yaml"
 
   #system
+  /system/auth/login:
+    $ref: "./resources/system/auth/login.yaml"
+  /system/auth/mfa:
+    $ref: "./resources/system/auth/mfa.yaml"
+  /system/auth/refresh:
+    $ref: "./resources/system/auth/refresh.yaml"
+  /system/auth/login-url:
+    $ref: "./resources/system/auth/login-url.yaml"
+  /system/auth/verify-mfa:
+    $ref: "./resources/system/auth/verify-mfa.yaml"
   /system/global-config:
     $ref: "./resources/system/global-config.yaml"
   /system/organizations/{id}:
