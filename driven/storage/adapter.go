@@ -991,8 +991,7 @@ func (sa *Adapter) DeleteLoginSessionsByIdentifier(context TransactionContext, i
 	return sa.deleteLoginSessions(context, "identifier", identifier, false)
 }
 
-//TODO - change this
-//DeleteLoginSessionsByRoleID deletes all login sessions
+//DeleteLoginSessionsByRoleID deletes all login sessions //TODO - change this
 func (sa *Adapter) DeleteLoginSessionsByRoleID(transaction TransactionContext, appID string, orgID string, roleID string) error {
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -2472,7 +2471,7 @@ func (sa *Adapter) DeletePermissionsFromRole(context TransactionContext, appOrgI
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
 	if res != nil {
-		sa.logger.Infof("Modified %s copies of the %s role", res.ModifiedCount, roleID)
+		sa.logger.Infof("Modified %d copies of the %s role", res.ModifiedCount, roleID)
 	}
 	///2 - done
 
