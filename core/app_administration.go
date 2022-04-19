@@ -908,7 +908,7 @@ func (app *application) admRemovePermissionsFromRole(appID string, orgID string,
 	//TODO - bigger timeout
 	transaction := func(context storage.TransactionContext) error {
 		//1. delete permissions from a role
-		err = app.storage.DeletePermissionsFromRole(context, role.ID, permissions)
+		err = app.storage.DeletePermissionsFromRole(context, appOrg.ID, role.ID, permissions)
 		if err != nil {
 			return errors.Wrap("error deleting permissions from role", err)
 		}

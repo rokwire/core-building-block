@@ -2410,7 +2410,7 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 //DeletePermissionsFromRole deletes permissions from role
 //	This will be slow operation as we keep a copy of the entity in the accounts collection without index.
 //	We need to up the transaction timeout for this operation because of this.
-func (sa *Adapter) DeletePermissionsFromRole(context TransactionContext, roleID string, permissions []model.Permission) error {
+func (sa *Adapter) DeletePermissionsFromRole(context TransactionContext, appOrgID string, roleID string, permissions []model.Permission) error {
 	if context == nil {
 		return errors.Newf("DeletePermissionsFromRole must be called within a transaction")
 	}
@@ -2430,9 +2430,9 @@ func (sa *Adapter) DeletePermissionsFromRole(context TransactionContext, roleID 
 
 	//1. update in applicationsOrganizationsRoles collection
 	//filter
-	filter := bson.D{primitive.E{Key: "_id", Value: roleID}}
+	aorFilter := bson.D{primitive.E{Key: "_id", Value: roleID}}
 	//update
-	update := bson.D{
+	aorUpdate := bson.D{
 		primitive.E{Key: "$pull", Value: bson.D{
 			primitive.E{Key: "permissions", Value: bson.M{"_id": bson.M{"$in": permissionsIDs}}},
 		}},
@@ -2440,7 +2440,7 @@ func (sa *Adapter) DeletePermissionsFromRole(context TransactionContext, roleID 
 			primitive.E{Key: "date_updated", Value: now},
 		}},
 	}
-	res, err := sa.db.applicationsOrganizationsRoles.UpdateOneWithContext(context, filter, update, nil)
+	res, err := sa.db.applicationsOrganizationsRoles.UpdateOneWithContext(context, aorFilter, aorUpdate, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
 	}
@@ -2450,7 +2450,30 @@ func (sa *Adapter) DeletePermissionsFromRole(context TransactionContext, roleID 
 	///1 - done
 
 	//2. update in accounts collection
-	//TODO
+	//filter
+	aFilter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
+	//update
+	aUpdate := bson.D{
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "roles.$[r].role.permissions", Value: bson.M{"_id": bson.M{"$in": permissionsIDs}}},
+		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "roles.$[r].role.date_updated", Value: now},
+		}},
+	}
+	//opts
+	arrayFilters := options.ArrayFilters{Filters: bson.A{bson.M{"r.role._id": roleID}}}
+	updateOpts := &options.UpdateOptions{
+		ArrayFilters: &arrayFilters,
+	}
+	res, err = sa.db.accounts.UpdateManyWithContext(context, aFilter, aUpdate, updateOpts)
+	if err != nil {
+		sa.logger.Errorf("error occured updating the accounts copies of role - %s - %s", roleID, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
+	}
+	if res != nil {
+		sa.logger.Infof("Modified %s copies of the %s role", res.ModifiedCount, roleID)
+	}
 	///2 - done
 
 	//3. update in applicationsOrganizationsGroups collection
