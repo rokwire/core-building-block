@@ -391,6 +391,8 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 		return errors.New("bad group id params")
 	}
 
+	allPermissions := group.GetAllPermissions()
+
 	//check assigners
 	err = group.CheckAssigners(assignerPermissions)
 	if err != nil {
@@ -412,14 +414,8 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 	}
 
 	transaction := func(context storage.TransactionContext) error {
-		var getPermissions []string
-		for _, permissions := range group.Permissions {
-			if permissions.Name != "" {
-				getPermissions = append(getPermissions, permissions.Name)
-			}
-		}
 
-		if getPermissions == nil {
+		if allPermissions == nil {
 			return nil
 		} else {
 			err = app.storage.DeleteLoginSessionsByIdentifiers(context, accountIDs)

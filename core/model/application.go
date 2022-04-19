@@ -77,6 +77,7 @@ type AppOrgRole struct {
 	Description string
 
 	System bool
+	Active bool
 
 	Permissions []Permission
 
@@ -122,6 +123,7 @@ type AppOrgGroup struct {
 	Name string
 
 	System bool
+	Active bool
 
 	Permissions []Permission
 	Roles       []AppOrgRole
@@ -154,6 +156,38 @@ func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
 	}
 	//all assigners are satisfied
 	return nil
+}
+
+//GetAllPermissions returns a map of all permissions granted to this account
+func (cg AppOrgGroup) GetAllPermissions() []Permission {
+
+	var rolePermissions []Permission
+	for _, role := range cg.Roles {
+		if role.Permissions != nil {
+			rolePermissions = append(rolePermissions, role.Permissions...)
+		}
+	}
+
+	var permissionsMap []Permission
+	for _, permission := range cg.Permissions {
+		for _, rolePer := range rolePermissions {
+			permissionsMap = append(permissionsMap, permission, rolePer)
+		}
+	}
+
+	return permissionsMap
+}
+
+//GetPermissions returns all permissions granted to this account
+func (cg AppOrgGroup) GetPermissions() []Permission {
+	permissionsMap := cg.GetAllPermissions()
+	permissions := make([]Permission, len(permissionsMap))
+	i := 0
+	for _, permission := range permissionsMap {
+		permissions[i] = permission
+		i++
+	}
+	return permissions
 }
 
 func (cg AppOrgGroup) String() string {
