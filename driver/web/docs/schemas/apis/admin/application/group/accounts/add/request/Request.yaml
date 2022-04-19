@@ -1,0 +1,11 @@
+required:
+  - group_id
+  - account_ids
+type: object
+properties:
+  group_id:
+    type: string
+  account_ids:
+    type: array
+    items:
+      type: string

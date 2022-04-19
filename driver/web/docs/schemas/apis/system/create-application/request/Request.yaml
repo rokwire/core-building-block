@@ -1,6 +1,7 @@
 required:
   - name
   - multi_tenant
+  - admin
   - shared_identities
 type: object
 properties:
@@ -8,11 +9,10 @@ properties:
     type: string
   multi_tenant:
     type: boolean
+  admin:
+    type: boolean
   shared_identities:
-    type: boolean  
-  max_login_session_duration:
-    description: The maximum allowed duration (in hours) of a user's login session for this application
-    type: integer
+    type: boolean
   application_types:
     type: array
     items:

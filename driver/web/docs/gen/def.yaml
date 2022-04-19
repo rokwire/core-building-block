@@ -3,7 +3,7 @@
   "info": {
     "title": "Rokwire Core Building Block API",
     "description": "Core Building Block API Documentation",
-    "version": "1.20.1"
+    "version": "1.22.0"
   },
   "servers": [
     {
@@ -45,6 +45,10 @@
       "description": "APIs consumed by third-party services."
     },
     {
+      "name": "UI",
+      "description": "Endpoints for HTML webpages"
+    },
+    {
       "name": "System",
       "description": "System APIs."
     }
@@ -67,11 +71,11 @@
               "examples": {
                 "email-sign_in": {
                   "summary": "Email - sign in",
-                  "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"email\": \"test@example.com\", \n    \"password\": \"test12345\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
+                  "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"email\": \"test@example.com\", \n    \"password\": \"test12345\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
                 },
                 "email-sign_up": {
                   "summary": "Email - sign up",
-                  "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"email\": \"test@example.com\", \n    \"password\": \"test12345\"\n  },\n  \"params\":{\n      \"sign_up\":true,\n      \"confirm_password\": \"test12345\"\n  },\n  \"preferences\":{\n      \"key1\":\"value1\",\n      \"key2\":\"value2\"\n  },\n  \"profile\":{\n    \"address\": \"address\",\n    \"birth_year\": 1990,\n    \"country\": \"county\",\n    \"email\": \"email\",\n    \"first_name\": \"first name\",\n    \"last_name\": \"last name\",\n    \"phone\": \"+000000000000\",\n    \"photo_url\": \"photo url\",\n    \"state\": \"state\",\n    \"zip_code\": \"zip code\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
+                  "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"email\": \"test@example.com\", \n    \"password\": \"test12345\"\n  },\n  \"params\":{\n      \"sign_up\":true,\n      \"confirm_password\": \"test12345\"\n  },\n  \"preferences\":{\n      \"key1\":\"value1\",\n      \"key2\":\"value2\"\n  },\n  \"profile\":{\n    \"address\": \"address\",\n    \"birth_year\": 1990,\n    \"country\": \"county\",\n    \"email\": \"email\",\n    \"first_name\": \"first name\",\n    \"last_name\": \"last name\",\n    \"phone\": \"+000000000000\",\n    \"photo_url\": \"photo url\",\n    \"state\": \"state\",\n    \"zip_code\": \"zip code\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
                 },
                 "phone": {
                   "summary": "Phone - sign in OR sign up",
@@ -264,6 +268,60 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/_shared_res_LoginUrl"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/services/auth/logout": {
+      "post": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Logout",
+        "description": "Logouts an account\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "all_sessions"
+                ],
+                "type": "object",
+                "properties": {
+                  "all_sessions": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Success"
                 }
               }
             }
@@ -710,7 +768,7 @@
               "examples": {
                 "email-sign_up": {
                   "summary": "Email",
-                  "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"email\": \"test@example.com\", \n    \"password\": \"test12345\"\n  },\n  \"params\":{\n      \"confirm_password\": \"test12345\"\n  }\n}\n"
+                  "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"email\": \"test@example.com\", \n    \"password\": \"test12345\"\n  },\n  \"params\":{\n      \"confirm_password\": \"test12345\"\n  }\n}\n"
                 },
                 "phone": {
                   "summary": "Phone",
@@ -791,7 +849,7 @@
               "examples": {
                 "email": {
                   "summary": "Email",
-                  "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"identifier\": \"test@example.com\"\n}\n"
+                  "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire\",\n  \"identifier\": \"test@example.com\"\n}\n"
                 },
                 "phone": {
                   "summary": "Phone",
@@ -865,7 +923,7 @@
                   },
                   "unauthorized": {
                     "summary": "Service unauthorized",
-                    "value": "{\n  \"service_reg\": {\n    \"service_id\": \"string\",\n    \"host\": \"string\",\n    \"pub_key\": {\n      \"key_pem\": \"string\",\n      \"alg\": \"string\"\n    },\n    \"name\": \"string\",\n    \"description\": \"string\",\n    \"info_url\": \"string\",\n    \"logo_url\": \"string\",\n    \"scopes\": [\n      {\n        \"scope\": \"string\",\n        \"required\": true,\n        \"explanation\": \"string\"\n      }\n    ],\n    \"first_party\": true\n  }\n}\n"
+                    "value": "{\n  \"service_reg\": {\n    \"service_id\": \"string\",\n    \"service_account_id\": \"string\",\n    \"host\": \"string\",\n    \"pub_key\": {\n      \"key_pem\": \"string\",\n      \"alg\": \"string\"\n    },\n    \"name\": \"string\",\n    \"description\": \"string\",\n    \"info_url\": \"string\",\n    \"logo_url\": \"string\",\n    \"scopes\": [\n      {\n        \"scope\": \"string\",\n        \"required\": true,\n        \"explanation\": \"string\"\n      }\n    ],\n    \"first_party\": true\n  }\n}\n"
                   }
                 }
               }
@@ -1428,25 +1486,17 @@
                 "$ref": "#/components/schemas/_shared_req_Login"
               },
               "examples": {
-                "email-sign_in": {
-                  "summary": "Email - sign in",
-                  "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"email\": \"test@example.com\", \n    \"password\": \"test12345\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
-                },
-                "email-sign_up": {
-                  "summary": "Email - sign up",
-                  "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.safercommunity\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"email\": \"test@example.com\", \n    \"password\": \"test12345\"\n  },\n  \"params\":{\n      \"sign_up\":true,\n      \"confirm_password\": \"test12345\"\n  },\n  \"preferences\":{\n      \"key1\":\"value1\",\n      \"key2\":\"value2\"\n  },\n  \"profile\":{\n    \"address\": \"address\",\n    \"birth_year\": 1990,\n    \"country\": \"county\",\n    \"email\": \"email\",\n    \"first_name\": \"first name\",\n    \"last_name\": \"last name\",\n    \"phone\": \"+000000000000\",\n    \"photo_url\": \"photo url\",\n    \"state\": \"state\",\n    \"zip_code\": \"zip code\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
+                "email": {
+                  "summary": "Email",
+                  "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"email\": \"test@example.com\", \n    \"password\": \"test12345\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
                 },
                 "phone": {
-                  "summary": "Phone - sign in OR sign up",
+                  "summary": "Phone",
                   "value": "{\n  \"auth_type\": \"twilio_phone\",\n  \"app_type_identifier\": \"edu.illinois.rokwire\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"phone\": \"+12223334444\", \n    \"code\": \"123456\"\n  },\n  \"preferences\":{\n      \"key1\":\"value1\",\n      \"key2\":\"value2\"\n  },\n  \"profile\":{\n    \"address\": \"address\",\n    \"birth_year\": 1990,\n    \"country\": \"county\",\n    \"email\": \"email\",\n    \"first_name\": \"first name\",\n    \"last_name\": \"last name\",\n    \"phone\": \"+000000000000\",\n    \"photo_url\": \"photo url\",\n    \"state\": \"state\",\n    \"zip_code\": \"zip code\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
                 },
                 "illinois_oidc": {
-                  "summary": "Illinois OIDC login",
+                  "summary": "Illinois OIDC",
                   "value": "{\n  \"auth_type\": \"illinois_oidc\",\n  \"app_type_identifier\": \"edu.illinois.rokwire\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": \"https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43\",\n  \"params\": {\n    \"redirect_uri\": \"https://redirect.example.com\",\n    \"pkce_verifier\": \"w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia\"\n  },\n  \"preferences\":{\n      \"key1\":\"value1\",\n      \"key2\":\"value2\"\n  },\n  \"profile\":{\n    \"address\": \"address\",\n    \"birth_year\": 1990,\n    \"country\": \"county\",\n    \"email\": \"email\",\n    \"first_name\": \"first name\",\n    \"last_name\": \"last name\",\n    \"phone\": \"+000000000000\",\n    \"photo_url\": \"photo url\",\n    \"state\": \"state\",\n    \"zip_code\": \"zip code\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
-                },
-                "anonymous": {
-                  "summary": "Anonymous login",
-                  "value": "{\n  \"auth_type\": \"anonymous\",\n  \"app_type_identifier\": \"edu.illinois.rokwire\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"anonymous_id\": \"dbb5ea5d-6c6c-44b8-9952-7ebf0e844beb\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
                 }
               }
             }
@@ -1693,7 +1743,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_admin_req_app-token"
+                  "$ref": "#/components/schemas/_admin_res_app-token"
                 }
               }
             }
@@ -1907,12 +1957,13 @@
         "responses": {
           "200": {
             "description": "Success",
-            "content": null,
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/_shared_res_Account"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/_shared_res_Account"
+                  }
                 }
               }
             }
@@ -1957,12 +2008,13 @@
         "responses": {
           "200": {
             "description": "Success",
-            "content": null,
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/DeviceFields"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeviceFields"
+                  }
                 }
               }
             }
@@ -2043,7 +2095,7 @@
           "Admin"
         ],
         "summary": "Grant account permissions",
-        "description": "Grant account permissions\n",
+        "description": "Grant account permissions\n\n**Auth:** Requires auth token with 'all_admin_core' permission\n",
         "security": [
           {
             "bearerAuth": []
@@ -2084,13 +2136,59 @@
         }
       }
     },
+    "/admin/application/account/permissions/revoke": {
+      "delete": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Delete permissions from account",
+        "description": "Deletes an existing permissions from account\n\n**Auth:** Requires auth token with 'all_admin_core' permission\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Permissions",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_admin_req_revoke-permissions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/admin/application/account/roles/grant": {
       "put": {
         "tags": [
           "Admin"
         ],
         "summary": "Grant account roles",
-        "description": "Grant account roles\n",
+        "description": "Grant account roles\n\n**Auth:** Requires auth token with 'all_admin_core' permission\n",
         "security": [
           {
             "bearerAuth": []
@@ -2106,6 +2204,52 @@
             }
           },
           "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/admin/application/account/roles/revoke": {
+      "delete": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Delete roles from account",
+        "description": "Deletes an existing roles from account\n\n**Auth:** Requires auth token with 'all_admin_core' permission\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Roles",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_admin_req_revoke-roles-from-account"
+              }
+            }
+          }
         },
         "responses": {
           "200": {
@@ -2370,6 +2514,99 @@
         }
       }
     },
+    "/admin/application/group/accounts/add": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Add accounts to a group",
+        "description": "Add accounts \n\n**Auth:** Requires auth token with `all_admin_core` permission\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Roles",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_admin_req_add-accounts-to-group"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/admin/application/group/accounts/remove": {
+      "delete": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Delete accounts from group",
+        "description": "Deletes an existing accounts from group\n\n**Auth:** Requires auth token with `all_admin_core` permission\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "account ID for removing",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_admin_req_remove-account-from-group"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/admin/application/permissions": {
       "get": {
         "tags": [
@@ -2525,6 +2762,53 @@
         }
       }
     },
+    "/admin/application/role/permissions/grant": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Grant permissions to role",
+        "description": "Grant permissions to role\n\n**Auth:** Requires auth token with 'all_admin_core' permission\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Permissions",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_admin_req_grant-permissions-to-role"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/admin/organization/applications": {
       "get": {
         "tags": [
@@ -2651,6 +2935,124 @@
         }
       }
     },
+    "/bbs/service-account/{id}": {
+      "post": {
+        "tags": [
+          "BBs"
+        ],
+        "summary": "Get service account params",
+        "description": "Returns service account parameters\n",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the service account",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Service account credentials\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_services_req_service-accounts_ParamsRequest"
+              },
+              "examples": {
+                "static_token": {
+                  "summary": "Static token",
+                  "value": "{\n  \"auth_type\": \"static_token\",\n  \"creds\": {\n    \"token\": \"account_token\"\n  }\n}\n"
+                },
+                "signature": {
+                  "summary": "Signature",
+                  "value": "{\n  \"auth_type\": \"signature\"\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppOrgPair"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/bbs/access-token": {
+      "post": {
+        "tags": [
+          "BBs"
+        ],
+        "summary": "Get service account access token",
+        "description": "Returns a new service account access token\n",
+        "requestBody": {
+          "description": "Service account credentials\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_services_req_service-accounts_TokenRequest"
+              },
+              "examples": {
+                "static_token": {
+                  "summary": "Static token",
+                  "value": "{\n  \"account_id\": \"service_account_id\",\n  \"app_id\": \"9766\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"auth_type\": \"static_token\",\n  \"creds\": {\n    \"token\": \"account_token\"\n  }\n}\n"
+                },
+                "signature": {
+                  "summary": "Signature",
+                  "value": "{\n  \"account_id\": \"service_account_id\",\n  \"app_id\": \"9766\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"auth_type\": \"signature\",\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_shared_res_RokwireToken"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/tps/service-regs": {
       "get": {
         "tags": [
@@ -2711,6 +3113,365 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/JWKS"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/tps/service-account/{id}": {
+      "post": {
+        "tags": [
+          "Third-Party Services"
+        ],
+        "summary": "Get service account params",
+        "description": "Returns service account parameters\n",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the service account",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Service account credentials\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_services_req_service-accounts_ParamsRequest"
+              },
+              "examples": {
+                "static_token": {
+                  "summary": "Static token",
+                  "value": "{\n  \"auth_type\": \"static_token\",\n  \"creds\": {\n    \"token\": \"account_token\"\n  }\n}\n"
+                },
+                "signature": {
+                  "summary": "Signature",
+                  "value": "{\n  \"auth_type\": \"signature\"\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppOrgPair"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/tps/access-token": {
+      "post": {
+        "tags": [
+          "Third-Party Services"
+        ],
+        "summary": "Get service account access token",
+        "description": "Returns a new service account access token\n",
+        "requestBody": {
+          "description": "Service account credentials\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_services_req_service-accounts_TokenRequest"
+              },
+              "examples": {
+                "static_token": {
+                  "summary": "Static token",
+                  "value": "{\n  \"account_id\": \"service_account_id\",\n  \"app_id\": \"9766\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"auth_type\": \"static_token\",\n  \"creds\": {\n    \"token\": \"account_token\"\n  }\n}\n"
+                },
+                "signature": {
+                  "summary": "Signature",
+                  "value": "{\n  \"account_id\": \"service_account_id\",\n  \"app_id\": \"9766\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"auth_type\": \"signature\",\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_shared_res_RokwireToken"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/system/auth/login": {
+      "post": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Login",
+        "description": "Login using credentials to retrieve access token, refresh token, and user data\n",
+        "requestBody": {
+          "description": "User credential details and parameters\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_shared_req_Login"
+              },
+              "examples": {
+                "email": {
+                  "summary": "Email",
+                  "value": "{\n  \"auth_type\": \"email\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.admin\",\n  \"org_id\": \"5d7ed0a6-48f2-4473-ae4e-120f2b541a22\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"email\": \"test@example.com\", \n    \"password\": \"test12345\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
+                },
+                "phone": {
+                  "summary": "Phone",
+                  "value": "{\n  \"auth_type\": \"twilio_phone\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.admin\",\n  \"org_id\": \"5d7ed0a6-48f2-4473-ae4e-120f2b541a22\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": {\n    \"phone\": \"+12223334444\", \n    \"code\": \"123456\"\n  },\n  \"preferences\":{\n      \"key1\":\"value1\",\n      \"key2\":\"value2\"\n  },\n  \"profile\":{\n    \"address\": \"address\",\n    \"birth_year\": 1990,\n    \"country\": \"county\",\n    \"email\": \"email\",\n    \"first_name\": \"first name\",\n    \"last_name\": \"last name\",\n    \"phone\": \"+000000000000\",\n    \"photo_url\": \"photo url\",\n    \"state\": \"state\",\n    \"zip_code\": \"zip code\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
+                },
+                "illinois_oidc": {
+                  "summary": "Illinois OIDC login",
+                  "value": "{\n  \"auth_type\": \"illinois_oidc\",\n  \"app_type_identifier\": \"edu.illinois.rokwire.admin\",\n  \"org_id\": \"5d7ed0a6-48f2-4473-ae4e-120f2b541a22\",\n  \"api_key\": \"95a463e3-2ce8-450b-ba75-d8506b874738\",\n  \"creds\": \"https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43\",\n  \"params\": {\n    \"redirect_uri\": \"https://redirect.example.com\",\n    \"pkce_verifier\": \"w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia\"\n  },\n  \"preferences\":{\n      \"key1\":\"value1\",\n      \"key2\":\"value2\"\n  },\n  \"profile\":{\n    \"address\": \"address\",\n    \"birth_year\": 1990,\n    \"country\": \"county\",\n    \"email\": \"email\",\n    \"first_name\": \"first name\",\n    \"last_name\": \"last name\",\n    \"phone\": \"+000000000000\",\n    \"photo_url\": \"photo url\",\n    \"state\": \"state\",\n    \"zip_code\": \"zip code\"\n  },\n  \"device\": {\n    \"type\": \"mobile\",\n    \"device_id\": \"5555\",\n    \"os\": \"Android\"\n  }\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/_shared_res_Login_Mfa"
+                    },
+                    {
+                      "$ref": "#/components/schemas/_shared_res_Login"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/system/auth/mfa": {
+      "post": {
+        "tags": [
+          "System"
+        ],
+        "summary": "MFA",
+        "description": "Verify multi-factor authentication credentials to complete login\n",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "description": "Login state",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "MFA credentials and parameters\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_shared_req_Login_Mfa"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_shared_res_Login"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/system/auth/refresh": {
+      "post": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Refresh",
+        "description": "Refresh access token using a refresh token\n",
+        "requestBody": {
+          "description": "Refresh token\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_shared_req_Refresh"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_shared_res_Refresh"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/system/auth/login-url": {
+      "post": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Get SSO login url",
+        "description": "Retrieve a pre-formatted SSO login URL\n",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_shared_req_LoginUrl"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_shared_res_LoginUrl"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/system/auth/verify-mfa": {
+      "post": {
+        "tags": [
+          "System"
+        ],
+        "summary": "MFA",
+        "description": "Verify multi-factor authentication credentials to complete MFA registration\n",
+        "requestBody": {
+          "description": "MFA credentials and parameters\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_shared_req_Mfa"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -2939,7 +3700,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_system_req_get_Organization"
+                  "$ref": "#/components/schemas/Organization"
                 }
               }
             }
@@ -2979,7 +3740,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/_system_res_get_Organizations"
+                    "$ref": "#/components/schemas/Organization"
                   }
                 }
               }
@@ -3230,6 +3991,557 @@
         }
       }
     },
+    "/system/service-accounts/{id}": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Get service account instance",
+        "description": "Get service account instance by account ID, app ID, and org ID\n\n**Auth:** Requires auth token with permission to read service accounts\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the service account",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "app_id",
+            "in": "query",
+            "description": "Application ID of the service account instance",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "query",
+            "description": "Organization ID of the service account instance",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceAccount"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Update service account instance",
+        "description": "Updates a service account instance\n\n**Auth:** Requires auth token with permission to update service accounts\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the service account instance",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "app_id",
+            "in": "query",
+            "description": "Application ID of the service account instance",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "query",
+            "description": "Organization ID of the service account instance",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Service account\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_system_req_update_service-account"
+              },
+              "examples": {
+                "update_account": {
+                  "summary": "Update service account",
+                  "value": "{\n  \"name\": \"updated_name\",\n  \"permissions\": [\"permission1\", \"new_permission1\"]\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceAccount"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Deregister service account instance",
+        "description": "Removes a service account instance\n\n**Auth:** Requires auth token with permission to delete service accounts\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the service account instance to delete",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "app_id",
+            "in": "query",
+            "description": "Application ID of the service account instance",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "query",
+            "description": "Organization ID of the service account instance",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/system/service-accounts": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Get service accounts",
+        "description": "Get list of all service accounts matching a search\n\n**Auth:** Requires auth token with permission to read service accounts\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "query",
+            "description": "Service account ID to search for",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Service account name to search for",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "app_id",
+            "in": "query",
+            "description": "Service account app ID to search for",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "query",
+            "description": "Service account org ID to search for",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "permissions",
+            "in": "query",
+            "description": "A comma-separated list of service account permissions to search for",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceAccount"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Register service account",
+        "description": "Creates a new service account\n\n**Auth:** Requires auth token with permission to create service accounts\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "app_id",
+            "in": "query",
+            "description": "Service account app ID to copy from",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "query",
+            "description": "Service account org ID to copy from",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Service account\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_system_req_create_service-account"
+              },
+              "examples": {
+                "initial_creds": {
+                  "summary": "Register new account with initial credentials",
+                  "value": "{\n  \"name\": \"test_account\",\n  \"app_id\": \"9766\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"permissions\": [\"permission1\", \"permission2\"],\n  \"first_party\": true,\n  \"creds\": [\n    {\n      \"name\": \"initial_token\",\n      \"type\": \"static_token\"\n    },\n    {\n      \"name\": \"initial_signature\",\n      \"type\": \"signature\",\n      \"params\": {\n        \"pub_key\": \"public_key_pem\"\n      }\n    }\n  ]\n}\n"
+                },
+                "no_initial_creds": {
+                  "summary": "Register new account without initial credentials",
+                  "value": "{\n  \"name\": \"test_account\",\n  \"app_id\": \"9766\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"permissions\": [\"permission1\", \"permission2\"],\n  \"first_party\": true\n}\n"
+                },
+                "copy_from": {
+                  "summary": "Register new account instance by copying from existing account instance",
+                  "value": "{\n  \"account_id\": \"12345678-e2cd-11eb-af68-60f81db5ecc0\",\n  \"name\": \"test_account\",\n  \"app_id\": \"9766\",\n  \"org_id\": \"0a2eff20-e2cd-11eb-af68-60f81db5ecc0\",\n  \"permissions\": [\"permission1\", \"permission2\"],\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceAccount"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Delete service accounts",
+        "description": "Delete service accounts matching an account ID\n\n**Auth:** Requires auth token with permission to delete service accounts\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "query",
+            "description": "Service account ID to delete",
+            "required": true,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/system/service-accounts/{id}/creds": {
+      "post": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Add service account credential",
+        "description": "Adds a new credential to an existing service account\n\n**Auth:** Requires auth token with permission to add service account credentials\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the service account to add new credential",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Service account credentials\n",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceAccountCredential"
+              },
+              "examples": {
+                "static_token": {
+                  "summary": "Add static token credential",
+                  "value": "{\n  \"name\": \"token_cred\",\n  \"type\": \"static_token\"\n}\n"
+                },
+                "signature": {
+                  "summary": "Add signature credential",
+                  "value": "{\n  \"name\": \"signature_cred\",\n  \"type\": \"signature\",\n  \"params\": {\n    \"pub_key\": \"public_key_pem\"\n  }\n}\n"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceAccountCredential"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Remove service account credential",
+        "description": "Removes a credential from an existing service account\n\n**Auth:** Requires auth token with permission to delete service account credentials\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the service account to remove credential",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cred_id",
+            "in": "query",
+            "description": "id of the credential to be removed",
+            "required": true,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/system/applications/{id}": {
       "get": {
         "tags": [
@@ -3261,7 +4573,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/_system_res_get_Application"
+                  "$ref": "#/components/schemas/Application"
                 }
               }
             }
@@ -3301,7 +4613,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/_system_res_get_Applications"
+                    "$ref": "#/components/schemas/Application"
                   }
                 }
               }
@@ -3920,7 +5232,6 @@
     },
     "/system/account/mfa": {
       "get": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
@@ -3957,7 +5268,6 @@
         }
       },
       "post": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
@@ -4004,7 +5314,6 @@
         }
       },
       "delete": {
-        "deprecated": true,
         "tags": [
           "System"
         ],
@@ -4373,6 +5682,100 @@
         }
       }
     },
+    "/ui/credential/reset": {
+      "get": {
+        "tags": [
+          "UI"
+        ],
+        "summary": "Display HTML password reset page",
+        "description": "Serves an HTML page with password reset form\n",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Credential ID",
+            "required": true,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "description": "Reset code",
+            "required": true,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation (HTML)"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/ui/credential/verify": {
+      "get": {
+        "tags": [
+          "UI"
+        ],
+        "summary": "Validate verification code",
+        "description": "Validates verification code to verify account ownership and displays result in an HTML page\n",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Credential ID",
+            "required": true,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "description": "Verification code",
+            "required": true,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation (HTML page)"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
     "/version": {
       "get": {
         "summary": "Get service version",
@@ -4464,6 +5867,9 @@
             "type": "string"
           },
           "multi_tenant": {
+            "type": "boolean"
+          },
+          "admin": {
             "type": "boolean"
           },
           "shared_identities": {
@@ -4639,7 +6045,7 @@
             "$ref": "#/components/schemas/OrganizationFields"
           },
           "config": {
-            "$ref": "#/components/schemas/OrganizationConfig"
+            "$ref": "#/components/schemas/OrganizationConfigFields"
           }
         }
       },
@@ -4865,6 +6271,96 @@
           }
         }
       },
+      "ServiceAccount": {
+        "required": [
+          "account_id",
+          "name",
+          "app_id",
+          "org_id",
+          "permissions",
+          "first_party"
+        ],
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "app_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "org_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "first_party": {
+            "type": "boolean"
+          },
+          "creds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceAccountCredential"
+            }
+          }
+        }
+      },
+      "AppOrgPair": {
+        "required": [
+          "app_id",
+          "org_id"
+        ],
+        "type": "object",
+        "properties": {
+          "app_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "org_id": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ServiceAccountCredential": {
+        "required": [
+          "name",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "readOnly": true,
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "static_token",
+              "signature"
+            ]
+          },
+          "params": {
+            "type": "object",
+            "nullable": true
+          },
+          "date_created": {
+            "readOnly": true,
+            "type": "string"
+          }
+        }
+      },
       "ServiceReg": {
         "required": [
           "service_id",
@@ -4877,6 +6373,9 @@
         "description": "Full service registration record",
         "properties": {
           "service_id": {
+            "type": "string"
+          },
+          "service_account_id": {
             "type": "string"
           },
           "host": {
@@ -4918,6 +6417,9 @@
         "description": "Service registration record used for auth",
         "properties": {
           "service_id": {
+            "type": "string"
+          },
+          "service_account_id": {
             "type": "string"
           },
           "host": {
@@ -6187,6 +7689,73 @@
           }
         }
       },
+      "_services_req_service-accounts_ParamsRequest": {
+        "required": [
+          "auth_type"
+        ],
+        "type": "object",
+        "properties": {
+          "auth_type": {
+            "type": "string",
+            "enum": [
+              "static_token",
+              "signature"
+            ]
+          },
+          "creds": {
+            "$ref": "#/components/schemas/_services_req_service-accounts_CredsStaticToken"
+          }
+        }
+      },
+      "_services_req_service-accounts_TokenRequest": {
+        "required": [
+          "account_id",
+          "app_id",
+          "org_id",
+          "auth_type"
+        ],
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "app_id": {
+            "nullable": true,
+            "type": "string"
+          },
+          "org_id": {
+            "nullable": true,
+            "type": "string"
+          },
+          "auth_type": {
+            "type": "string",
+            "enum": [
+              "static_token",
+              "signature"
+            ]
+          },
+          "creds": {
+            "$ref": "#/components/schemas/_services_req_service-accounts_CredsStaticToken"
+          }
+        }
+      },
+      "_services_req_service-accounts_CredsStaticToken": {
+        "required": [
+          "token"
+        ],
+        "type": "object",
+        "description": "Service account token for auth_type=\"static_token\"",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "_services_req_service-accounts_CredsNone": {
+        "type": "object",
+        "description": "Service account creds for unlisted auth_types (None)",
+        "nullable": true
+      },
       "_services_req_application_configs": {
         "required": [
           "app_type_identifier",
@@ -6223,7 +7792,7 @@
           }
         }
       },
-      "_admin_req_app-token": {
+      "_admin_res_app-token": {
         "required": [
           "token"
         ],
@@ -6279,7 +7848,61 @@
           }
         }
       },
+      "_admin_req_add-accounts-to-group": {
+        "required": [
+          "group_id",
+          "account_ids"
+        ],
+        "type": "object",
+        "properties": {
+          "group_id": {
+            "type": "string"
+          },
+          "account_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "_admin_req_remove-account-from-group": {
+        "required": [
+          "group_id",
+          "account_ids"
+        ],
+        "type": "object",
+        "properties": {
+          "group_id": {
+            "type": "string"
+          },
+          "account_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "_admin_req_grant-roles-to-account": {
+        "required": [
+          "account_id",
+          "role_ids"
+        ],
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "role_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "_admin_req_revoke-roles-from-account": {
         "required": [
           "account_id",
           "role_ids"
@@ -6305,6 +7928,42 @@
         "type": "object",
         "properties": {
           "account_id": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "_admin_req_revoke-permissions": {
+        "required": [
+          "account_id",
+          "permissions"
+        ],
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "_admin_req_grant-permissions-to-role": {
+        "required": [
+          "role_id",
+          "permissions"
+        ],
+        "type": "object",
+        "properties": {
+          "role_id": {
             "type": "string"
           },
           "permissions": {
@@ -6501,10 +8160,7 @@
             ]
           },
           "config": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OrganizationConfigFields"
-            }
+            "$ref": "#/components/schemas/OrganizationConfigFields"
           }
         }
       },
@@ -6516,6 +8172,7 @@
           "id",
           "name",
           "multi_tenant",
+          "admin",
           "shared_identities"
         ],
         "type": "object",
@@ -6530,12 +8187,11 @@
           "multi_tenant": {
             "type": "boolean"
           },
-          "shared_identities": {
+          "admin": {
             "type": "boolean"
           },
-          "max_login_session_duration": {
-            "description": "The maximum allowed duration (in hours) of a user's login session for this application",
-            "type": "integer"
+          "shared_identities": {
+            "type": "boolean"
           },
           "application_types": {
             "$ref": "#/components/schemas/ApplicationTypeFields"
@@ -6555,6 +8211,7 @@
         "required": [
           "name",
           "multi_tenant",
+          "admin",
           "shared_identities"
         ],
         "type": "object",
@@ -6565,12 +8222,11 @@
           "multi_tenant": {
             "type": "boolean"
           },
-          "shared_identities": {
+          "admin": {
             "type": "boolean"
           },
-          "max_login_session_duration": {
-            "description": "The maximum allowed duration (in hours) of a user's login session for this application",
-            "type": "integer"
+          "shared_identities": {
+            "type": "boolean"
           },
           "application_types": {
             "type": "array",
@@ -6920,6 +8576,62 @@
           },
           "data": {
             "type": "object"
+          }
+        }
+      },
+      "_system_req_create_service-account": {
+        "required": [
+          "app_id",
+          "org_id"
+        ],
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "app_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "org_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "first_party": {
+            "type": "boolean"
+          },
+          "creds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceAccountCredential"
+            }
+          }
+        }
+      },
+      "_system_req_update_service-account": {
+        "required": [
+          "name",
+          "permissions"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       }

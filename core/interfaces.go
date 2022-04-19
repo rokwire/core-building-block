@@ -32,10 +32,13 @@ type Administration interface {
 
 	AdmCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgGroup, error)
 	AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error)
+	AdmAddAccountsToGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error
+	AdmRemoveAccountsFromGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error
 	AdmDeleteAppOrgGroup(ID string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error
 
 	AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgRole, error)
 	AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error)
+	AdmGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error
 	AdmDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error
 
 	AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error)
@@ -44,8 +47,10 @@ type Administration interface {
 	AdmGetAccount(accountID string) (*model.Account, error)
 
 	AdmGrantAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error
+	AdmRevokeAccountPermissions(appID string, orgID string, accountID string, permissions []string, assignerPermissions []string, l *logs.Log) error
 
 	AdmGrantAccountRoles(appID string, orgID string, accountID string, roleIDs []string, assignerPermissions []string, l *logs.Log) error
+	AdmRevokeAccountRoles(appID string, orgID string, accountID string, roleIDs []string, assignerPermissions []string, l *logs.Log) error
 
 	AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymoys *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
@@ -75,7 +80,7 @@ type System interface {
 	SysGetOrganization(ID string) (*model.Organization, error)
 	SysUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 
-	SysCreateApplication(name string, multiTenant bool, sharedIdentities bool, maxLoginSessionDuration *int, appTypes []model.ApplicationType) (*model.Application, error)
+	SysCreateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error)
 	SysGetApplication(ID string) (*model.Application, error)
 	SysGetApplications() ([]model.Application, error)
 
@@ -104,20 +109,28 @@ type Storage interface {
 
 	PerformTransaction(func(context storage.TransactionContext) error) error
 
+	FindAuthType(codeOrID string) (*model.AuthType, error)
+
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
+	FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error)
 
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
+	DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
+	DeleteAccountRoles(context storage.TransactionContext, accountID string, roleIDs []string) error
+	InsertAccountsGroup(group model.AccountGroup, accounts []model.Account) error
+	RemoveAccountsGroup(groupID string, accounts []model.Account) error
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 
-	UpdateProfile(profile model.Profile) error
+	UpdateProfile(context storage.TransactionContext, profile model.Profile) error
 
 	FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
 	DeleteLoginSessionByID(context storage.TransactionContext, id string) error
+	DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error
 
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error
@@ -128,35 +141,38 @@ type Storage interface {
 
 	FindPermissionsByName(names []string) ([]model.Permission, error)
 	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)
-	InsertPermission(item model.Permission) error
+	InsertPermission(context storage.TransactionContext, item model.Permission) error
 	UpdatePermission(item model.Permission) error
 	DeletePermission(id string) error
 
-	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
+	FindAppOrgRoles(appOrgID string) ([]model.AppOrgRole, error)
+	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error)
 	InsertAppOrgRole(item model.AppOrgRole) error
 	UpdateAppOrgRole(item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
+	InsertAppOrgRolePermissions(context storage.TransactionContext, roleID string, permissionNames []model.Permission) error
 
-	FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
+	FindAppOrgGroups(appOrgID string) ([]model.AppOrgGroup, error)
+	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error)
 	InsertAppOrgGroup(item model.AppOrgGroup) error
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
 	CountGroupsByRoleID(roleID string) (*int64, error)
 
-	InsertOrganization(organization model.Organization) (*model.Organization, error)
+	InsertOrganization(context storage.TransactionContext, organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
-	LoadOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)
+	FindSystemOrganization() (*model.Organization, error)
+	FindOrganizations() ([]model.Organization, error)
 
-	LoadApplications() ([]model.Application, error)
-	InsertApplication(application model.Application) (*model.Application, error)
+	InsertApplication(context storage.TransactionContext, application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 
-	InsertAuthType(authType model.AuthType) (*model.AuthType, error)
-	LoadAuthTypes() ([]model.AuthType, error)
+	InsertAuthType(context storage.TransactionContext, authType model.AuthType) (*model.AuthType, error)
+	FindAuthTypes() ([]model.AuthType, error)
 	UpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
 
 	FindApplicationType(id string) (*model.ApplicationType, error)
@@ -170,6 +186,9 @@ type Storage interface {
 
 	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
+	InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
+
+	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
 }
 
 //StorageListener listenes for change data storage events
