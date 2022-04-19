@@ -859,7 +859,7 @@ func (app *application) admRevokeAccountRoles(appID string, orgID string, accoun
 }
 
 func (app *application) admRemovePermissionsFromRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
-
+	//check if there is data
 	if len(assignerPermissions) == 0 {
 		return errors.New("no permissions from admin assigner")
 	}
