@@ -1728,6 +1728,25 @@ func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, params map[string]in
 	return accounts, requestData.AuthType, nil
 }
 
+func (a *Auth) buildAccessTokenForServiceAccount(account model.ServiceAccount, authType string) (string, *model.AppOrgPair, error) {
+	permissions := account.GetPermissionNames()
+	var appID string
+	if account.Application != nil {
+		appID = account.Application.ID
+	}
+	var orgID string
+	if account.Organization != nil {
+		orgID = account.Organization.ID
+	}
+
+	claims := a.getStandardClaims(account.AccountID, "", account.Name, "", "", rokwireTokenAud, orgID, appID, authType, nil, nil, false, true, false, false, true, account.FirstParty, "")
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), "")
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+	}
+	return accessToken, &model.AppOrgPair{AppID: utils.StringOrNil(appID), OrgID: utils.StringOrNil(orgID)}, nil
+}
+
 func (a *Auth) registerAuthType(name string, auth authType) error {
 	if _, ok := a.authTypes[name]; ok {
 		return errors.Newf("the requested auth type name has already been registered: %s", name)

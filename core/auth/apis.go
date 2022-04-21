@@ -978,50 +978,29 @@ func (a *Auth) GetServiceAccessToken(r *sigauth.Request, l *logs.Log) (string, e
 		return "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}
 
-	permissions := accounts[0].GetPermissionNames()
-	var appID string
-	if accounts[0].Application != nil {
-		appID = accounts[0].Application.ID
-	}
-	var orgID string
-	if accounts[0].Organization != nil {
-		orgID = accounts[0].Organization.ID
+	accessToken, _, err := a.buildAccessTokenForServiceAccount(accounts[0], authType)
+	if err != nil {
+		return "", err
 	}
 
-	claims := a.getStandardClaims(accounts[0].AccountID, "", "", "", "", rokwireTokenAud, orgID, appID, authType, nil, nil, false, true, false, false, true, accounts[0].FirstParty, "")
-	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), "")
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
-	}
 	return accessToken, nil
 }
 
 //GetAllServiceAccessTokens returns an access token for each app, org pair a service account has access to
-func (a *Auth) GetAllServiceAccessTokens(r *sigauth.Request, l *logs.Log) (map[string]string, error) {
+func (a *Auth) GetAllServiceAccessTokens(r *sigauth.Request, l *logs.Log) (map[model.AppOrgPair]string, error) {
 	accounts, authType, err := a.checkServiceAccountCreds(r, nil, false, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}
 
-	accessTokens := make(map[string]string, len(accounts))
+	accessTokens := make(map[model.AppOrgPair]string, len(accounts))
 	for _, account := range accounts {
-		permissions := account.GetPermissionNames()
-		var appID string
-		if account.Application != nil {
-			appID = account.Application.ID
-		}
-		var orgID string
-		if account.Organization != nil {
-			orgID = account.Organization.ID
-		}
-
-		claims := a.getStandardClaims(account.AccountID, "", "", "", "", rokwireTokenAud, orgID, appID, authType, nil, nil, false, true, false, false, true, account.FirstParty, "")
-		accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), "")
+		accessToken, appOrgPair, err := a.buildAccessTokenForServiceAccount(account, authType)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+			return nil, err
 		}
 
-		accessTokens[fmt.Sprintf("%s_%s", appID, orgID)] = accessToken
+		accessTokens[*appOrgPair] = accessToken
 	}
 
 	return accessTokens, nil
