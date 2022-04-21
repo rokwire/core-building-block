@@ -979,13 +979,6 @@ func (h SystemApisHandler) createApplicationConfig(l *logs.Log, r *http.Request,
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplicationConfig, nil, err, http.StatusBadRequest, true)
 	}
 
-	// data, err = json.Marshal(insertedConfig)
-	// if err != nil {
-	// 	return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, false)
-	// }
-
-	// return l.HttpResponseSuccessJSON(data)
-
 	return l.HttpResponseSuccess()
 }
 
