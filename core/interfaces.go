@@ -80,7 +80,7 @@ type System interface {
 	SysGetOrganization(ID string) (*model.Organization, error)
 	SysUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 
-	SysCreateApplication(name string, multiTenant bool, sharedIdentities bool, maxLoginSessionDuration *int, identifier string, nameInType string, versions []string) (*model.Application, error)
+	SysCreateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error)
 	SysGetApplication(ID string) (*model.Application, error)
 	SysGetApplications() ([]model.Application, error)
 
@@ -109,6 +109,8 @@ type Storage interface {
 
 	PerformTransaction(func(context storage.TransactionContext) error) error
 
+	FindAuthType(codeOrID string) (*model.AuthType, error)
+
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error)
@@ -123,7 +125,7 @@ type Storage interface {
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 
-	UpdateProfile(profile model.Profile) error
+	UpdateProfile(context storage.TransactionContext, profile model.Profile) error
 
 	FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
@@ -139,12 +141,12 @@ type Storage interface {
 
 	FindPermissionsByName(names []string) ([]model.Permission, error)
 	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)
-	InsertPermission(item model.Permission) error
+	InsertPermission(context storage.TransactionContext, item model.Permission) error
 	UpdatePermission(item model.Permission) error
 	DeletePermission(id string) error
 
 	FindAppOrgRoles(appOrgID string) ([]model.AppOrgRole, error)
-	FindAppOrgRolesByIDs(ids []string, appOrgID string) ([]model.AppOrgRole, error)
+	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error)
 	InsertAppOrgRole(item model.AppOrgRole) error
 	UpdateAppOrgRole(item model.AppOrgRole) error
@@ -152,25 +154,25 @@ type Storage interface {
 	InsertAppOrgRolePermissions(context storage.TransactionContext, roleID string, permissionNames []model.Permission) error
 
 	FindAppOrgGroups(appOrgID string) ([]model.AppOrgGroup, error)
-	FindAppOrgGroupsByIDs(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
+	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error)
 	InsertAppOrgGroup(item model.AppOrgGroup) error
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
 	CountGroupsByRoleID(roleID string) (*int64, error)
 
-	InsertOrganization(organization model.Organization) (*model.Organization, error)
+	InsertOrganization(context storage.TransactionContext, organization model.Organization) (*model.Organization, error)
 	UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
-	LoadOrganizations() ([]model.Organization, error)
 	FindOrganization(id string) (*model.Organization, error)
+	FindSystemOrganization() (*model.Organization, error)
+	FindOrganizations() ([]model.Organization, error)
 
-	LoadApplications() ([]model.Application, error)
-	InsertApplication(application model.Application) (*model.Application, error)
+	InsertApplication(context storage.TransactionContext, application model.Application) (*model.Application, error)
 	FindApplication(ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 
-	InsertAuthType(authType model.AuthType) (*model.AuthType, error)
-	LoadAuthTypes() ([]model.AuthType, error)
+	InsertAuthType(context storage.TransactionContext, authType model.AuthType) (*model.AuthType, error)
+	FindAuthTypes() ([]model.AuthType, error)
 	UpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
 
 	FindApplicationType(id string) (*model.ApplicationType, error)
@@ -184,6 +186,9 @@ type Storage interface {
 
 	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
+	InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
+
+	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
 }
 
 //StorageListener listenes for change data storage events

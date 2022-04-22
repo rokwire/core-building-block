@@ -1,6 +1,6 @@
 post:
   tags:
-  - Admin
+  - System
   summary: Login
   description: |
     Login using credentials to retrieve access token, refresh token, and user data
@@ -17,8 +17,8 @@ post:
             value: |
               {
                 "auth_type": "email",
-                "app_type_identifier": "edu.illinois.rokwire",
-                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                "app_type_identifier": "edu.illinois.rokwire.admin",
+                "org_id": "5d7ed0a6-48f2-4473-ae4e-120f2b541a22",
                 "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                 "creds": {
                   "email": "test@example.com", 
@@ -35,8 +35,8 @@ post:
             value: |
               {
                 "auth_type": "twilio_phone",
-                "app_type_identifier": "edu.illinois.rokwire",
-                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                "app_type_identifier": "edu.illinois.rokwire.admin",
+                "org_id": "5d7ed0a6-48f2-4473-ae4e-120f2b541a22",
                 "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                 "creds": {
                   "phone": "+12223334444", 
@@ -65,12 +65,12 @@ post:
                 }
               }
           illinois_oidc:
-            summary: Illinois OIDC
+            summary: Illinois OIDC login
             value: |
               {
                 "auth_type": "illinois_oidc",
-                "app_type_identifier": "edu.illinois.rokwire",
-                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                "app_type_identifier": "edu.illinois.rokwire.admin",
+                "org_id": "5d7ed0a6-48f2-4473-ae4e-120f2b541a22",
                 "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                 "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
                 "params": {
