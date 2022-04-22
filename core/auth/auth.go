@@ -1698,7 +1698,7 @@ func (a *Auth) constructServiceAccount(accountID string, name string, appID *str
 		Permissions: permissionList, FirstParty: firstParty}, nil
 }
 
-func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, params map[string]interface{}, single bool, l *logs.Log) ([]model.ServiceAccount, string, error) {
+func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, accountID *string, firstParty bool, single bool, l *logs.Log) ([]model.ServiceAccount, string, error) {
 	var requestData model.ServiceAccountTokenRequest
 	err := json.Unmarshal(r.Body, &requestData)
 	if err != nil {
@@ -1711,14 +1711,16 @@ func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, params map[string]in
 		return nil, "", errors.WrapErrorAction("error getting service auth type on get service access token", "", nil, err)
 	}
 
-	if params == nil {
-		params = map[string]interface{}{"account_id": requestData.AccountID}
-		if single {
-			params["app_id"] = requestData.AppID
-			params["org_id"] = requestData.OrgID
-		}
+	params := map[string]interface{}{"first_party": firstParty}
+	if accountID == nil {
+		params["account_id"] = requestData.AccountID
+	} else {
+		params["account_id"] = *accountID
 	}
-	params["first_party"] = strings.HasPrefix(r.Path, "/core/bbs")
+	if single {
+		params["app_id"] = requestData.AppID
+		params["org_id"] = requestData.OrgID
+	}
 
 	accounts, err := serviceAuthType.checkCredentials(r, requestData.Creds, params)
 	if err != nil {

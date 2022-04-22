@@ -948,9 +948,8 @@ func (a *Auth) RemoveMFAType(accountID string, identifier string, mfaType string
 }
 
 //GetServiceAccountParams returns a list of app, org pairs a service account has access to
-func (a *Auth) GetServiceAccountParams(accountID string, r *sigauth.Request, l *logs.Log) ([]model.AppOrgPair, error) {
-	params := map[string]interface{}{"account_id": accountID}
-	accounts, _, err := a.checkServiceAccountCreds(r, params, false, l)
+func (a *Auth) GetServiceAccountParams(accountID string, firstParty bool, r *sigauth.Request, l *logs.Log) ([]model.AppOrgPair, error) {
+	accounts, _, err := a.checkServiceAccountCreds(r, &accountID, firstParty, false, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}
@@ -972,8 +971,8 @@ func (a *Auth) GetServiceAccountParams(accountID string, r *sigauth.Request, l *
 }
 
 //GetServiceAccessToken returns an access token for a non-human client
-func (a *Auth) GetServiceAccessToken(r *sigauth.Request, l *logs.Log) (string, error) {
-	accounts, authType, err := a.checkServiceAccountCreds(r, nil, true, l)
+func (a *Auth) GetServiceAccessToken(firstParty bool, r *sigauth.Request, l *logs.Log) (string, error) {
+	accounts, authType, err := a.checkServiceAccountCreds(r, nil, firstParty, true, l)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}
@@ -987,8 +986,8 @@ func (a *Auth) GetServiceAccessToken(r *sigauth.Request, l *logs.Log) (string, e
 }
 
 //GetAllServiceAccessTokens returns an access token for each app, org pair a service account has access to
-func (a *Auth) GetAllServiceAccessTokens(r *sigauth.Request, l *logs.Log) (map[model.AppOrgPair]string, error) {
-	accounts, authType, err := a.checkServiceAccountCreds(r, nil, false, l)
+func (a *Auth) GetAllServiceAccessTokens(firstParty bool, r *sigauth.Request, l *logs.Log) (map[model.AppOrgPair]string, error) {
+	accounts, authType, err := a.checkServiceAccountCreds(r, nil, firstParty, false, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}

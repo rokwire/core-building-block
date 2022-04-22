@@ -72,12 +72,13 @@ func (h TPSApisHandler) getServiceAccountParams(l *logs.Log, r *http.Request, cl
 		return l.HttpResponseErrorAction(logutils.ActionParse, "service account params http request", nil, err, http.StatusInternalServerError, false)
 	}
 
-	accountParams, err := h.coreAPIs.Auth.GetServiceAccountParams(accountID, req, l)
+	accountParams, err := h.coreAPIs.Auth.GetServiceAccountParams(accountID, false, req, l)
 	if err != nil {
-		loggingErr, ok := err.(*errors.Error)
-		status := loggingErr.Status()
-		if ok && (status == utils.ErrorStatusInvalid || status == utils.ErrorStatusNotFound) {
-			return l.HttpResponseError("Error getting service account params", err, http.StatusUnauthorized, true)
+		if loggingErr, ok := err.(*errors.Error); ok {
+			status := loggingErr.Status()
+			if status == utils.ErrorStatusInvalid || status == utils.ErrorStatusNotFound {
+				return l.HttpResponseError("Error getting service account params", err, http.StatusUnauthorized, true)
+			}
 		}
 		return l.HttpResponseError("Error getting service account params", err, http.StatusInternalServerError, true)
 	}
@@ -98,12 +99,13 @@ func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, clai
 		return l.HttpResponseErrorAction(logutils.ActionParse, "service access token http request", nil, err, http.StatusInternalServerError, false)
 	}
 
-	accessToken, err := h.coreAPIs.Auth.GetServiceAccessToken(req, l)
+	accessToken, err := h.coreAPIs.Auth.GetServiceAccessToken(false, req, l)
 	if err != nil {
-		loggingErr, ok := err.(*errors.Error)
-		status := loggingErr.Status()
-		if ok && (status == utils.ErrorStatusInvalid || status == utils.ErrorStatusNotFound) {
-			return l.HttpResponseError("Error getting access token", err, http.StatusUnauthorized, true)
+		if loggingErr, ok := err.(*errors.Error); ok {
+			status := loggingErr.Status()
+			if status == utils.ErrorStatusInvalid || status == utils.ErrorStatusNotFound {
+				return l.HttpResponseError("Error getting access token", err, http.StatusUnauthorized, true)
+			}
 		}
 		return l.HttpResponseError("Error getting access token", err, http.StatusInternalServerError, true)
 	}
@@ -125,12 +127,13 @@ func (h TPSApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, cla
 		return l.HttpResponseErrorAction(logutils.ActionParse, "service access tokens http request", nil, err, http.StatusInternalServerError, false)
 	}
 
-	accessTokens, err := h.coreAPIs.Auth.GetAllServiceAccessTokens(req, l)
+	accessTokens, err := h.coreAPIs.Auth.GetAllServiceAccessTokens(false, req, l)
 	if err != nil {
-		loggingErr, ok := err.(*errors.Error)
-		status := loggingErr.Status()
-		if ok && (status == utils.ErrorStatusInvalid || status == utils.ErrorStatusNotFound) {
-			return l.HttpResponseError("Error getting access tokens", err, http.StatusUnauthorized, true)
+		if loggingErr, ok := err.(*errors.Error); ok {
+			status := loggingErr.Status()
+			if status == utils.ErrorStatusInvalid || status == utils.ErrorStatusNotFound {
+				return l.HttpResponseError("Error getting access tokens", err, http.StatusUnauthorized, true)
+			}
 		}
 		return l.HttpResponseError("Error getting access tokens", err, http.StatusInternalServerError, true)
 	}
