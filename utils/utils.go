@@ -2,6 +2,7 @@ package utils
 
 import (
 	crand "crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
@@ -9,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"reflect"
+	"time"
 
 	"github.com/rokwire/logging-library-go/logs"
 
@@ -26,6 +28,10 @@ const (
 	ErrorStatusUnverified string = "unverified"
 	//ErrorStatusVerificationExpired ...
 	ErrorStatusVerificationExpired string = "verification-expired"
+	//ErrorStatusSharedCredentialUnverified ...
+	ErrorStatusSharedCredentialUnverified string = "shared-credential-unverified"
+	//ErrorStatusNotAllowed ...
+	ErrorStatusNotAllowed string = "not-allowed"
 )
 
 // SetRandomSeed sets the seed for random number generation
@@ -101,6 +107,12 @@ func GetIP(l *logs.Log, r *http.Request) string {
 	return IPAddress
 }
 
+//SHA256Hash computes the SHA256 hash of a byte slice
+func SHA256Hash(data []byte) []byte {
+	hash := sha256.Sum256(data)
+	return hash[:]
+}
+
 //GetLogValue prepares a sensitive data to be logged.
 func GetLogValue(value string, n int) string {
 	if len(value) <= n {
@@ -108,4 +120,38 @@ func GetLogValue(value string, n int) string {
 	}
 	lastN := value[len(value)-n:]
 	return fmt.Sprintf("***%s", lastN)
+}
+
+//FormatTime formats the time value which this pointer points. Gives empty string if the pointer is nil
+func FormatTime(v *time.Time) string {
+	if v == nil {
+		return ""
+	}
+	return v.Format("2006-01-02T15:04:05.000Z")
+}
+
+//Contains checks if list contains value
+func Contains(list []string, value string) bool {
+	for _, v := range list {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
+//StringOrNil returns a pointer to the input string, but returns nil if input is empty
+func StringOrNil(v string) *string {
+	if v == "" {
+		return nil
+	}
+	return &v
+}
+
+//GetPrintableString returns the string content of a pointer, and "nil" if pointer is nil
+func GetPrintableString(v *string) string {
+	if v != nil {
+		return *v
+	}
+	return "nil"
 }

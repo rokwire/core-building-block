@@ -1,0 +1,8 @@
+required:
+  - all_sessions
+type: object
+properties:
+  all_sessions:
+    type: boolean
+    default: false
+

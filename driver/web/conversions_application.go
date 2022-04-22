@@ -6,18 +6,66 @@ import (
 )
 
 //Application
-func applicationToDef(item *model.Application) *Def.ApplicationFields {
+//TODO
+/*
+func applicationToDef(item *model.Application) *Def.Application {
 	if item == nil {
 		return nil
 	}
 
-	return &Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
+	fields := Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
 		RequiresOwnUsers: &item.RequiresOwnUsers}
+	types := applicationTypeListToDef(item.Types)
+
+	return &Def.Application{Fields: &fields, Types: &types}
+}
+
+func applicationTypeListToDef(items []model.ApplicationType) []Def.ApplicationType {
+	result := make([]Def.ApplicationType, len(items))
+	for i, item := range items {
+		result[i] = *applicationTypeToDef(&item)
+	}
+	return result
+}
+
+func applicationTypeToDef(item *model.ApplicationType) *Def.ApplicationType {
+	if item == nil {
+		return nil
+	}
+
+	var name *string
+	if len(item.Name) > 0 {
+		name = &item.Name
+	}
+	var versions *[]string
+	if len(item.Versions) > 0 {
+		versions = &item.Versions
+	}
+
+	return &Def.ApplicationType{Fields: &Def.ApplicationTypeFields{Id: item.ID, Identifier: item.Identifier, Name: name, Versions: versions}}
+} */
+
+func applicationToDef(item model.Application) Def.ApplicationFields {
+
+	return Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
+		SharedIdentities: &item.SharedIdentities}
+}
+
+func applicationsToDef(item []model.Application) []Def.ApplicationFields {
+	result := make([]Def.ApplicationFields, len(item))
+	for i, item := range item {
+		result[i] = applicationToDef(item)
+	}
+	return result
 }
 
 //ApplicationPermission
 func applicationPermissionToDef(item model.Permission) Def.PermissionFields {
-	return Def.PermissionFields{Id: item.ID, Name: item.Name, ServiceId: &item.ServiceID, Assigners: &item.Assigners}
+	assigners := item.Assigners
+	if assigners == nil {
+		assigners = make([]string, 0)
+	}
+	return Def.PermissionFields{Id: item.ID, Name: item.Name, ServiceId: &item.ServiceID, Assigners: &assigners}
 }
 
 func applicationPermissionsToDef(items []model.Permission) []Def.PermissionFields {
@@ -55,18 +103,56 @@ func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroupFields {
 }
 
 //Organization
-func organizationToDef(item *model.Organization) *Def.OrganizationFields {
+func organizationToDef(item *model.Organization) *Def.Organization {
 	if item == nil {
 		return nil
 	}
 
-	return &Def.OrganizationFields{Id: item.ID, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
+	fields := Def.OrganizationFields{Id: item.ID, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
+	config := item.Config
+
+	return &Def.Organization{Config: organizationConfigToDef(&config), Fields: &fields}
 }
 
-func organizationsToDef(items []model.Organization) []Def.OrganizationFields {
-	result := make([]Def.OrganizationFields, len(items))
+func organizationsToDef(items []model.Organization) []Def.Organization {
+	result := make([]Def.Organization, len(items))
 	for i, item := range items {
 		result[i] = *organizationToDef(&item)
+	}
+	return result
+}
+
+func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationConfigFields {
+	if item == nil {
+		return nil
+	}
+
+	var id *string
+	if len(item.ID) > 0 {
+		id = &item.ID
+	}
+	var domains *[]string
+	if len(item.Domains) > 0 {
+		domains = &item.Domains
+	}
+
+	return &Def.OrganizationConfigFields{Id: id, Domains: domains}
+}
+
+//App Config
+func appConfigToDef(item model.ApplicationConfig) Def.ApplicationConfig {
+	defConfig := Def.ApplicationConfig{Id: item.ID, AppTypeId: item.ApplicationType.ID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
+	if item.AppOrg != nil {
+		defConfig.OrgId = &item.AppOrg.Organization.ID
+	}
+
+	return defConfig
+}
+
+func appConfigsToDef(items []model.ApplicationConfig) []Def.ApplicationConfig {
+	result := make([]Def.ApplicationConfig, len(items))
+	for i, item := range items {
+		result[i] = appConfigToDef(item)
 	}
 	return result
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/rokwire/core-auth-library-go/authorization"
+	"github.com/rokwire/core-auth-library-go/sigauth"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
 )
@@ -16,7 +17,7 @@ type authType interface {
 	// Returns:
 	//	message (string): Success message if verification is required. If verification is not required, return ""
 	//	credentialValue (map): Credential value
-	signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
+	signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//signUpAdmin signs up a new admin user
 	// Returns:
@@ -29,10 +30,10 @@ type authType interface {
 	verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error)
 
 	//sends the verification code to the identifier
-	sendVerifyCredential(credential *model.Credential, l *logs.Log) error
+	sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error
 
 	//restarts the credential verification
-	restartCredentialVerification(credential *model.Credential, l *logs.Log) error
+	restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error
 
 	//updates the value of the credential object with new value
 	// Returns:
@@ -40,7 +41,7 @@ type authType interface {
 	resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error)
 
 	//apply forgot credential for the auth type (generates a reset password link with code and expiry and sends it to given identifier for email auth type)
-	forgotCredential(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error)
+	forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error)
 
 	//getUserIdentifier parses the credentials and returns the user identifier
 	// Returns:
@@ -61,7 +62,7 @@ type authType interface {
 //these are the different identity providers - illinois_oidc etc
 type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
-	getLoginURL(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
+	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 	//externalLogin logins in the external system and provides the authenticated user
 	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 	//refresh refreshes tokens
@@ -74,7 +75,13 @@ type externalAuthType interface {
 type anonymousAuthType interface {
 	//checkCredentials checks the credentials for the provided app and organization
 	//	Returns anonymous profile identifier
-	checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, map[string]interface{}, error)
+	checkCredentials(creds string) (string, map[string]interface{}, error)
+}
+
+//serviceAuthType is the interface for authentication for non-human clients
+type serviceAuthType interface {
+	checkCredentials(r *sigauth.Request, creds interface{}, params map[string]interface{}) ([]model.ServiceAccount, error)
+	addCredentials(creds *model.ServiceAccountCredential) (map[string]interface{}, error)
 }
 
 //mfaType is the interface for multi-factor authentication
@@ -125,6 +132,11 @@ type APIs interface {
 		authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
 		profile model.Profile, preferences map[string]interface{}, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
 
+	//Logout logouts an account from app/org
+	//	Input:
+	//		allSessions (bool): If to remove the current session only or all sessions for the app/org for the account
+	Logout(appID string, orgID string, currentAccountID string, sessionID string, allSessions bool, l *logs.Log) error
+
 	//AccountExists checks if a user is already registered
 	//The authentication method must be one of the supported for the application.
 	//	Input:
@@ -133,10 +145,33 @@ type APIs interface {
 	//		apiKey (string): API key to validate the specified app
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
-	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		accountExisted (bool): valid when error is nil
-	AccountExists(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string, l *logs.Log) (bool, error)
+	AccountExists(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
+
+	//CanSignIn checks if a user can sign in
+	//The authentication method must be one of the supported for the application.
+	//	Input:
+	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		userIdentifier (string): User identifier for the specified auth type
+	//		apiKey (string): API key to validate the specified app
+	//		appTypeIdentifier (string): identifier of the app type/client being used
+	//		orgID (string): ID of the organization being used
+	//	Returns:
+	//		canSignIn (bool): valid when error is nil
+	CanSignIn(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
+
+	//CanLink checks if a user can link a new auth type
+	//The authentication method must be one of the supported for the application.
+	//	Input:
+	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		userIdentifier (string): User identifier for the specified auth type
+	//		apiKey (string): API key to validate the specified app
+	//		appTypeIdentifier (string): identifier of the app type/client being used
+	//		orgID (string): ID of the organization being used
+	//	Returns:
+	//		canLink (bool): valid when error is nil
+	CanLink(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
@@ -255,6 +290,37 @@ type APIs interface {
 	//		mfaType (string): Type of MFA to remove
 	RemoveMFAType(accountID string, identifier string, mfaType string) error
 
+	//GetServiceAccountParams returns a list of app, org pairs a service account has access to
+	GetServiceAccountParams(accountID string, r *sigauth.Request, l *logs.Log) ([]model.AppOrgPair, error)
+
+	//GetServiceAccessToken returns an access token for a non-human client
+	GetServiceAccessToken(r *sigauth.Request, l *logs.Log) (string, error)
+
+	//GetServiceAccounts gets all service accounts matching a search
+	GetServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
+
+	//RegisterServiceAccount registers a service account
+	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string, orgID *string,
+		permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error)
+
+	//DeregisterServiceAccount deregisters a service account
+	DeregisterServiceAccount(accountID string) error
+
+	//GetServiceAccountInstance gets a service account instance
+	GetServiceAccountInstance(accountID string, appID *string, orgID *string) (*model.ServiceAccount, error)
+
+	//UpdateServiceAccountInstance updates a service account instance
+	UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string) (*model.ServiceAccount, error)
+
+	//DeregisterServiceAccountInstance deregisters a service account instance
+	DeregisterServiceAccountInstance(id string, appID *string, orgID *string) error
+
+	//AddServiceAccountCredential adds a credential to a service account
+	AddServiceAccountCredential(accountID string, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccountCredential, error)
+
+	//RemoveServiceAccountCredential removes a credential from a service account
+	RemoveServiceAccountCredential(accountID string, credID string) error
+
 	//AuthorizeService returns a scoped token for the specified service and the service registration record if authorized or
 	//	the service registration record if not. Passing "approvedScopes" will update the service authorization for this user and
 	//	return a scoped access token which reflects this change.
@@ -279,8 +345,27 @@ type APIs interface {
 	//		params (string): JSON encoded params defined by specified auth type
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
-	//		Message (*string): message
-	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, error)
+	//		message (*string): response message
+	//		account (*model.Account): account data after the operation
+	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error)
+
+	//UnlinkAccountAuthType unlinks credentials from an existing account.
+	//The authentication method must be one of the supported for the application.
+	//	Input:
+	//		accountID (string): ID of the account to unlink creds from
+	//		authenticationType (string): Name of the authentication method of account auth type to unlink
+	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
+	//		identifier (string): Identifier of account auth type to unlink
+	//		l (*logs.Log): Log object pointer for request
+	//	Returns:
+	//		account (*model.Account): account data after the operation
+	UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error)
+
+	//InitializeSystemAccount initializes the first system account
+	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermissionID string, email string, password string, l *logs.Log) (string, error)
+
+	//DeleteAccount deletes an account for the given id
+	DeleteAccount(id string) error
 
 	//GetAdminToken returns an admin token for the specified application
 	GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error)
@@ -314,6 +399,9 @@ type APIs interface {
 
 	//DeleteAPIKey deletes an API key
 	DeleteAPIKey(ID string) error
+
+	//ValidateAPIKey validates the given API key for the given app ID
+	ValidateAPIKey(appID string, apiKey string) error
 }
 
 //Storage interface to communicate with the storage
@@ -323,7 +411,6 @@ type Storage interface {
 	PerformTransaction(func(context storage.TransactionContext) error) error
 
 	//AuthTypes
-	LoadAuthTypes() ([]model.AuthType, error)
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
 	//LoginsSessions
@@ -334,6 +421,9 @@ type Storage interface {
 	UpdateLoginSession(context storage.TransactionContext, loginSession model.LoginSession) error
 	DeleteLoginSession(context storage.TransactionContext, id string) error
 	DeleteLoginSessionsByIDs(context storage.TransactionContext, ids []string) error
+	DeleteLoginSessionsByAccountAuthTypeID(context storage.TransactionContext, id string) error
+	DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error
+
 	//LoginsSessions - predefined queries for manage deletion logic
 	DeleteMFAExpiredSessions() error
 	FindSessionsLazy(appID string, orgID string) ([]model.LoginSession, error)
@@ -342,22 +432,48 @@ type Storage interface {
 	//Accounts
 	FindAccount(appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
-	InsertAccount(account model.Account) (*model.Account, error)
+	InsertAccount(context storage.TransactionContext, account model.Account) (*model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
+	DeleteAccount(context storage.TransactionContext, id string) error
+
+	//Profiles
+	UpdateProfile(context storage.TransactionContext, profile model.Profile) error
+	FindProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)
+
+	//ServiceAccounts
+	FindServiceAccount(context storage.TransactionContext, accountID string, appID *string, orgID *string) (*model.ServiceAccount, error)
+	FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
+	InsertServiceAccount(account *model.ServiceAccount) error
+	UpdateServiceAccount(account *model.ServiceAccount) (*model.ServiceAccount, error)
+	DeleteServiceAccount(accountID string, appID *string, orgID *string) error
+	DeleteServiceAccounts(accountID string) error
+
+	//ServiceAccountCredentials
+	InsertServiceAccountCredential(accountID string, creds *model.ServiceAccountCredential) error
+	DeleteServiceAccountCredential(accountID string, credID string) error
 
 	//AccountAuthTypes
 	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccountAuthType(item model.AccountAuthType) error
 	UpdateAccountAuthType(item model.AccountAuthType) error
+	DeleteAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
+
+	//ExternalIDs
+	UpdateAccountExternalIDs(accountID string, externalIDs map[string]string) error
+	UpdateLoginSessionExternalIDs(accountID string, externalIDs map[string]string) error
+
+	//Applications
+	FindApplication(ID string) (*model.Application, error)
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)
 
 	//Credentials
-	InsertCredential(creds *model.Credential) error
+	InsertCredential(context storage.TransactionContext, creds *model.Credential) error
 	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
 	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
 	UpdateCredentialValue(ID string, value map[string]interface{}) error
+	DeleteCredential(context storage.TransactionContext, ID string) error
 
 	//MFA
 	FindMFAType(context storage.TransactionContext, accountID string, identifier string, mfaType string) (*model.MFAType, error)
@@ -384,30 +500,35 @@ type Storage interface {
 
 	//APIKeys
 	LoadAPIKeys() ([]model.APIKey, error)
-	FindApplicationAPIKeys(appID string) ([]model.APIKey, error)
-	FindAPIKey(ID string) (*model.APIKey, error)
-	InsertAPIKey(apiKey model.APIKey) (*model.APIKey, error)
+	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
 	UpdateAPIKey(apiKey model.APIKey) error
 	DeleteAPIKey(ID string) error
 
 	//ApplicationTypes
-	FindApplicationTypeByIdentifier(identifier string) (*model.ApplicationType, error)
+	FindApplicationType(id string) (*model.ApplicationType, error)
 
 	//ApplicationsOrganizations
-	LoadApplicationsOrganizations() ([]model.ApplicationOrganization, error)
-	FindApplicationOrganizations(appID string, orgID string) (*model.ApplicationOrganization, error)
+	FindApplicationsOrganizations() ([]model.ApplicationOrganization, error)
+	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
+
+	//Permissions
+	FindPermissionsByName(names []string) ([]model.Permission, error)
 
 	//Device
 	FindDevice(context storage.TransactionContext, deviceID string, accountID string) (*model.Device, error)
 	InsertDevice(context storage.TransactionContext, device model.Device) (*model.Device, error)
+	DeleteDevice(context storage.TransactionContext, id string) error
+
+	//Permissions
+	FindPermissions(context storage.TransactionContext, ids []string) ([]model.Permission, error)
 
 	//ApplicationRoles
-	FindAppOrgRoles(ids []string, appOrgID string) ([]model.AppOrgRole, error)
+	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	//AccountRoles
 	UpdateAccountRoles(accountID string, roles []model.AccountRole) error
 
 	//ApplicationGroups
-	FindAppOrgGroups(ids []string, appOrgID string) ([]model.AppOrgGroup, error)
+	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	//AccountGroups
 	UpdateAccountGroups(accountID string, groups []model.AccountGroup) error
 }

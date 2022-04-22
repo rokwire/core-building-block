@@ -17,7 +17,7 @@ post:
             value: |
               {
                 "auth_type": "email",
-                "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                "app_type_identifier": "edu.illinois.rokwire",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                 "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                 "creds": {
@@ -35,7 +35,7 @@ post:
             value: |
               {
                 "auth_type": "email",
-                "app_type_identifier": "edu.illinois.rokwire.safercommunity",
+                "app_type_identifier": "edu.illinois.rokwire",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                 "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                 "creds": {
@@ -184,12 +184,14 @@ post:
                   - already-exists
                   - not-found
                   - internal-server-error
+                  - shared-credential-unverified
                 description: |
                   - `invalid`: Invalid credentials
                   - `unverified`: Unverified credentials
                   - `verification-expired`: Credentials verification expired. The verification is restarted
-                  - `already-found`: Account already exists when `sign-up=true`
+                  - `already-exists`: Account already exists when `sign-up=true`
                   - `not-found`: Account could not be found when `sign-up=false`
                   - `internal-server-error`: An undefined error occurred
+                  - `shared-credential-unverified`: The shared credential has not been verified yet
               message:
                 type: string

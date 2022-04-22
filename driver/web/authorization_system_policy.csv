@@ -1,4 +1,5 @@
 #TODO - to be done
+p, all_system_core, /core/system/*, (GET)|(POST)|(DELETE)|(PUT)
 
 p, all_global-config, /core/system/global-config, (GET)|(POST)|(DELETE)|(PUT)
 p, get_global-config, /core/system/global-config, (GET)
@@ -12,6 +13,10 @@ p, all_applications, /core/system/applications, (GET)|(POST)|(DELETE)|(PUT)
 p, get_applications, /core/system/applications, (GET)
 p, update_applications, /core/system/applications, (POST)
 
+p, all_appconfigs, /core/system/application/configs, (GET)|(POST)|(PUT)|(DELETE)
+p, get_appconfig, /core/system/application/configs, (GET)
+p, update_appconfig, /core/system/application/configs, (POST)|(PUT)|(DELETE)
+
 p, all_api-keys, /core/system/api-keys, (GET)|(POST)|(DELETE)|(PUT)
 p, all_api-keys, /core/system/application-api-keys, (GET)
 p, get_api-keys, /core/system/api-keys, (GET)
@@ -20,6 +25,8 @@ p, update_api-keys, /core/system/api-keys, (POST)|(DELETE)|(PUT)
 
 p, all_service-regs, /core/system/service-regs, (GET)|(POST)|(DELETE)|(PUT)
 
+p, all_service-accounts, /core/system/service-accounts, (GET)|(POST)|(DELETE)|(PUT)
+
 p, all_permissions, /core/system/permissions, (GET)|(POST)|(DELETE)|(PUT)
 
 p, all_application-roles, /core/system/application-roles, (GET)|(POST)|(DELETE)|(PUT)
@@ -27,3 +34,8 @@ p, all_application-roles, /core/system/application-roles, (GET)|(POST)|(DELETE)|
 p, all_account-permissions, /core/system/account/permissions, (GET)|(POST)|(DELETE)|(PUT)
 
 p, all_account-roles, /core/system/account/roles, (GET)|(POST)|(DELETE)|(PUT)
+
+p, all_auth_types, /core/system/auth-types, (GET)|(POST)|(PUT)
+p, get_auth_types, /core/system/auth-types, (GET)
+p, create_auth_types, /core/system/auth-types, (GET)|(POST)
+p, update_auth_types, /core/system/auth-types,  (GET)|(POST)

@@ -19,7 +19,7 @@ type signatureAuthImpl struct {
 	authType string
 }
 
-func (a *signatureAuthImpl) signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *signatureAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, nil
 }
 
@@ -35,11 +35,11 @@ func (a *signatureAuthImpl) verifyCredential(credential *model.Credential, verif
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *signatureAuthImpl) sendVerifyCredential(credential *model.Credential, l *logs.Log) error {
+func (a *signatureAuthImpl) sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error {
 	return nil
 }
 
-func (a *signatureAuthImpl) restartCredentialVerification(credential *model.Credential, l *logs.Log) error {
+func (a *signatureAuthImpl) restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error {
 	return nil
 }
 
@@ -55,7 +55,7 @@ func (a *signatureAuthImpl) resetCredential(credential *model.Credential, resetC
 	return nil, nil
 }
 
-func (a *signatureAuthImpl) forgotCredential(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
+func (a *signatureAuthImpl) forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, nil
 }
 

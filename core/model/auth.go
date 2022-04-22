@@ -34,6 +34,10 @@ const (
 	TypeAuthRefresh logutils.MessageDataType = "auth refresh"
 	//TypeRefreshToken refresh token type
 	TypeRefreshToken logutils.MessageDataType = "refresh token"
+	//TypeServiceAccount service account type
+	TypeServiceAccount logutils.MessageDataType = "service account"
+	//TypeServiceAccountCredential service account type
+	TypeServiceAccountCredential logutils.MessageDataType = "service account credential"
 	//TypeServiceReg service reg type
 	TypeServiceReg logutils.MessageDataType = "service reg"
 	//TypeServiceScope service scope type
@@ -66,7 +70,8 @@ type LoginSession struct {
 
 	Anonymous bool
 
-	Identifier      string           //it is the account id(anonymous id for anonymous logins)
+	Identifier      string //it is the account id(anonymous id for anonymous logins)
+	ExternalIDs     map[string]string
 	AccountAuthType *AccountAuthType //it is nil for anonymous logins
 
 	Device *Device
@@ -295,6 +300,60 @@ type ServiceScope struct {
 	Scope       *authorization.Scope `json:"scope" bson:"scope"`
 	Required    bool                 `json:"required" bson:"required"`
 	Explanation string               `json:"explanation,omitempty" bson:"explanation,omitempty"`
+}
+
+//ServiceAccount represents a service account entity
+type ServiceAccount struct {
+	AccountID string
+	Name      string
+
+	Application  *Application
+	Organization *Organization
+
+	Permissions []Permission
+	FirstParty  bool
+
+	Credentials []ServiceAccountCredential
+
+	DateCreated time.Time
+	DateUpdated *time.Time
+}
+
+//GetPermissionNames returns all names of permissions granted to this account
+func (s ServiceAccount) GetPermissionNames() []string {
+	permissions := make([]string, len(s.Permissions))
+	for i, permission := range s.Permissions {
+		permissions[i] = permission.Name
+	}
+	return permissions
+}
+
+//AppOrgPair represents an appID, orgID pair entity
+type AppOrgPair struct {
+	AppID *string
+	OrgID *string
+}
+
+//ServiceAccountCredential represents a service account credential entity
+type ServiceAccountCredential struct {
+	ID   string `bson:"id"`
+	Name string `bson:"name"`
+	Type string `bson:"type"`
+
+	Params  map[string]interface{} `bson:"params,omitempty"`
+	Secrets map[string]interface{} `bson:"secrets,omitempty"`
+
+	DateCreated time.Time `bson:"date_created"`
+}
+
+// ServiceAccountTokenRequest represents a service account token request entity
+type ServiceAccountTokenRequest struct {
+	AccountID string  `json:"account_id"`
+	AppID     *string `json:"app_id"`
+	OrgID     *string `json:"org_id"`
+	AuthType  string  `json:"auth_type"`
+
+	Creds *interface{} `json:"creds,omitempty"`
 }
 
 //ServiceAuthorization represents service authorization entity
