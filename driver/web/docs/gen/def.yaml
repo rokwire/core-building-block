@@ -4516,8 +4516,6 @@ components:
           type: string
         multi_tenant:
           type: boolean
-        admin:
-          type: boolean
         shared_identities:
           type: boolean
     ApplicationType:
@@ -6120,15 +6118,12 @@ components:
       required:
         - name
         - multi_tenant
-        - admin
         - shared_identities
       type: object
       properties:
         name:
           type: string
         multi_tenant:
-          type: boolean
-        admin:
           type: boolean
         shared_identities:
           type: boolean

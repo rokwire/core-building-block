@@ -69,12 +69,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
-	if appOrg.Application.Admin != admin {
-		if admin {
-			return nil, nil, nil, errors.New("use services login endpoint")
-		}
-		return nil, nil, nil, errors.New("use admin login endpoint")
-	}
+	// want to prevent sign up for apps with exclusively admin functionality
 
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
 	err = a.validateAPIKey(apiKey, appType.Application.ID)
@@ -304,6 +299,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 	authType := loginSession.AuthType.Code
 
 	anonymous := loginSession.Anonymous
+	admin := false
 	uid := ""
 	name := ""
 	email := ""
@@ -352,13 +348,14 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 			l.Infof("for some reasons account auth type is null for not anonymous login - %s", loginSession.ID)
 			return nil, errors.ErrorAction("for some reasons account auth type is null for not anonymous login", "", nil)
 		}
+		admin = accountAuthType.Account.Admin
 		uid = accountAuthType.Identifier
 		name = accountAuthType.Account.Profile.GetFullName()
 		email = accountAuthType.Account.Profile.Email
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 	}
-	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, loginSession.ExternalIDs, nil, anonymous, false, loginSession.AppOrg.Application.Admin, loginSession.AppOrg.Organization.System, false, true, loginSession.ID)
+	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, loginSession.ExternalIDs, nil, anonymous, false, admin, loginSession.AppOrg.Organization.System, false, true, loginSession.ID)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
@@ -1400,7 +1397,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	credential := &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
 		AuthType: authType, DateCreated: now, DateUpdated: &now}
 
-	accountAuthType, err := a.registerUser(context, authType, email, nil, appOrg, credential, false, nil, profile, nil, []string{allSystemPermissionID}, nil, nil, l)
+	accountAuthType, err := a.registerUser(context, authType, email, nil, appOrg, true, credential, false, nil, profile, nil, []string{allSystemPermissionID}, nil, nil, l)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}

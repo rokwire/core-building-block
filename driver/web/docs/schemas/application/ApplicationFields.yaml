@@ -10,7 +10,5 @@ properties:
     type: string
   multi_tenant:
     type: boolean
-  admin:
-    type: boolean
   shared_identities:
     type: boolean

@@ -38,6 +38,7 @@ type Account struct {
 	ID string //this is ID for the account
 
 	AppOrg ApplicationOrganization
+	Admin  bool
 
 	Permissions []Permission
 	Roles       []AccountRole
