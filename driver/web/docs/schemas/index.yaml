@@ -108,6 +108,8 @@ _shared_req_Refresh:
   $ref: "./apis/shared/requests/refresh/Request.yaml"
 _shared_req_Mfa:
   $ref: "./apis/shared/requests/mfa/Request.yaml"
+_shared_req_CreateAccount:
+  $ref: "./apis/shared/requests/create-account/Request.yaml"
 _shared_req_AccountCheck:
   $ref: "./apis/shared/requests/AccountCheck.yaml"
 _shared_req_CredsEmail:
@@ -140,12 +142,14 @@ _shared_res_LoginUrl:
   $ref: "./apis/shared/responses/login-url/Response.yaml"
 _shared_res_Refresh:
   $ref: "./apis/shared/responses/refresh/Response.yaml"
+_shared_res_Mfa:
+  $ref: "./apis/shared/responses/mfa/Response.yaml"
+_shared_res_CreateAccount:
+  $ref: "./apis/shared/responses/create-account/Response.yaml"
 _shared_res_Account:
   $ref: "./apis/shared/responses/Account.yaml"
 _shared_res_AccountCheck:
   $ref: "./apis/shared/responses/AccountCheck.yaml"
-_shared_res_Mfa:
-  $ref: "./apis/shared/responses/mfa/Response.yaml"
 _shared_res_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
 _shared_res_LoginSession:
@@ -202,12 +206,6 @@ _services_req_application_org-configs:
 ## end SERVICES section
 
 ## ADMIN section
-
-### admin create-account API
-_admin_req_create-account:
-  $ref: "./apis/admin/create-account/request/Request.yaml"
-_admin_res_create-account:
-  $ref: "./apis/admin/create-account/response/Response.yaml"
 
 ### admin app-token API
 _admin_res_app-token:

@@ -383,16 +383,20 @@ func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *token
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h AdminApisHandler) createAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.AdminReqCreateAccount
+	var requestData Def.SharedReqCreateAccount
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create account request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	if claims.OrgID != requestData.OrgId {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.MessageDataType("account org id"), nil, err, http.StatusBadRequest, true)
 	}
 
 	var permissions []string
@@ -408,7 +412,8 @@ func (h AdminApisHandler) createAccount(l *logs.Log, r *http.Request, claims *to
 		groups = *requestData.Groups
 	}
 	profile := profileFromDefNullable(requestData.Profile)
-	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.OrgId, requestData.Identifier, permissions, roles, groups, profile)
+	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), requestData.AppTypeIdentifier,
+		requestData.OrgId, requestData.Identifier, permissions, roles, groups, profile, nil)
 	if err != nil || account == nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -418,7 +423,7 @@ func (h AdminApisHandler) createAccount(l *logs.Log, r *http.Request, claims *to
 	if len(params) > 0 {
 		paramsData = &params
 	}
-	respData := &Def.AdminResCreateAccount{Account: *accountData, Params: paramsData}
+	respData := &Def.SharedResCreateAccount{Account: *accountData, Params: paramsData}
 
 	data, err = json.Marshal(respData)
 	if err != nil {

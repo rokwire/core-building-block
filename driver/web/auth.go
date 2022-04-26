@@ -159,6 +159,9 @@ func (auth *ServicesAuth) check(req *http.Request) (int, *tokenauth.Claims, erro
 	if claims.Admin {
 		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
 	}
+	if claims.System {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+	}
 
 	err = auth.tokenAuth.AuthorizeRequestScope(claims, req)
 	if err != nil {
@@ -204,6 +207,9 @@ func (auth *AdminAuth) check(req *http.Request) (int, *tokenauth.Claims, error) 
 
 	if !claims.Admin {
 		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
+	}
+	if claims.System {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
 	}
 
 	return http.StatusOK, claims, nil

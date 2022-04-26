@@ -1036,6 +1036,52 @@ func (h SystemApisHandler) deleteApplicationConfig(l *logs.Log, r *http.Request,
 	return l.HttpResponseSuccess()
 }
 
+func (h SystemApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.SharedReqCreateAccount
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create account request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	var permissions []string
+	if requestData.Permissions != nil {
+		permissions = *requestData.Permissions
+	}
+	var roles []string
+	if requestData.Roles != nil {
+		roles = *requestData.Roles
+	}
+	var groups []string
+	if requestData.Groups != nil {
+		groups = *requestData.Groups
+	}
+	profile := profileFromDefNullable(requestData.Profile)
+	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), requestData.AppTypeIdentifier,
+		requestData.OrgId, requestData.Identifier, permissions, roles, groups, profile, nil)
+	if err != nil || account == nil {
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	accountData := accountToDef(*account)
+	var paramsData *map[string]interface{}
+	if len(params) > 0 {
+		paramsData = &params
+	}
+	respData := &Def.SharedResCreateAccount{Account: *accountData, Params: paramsData}
+
+	data, err = json.Marshal(respData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
 //grantAccountPermissions grants an account the given permissions
 func (h SystemApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)

@@ -535,7 +535,8 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 }
 
 //CreateAdminAccount creates an account for a new admin user
-func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string, permissions []string, roles []string, groups []string, profile model.Profile) (*model.Account, map[string]interface{}, error) {
+func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string,
+	permissions []string, roles []string, groups []string, profile model.Profile, creatorAppID *string) (*model.Account, map[string]interface{}, error) {
 	// validate if the provided auth type is supported by the provided application and organization
 	authType, _, _, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {

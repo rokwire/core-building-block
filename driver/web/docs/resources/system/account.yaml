@@ -24,20 +24,20 @@ get:
 post:
   tags:
   - System
-  summary: Create system account
+  summary: Create admin account
   description: |
-    Create a new system account
+    Create a new admin account
 
-    **Auth:** Requires system auth token
+    **Auth:** Requires auth token with `create_account` permission
   security:
     - bearerAuth: []
   requestBody:
     description: |
-      User credential details and parameters
+      User account details and parameters
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/admin/create-account/request/Request.yaml"
+          $ref: "../../schemas/apis/shared/requests/create-account/Request.yaml"
     required: true
   responses:
     200:
@@ -45,7 +45,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../schemas/apis/admin/create-account/response/Response.yaml" 
+            $ref: "../../schemas/apis/shared/responses/create-account/Response.yaml" 
     400:
       description: Bad request
     401:

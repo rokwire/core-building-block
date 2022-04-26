@@ -193,6 +193,8 @@ paths:
     $ref: "./resources/system/application-configs.yaml"
   /system/application/configs/{id}:
     $ref: "./resources/system/application-configsId.yaml"
+  /system/account:
+    $ref: "./resources/system/account.yaml"
   /system/account/permissions:
     $ref: "./resources/system/account/permissions.yaml"
   /system/account/roles:
