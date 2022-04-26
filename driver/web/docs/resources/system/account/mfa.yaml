@@ -1,5 +1,4 @@
 get:
-  deprecated: true
   tags:
   - System
   summary: Get account MFA types
@@ -25,7 +24,6 @@ get:
     500:
       description: Internal error
 post:
-  deprecated: true
   tags:
   - System
   summary: Enroll in MFA type
@@ -58,7 +56,6 @@ post:
     500:
       description: Internal error
 delete:
-  deprecated: true
   tags:
   - System
   summary: Remove MFA type

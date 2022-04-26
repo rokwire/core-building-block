@@ -1,5 +1,4 @@
 get:
-  deprecated: true
   tags:
   - System
   summary: Get API key
@@ -32,7 +31,6 @@ get:
     500:
       description: Internal error
 post:
-  deprecated: true
   tags:
   - System
   summary: Create API key
@@ -69,7 +67,6 @@ post:
     500:
       description: Internal error
 put:
-  deprecated: true
   tags:
   - System
   summary: Update API key
@@ -103,7 +100,6 @@ put:
     500:
       description: Internal error
 delete:
-  deprecated: true
   tags:
   - System
   summary: Delete API key

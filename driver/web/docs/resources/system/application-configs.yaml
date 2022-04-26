@@ -1,5 +1,4 @@
 get:
-  deprecated: true
   tags:
   - System
   summary: Reads app configs
@@ -47,7 +46,6 @@ get:
     500:
       description: Internal error
 post:
-  deprecated: true
   tags:
   - System
   summary: Creates app configs

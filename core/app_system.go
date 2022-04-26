@@ -74,7 +74,7 @@ func (app *application) sysCreateOrganization(name string, requestType string, o
 	organizationID, _ := uuid.NewUUID()
 	organization := model.Organization{ID: organizationID.String(), Name: name, Type: requestType, Config: orgConfig, DateCreated: now}
 
-	insertedOrg, err := app.storage.InsertOrganization(organization)
+	insertedOrg, err := app.storage.InsertOrganization(nil, organization)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
@@ -86,12 +86,15 @@ func (app *application) sysGetOrganization(ID string) (*model.Organization, erro
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err)
 	}
+	if organization == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, nil)
+	}
 
 	return organization, nil
 }
 
 func (app *application) sysGetOrganizations() ([]model.Organization, error) {
-	getOrganization, err := app.storage.LoadOrganizations()
+	getOrganization, err := app.storage.FindOrganizations()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err)
 	}
@@ -114,22 +117,27 @@ func (app *application) sysGetApplication(ID string) (*model.Application, error)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplication, nil, err)
 	}
+	if appAdm == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplication, nil)
+	}
 
 	return appAdm, nil
 }
 
-func (app *application) sysCreateApplication(name string, multiTenant bool, sharedIdentities bool, maxLoginSessionDuration *int, identifier string, nameInType string, versions []string) (*model.Application, error) {
-	/*now := time.Now()
+func (app *application) sysCreateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error) {
+	now := time.Now()
+
+	// application
 
 	applicationID, _ := uuid.NewUUID()
-	application := model.Application{ID: applicationID.String(), Name: name, MultiTenant: multiTenant, SharedIdentities: sharedIdentities,
-		DateCreated: now}
+	application := model.Application{ID: applicationID.String(), Name: name, MultiTenant: multiTenant, Admin: admin, SharedIdentities: sharedIdentities,
+		Types: appTypes, DateCreated: now}
 
-	insertedApplication, err := app.storage.InsertApplication(application)
+	insertedApplication, err := app.storage.InsertApplication(nil, application)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
-	}*/
-	return /*insertedApplication,*/ nil, nil
+	}
+	return insertedApplication, nil
 }
 
 func (app *application) sysGetApplications() ([]model.Application, error) {
@@ -146,7 +154,7 @@ func (app *application) sysCreatePermission(name string, serviceID string, assig
 	now := time.Now()
 	permission := model.Permission{ID: id.String(), Name: name, DateCreated: now, ServiceID: serviceID, Assigners: *assigners}
 
-	err := app.storage.InsertPermission(permission)
+	err := app.storage.InsertPermission(nil, permission)
 
 	if err != nil {
 		return nil, err
@@ -354,7 +362,7 @@ func (app *application) sysGrantAccountPermissions(accountID string, permissionN
 }
 
 func (app *application) sysGrantAccountRoles(accountID string, appOrgID string, roleIDs []string) error {
-	roles, err := app.storage.FindAppOrgRolesByIDs(roleIDs, appOrgID)
+	roles, err := app.storage.FindAppOrgRolesByIDs(nil, roleIDs, appOrgID)
 	if err != nil {
 		return err
 	}
@@ -378,7 +386,7 @@ func (app *application) sysCreateAuthTypes(code string, description string, isEx
 		IsExternal: isExternal, IsAnonymous: isAnonymous, UseCredentials: useCredentials,
 		IgnoreMFA: ignoreMFA, Params: params}
 
-	insertedAuthType, err := app.storage.InsertAuthType(authType)
+	insertedAuthType, err := app.storage.InsertAuthType(nil, authType)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 	}
@@ -386,7 +394,7 @@ func (app *application) sysCreateAuthTypes(code string, description string, isEx
 }
 
 func (app *application) sysGetAuthTypes() ([]model.AuthType, error) {
-	getAuthTypes, err := app.storage.LoadAuthTypes()
+	getAuthTypes, err := app.storage.FindAuthTypes()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAuthType, nil, err)
 	}
