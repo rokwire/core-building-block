@@ -111,8 +111,45 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appOrg model.Application
 	return "verification code sent successfully", emailCredValueMap, nil
 }
 
-func (a *emailAuthImpl) signUpAdmin(identifier string) (map[string]interface{}, error) {
-	return nil, errors.New(logutils.Unimplemented)
+func (a *emailAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, newCredentialID string) (string, map[string]interface{}, error) {
+	password := ""
+	//TODO: generate random password to use here
+
+	//password hash
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate hash from password"))
+	}
+
+	//verification code
+	code, err := utils.GenerateRandomString(64)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate random string for verify code"))
+	}
+
+	verifyEmail := a.getVerifyEmail(authType)
+	verifyExpiryTime := a.getVerifyExpiry(authType)
+
+	var emailCredValue emailCreds
+	if verifyEmail {
+		emailCredValue = emailCreds{Email: identifier, Password: string(hashedPassword), VerificationCode: code, VerificationExpiry: time.Now().Add(time.Hour * time.Duration(verifyExpiryTime))}
+	} else {
+		emailCredValue = emailCreds{Email: identifier, Password: string(hashedPassword)}
+	}
+
+	emailCredValueMap, err := emailCredsToMap(&emailCredValue)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction("failed email params to map", "", nil, err)
+	}
+
+	if verifyEmail {
+		//send verification code
+		if err = a.sendVerificationCode(identifier, appOrg.Application.Name, code, newCredentialID); err != nil {
+			return "", nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
+		}
+	}
+
+	return password, emailCredValueMap, nil
 }
 
 func (a *emailAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {

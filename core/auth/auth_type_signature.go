@@ -23,8 +23,8 @@ func (a *signatureAuthImpl) signUp(authType model.AuthType, appOrg model.Applica
 	return "", nil, nil
 }
 
-func (a *signatureAuthImpl) signUpAdmin(identifier string) (map[string]interface{}, error) {
-	return nil, errors.New(logutils.Unimplemented)
+func (a *signatureAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, newCredentialID string) (string, map[string]interface{}, error) {
+	return "", nil, nil
 }
 
 func (a *signatureAuthImpl) getUserIdentifier(creds string) (string, error) {

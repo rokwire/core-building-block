@@ -536,36 +536,66 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 
 //CreateAdminAccount creates an account for a new admin user
 func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string,
-	permissions []string, roles []string, groups []string, profile model.Profile, creatorAppID *string) (*model.Account, map[string]interface{}, error) {
+	permissions []string, roles []string, groups []string, profile model.Profile, creatorAppID *string, l *logs.Log) (*model.Account, string, error) {
+	//TODO: add admin authentication policies that specify which auth types may be used for each app org
+	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
+		return nil, "", errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
+	}
+
 	// validate if the provided auth type is supported by the provided application and organization
-	authType, _, _, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+	authType, _, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+		return nil, "", errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	if creatorAppID != nil && appOrg.Application.ID != *creatorAppID {
+		return nil, "", errors.ErrorData(logutils.StatusInvalid, "account application", nil)
+	}
+
+	//1. check if the user exists
+	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, identifier)
+	if err != nil {
+		return nil, "", errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	canSignIn := a.canSignIn(account, authType.ID, identifier)
+
+	if canSignIn {
+		//TODO: grant necessary permissions, roles, groups
+		return nil, "", errors.New(logutils.Unimplemented)
 	}
 
 	if authType.IsExternal {
-		authImpl, err := a.getExternalAuthTypeImpl(*authType)
-		if err != nil {
-			return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
-		}
-
-		err = authImpl.signUpAdmin(identifier)
-		if err != nil {
-			return nil, nil, errors.WrapErrorAction("signing up", "external admin user", nil, err)
-		}
-	} else {
-		authImpl, err := a.getAuthTypeImpl(*authType)
-		if err != nil {
-			return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
-		}
-
-		_, err = authImpl.signUpAdmin(identifier)
-		if err != nil {
-			return nil, nil, errors.WrapErrorAction("signing up", "external admin user", nil, err)
-		}
+		//TODO: insert account
+		return nil, "", errors.New(logutils.Unimplemented)
 	}
 
-	return nil, nil, errors.New(logutils.Unimplemented)
+	var credential *model.Credential
+	credentialID, _ := uuid.NewUUID()
+	credID := credentialID.String()
+
+	authImpl, err := a.getAuthTypeImpl(*authType)
+	if err != nil {
+		return nil, "", errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+	}
+
+	password, credentialValue, err := authImpl.signUpAdmin(*authType, *appOrg, identifier, credID)
+	if err != nil {
+		return nil, "", errors.WrapErrorAction("signing up", "admin user", nil, err)
+	}
+
+	//credential
+	if credentialValue != nil {
+		now := time.Now()
+		credential = &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
+			AuthType: *authType, DateCreated: now, DateUpdated: &now}
+	}
+
+	accountAuthType, err := a.registerUser(nil, *authType, identifier, nil, *appOrg, credential, false, nil, profile, nil, permissions, roles, groups, l)
+	if err != nil {
+		return nil, "", errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+	}
+
+	return &accountAuthType.Account, password, errors.New(logutils.Unimplemented)
 }
 
 //VerifyCredential verifies credential (checks the verification code in the credentials collection)
@@ -1263,7 +1293,7 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log)
 	}
 
 	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, claims.OrgID, appID, claims.AuthType,
-		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, appOrg.Organization.System, claims.Service, claims.FirstParty, claims.SessionID)
+		claims.ExternalIDs, &claims.ExpiresAt, false, false, false, false, claims.Service, claims.FirstParty, claims.SessionID)
 	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }
 
@@ -1389,7 +1419,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	}
 
 	var credentialValue map[string]interface{}
-	_, credentialValue, err = authImpl.signUp(authType, appOrg, string(emailCreds), string(emailParams), credentialID.String(), l)
+	_, credentialValue, err = authImpl.signUp(authType, appOrg, string(emailCreds), string(emailParams), credID, l)
 	if err != nil {
 		return "", errors.Wrap("error signing up", err)
 	}

@@ -21,8 +21,9 @@ type authType interface {
 
 	//signUpAdmin signs up a new admin user
 	// Returns:
-	//	params (map[string]interface{}): information necessary for new user to sign in
-	signUpAdmin(identifier string) (map[string]interface{}, error)
+	//	password (string): newly generated password
+	//	credentialValue (map): Credential value
+	signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, newCredentialID string) (string, map[string]interface{}, error)
 
 	//verifies credential (checks the verification code generated on email signup for email auth type)
 	// Returns:
@@ -67,8 +68,6 @@ type externalAuthType interface {
 	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 	//refresh refreshes tokens
 	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
-	//signUpAdmin signs up a new admin user
-	signUpAdmin(identifier string) error
 }
 
 //anonymousAuthType is the interface for authentication for auth types which are anonymous
@@ -219,7 +218,7 @@ type APIs interface {
 
 	//CreateAdminAccount creates an account for a new admin user
 	CreateAdminAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string, permissions []string,
-		roles []string, groups []string, profile model.Profile, creatorAppID *string) (*model.Account, map[string]interface{}, error)
+		roles []string, groups []string, profile model.Profile, creatorAppID *string, l *logs.Log) (*model.Account, string, error)
 
 	//VerifyCredential verifies credential (checks the verification code in the credentials collection)
 	VerifyCredential(id string, verification string, l *logs.Log) error

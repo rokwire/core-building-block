@@ -667,7 +667,7 @@ func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType m
 
 		///apply sign up
 		var credentialValue map[string]interface{}
-		message, credentialValue, err = authImpl.signUp(authType, appOrg, creds, params, credentialID.String(), l)
+		message, credentialValue, err = authImpl.signUp(authType, appOrg, creds, params, credID, l)
 		if err != nil {
 			return "", nil, errors.Wrap("error signing up", err)
 		}
@@ -1399,7 +1399,7 @@ func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthTyp
 	credID := credentialID.String()
 
 	//apply sign up
-	message, credentialValue, err := authImpl.signUp(authType, appOrg, creds, params, credentialID.String(), l)
+	message, credentialValue, err := authImpl.signUp(authType, appOrg, creds, params, credID, l)
 	if err != nil {
 		return "", nil, errors.Wrap("error signing up", err)
 	}
