@@ -106,7 +106,7 @@ func (c *APIs) storeSystemData() error {
 			}
 			documentIDs["application"] = uuid.NewString()
 			newAndroidAppType := model.ApplicationType{ID: uuid.NewString(), Identifier: c.systemAppTypeIdentifier, Name: c.systemAppTypeName, Versions: nil}
-			newSystemAdminApp := model.Application{ID: documentIDs["application"], Name: "System Admin application", MultiTenant: false,
+			newSystemAdminApp := model.Application{ID: documentIDs["application"], Name: "System Admin application", MultiTenant: false, Admin: true,
 				SharedIdentities: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplication(context, newSystemAdminApp)
 			if err != nil {
@@ -428,8 +428,8 @@ func (s *systemImpl) SysGetOrganization(ID string) (*model.Organization, error) 
 	return s.app.sysGetOrganization(ID)
 }
 
-func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error) {
-	return s.app.sysCreateApplication(name, multiTenant, sharedIdentities, appTypes)
+func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error) {
+	return s.app.sysCreateApplication(name, multiTenant, admin, sharedIdentities, appTypes)
 }
 
 func (s *systemImpl) SysGetApplication(ID string) (*model.Application, error) {

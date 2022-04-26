@@ -11,7 +11,8 @@ func applicationFromStorage(item *application) model.Application {
 	}
 
 	types := applicationTypesFromStorage(item.Types)
-	return model.Application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, SharedIdentities: item.SharedIdentities,
+	return model.Application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant,
+		SharedIdentities: item.SharedIdentities, Admin: item.Admin,
 		Types: types, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
@@ -267,6 +268,7 @@ func applicationTypesToStorage(items []model.ApplicationType) []applicationType 
 func applicationToStorage(item *model.Application) *application {
 	applicationTypes := applicationTypesToStorage(item.Types)
 
-	return &application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, SharedIdentities: item.SharedIdentities,
+	return &application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant,
+		SharedIdentities: item.SharedIdentities, Admin: item.Admin,
 		Types: applicationTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

@@ -124,13 +124,13 @@ func (app *application) sysGetApplication(ID string) (*model.Application, error)
 	return appAdm, nil
 }
 
-func (app *application) sysCreateApplication(name string, multiTenant bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error) {
+func (app *application) sysCreateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error) {
 	now := time.Now()
 
 	// application
 
 	applicationID, _ := uuid.NewUUID()
-	application := model.Application{ID: applicationID.String(), Name: name, MultiTenant: multiTenant, SharedIdentities: sharedIdentities,
+	application := model.Application{ID: applicationID.String(), Name: name, MultiTenant: multiTenant, Admin: admin, SharedIdentities: sharedIdentities,
 		Types: appTypes, DateCreated: now}
 
 	insertedApplication, err := app.storage.InsertApplication(nil, application)
