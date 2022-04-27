@@ -23,7 +23,7 @@ type authType interface {
 	// Returns:
 	//	password (string): newly generated password
 	//	credentialValue (map): Credential value
-	signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, newCredentialID string) (string, map[string]interface{}, error)
+	signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
 
 	//verifies credential (checks the verification code generated on email signup for email auth type)
 	// Returns:
@@ -218,7 +218,7 @@ type APIs interface {
 
 	//CreateAdminAccount creates an account for a new admin user
 	CreateAdminAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string, permissions []string,
-		roles []string, groups []string, profile model.Profile, creatorAppID *string, l *logs.Log) (*model.Account, string, error)
+		roles []string, groups []string, profile model.Profile, creatorAppID *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//VerifyCredential verifies credential (checks the verification code in the credentials collection)
 	VerifyCredential(id string, verification string, l *logs.Log) error

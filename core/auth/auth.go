@@ -698,6 +698,12 @@ func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType m
 	return message, accountAuthType, nil
 }
 
+func (a *Auth) applySignUpAdmin(authImpl authType, account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
+	identifier string, regProfile model.Profile, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
+
+	return nil, nil, errors.New(logutils.Unimplemented)
+}
+
 func (a *Auth) mergeClientAndSharedProfile(clientData model.Profile, sharedProfile model.Profile) model.Profile {
 	clientData.ID = sharedProfile.ID
 

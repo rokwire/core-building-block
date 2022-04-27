@@ -464,18 +464,18 @@ func (h ServicesApisHandler) createAdminAccount(l *logs.Log, r *http.Request, cl
 		groups = *requestData.Groups
 	}
 	profile := profileFromDefNullable(requestData.Profile)
-	account, password, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), requestData.AppTypeIdentifier,
+	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), requestData.AppTypeIdentifier,
 		requestData.OrgId, requestData.Identifier, permissions, roles, groups, profile, &claims.AppID, l)
 	if err != nil || account == nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
 	accountData := accountToDef(*account)
-	paramsData := make(map[string]interface{})
-	if len(password) > 0 {
-		paramsData["password"] = password
+	var paramsData *map[string]interface{}
+	if params != nil {
+		paramsData = &params
 	}
-	respData := &Def.SharedResCreateAccount{Account: *accountData, Params: &paramsData}
+	respData := &Def.SharedResCreateAccount{Account: *accountData, Params: paramsData}
 
 	data, err = json.Marshal(respData)
 	if err != nil {

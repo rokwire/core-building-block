@@ -32,6 +32,12 @@ const (
 	ErrorStatusSharedCredentialUnverified string = "shared-credential-unverified"
 	//ErrorStatusNotAllowed ...
 	ErrorStatusNotAllowed string = "not-allowed"
+
+	//Character sets for password generation
+	upper   string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	lower   string = "abcdefghijklmnopqrstuvwxyz"
+	digits  string = "0123456789"
+	special string = "!@#$%^&*()"
 )
 
 // SetRandomSeed sets the seed for random number generation
@@ -66,6 +72,19 @@ func GenerateRandomString(s int) (string, error) {
 // GenerateRandomInt returns a random integer between 0 and max
 func GenerateRandomInt(max int) int {
 	return rand.Intn(max)
+}
+
+// GenerateRandomPassword returns a randomly generated password string
+func GenerateRandomPassword(s int) string {
+	validCharacters := []byte(upper + lower + digits + special)
+	rand.Shuffle(len(validCharacters), func(i, j int) { validCharacters[i], validCharacters[j] = validCharacters[j], validCharacters[i] })
+
+	password := make([]byte, s)
+	for i := 0; i < s; i++ {
+		password[i] = validCharacters[rand.Intn(len(validCharacters))]
+	}
+
+	return string(password)
 }
 
 // ConvertToJSON converts to json

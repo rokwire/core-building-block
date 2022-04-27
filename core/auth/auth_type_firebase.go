@@ -23,8 +23,8 @@ func (a *firebaseAuthImpl) signUp(authType model.AuthType, appOrg model.Applicat
 	return "", nil, nil
 }
 
-func (a *firebaseAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, newCredentialID string) (string, map[string]interface{}, error) {
-	return "", nil, nil
+func (a *firebaseAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+	return nil, nil, nil
 }
 
 func (a *firebaseAuthImpl) getUserIdentifier(creds string) (string, error) {
