@@ -1062,7 +1062,7 @@ func (h SystemApisHandler) createAdminAccount(l *logs.Log, r *http.Request, clai
 	}
 	profile := profileFromDefNullable(requestData.Profile)
 	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), requestData.AppTypeIdentifier,
-		requestData.OrgId, requestData.Identifier, permissions, roles, groups, profile, nil, l)
+		requestData.OrgId, requestData.Identifier, profile, permissions, roles, groups, nil, l)
 	if err != nil || account == nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

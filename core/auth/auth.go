@@ -219,7 +219,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		externalIDs = account.ExternalIDs
 	} else if !admin {
 		//user does not exist, we need to register it
-		accountAuthType, err = a.applySignUpExternal(authType, appOrg, *externalUser, regProfile, regPreferences, l)
+		accountAuthType, err = a.applySignUpExternal(authType, appOrg, *externalUser, regProfile, regPreferences, nil, nil, nil, l)
 		if err != nil {
 			return nil, nil, nil, nil, errors.Wrap("error on apply sign up external", err)
 		}
@@ -261,7 +261,7 @@ func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthTy
 }
 
 func (a *Auth) applySignUpExternal(authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser,
-	regProfile model.Profile, regPreferences map[string]interface{}, l *logs.Log) (*model.AccountAuthType, error) {
+	regProfile model.Profile, regPreferences map[string]interface{}, permissions []string, roles []string, groups []string, l *logs.Log) (*model.AccountAuthType, error) {
 	var accountAuthType *model.AccountAuthType
 
 	var profile model.Profile
@@ -309,13 +309,19 @@ func (a *Auth) applySignUpExternal(authType model.AuthType, appOrg model.Applica
 	}
 
 	//4. roles and groups mapping
-	roles, groups, err := a.getExternalUserAuthorization(externalUser, appOrg, authType)
+	externalRoles, externalGroups, err := a.getExternalUserAuthorization(externalUser, appOrg, authType)
 	if err != nil {
 		l.WarnAction(logutils.ActionGet, "external authorization", err)
 	}
+	if len(roles) == 0 {
+		roles = externalRoles
+	}
+	if len(groups) == 0 {
+		groups = externalGroups
+	}
 
 	//5. register the account
-	accountAuthType, err = a.registerUser(nil, authType, identifier, accountAuthTypeParams, appOrg, nil, useSharedProfile, externalUser.ExternalIDs, profile, preferences, nil, roles, groups, l)
+	accountAuthType, err = a.registerUser(nil, authType, identifier, accountAuthTypeParams, appOrg, nil, useSharedProfile, externalUser.ExternalIDs, profile, preferences, permissions, roles, groups, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
@@ -699,7 +705,7 @@ func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType m
 }
 
 func (a *Auth) applySignUpAdmin(authImpl authType, account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
-	identifier string, permissions []string, roles []string, groups []string, regProfile model.Profile, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
+	identifier string, regProfile model.Profile, permissions []string, roles []string, groups []string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
 
 	if account != nil {
 		err := a.handleAccountAuthTypeConflict(*account, authType.ID, identifier, true)

@@ -465,7 +465,7 @@ func (h ServicesApisHandler) createAdminAccount(l *logs.Log, r *http.Request, cl
 	}
 	profile := profileFromDefNullable(requestData.Profile)
 	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), requestData.AppTypeIdentifier,
-		requestData.OrgId, requestData.Identifier, permissions, roles, groups, profile, &claims.AppID, l)
+		requestData.OrgId, requestData.Identifier, profile, permissions, roles, groups, &claims.AppID, l)
 	if err != nil || account == nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

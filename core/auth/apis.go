@@ -536,7 +536,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 
 //CreateAdminAccount creates an account for a new admin user
 func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string,
-	permissions []string, roles []string, groups []string, profile model.Profile, creatorAppID *string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
+	profile model.Profile, permissions []string, roles []string, groups []string, creatorAppID *string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
 	//TODO: add admin authentication policies that specify which auth types may be used for each app org
 	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
@@ -552,61 +552,70 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "account application", nil)
 	}
 
-	//1. check if the user exists
-	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, identifier)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-	canSignIn := a.canSignIn(account, authType.ID, identifier)
-
-	//2. account exists, so grant the necessary permissions, roles, groups
-	if canSignIn {
-		//TODO: grant necessary permissions, roles, groups
-		return nil, nil, errors.New(logutils.Unimplemented)
-	}
-
 	var accountAuthType *model.AccountAuthType
-	//3. account does not exist, using external auth type, so create the account
-	if authType.IsExternal {
-		//TODO: call applySignUpExternal(Admin)
-		useSharedProfile, sharedProfile, _, err := a.applySharedProfile(appOrg.Application, authType.ID, identifier, l)
+	var params map[string]interface{}
+	transaction := func(context storage.TransactionContext) error {
+		//1. check if the user exists
+		account, err := a.storage.FindAccount(appOrg.ID, authType.ID, identifier)
 		if err != nil {
-			return nil, nil, errors.Wrap("error applying shared profile", err)
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
+		canSignIn := a.canSignIn(account, authType.ID, identifier)
 
-		if useSharedProfile {
-			l.Infof("%s uses a shared profile", identifier)
-
-			//merge client profile and shared profile
-			profile = a.mergeClientAndSharedProfile(profile, *sharedProfile)
-		} else {
-			l.Infof("%s does not use a shared profile", identifier)
-		}
-
-		if !useSharedProfile {
-			//no need to merge from profile BB for new apps/UIUC app has useSharedprofile=false/
-			preparedProfile, _, err := a.prepareRegistrationData(*authType, identifier, profile, nil, l)
+		//2. account exists, so grant the necessary permissions, roles, groups
+		if canSignIn {
+			//TODO: grant necessary permissions, roles, groups
+			_, err := a.storage.FindPermissions(context, permissions)
 			if err != nil {
-				return nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
+				l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypePermission, nil), err)
 			}
-			profile = *preparedProfile
+			rolesList, err := a.storage.FindAppOrgRolesByIDs(context, roles, appOrg.ID)
+			if err != nil {
+				l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgRole, nil), err)
+			}
+			groupsList, err := a.storage.FindAppOrgGroupsByIDs(context, groups, appOrg.ID)
+			if err != nil {
+				l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgGroup, nil), err)
+			}
+
+			//TODO: current roles and groups update is naive
+			err = a.storage.UpdateAccountRoles(account.ID, model.AccountRolesFromAppOrgRoles(rolesList, true, true))
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountRoles, nil, err)
+			}
+			err = a.storage.UpdateAccountGroups(account.ID, model.AccountGroupsFromAppOrgGroups(groupsList, true, true))
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountGroups, nil, err)
+			}
+
+			return errors.New(logutils.Unimplemented)
 		}
 
-		accountAuthType, err = a.registerUser(nil, *authType, identifier, nil, *appOrg, nil, useSharedProfile, nil, profile, nil, permissions, roles, groups, l)
+		//3. account does not exist, so apply sign up
+		//TODO: make sure AdminSet flag is true on granted roles and groups
+		if authType.IsExternal {
+			externalUser := model.ExternalSystemUser{Identifier: identifier}
+			accountAuthType, err = a.applySignUpExternal(*authType, *appOrg, externalUser, profile, nil, permissions, roles, groups, l)
+		} else {
+			authImpl, err := a.getAuthTypeImpl(*authType)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+			}
+
+			params, accountAuthType, err = a.applySignUpAdmin(authImpl, account, *authType, *appOrg, identifier, profile, permissions, roles, groups, l)
+		}
 		if err != nil {
-			return nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+			return errors.WrapErrorAction("signing up", "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
 		}
 
-		return &accountAuthType.Account, nil, nil
+		return nil
 	}
 
-	//4. account does not exist, so create the account and the credential
-	authImpl, err := a.getAuthTypeImpl(*authType)
+	err = a.storage.PerformTransaction(transaction)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, "admin account", nil, err)
 	}
 
-	params, accountAuthType, err := a.applySignUpAdmin(authImpl, account, *authType, *appOrg, identifier, permissions, roles, groups, profile, l)
 	return &accountAuthType.Account, params, nil
 }
 

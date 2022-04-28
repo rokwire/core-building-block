@@ -217,8 +217,8 @@ type APIs interface {
 	LoginMFA(apiKey string, accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
 
 	//CreateAdminAccount creates an account for a new admin user
-	CreateAdminAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string, permissions []string,
-		roles []string, groups []string, profile model.Profile, creatorAppID *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
+	CreateAdminAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string, profile model.Profile,
+		permissions []string, roles []string, groups []string, creatorAppID *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//VerifyCredential verifies credential (checks the verification code in the credentials collection)
 	VerifyCredential(id string, verification string, l *logs.Log) error
