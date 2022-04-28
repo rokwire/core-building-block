@@ -4,7 +4,6 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -536,7 +535,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 
 //CreateAdminAccount creates an account for a new admin user
 func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string,
-	profile model.Profile, permissions []string, roles []string, groups []string, creatorAppID *string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
+	profile model.Profile, permissions []string, roleIDs []string, groupIDs []string, creatorAppID *string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
 	//TODO: add admin authentication policies that specify which auth types may be used for each app org
 	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
@@ -565,20 +564,33 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 		//2. account exists, so grant the necessary permissions, roles, groups
 		if canSignIn {
 			//TODO: grant necessary permissions, roles, groups
-			_, err := a.storage.FindPermissions(context, permissions)
+			permissionsList, err := a.storage.FindPermissions(context, permissions)
 			if err != nil {
 				l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypePermission, nil), err)
 			}
-			rolesList, err := a.storage.FindAppOrgRolesByIDs(context, roles, appOrg.ID)
+			rolesList, err := a.storage.FindAppOrgRolesByIDs(context, roleIDs, appOrg.ID)
 			if err != nil {
 				l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgRole, nil), err)
 			}
-			groupsList, err := a.storage.FindAppOrgGroupsByIDs(context, groups, appOrg.ID)
+			groupsList, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
 			if err != nil {
 				l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgGroup, nil), err)
 			}
 
 			//TODO: current roles and groups update is naive
+			addPermissions := make([]model.Permission, 0)
+			for _, p := range permissionsList {
+				include := true
+				for _, ap := range account.Permissions {
+					if ap.Name == p.Name {
+						include = false
+					}
+				}
+				if include {
+					addPermissions = append(addPermissions, p)
+				}
+			}
+			account.Permissions = append(account.Permissions, addPermissions...)
 			err = a.storage.UpdateAccountRoles(account.ID, model.AccountRolesFromAppOrgRoles(rolesList, true, true))
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountRoles, nil, err)
@@ -595,14 +607,14 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 		//TODO: make sure AdminSet flag is true on granted roles and groups
 		if authType.IsExternal {
 			externalUser := model.ExternalSystemUser{Identifier: identifier}
-			accountAuthType, err = a.applySignUpExternal(*authType, *appOrg, externalUser, profile, nil, permissions, roles, groups, l)
+			accountAuthType, err = a.applySignUpExternal(*authType, *appOrg, externalUser, profile, nil, permissions, roleIDs, groupIDs, l)
 		} else {
 			authImpl, err := a.getAuthTypeImpl(*authType)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
 			}
 
-			params, accountAuthType, err = a.applySignUpAdmin(authImpl, account, *authType, *appOrg, identifier, profile, permissions, roles, groups, l)
+			params, accountAuthType, err = a.applySignUpAdmin(authImpl, account, *authType, *appOrg, identifier, "", profile, permissions, roleIDs, groupIDs, l)
 		}
 		if err != nil {
 			return errors.WrapErrorAction("signing up", "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
@@ -1419,43 +1431,9 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	now := time.Now()
 	profile := model.Profile{ID: uuid.NewString(), Email: email, DateCreated: now}
 
-	credentialID, _ := uuid.NewUUID()
-	credID := credentialID.String()
-
-	///apply sign up
-	creds := struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}{email, password}
-	emailCreds, err := json.Marshal(creds)
+	_, accountAuthType, err := a.applySignUpAdmin(authImpl, nil, authType, appOrg, email, password, profile, []string{allSystemPermissionID}, nil, nil, l)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionMarshal, "initial system account email creds", nil, err)
-	}
-
-	params := struct {
-		ConfirmPassword string `json:"confirm_password"`
-	}{password}
-	emailParams, err := json.Marshal(params)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionMarshal, "initial system account email params", nil, err)
-	}
-
-	var credentialValue map[string]interface{}
-	_, credentialValue, err = authImpl.signUp(authType, appOrg, string(emailCreds), string(emailParams), credID, l)
-	if err != nil {
-		return "", errors.Wrap("error signing up", err)
-	}
-	if credentialValue == nil {
-		return "", errors.New("error creating credentials for initial system account")
-	}
-
-	//credential
-	credential := &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
-		AuthType: authType, DateCreated: now, DateUpdated: &now}
-
-	accountAuthType, err := a.registerUser(context, authType, email, nil, appOrg, credential, false, nil, profile, nil, []string{allSystemPermissionID}, nil, nil, l)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+		return "", errors.WrapErrorAction("signing up", "initial system user", &logutils.FieldArgs{"email": email}, err)
 	}
 
 	return accountAuthType.Account.ID, nil

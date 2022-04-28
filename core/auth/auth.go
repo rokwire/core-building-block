@@ -261,7 +261,7 @@ func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthTy
 }
 
 func (a *Auth) applySignUpExternal(authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser,
-	regProfile model.Profile, regPreferences map[string]interface{}, permissions []string, roles []string, groups []string, l *logs.Log) (*model.AccountAuthType, error) {
+	regProfile model.Profile, regPreferences map[string]interface{}, permissions []string, roleIDs []string, groupIDs []string, l *logs.Log) (*model.AccountAuthType, error) {
 	var accountAuthType *model.AccountAuthType
 
 	var profile model.Profile
@@ -313,15 +313,16 @@ func (a *Auth) applySignUpExternal(authType model.AuthType, appOrg model.Applica
 	if err != nil {
 		l.WarnAction(logutils.ActionGet, "external authorization", err)
 	}
-	if len(roles) == 0 {
-		roles = externalRoles
+	if len(roleIDs) == 0 {
+		roleIDs = externalRoles
 	}
-	if len(groups) == 0 {
-		groups = externalGroups
+	if len(groupIDs) == 0 {
+		groupIDs = externalGroups
 	}
 
 	//5. register the account
-	accountAuthType, err = a.registerUser(nil, authType, identifier, accountAuthTypeParams, appOrg, nil, useSharedProfile, externalUser.ExternalIDs, profile, preferences, permissions, roles, groups, l)
+	accountAuthType, err = a.registerUser(nil, authType, identifier, accountAuthTypeParams, appOrg, nil, useSharedProfile,
+		externalUser.ExternalIDs, profile, preferences, permissions, roleIDs, groupIDs, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
@@ -705,7 +706,7 @@ func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType m
 }
 
 func (a *Auth) applySignUpAdmin(authImpl authType, account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
-	identifier string, regProfile model.Profile, permissions []string, roles []string, groups []string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
+	identifier string, password string, regProfile model.Profile, permissions []string, roles []string, groups []string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
 
 	if account != nil {
 		err := a.handleAccountAuthTypeConflict(*account, authType.ID, identifier, true)
@@ -748,7 +749,7 @@ func (a *Auth) applySignUpAdmin(authImpl authType, account *model.Account, authT
 
 		///apply sign up
 		var credentialValue map[string]interface{}
-		params, credentialValue, err = authImpl.signUpAdmin(authType, appOrg, identifier, credID)
+		params, credentialValue, err = authImpl.signUpAdmin(authType, appOrg, identifier, password, credID)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("signing up", "admin user", nil, err)
 		}
@@ -1355,7 +1356,8 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 //		Registered account (AccountAuthType): Registered Account object
 func (a *Auth) registerUser(context storage.TransactionContext, authType model.AuthType, userIdentifier string, accountAuthTypeParams map[string]interface{},
 	appOrg model.ApplicationOrganization, credential *model.Credential, useSharedProfile bool, externalIDs map[string]string,
-	profile model.Profile, preferences map[string]interface{}, permissionIDs []string, roleIDs []string, groupIDs []string, l *logs.Log) (*model.AccountAuthType, error) {
+	profile model.Profile, preferences map[string]interface{}, permissionNames []string, roleIDs []string, groupIDs []string,
+	adminSet bool, creatorPermissions []string, l *logs.Log) (*model.AccountAuthType, error) {
 
 	//TODO - analyse what should go in one transaction
 
@@ -1377,21 +1379,47 @@ func (a *Auth) registerUser(context storage.TransactionContext, authType model.A
 	accountID, _ := uuid.NewUUID()
 	authTypes := []model.AccountAuthType{*accountAuthType}
 
-	permissions, err := a.storage.FindPermissions(context, permissionIDs)
+	permissions, err := a.storage.FindPermissionsByName(context, permissionNames)
 	if err != nil {
 		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypePermission, nil), err)
 	}
+	if adminSet {
+		for _, permission := range permissions {
+			err = permission.CheckAssigners(creatorPermissions)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionValidate, "account creator permissions", &logutils.FieldArgs{"name": permission.Name}, err)
+			}
+		}
+	}
+
 	roles, err := a.storage.FindAppOrgRolesByIDs(context, roleIDs, appOrg.ID)
 	if err != nil {
 		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgRole, nil), err)
 	}
+	if adminSet {
+		for _, role := range roles {
+			err = role.CheckAssigners(creatorPermissions)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionValidate, "account creator permissions", &logutils.FieldArgs{"name": role.Name, "app_org_id": role.AppOrg.ID}, err)
+			}
+		}
+	}
+
 	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
 	if err != nil {
 		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgGroup, nil), err)
 	}
+	if adminSet {
+		for _, group := range groups {
+			err = group.CheckAssigners(creatorPermissions)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionValidate, "account creator permissions", &logutils.FieldArgs{"name": group.Name, "app_org_id": group.AppOrg.ID}, err)
+			}
+		}
+	}
 
 	account := model.Account{ID: accountID.String(), AppOrg: appOrg,
-		Permissions: permissions, Roles: model.AccountRolesFromAppOrgRoles(roles, true, false), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, false),
+		Permissions: permissions, Roles: model.AccountRolesFromAppOrgRoles(roles, true, adminSet), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, adminSet),
 		AuthTypes: authTypes, ExternalIDs: externalIDs, Preferences: preferences, Profile: profile, DateCreated: time.Now()} // Anonymous: accountAuthType.AuthType.IsAnonymous
 
 	//insert account object - it includes the account auth type

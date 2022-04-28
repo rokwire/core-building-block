@@ -635,7 +635,7 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 	}
 
 	//find permissions
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	permissions, err := app.storage.FindPermissionsByName(nil, permissionNames)
 	if err != nil {
 		return err
 	}
@@ -691,7 +691,7 @@ func (app *application) admRevokeAccountPermissions(appID string, orgID string, 
 	}
 
 	//find permissions
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	permissions, err := app.storage.FindPermissionsByName(nil, permissionNames)
 	if err != nil {
 		return err
 	}
@@ -887,7 +887,7 @@ func (app *application) admGrantPermissionsToRole(appID string, orgID string, ro
 	}
 
 	//find permissions
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	permissions, err := app.storage.FindPermissionsByName(nil, permissionNames)
 	if err != nil {
 		return err
 	}

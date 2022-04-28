@@ -23,7 +23,7 @@ type authType interface {
 	// Returns:
 	//	password (string): newly generated password
 	//	credentialValue (map): Credential value
-	signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
+	signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
 
 	//verifies credential (checks the verification code generated on email signup for email auth type)
 	// Returns:
@@ -218,7 +218,7 @@ type APIs interface {
 
 	//CreateAdminAccount creates an account for a new admin user
 	CreateAdminAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string, profile model.Profile,
-		permissions []string, roles []string, groups []string, creatorAppID *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
+		permissions []string, roleIDs []string, groupIDs []string, creatorAppID *string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//VerifyCredential verifies credential (checks the verification code in the credentials collection)
 	VerifyCredential(id string, verification string, l *logs.Log) error
@@ -512,7 +512,7 @@ type Storage interface {
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 
 	//Permissions
-	FindPermissionsByName(names []string) ([]model.Permission, error)
+	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
 
 	//Device
 	FindDevice(context storage.TransactionContext, deviceID string, accountID string) (*model.Device, error)

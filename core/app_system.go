@@ -164,7 +164,7 @@ func (app *application) sysCreatePermission(name string, serviceID string, assig
 
 func (app *application) sysUpdatePermission(name string, serviceID *string, assigners *[]string) (*model.Permission, error) {
 	permissionNames := []string{name}
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	permissions, err := app.storage.FindPermissionsByName(nil, permissionNames)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func (app *application) sysUpdatePermission(name string, serviceID *string, assi
 }
 
 func (app *application) sysCreateAppOrgRole(name string, appOrgID string, description string, permissionNames []string) (*model.AppOrgRole, error) {
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	permissions, err := app.storage.FindPermissionsByName(nil, permissionNames)
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +332,7 @@ func (app *application) sysGrantAccountPermissions(accountID string, permissionN
 		return errors.New("no permissions from admin assigner")
 	}
 
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	permissions, err := app.storage.FindPermissionsByName(nil, permissionNames)
 	if err != nil {
 		return err
 	}

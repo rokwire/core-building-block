@@ -780,12 +780,12 @@ type SharedReqAccountCheckAuthType string
 type SharedReqCreateAccount struct {
 	AppTypeIdentifier string                         `json:"app_type_identifier"`
 	AuthType          SharedReqCreateAccountAuthType `json:"auth_type"`
-	Groups            *[]string                      `json:"groups,omitempty"`
+	GroupIds          *[]string                      `json:"group_ids,omitempty"`
 	Identifier        string                         `json:"identifier"`
 	OrgId             string                         `json:"org_id"`
 	Permissions       *[]string                      `json:"permissions,omitempty"`
 	Profile           *SharedReqProfileNullable      `json:"profile"`
-	Roles             *[]string                      `json:"roles,omitempty"`
+	RoleIds           *[]string                      `json:"role_ids,omitempty"`
 }
 
 // SharedReqCreateAccountAuthType defines model for SharedReqCreateAccount.AuthType.

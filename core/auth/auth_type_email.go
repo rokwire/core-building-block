@@ -82,8 +82,10 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appOrg model.Application
 	return "verification code sent successfully", emailCreds, nil
 }
 
-func (a *emailAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
-	password := utils.GenerateRandomPassword(12)
+func (a *emailAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+	if password == "" {
+		password = utils.GenerateRandomPassword(12)
+	}
 
 	emailCreds, err := a.buildCredentials(authType, appOrg.Application.Name, identifier, password, newCredentialID)
 	if err != nil {

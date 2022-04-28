@@ -5366,11 +5366,11 @@ components:
           type: array
           items:
             type: string
-        roles:
+        role_ids:
           type: array
           items:
             type: string
-        groups:
+        group_ids:
           type: array
           items:
             type: string

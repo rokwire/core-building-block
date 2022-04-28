@@ -1052,17 +1052,18 @@ func (h SystemApisHandler) createAdminAccount(l *logs.Log, r *http.Request, clai
 	if requestData.Permissions != nil {
 		permissions = *requestData.Permissions
 	}
-	var roles []string
-	if requestData.Roles != nil {
-		roles = *requestData.Roles
+	var roleIDs []string
+	if requestData.RoleIds != nil {
+		roleIDs = *requestData.RoleIds
 	}
-	var groups []string
-	if requestData.Groups != nil {
-		groups = *requestData.Groups
+	var groupIDs []string
+	if requestData.GroupIds != nil {
+		groupIDs = *requestData.GroupIds
 	}
 	profile := profileFromDefNullable(requestData.Profile)
+	creatorPermissions := strings.Split(claims.Permissions, ",")
 	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), requestData.AppTypeIdentifier,
-		requestData.OrgId, requestData.Identifier, profile, permissions, roles, groups, nil, l)
+		requestData.OrgId, requestData.Identifier, profile, permissions, roleIDs, groupIDs, nil, creatorPermissions, l)
 	if err != nil || account == nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

@@ -744,13 +744,13 @@ func (_m *Storage) FindOrganizations() ([]model.Organization, error) {
 	return r0, r1
 }
 
-// FindPermissionsByName provides a mock function with given fields: names
-func (_m *Storage) FindPermissionsByName(names []string) ([]model.Permission, error) {
-	ret := _m.Called(names)
+// FindPermissionsByName provides a mock function with given fields: context, names
+func (_m *Storage) FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error) {
+	ret := _m.Called(context, names)
 
 	var r0 []model.Permission
-	if rf, ok := ret.Get(0).(func([]string) []model.Permission); ok {
-		r0 = rf(names)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, []string) []model.Permission); ok {
+		r0 = rf(context, names)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Permission)
@@ -758,8 +758,8 @@ func (_m *Storage) FindPermissionsByName(names []string) ([]model.Permission, er
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func([]string) error); ok {
-		r1 = rf(names)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, []string) error); ok {
+		r1 = rf(context, names)
 	} else {
 		r1 = ret.Error(1)
 	}

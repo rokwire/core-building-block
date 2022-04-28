@@ -139,7 +139,7 @@ type Storage interface {
 	GetGlobalConfig() (*model.GlobalConfig, error)
 	DeleteGlobalConfig(context storage.TransactionContext) error
 
-	FindPermissionsByName(names []string) ([]model.Permission, error)
+	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
 	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)
 	InsertPermission(context storage.TransactionContext, item model.Permission) error
 	UpdatePermission(item model.Permission) error

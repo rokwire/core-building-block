@@ -160,7 +160,7 @@ func (c *APIs) storeSystemData() error {
 		}
 
 		//5. insert all_system_core permission if does not exist
-		allSystemPermissions, err := c.app.storage.FindPermissionsByName([]string{"all_system_core"})
+		allSystemPermissions, err := c.app.storage.FindPermissionsByName(nil, []string{"all_system_core"})
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, &logutils.FieldArgs{"name": "all_system_core"}, err)
 		}
