@@ -699,9 +699,78 @@ func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType m
 }
 
 func (a *Auth) applySignUpAdmin(authImpl authType, account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
-	identifier string, regProfile model.Profile, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
+	identifier string, permissions []string, roles []string, groups []string, regProfile model.Profile, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
 
-	return nil, nil, errors.New(logutils.Unimplemented)
+	if account != nil {
+		err := a.handleAccountAuthTypeConflict(*account, authType.ID, identifier, true)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	var params map[string]interface{}
+	var credential *model.Credential
+	var profile model.Profile
+	var preferences map[string]interface{}
+
+	//check if needs to use shared profile
+	useSharedProfile, sharedProfile, sharedCredential, err := a.applySharedProfile(appOrg.Application, authType.ID, identifier, l)
+	if err != nil {
+		return nil, nil, errors.Wrap("error applying shared profile", err)
+	}
+
+	if useSharedProfile {
+		l.Infof("%s uses a shared profile", identifier)
+
+		//allow sign up only if the shared credential is verified
+		if sharedCredential != nil && !sharedCredential.Verified {
+			l.Infof("trying to sign up in %s with unverified shared credentials", appOrg.Organization.Name)
+			return nil, nil, errors.New("unverified credentials").SetStatus(utils.ErrorStatusSharedCredentialUnverified)
+		}
+
+		//merge client profile and shared profile
+		profile = a.mergeClientAndSharedProfile(regProfile, *sharedProfile)
+		credential = sharedCredential
+		// message = "sucessfully registered"
+	} else {
+		l.Infof("%s does not use a shared profile", identifier)
+
+		profile = regProfile
+
+		credentialID, _ := uuid.NewUUID()
+		credID := credentialID.String()
+
+		///apply sign up
+		var credentialValue map[string]interface{}
+		params, credentialValue, err = authImpl.signUpAdmin(authType, appOrg, identifier, credID)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction("signing up", "admin user", nil, err)
+		}
+
+		//credential
+		if credentialValue != nil {
+			now := time.Now()
+			credential = &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
+				AuthType: authType, DateCreated: now, DateUpdated: &now}
+		}
+	}
+
+	if !useSharedProfile {
+		//no need to merge from profile BB for new apps/UIUC app has useSharedprofile=false/
+		preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, identifier, profile, preferences, l)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
+		}
+		profile = *preparedProfile
+		preferences = preparedPreferences
+	}
+
+	accountAuthType, err := a.registerUser(nil, authType, identifier, nil, appOrg, credential, useSharedProfile, nil, profile, preferences, permissions, roles, groups, l)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+	}
+
+	return params, accountAuthType, nil
 }
 
 func (a *Auth) mergeClientAndSharedProfile(clientData model.Profile, sharedProfile model.Profile) model.Profile {

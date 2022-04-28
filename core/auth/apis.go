@@ -601,33 +601,12 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 	}
 
 	//4. account does not exist, so create the account and the credential
-	//TODO: call applySignUpAdmin
-	var credential *model.Credential
-	credentialID, _ := uuid.NewUUID()
-	credID := credentialID.String()
-
 	authImpl, err := a.getAuthTypeImpl(*authType)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
 	}
 
-	params, credentialValue, err := authImpl.signUpAdmin(*authType, *appOrg, identifier, credID)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction("signing up", "admin user", nil, err)
-	}
-
-	//credential
-	if credentialValue != nil {
-		now := time.Now()
-		credential = &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
-			AuthType: *authType, DateCreated: now, DateUpdated: &now}
-	}
-
-	accountAuthType, err = a.registerUser(nil, *authType, identifier, nil, *appOrg, credential, false, nil, profile, nil, permissions, roles, groups, l)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
-	}
-
+	params, accountAuthType, err := a.applySignUpAdmin(authImpl, account, *authType, *appOrg, identifier, permissions, roles, groups, profile, l)
 	return &accountAuthType.Account, params, nil
 }
 
