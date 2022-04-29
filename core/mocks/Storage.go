@@ -873,13 +873,13 @@ func (_m *Storage) InsertAccountPermissions(context storage.TransactionContext, 
 	return r0
 }
 
-// InsertAccountRoles provides a mock function with given fields: accountID, appOrgID, roles
-func (_m *Storage) InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error {
-	ret := _m.Called(accountID, appOrgID, roles)
+// InsertAccountRoles provides a mock function with given fields: context, accountID, appOrgID, roles
+func (_m *Storage) InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error {
+	ret := _m.Called(context, accountID, appOrgID, roles)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string, []model.AccountRole) error); ok {
-		r0 = rf(accountID, appOrgID, roles)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, []model.AccountRole) error); ok {
+		r0 = rf(context, accountID, appOrgID, roles)
 	} else {
 		r0 = ret.Error(0)
 	}

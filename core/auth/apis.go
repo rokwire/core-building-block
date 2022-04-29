@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rokwire/core-auth-library-go/authorization"
+	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/core-auth-library-go/sigauth"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
@@ -571,15 +572,23 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 				}
 			}
 			if len(addPermissions) > 0 {
-				err = a.GrantAccountPermissions(context, account, permissions, creatorPermissions)
+				err = a.GrantAccountPermissions(context, account, addPermissions, creatorPermissions)
 				if err != nil {
 					return errors.WrapErrorAction("granting", "admin account permissions", nil, err)
 				}
 			}
 
-			rolesList, err := a.storage.FindAppOrgRolesByIDs(context, roleIDs, appOrg.ID)
-			if err != nil {
-				l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgRole, nil), err)
+			addRoles := make([]string, 0)
+			for _, r := range roleIDs {
+				if account.GetRole(r) == nil {
+					addRoles = append(addRoles, r)
+				}
+			}
+			if len(addRoles) > 0 {
+				err = a.GrantAccountPermissions(context, account, addRoles, creatorPermissions)
+				if err != nil {
+					return errors.WrapErrorAction("granting", "admin account roles", nil, err)
+				}
 			}
 			groupsList, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
 			if err != nil {
@@ -587,10 +596,6 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 			}
 
 			//TODO: current roles and groups update is naive
-			err = a.storage.UpdateAccountRoles(account.ID, model.AccountRolesFromAppOrgRoles(rolesList, true, true))
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountRoles, nil, err)
-			}
 			err = a.storage.UpdateAccountGroups(account.ID, model.AccountGroupsFromAppOrgGroups(groupsList, true, true))
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountGroups, nil, err)
@@ -1452,7 +1457,6 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 	for _, current := range permissionNames {
 		hasP := account.GetPermissionNamed(current)
 		if hasP != nil {
-			a.logger.Infof("trying to double grant %s for %s", current, account.ID)
 			return errors.Newf("account %s already has %s granted", account.ID, current)
 		}
 	}
@@ -1462,15 +1466,21 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
 	}
-	if len(permissions) == 0 {
-		return errors.Newf("no permissions found for names: %v", permissionNames)
+	if len(permissions) != len(permissionNames) {
+		badNames := make([]string, 0)
+		for _, p := range permissions {
+			if !authutils.ContainsString(permissionNames, p.Name) {
+				badNames = append(badNames, p.Name)
+			}
+		}
+		return errors.ErrorData(logutils.StatusInvalid, model.TypePermission, &logutils.FieldArgs{"names": badNames})
 	}
 
 	//check if authorized
 	for _, permission := range permissions {
 		err = permission.CheckAssigners(assignerPermissions)
 		if err != nil {
-			return errors.Wrapf("error checking permission assigners", err)
+			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"name": permission.Name}, err)
 		}
 	}
 
@@ -1479,7 +1489,117 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountPermissions, &logutils.FieldArgs{"account_id": account.ID}, err)
 	}
+
 	return nil
+}
+
+//GrantAccountRoles grants roles to an account after validating the assigner has required permissions
+//Checks that the account does not already have any of the requested roles
+func (a *Auth) GrantAccountRoles(context storage.TransactionContext, account *model.Account, roleIDs []string, assignerPermissions []string) error {
+	//check if there is data
+	if account == nil {
+		return errors.New("no account to grant roles")
+	}
+	if len(roleIDs) == 0 {
+		return errors.New("no roles to grant")
+	}
+
+	//verify that the account do not have any of the roles which are supposed to be granted
+	for _, current := range roleIDs {
+		hasR := account.GetRole(current)
+		if hasR != nil {
+			return errors.Newf("account %s already has %s granted", account.ID, current)
+		}
+	}
+
+	//find roles
+	roles, err := a.storage.FindAppOrgRolesByIDs(context, roleIDs, account.AppOrg.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+	}
+	if len(roles) != len(roleIDs) {
+		badIDs := make([]string, 0)
+		for _, r := range roles {
+			if !authutils.ContainsString(roleIDs, r.ID) {
+				badIDs = append(badIDs, r.ID)
+			}
+		}
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgRole, &logutils.FieldArgs{"ids": badIDs})
+	}
+
+	//check if authorized
+	for _, cRole := range roles {
+		err = cRole.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": cRole.ID}, err)
+		}
+	}
+
+	//update account if authorized
+	accountRoles := model.AccountRolesFromAppOrgRoles(roles, true, true)
+	err = a.storage.InsertAccountRoles(context, account.ID, account.AppOrg.ID, accountRoles)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountRoles, &logutils.FieldArgs{"account_id": account.ID}, err)
+	}
+
+	return nil
+}
+
+//GrantAccountGroups grants groups to an account after validating the assigner has required permissions
+//Checks that the account does not already have any of the requested groups
+func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *model.Account, groupIDs []string, assignerPermissions []string) error {
+	//check if there is data
+	if account == nil {
+		return errors.New("no accounts to grant groups")
+	}
+	if len(groupIDs) == 0 {
+		return errors.New("no groups to grant")
+	}
+
+	//ensure that the account does not have the groups before adding
+	for _, current := range groupIDs {
+		gr := account.GetGroup(current)
+		if gr != nil {
+			return errors.Newf("account %s already is a member of group %s", account.ID, current)
+		}
+	}
+
+	//find group
+	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, account.AppOrg.ID)
+	if err != nil {
+		return errors.Wrap("error finding app org group", err)
+	}
+	if len(groups) != len(groupIDs) {
+		badIDs := make([]string, 0)
+		for _, g := range groups {
+			if !authutils.ContainsString(groupIDs, g.ID) {
+				badIDs = append(badIDs, g.ID)
+			}
+		}
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgGroup, &logutils.FieldArgs{"ids": badIDs})
+	}
+
+	//check assigners
+	for _, group := range groups {
+		err = group.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": group.ID}, err)
+		}
+	}
+
+	//update account if authorized
+	accountGroups := model.AccountGroupsFromAppOrgGroups(groups, true, true)
+	err = a.storage.InsertAccountsGroup(accountGroups, account)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountGroups, &logutils.FieldArgs{"account_id": account.ID}, err)
+	}
+
+	return nil
+
+	// err = a.storage.InsertAccountRoles(context, account.ID, account.AppOrg.ID, accountRoles)
+	// if err != nil {
+
+	// }
 }
 
 //GetServiceRegistrations retrieves all service registrations

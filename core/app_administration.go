@@ -321,11 +321,7 @@ func (app *application) admAddAccountsToGroup(appID string, orgID string, groupI
 	}
 
 	//find group
-	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
-	if err != nil {
-		return errors.Wrap("error getting app org on add accounts to group", err)
-	}
-	group, err := app.storage.FindAppOrgGroup(groupID, appOrg.ID)
+	group, err := app.storage.FindAppOrgGroup(groupID, accounts[0].AppOrg.ID)
 	if err != nil {
 		return errors.Wrap("error finding app org group", err)
 	}
@@ -711,50 +707,27 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 		return errors.New("no roles for granting")
 	}
 
-	//verify that the account is for the current app/org
-	account, err := app.storage.FindAccountByID(nil, accountID)
-	if err != nil {
-		return errors.Wrap("error finding account on permissions granting", err)
-	}
-	if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
-		l.Warnf("someone is trying to grant roles to %s for different app/org", accountID)
-		return errors.Newf("not allowed")
-	}
-
-	//find roles
-	roles, err := app.storage.FindAppOrgRolesByIDs(nil, roleIDs, account.AppOrg.ID)
-	if err != nil {
-		return errors.Wrap("error finding app org roles", err)
-	}
-	if len(roles) != len(roleIDs) {
-		return errors.New("not valid roles")
-	}
-
-	//verify that the account do not have any of the roles which are supposed to be granted
-	for _, current := range roles {
-		hasR := account.GetRole(current.ID)
-		if hasR != nil {
-			l.Infof("trying to double grant %s for %s", current.Name, accountID)
-			return errors.Newf("account %s already has %s granted", accountID, current.Name)
-		}
-	}
-
-	//check if authorized
-	for _, cRole := range roles {
-		err = cRole.CheckAssigners(assignerPermissions)
+	transaction := func(context storage.TransactionContext) error {
+		//1. verify that the account is for the current app/org
+		account, err := app.storage.FindAccountByID(context, accountID)
 		if err != nil {
-			return errors.Wrapf("error checking assigners for %s role", err, cRole.Name)
+			return errors.Wrap("error finding account on roles granting", err)
 		}
+		if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
+			l.Warnf("someone is trying to grant roles to %s for different app/org", accountID)
+			return errors.Newf("not allowed")
+		}
+
+		//2. grant account roles
+		err = app.auth.GrantAccountRoles(context, account, roleIDs, assignerPermissions)
+		if err != nil {
+			return errors.Wrap("error granting account roles", err)
+		}
+
+		return nil
 	}
 
-	//update account if authorized
-	accountRoles := model.AccountRolesFromAppOrgRoles(roles, true, true)
-	err = app.storage.InsertAccountRoles(accountID, account.AppOrg.ID, accountRoles)
-	if err != nil {
-		return errors.Wrap("error inserting account roles", err)
-	}
-
-	return nil
+	return app.storage.PerformTransaction(transaction)
 }
 
 func (app *application) admRevokeAccountRoles(appID string, orgID string, accountID string, roleIDs []string, assignerPermissions []string, l *logs.Log) error {

@@ -368,6 +368,10 @@ type APIs interface {
 	//Checks that the account does not already have any of the requested permissions
 	GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
 
+	//GrantAccountRoles grants roles to an account after validating the assigner has required permissions
+	//Checks that the account does not already have any of the requested roles
+	GrantAccountRoles(context storage.TransactionContext, account *model.Account, roleIDs []string, assignerPermissions []string) error
+
 	//DeleteAccount deletes an account for the given id
 	DeleteAccount(id string) error
 
@@ -531,6 +535,7 @@ type Storage interface {
 	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	//AccountRoles
 	UpdateAccountRoles(accountID string, roles []model.AccountRole) error
+	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 
 	//ApplicationGroups
 	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)

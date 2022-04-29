@@ -1163,7 +1163,7 @@ func (sa *Adapter) FindAccountsByAccountID(appID string, orgID string, accountID
 		return nil, errors.WrapErrorAction("error getting cached application organization", "", nil, err)
 	}
 
-	accountFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}}}
+	accountFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}}, primitive.E{Key: "app_org_id", Value: appOrg.ID}}
 	var accountResult []account
 	err = sa.db.accounts.Find(accountFilter, &accountResult, nil)
 	if err != nil {
@@ -1564,7 +1564,7 @@ func (sa *Adapter) DeleteAccountPermissions(context TransactionContext, accountI
 }
 
 //InsertAccountRoles inserts account roles
-func (sa *Adapter) InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error {
+func (sa *Adapter) InsertAccountRoles(context TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error {
 	stgRoles := accountRolesToStorage(roles)
 
 	//appID included in search to prevent accidentally assigning permissions to account from different application
@@ -1578,7 +1578,13 @@ func (sa *Adapter) InsertAccountRoles(accountID string, appOrgID string, roles [
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	var res *mongo.UpdateResult
+	var err error
+	if context != nil {
+		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	} else {
+		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
+	}
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}

@@ -327,6 +327,14 @@ func (app *application) sysDeleteAppConfig(id string) error {
 }
 
 func (app *application) sysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
+	//check if there is data
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from system assigner")
+	}
+	if len(permissionNames) == 0 {
+		return errors.New("no permissions for granting")
+	}
+
 	transaction := func(context storage.TransactionContext) error {
 		//1. find the account
 		account, err := app.storage.FindAccountByID(context, accountID)
@@ -346,21 +354,32 @@ func (app *application) sysGrantAccountPermissions(accountID string, permissionN
 	return app.storage.PerformTransaction(transaction)
 }
 
-func (app *application) sysGrantAccountRoles(accountID string, appOrgID string, roleIDs []string) error {
-	roles, err := app.storage.FindAppOrgRolesByIDs(nil, roleIDs, appOrgID)
-	if err != nil {
-		return err
+func (app *application) sysGrantAccountRoles(accountID string, appOrgID string, roleIDs []string, assignerPermissions []string) error {
+	//check if there is data
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from system assigner")
+	}
+	if len(roleIDs) == 0 {
+		return errors.New("no roles for granting")
 	}
 
-	if len(roles) == 0 {
-		return errors.Newf("no roles found for IDs: %v", roleIDs)
+	transaction := func(context storage.TransactionContext) error {
+		//1. find the account
+		account, err := app.storage.FindAccountByID(context, accountID)
+		if err != nil {
+			return errors.Wrap("error finding account on roles granting", err)
+		}
+
+		//2. grant account roles
+		err = app.auth.GrantAccountRoles(context, account, roleIDs, assignerPermissions)
+		if err != nil {
+			return errors.Wrap("error granting account roles", err)
+		}
+
+		return nil
 	}
 
-	err = app.storage.InsertAccountRoles(accountID, appOrgID, model.AccountRolesFromAppOrgRoles(roles, true, true))
-	if err != nil {
-		return err
-	}
-	return nil
+	return app.storage.PerformTransaction(transaction)
 }
 
 func (app *application) sysCreateAuthTypes(code string, description string, isExternal bool,

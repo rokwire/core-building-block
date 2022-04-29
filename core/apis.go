@@ -477,8 +477,8 @@ func (s *systemImpl) SysGrantAccountPermissions(accountID string, permissionName
 	return s.app.sysGrantAccountPermissions(accountID, permissionNames, assignerPermissions)
 }
 
-func (s *systemImpl) SysGrantAccountRoles(accountID string, appID string, roleIDs []string) error {
-	return s.app.sysGrantAccountRoles(accountID, appID, roleIDs)
+func (s *systemImpl) SysGrantAccountRoles(accountID string, appID string, roleIDs []string, assignerPermissions []string) error {
+	return s.app.sysGrantAccountRoles(accountID, appID, roleIDs, assignerPermissions)
 }
 
 func (s *systemImpl) SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error) {
