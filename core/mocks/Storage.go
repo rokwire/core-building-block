@@ -859,13 +859,13 @@ func (_m *Storage) InsertAPIKey(context storage.TransactionContext, apiKey model
 	return r0, r1
 }
 
-// InsertAccountPermissions provides a mock function with given fields: accountID, permissions
-func (_m *Storage) InsertAccountPermissions(accountID string, permissions []model.Permission) error {
-	ret := _m.Called(accountID, permissions)
+// InsertAccountPermissions provides a mock function with given fields: context, accountID, permissions
+func (_m *Storage) InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error {
+	ret := _m.Called(context, accountID, permissions)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, []model.Permission) error); ok {
-		r0 = rf(accountID, permissions)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, []model.Permission) error); ok {
+		r0 = rf(context, accountID, permissions)
 	} else {
 		r0 = ret.Error(0)
 	}

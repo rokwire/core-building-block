@@ -160,7 +160,8 @@ func (c *APIs) storeSystemData() error {
 		}
 
 		//5. insert all_system_core permission if does not exist
-		allSystemPermissions, err := c.app.storage.FindPermissionsByName(nil, []string{"all_system_core"})
+		systemPermissions := []string{"all_system_core"}
+		allSystemPermissions, err := c.app.storage.FindPermissionsByName(context, systemPermissions)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, &logutils.FieldArgs{"name": "all_system_core"}, err)
 		}
@@ -168,7 +169,7 @@ func (c *APIs) storeSystemData() error {
 		if len(allSystemPermissions) == 0 {
 			documentIDs["permission"] = uuid.NewString()
 			allSystemCore := model.Permission{ID: documentIDs["permission"], Name: "all_system_core", ServiceID: "core",
-				Assigners: []string{"all_system_core"}, DateCreated: time.Now().UTC()}
+				Assigners: systemPermissions, DateCreated: time.Now().UTC()}
 			err = c.app.storage.InsertPermission(context, allSystemCore)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, nil, err)
@@ -182,7 +183,7 @@ func (c *APIs) storeSystemData() error {
 			if c.systemAccountEmail == "" || c.systemAccountPassword == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system account email or password", nil)
 			}
-			documentIDs["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, allSystemPermissions[0].ID, c.systemAccountEmail, c.systemAccountPassword, c.logger.NewRequestLog(nil))
+			documentIDs["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, "all_system_core", c.systemAccountEmail, c.systemAccountPassword, c.logger.NewRequestLog(nil))
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInitialize, "system account", nil, err)
 			}

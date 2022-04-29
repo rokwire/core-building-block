@@ -1499,7 +1499,7 @@ func (sa *Adapter) UpdateAccountPreferences(accountID string, preferences map[st
 }
 
 //InsertAccountPermissions inserts account permissions
-func (sa *Adapter) InsertAccountPermissions(accountID string, permissions []model.Permission) error {
+func (sa *Adapter) InsertAccountPermissions(context TransactionContext, accountID string, permissions []model.Permission) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 	update := bson.D{
 		primitive.E{Key: "$push", Value: bson.D{
@@ -1510,7 +1510,13 @@ func (sa *Adapter) InsertAccountPermissions(accountID string, permissions []mode
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	var res *mongo.UpdateResult
+	var err error
+	if context != nil {
+		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	} else {
+		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
+	}
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1567,6 +1573,9 @@ func (sa *Adapter) InsertAccountRoles(accountID string, appOrgID string, roles [
 		primitive.E{Key: "$push", Value: bson.D{
 			primitive.E{Key: "roles", Value: bson.M{"$each": stgRoles}},
 		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
 	}
 
 	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
@@ -1594,6 +1603,9 @@ func (sa *Adapter) InsertAccountsGroup(group model.AccountGroup, accounts []mode
 	update := bson.D{
 		primitive.E{Key: "$push", Value: bson.D{
 			primitive.E{Key: "groups", Value: storageGroup},
+		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 

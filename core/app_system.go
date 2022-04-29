@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -328,37 +327,23 @@ func (app *application) sysDeleteAppConfig(id string) error {
 }
 
 func (app *application) sysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
-	if assignerPermissions == nil {
-		return errors.New("no permissions from admin assigner")
-	}
-
-	permissions, err := app.storage.FindPermissionsByName(nil, permissionNames)
-	if err != nil {
-		return err
-	}
-
-	if len(permissions) == 0 {
-		return errors.Newf("no permissions found for names: %v", permissionNames)
-	}
-
-	var authorizedPermissions []model.Permission
-	for _, permission := range permissions {
-		authorizedAssigners := permission.Assigners
-		for _, authorizedAssigner := range authorizedAssigners {
-			if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
-				authorizedPermissions = append(authorizedPermissions, permission)
-			}
+	transaction := func(context storage.TransactionContext) error {
+		//1. find the account
+		account, err := app.storage.FindAccountByID(context, accountID)
+		if err != nil {
+			return errors.Wrap("error finding account on permissions granting", err)
 		}
-	}
-	if authorizedPermissions == nil {
-		return errors.Newf("Assigner is not authorized to assign permissions for names: %v", permissionNames)
+
+		//2. grant account permissions
+		err = app.auth.GrantAccountPermissions(context, account, permissionNames, assignerPermissions)
+		if err != nil {
+			return errors.Wrap("error granting account permissions", err)
+		}
+
+		return nil
 	}
 
-	err = app.storage.InsertAccountPermissions(accountID, authorizedPermissions)
-	if err != nil {
-		return err
-	}
-	return nil
+	return app.storage.PerformTransaction(transaction)
 }
 
 func (app *application) sysGrantAccountRoles(accountID string, appOrgID string, roleIDs []string) error {

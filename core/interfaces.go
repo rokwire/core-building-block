@@ -116,7 +116,7 @@ type Storage interface {
 	FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error)
 
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
-	InsertAccountPermissions(accountID string, permissions []model.Permission) error
+	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 	DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
 	DeleteAccountRoles(context storage.TransactionContext, accountID string, roleIDs []string) error

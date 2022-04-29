@@ -362,7 +362,11 @@ type APIs interface {
 	UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error)
 
 	//InitializeSystemAccount initializes the first system account
-	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermissionID string, email string, password string, l *logs.Log) (string, error)
+	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, l *logs.Log) (string, error)
+
+	//GrantAccountPermissions grants permissions to an account after validating the assigner has required permissions
+	//Checks that the account does not already have any of the requested permissions
+	GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
 
 	//DeleteAccount deletes an account for the given id
 	DeleteAccount(id string) error
@@ -513,6 +517,7 @@ type Storage interface {
 
 	//Permissions
 	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
+	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 
 	//Device
 	FindDevice(context storage.TransactionContext, deviceID string, accountID string) (*model.Device, error)
