@@ -301,7 +301,7 @@ type APIs interface {
 
 	//RegisterServiceAccount registers a service account
 	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string, orgID *string,
-		permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error)
+		permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, assignerPermissions []string, l *logs.Log) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccount deregisters a service account
 	DeregisterServiceAccount(accountID string) error
@@ -310,7 +310,7 @@ type APIs interface {
 	GetServiceAccountInstance(accountID string, appID *string, orgID *string) (*model.ServiceAccount, error)
 
 	//UpdateServiceAccountInstance updates a service account instance
-	UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string) (*model.ServiceAccount, error)
+	UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string, assignerPermissions []string) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccountInstance deregisters a service account instance
 	DeregisterServiceAccountInstance(id string, appID *string, orgID *string) error
@@ -541,6 +541,7 @@ type Storage interface {
 	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	//AccountGroups
 	UpdateAccountGroups(accountID string, groups []model.AccountGroup) error
+	InsertAccountGroups(context storage.TransactionContext, accountID string, appOrgID string, groups []model.AccountGroup) error
 }
 
 //ProfileBuildingBlock is used by auth to communicate with the profile building block.

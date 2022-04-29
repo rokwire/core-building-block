@@ -31,6 +31,8 @@ p, all_permissions, /core/system/permissions, (GET)|(POST)|(DELETE)|(PUT)
 
 p, all_application-roles, /core/system/application-roles, (GET)|(POST)|(DELETE)|(PUT)
 
+p, create_account, /core/system/account, (POST)
+
 p, all_account-permissions, /core/system/account/permissions, (GET)|(POST)|(DELETE)|(PUT)
 
 p, all_account-roles, /core/system/account/roles, (GET)|(POST)|(DELETE)|(PUT)

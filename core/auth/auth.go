@@ -1353,13 +1353,15 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 //		permissionIDs ([]string): set of permissions to assign to the user
 //		roleIDs ([]string): set of roles to assign to the user
 //		groupIDs ([]string): set of groups to assign to the user
+//		adminSet (bool): whether an admin is trying to set permissions, roles, or groups for the user
+//		assignerPermissions ([]string): the admin user's permissions to validate
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		Registered account (AccountAuthType): Registered Account object
 func (a *Auth) registerUser(context storage.TransactionContext, authType model.AuthType, userIdentifier string, accountAuthTypeParams map[string]interface{},
 	appOrg model.ApplicationOrganization, credential *model.Credential, useSharedProfile bool, externalIDs map[string]string,
 	profile model.Profile, preferences map[string]interface{}, permissionNames []string, roleIDs []string, groupIDs []string,
-	adminSet bool, creatorPermissions []string, l *logs.Log) (*model.AccountAuthType, error) {
+	adminSet bool, assignerPermissions []string, l *logs.Log) (*model.AccountAuthType, error) {
 
 	//TODO - analyse what should go in one transaction
 
@@ -1387,7 +1389,7 @@ func (a *Auth) registerUser(context storage.TransactionContext, authType model.A
 	}
 	if adminSet {
 		for _, permission := range permissions {
-			err = permission.CheckAssigners(creatorPermissions)
+			err = permission.CheckAssigners(assignerPermissions)
 			if err != nil {
 				return nil, errors.WrapErrorAction(logutils.ActionValidate, "account creator permissions", &logutils.FieldArgs{"name": permission.Name}, err)
 			}
@@ -1400,7 +1402,7 @@ func (a *Auth) registerUser(context storage.TransactionContext, authType model.A
 	}
 	if adminSet {
 		for _, role := range roles {
-			err = role.CheckAssigners(creatorPermissions)
+			err = role.CheckAssigners(assignerPermissions)
 			if err != nil {
 				return nil, errors.WrapErrorAction(logutils.ActionValidate, "account creator permissions", &logutils.FieldArgs{"name": role.Name, "app_org_id": role.AppOrg.ID}, err)
 			}
@@ -1413,7 +1415,7 @@ func (a *Auth) registerUser(context storage.TransactionContext, authType model.A
 	}
 	if adminSet {
 		for _, group := range groups {
-			err = group.CheckAssigners(creatorPermissions)
+			err = group.CheckAssigners(assignerPermissions)
 			if err != nil {
 				return nil, errors.WrapErrorAction(logutils.ActionValidate, "account creator permissions", &logutils.FieldArgs{"name": group.Name, "app_org_id": group.AppOrg.ID}, err)
 			}
@@ -1784,11 +1786,16 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 	return nil
 }
 
-func (a *Auth) constructServiceAccount(accountID string, name string, appID *string, orgID *string, permissions []string, firstParty bool) (*model.ServiceAccount, error) {
-	//TODO: check assigner permissions here
+func (a *Auth) constructServiceAccount(accountID string, name string, appID *string, orgID *string, permissions []string, firstParty bool, assignerPermissions []string) (*model.ServiceAccount, error) {
 	permissionList, err := a.storage.FindPermissionsByName(nil, permissions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+	}
+	for _, permission := range permissionList {
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"name": permission.Name}, err)
+		}
 	}
 
 	var application *model.Application

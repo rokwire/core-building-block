@@ -564,7 +564,6 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 
 		//2. account exists, so grant the necessary permissions, roles, groups
 		if canSignIn {
-			//TODO: grant necessary permissions, roles, groups
 			addPermissions := make([]string, 0)
 			for _, p := range permissions {
 				if account.GetPermissionNamed(p) == nil {
@@ -585,27 +584,29 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 				}
 			}
 			if len(addRoles) > 0 {
-				err = a.GrantAccountPermissions(context, account, addRoles, creatorPermissions)
+				err = a.GrantAccountRoles(context, account, addRoles, creatorPermissions)
 				if err != nil {
 					return errors.WrapErrorAction("granting", "admin account roles", nil, err)
 				}
 			}
-			groupsList, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
-			if err != nil {
-				l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgGroup, nil), err)
+
+			addGroups := make([]string, 0)
+			for _, g := range groupIDs {
+				if account.GetGroup(g) == nil {
+					addGroups = append(addGroups, g)
+				}
+			}
+			if len(addGroups) > 0 {
+				err = a.GrantAccountGroups(context, account, addGroups, creatorPermissions)
+				if err != nil {
+					return errors.WrapErrorAction("granting", "admin account groups", nil, err)
+				}
 			}
 
-			//TODO: current roles and groups update is naive
-			err = a.storage.UpdateAccountGroups(account.ID, model.AccountGroupsFromAppOrgGroups(groupsList, true, true))
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountGroups, nil, err)
-			}
-
-			return errors.New(logutils.Unimplemented)
+			return nil
 		}
 
 		//3. account does not exist, so apply sign up
-		//TODO: make sure AdminSet flag is true on granted roles and groups
 		profile.DateCreated = time.Now().UTC()
 		if authType.IsExternal {
 			externalUser := model.ExternalSystemUser{Identifier: identifier}
@@ -1108,7 +1109,7 @@ func (a *Auth) GetServiceAccounts(params map[string]interface{}) ([]model.Servic
 
 //RegisterServiceAccount registers a service account
 func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string,
-	orgID *string, permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
+	orgID *string, permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, assignerPermissions []string, l *logs.Log) (*model.ServiceAccount, error) {
 	var newAccount *model.ServiceAccount
 	var err error
 	var newName string
@@ -1131,7 +1132,7 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 			permissionList = *permissions
 		}
 
-		newAccount, err = a.constructServiceAccount(fromAccount.AccountID, newName, appID, orgID, permissionList, fromAccount.FirstParty)
+		newAccount, err = a.constructServiceAccount(fromAccount.AccountID, newName, appID, orgID, permissionList, fromAccount.FirstParty, assignerPermissions)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 		}
@@ -1149,7 +1150,7 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 			permissionList = *permissions
 		}
 
-		newAccount, err = a.constructServiceAccount(id.String(), newName, appID, orgID, permissionList, *firstParty)
+		newAccount, err = a.constructServiceAccount(id.String(), newName, appID, orgID, permissionList, *firstParty, assignerPermissions)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 		}
@@ -1209,8 +1210,8 @@ func (a *Auth) GetServiceAccountInstance(accountID string, appID *string, orgID 
 }
 
 //UpdateServiceAccountInstance updates a service account instance
-func (a *Auth) UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string) (*model.ServiceAccount, error) {
-	updatedAccount, err := a.constructServiceAccount(id, name, appID, orgID, permissions, false)
+func (a *Auth) UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string, assignerPermissions []string) (*model.ServiceAccount, error) {
+	updatedAccount, err := a.constructServiceAccount(id, name, appID, orgID, permissions, false, assignerPermissions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 	}
@@ -1589,17 +1590,12 @@ func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *m
 
 	//update account if authorized
 	accountGroups := model.AccountGroupsFromAppOrgGroups(groups, true, true)
-	err = a.storage.InsertAccountsGroup(accountGroups, account)
+	err = a.storage.InsertAccountGroups(context, account.ID, account.AppOrg.ID, accountGroups)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountGroups, &logutils.FieldArgs{"account_id": account.ID}, err)
 	}
 
 	return nil
-
-	// err = a.storage.InsertAccountRoles(context, account.ID, account.AppOrg.ID, accountRoles)
-	// if err != nil {
-
-	// }
 }
 
 //GetServiceRegistrations retrieves all service registrations
