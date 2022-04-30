@@ -946,7 +946,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_shared_req_CreateAccount'
+              $ref: '#/components/schemas/_services_req_create-account'
         required: true
       responses:
         '200':
@@ -1564,7 +1564,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_shared_req_CreateAccount'
+              $ref: '#/components/schemas/_admin_req_create-account'
         required: true
       responses:
         '200':
@@ -4084,7 +4084,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_shared_req_CreateAccount'
+              $ref: '#/components/schemas/_system_req_create-account'
         required: true
       responses:
         '200':
@@ -5343,39 +5343,6 @@ components:
             - totp
         code:
           type: string
-    _shared_req_CreateAccount:
-      required:
-        - auth_type
-        - app_type_identifier
-        - org_id
-        - identifier
-      type: object
-      properties:
-        auth_type:
-          type: string
-          enum:
-            - email
-            - illinois_oidc
-        app_type_identifier:
-          type: string
-        org_id:
-          type: string
-        identifier:
-          type: string
-        permissions:
-          type: array
-          items:
-            type: string
-        role_ids:
-          type: array
-          items:
-            type: string
-        group_ids:
-          type: array
-          items:
-            type: string
-        profile:
-          $ref: '#/components/schemas/_shared_req_ProfileNullable'
     _shared_req_AccountCheck:
       required:
         - auth_type
@@ -5719,6 +5686,36 @@ components:
           nullable: true
         date_created:
           type: string
+    _services_req_create-account:
+      required:
+        - auth_type
+        - app_type_identifier
+        - identifier
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - email
+            - illinois_oidc
+        app_type_identifier:
+          type: string
+        identifier:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        role_ids:
+          type: array
+          items:
+            type: string
+        group_ids:
+          type: array
+          items:
+            type: string
+        profile:
+          $ref: '#/components/schemas/_shared_req_ProfileNullable'
     _services_req_account_auth-type-link:
       required:
         - auth_type
@@ -5943,6 +5940,36 @@ components:
         version:
           type: string
           description: conforms major.minor.patch format
+    _admin_req_create-account:
+      required:
+        - auth_type
+        - app_type_identifier
+        - identifier
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - email
+            - illinois_oidc
+        app_type_identifier:
+          type: string
+        identifier:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        role_ids:
+          type: array
+          items:
+            type: string
+        group_ids:
+          type: array
+          items:
+            type: string
+        profile:
+          $ref: '#/components/schemas/_shared_req_ProfileNullable'
     _admin_res_app-token:
       required:
         - token
@@ -6064,6 +6091,39 @@ components:
           type: array
           items:
             type: string
+    _system_req_create-account:
+      required:
+        - auth_type
+        - app_type_identifier
+        - org_id
+        - identifier
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - email
+            - illinois_oidc
+        app_type_identifier:
+          type: string
+        org_id:
+          type: string
+        identifier:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        role_ids:
+          type: array
+          items:
+            type: string
+        group_ids:
+          type: array
+          items:
+            type: string
+        profile:
+          $ref: '#/components/schemas/_shared_req_ProfileNullable'
     _system_req_create-Organization:
       required:
         - name

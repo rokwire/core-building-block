@@ -1044,7 +1044,7 @@ func (h SystemApisHandler) createAdminAccount(l *logs.Log, r *http.Request, clai
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SharedReqCreateAccount
+	var requestData Def.SystemReqCreateAccount
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create account request"), nil, err, http.StatusBadRequest, true)

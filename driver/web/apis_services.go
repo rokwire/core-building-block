@@ -441,14 +441,10 @@ func (h ServicesApisHandler) createAdminAccount(l *logs.Log, r *http.Request, cl
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SharedReqCreateAccount
+	var requestData Def.ServicesReqCreateAccount
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create account request"), nil, err, http.StatusBadRequest, true)
-	}
-
-	if claims.OrgID != requestData.OrgId {
-		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.MessageDataType("account organization"), nil, err, http.StatusBadRequest, true)
 	}
 
 	var permissions []string
@@ -465,8 +461,9 @@ func (h ServicesApisHandler) createAdminAccount(l *logs.Log, r *http.Request, cl
 	}
 	profile := profileFromDefNullable(requestData.Profile)
 	creatorPermissions := strings.Split(claims.Permissions, ",")
+
 	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), requestData.AppTypeIdentifier,
-		requestData.OrgId, requestData.Identifier, profile, permissions, roleIDs, groupIDs, &claims.AppID, creatorPermissions, l)
+		claims.OrgID, requestData.Identifier, profile, permissions, roleIDs, groupIDs, &claims.AppID, creatorPermissions, l)
 	if err != nil || account == nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

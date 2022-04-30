@@ -61,7 +61,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/shared/requests/create-account/Request.yaml"
+          $ref: "../../schemas/apis/services/create-account/Request.yaml"
     required: true
   responses:
     200:

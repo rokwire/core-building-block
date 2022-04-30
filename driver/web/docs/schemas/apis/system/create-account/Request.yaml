@@ -29,4 +29,4 @@ properties:
     items:
       type: string
   profile:
-    $ref:  "../../../shared/requests/ProfileNullable.yaml"  
+    $ref:  "../../shared/requests/ProfileNullable.yaml"

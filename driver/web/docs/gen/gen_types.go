@@ -60,6 +60,13 @@ const (
 	ServiceAccountCredentialTypeStaticToken ServiceAccountCredentialType = "static_token"
 )
 
+// Defines values for AdminReqCreateAccountAuthType.
+const (
+	AdminReqCreateAccountAuthTypeEmail AdminReqCreateAccountAuthType = "email"
+
+	AdminReqCreateAccountAuthTypeIllinoisOidc AdminReqCreateAccountAuthType = "illinois_oidc"
+)
+
 // Defines values for ServicesReqAccountAuthTypeLinkAuthType.
 const (
 	ServicesReqAccountAuthTypeLinkAuthTypeEmail ServicesReqAccountAuthTypeLinkAuthType = "email"
@@ -80,6 +87,13 @@ const (
 	ServicesReqAccountAuthTypeUnlinkAuthTypeTwilioPhone ServicesReqAccountAuthTypeUnlinkAuthType = "twilio_phone"
 
 	ServicesReqAccountAuthTypeUnlinkAuthTypeUsername ServicesReqAccountAuthTypeUnlinkAuthType = "username"
+)
+
+// Defines values for ServicesReqCreateAccountAuthType.
+const (
+	ServicesReqCreateAccountAuthTypeEmail ServicesReqCreateAccountAuthType = "email"
+
+	ServicesReqCreateAccountAuthTypeIllinoisOidc ServicesReqCreateAccountAuthType = "illinois_oidc"
 )
 
 // Defines values for ServicesReqCredentialForgotInitiateAuthType.
@@ -122,13 +136,6 @@ const (
 	SharedReqAccountCheckAuthTypeTwilioPhone SharedReqAccountCheckAuthType = "twilio_phone"
 
 	SharedReqAccountCheckAuthTypeUsername SharedReqAccountCheckAuthType = "username"
-)
-
-// Defines values for SharedReqCreateAccountAuthType.
-const (
-	SharedReqCreateAccountAuthTypeEmail SharedReqCreateAccountAuthType = "email"
-
-	SharedReqCreateAccountAuthTypeIllinoisOidc SharedReqCreateAccountAuthType = "illinois_oidc"
 )
 
 // Defines values for SharedReqLoginAuthType.
@@ -194,6 +201,13 @@ const (
 	SystemReqCreateOrganizationTypeMicro SystemReqCreateOrganizationType = "micro"
 
 	SystemReqCreateOrganizationTypeSmall SystemReqCreateOrganizationType = "small"
+)
+
+// Defines values for SystemReqCreateAccountAuthType.
+const (
+	SystemReqCreateAccountAuthTypeEmail SystemReqCreateAccountAuthType = "email"
+
+	SystemReqCreateAccountAuthTypeIllinoisOidc SystemReqCreateAccountAuthType = "illinois_oidc"
 )
 
 // Defines values for SystemReqUpdateOrganizationType.
@@ -575,6 +589,20 @@ type AdminReqAddAccountsToGroup struct {
 	GroupId    string   `json:"group_id"`
 }
 
+// AdminReqCreateAccount defines model for _admin_req_create-account.
+type AdminReqCreateAccount struct {
+	AppTypeIdentifier string                        `json:"app_type_identifier"`
+	AuthType          AdminReqCreateAccountAuthType `json:"auth_type"`
+	GroupIds          *[]string                     `json:"group_ids,omitempty"`
+	Identifier        string                        `json:"identifier"`
+	Permissions       *[]string                     `json:"permissions,omitempty"`
+	Profile           *SharedReqProfileNullable     `json:"profile"`
+	RoleIds           *[]string                     `json:"role_ids,omitempty"`
+}
+
+// AdminReqCreateAccountAuthType defines model for AdminReqCreateAccount.AuthType.
+type AdminReqCreateAccountAuthType string
+
 // AdminReqCreateApplicationGroup defines model for _admin_req_create-application_group.
 type AdminReqCreateApplicationGroup struct {
 	Name        string    `json:"name"`
@@ -676,6 +704,20 @@ type ServicesReqAuthorizeService struct {
 	ServiceId      string    `json:"service_id"`
 }
 
+// ServicesReqCreateAccount defines model for _services_req_create-account.
+type ServicesReqCreateAccount struct {
+	AppTypeIdentifier string                           `json:"app_type_identifier"`
+	AuthType          ServicesReqCreateAccountAuthType `json:"auth_type"`
+	GroupIds          *[]string                        `json:"group_ids,omitempty"`
+	Identifier        string                           `json:"identifier"`
+	Permissions       *[]string                        `json:"permissions,omitempty"`
+	Profile           *SharedReqProfileNullable        `json:"profile"`
+	RoleIds           *[]string                        `json:"role_ids,omitempty"`
+}
+
+// ServicesReqCreateAccountAuthType defines model for ServicesReqCreateAccount.AuthType.
+type ServicesReqCreateAccountAuthType string
+
 // ServicesReqCredentialForgotComplete defines model for _services_req_credential_forgot_complete.
 type ServicesReqCredentialForgotComplete struct {
 	CredentialId string       `json:"credential_id"`
@@ -775,21 +817,6 @@ type SharedReqAccountCheck struct {
 
 // SharedReqAccountCheckAuthType defines model for SharedReqAccountCheck.AuthType.
 type SharedReqAccountCheckAuthType string
-
-// SharedReqCreateAccount defines model for _shared_req_CreateAccount.
-type SharedReqCreateAccount struct {
-	AppTypeIdentifier string                         `json:"app_type_identifier"`
-	AuthType          SharedReqCreateAccountAuthType `json:"auth_type"`
-	GroupIds          *[]string                      `json:"group_ids,omitempty"`
-	Identifier        string                         `json:"identifier"`
-	OrgId             string                         `json:"org_id"`
-	Permissions       *[]string                      `json:"permissions,omitempty"`
-	Profile           *SharedReqProfileNullable      `json:"profile"`
-	RoleIds           *[]string                      `json:"role_ids,omitempty"`
-}
-
-// SharedReqCreateAccountAuthType defines model for SharedReqCreateAccount.AuthType.
-type SharedReqCreateAccountAuthType string
 
 // Auth login creds for auth_type="anonymous"
 type SharedReqCredsAPIKey struct {
@@ -1061,6 +1088,21 @@ type SystemReqCreateOrganization struct {
 // SystemReqCreateOrganizationType defines model for SystemReqCreateOrganization.Type.
 type SystemReqCreateOrganizationType string
 
+// SystemReqCreateAccount defines model for _system_req_create-account.
+type SystemReqCreateAccount struct {
+	AppTypeIdentifier string                         `json:"app_type_identifier"`
+	AuthType          SystemReqCreateAccountAuthType `json:"auth_type"`
+	GroupIds          *[]string                      `json:"group_ids,omitempty"`
+	Identifier        string                         `json:"identifier"`
+	OrgId             string                         `json:"org_id"`
+	Permissions       *[]string                      `json:"permissions,omitempty"`
+	Profile           *SharedReqProfileNullable      `json:"profile"`
+	RoleIds           *[]string                      `json:"role_ids,omitempty"`
+}
+
+// SystemReqCreateAccountAuthType defines model for SystemReqCreateAccount.AuthType.
+type SystemReqCreateAccountAuthType string
+
 // SystemReqCreateApplication defines model for _system_req_create_Application.
 type SystemReqCreateApplication struct {
 	Admin            bool `json:"admin"`
@@ -1154,7 +1196,7 @@ type SystemReqUpdateServiceAccount struct {
 }
 
 // PostAdminAccountJSONBody defines parameters for PostAdminAccount.
-type PostAdminAccountJSONBody SharedReqCreateAccount
+type PostAdminAccountJSONBody AdminReqCreateAccount
 
 // DeleteAdminAccountMfaParams defines parameters for DeleteAdminAccountMfa.
 type DeleteAdminAccountMfaParams struct {
@@ -1275,7 +1317,7 @@ type GetBbsServiceRegsParams struct {
 }
 
 // PostServicesAccountJSONBody defines parameters for PostServicesAccount.
-type PostServicesAccountJSONBody SharedReqCreateAccount
+type PostServicesAccountJSONBody ServicesReqCreateAccount
 
 // DeleteServicesAccountMfaJSONBody defines parameters for DeleteServicesAccountMfa.
 type DeleteServicesAccountMfaJSONBody SharedReqMfa
@@ -1370,7 +1412,7 @@ type GetServicesAuthServiceRegsParams struct {
 type PostServicesAuthVerifyMfaJSONBody SharedReqMfa
 
 // PostSystemAccountJSONBody defines parameters for PostSystemAccount.
-type PostSystemAccountJSONBody SharedReqCreateAccount
+type PostSystemAccountJSONBody SystemReqCreateAccount
 
 // DeleteSystemAccountMfaParams defines parameters for DeleteSystemAccountMfa.
 type DeleteSystemAccountMfaParams struct {

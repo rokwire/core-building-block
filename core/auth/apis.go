@@ -549,7 +549,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 	}
 
 	if creatorAppID != nil && appOrg.Application.ID != *creatorAppID {
-		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "account application", nil)
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "application type", &logutils.FieldArgs{"app_type_identifier": appTypeIdentifier})
 	}
 
 	var accountAuthType *model.AccountAuthType
