@@ -611,6 +611,9 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 		if authType.IsExternal {
 			externalUser := model.ExternalSystemUser{Identifier: identifier}
 			accountAuthType, err = a.applySignUpExternal(*authType, *appOrg, externalUser, profile, nil, permissions, roleIDs, groupIDs, true, creatorPermissions, l)
+			if err != nil {
+				return errors.WrapErrorAction("signing up", "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
+			}
 		} else {
 			authImpl, err := a.getAuthTypeImpl(*authType)
 			if err != nil {
@@ -619,9 +622,9 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 
 			profile.Email = identifier
 			params, accountAuthType, err = a.applySignUpAdmin(authImpl, account, *authType, *appOrg, identifier, "", profile, permissions, roleIDs, groupIDs, creatorPermissions, l)
-		}
-		if err != nil {
-			return errors.WrapErrorAction("signing up", "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
+			if err != nil {
+				return errors.WrapErrorAction("signing up", "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
+			}
 		}
 
 		return nil
