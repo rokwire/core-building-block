@@ -612,7 +612,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 		profile.DateCreated = time.Now().UTC()
 		if authType.IsExternal {
 			externalUser := model.ExternalSystemUser{Identifier: identifier}
-			accountAuthType, err = a.applySignUpExternal(*authType, *appOrg, externalUser, profile, nil, permissions, roleIDs, groupIDs, true, creatorPermissions, l)
+			accountAuthType, err = a.applySignUpAdminExternal(context, *authType, *appOrg, externalUser, profile, permissions, roleIDs, groupIDs, creatorPermissions, l)
 			if err != nil {
 				return errors.WrapErrorAction("signing up", "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
 			}
@@ -623,7 +623,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 			}
 
 			profile.Email = identifier
-			params, accountAuthType, err = a.applySignUpAdmin(authImpl, account, *authType, *appOrg, identifier, "", profile, permissions, roleIDs, groupIDs, creatorPermissions, l)
+			params, accountAuthType, err = a.applySignUpAdmin(context, authImpl, account, *authType, *appOrg, identifier, "", profile, permissions, roleIDs, groupIDs, creatorPermissions, l)
 			if err != nil {
 				return errors.WrapErrorAction("signing up", "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
 			}
@@ -1441,7 +1441,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	profile := model.Profile{ID: uuid.NewString(), Email: email, DateCreated: now}
 	permissions := []string{allSystemPermission}
 
-	_, accountAuthType, err := a.applySignUpAdmin(authImpl, nil, authType, appOrg, email, password, profile, permissions, nil, nil, permissions, l)
+	_, accountAuthType, err := a.applySignUpAdmin(context, authImpl, nil, authType, appOrg, email, password, profile, permissions, nil, nil, permissions, l)
 	if err != nil {
 		return "", errors.WrapErrorAction("signing up", "initial system user", &logutils.FieldArgs{"email": email}, err)
 	}
