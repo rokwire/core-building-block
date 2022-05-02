@@ -553,6 +553,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 	}
 
 	var accountAuthType *model.AccountAuthType
+	var newAccount *model.Account
 	var params map[string]interface{}
 	transaction := func(context storage.TransactionContext) error {
 		//1. check if the user exists
@@ -603,6 +604,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 				}
 			}
 
+			newAccount = account
 			return nil
 		}
 
@@ -627,6 +629,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 			}
 		}
 
+		newAccount = &accountAuthType.Account
 		return nil
 	}
 
@@ -635,7 +638,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier s
 		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, "admin account", nil, err)
 	}
 
-	return &accountAuthType.Account, params, nil
+	return newAccount, params, nil
 }
 
 //VerifyCredential verifies credential (checks the verification code in the credentials collection)
@@ -1494,6 +1497,7 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountPermissions, &logutils.FieldArgs{"account_id": account.ID}, err)
 	}
 
+	account.Permissions = append(account.Permissions, permissions...)
 	return nil
 }
 
@@ -1546,6 +1550,7 @@ func (a *Auth) GrantAccountRoles(context storage.TransactionContext, account *mo
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountRoles, &logutils.FieldArgs{"account_id": account.ID}, err)
 	}
 
+	account.Roles = append(account.Roles, accountRoles...)
 	return nil
 }
 
@@ -1598,6 +1603,7 @@ func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *m
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountGroups, &logutils.FieldArgs{"account_id": account.ID}, err)
 	}
 
+	account.Groups = append(account.Groups, accountGroups...)
 	return nil
 }
 

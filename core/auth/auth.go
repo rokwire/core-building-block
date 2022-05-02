@@ -1367,7 +1367,7 @@ func (a *Auth) registerUser(context storage.TransactionContext, authType model.A
 
 	//External and anonymous auth is automatically verified, otherwise verified if credential has been verified previously
 	unverified := true
-	if authType.IsExternal || authType.IsAnonymous {
+	if !adminSet && (authType.IsExternal || authType.IsAnonymous) {
 		unverified = false
 	} else if credential != nil {
 		unverified = !credential.Verified
