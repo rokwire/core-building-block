@@ -257,6 +257,19 @@ func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthTy
 		}
 	}
 
+	if accountAuthType.Unverified {
+		accountAuthType.Unverified = false
+		for i := 0; i < len(accountAuthType.Account.AuthTypes); i++ {
+			if accountAuthType.Account.AuthTypes[i].ID == accountAuthType.ID {
+				accountAuthType.Account.AuthTypes[i].Unverified = false
+			}
+		}
+		err := a.storage.UpdateAccountAuthType(*accountAuthType)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
+		}
+	}
+
 	return accountAuthType, nil
 }
 
