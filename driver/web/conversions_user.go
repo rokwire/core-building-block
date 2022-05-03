@@ -40,6 +40,9 @@ func adminAccountToDef(item model.Account, params map[string]interface{}) *Def.S
 	groups := accountGroupsToDef(item.GetActiveGroups())
 	//account auth types
 	authTypes := accountAuthTypesToDef(item.AuthTypes)
+	for i := 0; i < len(authTypes); i++ {
+		authTypes[i].Params = nil
+	}
 	//params
 	var paramsData *map[string]interface{}
 	if params != nil {

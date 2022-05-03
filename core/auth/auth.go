@@ -253,6 +253,9 @@ func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthTy
 	//apply external id changes to account
 	if account != nil {
 		for k, v := range externalIDChanges {
+			if account.ExternalIDs == nil {
+				account.ExternalIDs = make(map[string]string)
+			}
 			account.ExternalIDs[k] = v
 		}
 	}
@@ -458,6 +461,9 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 
 			//3. update external ids
 			for k, v := range externalUser.ExternalIDs {
+				if account.ExternalIDs == nil {
+					account.ExternalIDs = make(map[string]string)
+				}
 				if account.ExternalIDs[k] != v {
 					account.ExternalIDs[k] = v
 					externalIDChanges[k] = v
@@ -1672,6 +1678,9 @@ func (a *Auth) linkAccountAuthTypeExternal(account model.Account, authType model
 	accountAuthType.Account = account
 
 	for k, v := range externalUser.ExternalIDs {
+		if account.ExternalIDs == nil {
+			account.ExternalIDs = make(map[string]string)
+		}
 		if account.ExternalIDs[k] == "" {
 			account.ExternalIDs[k] = v
 		}
@@ -1994,10 +2003,10 @@ func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier str
 	applicationID := applicationType.Application.ID
 	appOrg, err := a.storage.FindApplicationOrganization(applicationID, orgID)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, logutils.StringArgs(orgID), err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": orgID}, err)
 	}
 	if appOrg == nil {
-		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, logutils.StringArgs(orgID))
+		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": orgID})
 	}
 
 	//check if the auth type is supported for this application and organization

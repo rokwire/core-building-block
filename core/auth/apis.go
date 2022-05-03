@@ -343,6 +343,9 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 	}
 
 	for k, v := range externalIDChanges {
+		if loginSession.ExternalIDs == nil {
+			loginSession.ExternalIDs = make(map[string]string)
+		}
 		loginSession.ExternalIDs[k] = v
 	}
 
