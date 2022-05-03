@@ -2003,10 +2003,10 @@ func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier str
 	applicationID := applicationType.Application.ID
 	appOrg, err := a.storage.FindApplicationOrganization(applicationID, orgID)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": orgID}, err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": applicationID, "org_id": orgID}, err)
 	}
 	if appOrg == nil {
-		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": orgID})
+		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": applicationID, "org_id": orgID})
 	}
 
 	//check if the auth type is supported for this application and organization
