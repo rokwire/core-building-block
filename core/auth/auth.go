@@ -608,7 +608,7 @@ func (a *Auth) checkCredentialVerified(authImpl authType, accountAuthType *model
 		//it is unverified
 		if !*expired {
 			//not expired, just notify the client that it is "unverified"
-			return errors.ErrorData("", "unverified credential", nil).SetStatus(utils.ErrorStatusUnverified)
+			return errors.ErrorData("unverified", "credential", nil).SetStatus(utils.ErrorStatusUnverified)
 		}
 		//expired, first restart the verification and then notify the client that it is unverified and verification is restarted
 
@@ -619,7 +619,7 @@ func (a *Auth) checkCredentialVerified(authImpl authType, accountAuthType *model
 		}
 
 		//notify the client
-		return errors.ErrorData("", "credential verification expired", nil).SetStatus(utils.ErrorStatusVerificationExpired)
+		return errors.ErrorData("expired", "credential verification", nil).SetStatus(utils.ErrorStatusVerificationExpired)
 	}
 
 	return nil
@@ -643,6 +643,11 @@ func (a *Auth) checkCredentials(authImpl authType, authType model.AuthType, acco
 	//if sign in was completed successfully, set auth type to verified
 	if message == "" && accountAuthType.Unverified {
 		accountAuthType.Unverified = false
+		for i := 0; i < len(accountAuthType.Account.AuthTypes); i++ {
+			if accountAuthType.Account.AuthTypes[i].ID == accountAuthType.ID {
+				accountAuthType.Account.AuthTypes[i].Unverified = false
+			}
+		}
 		err := a.storage.UpdateAccountAuthType(*accountAuthType)
 		if err != nil {
 			return "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
