@@ -1,9 +1,42 @@
 required:
-  - account
+  - id
+  - app_id
+  - org_id
+  - first_name
+  - last_name
+  - permissions
+  - roles
+  - groups
+  - auth_types
 type: object
 properties:
-  account:
-    $ref: "../../../shared/responses/Account.yaml"
+  id:
+    type: string
+    readOnly: true
+  app_id:
+    type: string
+  org_id:
+    type: string
+  first_name:
+    type: string
+  last_name:
+    type: string
+  permissions:
+    type: array
+    items:
+      $ref: "../../../../application/PermissionFields.yaml"
+  roles:
+    type: array
+    items:
+      $ref: "../../../../application/AppOrgRoleFields.yaml"
+  groups:
+    type: array
+    items:
+      $ref: "../../../../application/AppOrgGroupFields.yaml"
+  auth_types:
+    type: array
+    items:
+      $ref: "../../../../user/AccountAuthTypeFields.yaml"
   params:
     type: object
     nullable: true

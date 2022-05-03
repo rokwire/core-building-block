@@ -534,8 +534,8 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 	return nil, loginSession, nil
 }
 
-//CreateAdminAccount creates an account for a new admin user
-func (a *Auth) CreateAdminAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string,
+//CreateAccount creates an account for a new user or updates an existing user's account with new permissions, roles, and groups
+func (a *Auth) CreateAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string,
 	profile model.Profile, permissions []string, roleIDs []string, groupIDs []string, creatorAppID *string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
 	//TODO: add admin authentication policies that specify which auth types may be used for each app org
 	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {

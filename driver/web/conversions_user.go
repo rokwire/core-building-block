@@ -23,12 +23,31 @@ func accountToDef(item model.Account) *Def.SharedResAccount {
 		AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 }
 
-func аccountsToDef(items []model.Account) []Def.SharedResAccount {
+func accountsToDef(items []model.Account) []Def.SharedResAccount {
 	result := make([]Def.SharedResAccount, len(items))
 	for i, item := range items {
 		result[i] = *accountToDef(item)
 	}
 	return result
+}
+
+func adminAccountToDef(item model.Account, params map[string]interface{}) *Def.SharedResCreateAccount {
+	//permissions
+	permissions := applicationPermissionsToDef(item.Permissions)
+	//roles
+	roles := accountRolesToDef(item.GetActiveRoles())
+	//groups
+	groups := accountGroupsToDef(item.GetActiveGroups())
+	//account auth types
+	authTypes := accountAuthTypesToDef(item.AuthTypes)
+	//params
+	var paramsData *map[string]interface{}
+	if params != nil {
+		paramsData = &params
+	}
+	return &Def.SharedResCreateAccount{Id: item.ID, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID,
+		FirstName: item.Profile.FirstName, LastName: item.Profile.LastName, Permissions: permissions, Roles: roles, Groups: groups,
+		AuthTypes: authTypes, Params: paramsData}
 }
 
 //AccountAuthType

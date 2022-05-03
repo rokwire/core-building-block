@@ -216,8 +216,8 @@ type APIs interface {
 	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
 	LoginMFA(apiKey string, accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
 
-	//CreateAdminAccount creates an account for a new admin user
-	CreateAdminAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string, profile model.Profile,
+	//CreateAccount creates an account for a new user or updates an existing user's account with new permissions, roles, and groups
+	CreateAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string, profile model.Profile,
 		permissions []string, roleIDs []string, groupIDs []string, creatorAppID *string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//VerifyCredential verifies credential (checks the verification code in the credentials collection)

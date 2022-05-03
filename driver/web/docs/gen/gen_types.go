@@ -976,8 +976,16 @@ type SharedResAccountCheck bool
 
 // SharedResCreateAccount defines model for _shared_res_CreateAccount.
 type SharedResCreateAccount struct {
-	Account SharedResAccount        `json:"account"`
-	Params  *map[string]interface{} `json:"params"`
+	AppId       string                  `json:"app_id"`
+	AuthTypes   []AccountAuthTypeFields `json:"auth_types"`
+	FirstName   string                  `json:"first_name"`
+	Groups      []AppOrgGroupFields     `json:"groups"`
+	Id          string                  `json:"id"`
+	LastName    string                  `json:"last_name"`
+	OrgId       string                  `json:"org_id"`
+	Params      *map[string]interface{} `json:"params"`
+	Permissions []PermissionFields      `json:"permissions"`
+	Roles       []AppOrgRoleFields      `json:"roles"`
 }
 
 // SharedResLogin defines model for _shared_res_Login.

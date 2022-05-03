@@ -1038,7 +1038,7 @@ func (h SystemApisHandler) deleteApplicationConfig(l *logs.Log, r *http.Request,
 	return l.HttpResponseSuccess()
 }
 
-func (h SystemApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h SystemApisHandler) createAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -1064,18 +1064,13 @@ func (h SystemApisHandler) createAdminAccount(l *logs.Log, r *http.Request, clai
 	}
 	profile := profileFromDefNullable(requestData.Profile)
 	creatorPermissions := strings.Split(claims.Permissions, ",")
-	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), requestData.AppTypeIdentifier,
+	account, params, err := h.coreAPIs.Auth.CreateAccount(string(requestData.AuthType), requestData.AppTypeIdentifier,
 		requestData.OrgId, requestData.Identifier, profile, permissions, roleIDs, groupIDs, nil, creatorPermissions, l)
 	if err != nil || account == nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	accountData := accountToDef(*account)
-	var paramsData *map[string]interface{}
-	if params != nil {
-		paramsData = &params
-	}
-	respData := &Def.SharedResCreateAccount{Account: *accountData, Params: paramsData}
+	respData := adminAccountToDef(*account, params)
 
 	data, err = json.Marshal(respData)
 	if err != nil {

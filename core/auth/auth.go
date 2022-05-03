@@ -258,12 +258,7 @@ func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthTy
 	}
 
 	if accountAuthType.Unverified {
-		accountAuthType.Unverified = false
-		for i := 0; i < len(accountAuthType.Account.AuthTypes); i++ {
-			if accountAuthType.Account.AuthTypes[i].ID == accountAuthType.ID {
-				accountAuthType.Account.AuthTypes[i].Unverified = false
-			}
-		}
+		accountAuthType.SetUnverified(false)
 		err := a.storage.UpdateAccountAuthType(*accountAuthType)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
@@ -655,12 +650,7 @@ func (a *Auth) checkCredentials(authImpl authType, authType model.AuthType, acco
 
 	//if sign in was completed successfully, set auth type to verified
 	if message == "" && accountAuthType.Unverified {
-		accountAuthType.Unverified = false
-		for i := 0; i < len(accountAuthType.Account.AuthTypes); i++ {
-			if accountAuthType.Account.AuthTypes[i].ID == accountAuthType.ID {
-				accountAuthType.Account.AuthTypes[i].Unverified = false
-			}
-		}
+		accountAuthType.SetUnverified(false)
 		err := a.storage.UpdateAccountAuthType(*accountAuthType)
 		if err != nil {
 			return "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)

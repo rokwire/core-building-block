@@ -5594,11 +5594,44 @@ components:
           type: object
     _shared_res_CreateAccount:
       required:
-        - account
+        - id
+        - app_id
+        - org_id
+        - first_name
+        - last_name
+        - permissions
+        - roles
+        - groups
+        - auth_types
       type: object
       properties:
-        account:
-          $ref: '#/components/schemas/_shared_res_Account'
+        id:
+          type: string
+          readOnly: true
+        app_id:
+          type: string
+        org_id:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionFields'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppOrgRoleFields'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppOrgGroupFields'
+        auth_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountAuthTypeFields'
         params:
           type: object
           nullable: true
