@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rokwire/core-auth-library-go/authorization"
-	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/core-auth-library-go/sigauth"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
@@ -1478,9 +1477,16 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 	}
 	if len(permissions) != len(permissionNames) {
 		badNames := make([]string, 0)
-		for _, p := range permissions {
-			if !authutils.ContainsString(permissionNames, p.Name) {
-				badNames = append(badNames, p.Name)
+		for _, pName := range permissionNames {
+			bad := true
+			for _, p := range permissions {
+				if p.Name == pName {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badNames = append(badNames, pName)
 			}
 		}
 		return errors.ErrorData(logutils.StatusInvalid, model.TypePermission, &logutils.FieldArgs{"names": badNames})
@@ -1530,9 +1536,16 @@ func (a *Auth) GrantAccountRoles(context storage.TransactionContext, account *mo
 	}
 	if len(roles) != len(roleIDs) {
 		badIDs := make([]string, 0)
-		for _, r := range roles {
-			if !authutils.ContainsString(roleIDs, r.ID) {
-				badIDs = append(badIDs, r.ID)
+		for _, rID := range roleIDs {
+			bad := true
+			for _, r := range roles {
+				if r.ID == rID {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badIDs = append(badIDs, rID)
 			}
 		}
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgRole, &logutils.FieldArgs{"ids": badIDs})
@@ -1583,9 +1596,16 @@ func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *m
 	}
 	if len(groups) != len(groupIDs) {
 		badIDs := make([]string, 0)
-		for _, g := range groups {
-			if !authutils.ContainsString(groupIDs, g.ID) {
-				badIDs = append(badIDs, g.ID)
+		for _, gID := range groupIDs {
+			bad := true
+			for _, g := range groups {
+				if g.ID == gID {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badIDs = append(badIDs, gID)
 			}
 		}
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgGroup, &logutils.FieldArgs{"ids": badIDs})

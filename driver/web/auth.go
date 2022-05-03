@@ -353,10 +353,6 @@ func (auth *SystemAuth) check(req *http.Request) (int, *tokenauth.Claims, error)
 		return http.StatusUnauthorized, nil, errors.WrapErrorAction(typeCheckSystemAuthRequestToken, logutils.TypeToken, nil, err)
 	}
 
-	if !claims.Admin {
-		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
-	}
-
 	if !claims.System {
 		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
 	}
