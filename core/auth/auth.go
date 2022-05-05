@@ -1698,7 +1698,7 @@ func (a *Auth) constructServiceAccount(accountID string, name string, appID *str
 		Permissions: permissionList, FirstParty: firstParty}, nil
 }
 
-func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, params map[string]interface{}, l *logs.Log) ([]model.ServiceAccount, string, error) {
+func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, accountID *string, firstParty bool, single bool, l *logs.Log) ([]model.ServiceAccount, string, error) {
 	var requestData model.ServiceAccountTokenRequest
 	err := json.Unmarshal(r.Body, &requestData)
 	if err != nil {
@@ -1711,14 +1711,16 @@ func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, params map[string]in
 		return nil, "", errors.WrapErrorAction("error getting service auth type on get service access token", "", nil, err)
 	}
 
-	if params == nil {
-		params = map[string]interface{}{
-			"account_id": requestData.AccountID,
-			"app_id":     requestData.AppID,
-			"org_id":     requestData.OrgID,
-		}
+	params := map[string]interface{}{"first_party": firstParty}
+	if accountID == nil {
+		params["account_id"] = requestData.AccountID
+	} else {
+		params["account_id"] = *accountID
 	}
-	params["first_party"] = strings.HasPrefix(r.Path, "/core/bbs")
+	if single {
+		params["app_id"] = requestData.AppID
+		params["org_id"] = requestData.OrgID
+	}
 
 	accounts, err := serviceAuthType.checkCredentials(r, requestData.Creds, params)
 	if err != nil {
@@ -1726,6 +1728,25 @@ func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, params map[string]in
 	}
 
 	return accounts, requestData.AuthType, nil
+}
+
+func (a *Auth) buildAccessTokenForServiceAccount(account model.ServiceAccount, authType string) (string, *model.AppOrgPair, error) {
+	permissions := account.GetPermissionNames()
+	var appID string
+	if account.Application != nil {
+		appID = account.Application.ID
+	}
+	var orgID string
+	if account.Organization != nil {
+		orgID = account.Organization.ID
+	}
+
+	claims := a.getStandardClaims(account.AccountID, "", account.Name, "", "", rokwireTokenAud, orgID, appID, authType, nil, nil, false, true, false, false, true, account.FirstParty, "")
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), "")
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+	}
+	return accessToken, &model.AppOrgPair{AppID: utils.StringOrNil(appID), OrgID: utils.StringOrNil(orgID)}, nil
 }
 
 func (a *Auth) registerAuthType(name string, auth authType) error {

@@ -148,10 +148,10 @@ func StringOrNil(v string) *string {
 	return &v
 }
 
-//GetPrintableString returns the string content of a pointer, and "nil" if pointer is nil
-func GetPrintableString(v *string) string {
+//GetPrintableString returns the string content of a pointer, and defaultVal if pointer is nil
+func GetPrintableString(v *string, defaultVal string) string {
 	if v != nil {
 		return *v
 	}
-	return "nil"
+	return defaultVal
 }

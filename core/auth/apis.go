@@ -948,9 +948,8 @@ func (a *Auth) RemoveMFAType(accountID string, identifier string, mfaType string
 }
 
 //GetServiceAccountParams returns a list of app, org pairs a service account has access to
-func (a *Auth) GetServiceAccountParams(accountID string, r *sigauth.Request, l *logs.Log) ([]model.AppOrgPair, error) {
-	params := map[string]interface{}{"account_id": accountID}
-	accounts, _, err := a.checkServiceAccountCreds(r, params, l)
+func (a *Auth) GetServiceAccountParams(accountID string, firstParty bool, r *sigauth.Request, l *logs.Log) ([]model.AppOrgPair, error) {
+	accounts, _, err := a.checkServiceAccountCreds(r, &accountID, firstParty, false, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}
@@ -972,28 +971,38 @@ func (a *Auth) GetServiceAccountParams(accountID string, r *sigauth.Request, l *
 }
 
 //GetServiceAccessToken returns an access token for a non-human client
-func (a *Auth) GetServiceAccessToken(r *sigauth.Request, l *logs.Log) (string, error) {
-	accounts, authType, err := a.checkServiceAccountCreds(r, nil, l)
+func (a *Auth) GetServiceAccessToken(firstParty bool, r *sigauth.Request, l *logs.Log) (string, error) {
+	accounts, authType, err := a.checkServiceAccountCreds(r, nil, firstParty, true, l)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
 	}
 
-	permissions := accounts[0].GetPermissionNames()
-	var appID string
-	if accounts[0].Application != nil {
-		appID = accounts[0].Application.ID
-	}
-	var orgID string
-	if accounts[0].Organization != nil {
-		orgID = accounts[0].Organization.ID
+	accessToken, _, err := a.buildAccessTokenForServiceAccount(accounts[0], authType)
+	if err != nil {
+		return "", err
 	}
 
-	claims := a.getStandardClaims(accounts[0].AccountID, "", "", "", "", rokwireTokenAud, orgID, appID, authType, nil, nil, false, true, false, false, true, accounts[0].FirstParty, "")
-	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), "")
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
-	}
 	return accessToken, nil
+}
+
+//GetAllServiceAccessTokens returns an access token for each app, org pair a service account has access to
+func (a *Auth) GetAllServiceAccessTokens(firstParty bool, r *sigauth.Request, l *logs.Log) (map[model.AppOrgPair]string, error) {
+	accounts, authType, err := a.checkServiceAccountCreds(r, nil, firstParty, false, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, "service account creds", nil, err)
+	}
+
+	accessTokens := make(map[model.AppOrgPair]string, len(accounts))
+	for _, account := range accounts {
+		accessToken, appOrgPair, err := a.buildAccessTokenForServiceAccount(account, authType)
+		if err != nil {
+			return nil, err
+		}
+
+		accessTokens[*appOrgPair] = accessToken
+	}
+
+	return accessTokens, nil
 }
 
 //GetServiceAccounts gets all service accounts matching a search
