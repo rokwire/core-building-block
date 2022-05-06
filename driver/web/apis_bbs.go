@@ -149,7 +149,7 @@ func (h BBsApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, cla
 }
 
 func (h BBsApisHandler) getDeletedAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	accountIDs, err := h.coreAPIs.BBs.BBsGetDeletedAccounts()
+	accountIDs, err := h.coreAPIs.BBs.BBsGetDeletedAccounts(claims.AppID, claims.OrgID)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, "deleted account ids", nil, err, http.StatusInternalServerError, true)
 	}

@@ -742,13 +742,13 @@ func (_m *Storage) FindCredential(context storage.TransactionContext, ID string)
 	return r0, r1
 }
 
-// FindDeletedAccounts provides a mock function with given fields:
-func (_m *Storage) FindDeletedAccounts() ([]model.Account, error) {
-	ret := _m.Called()
+// FindDeletedAccounts provides a mock function with given fields: appID, orgID
+func (_m *Storage) FindDeletedAccounts(appID string, orgID string) ([]model.Account, error) {
+	ret := _m.Called(appID, orgID)
 
 	var r0 []model.Account
-	if rf, ok := ret.Get(0).(func() []model.Account); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(string, string) []model.Account); ok {
+		r0 = rf(appID, orgID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Account)
@@ -756,8 +756,8 @@ func (_m *Storage) FindDeletedAccounts() ([]model.Account, error) {
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(appID, orgID)
 	} else {
 		r1 = ret.Error(1)
 	}

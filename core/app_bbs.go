@@ -7,8 +7,8 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-func (app *application) bbsGetDeletedAccounts() ([]string, error) {
-	accounts, err := app.storage.FindDeletedAccounts()
+func (app *application) bbsGetDeletedAccounts(appID string, orgID string) ([]string, error) {
+	accounts, err := app.storage.FindDeletedAccounts(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}

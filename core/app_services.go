@@ -79,7 +79,7 @@ func (app *application) serDeleteAccount(id string) error {
 
 		//2. mark account deleted and remove data in storage
 		now := time.Now().UTC()
-		deletedAccount := model.Account{ID: account.ID, Deleted: true, DateCreated: account.DateCreated, DateUpdated: &now}
+		deletedAccount := model.Account{ID: account.ID, AppOrg: account.AppOrg, Deleted: true, DateCreated: account.DateCreated, DateUpdated: &now}
 		err = app.storage.SaveAccount(context, &deletedAccount)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
