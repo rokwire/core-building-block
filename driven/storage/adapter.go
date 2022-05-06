@@ -579,7 +579,7 @@ func (sa *Adapter) getCachedApplicationOrganizations(substring string) ([]model.
 }
 
 func (sa *Adapter) getAppOrgIDsByAppOrgPair(appID string, orgID string) ([]string, error) {
-	if appID != "" && orgID != "" {
+	if appID != "all" && orgID != "all" {
 		appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
@@ -591,7 +591,7 @@ func (sa *Adapter) getAppOrgIDsByAppOrgPair(appID string, orgID string) ([]strin
 		return []string{appOrg.ID}, nil
 	}
 
-	key := fmt.Sprintf("%s_%s", appID, orgID)
+	key := strings.ReplaceAll(fmt.Sprintf("%s_%s", appID, orgID), "all", "")
 	if key != "_" {
 		appOrgs, err := sa.getCachedApplicationOrganizations(key)
 		if err != nil {

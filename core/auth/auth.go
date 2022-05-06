@@ -1732,11 +1732,11 @@ func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, accountID *string, f
 
 func (a *Auth) buildAccessTokenForServiceAccount(account model.ServiceAccount, authType string) (string, *model.AppOrgPair, error) {
 	permissions := account.GetPermissionNames()
-	var appID string
+	appID := "all"
 	if account.Application != nil {
 		appID = account.Application.ID
 	}
-	var orgID string
+	orgID := "all"
 	if account.Organization != nil {
 		orgID = account.Organization.ID
 	}
@@ -1746,7 +1746,7 @@ func (a *Auth) buildAccessTokenForServiceAccount(account model.ServiceAccount, a
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
-	return accessToken, &model.AppOrgPair{AppID: utils.StringOrNil(appID), OrgID: utils.StringOrNil(orgID)}, nil
+	return accessToken, &model.AppOrgPair{AppID: utils.StringOrNil(appID, "all"), OrgID: utils.StringOrNil(orgID, "all")}, nil
 }
 
 func (a *Auth) registerAuthType(name string, auth authType) error {
