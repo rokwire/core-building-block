@@ -15,6 +15,8 @@ import (
 const (
 	typeCheckPermission               logutils.MessageActionType = "checking permission"
 	typeCheckScope                    logutils.MessageActionType = "checking scope"
+	typeCheckSystemAuthRequestToken   logutils.MessageActionType = "checking system auth"
+	typeCheckTPsAuthRequestToken      logutils.MessageActionType = "checking tps auth"
 	typeCheckBBsAuthRequestToken      logutils.MessageActionType = "checking bbs auth"
 	typeCheckAdminAuthRequestToken    logutils.MessageActionType = "checking admin auth"
 	typeCheckServicesAuthRequestToken logutils.MessageActionType = "checking services auth"
@@ -22,11 +24,12 @@ const (
 
 //Auth handler
 type Auth struct {
-	services   *TokenAuthHandlers
-	admin      *TokenAuthHandlers
-	encAuth    *EncAuth
-	bbs        *TokenAuthHandlers
-	systemAuth *SystemAuth
+	services *TokenAuthHandlers
+	admin    *TokenAuthHandlers
+	encAuth  *EncAuth
+	bbs      *TokenAuthHandlers
+	tps      *TokenAuthHandlers
+	system   *TokenAuthHandlers
 
 	logger *logs.Logger
 }
@@ -51,7 +54,8 @@ func (auth *Auth) Start() error {
 	auth.admin.start()
 	auth.encAuth.start()
 	auth.bbs.start()
-	auth.systemAuth.start()
+	auth.tps.start()
+	auth.system.start()
 
 	return nil
 }
@@ -87,12 +91,25 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "bbs auth handlers", nil, err)
 	}
 
-	systemAuth, err := newSystemAuth(authService, logger)
+	tpsAuth, err := newTPsAuth(coreAPIs, authService, logger)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "tps auth", nil, err)
+	}
+	tpsHandlers, err := newTokenAuthHandlers(tpsAuth)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "tps auth handlers", nil, err)
+	}
+
+	systemAuth, err := newSystemAuth(coreAPIs, authService, logger)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "auth handler", nil, err)
 	}
+	systemHandlers, err := newTokenAuthHandlers(systemAuth)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "system auth handlers", nil, err)
+	}
 
-	auth := Auth{services: serviceHandlers, admin: adminHandlers, encAuth: encAuth, bbs: bbsHandlers, systemAuth: systemAuth, logger: logger}
+	auth := Auth{services: serviceHandlers, admin: adminHandlers, encAuth: encAuth, bbs: bbsHandlers, tps: tpsHandlers, system: systemHandlers, logger: logger}
 
 	return &auth, nil
 }
@@ -245,6 +262,10 @@ func (auth *BBsAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
 		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "service claim", nil)
 	}
 
+	if !claims.FirstParty {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "first party claim", nil)
+	}
+
 	return http.StatusOK, claims, nil
 }
 
@@ -264,9 +285,53 @@ func newBBsAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logge
 	return &auth, nil
 }
 
+//TPsAuth entity
+type TPsAuth struct {
+	coreAPIs  *core.APIs
+	tokenAuth *tokenauth.TokenAuth
+	logger    *logs.Logger
+}
+
+func (auth *TPsAuth) start() {
+	auth.logger.Info("TPsAuth -> start")
+}
+
+func (auth *TPsAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
+	claims, err := auth.tokenAuth.CheckRequestTokens(req)
+	if err != nil {
+		return http.StatusUnauthorized, nil, errors.WrapErrorAction(typeCheckTPsAuthRequestToken, logutils.TypeToken, nil, err)
+	}
+
+	if !claims.Service {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "service claim", nil)
+	}
+
+	if claims.FirstParty {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "first party claim", nil)
+	}
+
+	return http.StatusOK, claims, nil
+}
+
+func (auth *TPsAuth) getTokenAuth() *tokenauth.TokenAuth {
+	return auth.tokenAuth
+}
+
+func newTPsAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) (*TPsAuth, error) {
+	tpsPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_tps_policy.csv")
+	tpsTokenAuth, err := tokenauth.NewTokenAuth(true, authService, tpsPermissionAuth, nil)
+
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for tpsAuth", nil, err)
+	}
+
+	auth := TPsAuth{coreAPIs: coreAPIs, tokenAuth: tpsTokenAuth, logger: logger}
+	return &auth, nil
+}
+
 //SystemAuth entity
 type SystemAuth struct {
-	//TODO
+	coreAPIs  *core.APIs
 	tokenAuth *tokenauth.TokenAuth
 	logger    *logs.Logger
 }
@@ -276,18 +341,35 @@ func (auth *SystemAuth) start() {
 }
 
 func (auth *SystemAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
-	return 0, nil, nil
+	claims, err := auth.tokenAuth.CheckRequestTokens(req)
+	if err != nil {
+		return http.StatusUnauthorized, nil, errors.WrapErrorAction(typeCheckSystemAuthRequestToken, logutils.TypeToken, nil, err)
+	}
+
+	if !claims.Admin {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
+	}
+
+	if !claims.System {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+	}
+
+	return http.StatusOK, claims, nil
 }
 
-func newSystemAuth(authService *authservice.AuthService, logger *logs.Logger) (*SystemAuth, error) {
+func (auth *SystemAuth) getTokenAuth() *tokenauth.TokenAuth {
+	return auth.tokenAuth
+}
+
+func newSystemAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) (*SystemAuth, error) {
 	systemPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_system_policy.csv")
 	systemTokenAuth, err := tokenauth.NewTokenAuth(true, authService, systemPermissionAuth, nil)
 
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for adminAuth", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for systemAuth", nil, err)
 	}
 
-	auth := SystemAuth{tokenAuth: systemTokenAuth, logger: logger}
+	auth := SystemAuth{coreAPIs: coreAPIs, tokenAuth: systemTokenAuth, logger: logger}
 	return &auth, nil
 }
 

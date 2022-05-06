@@ -8,8 +8,12 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+	"strings"
 
+	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -49,7 +53,7 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 		return l.HttpResponseError("Error getting IP", err, http.StatusInternalServerError, true)
 	}
 
-	var requestData Def.ReqSharedLogin
+	var requestData Def.SharedReqLogin
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login request"), nil, err, http.StatusBadRequest, true)
@@ -82,6 +86,10 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId,
 		string(requestData.AuthType), requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, requestProfile, requestPreferences, true, l)
 	if err != nil {
+		loggingErr, ok := err.(*errors.Error)
+		if ok && loggingErr.Status() != "" {
+			return l.HttpResponseError("Error logging in", err, http.StatusUnauthorized, true)
+		}
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
 
@@ -89,7 +97,7 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 
 	//message
 	if message != nil {
-		responseData := &Def.ResSharedLogin{Message: message}
+		responseData := &Def.SharedResLogin{Message: message}
 		respData, err := json.Marshal(responseData)
 		if err != nil {
 			return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
@@ -105,7 +113,7 @@ func (h AdminApisHandler) adminLogin(l *logs.Log, r *http.Request, claims *token
 		}
 
 		mfaResp := mfaDataListToDef(mfaTypes)
-		responseData := &Def.ResSharedLoginMfa{AccountId: loginSession.Identifier, Enrolled: mfaResp, Params: &paramsRes,
+		responseData := &Def.SharedResLoginMfa{AccountId: loginSession.Identifier, Enrolled: mfaResp, Params: &paramsRes,
 			SessionId: loginSession.ID, State: loginSession.State}
 		respData, err := json.Marshal(responseData)
 		if err != nil {
@@ -123,7 +131,7 @@ func (h AdminApisHandler) adminLoginMFA(l *logs.Log, r *http.Request, claims *to
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var mfaData Def.ReqSharedLoginMfa
+	var mfaData Def.SharedReqLoginMfa
 	err = json.Unmarshal(data, &mfaData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("login mfa request"), nil, err, http.StatusBadRequest, true)
@@ -146,7 +154,7 @@ func (h AdminApisHandler) adminLoginURL(l *logs.Log, r *http.Request, claims *to
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqSharedLoginUrl
+	var requestData Def.SharedReqLoginUrl
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "auth login url request", nil, err, http.StatusBadRequest, true)
@@ -157,7 +165,7 @@ func (h AdminApisHandler) adminLoginURL(l *logs.Log, r *http.Request, claims *to
 		return l.HttpResponseErrorAction(logutils.ActionGet, "login url", nil, err, http.StatusInternalServerError, true)
 	}
 
-	responseData := &Def.ResSharedLoginUrl{LoginUrl: loginURL, Params: &params}
+	responseData := &Def.SharedResLoginUrl{LoginUrl: loginURL, Params: &params}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "auth login url response", nil, err, http.StatusInternalServerError, false)
@@ -172,7 +180,7 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ReqSharedRefresh
+	var requestData Def.SharedReqRefresh
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth refresh request"), nil, err, http.StatusBadRequest, true)
@@ -195,15 +203,30 @@ func (h AdminApisHandler) adminRefresh(l *logs.Log, r *http.Request, claims *tok
 		paramsRes = loginSession.Params
 	}
 
-	tokenType := Def.ResSharedRokwireTokenTokenTypeBearer
-	rokwireToken := Def.ResSharedRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
-	responseData := &Def.ResSharedRefresh{Token: &rokwireToken, Params: &paramsRes}
+	tokenType := Def.SharedResRokwireTokenTokenTypeBearer
+	rokwireToken := Def.SharedResRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
+	responseData := &Def.SharedResRefresh{Token: &rokwireToken, Params: &paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth refresh response"), nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HttpResponseSuccessJSON(respData)
+}
+
+func (h AdminApisHandler) adminGetApplications(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	applications, err := h.coreAPIs.Administration.AdmGetApplications(claims.OrgID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
+	}
+
+	response := applicationsToDef(applications)
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
 }
 
 func (h AdminApisHandler) adminGetApplicationGroups(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
@@ -272,11 +295,70 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
-	response := аccountsToDef(accounts)
+	response := accountsToDef(accounts)
 
 	data, err := json.Marshal(response)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	identifierFromQuery := r.URL.Query().Get("identifier")
+	var identifier *string
+	if len(identifierFromQuery) > 0 {
+		identifier = &identifierFromQuery
+	}
+
+	accountAuthTypeIdentifierFromQuery := r.URL.Query().Get("account-auth-type-identifier")
+	var accountAuthTypeIdentifier *string
+	if len(accountAuthTypeIdentifierFromQuery) > 0 {
+		accountAuthTypeIdentifier = &accountAuthTypeIdentifierFromQuery
+	}
+
+	appTypeIDFromQuery := r.URL.Query().Get("app-type-id")
+	var appTypeID *string
+	if len(appTypeIDFromQuery) > 0 {
+		appTypeID = &appTypeIDFromQuery
+	}
+
+	appTypeIdentifierFromQuery := r.URL.Query().Get("app-type-identifier")
+	var appTypeIdentifier *string
+	if len(appTypeIdentifierFromQuery) > 0 {
+		appTypeIdentifier = &appTypeIdentifierFromQuery
+	}
+
+	anonymousFromQuery := r.URL.Query().Get("anonymous")
+	var anonymous *bool
+	if len(anonymousFromQuery) > 0 {
+		result, _ := strconv.ParseBool(anonymousFromQuery)
+		anonymous = &result
+	}
+
+	deviceIDFromQuery := r.URL.Query().Get("device-id")
+	var deviceID *string
+	if len(deviceIDFromQuery) > 0 {
+		deviceID = &deviceIDFromQuery
+	}
+
+	ipAddressFromQuery := r.URL.Query().Get("ip-address")
+	var ipAddress *string
+	if len(ipAddressFromQuery) > 0 {
+		ipAddress = &ipAddressFromQuery
+	}
+
+	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, identifier, accountAuthTypeIdentifier, appTypeID,
+		appTypeIdentifier, anonymous, deviceID, ipAddress)
+	if err != nil {
+		return l.HttpResponseErrorAction("error finding login sessions", model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
+	}
+
+	loginSessions := loginSessionsToDef(getLoginSessions)
+
+	data, err := json.Marshal(loginSessions)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeLoginSession, nil, err, http.StatusInternalServerError, false)
 	}
 	return l.HttpResponseSuccessJSON(data)
 }
@@ -287,8 +369,9 @@ func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *token
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	var accountData *Def.ResSharedAccount
+	var accountData *Def.SharedResAccount
 	if account != nil {
+		account.SortAccountAuthTypes(claims.UID)
 		accountData = accountToDef(*account)
 	}
 
@@ -322,7 +405,7 @@ func (h AdminApisHandler) addMFAType(l *logs.Log, r *http.Request, claims *token
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var mfaData Def.ReqSharedMfa
+	var mfaData Def.SharedReqMfa
 	err = json.Unmarshal(data, &mfaData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("add mfa request"), nil, err, http.StatusBadRequest, true)
@@ -349,7 +432,7 @@ func (h AdminApisHandler) removeMFAType(l *logs.Log, r *http.Request, claims *to
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var mfaData Def.ReqSharedMfa
+	var mfaData Def.SharedReqMfa
 	err = json.Unmarshal(data, &mfaData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("remove mfa request"), nil, err, http.StatusBadRequest, true)
@@ -369,7 +452,7 @@ func (h AdminApisHandler) adminVerifyMFA(l *logs.Log, r *http.Request, claims *t
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var mfaData Def.ReqSharedMfa
+	var mfaData Def.SharedReqMfa
 	err = json.Unmarshal(data, &mfaData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("verify mfa request"), nil, err, http.StatusBadRequest, true)
@@ -410,13 +493,294 @@ func (h AdminApisHandler) getAppToken(l *logs.Log, r *http.Request, claims *toke
 		return l.HttpResponseErrorAction(logutils.ActionGet, "app token", nil, err, http.StatusInternalServerError, true)
 	}
 
-	response := Def.ReqAdminAppTokenResponse{Token: token}
+	response := Def.AdminResAppToken{Token: token}
 	responseJSON, err := json.Marshal(response)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "app token", nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HttpResponseSuccessJSON(responseJSON)
+}
+
+//adminCreateApplicationGroup creates an application group
+func (h AdminApisHandler) adminCreateApplicationGroup(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+	var requestData Def.AdminReqCreateApplicationGroup
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgGroup, nil, err, http.StatusBadRequest, true)
+	}
+
+	//permissions ids
+	var permissionsIDs []string
+	if requestData.Permissions != nil {
+		permissionsIDs = *requestData.Permissions
+	}
+
+	//roles ids
+	var rolesIDs []string
+	if requestData.Roles != nil {
+		rolesIDs = *requestData.Roles
+	}
+
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	_, err = h.coreAPIs.Administration.AdmCreateAppOrgGroup(requestData.Name, permissionsIDs, rolesIDs, claims.AppID, claims.OrgID, assignerPermissions, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
+	}
+	return l.HttpResponseSuccess()
+}
+
+func (h AdminApisHandler) adminDeleteApplicationGroup(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	groupsID := params["id"]
+	if len(groupsID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	err := h.coreAPIs.Administration.AdmDeleteAppOrgGroup(groupsID, claims.AppID, claims.OrgID, assignerPermissions, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
+	}
+	return l.HttpResponseSuccess()
+}
+
+//addAccountsToGroup adds a group the given account
+func (h AdminApisHandler) addAccountsToGroup(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.AdminReqAddAccountsToGroup
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAccount, nil, err, http.StatusBadRequest, true)
+	}
+
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	err = h.coreAPIs.Administration.AdmAddAccountsToGroup(claims.AppID, claims.OrgID, requestData.GroupId, requestData.AccountIds, assignerPermissions, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(actionGrant, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+//removeAccountsFromGroup removes accounts from a given group
+func (h AdminApisHandler) removeAccountsFromGroup(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.AdminReqRemoveAccountFromGroup
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgGroup, nil, err, http.StatusBadRequest, true)
+	}
+
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	err = h.coreAPIs.Administration.AdmRemoveAccountsFromGroup(claims.AppID, claims.OrgID, requestData.GroupId, requestData.AccountIds, assignerPermissions, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+//adminCreateApplicationRole creates an application role
+func (h AdminApisHandler) adminCreateApplicationRole(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.AdminReqCreateApplicationRole
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)
+	}
+
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	_, err = h.coreAPIs.Administration.AdmCreateAppOrgRole(requestData.Name, requestData.Description, requestData.Permissions, claims.AppID, claims.OrgID, assignerPermissions, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h AdminApisHandler) adminDeleteApplicationRole(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	rolesID := params["id"]
+	if len(rolesID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	err := h.coreAPIs.Administration.AdmDeleteAppOrgRole(rolesID, claims.AppID, claims.OrgID, assignerPermissions, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
+	}
+	return l.HttpResponseSuccess()
+}
+
+func (h AdminApisHandler) deleteApplicationLoginSession(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	identifier := params["account_id"]
+	if len(identifier) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("account_id"), nil, http.StatusBadRequest, false)
+	}
+
+	params2 := mux.Vars(r)
+	sessionID := params2["session_id"]
+	if len(sessionID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("session_id"), nil, http.StatusBadRequest, false)
+	}
+
+	err := h.coreAPIs.Administration.AdmDeleteApplicationLoginSession(claims.AppID, claims.OrgID, claims.Subject, identifier, sessionID, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
+	}
+	return l.HttpResponseSuccess()
+}
+
+func (h AdminApisHandler) getApplicationAccountDevices(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	accountID := params["id"]
+	if len(accountID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	if len(accountID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+	devices, err := h.coreAPIs.Administration.AdmGetApplicationAccountDevices(claims.AppID, claims.OrgID, accountID, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeDevice, nil, err, http.StatusInternalServerError, true)
+	}
+
+	devicesRes := deviceListToDef(devices)
+	data, err := json.Marshal(devicesRes)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplication, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
+//grantAccountsPermissions grants an account the given permissions
+func (h AdminApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.AdminReqGrantPermissions
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
+	}
+
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	err = h.coreAPIs.Administration.AdmGrantAccountPermissions(claims.AppID, claims.OrgID, requestData.AccountId, requestData.Permissions, assignerPermissions, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(actionGrant, model.TypePermission, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+//revokeAccountPermissions removes permissions from an account
+func (h AdminApisHandler) revokeAccountPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+	var requestData Def.AdminReqRevokePermissions
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
+	}
+
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	err = h.coreAPIs.Administration.AdmRevokeAccountPermissions(claims.AppID, claims.OrgID, requestData.AccountId, requestData.Permissions, assignerPermissions, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(actionGrant, model.TypePermission, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+//grantAccountRoles grants an account the given roles
+func (h AdminApisHandler) grantAccountRoles(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.AdminReqGrantRolesToAccount
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)
+	}
+
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	err = h.coreAPIs.Administration.AdmGrantAccountRoles(claims.AppID, claims.OrgID, requestData.AccountId, requestData.RoleIds, assignerPermissions, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+//revokeAccountRoles removes role from a given account
+func (h AdminApisHandler) revokeAccountRoles(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.AdminReqRevokeRolesFromAccount
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)
+	}
+
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	err = h.coreAPIs.Administration.AdmRevokeAccountRoles(claims.AppID, claims.OrgID, requestData.AccountId, requestData.RoleIds, assignerPermissions, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+//adminGrantPermissionsToRole grants a role the given permission
+func (h AdminApisHandler) adminGrantPermissionsToRole(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.AdminReqGrantPermissionsToRole
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)
+	}
+
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	err = h.coreAPIs.Administration.AdmGrantPermissionsToRole(claims.AppID, claims.OrgID, requestData.RoleId, requestData.Permissions, assignerPermissions, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
 }
 
 //NewAdminApisHandler creates new admin rest Handler instance

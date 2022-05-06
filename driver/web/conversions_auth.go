@@ -3,12 +3,47 @@ package web
 import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 
 	"github.com/rokwire/core-auth-library-go/authorization"
 	"github.com/rokwire/core-auth-library-go/authservice"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
+
+//LoginSession
+func loginSessionToDef(item model.LoginSession) Def.SharedResLoginSession {
+	var accountAuthTypeID *string
+	var accountAuthTypeIdentifier *string
+	if item.AccountAuthType != nil {
+		accountAuthTypeID = &item.AccountAuthType.ID
+		accountAuthTypeIdentifier = &item.AccountAuthType.Identifier
+	}
+
+	appTypeID := item.AppType.ID
+	appTypeIdentifier := item.AppType.Identifier
+	authTypeCode := item.AuthType.Code
+	deviceID := item.Device.ID
+	refreshTokensCount := len(item.RefreshTokens)
+	stateExpires := utils.FormatTime(item.StateExpires)
+	dateRefreshed := utils.FormatTime(item.DateRefreshed)
+	dateUpdated := utils.FormatTime(item.DateUpdated)
+	dateCreated := utils.FormatTime(&item.DateCreated)
+	return Def.SharedResLoginSession{Id: &item.ID, Anonymous: &item.Anonymous, AccountAuthTypeId: accountAuthTypeID,
+		AccountAuthTypeIdentifier: accountAuthTypeIdentifier, AppTypeId: &appTypeID, AppTypeIdentifier: &appTypeIdentifier,
+		AuthTypeCode: &authTypeCode, Identifier: &item.Identifier, IpAddress: &item.IPAddress, DeviceId: &deviceID,
+		RefreshTokensCount: &refreshTokensCount, State: &item.State, MfaAttempts: &item.MfaAttempts, StateExpires: &stateExpires,
+		DateRefreshed: &dateRefreshed, DateUpdated: &dateUpdated, DateCreated: &dateCreated,
+	}
+}
+
+func loginSessionsToDef(items []model.LoginSession) []Def.SharedResLoginSession {
+	result := make([]Def.SharedResLoginSession, len(items))
+	for i, item := range items {
+		result[i] = loginSessionToDef(item)
+	}
+	return result
+}
 
 func pubKeyFromDef(item *Def.PubKey) *authservice.PubKey {
 	if item == nil {
@@ -70,7 +105,7 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 		return nil
 	}
 
-	id := item.ID
+	accountID := item.AccountID
 	name := item.Name
 	var appID *string
 	if item.Application != nil {
@@ -84,14 +119,11 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 	for i, p := range item.Permissions {
 		permissions[i] = p.Name
 	}
-	roles := make([]string, len(item.Roles))
-	for i, r := range item.Roles {
-		roles[i] = r.Role.ID
-	}
-
+	firstParty := item.FirstParty
 	creds := serviceAccountCredentialListToDef(item.Credentials)
 
-	return &Def.ServiceAccount{Id: &id, Name: name, OrgId: orgID, AppId: appID, Permissions: permissions, Roles: roles, Creds: &creds}
+	return &Def.ServiceAccount{AccountId: accountID, Name: name, AppId: appID, OrgId: orgID, Permissions: permissions,
+		FirstParty: firstParty, Creds: &creds}
 }
 
 func serviceAccountCredentialFromDef(item *Def.ServiceAccountCredential) *model.ServiceAccountCredential {
@@ -147,6 +179,18 @@ func serviceAccountCredentialListToDef(items []model.ServiceAccountCredential) [
 		} else {
 			out[i] = Def.ServiceAccountCredential{}
 		}
+	}
+	return out
+}
+
+func appOrgPairToDef(item model.AppOrgPair) Def.AppOrgPair {
+	return Def.AppOrgPair{AppId: item.AppID, OrgId: item.OrgID}
+}
+
+func appOrgPairListToDef(items []model.AppOrgPair) []Def.AppOrgPair {
+	out := make([]Def.AppOrgPair, len(items))
+	for i, item := range items {
+		out[i] = appOrgPairToDef(item)
 	}
 	return out
 }
@@ -328,4 +372,23 @@ func jsonWebKeySetDef(items *model.JSONWebKeySet) *Def.JWKS {
 		}
 	}
 	return &Def.JWKS{Keys: out}
+}
+
+//AuthType
+func authTypeToDef(item *model.AuthType) *Def.AuthTypeFields {
+	if item == nil {
+		return nil
+	}
+
+	return &Def.AuthTypeFields{Id: &item.ID, Code: &item.Code, Description: &item.Description,
+		IsExternal: &item.IsExternal, IsAnonymous: &item.IsAnonymous, UseCredentials: &item.UseCredentials,
+		IgnoreMfa: &item.IgnoreMFA, Params: &Def.AuthTypeFields_Params{AdditionalProperties: item.Params}}
+}
+
+func authTypesToDef(items []model.AuthType) []Def.AuthTypeFields {
+	result := make([]Def.AuthTypeFields, len(items))
+	for i, item := range items {
+		result[i] = *authTypeToDef(&item)
+	}
+	return result
 }

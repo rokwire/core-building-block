@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.17.0
+  version: 1.23.0
 servers:
   - url: https://api.rokwire.illinois.edu/core
     description: Production server
@@ -23,6 +23,8 @@ tags:
     description: APIs consumed by the platform building blocks.
   - name: Third-Party Services
     description: APIs consumed by third-party services.
+  - name: UI
+    description: Endpoints for HTML webpages
   - name: System
     description: System APIs.
 paths:
@@ -35,6 +37,8 @@ paths:
     $ref: "./resources/services/auth/refresh.yaml"
   /services/auth/login-url:
     $ref: "./resources/services/auth/login-url.yaml"
+  /services/auth/logout:
+    $ref: "./resources/services/auth/logout.yaml"
   /services/auth/credential/verify:
     $ref: "./resources/services/auth/credential/verify.yaml"
   /services/auth/credential/send-verify:
@@ -49,6 +53,10 @@ paths:
     $ref: "./resources/services/auth/verify-mfa.yaml"
   /services/auth/account/exists:
     $ref: "./resources/services/auth/account/exists.yaml"
+  /services/auth/account/can-sign-in:
+    $ref: "./resources/services/auth/account/can-sign-in.yaml"
+  /services/auth/account/can-link:
+    $ref: "./resources/services/auth/account/can-link.yaml"
   /services/auth/account/auth-type/link:
     $ref: "./resources/services/auth/account/auth-type/link.yaml"
   /services/auth/authorize-service:
@@ -65,6 +73,10 @@ paths:
     $ref: "./resources/services/account/profile.yaml"
   /services/test:
     $ref: "./resources/services/test.yaml"
+  /services/application/configs:
+    $ref: "./resources/services/application/configs.yaml"
+  /services/application/organization/configs:
+    $ref: "./resources/services/application/organization/configs.yaml"
 
   #admin
   /admin/auth/login:
@@ -85,13 +97,39 @@ paths:
     $ref: "./resources/admin/account/mfa.yaml"
   /admin/application/accounts:
     $ref: "./resources/admin/application/accounts.yaml"
+  /admin/application/account/{id}/devices:
+    $ref: "./resources/admin/application/account/devices.yaml"
+  /admin/application/account/{account_id}/login-sessions/{session_id}:
+    $ref: "./resources/admin/application/account/login-sessions.yaml"
+  /admin/application/account/permissions/grant:
+    $ref: "./resources/admin/application/account/permissions/grant.yaml"
+  /admin/application/account/permissions/revoke:
+    $ref: "./resources/admin/application/account/permissions/revoke.yaml"
+  /admin/application/account/roles/grant:
+    $ref: "./resources/admin/application/account/roles/grant.yaml"
+  /admin/application/account/roles/revoke:
+    $ref: "./resources/admin/application/account/roles/revoke.yaml"
+  /admin/application/login-sessions:
+    $ref: "./resources/admin/application/login-sessions.yaml"
   /admin/application/groups:
     $ref: "./resources/admin/application/groups.yaml"
+  /admin/application/groups/{id}:
+    $ref: "./resources/admin/application/groupsID.yaml"
+  /admin/application/group/accounts/add:
+    $ref: "./resources/admin/application/group/accounts/add.yaml"
+  /admin/application/group/accounts/remove:
+    $ref: "./resources/admin/application/group/accounts/remove.yaml"
   /admin/application/permissions:
     $ref: "./resources/admin/application/permissions.yaml"
   /admin/application/roles:
     $ref: "./resources/admin/application/roles.yaml"
-
+  /admin/application/roles/{id}:
+    $ref: "./resources/admin/application/rolesID.yaml"
+  /admin/application/role/permissions/grant:
+    $ref: "./resources/admin/application/role/permissions/grant.yaml"
+  /admin/organization/applications:
+    $ref: "./resources/admin/organization/applications.yaml"
+ 
   #enc
   /enc/test:
     $ref: "./resources/enc/test.yaml"
@@ -101,8 +139,12 @@ paths:
     $ref: "./resources/bbs/test.yaml"
   /bbs/service-regs:
     $ref: "./resources/bbs/service-regs.yaml"
+  /bbs/service-account/{id}:
+    $ref: "./resources/bbs/service-account.yaml"
   /bbs/access-token:
     $ref: "./resources/bbs/access-token.yaml"
+  /bbs/access-tokens:
+    $ref: "./resources/bbs/access-tokens.yaml"
   /bbs/deleted-accounts:
     $ref: "./resources/bbs/deleted-accounts.yaml"
 
@@ -111,10 +153,24 @@ paths:
     $ref: "./resources/tps/service-regs.yaml"
   /tps/auth-keys:
     $ref: "./resources/tps/auth-keys.yaml"
+  /tps/service-account/{id}:
+    $ref: "./resources/tps/service-account.yaml"
   /tps/access-token:
     $ref: "./resources/tps/access-token.yaml"
+  /tps/access-tokens:
+    $ref: "./resources/tps/access-tokens.yaml"
 
   #system
+  /system/auth/login:
+    $ref: "./resources/system/auth/login.yaml"
+  /system/auth/mfa:
+    $ref: "./resources/system/auth/mfa.yaml"
+  /system/auth/refresh:
+    $ref: "./resources/system/auth/refresh.yaml"
+  /system/auth/login-url:
+    $ref: "./resources/system/auth/login-url.yaml"
+  /system/auth/verify-mfa:
+    $ref: "./resources/system/auth/verify-mfa.yaml"
   /system/global-config:
     $ref: "./resources/system/global-config.yaml"
   /system/organizations/{id}:
@@ -139,6 +195,10 @@ paths:
     $ref: "./resources/system/application-roles.yaml"
   /system/application-api-keys:
     $ref: "./resources/system/application-api-keys.yaml"
+  /system/application/configs:
+    $ref: "./resources/system/application-configs.yaml"
+  /system/application/configs/{id}:
+    $ref: "./resources/system/application-configsId.yaml"
   /system/account/permissions:
     $ref: "./resources/system/account/permissions.yaml"
   /system/account/roles:
@@ -147,12 +207,23 @@ paths:
     $ref: "./resources/system/account/mfa.yaml"
   /system/api-keys:
     $ref: "./resources/system/api-keys.yaml"
+  /system/auth-types:
+    $ref: "./resources/system/auth-types.yaml"
+  /system/auth-types/{id}:
+    $ref: "./resources/system/auth-typesID.yaml"
+
+  #ui
+  /ui/credential/reset:
+    $ref: "./resources/ui/credential/reset.yaml"
+  /ui/credential/verify:
+    $ref: "./resources/ui/credential/verify.yaml"
 
   #default
   /version:
     $ref: "./resources/default/version.yaml"
   /.well-known/openid-configuration:
     $ref: "./resources/default/openid-configuration.yaml"
+
 components:
   securitySchemes:
       bearerAuth:            # arbitrary name for the security scheme

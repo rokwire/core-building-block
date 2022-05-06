@@ -55,7 +55,7 @@ func main() {
 	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
 
 	// mongoDB adapter
-	mongoDBAuth := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_AUTH", true, false)
+	mongoDBAuth := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_AUTH", true, true)
 	mongoDBName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true, false)
 	mongoTimeout := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false, false)
 	storageAdapter := storage.NewStorageAdapter(mongoDBAuth, mongoDBName, mongoTimeout, logger)
@@ -132,7 +132,16 @@ func main() {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
 
-	//core
+	//system account init
+	systemInitSettings := map[string]string{
+		"app_type_id":   envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_APP_TYPE_IDENTIFIER", false, false),
+		"app_type_name": envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_APP_TYPE_NAME", false, false),
+		"api_key":       envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_API_KEY", false, true),
+		"email":         envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_ACCOUNT_EMAIL", false, false),
+		"password":      envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_ACCOUNT_PASSWORD", false, true),
+	}
+
+	//deleted accounts
 	deleteAccountsPeriodStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_DELETE_ACCOUNTS_PERIOD", false, false)
 	var deleteAccountsPeriod *uint64
 	deleteAccountsPeriodVal, err := strconv.ParseUint(deleteAccountsPeriodStr, 10, 64)
@@ -142,7 +151,8 @@ func main() {
 		logger.Infof("Error parsing delete account period, applying defaults: %v", err)
 	}
 
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, deleteAccountsPeriod, logger)
+	//core
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, systemInitSettings, deleteAccountsPeriod, logger)
 	coreAPIs.Start()
 
 	//web adapter

@@ -16,12 +16,16 @@ RUN apk --no-cache add tzdata
 COPY --from=builder /core-app/bin/core-building-block /
 
 COPY --from=builder /core-app/driver/web/ui/reset-credential.html /driver/web/ui/reset-credential.html
+COPY --from=builder /core-app/driver/web/ui/error.html /driver/web/ui/error.html
+COPY --from=builder /core-app/driver/web/ui/success.html /driver/web/ui/success.html
 COPY --from=builder /core-app/driver/web/docs/gen/def.yaml /driver/web/docs/gen/def.yaml
 
 COPY --from=builder /core-app/driver/web/authorization_model.conf /driver/web/authorization_model.conf
 
 COPY --from=builder /core-app/driver/web/authorization_services_policy.csv /driver/web/authorization_services_policy.csv
 COPY --from=builder /core-app/driver/web/authorization_admin_policy.csv /driver/web/authorization_admin_policy.csv
+COPY --from=builder /core-app/driver/web/authorization_bbs_policy.csv /driver/web/authorization_bbs_policy.csv
+COPY --from=builder /core-app/driver/web/authorization_tps_policy.csv /driver/web/authorization_tps_policy.csv
 COPY --from=builder /core-app/driver/web/authorization_system_policy.csv /driver/web/authorization_system_policy.csv
 
 COPY --from=builder /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_scope.conf /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_scope.conf

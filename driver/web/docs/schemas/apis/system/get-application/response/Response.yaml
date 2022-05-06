@@ -10,7 +10,7 @@ properties:
     type: string
   multi_tenant:
     type: boolean
-  requires_own_users:
+  shared_identities:
     type: boolean
   max_login_session_duration:
     description: The maximum allowed duration (in hours) of a user's login session for this application

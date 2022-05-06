@@ -70,7 +70,8 @@ type LoginSession struct {
 
 	Anonymous bool
 
-	Identifier      string           //it is the account id(anonymous id for anonymous logins)
+	Identifier      string //it is the account id(anonymous id for anonymous logins)
+	ExternalIDs     map[string]string
 	AccountAuthType *AccountAuthType //it is nil for anonymous logins
 
 	Device *Device
@@ -303,14 +304,14 @@ type ServiceScope struct {
 
 //ServiceAccount represents a service account entity
 type ServiceAccount struct {
-	ID   string //this is ID for the service account
-	Name string
+	AccountID string
+	Name      string
 
 	Application  *Application
 	Organization *Organization
 
 	Permissions []Permission
-	Roles       []AccountRole
+	FirstParty  bool
 
 	Credentials []ServiceAccountCredential
 
@@ -320,30 +321,17 @@ type ServiceAccount struct {
 
 //GetPermissionNames returns all names of permissions granted to this account
 func (s ServiceAccount) GetPermissionNames() []string {
-	permissionsMap := s.GetPermissionsMap()
-	permissions := make([]string, len(permissionsMap))
-	i := 0
-	for name := range permissionsMap {
-		permissions[i] = name
-		i++
+	permissions := make([]string, len(s.Permissions))
+	for i, permission := range s.Permissions {
+		permissions[i] = permission.Name
 	}
 	return permissions
 }
 
-//GetPermissionsMap returns a map of all permissions granted to this account
-func (s ServiceAccount) GetPermissionsMap() map[string]Permission {
-	permissionsMap := make(map[string]Permission, len(s.Permissions))
-	for _, permission := range s.Permissions {
-		permissionsMap[permission.Name] = permission
-	}
-	for _, role := range s.Roles {
-		if role.Active {
-			for _, permission := range role.Role.Permissions {
-				permissionsMap[permission.Name] = permission
-			}
-		}
-	}
-	return permissionsMap
+//AppOrgPair represents an appID, orgID pair entity
+type AppOrgPair struct {
+	AppID *string
+	OrgID *string
 }
 
 //ServiceAccountCredential represents a service account credential entity
@@ -352,15 +340,20 @@ type ServiceAccountCredential struct {
 	Name string `bson:"name"`
 	Type string `bson:"type"`
 
-	Params map[string]interface{} `bson:"params"`
+	Params  map[string]interface{} `bson:"params,omitempty"`
+	Secrets map[string]interface{} `bson:"secrets,omitempty"`
 
 	DateCreated time.Time `bson:"date_created"`
 }
 
 // ServiceAccountTokenRequest represents a service account token request entity
 type ServiceAccountTokenRequest struct {
-	AuthType string       `json:"auth_type"`
-	Creds    *interface{} `json:"creds,omitempty"`
+	AccountID string  `json:"account_id"`
+	AppID     *string `json:"app_id"`
+	OrgID     *string `json:"org_id"`
+	AuthType  string  `json:"auth_type"`
+
+	Creds *interface{} `json:"creds,omitempty"`
 }
 
 //ServiceAuthorization represents service authorization entity

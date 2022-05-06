@@ -16,11 +16,16 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 
 	anonymous := item.Anonymous
 	identifier := item.Identifier
+	externalIDs := item.ExternalIDs
 	var accountAuthType *model.AccountAuthType
 	if item.AccountAuthTypeID != nil && account != nil {
 		accountAuthType = account.GetAccountAuthTypeByID(*item.AccountAuthTypeID)
 	}
-	device := &model.Device{ID: item.ID}
+	var deviceID string
+	if item.DeviceID != nil {
+		deviceID = *item.DeviceID
+	}
+	device := &model.Device{ID: deviceID}
 	idAddress := item.IPAddress
 	accessToken := item.AccessToken
 	refreshTokens := item.RefreshTokens
@@ -42,7 +47,7 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 	dateCreated := item.DateCreated
 
 	return model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType, AppType: appType,
-		Anonymous: anonymous, Identifier: identifier, AccountAuthType: accountAuthType,
+		Anonymous: anonymous, Identifier: identifier, ExternalIDs: externalIDs, AccountAuthType: accountAuthType,
 		Device: device, IPAddress: idAddress, AccessToken: accessToken, RefreshTokens: refreshTokens, Params: params,
 		State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
 		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
@@ -61,6 +66,7 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 
 	anonymous := item.Anonymous
 	identifier := item.Identifier
+	externalIDs := item.ExternalIDs
 	var accountAuthTypeID *string
 	var accountAuthTypeIdentifier *string
 	if item.AccountAuthType != nil {
@@ -93,7 +99,7 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 
 	return &loginSession{ID: id, AppID: appID, OrgID: orgID, AuthTypeCode: authTypeCode,
 		AppTypeID: appTypeID, AppTypeIdentifier: appTypeIdentifier, Anonymous: anonymous,
-		Identifier: identifier, AccountAuthTypeID: accountAuthTypeID, AccountAuthTypeIdentifier: accountAuthTypeIdentifier,
+		Identifier: identifier, ExternalIDs: externalIDs, AccountAuthTypeID: accountAuthTypeID, AccountAuthTypeIdentifier: accountAuthTypeIdentifier,
 		DeviceID: deviceID, IPAddress: ipAddress, AccessToken: accessToken, RefreshTokens: refreshTokens,
 		Params: params, State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
 		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
@@ -117,17 +123,8 @@ func serviceAccountFromStorage(item serviceAccount, sa *Adapter) (*model.Service
 		}
 	}
 
-	roles := make([]model.AccountRole, len(item.Roles))
-	for i, role := range item.Roles {
-		appOrg, err := sa.getCachedApplicationOrganizationByKey(role.Role.AppOrgID)
-		if err != nil || appOrg == nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": role.Role.AppOrgID}, err)
-		}
-		roles[i] = accountRoleFromStorage(&role, *appOrg)
-	}
-
-	return &model.ServiceAccount{ID: item.ID, Name: item.Name, Application: application, Organization: organization, Permissions: item.Permissions,
-		Roles: roles, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}, nil
+	return &model.ServiceAccount{AccountID: item.AccountID, Name: item.Name, Application: application, Organization: organization, Permissions: item.Permissions,
+		FirstParty: item.FirstParty, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}, nil
 }
 
 func serviceAccountListFromStorage(items []serviceAccount, sa *Adapter) []model.ServiceAccount {
@@ -144,8 +141,6 @@ func serviceAccountListFromStorage(items []serviceAccount, sa *Adapter) []model.
 }
 
 func serviceAccountToStorage(item model.ServiceAccount) *serviceAccount {
-	roles := accountRolesToStorage(item.Roles)
-
 	var appID *string
 	if item.Application != nil {
 		appID = &item.Application.ID
@@ -155,6 +150,6 @@ func serviceAccountToStorage(item model.ServiceAccount) *serviceAccount {
 		orgID = &item.Organization.ID
 	}
 
-	return &serviceAccount{ID: item.ID, Name: item.Name, AppID: appID, OrgID: orgID, Permissions: item.Permissions, Roles: roles,
-		Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return &serviceAccount{AccountID: item.AccountID, Name: item.Name, AppID: appID, OrgID: orgID, Permissions: item.Permissions,
+		FirstParty: item.FirstParty, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

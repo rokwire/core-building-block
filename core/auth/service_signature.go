@@ -2,17 +2,15 @@ package auth
 
 import (
 	"core-building-block/core/model"
-	"encoding/json"
-	"net/http"
+	"core-building-block/utils"
 	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
+	"github.com/rokwire/core-auth-library-go/sigauth"
 	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 const (
@@ -22,71 +20,49 @@ const (
 	TypeSignatureCreds logutils.MessageDataType = "signature creds"
 )
 
-//signatureCreds represents the creds struct for signature auth
-type signatureCreds struct {
-	ID string `json:"id" validate:"required"`
-}
-
 // Signature implementation of serviceAuthType
 type signatureServiceAuthImpl struct {
 	auth            *Auth
 	serviceAuthType string
 }
 
-func (s *signatureServiceAuthImpl) checkCredentials(r *http.Request, creds interface{}, l *logs.Log) (*string, *model.ServiceAccount, error) {
-	credsData, err := json.Marshal(creds)
+func (s *signatureServiceAuthImpl) checkCredentials(r *sigauth.Request, _ interface{}, params map[string]interface{}) ([]model.ServiceAccount, error) {
+	accounts, err := s.auth.storage.FindServiceAccounts(params)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionMarshal, TypeSignatureCreds, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+	}
+	if len(accounts) == 0 {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil).SetStatus(utils.ErrorStatusNotFound)
 	}
 
-	var sigCreds signatureCreds
-	err = json.Unmarshal([]byte(credsData), &sigCreds)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, TypeSignatureCreds, nil, err)
-	}
-
-	validate := validator.New()
-	err = validate.Struct(sigCreds)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, TypeSignatureCreds, nil, err)
-	}
-
-	account, err := s.auth.storage.FindServiceAccountByID(nil, sigCreds.ID)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
-	}
-
-	for _, credential := range account.Credentials {
+	for _, credential := range accounts[0].Credentials {
 		if credential.Type == ServiceAuthTypeSignature && credential.Params != nil {
 			pubKeyPem, ok := credential.Params["pub_key"].(string)
-			if !ok || pubKeyPem == "" {
+			if !ok {
+				s.auth.logger.ErrorWithFields("error asserting stored public key is string", logutils.Fields{"pub_key": credential.Params["pub_key"]})
 				continue
 			}
-			pubKeyPem = strings.Replace(pubKeyPem, `\n`, "\n", -1)
+			pubKeyPem = strings.ReplaceAll(pubKeyPem, `\n`, "\n")
 
 			pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(pubKeyPem))
 			if err != nil {
-				return nil, nil, errors.WrapErrorAction(logutils.ActionParse, "service account public key", nil, err)
+				s.auth.logger.ErrorWithFields("error parsing stored public key", logutils.Fields{"pub_key": credential.Params["pub_key"]})
+				continue
 			}
 
 			err = s.auth.SignatureAuth.CheckRequestSignature(r, pubKey)
 			if err == nil {
-				return nil, account, nil
+				return accounts, nil
 			}
-
-			l.WarnError("error checking request signature", err)
 		}
 	}
 
-	return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "request signature", nil, err)
+	return nil, errors.WrapErrorAction(logutils.ActionValidate, "request signature", nil, err).SetStatus(utils.ErrorStatusInvalid)
 }
 
-func (s *signatureServiceAuthImpl) addCredentials(account *model.ServiceAccount, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, string, error) {
-	if account == nil {
-		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccount, nil)
-	}
+func (s *signatureServiceAuthImpl) addCredentials(creds *model.ServiceAccountCredential) (map[string]interface{}, error) {
 	if creds == nil {
-		return nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
 	}
 
 	now := time.Now().UTC()
@@ -94,14 +70,8 @@ func (s *signatureServiceAuthImpl) addCredentials(account *model.ServiceAccount,
 
 	creds.ID = id.String()
 	creds.DateCreated = now
-	account.Credentials = append(account.Credentials, *creds)
 
-	return account, "", nil
-}
-
-// no hidden params for signature service auth
-func (s *signatureServiceAuthImpl) hiddenParams() []string {
-	return nil
+	return creds.Params, nil
 }
 
 //initSignatureServiceAuth initializes and registers a new signature service auth instance

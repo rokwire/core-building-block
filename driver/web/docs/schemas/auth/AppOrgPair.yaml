@@ -1,0 +1,11 @@
+required:
+  - app_id
+  - org_id
+type: object
+properties:
+  app_id:
+    type: string
+    nullable: true
+  org_id:
+    type: string
+    nullable: true

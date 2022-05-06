@@ -33,6 +33,8 @@ OrganizationConfig:
   $ref: "./application/OrganizationConfig.yaml"
 OrganizationConfigFields:
   $ref: "./application/OrganizationConfigFields.yaml"
+ApplicationConfig:
+  $ref: "./application/ApplicationConfig.yaml"
 
 # auth
 LoginSession:
@@ -49,6 +51,8 @@ CredentialFields:
   $ref: "./auth/CredentialFields.yaml"
 ServiceAccount:
   $ref: "./auth/ServiceAccount.yaml"
+AppOrgPair:
+  $ref: "./auth/AppOrgPair.yaml"
 ServiceAccountCredential:
   $ref: "./auth/ServiceAccountCredential.yaml"
 ServiceReg:
@@ -89,142 +93,217 @@ DeviceFields:
 
 ##### APIs requests and responses - they are at bottom
 
-### shared requests and responses
+## SHARED requests and responses
 
-#### requests
-_req_shared_Login:
+### requests
+_shared_req_Login:
   $ref: "./apis/shared/requests/login/Request.yaml"
-_req_shared_Login_Mfa:
+_shared_req_Login_Mfa:
   $ref: "../schemas/apis/shared/requests/login/MfaRequest.yaml"
-_req_shared_Login_Device:
+_shared_req_Login_Device:
   $ref: "./apis/shared/requests/login/Device.yaml"
-_req_shared_LoginUrl:
+_shared_req_LoginUrl:
   $ref: "./apis/shared/requests/login-url/Request.yaml"
-_req_shared_Refresh:
+_shared_req_Refresh:
   $ref: "./apis/shared/requests/refresh/Request.yaml"
-_req_shared_Mfa:
+_shared_req_Mfa:
   $ref: "./apis/shared/requests/mfa/Request.yaml"
-
-_req_shared_CredsEmail:
+_shared_req_AccountCheck:
+  $ref: "./apis/shared/requests/AccountCheck.yaml"
+_shared_req_CredsEmail:
   $ref: "./apis/shared/requests/CredsEmail.yaml"
-_req_shared_CredsTwilioPhone:
+_shared_req_CredsTwilioPhone:
   $ref: "./apis/shared/requests/CredsTwilioPhone.yaml"
-_req_shared_CredsOIDC:
+_shared_req_CredsOIDC:
   $ref: "./apis/shared/requests/CredsOIDC.yaml"
-_req_shared_CredsAPIKey:
+_shared_req_CredsAPIKey:
   $ref: "./apis/shared/requests/CredsAPIKey.yaml"
-_req_shared_ParamsEmail:
+_shared_req_ParamsEmail:
   $ref: "./apis/shared/requests/ParamsEmail.yaml"
-_req_shared_ParamsOIDC:
+_shared_req_ParamsOIDC:
   $ref: "./apis/shared/requests/ParamsOIDC.yaml"
-_req_shared_ParamsNone:
+_shared_req_ParamsNone:
   $ref: "./apis/shared/requests/ParamsNone.yaml"
-_req_shared_Profile:
+_shared_req_Profile:
   $ref: "./apis/shared/requests/Profile.yaml"
-_req_shared_ProfileNullable:
+_shared_req_ProfileNullable:
   $ref: "./apis/shared/requests/ProfileNullable.yaml"
-_req_shared_ParamsSetEmailCredential:
+_shared_req_ParamsSetEmailCredential:
   $ref: "./apis/shared/requests/ParamsSetEmailCredential.yaml"
 
-#### responses
-_res_shared_Login:
+### responses
+_shared_res_Login:
   $ref: "./apis/shared/responses/login/Response.yaml"
-_res_shared_Login_Mfa:
+_shared_res_Login_Mfa:
   $ref: "./apis/shared/responses/login/MfaResponse.yaml"
-_res_shared_LoginUrl:
+_shared_res_LoginUrl:
   $ref: "./apis/shared/responses/login-url/Response.yaml"
-_res_shared_Refresh:
+_shared_res_Refresh:
   $ref: "./apis/shared/responses/refresh/Response.yaml"
-_res_shared_Account:
+_shared_res_Account:
   $ref: "./apis/shared/responses/Account.yaml"
-_res_shared_Mfa:
+_shared_res_AccountCheck:
+  $ref: "./apis/shared/responses/AccountCheck.yaml"
+_shared_res_Mfa:
   $ref: "./apis/shared/responses/mfa/Response.yaml"
-_res_shared_RokwireToken:
+_shared_res_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
-### end - shared requests and responses
+_shared_res_LoginSession:
+  $ref: "./apis/shared/responses/LoginSession.yaml"
+## end SHARED requests and responses
 
-### account exists API
-_req_account-exists_Request:
-  $ref: "./apis/services/account/exists/request/Request.yaml"
-_res_account-exists_Response:
-  $ref: "./apis/services/account/exists/response/Response.yaml"
+## SERVICES section
 
 ### account auth-type link API
-_req_account_auth-type_link_Request:
-  $ref: "./apis/services/account/auth-type/link/request/Request.yaml"
+_services_req_account_auth-type-link:
+  $ref: "./apis/services/account/auth-type/link/request/Link.yaml"
+_services_req_account_auth-type-unlink:
+  $ref: "./apis/services/account/auth-type/link/request/Unlink.yaml"
+_services_res_account_auth-type-link:
+  $ref: "./apis/services/account/auth-type/link/response/Response.yaml"
 
 ### credential_update API
-_req_credential_update_Request:
+_services_req_credential_update:
   $ref: "./apis/services/credential/update/request/Request.yaml"
 
 ### credential_send-verify API
-_req_credential_send-verify_Request:
+_services_req_credential_send-verify:
   $ref: "./apis/services/credential/send-verify/request/Request.yaml"
 
 ### credential_forgot_initiate API
-_req_credential_forgot_initiate_Request:
+_services_req_credential_forgot_initiate:
   $ref: "./apis/services/credential/forgot/initiate/request/Request.yaml"
 
 ### credential_forgot_complete API
-_req_credential_forgot_complete_Request:
+_services_req_credential_forgot_complete:
   $ref: "./apis/services/credential/forgot/complete/request/Request.yaml"
 
 ### authorize-service API
-_req_authorize-service_Request:
+_services_req_authorize-service:
   $ref: "./apis/services/authorize-service/request/Request.yaml"
-_res_authorize-service_Response:
+_services_res_authorize-service:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
 
-### admin app-token API
-_req_admin_app-token_Response:
-  $ref: "./apis/admin/app-token/response/Response.yaml"
-
 ### service-accounts API
-_req_service-accounts_TokenRequest:
-  $ref: "./apis/services/service-accounts/TokenRequest.yaml"
-_req_service-accounts_CredsStaticToken:
+_services_req_service-accounts_params:
+  $ref: "./apis/services/service-accounts/params/request/Request.yaml"
+_services_req_service-accounts_access-token:
+  $ref: "./apis/services/service-accounts/access-token/request/Request.yaml"
+_services_req_service-accounts_access-tokens:
+  $ref: "./apis/services/service-accounts/access-tokens/request/Request.yaml"
+_services_res_service-accounts_access-tokens:
+  $ref: "./apis/services/service-accounts/access-tokens/response/Response.yaml"
+_services_service-accounts_CredsStaticToken:
   $ref: "./apis/services/service-accounts/CredsStaticToken.yaml"
 
+### app-configs API
+_services_req_application_configs:
+  $ref: "./apis/services/application/configs/request/Request.yaml"
+_services_req_application_org-configs:
+  $ref: "./apis/services/application/organization/configs/request/Request.yaml"
+## end SERVICES section
+
+## ADMIN section
+
+### admin app-token API
+_admin_res_app-token:
+  $ref: "./apis/admin/app-token/response/Response.yaml"
+
+### admin application_roles API
+_admin_req_create-application_role:
+  $ref: "./apis/admin/application/roles/request/Request.yaml"
+
+### admin application_groups API
+_admin_req_create-application_group:
+  $ref: "./apis/admin/application/groups/request/Request.yaml"
+
+### admin add-accounts-to-group API
+_admin_req_add-accounts-to-group:
+  $ref: "./apis/admin/application/group/accounts/add/request/Request.yaml"
+
+### admin remove-accounts-from-group API
+_admin_req_remove-account-from-group:
+  $ref: "./apis/admin/application/group/accounts/remove/request/Request.yaml"
+  
+### grant account roles API
+_admin_req_grant-roles-to-account:
+  $ref: "./apis/admin/application/account/roles/grant/request/Request.yaml"
+
+### revoke account roles API
+_admin_req_revoke-roles-from-account:
+  $ref: "./apis/admin/application/account/roles/revoke/request/Request.yaml"
+
+### grant permissions to account API
+_admin_req_grant-permissions:
+  $ref: "./apis/admin/application/account/permissions/grant/request/Request.yaml"
+
+### revoke permissions from account API
+_admin_req_revoke-permissions:
+  $ref: "./apis/admin/application/account/permissions/revoke/request/Request.yaml"
+
+### grant permissions to role API
+_admin_req_grant-permissions-to-role:
+  $ref: "./apis/admin/application/role/permissions/grant/request/Request.yaml"
+## end ADMIN section
+
+## SYSTEM section
+
 ### organization API
-_req_create-Organization_Request:
+_system_req_create-Organization:
   $ref: "./apis/system/create-organization/request/Request.yaml"
-_res_create_Organization_Response:
- $ref: "./apis/system/create-organization/response/Response.yaml"
-_req_update_Organization_Request:
- $ref: "./apis/system/update-organization/request/Request.yaml"
-_res_update_Organization_Response:
- $ref: "./apis/system/update-organization/response/Response.yaml"
-_req_get_Organization_Request:
- $ref: "./apis/system/get-organization/request/Request.yaml"
-_res_get_Organization_Response:
- $ref: "./apis/system/get-organization/response/Response.yaml"
-_res_get_Organizations_Response:
- $ref: "./apis/system/get-organizations/response/Response.yaml"
+_system_res_create_Organization:
+  $ref: "./apis/system/create-organization/response/Response.yaml"
+_system_req_update_Organization:
+  $ref: "./apis/system/update-organization/request/Request.yaml"
+_system_res_update_Organization:
+  $ref: "./apis/system/update-organization/response/Response.yaml"
+_system_req_get_Organization:
+  $ref: "./apis/system/get-organization/request/Request.yaml"
+_system_res_get_Organization:
+  $ref: "./apis/system/get-organization/response/Response.yaml"
+_system_res_get_Organizations:
+  $ref: "./apis/system/get-organizations/response/Response.yaml"
 
  ### application API
-_req_create_Application_Request:
+_system_req_create_Application:
   $ref: "./apis/system/create-application/request/Request.yaml"
-#_res_create_Application_Response:
-# $ref: "./apis/admin/create-application/response/Response.yaml"
-_req_get_Application_Request:
- $ref: "./apis/system/get-application/request/Request.yaml"
-_res_get_Application_Response:
- $ref: "./apis/system/get-application/response/Response.yaml"
-_res_get_Applications_Response:
- $ref: "./apis/system/get-applications/response/Response.yaml"
+_system_req_get_Application:
+  $ref: "./apis/system/get-application/request/Request.yaml"
+_system_res_get_Application:
+  $ref: "./apis/system/get-application/response/Response.yaml"
+_system_res_get_Applications:
+  $ref: "./apis/system/get-applications/response/Response.yaml"
  
 ### permissions API
-_req_permissions_Request:
+_system_req_permissions:
   $ref: "./apis/system/permissions/request/Request.yaml"
   
 ### application-roles API
-_req_application-roles_Request:
+_system_req_application-roles:
   $ref: "./apis/system/application-roles/request/Request.yaml"
 
 ### account permissions API
-_req_account-permissions_Request:
+_system_req_account-permissions:
   $ref: "./apis/system/account/permissions/request/Request.yaml"
 
+### auth_type API
+_system_req_create_auth_type:
+  $ref: "./apis/system/auth-types/request/Request.yaml"
+_system_req_update_auth_type:
+  $ref: "./apis/system/auth-typesID/request/Request.yaml"
+
 ### account roles API
-_req_account-roles_Request:
+_system_req_account-roles:
   $ref: "./apis/system/account/roles/request/Request.yaml"
+
+### application config API
+_system_req_create_ApplicationConfig_Request:
+  $ref: "./apis/system/application-config/request/Request.yaml"
+
+### service accounts API
+_system_req_create_service-account:
+  $ref: "./apis/system/create-service-account/request/Request.yaml"
+_system_req_update_service-account:
+  $ref: "./apis/system/update-service-account/request/Request.yaml"
+
+## end SYSTEM section
